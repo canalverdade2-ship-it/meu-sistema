@@ -173,15 +173,14 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
       const { data, error } = await supabase.rpc('gsa_public_lookup_referral', { p_token: voucherInput.trim() });
       if (error || !data?.valid) throw new Error(data?.error || 'Indicação inválida.');
       const fullReferral = {
-        ...data,
+        kind: data.kind,
         id: data.indicacao_id || null,
         isDefaultCode: data.kind === 'default',
       };
       setReferralInfo(fullReferral);
       setRegistrationData((previous) => ({
         ...previous,
-        nome: fullReferral.indicado_nome || '',
-        telefone: fullReferral.whatsapp_indicado ? maskPhone(fullReferral.whatsapp_indicado) : '',
+        telefone: data.kind === 'referral' ? maskPhone(voucherInput) : previous.telefone,
       }));
       setRegisterStage(fullReferral.isDefaultCode ? 'form' : 'confirm');
     } catch (error: any) {
@@ -275,7 +274,7 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
           <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-900">Use o documento e o mesmo telefone já cadastrados. A conta não será consultada nem identificada antes da confirmação completa.</div>
           <PersonSelector value={personType} onChange={(value) => { setPersonType(value); setDocumento(''); }} />
           <DocumentInput personType={personType} value={documento} onChange={setDocumento} />
-          <input type="tel" value={phone} onChange={(event) => setPhone(maskPhone(event.target.value))} placeholder="Telefone cadastrado" className="input-field" maxLength={15} />
+          <label className="grid gap-2 text-sm font-medium text-neutral-600">Telefone cadastrado<input type="tel" name="first-access-phone" autoComplete="tel" value={phone} onChange={(event) => setPhone(maskPhone(event.target.value))} className="input-field" maxLength={15} /></label>
           <PinInput value={pin} onChange={(value) => { setPin(value); setPinError(false); }} error={pinError} disabled={loading} label="Nova senha" />
           <PinInput value={pinConfirm} onChange={(value) => { setPinConfirm(value); setPinError(false); }} error={pinError} disabled={loading} autoFocus={false} label="Confirmar senha" onEnter={handleFirstAccess} />
           <div className="flex gap-3"><button type="button" onClick={() => changeMode('login')} className="btn-secondary flex-1">Voltar</button><button type="button" onClick={handleFirstAccess} disabled={loading} className="btn-primary flex-1">{loading ? 'Confirmando...' : 'Criar senha'}</button></div>
@@ -294,9 +293,9 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
 
       {mode === 'register' && registerStage === 'voucher' && (
         <div className="space-y-5">
-          <div className="flex gap-2 rounded-lg bg-neutral-100 p-1">
-            <button type="button" onClick={() => { setVoucherTab('com-indicacao'); setVoucherInput(''); }} className={`flex-1 rounded-md py-2 text-sm ${voucherTab === 'com-indicacao' ? 'bg-white shadow' : 'text-neutral-500'}`}>Com indicação</button>
-            <button type="button" onClick={() => { setVoucherTab('sem-indicacao'); setVoucherInput(''); }} className={`flex-1 rounded-md py-2 text-sm ${voucherTab === 'sem-indicacao' ? 'bg-white shadow' : 'text-neutral-500'}`}>Sem indicação</button>
+          <div className="flex gap-2 rounded-lg bg-neutral-100 p-1" role="group" aria-label="Forma de cadastro">
+            <button type="button" aria-pressed={voucherTab === 'com-indicacao'} onClick={() => { setVoucherTab('com-indicacao'); setVoucherInput(''); }} className={`flex-1 rounded-md py-2 text-sm ${voucherTab === 'com-indicacao' ? 'bg-white shadow' : 'text-neutral-500'}`}>Com indicação</button>
+            <button type="button" aria-pressed={voucherTab === 'sem-indicacao'} onClick={() => { setVoucherTab('sem-indicacao'); setVoucherInput(''); }} className={`flex-1 rounded-md py-2 text-sm ${voucherTab === 'sem-indicacao' ? 'bg-white shadow' : 'text-neutral-500'}`}>Sem indicação</button>
           </div>
           {voucherTab === 'sem-indicacao' && (
             <div className="rounded-2xl bg-indigo-50 p-4 text-sm text-indigo-900">
@@ -309,14 +308,14 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
               ) : <p>O cadastro sem indicação está temporariamente indisponível.</p>}
             </div>
           )}
-          <input type="text" inputMode={voucherTab === 'com-indicacao' ? 'numeric' : 'text'} value={voucherInput} onChange={(event) => setVoucherInput(voucherTab === 'com-indicacao' ? maskPhone(event.target.value) : event.target.value)} placeholder={voucherTab === 'com-indicacao' ? 'Celular usado na indicação' : 'Código público'} className="input-field" disabled={voucherTab === 'sem-indicacao' && !settings.ativo} />
+          <label className="grid gap-2 text-sm font-medium text-neutral-600">{voucherTab === 'com-indicacao' ? 'Celular usado na indicação' : 'Código público'}<input type="text" name="referral-token" autoComplete="off" inputMode={voucherTab === 'com-indicacao' ? 'numeric' : 'text'} value={voucherInput} onChange={(event) => setVoucherInput(voucherTab === 'com-indicacao' ? maskPhone(event.target.value) : event.target.value)} className="input-field" disabled={voucherTab === 'sem-indicacao' && !settings.ativo} /></label>
           <div className="flex gap-3"><button type="button" onClick={() => changeMode('login')} className="btn-secondary flex-1">Voltar</button><button type="button" onClick={handleValidateVoucher} disabled={loading || (voucherTab === 'sem-indicacao' && !settings.ativo)} className="btn-primary flex-1">{loading ? 'Validando...' : 'Validar'}</button></div>
         </div>
       )}
 
       {mode === 'register' && registerStage === 'confirm' && (
         <div className="space-y-5">
-          <div className="rounded-2xl bg-neutral-50 p-5"><p className="text-xs uppercase tracking-widest text-neutral-400">Indicação encontrada</p><p className="mt-2 font-bold">{referralInfo?.indicador?.nome || 'Indicador cadastrado'}</p></div>
+          <div className="rounded-2xl bg-neutral-50 p-5"><p className="text-xs uppercase tracking-widest text-neutral-400">Indicação encontrada</p><p className="mt-2 font-bold">{referralInfo?.isDefaultCode ? 'Cadastro público autorizado' : 'Indicação válida'}</p></div>
           <p className="text-sm text-neutral-600">Confirma que esta é a indicação correta?</p>
           <div className="flex gap-3"><button type="button" onClick={() => setRegisterStage('voucher')} className="btn-secondary flex-1">Não</button><button type="button" onClick={() => setRegisterStage('form')} className="btn-primary flex-1">Sim, continuar</button></div>
         </div>
@@ -326,23 +325,54 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
         <form onSubmit={handleRegister} className="space-y-4">
           <PersonSelector value={personType} onChange={(value) => { setPersonType(value); setDocumento(''); }} />
           <DocumentInput personType={personType} value={documento} onChange={setDocumento} validate />
-          <input required value={registrationData.nome} onChange={(event) => setRegistrationData({ ...registrationData, nome: event.target.value })} placeholder={personType === 'pf' ? 'Nome completo' : 'Razão social'} className="input-field" />
-          <div className="grid gap-4 sm:grid-cols-2"><input type="email" required value={registrationData.email} onChange={(event) => setRegistrationData({ ...registrationData, email: event.target.value })} placeholder="E-mail" className="input-field" /><input required value={registrationData.telefone} onChange={(event) => setRegistrationData({ ...registrationData, telefone: maskPhone(event.target.value) })} placeholder="Telefone" className="input-field" maxLength={15} /></div>
-          <div className="grid grid-cols-[1fr_120px] gap-4"><input required value={registrationData.cep} onChange={async (event) => { let value = event.target.value.replace(/\D/g, ''); if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2'); setRegistrationData((previous) => ({ ...previous, cep: value })); const raw = value.replace(/\D/g, ''); if (raw.length === 8) { const address = await consultarCEP(raw); if (address) setRegistrationData((previous) => ({ ...previous, endereco: address.logradouro, bairro: address.bairro, cidade: address.localidade, estado: address.uf })); } }} placeholder="CEP" className="input-field" maxLength={9} /><input required value={registrationData.numero} onChange={(event) => setRegistrationData({ ...registrationData, numero: event.target.value })} placeholder="Número" className="input-field" /></div>
-          <input required value={registrationData.endereco} onChange={(event) => setRegistrationData({ ...registrationData, endereco: event.target.value })} placeholder="Endereço" className="input-field" />
-          <div className="grid gap-4 sm:grid-cols-[1fr_1fr_90px]"><input required value={registrationData.bairro} onChange={(event) => setRegistrationData({ ...registrationData, bairro: event.target.value })} placeholder="Bairro" className="input-field" /><input required value={registrationData.cidade} onChange={(event) => setRegistrationData({ ...registrationData, cidade: event.target.value })} placeholder="Cidade" className="input-field" /><input required maxLength={2} value={registrationData.estado} onChange={(event) => setRegistrationData({ ...registrationData, estado: event.target.value.toUpperCase() })} placeholder="UF" className="input-field" /></div>
-          <textarea rows={2} value={registrationData.observacoes} onChange={(event) => setRegistrationData({ ...registrationData, observacoes: event.target.value })} placeholder="Observações" className="input-field resize-none" />
+          <label className="grid gap-2 text-sm font-medium text-neutral-600">{personType === 'pf' ? 'Nome completo' : 'Razão social'}
+            <input required name="nome" autoComplete="name" value={registrationData.nome} onChange={(event) => setRegistrationData({ ...registrationData, nome: event.target.value })} className="input-field" maxLength={180} />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">E-mail
+              <input type="email" required name="email" autoComplete="email" value={registrationData.email} onChange={(event) => setRegistrationData({ ...registrationData, email: event.target.value })} className="input-field" maxLength={254} />
+            </label>
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">Telefone
+              <input required name="telefone" autoComplete="tel" value={registrationData.telefone} onChange={(event) => setRegistrationData({ ...registrationData, telefone: maskPhone(event.target.value) })} className="input-field" maxLength={15} />
+            </label>
+          </div>
+          <div className="grid grid-cols-[1fr_120px] gap-4">
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">CEP
+              <input required name="cep" autoComplete="postal-code" value={registrationData.cep} onChange={async (event) => { let value = event.target.value.replace(/\D/g, ''); if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2'); setRegistrationData((previous) => ({ ...previous, cep: value })); const raw = value.replace(/\D/g, ''); if (raw.length === 8) { const address = await consultarCEP(raw); if (address) setRegistrationData((previous) => ({ ...previous, endereco: address.logradouro, bairro: address.bairro, cidade: address.localidade, estado: address.uf })); } }} className="input-field" maxLength={9} />
+            </label>
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">Número
+              <input required name="numero" autoComplete="address-line2" value={registrationData.numero} onChange={(event) => setRegistrationData({ ...registrationData, numero: event.target.value })} className="input-field" maxLength={20} />
+            </label>
+          </div>
+          <label className="grid gap-2 text-sm font-medium text-neutral-600">Endereço
+            <input required name="endereco" autoComplete="street-address" value={registrationData.endereco} onChange={(event) => setRegistrationData({ ...registrationData, endereco: event.target.value })} className="input-field" maxLength={220} />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-[1fr_1fr_90px]">
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">Bairro
+              <input required name="bairro" value={registrationData.bairro} onChange={(event) => setRegistrationData({ ...registrationData, bairro: event.target.value })} className="input-field" maxLength={120} />
+            </label>
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">Cidade
+              <input required name="cidade" autoComplete="address-level2" value={registrationData.cidade} onChange={(event) => setRegistrationData({ ...registrationData, cidade: event.target.value })} className="input-field" maxLength={120} />
+            </label>
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">UF
+              <input required name="estado" autoComplete="address-level1" maxLength={2} value={registrationData.estado} onChange={(event) => setRegistrationData({ ...registrationData, estado: event.target.value.toUpperCase() })} className="input-field" />
+            </label>
+          </div>
+          <label className="grid gap-2 text-sm font-medium text-neutral-600">Observações
+            <textarea name="observacoes" rows={2} maxLength={2000} value={registrationData.observacoes} onChange={(event) => setRegistrationData({ ...registrationData, observacoes: event.target.value })} className="input-field resize-none" />
+          </label>
           <div className="flex gap-3"><button type="button" onClick={() => setRegisterStage(referralInfo?.isDefaultCode ? 'voucher' : 'confirm')} className="btn-secondary flex-1">Voltar</button><button type="submit" disabled={loading} className="btn-primary flex-1">{loading ? 'Enviando...' : 'Finalizar cadastro'}</button></div>
         </form>
       )}
+
     </Modal>
   );
 }
 
 function PersonSelector({ value, onChange }: { value: PersonType; onChange: (value: PersonType) => void }) {
-  return <div className="flex gap-2 rounded-lg bg-neutral-100 p-1"><button type="button" onClick={() => onChange('pf')} className={`flex-1 rounded-md py-2 text-sm ${value === 'pf' ? 'bg-white shadow' : 'text-neutral-500'}`}>CPF</button><button type="button" onClick={() => onChange('pj')} className={`flex-1 rounded-md py-2 text-sm ${value === 'pj' ? 'bg-white shadow' : 'text-neutral-500'}`}>CNPJ</button></div>;
+  return <div className="flex gap-2 rounded-lg bg-neutral-100 p-1" role="group" aria-label="Tipo de pessoa"><button type="button" aria-pressed={value === 'pf'} onClick={() => onChange('pf')} className={`flex-1 rounded-md py-2 text-sm ${value === 'pf' ? 'bg-white shadow' : 'text-neutral-500'}`}>CPF</button><button type="button" aria-pressed={value === 'pj'} onClick={() => onChange('pj')} className={`flex-1 rounded-md py-2 text-sm ${value === 'pj' ? 'bg-white shadow' : 'text-neutral-500'}`}>CNPJ</button></div>;
 }
 
 function DocumentInput({ personType, value, onChange, validate = false }: { personType: PersonType; value: string; onChange: (value: string) => void; validate?: boolean }) {
-  return <div><label className="mb-2 block text-sm font-medium text-neutral-600">{personType === 'pf' ? 'CPF' : 'CNPJ'}</label><input type="text" inputMode="numeric" required value={value} onChange={(event) => onChange(personType === 'pf' ? maskCPF(event.target.value) : maskCNPJ(event.target.value))} onBlur={() => { if (!validate) return; const clean = value.replace(/\D/g, ''); if (clean && (personType === 'pf' ? !validarCPF(clean) : !validarCNPJ(clean))) { toast.error(`${personType === 'pf' ? 'CPF' : 'CNPJ'} inválido.`); onChange(''); } }} placeholder={personType === 'pf' ? '000.000.000-00' : '00.000.000/0000-00'} className="input-field" /></div>;
+  const inputId = `client-document-${personType}`; return <div><label htmlFor={inputId} className="mb-2 block text-sm font-medium text-neutral-600">{personType === 'pf' ? 'CPF' : 'CNPJ'}</label><input id={inputId} name="documento" autoComplete="off" type="text" inputMode="numeric" required value={value} onChange={(event) => onChange(personType === 'pf' ? maskCPF(event.target.value) : maskCNPJ(event.target.value))} onBlur={() => { if (!validate) return; const clean = value.replace(/\D/g, ''); if (clean && (personType === 'pf' ? !validarCPF(clean) : !validarCNPJ(clean))) { toast.error(`${personType === 'pf' ? 'CPF' : 'CNPJ'} inválido.`); onChange(''); } }} placeholder={personType === 'pf' ? '000.000.000-00' : '00.000.000/0000-00'} className="input-field" /></div>;
 }
