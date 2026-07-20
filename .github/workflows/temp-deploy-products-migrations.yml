@@ -1,19 +1,24 @@
-name: Deploy Products Migrations Production
+name: Finalize Products Production
 
 on:
-  push:
-    branches: [agent/corrigir-versoes-migrations-produtos]
-    paths: ['.products-production-deploy-trigger']
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-deploy-products-migrations.yml'
+      - '.products-production-deploy-trigger'
+      - 'supabase/migrations/20260721010000_harden_products_and_subscriptions.sql'
+      - 'supabase/migrations/20260721010100_secure_product_subscription_catalog.sql'
 
 permissions:
   contents: write
 
 concurrency:
-  group: deploy-products-migrations-production
+  group: finalize-products-production
   cancel-in-progress: false
 
 jobs:
   deploy:
+    if: github.event.pull_request.head.ref == 'ops/finalize-products-production'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -24,33 +29,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: agent/corrigir-versoes-migrations-produtos
-
-      - name: Initialize diagnostic
-        run: : > products-deployment.log
+          ref: ops/finalize-products-production
+          fetch-depth: 0
 
       - name: Validate target and files
-        shell: bash
         run: |
-          set -o pipefail
-          {
-            test -n "$SUPABASE_ACCESS_TOKEN"
-            test -n "$SUPABASE_DB_PASSWORD"
-            test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-            grep -Fqx 'APPLY_PRODUCTS_MIGRATIONS_20260720_V2' .products-production-deploy-trigger
-            test -f supabase/migrations/20260721010000_harden_products_and_subscriptions.sql
-            test -f supabase/migrations/20260721010100_secure_product_subscription_catalog.sql
-          } 2>&1 | tee -a products-deployment.log
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          grep -Fqx 'APPLY_PRODUCTS_MIGRATIONS_20260720_V2' .products-production-deploy-trigger
+          test -f supabase/migrations/20260721010000_harden_products_and_subscriptions.sql
+          test -f supabase/migrations/20260721010100_secure_product_subscription_catalog.sql
 
       - uses: supabase/setup-cli@v1
         with:
           version: latest
 
       - name: Link production project
-        shell: bash
-        run: |
-          set -o pipefail
-          supabase link --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee -a products-deployment.log
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
       - name: Check migration state
         id: state
@@ -61,8 +58,7 @@ jobs:
           FROM supabase_migrations.schema_migrations
           WHERE version IN ('20260721010000', '20260721010100');
           SQL
-          set -o pipefail
-          supabase db query --linked --file products-state.sql 2>&1 | tee products-state.log | tee -a products-deployment.log
+          supabase db query --linked --file products-state.sql | tee products-state.log
           if grep -Eq '(^|[^0-9])2([^0-9]|$)' products-state.log; then
             echo 'applied=true' >> "$GITHUB_OUTPUT"
           else
@@ -85,24 +81,15 @@ jobs:
 
       - name: Validate migrations with rollback
         if: steps.state.outputs.applied != 'true'
-        shell: bash
-        run: |
-          set -o pipefail
-          supabase db query --linked --file products-preview.sql 2>&1 | tee -a products-deployment.log
+        run: supabase db query --linked --file products-preview.sql
 
       - name: Apply migrations atomically
         if: steps.state.outputs.applied != 'true'
-        shell: bash
-        run: |
-          set -o pipefail
-          supabase db query --linked --file products-production.sql 2>&1 | tee -a products-deployment.log
+        run: supabase db query --linked --file products-production.sql
 
       - name: Register migration history
         if: steps.state.outputs.applied != 'true'
-        shell: bash
-        run: |
-          set -o pipefail
-          supabase migration repair 20260721010000 20260721010100 --status applied --linked 2>&1 | tee -a products-deployment.log
+        run: supabase migration repair 20260721010000 20260721010100 --status applied --linked
 
       - name: Verify production state
         shell: bash
@@ -146,50 +133,16 @@ jobs:
           WHERE version IN ('20260721010000', '20260721010100')
           ORDER BY version;
           SQL
-          set -o pipefail
-          supabase db query --linked --file products-verify.sql 2>&1 | tee products-verification.log | tee -a products-deployment.log
+          supabase db query --linked --file products-verify.sql | tee products-verification.log
           grep -q '20260721010000' products-verification.log
           grep -q '20260721010100' products-verification.log
 
-      - name: Record successful deployment
-        shell: bash
+      - name: Remove temporary deployment controls
         run: |
-          rm -f .products-production-deploy-failure
-          printf 'SUCCESS\nproject=%s\ncommit=%s\nrun=%s\nmigrations=20260721010000,20260721010100\n' \
-            "$SUPABASE_PROJECT_ID" "$GITHUB_SHA" "$GITHUB_RUN_ID" > .products-production-deploy-success
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .products-production-deploy-success .products-production-deploy-failure
-          git commit -m 'Registrar implantação de Produtos e Assinaturas'
-          git push
-
-      - name: Record failed deployment
-        if: failure()
-        shell: bash
-        run: |
-          {
-            echo 'FAILED'
-            echo "project=$EXPECTED_PROJECT_ID"
-            echo "commit=$GITHUB_SHA"
-            echo "run=$GITHUB_RUN_ID"
-            echo '--- diagnostic ---'
-            tail -n 200 products-deployment.log 2>/dev/null || true
-          } > .products-production-deploy-failure
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .products-production-deploy-failure
-          git commit -m 'Registrar falha da implantação de Produtos' || true
-          git push || true
-
-      - name: Upload deployment diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: products-production-deployment
-          path: |
-            products-deployment.log
-            products-state.log
-            products-verification.log
-            products-preview.sql
-          retention-days: 1
-          if-no-files-found: ignore
+          rm -f .github/workflows/temp-deploy-products-migrations.yml
+          rm -f .products-production-deploy-trigger
+          git add -A
+          git commit -m 'Remover controles temporários de Produtos e Assinaturas'
+          git push origin HEAD:ops/finalize-products-production
