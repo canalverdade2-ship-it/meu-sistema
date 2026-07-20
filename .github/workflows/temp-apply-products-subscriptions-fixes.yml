@@ -30,6 +30,18 @@ jobs:
           set -o pipefail
           exec > >(tee /tmp/apply-products-subscriptions.log) 2>&1
           cat .patch/apply-interfaces.py.part* > /tmp/apply-interfaces.py
+
+          python <<'PY'
+          from pathlib import Path
+          script_path = Path('/tmp/apply-interfaces.py')
+          script = script_path.read_text(encoding='utf-8')
+          old = r'''r"  const handleCancelAndRefundConfirm = async \(\) => \{.*?\n  \};\n\n  return \("'''
+          new = r'''r"  const handleCancelAndRefundConfirm = async \(\) => \{.*?\n  \};\n\s*return \("'''
+          if old not in script:
+              raise RuntimeError('Padrão de cancelamento administrativo não localizado no aplicador.')
+          script_path.write_text(script.replace(old, new, 1), encoding='utf-8')
+          PY
+
           python -m py_compile /tmp/apply-interfaces.py
           python /tmp/apply-interfaces.py
 
