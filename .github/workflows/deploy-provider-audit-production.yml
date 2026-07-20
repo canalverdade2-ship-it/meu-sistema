@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 25
     env:
       EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
-      EXPECTED_SOURCE_SHA: 308657f13abf433a2ceb66c9f6583295d703523e
+      EXPECTED_SOURCE_SHA: c73af8ba6395beff0854d946a54e04fa1afda537
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
@@ -33,9 +33,10 @@ jobs:
         run: |
           set -euo pipefail
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          grep -Fqx 'APPLY_PROVIDER_AUDIT_20260720_V2' .provider-audit-production-trigger
+          grep -Fqx 'APPLY_PROVIDER_AUDIT_20260720_V3' .provider-audit-production-trigger
           git fetch origin agent/harden-provider-portal-audit
           test "$(git rev-parse FETCH_HEAD)" = "$EXPECTED_SOURCE_SHA"
+          git show FETCH_HEAD:supabase/migrations/20260720232900_provider_portal_admin_module_compat.sql > /tmp/20260720232900.sql
           git show FETCH_HEAD:supabase/migrations/20260720233000_provider_portal_audit_hardening.sql > /tmp/20260720233000.sql
           git show FETCH_HEAD:supabase/migrations/20260720233100_provider_portal_secure_snapshots.sql > /tmp/20260720233100.sql
           git show FETCH_HEAD:supabase/migrations/20260720233200_provider_portal_final_guards.sql > /tmp/20260720233200.sql
@@ -52,9 +53,9 @@ jobs:
         shell: bash
         run: |
           cat > /tmp/provider-audit-state.sql <<'SQL'
-          SELECT CASE WHEN count(*) = 3 THEN 'ALL_APPLIED' ELSE 'PENDING' END AS provider_audit_state
+          SELECT CASE WHEN count(*) = 4 THEN 'ALL_APPLIED' ELSE 'PENDING' END AS provider_audit_state
           FROM supabase_migrations.schema_migrations
-          WHERE version IN ('20260720233000', '20260720233100', '20260720233200');
+          WHERE version IN ('20260720232900', '20260720233000', '20260720233100', '20260720233200');
           SQL
           supabase db query --linked --file /tmp/provider-audit-state.sql 2>&1 | tee provider-audit-state.log
           if grep -q 'ALL_APPLIED' provider-audit-state.log; then
@@ -70,7 +71,7 @@ jobs:
           set -euo pipefail
           {
             echo 'BEGIN;'
-            for version in 20260720233000 20260720233100 20260720233200; do
+            for version in 20260720232900 20260720233000 20260720233100 20260720233200; do
               sed '/^[[:space:]]*BEGIN;[[:space:]]*$/d; /^[[:space:]]*COMMIT;[[:space:]]*$/d' "/tmp/${version}.sql"
             done
             echo 'ROLLBACK;'
@@ -96,7 +97,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          supabase migration repair 20260720233000 20260720233100 20260720233200 --status applied --linked 2>&1 | tee provider-audit-history.log
+          supabase migration repair 20260720232900 20260720233000 20260720233100 20260720233200 --status applied --linked 2>&1 | tee provider-audit-history.log
 
       - name: Verify definitive deployment
         shell: bash
@@ -107,7 +108,8 @@ jobs:
             IF to_regclass('public.gsa_provider_audit_events') IS NULL THEN
               RAISE EXCEPTION 'Tabela de auditoria do prestador ausente';
             END IF;
-            IF to_regprocedure('public.gsa_provider_context(boolean)') IS NULL
+            IF to_regprocedure('public.gsa_admin_has_module(text)') IS NULL
+               OR to_regprocedure('public.gsa_provider_context(boolean)') IS NULL
                OR to_regprocedure('public.gsa_provider_dashboard_snapshot()') IS NULL
                OR to_regprocedure('public.gsa_provider_pendency_snapshot()') IS NULL
                OR to_regprocedure('public.gsa_provider_create_ticket(text,text,boolean)') IS NULL
@@ -143,18 +145,19 @@ jobs:
 
           SELECT version
           FROM supabase_migrations.schema_migrations
-          WHERE version IN ('20260720233000', '20260720233100', '20260720233200')
+          WHERE version IN ('20260720232900', '20260720233000', '20260720233100', '20260720233200')
           ORDER BY version;
           SQL
           set -o pipefail
           supabase db query --linked --file /tmp/provider-audit-verify.sql 2>&1 | tee provider-audit-verification.log
+          grep -q '20260720232900' provider-audit-verification.log
           grep -q '20260720233000' provider-audit-verification.log
           grep -q '20260720233100' provider-audit-verification.log
           grep -q '20260720233200' provider-audit-verification.log
 
       - name: Record production success
         run: |
-          printf 'SUCCESS\nproject=%s\nsource=%s\nrun=%s\nmigrations=20260720233000,20260720233100,20260720233200\n' "$SUPABASE_PROJECT_ID" "$EXPECTED_SOURCE_SHA" "$GITHUB_RUN_ID" > .provider-audit-production-success
+          printf 'SUCCESS\nproject=%s\nsource=%s\nrun=%s\nmigrations=20260720232900,20260720233000,20260720233100,20260720233200\n' "$SUPABASE_PROJECT_ID" "$EXPECTED_SOURCE_SHA" "$GITHUB_RUN_ID" > .provider-audit-production-success
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add .provider-audit-production-success
