@@ -14,10 +14,11 @@
     "test:travel": "tsx scripts/check-gsa-travel-contracts.ts",
     "test:admin": "tsx scripts/check-admin-panel-contracts.ts",
     "test:client-security": "tsx scripts/check-client-portal-security-contracts.ts",
+    "test:provider": "tsx scripts/check-provider-portal-security-contracts.ts",
+    "test:home": "tsx scripts/check-home-public-contracts.ts",
     "test:e2e": "playwright test",
     "test:e2e:full": "playwright test",
-    "test:stress": "playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3",
-    "test:home": "tsx scripts/check-home-public-contracts.ts"
+    "test:stress": "playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
