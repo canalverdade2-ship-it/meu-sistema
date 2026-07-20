@@ -2,14 +2,26 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 let supabaseInstance: SupabaseClient | null = null;
 
+const sessionStorageAdapter = {
+  getItem(key: string) {
+    return typeof window === 'undefined' ? null : window.sessionStorage.getItem(key);
+  },
+  setItem(key: string, value: string) {
+    if (typeof window !== 'undefined') window.sessionStorage.setItem(key, value);
+  },
+  removeItem(key: string) {
+    if (typeof window !== 'undefined') window.sessionStorage.removeItem(key);
+  },
+};
+
 export const getSupabase = (): SupabaseClient => {
   if (!supabaseInstance) {
     const meta = import.meta as any;
     const processEnv = (typeof process !== 'undefined' ? process.env : {}) as any;
-    
+
     const supabaseUrl = meta.env?.VITE_SUPABASE_URL || processEnv.VITE_SUPABASE_URL;
     const supabaseAnonKey = meta.env?.VITE_SUPABASE_ANON_KEY || processEnv.VITE_SUPABASE_ANON_KEY;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error(
         'Erro Crítico: Credenciais do Supabase não encontradas. Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para ativar o banco de dados real.'
@@ -17,9 +29,16 @@ export const getSupabase = (): SupabaseClient => {
     }
 
     supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        storage: sessionStorageAdapter,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+      },
       realtime: {
         params: {
-          eventsPerSecond: 10, // Limitar para evitar throttling do servidor
+          eventsPerSecond: 10,
         },
       },
     });
@@ -27,10 +46,9 @@ export const getSupabase = (): SupabaseClient => {
   return supabaseInstance;
 };
 
-// Proxy completo para garantir inicialização preguiçosa (lazy) e compatibilidade total com o SDK
-// Implementa TODOS os traps necessários para que o Proxy se comporte exatamente como o SupabaseClient
+// Proxy completo para garantir inicialização preguiçosa (lazy) e compatibilidade total com o SDK.
 export const supabase = new Proxy({} as SupabaseClient, {
-  get: (_target, prop, receiver) => {
+  get: (_target, prop) => {
     const client = getSupabase();
     const value = (client as any)[prop];
     return typeof value === 'function' ? value.bind(client) : value;
