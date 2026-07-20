@@ -13,18 +13,18 @@ CREATE POLICY "Cliente ou visitante insere orcamentos"
   WITH CHECK (
     (
       cliente_id IS NULL
-      AND nome IS NOT NULL
-      AND email IS NOT NULL
-      AND telefone IS NOT NULL
+      AND NULLIF(trim(nome), '') IS NOT NULL
+      AND NULLIF(trim(email), '') IS NOT NULL
+      AND NULLIF(trim(telefone), '') IS NOT NULL
     )
-    OR auth.uid() IN (
-      SELECT user_id
-      FROM public.clientes
-      WHERE id = cliente_id
+    OR (
+      public.gsa_jwt_session_is_valid()
+      AND public.gsa_jwt_actor_type() = 'cliente'
+      AND cliente_id = public.gsa_jwt_actor_id()
     )
   );
 
--- Buckets privados. Documentos pessoais e vouchers nunca devem usar URL pública.
+-- Buckets privados. Documentos pessoais e vouchers nunca usam URL pública.
 INSERT INTO storage.buckets (
   id,
   name,
@@ -61,7 +61,7 @@ ON CONFLICT (id) DO UPDATE SET
   file_size_limit = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
--- O caminho de documentos deve seguir:
+-- O caminho de documentos segue:
 -- <cliente_id>/<passageiro_id>/<arquivo>.
 DROP POLICY IF EXISTS "Cliente envia documentos de viagem" ON storage.objects;
 CREATE POLICY "Cliente envia documentos de viagem"
@@ -70,14 +70,14 @@ CREATE POLICY "Cliente envia documentos de viagem"
   TO authenticated
   WITH CHECK (
     bucket_id = 'viagens-documentos'
+    AND public.gsa_jwt_session_is_valid()
+    AND public.gsa_jwt_actor_type() = 'cliente'
+    AND public.gsa_jwt_actor_id()::text = split_part(name, '/', 1)
     AND EXISTS (
       SELECT 1
-      FROM public.clientes c
-      JOIN public.viagens_passageiros p
-        ON p.cliente_id = c.id
-      WHERE c.user_id = auth.uid()
-        AND c.id::text = split_part(name, '/', 1)
-        AND p.id::text = split_part(name, '/', 2)
+      FROM public.viagens_passageiros passageiro
+      WHERE passageiro.id::text = split_part(name, '/', 2)
+        AND passageiro.cliente_id = public.gsa_jwt_actor_id()
     )
   );
 
@@ -88,14 +88,14 @@ CREATE POLICY "Cliente le documentos de viagem"
   TO authenticated
   USING (
     bucket_id = 'viagens-documentos'
+    AND public.gsa_jwt_session_is_valid()
+    AND public.gsa_jwt_actor_type() = 'cliente'
+    AND public.gsa_jwt_actor_id()::text = split_part(name, '/', 1)
     AND EXISTS (
       SELECT 1
-      FROM public.clientes c
-      JOIN public.viagens_passageiros p
-        ON p.cliente_id = c.id
-      WHERE c.user_id = auth.uid()
-        AND c.id::text = split_part(name, '/', 1)
-        AND p.id::text = split_part(name, '/', 2)
+      FROM public.viagens_passageiros passageiro
+      WHERE passageiro.id::text = split_part(name, '/', 2)
+        AND passageiro.cliente_id = public.gsa_jwt_actor_id()
     )
   );
 
@@ -106,19 +106,18 @@ CREATE POLICY "Cliente remove documentos de viagem"
   TO authenticated
   USING (
     bucket_id = 'viagens-documentos'
+    AND public.gsa_jwt_session_is_valid()
+    AND public.gsa_jwt_actor_type() = 'cliente'
+    AND public.gsa_jwt_actor_id()::text = split_part(name, '/', 1)
     AND EXISTS (
       SELECT 1
-      FROM public.clientes c
-      JOIN public.viagens_passageiros p
-        ON p.cliente_id = c.id
-      WHERE c.user_id = auth.uid()
-        AND c.id::text = split_part(name, '/', 1)
-        AND p.id::text = split_part(name, '/', 2)
+      FROM public.viagens_passageiros passageiro
+      WHERE passageiro.id::text = split_part(name, '/', 2)
+        AND passageiro.cliente_id = public.gsa_jwt_actor_id()
     )
   );
 
--- Vouchers são gravados pela operação administrativa e lidos pelo titular.
--- O caminho administrativo deve seguir <cliente_id>/<transacao_id>/<arquivo>.
+-- Vouchers seguem <cliente_id>/<transacao_id>/<arquivo>.
 DROP POLICY IF EXISTS "Cliente baixa vouchers de viagem" ON storage.objects;
 CREATE POLICY "Cliente baixa vouchers de viagem"
   ON storage.objects
@@ -126,13 +125,30 @@ CREATE POLICY "Cliente baixa vouchers de viagem"
   TO authenticated
   USING (
     bucket_id = 'viagens-vouchers'
+    AND public.gsa_jwt_session_is_valid()
+    AND public.gsa_jwt_actor_type() = 'cliente'
+    AND public.gsa_jwt_actor_id()::text = split_part(name, '/', 1)
     AND EXISTS (
       SELECT 1
-      FROM public.clientes c
-      JOIN public.viagens_transacoes t
-        ON t.cliente_id = c.id
-      WHERE c.user_id = auth.uid()
-        AND c.id::text = split_part(name, '/', 1)
-        AND t.id::text = split_part(name, '/', 2)
+      FROM public.viagens_transacoes transacao
+      WHERE transacao.id::text = split_part(name, '/', 2)
+        AND transacao.cliente_id = public.gsa_jwt_actor_id()
     )
+  );
+
+-- Administração e colaboradores operacionais gerenciam os arquivos privados.
+DROP POLICY IF EXISTS "Operacao GSA gerencia arquivos de viagem" ON storage.objects;
+CREATE POLICY "Operacao GSA gerencia arquivos de viagem"
+  ON storage.objects
+  FOR ALL
+  TO authenticated
+  USING (
+    bucket_id IN ('viagens-documentos', 'viagens-vouchers')
+    AND public.gsa_jwt_session_is_valid()
+    AND public.gsa_jwt_actor_type() IN ('admin', 'colaborador')
+  )
+  WITH CHECK (
+    bucket_id IN ('viagens-documentos', 'viagens-vouchers')
+    AND public.gsa_jwt_session_is_valid()
+    AND public.gsa_jwt_actor_type() IN ('admin', 'colaborador')
   );
