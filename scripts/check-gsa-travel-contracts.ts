@@ -74,6 +74,8 @@ async function main() {
       "'viagens-documentos'",
       "'viagens-vouchers'",
       'Cliente ou visitante insere orcamentos',
+      'JOIN public.viagens_passageiros',
+      'JOIN public.viagens_transacoes',
       'Cliente baixa vouchers de viagem',
     ],
   );
@@ -85,7 +87,18 @@ async function main() {
 
   await assertFileContains(
     'src/components/client/marketplace/MarketplaceGSAStore.tsx',
-    ['TravelCancellationsPage', 'TravelSupportPage', "currentSubmodule === 'documentos'"],
+    [
+      'TravelCancellationsPage',
+      'TravelSupportPage',
+      "currentSubmodule === 'documentos'",
+      "currentSubmodule === 'cancelamentos'",
+      "currentSubmodule === 'suporte'",
+    ],
+  );
+
+  await assertFileContains(
+    'src/components/client/marketplace/travel/TravelReservationPage.tsx',
+    ['viagens-documentos', 'viagens-vouchers', 'createSignedUrl'],
   );
 
   console.log('GSA Viagens: rotas e contratos críticos validados com sucesso.');
