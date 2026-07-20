@@ -1,1 +1,1 @@
-Executar integração controlada preservando o workflow de qualidade da main.
+Executar integração administrativa definitiva sobre a main atual — versão 3.
