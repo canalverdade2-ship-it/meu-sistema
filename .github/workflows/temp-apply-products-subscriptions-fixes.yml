@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   apply:
@@ -175,3 +175,24 @@ jobs:
             /tmp/products-subscriptions-validated-files.tar.gz
             /tmp/products-subscriptions-deleted-files.txt
           retention-days: 3
+
+      - name: Restore workflow files before token push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git restore .github/workflows/quality.yml
+          git restore .github/workflows/temp-apply-products-subscriptions-fixes.yml
+
+      - name: Publish validated source changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração de código para publicar."
+            exit 0
+          fi
+          git commit -m "Corrigir integridade de Produtos e Assinaturas"
+          git push origin HEAD:agent/corrigir-produtos-assinaturas
