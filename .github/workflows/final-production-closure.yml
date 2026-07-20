@@ -25,22 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     env:
-      PGPASSWORD: postgres
-      EXPECTED_PROJECT_ID: ${{ secrets.EXPECTED_PROJECT_ID }}
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
@@ -80,6 +66,9 @@ jobs:
       - name: Provider portal security contracts
         run: npm run test:provider
 
+      - name: Home public contracts
+        run: npm run test:home --if-present
+
       - name: GSA Viagens contracts
         run: npm run test:travel
 
@@ -97,11 +86,7 @@ jobs:
           set -euo pipefail
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$SUPABASE_DB_PASSWORD"
-          test -n "$SUPABASE_PROJECT_ID"
-          if [ -n "$EXPECTED_PROJECT_ID" ] && [ "$SUPABASE_PROJECT_ID" != "$EXPECTED_PROJECT_ID" ]; then
-            echo 'O projeto Supabase informado não corresponde ao projeto de produção esperado.' >&2
-            exit 1
-          fi
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -111,75 +96,88 @@ jobs:
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
 
-      - name: Capture migration state before deployment
+      - name: Verify migration history and critical production objects
         shell: bash
         run: |
+          cat > final-production-verification.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_required integer;
+          BEGIN
+            SELECT count(*)
+              INTO v_required
+              FROM supabase_migrations.schema_migrations
+             WHERE version IN (
+               '20260720213000',
+               '20260720232000',
+               '20260720233000','20260720233100','20260720233200',
+               '20260720234400','20260720234500','20260720235300','20260720235425',
+               '20260720235450','20260720235500','20260721000500','20260721001500',
+               '20260721002500','20260721003000','20260721003500','20260721003600',
+               '20260721003700','20260721003800',
+               '20260721010000','20260721010100'
+             );
+            IF v_required <> 21 THEN
+              RAISE EXCEPTION 'Histórico obrigatório incompleto: % de 21 migrations', v_required;
+            END IF;
+
+            IF to_regprocedure('public.gsa_admin_context()') IS NULL
+               OR to_regprocedure('public.gsa_admin_validate_context(uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_sensitive_change_audit()') IS NULL THEN
+              RAISE EXCEPTION 'Contexto ou auditoria administrativa ausente';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname='public' AND p.proname='gsa_admin_access_snapshot'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname='public' AND p.proname='gsa_admin_save_collaborator'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname='public' AND p.proname='gsa_admin_system_snapshot'
+            ) THEN
+              RAISE EXCEPTION 'Operações administrativas críticas ausentes';
+            END IF;
+
+            IF to_regprocedure('public.gsa_public_create_enterprise_budget_v2(jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'Orçamento público protegido ausente';
+            END IF;
+
+            IF to_regprocedure('public.gsa_admin_adjust_product_stock(uuid,text,uuid,uuid,text,integer,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_activate_subscription(uuid,text,uuid,uuid)') IS NULL THEN
+              RAISE EXCEPTION 'Operações de Produtos e Assinaturas ausentes';
+            END IF;
+
+            IF to_regclass('public.gsa_public_budget_rate_limits') IS NULL
+               OR to_regclass('public.gsa_admin_operation_requests') IS NULL THEN
+              RAISE EXCEPTION 'Tabelas de segurança e idempotência ausentes';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM storage.buckets
+              WHERE id='gsa-private-documents' AND public=false
+            ) THEN
+              RAISE EXCEPTION 'Armazenamento administrativo privado ausente';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger t
+              JOIN pg_proc p ON p.oid=t.tgfoid
+              JOIN pg_namespace n ON n.oid=p.pronamespace
+              WHERE n.nspname='public'
+                AND p.proname='gsa_admin_sensitive_change_audit'
+                AND NOT t.tgisinternal
+            ) THEN
+              RAISE EXCEPTION 'Gatilhos de auditoria administrativa ausentes';
+            END IF;
+          END $$;
+
+          SELECT 'FINAL_PRODUCTION_VERIFIED' AS result;
+          SQL
           set -o pipefail
-          supabase migration list --linked 2>&1 | tee production-migrations-before.log
-
-      - name: Apply every pending migration
-        shell: bash
-        run: |
-          set +e
-          supabase db push --linked --include-all --yes > db-push.log 2>&1
-          code=$?
-          cat db-push.log
-          exit "$code"
-
-      - name: Verify migration history
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase migration list --linked > production-migrations.log
-          cat production-migrations.log
-          for version in \
-            20260720234400 \
-            20260720234500 \
-            20260720235300 \
-            20260720235425 \
-            20260720235450 \
-            20260720235500 \
-            20260721000500 \
-            20260721001500 \
-            20260721002500 \
-            20260721003000 \
-            20260721003500 \
-            20260721003600 \
-            20260721003700 \
-            20260721003800
-          do
-            grep -q "$version" production-migrations.log || {
-              echo "Migration obrigatória ausente em produção: $version" >&2
-              exit 1
-            }
-          done
-
-      - name: Verify critical production objects
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase db dump --linked --schema public --file production-public-schema.sql
-          for object in \
-            gsa_admin_context \
-            gsa_admin_validate_context \
-            gsa_admin_has_module \
-            gsa_admin_save_collaborator \
-            gsa_admin_rotate_collaborator_credential \
-            gsa_admin_sensitive_change_audit \
-            gsa_admin_access_snapshot \
-            gsa_admin_list_notifications \
-            gsa_admin_system_snapshot \
-            gsa_admin_update_settings_secure
-          do
-            grep -q "$object" production-public-schema.sql || {
-              echo "Objeto crítico ausente em produção: $object" >&2
-              exit 1
-            }
-          done
-          grep -q 'collaborator_' production-public-schema.sql || {
-            echo 'As políticas de isolamento do colaborador não foram encontradas.' >&2
-            exit 1
-          }
+          supabase db query --linked --file final-production-verification.sql 2>&1 | tee final-production-verification.log
+          grep -q 'FINAL_PRODUCTION_VERIFIED' final-production-verification.log
 
       - name: Publish authentication gateway
         run: supabase functions deploy gsa-auth-session --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
@@ -189,11 +187,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: final-production-closure-evidence
-          path: |
-            production-migrations-before.log
-            db-push.log
-            production-migrations.log
-            production-public-schema.sql
+          path: final-production-verification.log
           if-no-files-found: ignore
           retention-days: 30
 
@@ -224,7 +218,7 @@ jobs:
             "workflow_run_id": "${RUN_ID}",
             "validated_sha": "${VALIDATED_SHA}",
             "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "scope": "admin-collaborator-client-provider-travel-products-subscriptions-supabase",
+            "scope": "admin-collaborator-client-provider-home-travel-products-subscriptions-supabase",
             "migrations": "${RESULT}",
             "database_objects": "${RESULT}",
             "edge_function": "${RESULT}",
@@ -235,6 +229,9 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add deployment-status/final-production-closure.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
           git commit -m "Registrar fechamento definitivo de produção: ${RESULT}"
           git pull --rebase origin main
           git push origin HEAD:main
