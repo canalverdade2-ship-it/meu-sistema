@@ -83,8 +83,13 @@ async function main() {
   await assertFileContains('src/App.tsx', [
     'SecureAdminPanel',
     'defaultAdminPath',
-    "localStorage.setItem('colaboradorModulos'",
     'isRouteAllowed(route.area, session, route.module, route.submodule)',
+  ]);
+  await assertFileExcludes('src/App.tsx', [
+    "localStorage.setItem('adminType'",
+    "localStorage.setItem('colaboradorId'",
+    "localStorage.setItem('colaboradorNome'",
+    "localStorage.setItem('colaboradorModulos'",
   ]);
 
   await assertFileContains('src/pages/SecureAdminPanel.tsx', [
@@ -92,6 +97,14 @@ async function main() {
     "select('id, nome, status, colaborador_modulos(modulo_id)')",
     "data.status !== 'ativo'",
     "table: 'colaborador_modulos'",
+    "sessionStorage.setItem('colaboradorModulos'",
+    "localStorage.removeItem(key)",
+  ]);
+  await assertFileExcludes('src/pages/SecureAdminPanel.tsx', [
+    "localStorage.setItem('adminType'",
+    "localStorage.setItem('colaboradorId'",
+    "localStorage.setItem('colaboradorNome'",
+    "localStorage.setItem('colaboradorModulos'",
   ]);
 
   await assertFileContains('src/pages/AdminPanel.tsx', [
