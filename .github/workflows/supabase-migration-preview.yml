@@ -1,0 +1,147 @@
+name: Supabase Migration Preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/supabase-migration-preview.yml'
+      - 'supabase/migrations/**'
+      - 'scripts/gsa-viagens-remote-preflight.sql'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: supabase-migration-preview-production
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    name: Preview migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate protected configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo 'SUPABASE_ACCESS_TOKEN não configurado.'; exit 1; }
+          test -n "$SUPABASE_DB_PASSWORD" || { echo 'SUPABASE_DB_PASSWORD não configurado.'; exit 1; }
+          test -n "$SUPABASE_PROJECT_ID" || { echo 'SUPABASE_PROJECT_ID não configurado.'; exit 1; }
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID" || {
+            echo 'O Project Reference configurado não corresponde ao projeto autorizado.'
+            exit 1
+          }
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        shell: bash
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Inspect remote GSA schema
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file scripts/gsa-viagens-remote-preflight.sql \
+            2>&1 | tee gsa-remote-preflight.log
+
+      - name: Build reversible GSA migration transaction
+        shell: bash
+        run: |
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20260720120000_fix_gsa_viagens_core_flow.sql
+            cat supabase/migrations/20260720123000_gsa_viagens_storage_and_quotes.sql
+            cat supabase/migrations/20260720130000_gsa_viagens_cancelamento_rpc.sql
+            echo 'ROLLBACK;'
+          } > gsa-targeted-validation.sql
+
+      - name: Validate GSA migrations with rollback
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file gsa-targeted-validation.sql \
+            2>&1 | tee gsa-targeted-validation.log
+
+      - name: Compare migration history
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee migration-list.log
+
+      - name: Preview normal database push
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db push --linked --dry-run 2>&1 | tee migration-dry-run.log
+
+      - name: Upload migration preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-migration-preview
+          path: |
+            gsa-remote-preflight.log
+            gsa-targeted-validation.log
+            migration-list.log
+            migration-dry-run.log
+          retention-days: 7
+
+      - name: Publish private preview report
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          touch gsa-remote-preflight.log gsa-targeted-validation.log migration-list.log migration-dry-run.log
+          {
+            echo '# Prévia das migrações Supabase'
+            echo
+            echo "- Projeto: \`$EXPECTED_PROJECT_ID\`"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Resultado do job: **$JOB_STATUS**"
+            echo
+            echo '## Inspeção remota do GSA Viagens'
+            echo '```text'
+            sed -n '1,420p' gsa-remote-preflight.log
+            echo '```'
+            echo
+            echo '## Validação transacional com rollback'
+            echo '```text'
+            sed -n '1,260p' gsa-targeted-validation.log
+            echo '```'
+            echo
+            echo '## Histórico local e remoto'
+            echo '```text'
+            sed -n '1,180p' migration-list.log
+            echo '```'
+            echo
+            echo '## Dry-run normal do banco'
+            echo '```text'
+            sed -n '1,120p' migration-dry-run.log
+            echo '```'
+          } > migration-report.md
+
+          gh issue create \
+            --title "Prévia Supabase #$GITHUB_RUN_NUMBER" \
+            --body-file migration-report.md
