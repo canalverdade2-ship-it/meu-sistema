@@ -1,0 +1,70 @@
+name: Temporary add Home migration diagnostics
+
+on:
+  push:
+    branches: [agent/corrigir-home-itens-2-a-10]
+    paths: ['.home-migration-diagnostics-ready']
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add persistent diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/workflows/quality.yml')
+          text = path.read_text()
+          old = '''      - name: Validate Home public migrations
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        env:
+          PGPASSWORD: postgres
+        run: psql -h 127.0.0.1 -U postgres -f scripts/test-home-public-migrations.sql
+'''
+          new = '''      - name: Validate Home public migrations
+        id: home_migrations
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        env:
+          PGPASSWORD: postgres
+        shell: bash
+        run: |
+          set +e
+          psql -h 127.0.0.1 -U postgres -f scripts/test-home-public-migrations.sql > home-migrations.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload Home migration log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-migration-log
+          path: home-migrations.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Report Home migration result
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          cat home-migrations.log
+          test "${{ steps.home_migrations.outputs.exit_code }}" = "0"
+'''
+          if text.count(old) != 1:
+              raise SystemExit('Etapa de migration não encontrada exatamente uma vez.')
+          path.write_text(text.replace(old, new))
+          PY
+          rm .home-migration-diagnostics-ready .github/workflows/add-home-migration-diagnostics.yml
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Registrar diagnóstico das migrations públicas da Home'
+          git push
