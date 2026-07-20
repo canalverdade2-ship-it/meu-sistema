@@ -61,17 +61,42 @@ jobs:
         run: npm run lint
       - name: Validate provider security contracts
         if: steps.patch.outputs.status == '0'
-        run: npm run test:provider
+        id: provider_contracts
+        shell: bash
+        run: |
+          set +e
+          npm run test:provider > provider-contracts.log 2>&1
+          status=$?
+          cat provider-contracts.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Publish provider contract diagnostic
+        if: steps.patch.outputs.status == '0' && steps.provider_contracts.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo '## Falha nos contratos do Painel do Prestador'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo '```text'
+            sed -n '1,240p' provider-contracts.log
+            echo '```'
+          } > provider-contract-report.md
+          gh issue create --title 'Diagnóstico contratos Painel do Prestador' --body-file provider-contract-report.md
+      - name: Enforce provider contract result
+        if: steps.patch.outputs.status == '0' && steps.provider_contracts.outputs.status != '0'
+        run: exit 1
       - name: Build production bundle
-        if: steps.patch.outputs.status == '0'
+        if: steps.patch.outputs.status == '0' && steps.provider_contracts.outputs.status == '0'
         run: npm run build
       - name: Publish definitive correction commit
-        if: steps.patch.outputs.status == '0'
+        if: steps.patch.outputs.status == '0' && steps.provider_contracts.outputs.status == '0'
         run: |
           rm -f scripts/apply-provider-audit-fixes.py
           rm -f .github/workflows/apply-provider-audit-fixes.yml
           rm -f .provider-audit-fix-trigger
-          rm -f provider-patch.log
+          rm -f provider-patch.log provider-contracts.log
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
