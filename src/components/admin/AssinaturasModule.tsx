@@ -4,6 +4,8 @@ import { supabase } from '../../lib/supabase';
 import { Assinatura } from '../../types';
 import { Modal } from '../ui/Modal';
 import { formatCurrency, generateCode, handleError } from '../../lib/utils';
+import { archiveAdminCatalogItems, saveAdminSubscriptionCatalog } from '../../lib/adminStoreOperations';
+import { removePublicStoreImage, removeUnusedPublicStoreImages, uploadPublicStoreImage } from '../../lib/publicStoreImage';
 import { toast } from 'react-hot-toast';
 import { canDeleteRecord } from '../../lib/deleteRequest';
 import { logService } from '../../lib/logService';
@@ -91,34 +93,30 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
 
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !selectedAssinatura) return;
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${selectedAssinatura.id}-${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (!e.target.files || e.target.files.length === 0 || !selectedAssinatura) return;
+  const file = e.target.files[0];
+  setUploadingImage(true);
+  try {
+    const publicUrl = await uploadPublicStoreImage(file, `assinaturas/${selectedAssinatura.id}`);
+    await saveAdminSubscriptionCatalog({
+      assinaturaId: selectedAssinatura.id,
+      payload: { imagem_url: publicUrl },
+    });
+    const oldUrl = selectedAssinatura.imagem_url;
+    setSelectedAssinatura({ ...selectedAssinatura, imagem_url: publicUrl });
+    await removePublicStoreImage(oldUrl).catch(() => undefined);
+    toast.success('Imagem atualizada com sucesso!');
+    fetchAssinaturas();
+  } catch (error: any) {
+    toast.error(error?.message || 'Erro ao fazer upload da imagem.');
+  } finally {
+    setUploadingImage(false);
+    e.target.value = '';
+  }
+};
 
-    setUploadingImage(true);
-    try {
-      const { error: uploadError } = await supabase.storage.from('gsa-store-images').upload(filePath, file);
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from('gsa-store-images').getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase.from('assinaturas').update({ imagem_url: publicUrl }).eq('id', selectedAssinatura.id);
-      if (updateError) throw updateError;
-
-      setSelectedAssinatura({ ...selectedAssinatura, imagem_url: publicUrl });
-      toast.success('Imagem atualizada com sucesso!');
-      fetchAssinaturas();
-    } catch (error: any) {
-      toast.error('Erro ao fazer upload da imagem.');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const fetchAssinaturas = async () => {
+const fetchAssinaturas = async () => {
     let query = supabase
       .from('assinaturas')
       .select('*')
@@ -138,86 +136,82 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
     if (data) setAssinaturas(data);
   };
 
-  const handleCreate = async (formData: any) => {
-    const { imagens_adicionais, ...otherData } = formData;
-    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-
-    const { data, error } = await supabase.from('assinaturas').insert([{
-      ...otherData,
-      ...galleryCols,
-      descricao: otherData.descricao || '',
-      codigo_assinatura: generateCode('ASS'),
-      status: 'ativo'
-    }]).select().single();
-
-    if (error) {
-      toast.error(handleError(error, 'Erro ao cadastrar assinatura'));
-      return false;
-    } else {
-      toast.success('Assinatura cadastrada com sucesso.');
-      
-      // Log Action
-      await logService.logAction({
-        acao: 'CRIAR_ASSINATURA',
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-        ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
-        detalhes: `Cadastrou a assinatura: ${formData.nome} (${formatCurrency(formData.valor)})`
-      });
-
-      // Notificar Clientes (se não for oculta)
-      if (!formData.ocultar_valor) {
-        await notificationService.broadcastClients(
-          '✨ Nova Assinatura Disponível',
-          `Conheça nosso novo plano: ${formData.nome}. Confira na área de assinaturas!`,
-          'assinaturas',
-          'broadcast_assinatura',
-          { tab: 'disponiveis' }
-        );
-      }
-
-      setIsModalOpen(false);
-      fetchAssinaturas();
-      if (data) {
-        setSelectedAssinatura(data);
-        setIsDetailOpen(true);
-      }
-      return true;
+const handleCreate = async (formData: any) => {
+  const { imagens_adicionais, ...otherData } = formData;
+  const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
+  try {
+    const result = await saveAdminSubscriptionCatalog({
+      payload: {
+        ...otherData,
+        ...galleryCols,
+        descricao: otherData.descricao || '',
+        status: 'ativo',
+      },
+    });
+    const data = result?.assinatura || result?.data || result;
+    toast.success('Assinatura cadastrada com sucesso.');
+    await logService.logAction({
+      acao: 'CRIAR_ASSINATURA',
+      ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+      ator_id: colaboradorId || undefined,
+      ator_nome: colaboradorNome || 'Administrador',
+      detalhes: `Cadastrou a assinatura: ${formData.nome} (${formatCurrency(formData.valor)})`,
+    });
+    if (formData.visivel_na_loja) {
+      await notificationService.broadcastClients(
+        '✨ Nova Assinatura Disponível',
+        `Conheça nosso novo plano: ${formData.nome}. Confira na área de assinaturas!`,
+        'assinaturas',
+        'broadcast_assinatura',
+        { tab: 'disponiveis' },
+      );
     }
-  };
-
-  const handleUpdate = async (formData: any) => {
-    if (!selectedAssinatura) return false;
-    const { imagens_adicionais, ...otherData } = formData;
-    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-
-    const { error } = await supabase.from('assinaturas').update({
-      ...otherData,
-      ...galleryCols,
-      descricao: otherData.descricao || '',
-    }).eq('id', selectedAssinatura.id);
-
-    if (error) {
-      toast.error(handleError(error, 'Erro ao atualizar assinatura'));
-      return false;
-    } else {
-      toast.success('Assinatura atualizada com sucesso.');
-      
-      await logService.logAction({
-        acao: 'EDITAR_ASSINATURA',
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-        ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
-        detalhes: `Editou a assinatura: ${formData.nome} (#${selectedAssinatura.codigo_assinatura})`
-      });
-
-      setIsEditModalOpen(false);
-      fetchAssinaturas();
-      return true;
+    setIsModalOpen(false);
+    await fetchAssinaturas();
+    if (data?.id) {
+      setSelectedAssinatura(data);
+      setIsDetailOpen(true);
     }
-  };
+    return true;
+  } catch (error) {
+    toast.error(handleError(error, 'Erro ao cadastrar assinatura'));
+    return false;
+  }
+};
 
-  return (
+const handleUpdate = async (formData: any) => {
+  if (!selectedAssinatura) return false;
+  const { imagens_adicionais, ...otherData } = formData;
+  const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
+  const previousImages = mapColumnsToGallery(selectedAssinatura);
+  try {
+    await saveAdminSubscriptionCatalog({
+      assinaturaId: selectedAssinatura.id,
+      payload: {
+        ...otherData,
+        ...galleryCols,
+        descricao: otherData.descricao || '',
+      },
+    });
+    await removeUnusedPublicStoreImages(previousImages, imagens_adicionais || []);
+    toast.success('Assinatura atualizada com sucesso.');
+    await logService.logAction({
+      acao: 'EDITAR_ASSINATURA',
+      ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+      ator_id: colaboradorId || undefined,
+      ator_nome: colaboradorNome || 'Administrador',
+      detalhes: `Editou a assinatura: ${formData.nome} (#${selectedAssinatura.codigo_assinatura})`,
+    });
+    setIsEditModalOpen(false);
+    await fetchAssinaturas();
+    return true;
+  } catch (error) {
+    toast.error(handleError(error, 'Erro ao atualizar assinatura'));
+    return false;
+  }
+};
+
+return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
 
       {/* Filtro PF/PJ */}
@@ -578,24 +572,14 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
                         return;
                       }
 
-                      const { error } = await supabase.from('assinaturas').delete().eq('id', selectedAssinatura.id);
-                      if (error) {
-                        toast.error('Erro ao excluir. A assinatura pode estar em uso.');
-                      } else {
-                        toast.success('Assinatura excluída com sucesso.');
-                        
-                        // Log Action
-                        await logService.logAction({
-                          acao: 'EXCLUIR_ASSINATURA',
-                          ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-                          ator_id: colaboradorId || undefined,
-                          ator_nome: colaboradorNome || 'Administrador',
-                          detalhes: `Excluiu permanentemente a assinatura: ${selectedAssinatura.nome} (#${selectedAssinatura.codigo_assinatura})`
-                        });
-
+                      try {
+                        await archiveAdminCatalogItems('assinatura', [selectedAssinatura.id]);
+                        toast.success('Assinatura inativado com sucesso.');
                         setIsDetailOpen(false);
                         setIsDeleting(false);
                         fetchAssinaturas();
+                      } catch (error) {
+                        toast.error(handleError(error, 'Erro ao inativar assinatura'));
                       }
                     }}
                     className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 transition-all shadow-lg shadow-red-600/20"
@@ -683,33 +667,26 @@ function AssinaturaForm({ initialData, onSubmit, onCancel, categorias = [] }: { 
     imagens_adicionais: initialData ? mapColumnsToGallery(initialData) : [] as string[]
   });
 
-  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `gallery-ass-${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (!e.target.files || e.target.files.length === 0) return;
+  const file = e.target.files[0];
+  setUploadingGallery(true);
+  try {
+    const publicUrl = await uploadPublicStoreImage(file, 'assinaturas/galeria');
+    setFormData(prev => ({
+      ...prev,
+      imagens_adicionais: [...prev.imagens_adicionais, publicUrl].slice(0, 5),
+    }));
+    toast.success('Imagem adicionada à galeria!');
+  } catch (error: any) {
+    toast.error(error?.message || 'Erro ao fazer upload da imagem.');
+  } finally {
+    setUploadingGallery(false);
+    e.target.value = '';
+  }
+};
 
-    setUploadingGallery(true);
-    try {
-      const { error: uploadError } = await supabase.storage.from('gsa-store-images').upload(filePath, file);
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from('gsa-store-images').getPublicUrl(filePath);
-      
-      setFormData(prev => ({
-        ...prev,
-        imagens_adicionais: [...prev.imagens_adicionais, publicUrl]
-      }));
-      toast.success('Imagem adicionada à galeria!');
-    } catch (error: any) {
-      toast.error('Erro ao fazer upload da imagem.');
-    } finally {
-      setUploadingGallery(false);
-    }
-  };
-
-  const removeGalleryImage = (index: number) => {
+const removeGalleryImage = (index: number) => {
     setFormData(prev => ({
       ...prev,
       imagens_adicionais: prev.imagens_adicionais.filter((_, i) => i !== index)
@@ -800,6 +777,7 @@ function AssinaturaForm({ initialData, onSubmit, onCancel, categorias = [] }: { 
         <input 
           type="number" 
           step="0.01"
+          min="0.01"
           required
           value={formData.valor}
           onChange={e => setFormData({...formData, valor: e.target.value})}

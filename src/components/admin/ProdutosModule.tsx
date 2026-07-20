@@ -3,7 +3,7 @@ import { Plus, Search, MoreHorizontal, Package, Trash2, User, Building2, Store, 
 import { supabase } from '../../lib/supabase';
 import { Produto } from '../../types';
 import { Modal } from '../ui/Modal';
-import { formatCurrency, generateCode, handleError } from '../../lib/utils';
+import { formatCurrency, generateCode, handleError, generateUUID } from '../../lib/utils';
 import { toast } from 'react-hot-toast';
 import { canDeleteRecord } from '../../lib/deleteRequest';
 import { logService } from '../../lib/logService';
@@ -18,6 +18,8 @@ import { BarcodeScannerModal } from './products/BarcodeScannerModal';
 import { getProductDisplayCode, getProductDisplayCodeLabel, validateBarcode, detectBarcodeType, normalizeBarcode, BarcodeType } from '../../lib/productIdentification';
 import { sessionService } from '../../lib/sessionService';
 import { hasActiveProductDiscount, getProductRegularPrice, getProductEffectivePrice, getProductDiscountAmount, getProductDiscountPercentage, formatProductDiscountPercentage, getProductDiscountValidityInfo, getProductRemainingDaysText } from '../../lib/productPricing';
+import { adjustAdminProductStock, archiveAdminCatalogItems, saveAdminProductCatalog } from '../../lib/adminStoreOperations';
+import { removePublicStoreImage, removeUnusedPublicStoreImages, uploadPublicStoreImage } from '../../lib/publicStoreImage';
 
 // Helper functions for gallery mapping
 const mapGalleryToColumns = (images: string[]) => {
@@ -43,7 +45,7 @@ const mapColumnsToGallery = (item: any) => {
 
 export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, colaboradorNome }: { activeSubTab?: 'ativos' | 'inativos', initialItemId?: string, colaboradorId?: string, colaboradorNome?: string }) {
   const [activeTab, setActiveTab] = useState<'ativos' | 'inativos'>('ativos');
-  const [tipoClienteFilter, setTipoClienteFilter] = useState<'todos' | 'pf' | 'pj'>('todos');
+  const [tipoClienteFilter, setTipoClienteFilter] = useState<'todos' | 'pf' | 'pj' | 'ambos'>('todos');
   const [categoriaFilter, setCategoriaFilter] = useState<string>('todos');
 
   useEffect(() => {
@@ -196,41 +198,39 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
 
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !selectedProduto) return;
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${selectedProduto.id}-${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (!e.target.files || e.target.files.length === 0 || !selectedProduto) return;
+  const file = e.target.files[0];
+  setUploadingImage(true);
+  try {
+    const publicUrl = await uploadPublicStoreImage(file, `produtos/${selectedProduto.id}`);
+    await saveAdminProductCatalog({
+      produtoId: selectedProduto.id,
+      payload: { imagem_url: publicUrl },
+    });
+    const oldUrl = selectedProduto.imagem_url;
+    setSelectedProduto({ ...selectedProduto, imagem_url: publicUrl });
+    await removePublicStoreImage(oldUrl).catch(() => undefined);
+    toast.success('Imagem atualizada com sucesso!');
+    fetchProdutos();
+  } catch (error: any) {
+    toast.error(error?.message || 'Erro ao fazer upload da imagem.');
+  } finally {
+    setUploadingImage(false);
+    e.target.value = '';
+  }
+};
 
-    setUploadingImage(true);
-    try {
-      const { error: uploadError } = await supabase.storage.from('gsa-store-images').upload(filePath, file);
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from('gsa-store-images').getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase.from('produtos').update({ imagem_url: publicUrl }).eq('id', selectedProduto.id);
-      if (updateError) throw updateError;
-
-      setSelectedProduto({ ...selectedProduto, imagem_url: publicUrl });
-      toast.success('Imagem atualizada com sucesso!');
-      fetchProdutos();
-    } catch (error: any) {
-      toast.error('Erro ao fazer upload da imagem.');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const fetchProdutos = async () => {
+const fetchProdutos = async () => {
     let query = supabase
       .from('produtos')
       .select('*')
       .eq('status', activeTab === 'ativos' ? 'ativo' : 'inativo');
     
-    if (tipoClienteFilter !== 'todos') {
-      query = query.eq('tipo_cliente', tipoClienteFilter);
+    if (tipoClienteFilter === 'pf' || tipoClienteFilter === 'pj') {
+      query = query.in('tipo_cliente', [tipoClienteFilter, 'ambos']);
+    } else if (tipoClienteFilter === 'ambos') {
+      query = query.eq('tipo_cliente', 'ambos');
     }
 
     if (search) {
@@ -259,113 +259,75 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
     if (data) setProdutos(data);
   };
 
-  const handleCreate = async (formData: any) => {
-    const { imagens_adicionais, fornecedor_config, codigo_barras, identificador_preferencial, tipo_codigo_barras, ...otherData } = formData;
-    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-    
-    // codigo_produto will be auto-generated by the database trigger
-    const { data, error } = await supabase.from('produtos').insert([{
-      ...otherData,
-      ...galleryCols,
-      descricao: `${otherData.descricao || ''} ${colaboradorNome ? `[Cadastrado por: ${colaboradorNome}]` : ''}`.trim(),
-      status: 'ativo',
-      codigo_barras: codigo_barras ? normalizeBarcode(codigo_barras) : null,
-      identificador_preferencial: identificador_preferencial || 'interno',
-      tipo_codigo_barras: tipo_codigo_barras || null
-    }]).select().single();
-
-    if (error) {
-      toast.error(handleError(error, 'Erro ao cadastrar produto'));
-      return false;
-    }
-
-    if (fornecedor_config && fornecedor_config.fornecimento_externo_ativo) {
-      try {
-        await upsertAdminProductSupplierConfig(data.id, fornecedor_config);
-        await logService.logAction({
-          acao: 'CONFIGURAR_FORNECEDOR_PRODUTO',
-          ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-          ator_id: colaboradorId || undefined,
-          ator_nome: colaboradorNome || 'Administrador',
-          detalhes: `Configurou fornecedor externo para o produto: ${formData.nome} (${fornecedor_config.tipo_fornecedor})`
-        });
-      } catch (err) {
-        await supabase.from('produtos').delete().eq('id', data.id);
-        toast.error(handleError(err, 'Erro ao salvar configuração do fornecedor. O produto não foi criado.'));
-        return false;
-      }
-    }
-
+const handleCreate = async (formData: any) => {
+  const { imagens_adicionais, fornecedor_config, ...otherData } = formData;
+  const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
+  try {
+    const result = await saveAdminProductCatalog({
+      payload: {
+        ...otherData,
+        ...galleryCols,
+        descricao: otherData.descricao || '',
+        status: 'ativo',
+      },
+      fornecedor: fornecedor_config || null,
+    });
+    const data = result?.produto || result?.data || result;
     toast.success('Produto cadastrado com sucesso.');
-    
     await logService.logAction({
       acao: 'CRIAR_PRODUTO',
       ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
       ator_id: colaboradorId || undefined,
       ator_nome: colaboradorNome || 'Administrador',
-      detalhes: `Cadastrou o produto: ${formData.nome} (${formatCurrency(formData.valor)})`
+      detalhes: `Cadastrou o produto: ${formData.nome} (${formatCurrency(formData.valor)})`,
     });
-
     setIsModalOpen(false);
-    fetchProdutos();
-    if (data) {
+    await fetchProdutos();
+    if (data?.id) {
       setSelectedProduto(data);
       setIsDetailOpen(true);
     }
     return true;
-  };
+  } catch (error) {
+    toast.error(handleError(error, 'Erro ao cadastrar produto'));
+    return false;
+  }
+};
 
-  const handleUpdate = async (formData: any) => {
-    if (!selectedProduto) return false;
-    const { imagens_adicionais, fornecedor_config, codigo_barras, identificador_preferencial, tipo_codigo_barras, ...otherData } = formData;
-    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-
-    const { error } = await supabase.from('produtos').update({
-      ...otherData,
-      ...galleryCols,
-      descricao: `${otherData.descricao || ''} ${colaboradorNome ? `[Editado por: ${colaboradorNome}]` : ''}`.trim(),
-      codigo_barras: codigo_barras ? normalizeBarcode(codigo_barras) : null,
-      identificador_preferencial: identificador_preferencial || 'interno',
-      tipo_codigo_barras: tipo_codigo_barras || null
-    }).eq('id', selectedProduto.id);
-
-    if (error) {
-      toast.error(handleError(error, 'Erro ao atualizar produto'));
-      return false;
-    }
-
-    if (fornecedor_config) {
-      try {
-        await upsertAdminProductSupplierConfig(selectedProduto.id, fornecedor_config);
-        await logService.logAction({
-          acao: 'ALTERAR_FORNECEDOR_PRODUTO',
-          ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-          ator_id: colaboradorId || undefined,
-          ator_nome: colaboradorNome || 'Administrador',
-          detalhes: `Atualizou fornecedor externo do produto: ${formData.nome}`
-        });
-      } catch (err) {
-        toast.error(handleError(err, 'Produto atualizado, mas erro ao salvar configuração do fornecedor.'));
-        return false;
-      }
-    }
-
+const handleUpdate = async (formData: any) => {
+  if (!selectedProduto) return false;
+  const { imagens_adicionais, fornecedor_config, ...otherData } = formData;
+  const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
+  const previousImages = mapColumnsToGallery(selectedProduto);
+  try {
+    await saveAdminProductCatalog({
+      produtoId: selectedProduto.id,
+      payload: {
+        ...otherData,
+        ...galleryCols,
+        descricao: otherData.descricao || '',
+      },
+      fornecedor: fornecedor_config || null,
+    });
+    await removeUnusedPublicStoreImages(previousImages, imagens_adicionais || []);
     toast.success('Produto atualizado com sucesso.');
-    
     await logService.logAction({
       acao: 'EDITAR_PRODUTO',
       ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
       ator_id: colaboradorId || undefined,
       ator_nome: colaboradorNome || 'Administrador',
-      detalhes: `Editou o produto: ${formData.nome} (#${selectedProduto.codigo_produto})`
+      detalhes: `Editou o produto: ${formData.nome} (#${selectedProduto.codigo_produto})`,
     });
-
     setIsEditModalOpen(false);
-    fetchProdutos();
+    await fetchProdutos();
     return true;
-  };
+  } catch (error) {
+    toast.error(handleError(error, 'Erro ao atualizar produto'));
+    return false;
+  }
+};
 
-  const handleBulkDelete = async () => {
+const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
     
     if (colaboradorId) {
@@ -378,17 +340,15 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
     }
 
     setIsDeleting(true);
-    const ids = Array.from(selectedIds);
+    const ids = Array.from(selectedIds) as string[];
     try {
-      const { error } = await supabase.from('produtos').delete().in('id', ids);
-      if (error) throw error;
-      
-      toast.success(`${ids.length} produto(s) excluído(s) com sucesso.`);
+      await archiveAdminCatalogItems('produto', ids);
+      toast.success(`${ids.length} produto(s) inativado(s) com sucesso.`);
       await logService.logAction({
         acao: 'EXCLUIR_PRODUTO_LOTE',
         ator_tipo: 'admin',
         ator_nome: 'Administrador',
-        detalhes: `Excluiu ${ids.length} produtos em lote.`
+        detalhes: `Inativou ${ids.length} produtos em lote.`
       });
       setSelectedIds(new Set());
       fetchProdutos();
@@ -408,6 +368,7 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
           { id: 'todos' as const, label: 'Todos', icon: null },
           { id: 'pf' as const, label: 'Pessoa Física', icon: User },
           { id: 'pj' as const, label: 'Pessoa Jurídica', icon: Building2 },
+          { id: 'ambos' as const, label: 'Ambos', icon: MoreHorizontal },
         ].map((opt) => (
           <button
             key={opt.id}
@@ -1453,24 +1414,14 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
                         return;
                       }
 
-                      const { error } = await supabase.from('produtos').delete().eq('id', selectedProduto.id);
-                      if (error) {
-                        toast.error('Erro ao excluir. O produto pode estar em uso.');
-                      } else {
-                        toast.success('Produto excluído com sucesso.');
-                        
-                        // Log Action
-                        await logService.logAction({
-                          acao: 'EXCLUIR_PRODUTO',
-                          ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-                          ator_id: colaboradorId || undefined,
-                          ator_nome: colaboradorNome || 'Administrador',
-                          detalhes: `Excluiu permanentemente o produto: ${selectedProduto.nome} (#${selectedProduto.codigo_produto})`
-                        });
-
+                      try {
+                        await archiveAdminCatalogItems('produto', [selectedProduto.id]);
+                        toast.success('Produto inativado com sucesso.');
                         setIsDetailOpen(false);
                         setIsDeleting(false);
                         fetchProdutos();
+                      } catch (error) {
+                        toast.error(handleError(error, 'Erro ao inativar produto'));
                       }
                     }}
                     className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 transition-all shadow-lg shadow-red-600/20"
@@ -1867,33 +1818,26 @@ function ProdutoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
     setFormData({ ...formData, porcentagem_lucro: lucro, valor: v.toFixed(2) });
   };
 
-  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `gallery-${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (!e.target.files || e.target.files.length === 0) return;
+  const file = e.target.files[0];
+  setUploadingGallery(true);
+  try {
+    const publicUrl = await uploadPublicStoreImage(file, 'produtos/galeria');
+    setFormData(prev => ({
+      ...prev,
+      imagens_adicionais: [...prev.imagens_adicionais, publicUrl].slice(0, 5),
+    }));
+    toast.success('Imagem adicionada à galeria!');
+  } catch (error: any) {
+    toast.error(error?.message || 'Erro ao fazer upload da imagem.');
+  } finally {
+    setUploadingGallery(false);
+    e.target.value = '';
+  }
+};
 
-    setUploadingGallery(true);
-    try {
-      const { error: uploadError } = await supabase.storage.from('gsa-store-images').upload(filePath, file);
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from('gsa-store-images').getPublicUrl(filePath);
-      
-      setFormData(prev => ({
-        ...prev,
-        imagens_adicionais: [...prev.imagens_adicionais, publicUrl]
-      }));
-      toast.success('Imagem adicionada à galeria!');
-    } catch (error: any) {
-      toast.error('Erro ao fazer upload da imagem.');
-    } finally {
-      setUploadingGallery(false);
-    }
-  };
-
-  const removeGalleryImage = (index: number) => {
+const removeGalleryImage = (index: number) => {
     setFormData(prev => ({
       ...prev,
       imagens_adicionais: prev.imagens_adicionais.filter((_, i) => i !== index)
@@ -2467,6 +2411,7 @@ function ProdutoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
           <input 
             type="number" 
             step="0.01"
+            min="0"
             required
             value={formData.valor_custo}
             onChange={e => handleCustoChange(e.target.value)}
@@ -2478,6 +2423,7 @@ function ProdutoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
           <input 
             type="number" 
             step="0.1"
+            min="0"
             required
             value={formData.porcentagem_lucro}
             onChange={e => handleLucroChange(e.target.value)}
@@ -2654,51 +2600,31 @@ function AjusteEstoqueModal({ isOpen, onClose, produto, onSuccess, colaboradorNo
     if (data) setHistorico(data);
   };
 
-  const handleAjuste = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const qtdAbsoluta = Math.abs(parseInt(ajuste));
-    if (isNaN(qtdAbsoluta) || qtdAbsoluta === 0) return toast.error('Informe uma quantidade válida.');
-    if (!motivo.trim()) return toast.error('Informe o motivo do ajuste.');
+const handleAjuste = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const qtdAbsoluta = Math.abs(parseInt(ajuste));
+  if (isNaN(qtdAbsoluta) || qtdAbsoluta === 0) return toast.error('Informe uma quantidade válida.');
+  if (!motivo.trim()) return toast.error('Informe o motivo do ajuste.');
 
-    const valorAjuste = tipoAjuste === 'entrada' ? qtdAbsoluta : -qtdAbsoluta;
+  setIsSubmitting(true);
+  try {
+    const result = await adjustAdminProductStock({
+      requestId: generateUUID(),
+      produtoId: produto.id,
+      tipo: tipoAjuste,
+      quantidade: qtdAbsoluta,
+      motivo: motivo.trim(),
+    });
+    toast.success(result?.already_processed ? 'Este ajuste já havia sido processado.' : 'Estoque ajustado com sucesso!');
+    onSuccess();
+  } catch (err: any) {
+    toast.error(err.message || 'Erro ao ajustar estoque.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-    setIsSubmitting(true);
-    try {
-      const novaQuantidade = (produto.estoque_disponivel || 0) + valorAjuste;
-      if (novaQuantidade < 0) throw new Error('O estoque não pode ficar negativo.');
-
-      // 1. Atualiza produto
-      const { error: prodError } = await supabase
-        .from('produtos')
-        .update({ estoque_disponivel: novaQuantidade })
-        .eq('id', produto.id);
-      
-      if (prodError) throw prodError;
-
-      // 2. Registra histórico
-      const { error: histError } = await supabase
-        .from('loja_estoque_historico')
-        .insert({
-          produto_id: produto.id,
-          quantidade_anterior: produto.estoque_disponivel || 0,
-          ajuste: valorAjuste,
-          quantidade_atual: novaQuantidade,
-          motivo: motivo.trim(),
-          colaborador_nome: colaboradorNome || 'Administrador'
-        });
-
-      if (histError) throw histError;
-
-      toast.success('Estoque ajustado com sucesso!');
-      onSuccess();
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao ajustar estoque.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
+return (
     <Modal isOpen={isOpen} onClose={onClose} title="Ajuste de Estoque" size="sm">
       <div className="space-y-6">
         {/* Histórico Recente */}

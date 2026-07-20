@@ -72,7 +72,7 @@ export function ClientAssinaturas({
       if (item) {
         hasAutoOpened.current = initialItemId;
         // Auto-tab switching
-        if (item.status === 'em_analise' || item.status === 'concluido' || item.status === 'em_cancelamento') setMinhasTab('ativas');
+        if (['em_analise', 'pendente', 'pago', 'concluido', 'em_cancelamento'].includes(item.status)) setMinhasTab('ativas');
         else if (item.status === 'cancelado') setMinhasTab('canceladas');
 
         setSelectedAssinatura(item);
@@ -216,7 +216,7 @@ export function ClientAssinaturas({
 
   const filteredMinhas = minhasAssinaturas.filter(a => {
     if (minhasTab === 'ativas') {
-      return a.status === 'concluido' || a.status === 'em_cancelamento' || a.status === 'em_analise';
+      return ['em_analise', 'pendente', 'pago', 'concluido', 'em_cancelamento'].includes(a.status);
     } else if (minhasTab === 'em_cancelamento') {
       return a.status === 'em_cancelamento';
     } else {
@@ -390,7 +390,7 @@ export function ClientAssinaturas({
                   <div className="text-left">
                     <h5 className="text-sm font-black text-amber-900 uppercase">Cancelamento Agendado</h5>
                     <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                      A assinatura está programada para ser cancelada permanentemente em {formatDate(selectedAssinatura.data_cancelamento)}. O valor proporcional estimado creditado é de {formatCurrency(selectedAssinatura.valor_proporcional_cancelamento || 0)}.
+                      A assinatura está programada para ser encerrada em {formatDate(selectedAssinatura.data_cancelamento)}. Cobranças futuras não pagas serão canceladas conforme a regra financeira do contrato.
                     </p>
                   </div>
                 </div>
@@ -437,7 +437,7 @@ export function ClientAssinaturas({
                       <div>
                         <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block">Valor do Plano</span>
                         <span className="text-lg font-black text-neutral-950 mt-1 block">
-                          {formatCurrency(selectedAssinatura.assinaturas?.valor || 0)}
+                          {formatCurrency(selectedAssinatura.valor_mensal_contratado ?? selectedAssinatura.assinaturas?.valor ?? 0)}
                           <span className="text-xs text-neutral-400 font-bold"> /mês</span>
                         </span>
                       </div>

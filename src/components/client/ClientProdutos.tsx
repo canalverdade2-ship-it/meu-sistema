@@ -57,7 +57,7 @@ export function ClientProdutos({
       const item = meusProdutos.find(p => p.id === initialItemId);
       if (item) {
         hasAutoOpened.current = initialItemId;
-        if (item.status === 'em_analise' || item.status === 'concluido') setMeusTab('comprados');
+        if (['em_analise', 'pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(item.status)) setMeusTab('comprados');
         else if (item.status === 'cancelado') setMeusTab('cancelados');
 
         setSelectedProduto(item);
@@ -115,6 +115,18 @@ export function ClientProdutos({
     try {
       if (!clientId) throw new Error('ID do cliente não encontrado');
 
+      const { data: catalogProduct, error: catalogError } = await supabase
+        .from('produtos')
+        .select('id, status, visivel_na_loja, controle_estoque, estoque_disponivel, tipo_cliente')
+        .eq('id', produto.produto_id)
+        .single();
+      if (catalogError || !catalogProduct || catalogProduct.status !== 'ativo' || !catalogProduct.visivel_na_loja) {
+        throw new Error('Este produto não está disponível para recompra.');
+      }
+      if (catalogProduct.controle_estoque && Number(catalogProduct.estoque_disponivel || 0) < 1) {
+        throw new Error('Este produto está sem estoque.');
+      }
+
       // Check if item is already in cart
       const { data: existingCart } = await supabase.from('loja_carrinhos')
         .select('id, quantidade')
@@ -150,8 +162,8 @@ export function ClientProdutos({
         window.dispatchEvent(new CustomEvent('open-store-cart', { detail: { open: true } }));
       }, 150);
       
-    } catch (error) {
-      toast.error('Erro ao adicionar produto ao carrinho.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao adicionar produto ao carrinho.');
       console.error(error);
     }
   };
@@ -163,7 +175,7 @@ export function ClientProdutos({
 
   const filteredMeusProdutos = meusProdutos.filter(p => {
     if (meusTab === 'comprados') {
-      return p.status === 'concluido' || p.status === 'em_analise';
+      return ['em_analise', 'pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(p.status);
     } else {
       return p.status === 'cancelado';
     }
@@ -280,7 +292,7 @@ export function ClientProdutos({
                           </span>
                           <span className="h-1 w-1 rounded-full bg-neutral-300" />
                           <span className="text-sm font-black text-neutral-900">
-                            {formatCurrency((p.produtos?.valor || 0) * (p.quantidade || 1))}
+                            {formatCurrency((p.valor_unitario_contratado ?? p.produtos?.valor ?? 0) * (p.quantidade || 1))}
                           </span>
                         </div>
                       </div>
