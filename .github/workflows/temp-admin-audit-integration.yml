@@ -51,13 +51,18 @@ jobs:
               fi
             done
 
-            if git diff --name-only --diff-filter=U | grep -Fxq 'src/components/admin/AcessosModule.tsx'; then
-              git checkout --theirs -- src/components/admin/AcessosModule.tsx
-              git add src/components/admin/AcessosModule.tsx
-            fi
+            for path in \
+              src/components/admin/AcessosModule.tsx \
+              src/lib/supabase.ts; do
+              if git diff --name-only --diff-filter=U | grep -Fxq "$path"; then
+                git checkout --theirs -- "$path"
+                git add "$path"
+              fi
+            done
           fi
 
           unresolved="$(git diff --name-only --diff-filter=U)"
+          printf '%s\n' "$unresolved" > /tmp/admin-audit-conflicts.txt
           if [ -n "$unresolved" ]; then
             echo "Conflitos ainda não resolvidos:"
             echo "$unresolved"
@@ -76,3 +81,12 @@ jobs:
           git add -A
           git commit -m "Integrar auditoria administrativa sobre a main atual"
           git push origin HEAD:agent/corrigir-auditoria-admin-final
+
+      - name: Upload conflict evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-audit-integration-conflicts
+          path: /tmp/admin-audit-conflicts.txt
+          retention-days: 1
+          if-no-files-found: ignore
