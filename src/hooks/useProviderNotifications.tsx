@@ -5,7 +5,7 @@ import { showAnimatedToast } from '../lib/notifications';
 import { providerOperations } from '../lib/providerOperations';
 import { isProviderRevoked } from '../lib/providerStatus';
 
-const HEARTBEAT_INTERVAL_MS = 30_000;
+const HEARTBEAT_INTERVAL_MS = 120_000;
 
 type ProviderProfile = {
   id: string;
@@ -111,7 +111,6 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
       .select('id,nome_razao,documento,email,telefone,cep,numero,area_servico,status,created_at')
       .eq('id', prestadorId)
       .maybeSingle();
-
     if (queryError) throw queryError;
     if (!data) throw new Error('Cadastro de prestador não encontrado.');
     if (!mountedRef.current) return;
@@ -121,44 +120,33 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
 
   const fetchPendencies = useCallback(async () => {
     if (!prestadorId) return;
-    const [{ data: rpcData, error: rpcError }, { data: demands, error: demandError }] = await Promise.all([
-      supabase.rpc('get_provider_pendency_counts', { p_prestador_id: prestadorId }),
-      supabase.from('prestador_demandas').select('status').eq('prestador_id', prestadorId),
-    ]);
-
-    if (rpcError) throw rpcError;
-    if (demandError) throw demandError;
-
-    const source = Array.isArray(rpcData) ? rpcData[0] || {} : rpcData || {};
-    const statuses = (demands || []).map((item: any) => item.status);
-    const novas = statuses.filter((status) => ['aguardando_aceite', 'aberta'].includes(status)).length;
-    const negociacao = statuses.filter((status) => ['em_negociacao', 'contraproposta_prestador', 'contraproposta_admin_final'].includes(status)).length;
-    const ativas = statuses.filter((status) => ['ativa', 'em_analise', 'em_ajuste'].includes(status)).length;
-
+    const source = await providerOperations.pendencySnapshot();
+    const novas = Number(source?.demandas_novas || 0);
+    const negociacao = Number(source?.demandas_negociacao || 0);
+    const ativas = Number(source?.servicos_ativos || 0);
     const counts: ProviderPendencyCounts = {
       demandas_novas: novas,
       demandas_negociacao: negociacao,
       demandas_pendentes: novas + negociacao,
       demandas_em_execucao: ativas,
-      servicos_ativos: Number(source.servicos_ativos || 0),
-      financeiro_saques_pendentes: Number(source.financeiro_saques_pendentes || 0),
-      vouchers_ativos: Number(source.vouchers_ativos || 0),
-      suporte_tickets_ativos: Number(source.suporte_tickets_ativos || 0),
-      suporte_mensagens_nao_lidas: Number(source.suporte_mensagens_nao_lidas || 0),
-      promocoes_ativas: Number(source.promocoes_ativas || 0),
+      servicos_ativos: ativas,
+      financeiro_saques_pendentes: Number(source?.financeiro_saques_pendentes || 0),
+      vouchers_ativos: Number(source?.vouchers_ativos || 0),
+      suporte_tickets_ativos: Number(source?.suporte_tickets_ativos || 0),
+      suporte_mensagens_nao_lidas: Number(source?.suporte_mensagens_nao_lidas || 0),
+      promocoes_ativas: Number(source?.promocoes_ativas || 0),
       moduleDemandas: novas + negociacao + ativas,
       moduleDemandasAbertas: novas + negociacao,
       moduleDemandasAtivas: ativas,
-      moduleAgenda: Number(source.agendamentos_pendentes || 0),
-      moduleFinanceiro: Number(source.financeiro_saques_pendentes || 0),
-      moduleVouchers: Number(source.vouchers_ativos || 0),
-      moduleSuporte: Number(source.suporte_tickets_ativos || 0) + Number(source.suporte_mensagens_nao_lidas || 0),
-      moduleDocumentos: Number(source.documentos_pendentes || 0),
-      modulePremios: Number(source.premios_pendentes || 0),
-      modulePromocoes: Number(source.promocoes_ativas || 0),
+      moduleAgenda: Number(source?.agendamentos_pendentes || 0),
+      moduleFinanceiro: Number(source?.financeiro_saques_pendentes || 0),
+      moduleVouchers: Number(source?.vouchers_ativos || 0),
+      moduleSuporte: Number(source?.suporte_tickets_ativos || 0) + Number(source?.suporte_mensagens_nao_lidas || 0),
+      moduleDocumentos: Number(source?.documentos_pendentes || 0),
+      modulePremios: Number(source?.premios_pendentes || 0),
+      modulePromocoes: Number(source?.promocoes_ativas || 0),
       total: 0,
     };
-
     counts.total = counts.moduleDemandasAbertas + counts.moduleAgenda + counts.moduleFinanceiro + counts.moduleSuporte + counts.moduleDocumentos + counts.modulePremios;
     if (mountedRef.current) setPendencies(counts);
   }, [prestadorId]);
@@ -179,17 +167,12 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
         .eq('ator_tipo', 'prestador')
         .eq('ator_id', prestadorId),
     ]);
-
     if (notificationError) throw notificationError;
     if (readsError) throw readsError;
-
     const readIds = new Set((reads || []).map((row: any) => row.notificacao_id));
     const minimumBroadcastDate = registrationDate ? new Date(registrationDate).getTime() - 10 * 60 * 1000 : 0;
     const normalized = (rows || [])
-      .filter((row: any) => {
-        if (row.prestador_id === prestadorId) return true;
-        return new Date(row.data_criacao).getTime() >= minimumBroadcastDate;
-      })
+      .filter((row: any) => row.prestador_id === prestadorId || new Date(row.data_criacao).getTime() >= minimumBroadcastDate)
       .slice(0, 30)
       .map((row: any): ProviderNotification => ({
         id: row.id,
@@ -203,7 +186,6 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
         created_at: row.data_criacao,
         prioridade: row.prioridade || 'normal',
       }));
-
     if (mountedRef.current) setNotifications(normalized);
   }, [prestadorId]);
 
@@ -211,21 +193,25 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
     setError(null);
     const results = await Promise.allSettled([fetchPrestador(), fetchPendencies(), fetchNotifications()]);
     const failed = results.find((result) => result.status === 'rejected') as PromiseRejectedResult | undefined;
-    if (failed && mountedRef.current) {
-      setError(failed.reason?.message || 'Não foi possível atualizar o painel.');
-    }
+    if (failed && mountedRef.current) setError(failed.reason?.message || 'Não foi possível atualizar o painel.');
   }, [fetchNotifications, fetchPendencies, fetchPrestador]);
 
   useEffect(() => {
     mountedRef.current = true;
     setLoading(true);
     refreshCounts().finally(() => mountedRef.current && setLoading(false));
-
     if (!prestadorId) return;
+
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
     const scheduleRefresh = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => void refreshCounts(), 350);
+    };
+    const notify = (payload: any) => {
+      const row = payload.new as any;
+      playPremiumBeep();
+      showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');
+      scheduleRefresh();
     };
 
     const channel = supabase.channel(`provider-scoped-${prestadorId}`)
@@ -236,15 +222,8 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
-        const row = payload.new as any;
-        const isOwn = row.prestador_id && String(row.prestador_id) === String(prestadorId);
-        const isBroadcast = ['broadcast_prestadores', 'broadcast_todos'].includes(row.destinatario_tipo);
-        if (!isOwn && !isBroadcast) return;
-        playPremiumBeep();
-        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');
-        scheduleRefresh();
-      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, notify)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: 'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)' }, notify)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestadores', filter: `id=eq.${prestadorId}` }, (payload) => {
         if (payload.eventType === 'DELETE' || isProviderRevoked((payload.new as any)?.status)) {
           window.sessionStorage.clear();
@@ -257,7 +236,6 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
       .subscribe();
 
     const heartbeat = window.setInterval(() => void refreshCounts(), HEARTBEAT_INTERVAL_MS);
-
     return () => {
       mountedRef.current = false;
       if (debounceTimer) clearTimeout(debounceTimer);
@@ -290,17 +268,7 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
   const unreadNotifications = useMemo(() => notifications.filter((item) => !item.lida).length, [notifications]);
 
   return (
-    <ProviderNotificationContext.Provider value={{
-      pendencies,
-      notifications,
-      unreadNotifications,
-      prestador,
-      loading,
-      error,
-      markAsRead,
-      markAllAsRead,
-      refreshCounts,
-    }}>
+    <ProviderNotificationContext.Provider value={{ pendencies, notifications, unreadNotifications, prestador, loading, error, markAsRead, markAllAsRead, refreshCounts }}>
       {children}
     </ProviderNotificationContext.Provider>
   );
