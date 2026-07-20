@@ -51,8 +51,12 @@ jobs:
             GZIP_DECODE_STATUS=1
           fi
           if [ "$GZIP_DECODE_STATUS" -eq 0 ]; then
+            cp src/hooks/useAutoLogout.tsx src/hooks/useAutoLogout.ts
             python /tmp/apply_collaborator_fixes.py > .correction-diagnostics/apply.txt 2>&1
             APPLY_STATUS=$?
+            if [ "$APPLY_STATUS" -eq 0 ]; then
+              rm -f src/hooks/useAutoLogout.tsx
+            fi
           else
             APPLY_STATUS=1
           fi
