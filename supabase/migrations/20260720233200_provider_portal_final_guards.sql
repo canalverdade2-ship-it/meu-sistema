@@ -30,7 +30,12 @@ BEGIN
   IF to_regclass('public.sistema_sessoes') IS NULL OR NOT EXISTS (
     SELECT 1
     FROM public.sistema_sessoes s
-    WHERE COALESCE(to_jsonb(s) ->> 'id', to_jsonb(s) ->> 'sessao_id', '') = v_session_id
+    WHERE COALESCE(
+      to_jsonb(s) ->> 'id',
+      to_jsonb(s) ->> 'sessao_id',
+      to_jsonb(s) ->> 'gsa_session_id',
+      ''
+    ) = v_session_id
       AND COALESCE(to_jsonb(s) ->> 'ator_tipo', '') = 'prestador'
       AND COALESCE(to_jsonb(s) ->> 'ator_id', '') = v_provider_id::text
       AND COALESCE(to_jsonb(s) ->> 'status', '') NOT IN ('encerrado', 'revogado', 'expirado', 'inativo')
