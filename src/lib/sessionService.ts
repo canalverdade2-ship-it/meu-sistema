@@ -9,6 +9,12 @@ type StoredSession = {
   [key: string]: any;
 };
 
+export type AuthGatewayError = Error & {
+  code?: string;
+  retryAfter?: number;
+  status?: number;
+};
+
 const SESSION_STORAGE_KEY = '_gsa_session';
 
 function getSessionStorage() {
@@ -39,11 +45,47 @@ function clearStoredSession() {
   localStorage.removeItem('lastPing');
 }
 
+function gatewayErrorMessage(code: string, retryAfter: number) {
+  if (code === 'too_many_attempts') {
+    const minutes = Math.max(1, Math.ceil(retryAfter / 60));
+    return `Muitas tentativas. Aguarde ${minutes} minuto(s) e tente novamente.`;
+  }
+  if (code === 'origin_not_allowed') {
+    return 'Este endereço não está autorizado para acessar o sistema.';
+  }
+  if (code === 'server_not_configured' || code === 'rate_limit_unavailable') {
+    return 'O acesso está temporariamente indisponível. Tente novamente mais tarde.';
+  }
+  return 'Não foi possível concluir a autenticação.';
+}
+
+async function createAuthGatewayError(error: any): Promise<AuthGatewayError> {
+  const response = error?.context instanceof Response ? error.context as Response : null;
+  let payload: { error?: string; retry_after?: number } | null = null;
+
+  if (response) {
+    try {
+      payload = await response.clone().json();
+    } catch {
+      payload = null;
+    }
+  }
+
+  const code = payload?.error || 'authentication_failed';
+  const retryAfterHeader = Number(response?.headers.get('retry-after') || 0);
+  const retryAfter = Math.max(0, Number(payload?.retry_after || retryAfterHeader || 0));
+  const gatewayError = new Error(gatewayErrorMessage(code, retryAfter)) as AuthGatewayError;
+  gatewayError.code = code;
+  gatewayError.retryAfter = retryAfter;
+  gatewayError.status = response?.status;
+  return gatewayError;
+}
+
 async function invokeAuthGateway(action: string, payload: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke('gsa-auth-session', {
     body: { action, payload },
   });
-  if (error) throw new Error('Não foi possível concluir a autenticação.');
+  if (error) throw await createAuthGatewayError(error);
   return data as any;
 }
 
