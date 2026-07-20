@@ -61,6 +61,7 @@ jobs:
 
           python <<'PY'
           import json
+          import re
           from pathlib import Path
 
           def replace_delete_handler(path: str, table: str, selected: str, kind: str, fetch_call: str) -> None:
@@ -71,9 +72,10 @@ jobs:
               if start < 0:
                   raise RuntimeError(f'{path}: exclusão individual não localizada')
               line_start = content.rfind('\n', 0, start) + 1
-              handler_end = content.find('\n                     }}', start)
-              if handler_end < 0:
-                  raise RuntimeError(f'{path}: final do manipulador não localizado')
+              boundary = re.search(r"\n(?P<indent>[ \t]+)\}\}\n(?P=indent)className=", content[start:])
+              if not boundary:
+                  raise RuntimeError(f'{path}: final estrutural do manipulador não localizado')
+              handler_end = start + boundary.start()
               indent = content[line_start:start]
               replacement = (
                   f"{indent}try {{\n"
