@@ -116,7 +116,7 @@ export function PrestadorVouchers({ prestadorId, initialItemId }: { prestadorId:
   );
 }
 
-function VoucherCard({ voucher, highlighted, onClick }: { voucher: Voucher; highlighted: boolean; onClick: () => void }) {
+function VoucherCard({ voucher, highlighted, onClick }: { key?: string; voucher: Voucher; highlighted: boolean; onClick: () => void }) {
   return <article id={`voucher-${voucher.id}`} className={`rounded-2xl border p-5 transition ${highlighted ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-300' : 'border-indigo-100 bg-white'}`}><Ticket className="h-9 w-9 text-indigo-500" /><p className="mt-4 text-2xl font-black text-indigo-900">{formatCurrency(Number(voucher.valor))}</p><p className="mt-1 font-mono text-xs font-bold text-indigo-600">{voucher.codigo}</p><p className="mt-3 min-h-10 text-sm text-neutral-500">{voucher.descricao || 'Voucher de bonificação'}</p><button onClick={onClick} className="mt-5 w-full rounded-xl bg-indigo-600 py-3 text-sm font-black text-white">Resgatar</button></article>;
 }
 
