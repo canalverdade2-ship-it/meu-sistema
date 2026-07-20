@@ -5,6 +5,7 @@ import { sanitizeInternalReturnTo } from '../src/routing/safeReturnTo';
 
 const read = (path: string) => readFileSync(path, 'utf8');
 const migration = read('supabase/migrations/20260720215500_fix_public_home_contracts.sql');
+const referralMigration = read('supabase/migrations/20260720215530_minimize_public_referral_lookup.sql');
 const budgetGuard = read('supabase/migrations/20260720215600_guard_legacy_budget_permissions.sql');
 const enterpriseHome = read('src/components/public/GSAEnterpriseHome.tsx');
 const clientModal = read('src/components/auth/ClientAccessModal.tsx');
@@ -19,10 +20,10 @@ for (const projectType of PUBLIC_PROJECT_TYPES) {
 assert.doesNotMatch(migration, /upper\(v_token\)\s*=\s*'BEMVINDO'/i, 'Código legado não pode liberar cadastro');
 assert.doesNotMatch(migration, /gsa_recuperar_senha_cliente|recover_client/, 'A correção da Home não pode alterar a recuperação em andamento');
 assert.match(migration, /v_default_active AND upper\(v_token\)/, 'Código público depende da configuração ativa');
+assert.match(migration, /v_email text := lower\(trim\(coalesce\(v_payload->>'email', ''\)\)\);/, 'Declaração do e-mail do prestador deve ter sintaxe válida');
 assert.match(migration, /Cadastro nao concluido\. Verifique os dados ou procure o suporte\./, 'Duplicidades devem usar mensagem genérica');
-assert.doesNotMatch(migration, /whatsapp_indicado'\s*,\s*v_indicacao\.whatsapp_indicado/, 'Consulta pública não deve retornar telefone indicado');
-assert.doesNotMatch(migration, /indicado_nome'\s*,/, 'Consulta pública não deve retornar nome indicado');
-assert.doesNotMatch(clientModal, /fullReferral\.indicado_nome|fullReferral\.whatsapp_indicado/, 'Frontend não deve depender de dados pessoais da indicação');
+assert.doesNotMatch(referralMigration, /indicacao_id|indicado_nome|whatsapp_indicado'\s*,/, 'Consulta pública final não deve retornar identificadores ou dados pessoais');
+assert.doesNotMatch(clientModal, /fullReferral\.indicacao_id|fullReferral\.indicado_nome|fullReferral\.whatsapp_indicado|id: data\.indicacao_id/, 'Frontend não deve depender de dados internos da indicação');
 assert.match(budgetGuard, /gsa_public_create_enterprise_budget_v2\(jsonb\)/, 'Permissões devem reconhecer a rotina protegida v2');
 assert.match(budgetGuard, /REVOKE ALL ON FUNCTION public\.gsa_public_create_enterprise_budget\(jsonb\)/, 'Função legada deve ser fechada antes da decisão de compatibilidade');
 assert.match(budgetGuard, /IF to_regprocedure\('public\.gsa_public_create_enterprise_budget_v2\(jsonb\)'\) IS NULL/, 'Acesso público legado só pode existir antes da v2');
