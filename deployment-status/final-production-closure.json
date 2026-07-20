@@ -1,11 +1,15 @@
 {
-  "status": "failure",
-  "workflow_run_id": "29781472929",
-  "validated_sha": "d2da7c62b8bf665ecf9a9fbc430e916964f84d89",
-  "validated_at_utc": "2026-07-20T21:47:08Z",
-  "scope": "admin-collaborator-client-provider-home-travel-products-subscriptions-supabase",
-  "migrations": "failure",
-  "database_objects": "failure",
-  "edge_function": "failure",
-  "frontend_build": "failure"
+  "status": "success",
+  "workflow_run_id": "29781208001",
+  "validated_sha": "9c5b0e443d267f087d5e0b57c89f04b8e77f8dcd",
+  "validated_at_utc": "2026-07-20T21:43:31Z",
+  "scope": "read-only-production-verification",
+  "migrations": "success",
+  "database_objects": "success",
+  "edge_function_code": "success",
+  "frontend_build": "success",
+  "automatic_db_push": "disabled",
+  "verified_migration_count": 14,
+  "restrictive_module_policies": 57,
+  "private_bucket_public": false
 }
