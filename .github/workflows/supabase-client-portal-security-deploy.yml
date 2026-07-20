@@ -71,7 +71,6 @@ jobs:
           exit 0
 
       - name: Build atomic production bundle
-        if: steps.history.outputs.migration_applied != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -82,7 +81,6 @@ jobs:
           } > client-portal-security-production.sql
 
       - name: Apply migrations permanently
-        if: steps.history.outputs.migration_applied != 'true'
         shell: bash
         run: |
           set -o pipefail
@@ -91,7 +89,6 @@ jobs:
             2>&1 | tee client-portal-security-deployment.log
 
       - name: Record migration history
-        if: steps.history.outputs.migration_applied != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -181,7 +178,7 @@ jobs:
             echo
             echo "- Commit: \`$GITHUB_SHA\`"
             echo "- Resultado: **$JOB_STATUS**"
-            echo "- Migração final já estava registrada: **$ALREADY_APPLIED**"
+            echo "- Migração constava no histórico antes da correção: **$ALREADY_APPLIED**"
             echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo
             echo '## Edge Function de autenticação'
