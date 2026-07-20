@@ -11,6 +11,7 @@ on:
       - 'supabase/migrations/20260720203000_private_client_documents_storage.sql'
       - 'supabase/migrations/20260720204000_harden_client_operational_permissions.sql'
       - 'supabase/migrations/20260720205000_optional_client_block_state_compat.sql'
+      - 'supabase/migrations/20260720232000_harden_client_portal_audit_findings.sql'
       - 'scripts/client-portal-security-preview.sql'
       - '.github/workflows/supabase-client-portal-security-preview.yml'
 
@@ -65,6 +66,7 @@ jobs:
             cat supabase/migrations/20260720203000_private_client_documents_storage.sql
             cat supabase/migrations/20260720204000_harden_client_operational_permissions.sql
             cat supabase/migrations/20260720205000_optional_client_block_state_compat.sql
+            cat supabase/migrations/20260720232000_harden_client_portal_audit_findings.sql
             cat scripts/client-portal-security-preview.sql
             echo 'ROLLBACK;'
           } > client-portal-security-preview.sql
