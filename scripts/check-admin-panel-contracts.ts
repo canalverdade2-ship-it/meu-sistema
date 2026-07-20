@@ -55,6 +55,7 @@ async function main() {
 
   await assertFileContains('src/components/admin/Dashboard.tsx', [
     "import type React from 'react';",
+    'key?: React.Key;',
     'gsa_admin_dashboard_snapshot',
     'Faturamento dos últimos 6 meses',
     'credito_pendente_total',
