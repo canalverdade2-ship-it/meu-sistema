@@ -1,416 +1,139 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useEffect, useState } from 'react';
+import { CheckCircle, Gift, Info, MessageSquare, Star, Trophy } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { Gift, CheckCircle, Trophy, Star, Info, AlertCircle, Clock, Check, MessageSquare } from 'lucide-react';
-import { Modal } from '../ui/Modal';
-import { createNotification } from '../../lib/notifications';
-import { notificationService } from '../../lib/notificationService';
+import { supabase } from '../../lib/supabase';
 import { formatDate } from '../../lib/utils';
+import { providerOperations } from '../../lib/providerOperations';
+import { notificationService } from '../../lib/notificationService';
+import { useProviderNotifications } from '../../hooks/useProviderNotifications';
+import { Modal } from '../ui/Modal';
 
-interface PrestadorPremiosProps {
-  prestadorId: string;
-  initialItemId?: string;
-}
+type Prize = {
+  id: string;
+  titulo: string;
+  descricao?: string | null;
+  status: string;
+  created_at: string;
+  data_resgate?: string | null;
+};
 
-export function PrestadorPremios({ prestadorId, initialItemId }: PrestadorPremiosProps) {
-  const [premios, setPremios] = useState<any[]>([]);
+export function PrestadorPremios({ prestadorId, initialItemId }: { prestadorId: string; initialItemId?: string }) {
+  const { refreshCounts } = useProviderNotifications();
+  const [prizes, setPrizes] = useState<Prize[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPremio, setSelectedPremio] = useState<any>(null);
-  const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selected, setSelected] = useState<Prize | null>(null);
+  const [details, setDetails] = useState<Prize | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
-  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (initialItemId && premios.length > 0) {
-      const premio = premios.find(p => p.id === initialItemId);
-      if (premio) {
-        setTimeout(() => {
-          const element = document.getElementById(`premio-${initialItemId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setHighlightedItemId(initialItemId);
-            setTimeout(() => setHighlightedItemId(null), 3000);
-          }
-        }, 400);
-      }
-    }
-  }, [initialItemId, premios.length]);
-
-  useEffect(() => {
-    fetchPremios();
-    const channel = supabase
-      .channel(`prestador-premios-${prestadorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, fetchPremios)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [prestadorId]);
-
-  const fetchPremios = async () => {
+  const load = async () => {
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('prestador_premios')
-        .select('*')
+        .select('id,titulo,descricao,status,created_at,data_resgate')
         .eq('prestador_id', prestadorId)
         .order('created_at', { ascending: false });
-
-      if (error) {
-        if (error.code === '42P01') {
-          console.warn('Tabela prestador_premios não existe ainda.');
-          setPremios([]);
-          return;
-        }
-        throw error;
-      }
-      setPremios(data || []);
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao buscar prêmios.');
+      if (error) throw error;
+      setPrizes((data || []) as Prize[]);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível carregar os prêmios.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRedeemClick = (premio: any) => {
-    setSelectedPremio(premio);
-    setIsRedeemModalOpen(true);
-  };
+  useEffect(() => {
+    void load();
+    const channel = supabase.channel(`provider-prizes-${prestadorId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [prestadorId]);
 
-  const confirmarResgate = async () => {
-    if (!selectedPremio) return;
-    
-    setIsSubmitting(true);
+  useEffect(() => {
+    if (!initialItemId || !prizes.length) return;
+    const prize = prizes.find((item) => item.id === initialItemId);
+    if (!prize) return;
+    setHighlightedId(prize.id);
+    setDetails(prize);
+    const timer = window.setTimeout(() => setHighlightedId(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [initialItemId, prizes]);
+
+  const redeem = async () => {
+    if (!selected || submitting) return;
+    setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('prestador_premios')
-        .update({ 
-          status: 'resgatado', 
-          data_resgate: new Date().toISOString() 
-        })
-        .eq('id', selectedPremio.id);
-      
-      if (error) throw error;
-
-      await notificationService.notifyAdmin(
-        '🏆 Prêmio Resgatado pelo Prestador',
-        `O prestador solicitou o resgate do prêmio "${selectedPremio.titulo}". Por favor, entre em contato via WhatsApp/telefone em até 48 horas para alinhar a entrega.`,
-        'premios',
-        'premio_resgate_solicitado',
-        { tab: 'resgatados', itemId: selectedPremio.id, contexto: { prestador_id: prestadorId, premio_id: selectedPremio.id } }
-      );
-      
-      toast.success('Parabéns! O resgate foi solicitado com sucesso.');
-      setIsRedeemModalOpen(false);
-      setSelectedPremio(null);
-      fetchPremios();
-    } catch (e: any) {
-      console.error(e);
-      toast.error('Erro ao resgatar o prêmio: ' + e.message);
+      await providerOperations.redeemPrize(selected.id);
+      await Promise.allSettled([
+        notificationService.notifyAdmin('Prêmio resgatado pelo prestador', `O prêmio "${selected.titulo}" foi resgatado. Entre em contato para organizar a entrega.`, 'premios', 'premio_resgate_solicitado', { tab: 'resgatados', itemId: selected.id }),
+        refreshCounts(),
+      ]);
+      toast.success('Resgate solicitado com sucesso.');
+      setSelected(null);
+      await load();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível resgatar o prêmio.');
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  const handleAbrirTicket = async (premio: any) => {
-    setIsSubmitting(true);
+  const openTicket = async (prize: Prize) => {
+    if (submitting) return;
+    setSubmitting(true);
     try {
-      const assunto = `Dúvida sobre o Prêmio: ${premio.titulo}`;
-
-      // Verificação de ticket duplicado
-      const { data: existingTickets, error: checkError } = await supabase
+      const subject = `Dúvida sobre o prêmio: ${prize.titulo}`;
+      const { data: existing, error: existingError } = await supabase
         .from('tickets')
         .select('id')
         .eq('prestador_id', prestadorId)
-        .eq('assunto', assunto)
+        .eq('assunto', subject)
         .neq('status', 'concluido')
         .limit(1);
-
-      if (checkError) throw checkError;
-
-      if (existingTickets && existingTickets.length > 0) {
-        toast.error('Identificamos que já existe um atendimento em andamento para este prêmio. Por favor, acompanhe a evolução no Suporte.');
-        return;
-      }
-
-      const { error } = await supabase.from('tickets').insert([{
-        assunto,
-        descricao: `Gostaria de tirar uma dúvida referente ao prêmio "${premio.titulo}" (Resgatado em ${premio.data_resgate ? formatDate(premio.data_resgate) : 'data indisponível'}).`,
+      if (existingError) throw existingError;
+      if (existing?.length) throw new Error('Já existe um atendimento aberto para este prêmio.');
+      const { data: ticket, error } = await supabase.from('tickets').insert({
         prestador_id: prestadorId,
-        status: 'aberto'
-      }]);
-
+        assunto: subject,
+        descricao: `Solicito informações sobre o prêmio "${prize.titulo}".`,
+        status: 'aberto',
+      }).select('id').single();
       if (error) throw error;
-
-      await notificationService.notifyAdmin(
-        'Novo Ticket de Prestador (Prêmios)',
-        `O prestador abriu um ticket com dúvidas sobre o prêmio ${premio.titulo}.`,
-        'suporte',
-        'ticket_aberto_prestador',
-        { tab: 'abertos', contexto: { prestador_id: prestadorId } }
-      );
-
-      toast.success('Ticket aberto com sucesso! Nossa equipe entrará em contato via Dúvidas.');
-    } catch (e: any) {
-      console.error(e);
-      toast.error('Não foi possível processar sua solicitação agora. Por favor, tente novamente em instantes ou utilize o canal de suporte geral.');
+      await notificationService.notifyAdmin('Novo ticket sobre prêmio', `Um prestador abriu uma dúvida sobre o prêmio ${prize.titulo}.`, 'suporte', 'ticket_aberto_prestador', { tab: 'abertos', itemId: ticket?.id });
+      toast.success('Atendimento aberto com sucesso.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível abrir o atendimento.');
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  if (loading) return <div className="py-12 flex justify-center"><div className="w-8 h-8 rounded-full border-4 border-rose-600 border-t-transparent animate-spin"/></div>;
+  if (loading) return <div className="flex justify-center py-16"><div className="h-9 w-9 animate-spin rounded-full border-4 border-rose-600 border-t-transparent" /></div>;
 
-  const disponiveis = premios.filter(p => p.status === 'disponivel');
-  const resgatados = premios.filter(p => p.status === 'resgatado');
+  const available = prizes.filter((item) => item.status === 'disponivel');
+  const redeemed = prizes.filter((item) => item.status === 'resgatado');
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 overflow-hidden">
-        <div className="p-6 border-b border-neutral-100 flex justify-between items-center bg-rose-50/50">
-          <div>
-            <h3 className="text-lg font-medium text-neutral-900 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-rose-600" />
-              Prêmios Disponíveis
-            </h3>
-            <p className="text-sm text-neutral-500 mt-1">Reconhecimento pelo seu excelente trabalho.</p>
-          </div>
-          <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-sm font-bold">
-            {disponiveis.length} disponíveis
-          </span>
-        </div>
-        
-        {disponiveis.length === 0 ? (
-          <div className="p-12 text-center text-neutral-500">
-            <Gift className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
-            <p className="font-medium text-neutral-900">Nenhum prêmio disponível</p>
-            <p className="text-sm mt-1">Mantenha a qualidade dos serviços para desbloquear recompensas exclusivas.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            {disponiveis.map(premio => (
-              <div 
-                id={`premio-${premio.id}`}
-                key={premio.id} 
-                className={`group relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 flex flex-col ring-1 ring-black/[0.02] ${
-                  highlightedItemId === premio.id 
-                    ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500 scale-[1.02] z-10 shadow-2xl' 
-                    : 'border-neutral-200 bg-white p-8 shadow-sm hover:shadow-2xl hover:-translate-y-1'
-                } p-8`}
-              >
-                <div className="flex justify-between items-start mb-6">
-                  <div className="w-16 h-16 rounded-[1.5rem] bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 border border-rose-100/50 group-hover:scale-110 transition-transform duration-500 shadow-sm shadow-rose-500/10">
-                    <Gift className="w-8 h-8" />
-                  </div>
-                  <div className="bg-rose-100/50 backdrop-blur-sm rounded-full px-3 py-1 text-rose-600 flex items-center gap-1.5 border border-rose-200/50">
-                    <Star className="w-3.5 h-3.5 fill-rose-600" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Premium</span>
-                  </div>
-                </div>
-                
-                <h4 className="text-2xl font-black text-[#1a1a1a] mb-3 group-hover:text-rose-600 transition-colors uppercase tracking-tight">{premio.titulo}</h4>
-                <p className="text-sm text-neutral-500 mb-8 flex-1 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">{premio.descricao}</p>
-                
-                <button
-                  onClick={() => handleRedeemClick(premio)}
-                  className="w-full bg-[#1a1a1a] hover:bg-black text-white font-black py-4 rounded-2xl transition-all active:scale-[0.98] shadow-xl shadow-black/10 flex items-center justify-center gap-2"
-                >
-                  Resgatar Agora
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        <div className="flex items-center justify-between border-b border-neutral-100 bg-rose-50/50 p-5"><div><h2 className="flex items-center gap-2 text-xl font-black"><Trophy className="h-5 w-5 text-rose-600" />Prêmios disponíveis</h2><p className="text-sm text-neutral-500">Cada prêmio pode ser resgatado apenas uma vez.</p></div><span className="rounded-full bg-rose-100 px-3 py-1 text-sm font-black text-rose-700">{available.length}</span></div>
+        {available.length === 0 ? <Empty text="Nenhum prêmio disponível." /> : <div className="grid gap-5 p-5 md:grid-cols-2 xl:grid-cols-3">{available.map((prize) => <article id={`premio-${prize.id}`} key={prize.id} className={`rounded-3xl border bg-white p-6 transition ${highlightedId === prize.id ? 'border-indigo-500 ring-2 ring-indigo-300' : 'border-neutral-200 hover:-translate-y-0.5 hover:shadow-lg'}`}><div className="flex items-start justify-between"><span className="rounded-2xl bg-rose-50 p-4 text-rose-500"><Gift className="h-7 w-7" /></span><span className="flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1 text-[10px] font-black uppercase text-rose-700"><Star className="h-3.5 w-3.5 fill-current" />Premium</span></div><h3 className="mt-5 text-xl font-black">{prize.titulo}</h3><p className="mt-2 min-h-12 text-sm text-neutral-500">{prize.descricao || 'Reconhecimento especial pelo seu trabalho.'}</p><button onClick={() => setSelected(prize)} className="mt-5 w-full rounded-xl bg-neutral-900 py-3 text-sm font-black text-white">Resgatar agora</button></article>)}</div>}
+      </section>
 
-      {resgatados.length > 0 && (
-        <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 overflow-hidden">
-          <div className="p-6 border-b border-neutral-100">
-            <h3 className="text-lg font-medium text-neutral-900">Histórico de Prêmios</h3>
-          </div>
-          <div className="divide-y divide-neutral-100 text-sm">
-            {resgatados.map(p => (
-              <div 
-                id={`premio-${p.id}`}
-                key={p.id} 
-                className={`p-4 sm:p-6 flex items-center justify-between hover:bg-neutral-50 transition-all duration-500 ${
-                  highlightedItemId === p.id 
-                    ? 'bg-indigo-50/50 ring-2 ring-indigo-500 scale-[1.01] z-10 shadow-lg rounded-xl' 
-                    : ''
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-sm border border-emerald-100">
-                    <Gift className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-neutral-900">{p.titulo}</h5>
-                    <p className="text-xs text-neutral-500 mt-0.5">
-                      Resgatado em {p.data_resgate ? formatDate(p.data_resgate) : 'data indisponível'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => { setSelectedPremio(p); setIsDetailsModalOpen(true); }} className="px-3 py-1.5 text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl transition-colors flex items-center gap-1">
-                    <Info className="h-4 w-4" /> Detalhes
-                  </button>
-                  <button onClick={() => handleAbrirTicket(p)} disabled={isSubmitting} className="px-3 py-1.5 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-1">
-                    <MessageSquare className="h-4 w-4" /> Dúvidas?
-                  </button>
-                  <div className="hidden sm:flex items-center gap-1.5 text-emerald-700 font-black text-[10px] bg-emerald-100 px-4 py-1.5 rounded-full uppercase tracking-widest border border-emerald-200">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Resgatado
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {redeemed.length > 0 && <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5"><div className="border-b border-neutral-100 p-5"><h3 className="font-black">Histórico de prêmios</h3></div>{redeemed.map((prize) => <div id={`premio-${prize.id}`} key={prize.id} className={`flex flex-col gap-4 border-b border-neutral-100 p-4 last:border-0 sm:flex-row sm:items-center sm:justify-between ${highlightedId === prize.id ? 'bg-indigo-50 ring-2 ring-inset ring-indigo-400' : ''}`}><div className="flex items-center gap-3"><span className="rounded-xl bg-emerald-50 p-3 text-emerald-600"><Gift className="h-5 w-5" /></span><div><p className="font-black">{prize.titulo}</p><p className="text-xs text-neutral-400">Resgatado em {prize.data_resgate ? formatDate(prize.data_resgate) : 'data não informada'}</p></div></div><div className="flex gap-2"><button onClick={() => setDetails(prize)} className="flex items-center gap-1 rounded-xl bg-neutral-100 px-3 py-2 text-xs font-black text-neutral-700"><Info className="h-4 w-4" />Detalhes</button><button disabled={submitting} onClick={() => openTicket(prize)} className="flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 disabled:opacity-50"><MessageSquare className="h-4 w-4" />Dúvidas</button><span className="hidden items-center gap-1 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 sm:flex"><CheckCircle className="h-4 w-4" />Resgatado</span></div></div>)}</section>}
 
-      {/* Redemption Instructions Modal */}
-      <Modal 
-        isOpen={isRedeemModalOpen} 
-        onClose={() => setIsRedeemModalOpen(false)} 
-        title="Instruções de Resgate"
-        size="wide"
-      >
-        {selectedPremio && (
-          <div className="space-y-8">
-            <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center bg-neutral-50 p-6 rounded-[2rem] border border-neutral-100 shadow-inner">
-              <div className="w-24 h-24 rounded-[1.5rem] bg-rose-50 flex items-center justify-center text-rose-500 shadow-sm border border-rose-100">
-                <Gift className="w-12 h-12" />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500 mb-1">Você selecionou:</p>
-                <h4 className="text-3xl font-black text-[#1a1a1a] uppercase tracking-tight">{selectedPremio.titulo}</h4>
-                <p className="text-sm text-neutral-500 mt-1 line-clamp-2 leading-relaxed">{selectedPremio.descricao}</p>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <h5 className="text-lg font-bold text-[#1a1a1a] flex items-center gap-2">
-                <Info className="w-5 h-5 text-rose-500" />
-                Como funcionará a entrega?
-              </h5>
-              
-              <div className="space-y-4">
-                <div className="flex gap-4 p-4 rounded-2xl bg-white ring-1 ring-black/5">
-                  <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-[#1a1a1a]">Prazo de Notificação</p>
-                    <p className="text-sm text-neutral-500 mt-0.5">Nossa equipe administrativa receberá seu pedido instantaneamente.</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 p-4 rounded-2xl bg-white ring-1 ring-black/5">
-                  <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                    <Star className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-[#1a1a1a]">Contato de Confirmado</p>
-                    <p className="text-sm text-neutral-500 mt-0.5">Entraremos em contato via WhatsApp ou telefone em até 48 horas úteis para alinhar os detalhes.</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 p-4 rounded-2xl bg-white ring-1 ring-black/5">
-                  <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                    <Gift className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-[#1a1a1a]">Forma de Entrega</p>
-                    <p className="text-sm text-neutral-500 mt-0.5">Dependendo do prêmio, ele poderá ser entregue via Correios, Voucher Digital ou agendamento para retirada.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-amber-50 p-4 border border-amber-100">
-                <div className="flex gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-800 leading-relaxed font-medium">
-                    Importante: Ao resgatar, você declara que suas informações de contato (WhatsApp e Telefone) estão atualizadas em seu perfil.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button 
-                onClick={() => setIsRedeemModalOpen(false)}
-                className="flex-1 px-8 py-4 rounded-2xl font-bold text-neutral-500 hover:bg-neutral-100 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button 
-                disabled={isSubmitting}
-                onClick={confirmarResgate}
-                className="flex-[2] bg-[#1a1a1a] hover:bg-black text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-black/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? (
-                  <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                ) : (
-                  <>
-                    <Check className="w-5 h-5" />
-                    Confirmar Resgate
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
+      <Modal isOpen={!!selected} onClose={() => !submitting && setSelected(null)} title="Confirmar resgate do prêmio">
+        {selected && <div className="space-y-5"><div className="rounded-2xl bg-rose-50 p-5"><Gift className="h-8 w-8 text-rose-600" /><h3 className="mt-3 text-xl font-black text-rose-900">{selected.titulo}</h3><p className="mt-2 text-sm text-rose-700">{selected.descricao}</p></div><p className="text-sm text-neutral-600">A administração será notificada e entrará em contato para organizar a entrega.</p><button disabled={submitting} onClick={redeem} className="w-full rounded-xl bg-rose-600 py-3 font-black text-white disabled:opacity-50">{submitting ? 'Processando...' : 'Confirmar resgate'}</button></div>}
       </Modal>
 
-      {/* Modal Detalhes do Prêmio Resgatado */}
-      <Modal
-        isOpen={isDetailsModalOpen}
-        onClose={() => {
-          setIsDetailsModalOpen(false);
-          setSelectedPremio(null);
-        }}
-        title="Detalhes do Prêmio Resgatado"
-        size="full"
-      >
-        {selectedPremio && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center bg-neutral-50 p-6 rounded-[2rem] border border-neutral-100 shadow-inner">
-               <div className="w-24 h-24 rounded-[1.5rem] bg-emerald-50 flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-100">
-                <Gift className="w-12 h-12" />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 mb-1">Prêmio Selecionado:</p>
-                <h4 className="text-3xl font-black text-[#1a1a1a] uppercase tracking-tight">{selectedPremio.titulo}</h4>
-              </div>
-            </div>
-            
-            <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md">
-                  <CheckCircle className="h-5 w-5 text-emerald-500" />
-                </div>
-                <h4 className="font-black text-emerald-900 text-lg uppercase tracking-tight">Status: Resgatado</h4>
-              </div>
-              <p className="text-emerald-800 text-sm leading-relaxed mb-4">
-                Este prêmio já foi resgatado com a nossa equipe em <strong>{selectedPremio.data_resgate ? formatDate(selectedPremio.data_resgate) : 'data indisponível'}</strong>. 
-                <br /><br />
-                {selectedPremio.descricao}
-              </p>
-            </div>
-            
-            <button
-              onClick={() => {
-                setIsDetailsModalOpen(false);
-                setSelectedPremio(null);
-              }}
-              className="w-full px-6 py-4 rounded-2xl font-black text-neutral-500 hover:bg-neutral-100 transition-colors uppercase tracking-widest text-xs"
-            >
-              Fechar Detalhes
-            </button>
-          </div>
-        )}
+      <Modal isOpen={!!details} onClose={() => setDetails(null)} title="Detalhes do prêmio">
+        {details && <div className="space-y-4"><div><p className="text-xs font-black uppercase tracking-widest text-neutral-400">Prêmio</p><p className="mt-1 text-xl font-black">{details.titulo}</p></div><p className="text-sm text-neutral-600">{details.descricao || 'Sem descrição adicional.'}</p><div className="rounded-xl bg-neutral-50 p-4 text-sm text-neutral-700">A equipe administrativa fará contato para confirmar a forma e o prazo de entrega.</div></div>}
       </Modal>
     </div>
   );
+}
+
+function Empty({ text }: { text: string }) {
+  return <div className="p-12 text-center text-neutral-400"><Gift className="mx-auto h-10 w-10" /><p className="mt-3 text-sm font-bold">{text}</p></div>;
 }

@@ -1123,13 +1123,13 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                       <span className="text-[9px] text-neutral-400 line-through">
                         {formatCurrency((c.item_detalhes.valor || 0) * c.quantidade)}
                       </span>
-                      <span className="font-bold text-indigo-700">
+                      <span className="font-bold text-indigo-200">
                         {formatCurrency(getProductQuantityPriceBreakdown(c.item_detalhes, c.quantidade).subtotalFinal)}
                       </span>
                     </div>
                   )}
                   {(!hasActiveProductDiscount(c.item_detalhes) || c.tipo !== 'produto') && (
-                    <span className="font-bold text-neutral-900">
+                    <span className="font-bold text-white">
                       {formatCurrency((c.item_detalhes?.valor || 0) * c.quantidade)}
                     </span>
                   )}
