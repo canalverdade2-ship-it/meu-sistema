@@ -10,48 +10,49 @@ function replaceOnce(search, replacement, label) {
   source = source.replace(search, replacement);
 }
 
-function replaceSection(startMarker, endMarker, replacement, label) {
-  const start = source.indexOf(startMarker);
-  const end = source.indexOf(endMarker, start + startMarker.length);
-  if (start < 0 || end < 0 || end <= start) {
-    throw new Error(`${label}: marcadores nao encontrados.`);
-  }
-  source = source.slice(0, start) + replacement + source.slice(end + endMarker.length);
-}
-
 replaceOnce(
   "import { PainelRentabilidade } from './PainelRentabilidade';\n",
   "import { PainelRentabilidade } from './PainelRentabilidade';\nimport { SecureAttachmentButton } from '../ui/SecureAttachmentButton';\n",
   'Importar botão seguro',
 );
 
-replaceSection(
-  '                           {d.arquivos_briefing.map((url: string, idx: number) => (',
-  '                           ))}',
-  `                           {d.arquivos_briefing.map((url: string, idx: number) => (
-                             <SecureAttachmentButton
-                               key={idx}
-                               reference={url}
-                               fileName={\`Anexo de briefing \${idx + 1}\`}
-                               className="bg-neutral-50 text-amber-700 hover:bg-amber-50 ring-1 ring-inset ring-neutral-200/50"
-                             />
-                           ))}`,
-  'Briefings privados',
+replaceOnce(
+  `                               <a
+                                 href={url}
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 className="p-2 rounded-lg bg-white text-amber-600 hover:bg-amber-50 ring-1 ring-inset ring-neutral-200/50 transition-colors"
+                                 title="Visualizar"
+                               >
+                                 <Download className="h-4 w-4" />
+                               </a>`,
+  `                               <SecureAttachmentButton
+                                 reference={url}
+                                 fileName={\`Anexo de briefing \${idx + 1}\`}
+                                 compact
+                                 className="bg-white text-amber-600 hover:bg-amber-50 ring-1 ring-inset ring-neutral-200/50"
+                               />`,
+  'Link do briefing privado',
 );
 
-replaceSection(
-  '                         {os.anexos_os.map((doc: any, idx: number) => (',
-  '                         ))}',
-  `                         {os.anexos_os.map((doc: any, idx: number) => (
-                           <SecureAttachmentButton
-                             key={idx}
-                             reference={doc.url}
-                             fileName={doc.nome}
-                             mimeType={doc.mime_type}
-                             className="bg-neutral-50 text-indigo-700 hover:bg-indigo-50 ring-1 ring-inset ring-neutral-200/50"
-                           />
-                         ))}`,
-  'Anexos privados da OS',
+replaceOnce(
+  `                             <a
+                               href={doc.url}
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               className="p-2 rounded-lg bg-white text-indigo-600 hover:bg-indigo-50 ring-1 ring-inset ring-neutral-200/50 transition-colors"
+                               title="Baixar Documento"
+                             >
+                               <Download className="h-4 w-4" />
+                             </a>`,
+  `                             <SecureAttachmentButton
+                               reference={doc.url}
+                               fileName={doc.nome}
+                               mimeType={doc.mime_type}
+                               compact
+                               className="bg-white text-indigo-600 hover:bg-indigo-50 ring-1 ring-inset ring-neutral-200/50"
+                             />`,
+  'Link do anexo privado da OS',
 );
 
 fs.writeFileSync(file, source, 'utf8');
