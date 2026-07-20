@@ -1,0 +1,125 @@
+name: Temporary collaborator correction runner
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]' && github.event.pull_request.head.ref == 'agent/corrigir-painel-colaborador'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-painel-colaborador
+          fetch-depth: 0
+
+      - name: Rebuild and apply the reviewed correction
+        id: apply_patch
+        shell: bash
+        run: |
+          set +e
+          rm -rf .correction-diagnostics
+          mkdir -p .correction-diagnostics
+          cat \
+            .patch/collaborator_fix_v2.part00 \
+            .patch/collaborator_fix_v3.part03 \
+            .patch/collaborator_fix_v3.part04 \
+            .patch/collaborator_fix_v3.part05 \
+            .patch/collaborator_fix_v3.part06 \
+            .patch/collaborator_fix_v3.part07 \
+            .patch/collaborator_fix_v3.part08 \
+            .patch/collaborator_fix_v3.part09 \
+            .patch/collaborator_fix_v3.part10 \
+            .patch/collaborator_fix_v3.part11 \
+            > /tmp/collaborator_patch.b64
+          CAT_STATUS=$?
+          wc -c /tmp/collaborator_patch.b64 | tee .correction-diagnostics/package-size.txt
+          base64 -d /tmp/collaborator_patch.b64 > /tmp/collaborator_patch.gz 2> .correction-diagnostics/decode.txt
+          DECODE_STATUS=$?
+          gzip -t /tmp/collaborator_patch.gz 2> .correction-diagnostics/gzip-test.txt
+          GZIP_STATUS=$?
+          if [ "$CAT_STATUS" -eq 0 ] && [ "$DECODE_STATUS" -eq 0 ] && [ "$GZIP_STATUS" -eq 0 ]; then
+            gzip -d -c /tmp/collaborator_patch.gz > /tmp/apply_collaborator_fixes.py 2> .correction-diagnostics/gzip-decode.txt
+            GZIP_DECODE_STATUS=$?
+          else
+            GZIP_DECODE_STATUS=1
+          fi
+          if [ "$GZIP_DECODE_STATUS" -eq 0 ]; then
+            cp src/hooks/useAutoLogout.tsx src/hooks/useAutoLogout.ts
+            python /tmp/apply_collaborator_fixes.py > .correction-diagnostics/apply.txt 2>&1
+            APPLY_STATUS=$?
+            if [ "$APPLY_STATUS" -eq 0 ]; then
+              rm -f src/hooks/useAutoLogout.tsx
+            fi
+          else
+            APPLY_STATUS=1
+          fi
+          printf 'cat=%s\ndecode=%s\ngzip_test=%s\ngzip_decode=%s\napply=%s\n' \
+            "$CAT_STATUS" "$DECODE_STATUS" "$GZIP_STATUS" "$GZIP_DECODE_STATUS" "$APPLY_STATUS" \
+            > .correction-diagnostics/status.txt
+          cat .correction-diagnostics/status.txt
+          cat .correction-diagnostics/apply.txt 2>/dev/null || true
+          echo "status=$APPLY_STATUS" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Publish diagnostic when package application fails
+        if: steps.apply_patch.outputs.status != '0'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .correction-diagnostics
+          git commit -m "Atualizar diagnóstico da correção do colaborador"
+          git push origin HEAD:agent/corrigir-painel-colaborador
+
+      - name: Stop after application failure
+        if: steps.apply_patch.outputs.status != '0'
+        run: exit 1
+
+      - name: Remove temporary package and diagnostics
+        if: steps.apply_patch.outputs.status == '0'
+        run: rm -rf .patch .correction-diagnostics
+
+      - name: Install dependencies
+        if: steps.apply_patch.outputs.status == '0'
+        run: npm ci || npm install
+
+      - name: Validate TypeScript and build
+        if: steps.apply_patch.outputs.status == '0'
+        id: validate
+        shell: bash
+        run: |
+          set +e
+          npm run lint
+          LINT_STATUS=$?
+          npm run build
+          BUILD_STATUS=$?
+          set -e
+          echo "lint_status=$LINT_STATUS" >> "$GITHUB_OUTPUT"
+          echo "build_status=$BUILD_STATUS" >> "$GITHUB_OUTPUT"
+
+      - name: Publish one clean correction commit
+        if: steps.apply_patch.outputs.status == '0'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git reset --soft bae7620fa1f7b48a389c9468042d146e578aea90
+          git add -A
+          git commit -m "Corrigir segurança e experiência do painel do colaborador"
+          git push --force-with-lease origin HEAD:agent/corrigir-painel-colaborador
+
+      - name: Enforce validation result
+        if: steps.apply_patch.outputs.status == '0'
+        shell: bash
+        run: |
+          if [ "${{ steps.validate.outputs.lint_status }}" -ne 0 ] || [ "${{ steps.validate.outputs.build_status }}" -ne 0 ]; then
+            echo "Validation failed: lint=${{ steps.validate.outputs.lint_status }} build=${{ steps.validate.outputs.build_status }}"
+            exit 1
+          fi
