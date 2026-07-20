@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: supabase-migration-preview-production
@@ -72,3 +73,34 @@ jobs:
             migration-list.log
             migration-dry-run.log
           retention-days: 7
+
+      - name: Publish private preview report
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          touch migration-list.log migration-dry-run.log
+          {
+            echo '# Prévia das migrações Supabase'
+            echo
+            echo "- Projeto: \`$EXPECTED_PROJECT_ID\`"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Resultado do job: **$JOB_STATUS**"
+            echo
+            echo '## Histórico local e remoto'
+            echo '```text'
+            sed -n '1,260p' migration-list.log
+            echo '```'
+            echo
+            echo '## Dry-run do banco'
+            echo '```text'
+            sed -n '1,260p' migration-dry-run.log
+            echo '```'
+          } > migration-report.md
+
+          gh issue create \
+            --title "Prévia Supabase #$GITHUB_RUN_NUMBER" \
+            --body-file migration-report.md
