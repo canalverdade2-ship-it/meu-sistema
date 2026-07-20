@@ -1,73 +1,75 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Activity, Building2, FileCheck2, HeartPulse, Loader2, MessageCircle, Plus, RefreshCw, Search, ShieldCheck, WalletCards, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type React from 'react';
+import {
+  Activity,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  FileCheck2,
+  HeartPulse,
+  Loader2,
+  MessageCircle,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  WalletCards,
+  X,
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { supabase } from '../../lib/supabase';
+import { callAdminRpc } from '../../lib/adminRpc';
 import { navigate } from '../../routing/navigationService';
-import { routes } from '../../routing/routeCatalog';
+import { formatCurrency, formatDateTime } from '../../lib/utils';
 
 type Domain = 'saude' | 'seguros';
 type Props = { domain: Domain; initialTab?: string; initialItemId?: string };
 type Tab = 'dashboard' | 'parceiros' | 'produtos' | 'cotacoes' | 'propostas' | 'contratos' | 'assessorias' | 'comissoes' | 'documentos' | 'assistencias' | 'sinistros' | 'atendimentos';
 
+type PagedResult = { items: any[]; total: number; page: number; page_size: number };
+
+const PAGE_SIZE = 40;
+
 const definitions = {
-  saude: { label: 'GSA Saúde', accent: '#159988', icon: HeartPulse, contract: 'Planos contratados', product: 'Planos', productTable: 'saude_produtos', contractTable: 'saude_contratos' },
-  seguros: { label: 'GSA Seguros', accent: '#3569e8', icon: ShieldCheck, contract: 'Apólices', product: 'Ofertas', productTable: 'seguros_produtos', contractTable: 'seguros_apolices' },
+  saude: {
+    label: 'GSA Saúde',
+    accent: '#159988',
+    icon: HeartPulse,
+    contract: 'Contratações',
+    tabs: ['dashboard', 'parceiros', 'produtos', 'cotacoes', 'propostas', 'contratos', 'assessorias', 'comissoes', 'documentos', 'atendimentos'] as Tab[],
+  },
+  seguros: {
+    label: 'GSA Seguros',
+    accent: '#3569e8',
+    icon: ShieldCheck,
+    contract: 'Apólices',
+    tabs: ['dashboard', 'parceiros', 'produtos', 'cotacoes', 'propostas', 'contratos', 'assessorias', 'comissoes', 'assistencias', 'sinistros', 'documentos', 'atendimentos'] as Tab[],
+  },
 } as const;
 
-const labels: Record<Tab, string> = { dashboard: 'Visão geral', parceiros: 'Parceiros', produtos: 'Catálogo', cotacoes: 'Cotações', propostas: 'Propostas', contratos: 'Contratações', assessorias: 'Assessorias', comissoes: 'Comissões', documentos: 'Documentos', assistencias: 'Assistências', sinistros: 'Sinistros', atendimentos: 'Atendimentos' };
+const labels: Record<Tab, string> = {
+  dashboard: 'Visão geral',
+  parceiros: 'Parceiros',
+  produtos: 'Catálogo',
+  cotacoes: 'Cotações',
+  propostas: 'Propostas',
+  contratos: 'Contratações',
+  assessorias: 'Assessorias',
+  comissoes: 'Comissões',
+  documentos: 'Documentos',
+  assistencias: 'Assistências',
+  sinistros: 'Sinistros',
+  atendimentos: 'Atendimentos',
+};
 
-function tableFor(domain: Domain, tab: Tab) {
-  const d = definitions[domain];
-  const map: Record<Tab, string> = {
-    dashboard: '', parceiros: `${domain}_parceiros`, produtos: d.productTable,
-    cotacoes: `${domain}_cotacoes`, propostas: `${domain}_propostas`, contratos: d.contractTable,
-    assessorias: `${domain}_assessorias`, comissoes: `${domain}_comissoes`, documentos: `${domain}_documentos`,
-    assistencias: domain === 'seguros' ? 'seguros_assistencias' : 'saude_atendimentos',
-    sinistros: domain === 'seguros' ? 'seguros_sinistros' : 'saude_atendimentos', atendimentos: `${domain}_atendimentos`,
-  };
-  return map[tab];
-}
-
-export function ProtectionAdminModule({ domain, initialTab = 'dashboard' }: Props) {
-  const d = definitions[domain]; const Icon = d.icon;
-  const normalizedTab = initialTab === 'apolices' ? 'contratos' : initialTab;
-  const validTab = (Object.keys(labels) as Tab[]).includes(normalizedTab as Tab) ? normalizedTab as Tab : 'dashboard';
-  const [tab, setTab] = useState<Tab>(validTab);
-  const domainTabs: Tab[] = domain === 'seguros' ? ['dashboard','parceiros','produtos','cotacoes','propostas','contratos','assessorias','comissoes','assistencias','sinistros','documentos','atendimentos'] : ['dashboard','parceiros','produtos','cotacoes','propostas','contratos','assessorias','comissoes','documentos','atendimentos'];
-  useEffect(() => setTab(validTab), [validTab]);
-  const openTab = (key: Tab) => {
-    setTab(key);
-    const catalog = domain === 'saude' ? routes.admin.saude : routes.admin.seguros;
-    const pathMap: Record<Tab, () => string> = { dashboard: catalog.dashboard, parceiros: catalog.parceiros, produtos: catalog.produtos, cotacoes: catalog.cotacoes, propostas: catalog.propostas, contratos: catalog.contratos, assessorias: catalog.assessorias, comissoes: catalog.comissoes, documentos: catalog.documentos, assistencias: catalog.assistencias, sinistros: catalog.sinistros, atendimentos: catalog.atendimentos };
-    navigate(pathMap[key]());
-  };
-  return <div className="space-y-6"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><h1 className="flex items-center gap-3 text-2xl font-black"><span className="flex h-11 w-11 items-center justify-center rounded-2xl text-white" style={{ background: d.accent }}><Icon className="h-6 w-6" /></span>{d.label}</h1><p className="mt-2 text-sm text-neutral-500">Gestão de parceiros, catálogo, cotações, propostas, contratos e receitas de comissão.</p></div></div><div className="flex gap-1 overflow-x-auto rounded-2xl border border-black/5 bg-white p-1.5 shadow-sm">{domainTabs.map(key => <button key={key} onClick={() => openTab(key)} className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-bold transition ${tab === key ? 'text-white shadow-sm' : 'text-neutral-500 hover:bg-neutral-50'}`} style={tab === key ? { background: d.accent } : undefined}>{labels[key]}</button>)}</div>{tab === 'dashboard' ? <Dashboard domain={domain} onOpen={openTab} /> : <DataManager domain={domain} tab={tab} />}</div>;
-}
-
-function Dashboard({ domain, onOpen }: { domain: Domain; onOpen: (tab: Tab) => void }) {
-  const d = definitions[domain]; const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [counts, setCounts] = useState<Record<string, number>>({});
-  const cards: { tab: Tab; label: string; icon: React.ElementType }[] = [{ tab: 'parceiros', label: 'Parceiros ativos', icon: Building2 }, { tab: 'produtos', label: `${d.product} publicados`, icon: FileCheck2 }, { tab: 'cotacoes', label: 'Cotações abertas', icon: Search }, { tab: 'propostas', label: 'Propostas aguardando', icon: WalletCards }, { tab: 'contratos', label: d.contract, icon: ShieldCheck }, { tab: 'atendimentos', label: 'Atendimentos abertos', icon: MessageCircle }];
-  const load = async () => { setLoading(true); setError(''); try { const entries = await Promise.all(cards.map(async card => { let q = supabase.from(tableFor(domain, card.tab)).select('*', { count: 'exact', head: true }); if (card.tab === 'parceiros') q = q.eq('status', 'ativo'); if (card.tab === 'produtos') q = q.eq('status', 'publicado'); if (card.tab === 'cotacoes' || card.tab === 'atendimentos') q = q.not('status', 'in', '(encerrado,cancelado)'); const { count, error } = await q; if (error) throw error; return [card.tab, count || 0] as const; })); setCounts(Object.fromEntries(entries)); } catch (e: any) { setError(e.message || 'Falha ao consultar os indicadores.'); } finally { setLoading(false); } };
-  useEffect(() => { void load(); }, [domain]);
-  if (loading) return <PanelState icon={Loader2} text="Carregando indicadores reais..." spin />;
-  if (error) return <PanelState icon={Activity} text={error} action={load} />;
-  return <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{cards.map(card => { const I = card.icon; return <button key={card.tab} onClick={() => onOpen(card.tab)} className="rounded-2xl border border-black/5 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><div className="flex items-start justify-between"><span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ color: d.accent, background: `${d.accent}12` }}><I className="h-5 w-5" /></span><strong className="text-3xl font-black">{counts[card.tab] || 0}</strong></div><p className="mt-5 font-bold text-neutral-600">{card.label}</p></button>; })}</div>;
-}
-
-function DataManager({ domain, tab }: { domain: Domain; tab: Exclude<Tab, 'dashboard'> }) {
-  const d = definitions[domain]; const table = tableFor(domain, tab);
-  const [items, setItems] = useState<any[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [search, setSearch] = useState(''); const [modal, setModal] = useState(false); const [editing, setEditing] = useState<any>(null);
-  const load = async () => { setLoading(true); setError(''); const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false }).limit(250); if (error) setError(error.message); else setItems(data || []); setLoading(false); };
-  useEffect(() => { void load(); }, [table]);
-  const filtered = useMemo(() => items.filter(item => JSON.stringify(item).toLowerCase().includes(search.toLowerCase())), [items, search]);
-  const canCreate = tab === 'parceiros' || tab === 'produtos' || tab === 'propostas';
-  const updateStatus = async (item: any, status: string) => { const { error } = await supabase.from(table).update({ status, updated_at: new Date().toISOString() }).eq('id', item.id); if (error) toast.error(error.message); else { toast.success('Status atualizado.'); void load(); } };
-  return <div className="overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"><div className="flex flex-col justify-between gap-4 border-b border-black/5 p-5 sm:flex-row sm:items-center"><div><h2 className="text-xl font-black">{labels[tab]}</h2><p className="text-sm text-neutral-500">{items.length} registro(s) encontrado(s)</p></div><div className="flex gap-2"><label className="flex items-center gap-2 rounded-xl border border-black/10 px-3"><Search className="h-4 w-4 text-neutral-400" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Pesquisar" className="w-40 bg-transparent py-2.5 text-sm outline-none" /></label><button onClick={load} className="rounded-xl border border-black/10 p-3" aria-label="Atualizar"><RefreshCw className="h-4 w-4" /></button>{canCreate && <button onClick={() => { setEditing(null); setModal(true); }} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black text-white" style={{ background: d.accent }}><Plus className="h-4 w-4" /> Novo</button>}</div></div>{loading ? <PanelState icon={Loader2} text="Carregando registros..." spin /> : error ? <PanelState icon={Activity} text={error} action={load} /> : filtered.length === 0 ? <PanelState icon={Search} text={`Nenhum registro em ${labels[tab].toLowerCase()}.`} /> : <div className="divide-y divide-black/5">{filtered.map(item => <div key={item.id} className="flex flex-col justify-between gap-4 p-5 hover:bg-neutral-50 sm:flex-row sm:items-center"><div className="min-w-0"><p className="truncate font-black">{item.nome || item.titulo || item.protocolo || item.numero || `Registro ${String(item.id).slice(0, 8)}`}</p><p className="mt-1 truncate text-sm text-neutral-500">{item.resumo || item.email || item.assunto || item.categoria || (item.created_at && new Date(item.created_at).toLocaleDateString('pt-BR'))}</p></div><div className="flex items-center gap-2">{item.status && <select value={item.status} onChange={e => updateStatus(item, e.target.value)} className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-bold"><option value={item.status}>{String(item.status).replaceAll('_', ' ')}</option>{statusOptions(tab).filter(x => x !== item.status).map(x => <option key={x} value={x}>{x.replaceAll('_', ' ')}</option>)}</select>}{(tab === 'parceiros' || tab === 'produtos') && <button onClick={() => { setEditing(item); setModal(true); }} className="rounded-xl border border-black/10 px-3 py-2 text-xs font-black">Editar</button>}</div></div>)}</div>}{modal && (tab === 'parceiros' || tab === 'produtos') && <EditModal domain={domain} tab={tab} item={editing} onClose={() => setModal(false)} onSaved={() => { setModal(false); void load(); }} />}{modal && tab === 'propostas' && <ProposalModal domain={domain} onClose={() => setModal(false)} onSaved={() => { setModal(false); void load(); }} />}</div>;
+function resourceFor(domain: Domain, tab: Exclude<Tab, 'dashboard'>) {
+  if (tab === 'contratos') return domain === 'saude' ? 'saude_contratos' : 'seguros_apolices';
+  return `${domain}_${tab}`;
 }
 
 function statusOptions(tab: Tab) {
   const options: Partial<Record<Tab, string[]>> = {
-    parceiros: ['ativo', 'inativo'], produtos: ['rascunho', 'publicado', 'pausado', 'arquivado'],
+    parceiros: ['ativo', 'inativo'],
+    produtos: ['rascunho', 'publicado', 'pausado', 'arquivado'],
     cotacoes: ['recebida', 'em_analise', 'aguardando_dados', 'propostas_disponiveis', 'encerrada', 'cancelada'],
     propostas: ['rascunho', 'enviada', 'visualizada', 'aceita', 'recusada', 'expirada', 'cancelada'],
     contratos: ['em_implantacao', 'ativo', 'suspenso', 'encerrado', 'cancelado'],
@@ -81,20 +83,222 @@ function statusOptions(tab: Tab) {
   return options[tab] || [];
 }
 
-function EditModal({ domain, tab, item, onClose, onSaved }: { domain: Domain; tab: 'parceiros' | 'produtos'; item: any; onClose: () => void; onSaved: () => void }) {
-  const d = definitions[domain]; const [saving, setSaving] = useState(false); const [partners, setPartners] = useState<any[]>([]); const [form, setForm] = useState<any>(item || (tab === 'parceiros' ? { nome: '', status: 'ativo', comissao_tipo: 'porcentagem' } : { nome: '', slug: '', categoria: domain === 'saude' ? 'individual-familiar' : 'auto', status: 'rascunho', destaque: false }));
-  useEffect(() => { if (tab === 'produtos') supabase.from(`${domain}_parceiros`).select('id,nome').eq('status', 'ativo').order('nome').then(({ data }) => setPartners(data || [])); }, [domain, tab]);
-  const save = async () => { if (!form.nome?.trim()) return toast.error('Informe o nome.'); setSaving(true); const payload = { ...form, slug: tab === 'produtos' ? (form.slug || form.nome).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : undefined, updated_at: new Date().toISOString() }; if (!item) delete payload.id; const { error } = await supabase.from(tableFor(domain, tab)).upsert(payload); setSaving(false); if (error) toast.error(error.message); else { toast.success('Registro salvo.'); onSaved(); } };
-  const field = (name: string, label: string, type = 'text') => <label className="block text-sm font-bold">{label}<input type={type} value={form[name] ?? ''} onChange={e => setForm({ ...form, [name]: type === 'number' ? Number(e.target.value) : e.target.value })} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 outline-none focus:border-black/30" /></label>;
-  return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onMouseDown={e => e.target === e.currentTarget && onClose()}><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8"><div className="flex items-center justify-between"><h2 className="text-2xl font-black">{item ? 'Editar' : 'Novo'} {tab === 'parceiros' ? 'parceiro' : d.product.slice(0, -1).toLowerCase()}</h2><button onClick={onClose} className="rounded-full p-2 hover:bg-neutral-100"><X className="h-5 w-5" /></button></div><div className="mt-7 grid gap-5 sm:grid-cols-2">{field('nome', 'Nome *')}{tab === 'parceiros' ? <>{field('documento', 'CNPJ/registro')}{field('site', 'Site')}{field('contato', 'Contato')}{field('comissao_valor', 'Comissão acordada', 'number')}<label className="block text-sm font-bold sm:col-span-2">Observações<textarea value={form.observacoes || ''} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3" /></label></> : <><label className="block text-sm font-bold">Parceiro<select value={form.parceiro_id || ''} onChange={e => setForm({ ...form, parceiro_id: e.target.value || null })} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3"><option value="">Selecione</option>{partners.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}</select></label>{field('categoria', 'Categoria')}{field('imagem_url', 'URL da imagem')}{field('preco_referencia', domain === 'saude' ? 'Mensalidade de referência' : 'Prêmio de referência', 'number')}<label className="block text-sm font-bold sm:col-span-2">Resumo<textarea value={form.resumo || ''} onChange={e => setForm({ ...form, resumo: e.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3" /></label><label className="flex items-center gap-3 text-sm font-bold sm:col-span-2"><input type="checkbox" checked={!!form.destaque} onChange={e => setForm({ ...form, destaque: e.target.checked })} /> Destacar no catálogo</label></>}</div><div className="mt-8 flex justify-end gap-3"><button onClick={onClose} className="rounded-full border border-black/10 px-6 py-3 font-bold">Cancelar</button><button disabled={saving} onClick={save} className="flex items-center gap-2 rounded-full px-7 py-3 font-black text-white disabled:opacity-50" style={{ background: d.accent }}>{saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar</button></div></div></div>;
+function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div role="dialog" aria-modal="true" className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8">{children}</div></div>;
 }
 
-function ProposalModal({ domain, onClose, onSaved }: { domain: Domain; onClose: () => void; onSaved: () => void }) {
-  const d = definitions[domain]; const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [quotes, setQuotes] = useState<any[]>([]); const [partners, setPartners] = useState<any[]>([]); const [products, setProducts] = useState<any[]>([]); const [form, setForm] = useState<any>({ cotacao_id: '', parceiro_id: '', produto_id: '', titulo: '', valor: '', franquia: '', taxa_assessoria_gsa: 0, validade_dias: 5 });
-  useEffect(() => { Promise.all([supabase.from(`${domain}_cotacoes`).select('id,cliente_id,protocolo,categoria,status').not('status', 'in', '(encerrada,cancelada)').order('created_at', { ascending: false }), supabase.from(`${domain}_parceiros`).select('id,nome').eq('status', 'ativo').order('nome'), supabase.from(d.productTable).select('id,nome,parceiro_id').eq('status', 'publicado').order('nome')]).then(([q, p, pr]) => { setQuotes(q.data || []); setPartners(p.data || []); setProducts(pr.data || []); setLoading(false); }); }, [domain]);
-  const save = async () => { const quote = quotes.find(q => q.id === form.cotacao_id); if (!quote || !form.parceiro_id || !Number(form.valor)) return toast.error('Selecione cotação, parceiro e informe o valor.'); setSaving(true); const protocol = `${domain === 'saude' ? 'SAU' : 'SEG'}-PROP-${Date.now().toString(36).toUpperCase()}`; const common: any = { cotacao_id: quote.id, cliente_id: quote.cliente_id, parceiro_id: form.parceiro_id, produto_id: form.produto_id || null, protocolo: protocol, titulo: form.titulo || `Proposta ${protocol}`, taxa_assessoria_gsa: Number(form.taxa_assessoria_gsa) || 0, validade_ate: new Date(Date.now() + Number(form.validade_dias || 5) * 86400000).toISOString(), status: 'enviada' }; if (domain === 'saude') common.mensalidade_operadora = Number(form.valor); else { common.premio_seguradora = Number(form.valor); common.franquia = Number(form.franquia) || null; } const { error } = await supabase.from(`${domain}_propostas`).insert(common); if (!error) await supabase.from(`${domain}_cotacoes`).update({ status: 'propostas_disponiveis', updated_at: new Date().toISOString() }).eq('id', quote.id); setSaving(false); if (error) toast.error(error.message); else { toast.success('Proposta enviada ao cliente.'); onSaved(); } };
-  const input = (name: string, label: string, type = 'text') => <label className="block text-sm font-bold">{label}<input type={type} value={form[name] ?? ''} onChange={e => setForm({ ...form, [name]: e.target.value })} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3" /></label>;
-  return <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-7"><div className="flex justify-between"><h2 className="text-2xl font-black">Nova proposta</h2><button onClick={onClose}><X className="h-5 w-5" /></button></div>{loading ? <PanelState icon={Loader2} text="Carregando dados..." spin /> : <div className="mt-6 grid gap-5 sm:grid-cols-2"><label className="text-sm font-bold sm:col-span-2">Cotação<select value={form.cotacao_id} onChange={e => setForm({ ...form, cotacao_id: e.target.value })} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3"><option value="">Selecione</option>{quotes.map(q => <option key={q.id} value={q.id}>{q.protocolo} · {q.categoria}</option>)}</select></label><label className="text-sm font-bold">Parceiro<select value={form.parceiro_id} onChange={e => setForm({ ...form, parceiro_id: e.target.value, produto_id: '' })} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3"><option value="">Selecione</option>{partners.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}</select></label><label className="text-sm font-bold">Produto<select value={form.produto_id} onChange={e => setForm({ ...form, produto_id: e.target.value })} className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3"><option value="">Opcional</option>{products.filter(p => !form.parceiro_id || p.parceiro_id === form.parceiro_id).map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}</select></label>{input('titulo', 'Título da proposta')}{input('valor', domain === 'saude' ? 'Mensalidade da operadora (R$)' : 'Prêmio da seguradora (R$)', 'number')}{domain === 'seguros' && input('franquia', 'Franquia (R$)', 'number')}{input('taxa_assessoria_gsa', 'Taxa de assessoria GSA (R$)', 'number')}{input('validade_dias', 'Validade (dias)', 'number')}<p className="rounded-xl bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-800 sm:col-span-2">O valor da {domain === 'saude' ? 'mensalidade' : 'prêmio'} pertence à parceira. Somente comissão e eventual taxa de assessoria aceita são receitas da GSA.</p></div>}<div className="mt-7 flex justify-end gap-3"><button onClick={onClose} className="rounded-full border border-black/10 px-6 py-3 font-bold">Cancelar</button><button disabled={saving || loading} onClick={save} className="rounded-full px-7 py-3 font-black text-white disabled:opacity-50" style={{ background: d.accent }}>{saving ? 'Salvando...' : 'Enviar proposta'}</button></div></div></div>;
+export function ProtectionAdminModule({ domain, initialTab = 'dashboard', initialItemId }: Props) {
+  const definition = definitions[domain];
+  const Icon = definition.icon;
+  const normalizedInitial = initialTab === 'apolices' ? 'contratos' : initialTab;
+  const initial = definition.tabs.includes(normalizedInitial as Tab) ? normalizedInitial as Tab : 'dashboard';
+  const [tab, setTab] = useState<Tab>(initial);
+
+  useEffect(() => {
+    const normalized = initialTab === 'apolices' ? 'contratos' : initialTab;
+    setTab(definition.tabs.includes(normalized as Tab) ? normalized as Tab : 'dashboard');
+  }, [definition.tabs, initialTab]);
+
+  const openTab = (next: Tab) => {
+    setTab(next);
+    navigate(`/admin/${domain}/${next}`);
+  };
+
+  return (
+    <div className="space-y-6 pb-10">
+      <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl">
+        <h1 className="flex items-center gap-3 text-2xl font-black"><span className="flex h-11 w-11 items-center justify-center rounded-2xl text-white" style={{ background: definition.accent }}><Icon className="h-6 w-6" /></span>{definition.label}</h1>
+        <p className="mt-3 text-sm text-white/55">Operações paginadas, autorizadas por domínio e auditadas no servidor.</p>
+      </header>
+
+      <div className="flex gap-1 overflow-x-auto rounded-2xl border border-neutral-200 bg-white p-1.5 shadow-sm">
+        {definition.tabs.map((key) => <button key={key} type="button" onClick={() => openTab(key)} className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-bold transition ${tab === key ? 'text-white shadow-sm' : 'text-neutral-500 hover:bg-neutral-50'}`} style={tab === key ? { background: definition.accent } : undefined}>{key === 'contratos' ? definition.contract : labels[key]}</button>)}
+      </div>
+
+      {tab === 'dashboard' ? <ProtectionDashboard domain={domain} accent={definition.accent} onOpen={openTab} /> : <ProtectionList domain={domain} tab={tab as Exclude<Tab, 'dashboard'>} accent={definition.accent} initialItemId={initialItemId} />}
+    </div>
+  );
 }
 
-function PanelState({ icon: Icon, text, spin, action }: { icon: React.ElementType; text: string; spin?: boolean; action?: () => void }) { return <div className="p-14 text-center"><Icon className={`mx-auto h-9 w-9 text-neutral-300 ${spin ? 'animate-spin' : ''}`} /><p className="mt-4 font-bold text-neutral-500">{text}</p>{action && <button onClick={action} className="mt-4 rounded-full bg-neutral-900 px-5 py-2 text-sm font-black text-white">Tentar novamente</button>}</div>; }
+function ProtectionDashboard({ domain, accent, onOpen }: { domain: Domain; accent: string; onOpen: (tab: Tab) => void }) {
+  const [loading, setLoading] = useState(true);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const cards: Array<{ tab: Exclude<Tab, 'dashboard'>; label: string; icon: React.ElementType }> = [
+    { tab: 'parceiros', label: 'Parceiros', icon: Building2 },
+    { tab: 'produtos', label: 'Produtos', icon: FileCheck2 },
+    { tab: 'cotacoes', label: 'Cotações', icon: Search },
+    { tab: 'propostas', label: 'Propostas', icon: WalletCards },
+    { tab: 'contratos', label: domain === 'saude' ? 'Contratações' : 'Apólices', icon: ShieldCheck },
+    { tab: 'atendimentos', label: 'Atendimentos', icon: MessageCircle },
+  ];
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const entries = await Promise.all(cards.map(async (card) => {
+        const result = await callAdminRpc<PagedResult>('gsa_admin_list_resource', {
+          p_resource: resourceFor(domain, card.tab),
+          p_page: 1,
+          p_page_size: 1,
+          p_search: null,
+          p_status: null,
+        });
+        return [card.tab, Number(result?.total || 0)] as const;
+      }));
+      setCounts(Object.fromEntries(entries));
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível carregar os indicadores.');
+    } finally {
+      setLoading(false);
+    }
+  }, [domain]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  if (loading) return <PanelState icon={Loader2} text="Carregando indicadores..." spin />;
+
+  return <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{cards.map((card) => { const CardIcon = card.icon; return <button key={card.tab} type="button" onClick={() => onOpen(card.tab)} className="rounded-2xl border border-neutral-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><div className="flex items-start justify-between"><span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ color: accent, background: `${accent}12` }}><CardIcon className="h-5 w-5" /></span><strong className="text-3xl font-black">{counts[card.tab] || 0}</strong></div><p className="mt-5 font-bold text-neutral-600">{card.label}</p></button>; })}</div>;
+}
+
+function ProtectionList({ domain, tab, accent, initialItemId }: { domain: Domain; tab: Exclude<Tab, 'dashboard'>; accent: string; initialItemId?: string }) {
+  const resource = resourceFor(domain, tab);
+  const [result, setResult] = useState<PagedResult>({ items: [], total: 0, page: 1, page_size: PAGE_SIZE });
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
+  const [showProposal, setShowProposal] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  useEffect(() => { setPage(1); setSearch(''); setAppliedSearch(''); setEditing(null); setShowEditor(false); setShowProposal(false); }, [resource]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await callAdminRpc<PagedResult>('gsa_admin_list_resource', {
+        p_resource: resource,
+        p_page: page,
+        p_page_size: PAGE_SIZE,
+        p_search: appliedSearch || null,
+        p_status: null,
+      });
+      setResult({ items: Array.isArray(data?.items) ? data.items : [], total: Number(data?.total || 0), page: Number(data?.page || page), page_size: Number(data?.page_size || PAGE_SIZE) });
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível carregar os registros.');
+    } finally {
+      setLoading(false);
+    }
+  }, [appliedSearch, page, resource]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const updateStatus = async (item: any, status: string) => {
+    setProcessingId(item.id);
+    try {
+      await callAdminRpc('gsa_admin_update_resource_status', { p_resource: resource, p_id: item.id, p_status: status, p_reason: null });
+      toast.success('Status atualizado e auditado.');
+      await load();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível alterar o status.');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const canEdit = tab === 'parceiros' || tab === 'produtos';
+  const canCreateProposal = tab === 'propostas';
+  const totalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+  const highlighted = useMemo(() => initialItemId ? result.items.find((item) => item.id === initialItemId) : null, [initialItemId, result.items]);
+
+  return <>
+    <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <div className="flex flex-col justify-between gap-4 border-b border-neutral-100 p-5 lg:flex-row lg:items-center">
+        <div><h2 className="text-xl font-black">{tab === 'contratos' ? (domain === 'saude' ? 'Contratações' : 'Apólices') : labels[tab]}</h2><p className="mt-1 text-sm text-neutral-500">{result.total} registro(s), carregados por página.</p></div>
+        <div className="flex flex-wrap gap-2"><div className="relative min-w-[220px] flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { setPage(1); setAppliedSearch(search.trim()); } }} placeholder="Pesquisar" className="w-full rounded-xl border border-neutral-200 py-2.5 pl-10 pr-3 text-sm" /></div><button type="button" onClick={() => { setPage(1); setAppliedSearch(search.trim()); }} className="rounded-xl border border-neutral-200 px-4 py-2.5"><Search className="h-4 w-4" /></button><button type="button" onClick={() => void load()} className="rounded-xl border border-neutral-200 px-4 py-2.5"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /></button>{canEdit && <button type="button" onClick={() => { setEditing(null); setShowEditor(true); }} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black text-white" style={{ background: accent }}><Plus className="h-4 w-4" /> Novo</button>}{canCreateProposal && <button type="button" onClick={() => setShowProposal(true)} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black text-white" style={{ background: accent }}><Plus className="h-4 w-4" /> Nova proposta</button>}</div>
+      </div>
+
+      {loading ? <PanelState icon={Loader2} text="Carregando registros..." spin /> : result.items.length === 0 ? <PanelState icon={Search} text="Nenhum registro encontrado." /> : <div className="divide-y divide-neutral-100">{result.items.map((item) => <article key={item.id} className={`flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center ${highlighted?.id === item.id ? 'bg-indigo-50/70' : ''}`}><div className="min-w-0"><h3 className="truncate font-black text-neutral-900">{item.nome || item.titulo || item.protocolo || item.numero || `Registro ${String(item.id).slice(0, 8)}`}</h3><p className="mt-1 truncate text-sm text-neutral-500">{item.resumo || item.email || item.assunto || item.categoria || (item.created_at ? formatDateTime(item.created_at) : 'Sem descrição')}</p>{item.valor != null && <p className="mt-1 text-sm font-bold">{formatCurrency(Number(item.valor))}</p>}</div><div className="flex shrink-0 items-center gap-2">{item.status && statusOptions(tab).length > 0 && <select disabled={processingId === item.id} value={item.status} onChange={(event) => void updateStatus(item, event.target.value)} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold disabled:opacity-50">{Array.from(new Set([item.status, ...statusOptions(tab)])).map((status) => <option key={status} value={status}>{String(status).replaceAll('_', ' ')}</option>)}</select>}{canEdit && <button type="button" onClick={() => { setEditing(item); setShowEditor(true); }} className="rounded-xl border border-neutral-200 px-3 py-2 text-xs font-black">Editar</button>}</div></article>)}</div>}
+    </section>
+
+    <div className="flex items-center justify-between"><p className="text-xs font-bold text-neutral-400">Página {page} de {totalPages}</p><div className="flex gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-xl border border-neutral-200 p-2 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button><button type="button" disabled={page >= totalPages || loading} onClick={() => setPage((value) => value + 1)} className="rounded-xl border border-neutral-200 p-2 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button></div></div>
+
+    {showEditor && <EntityEditor domain={domain} tab={tab as 'parceiros' | 'produtos'} item={editing} accent={accent} onClose={() => setShowEditor(false)} onSaved={async () => { setShowEditor(false); await load(); }} />}
+    {showProposal && <ProposalEditor domain={domain} accent={accent} onClose={() => setShowProposal(false)} onSaved={async () => { setShowProposal(false); await load(); }} />}
+  </>;
+}
+
+function EntityEditor({ domain, tab, item, accent, onClose, onSaved }: { domain: Domain; tab: 'parceiros' | 'produtos'; item: any; accent: string; onClose: () => void; onSaved: () => Promise<void> }) {
+  const [saving, setSaving] = useState(false);
+  const [partners, setPartners] = useState<any[]>([]);
+  const [form, setForm] = useState<any>(item || (tab === 'parceiros' ? { nome: '', status: 'ativo', comissao_tipo: 'porcentagem', comissao_valor: 0 } : { nome: '', slug: '', categoria: domain === 'saude' ? 'individual-familiar' : 'auto', status: 'rascunho', destaque: false }));
+
+  useEffect(() => {
+    if (tab !== 'produtos') return;
+    void callAdminRpc<PagedResult>('gsa_admin_list_resource', { p_resource: `${domain}_parceiros`, p_page: 1, p_page_size: 250, p_search: null, p_status: 'ativo' }).then((data) => setPartners(data.items || [])).catch(() => setPartners([]));
+  }, [domain, tab]);
+
+  const save = async () => {
+    if (!form.nome?.trim()) return toast.error('Informe o nome.');
+    setSaving(true);
+    try {
+      await callAdminRpc('gsa_admin_save_protection_entity', {
+        p_domain: domain,
+        p_kind: tab === 'parceiros' ? 'parceiro' : 'produto',
+        p_id: item?.id || null,
+        p_payload: form,
+      });
+      toast.success('Registro salvo e auditado.');
+      await onSaved();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível salvar o registro.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const field = (name: string, label: string, type = 'text') => <label className="block text-sm font-bold">{label}<input type={type} value={form[name] ?? ''} onChange={(event) => setForm({ ...form, [name]: type === 'number' ? Number(event.target.value) : event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>;
+
+  return <Overlay onClose={onClose}><div className="flex items-center justify-between"><h2 className="text-2xl font-black">{item ? 'Editar' : 'Novo'} {tab === 'parceiros' ? 'parceiro' : 'produto'}</h2><button type="button" onClick={onClose}><X className="h-5 w-5" /></button></div><div className="mt-6 grid gap-4 sm:grid-cols-2">{field('nome', 'Nome *')}{tab === 'parceiros' ? <>{field('documento', 'CNPJ/registro')}{field('site', 'Site')}{field('contato', 'Contato')}{field('comissao_valor', 'Comissão acordada', 'number')}<label className="block text-sm font-bold sm:col-span-2">Observações<textarea value={form.observacoes || ''} onChange={(event) => setForm({ ...form, observacoes: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></> : <><label className="block text-sm font-bold">Parceiro<select value={form.parceiro_id || ''} onChange={(event) => setForm({ ...form, parceiro_id: event.target.value || null })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3"><option value="">Selecione</option>{partners.map((partner) => <option key={partner.id} value={partner.id}>{partner.nome}</option>)}</select></label>{field('categoria', 'Categoria')}{field('imagem_url', 'URL da imagem')}{field('preco_referencia', domain === 'saude' ? 'Mensalidade de referência' : 'Prêmio de referência', 'number')}<label className="block text-sm font-bold sm:col-span-2">Resumo<textarea value={form.resumo || ''} onChange={(event) => setForm({ ...form, resumo: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label><label className="flex items-center gap-3 text-sm font-bold sm:col-span-2"><input type="checkbox" checked={Boolean(form.destaque)} onChange={(event) => setForm({ ...form, destaque: event.target.checked })} /> Destacar no catálogo</label></>}</div><div className="mt-8 flex justify-end gap-3"><button type="button" onClick={onClose} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving} onClick={() => void save()} className="rounded-xl px-6 py-3 font-black text-white disabled:opacity-50" style={{ background: accent }}>{saving ? 'Salvando...' : 'Salvar'}</button></div></Overlay>;
+}
+
+function ProposalEditor({ domain, accent, onClose, onSaved }: { domain: Domain; accent: string; onClose: () => void; onSaved: () => Promise<void> }) {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [quotes, setQuotes] = useState<any[]>([]);
+  const [partners, setPartners] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [form, setForm] = useState<any>({ cotacao_id: '', parceiro_id: '', produto_id: '', titulo: '', valor: '', franquia: '', taxa_assessoria_gsa: 0, validade_dias: 5 });
+
+  useEffect(() => {
+    void Promise.all([
+      callAdminRpc<PagedResult>('gsa_admin_list_resource', { p_resource: `${domain}_cotacoes`, p_page: 1, p_page_size: 250, p_search: null, p_status: null }),
+      callAdminRpc<PagedResult>('gsa_admin_list_resource', { p_resource: `${domain}_parceiros`, p_page: 1, p_page_size: 250, p_search: null, p_status: 'ativo' }),
+      callAdminRpc<PagedResult>('gsa_admin_list_resource', { p_resource: `${domain}_produtos`, p_page: 1, p_page_size: 250, p_search: null, p_status: 'publicado' }),
+    ]).then(([quoteData, partnerData, productData]) => { setQuotes((quoteData.items || []).filter((quote) => !['encerrada', 'cancelada'].includes(quote.status))); setPartners(partnerData.items || []); setProducts(productData.items || []); }).catch((error) => toast.error(error?.message || 'Não foi possível carregar os dados da proposta.')).finally(() => setLoading(false));
+  }, [domain]);
+
+  const save = async () => {
+    const amount = Number(form.valor);
+    if (!form.cotacao_id || !form.parceiro_id || !Number.isFinite(amount) || amount <= 0) return toast.error('Selecione cotação, parceiro e informe o valor.');
+    setSaving(true);
+    try {
+      await callAdminRpc('gsa_admin_create_protection_proposal', { p_domain: domain, p_payload: { ...form, valor: amount } });
+      toast.success('Proposta criada de forma transacional.');
+      await onSaved();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível criar a proposta.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const input = (name: string, label: string, type = 'text') => <label className="block text-sm font-bold">{label}<input type={type} value={form[name] ?? ''} onChange={(event) => setForm({ ...form, [name]: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>;
+
+  return <Overlay onClose={onClose}><div className="flex items-center justify-between"><h2 className="text-2xl font-black">Nova proposta</h2><button type="button" onClick={onClose}><X className="h-5 w-5" /></button></div>{loading ? <PanelState icon={Loader2} text="Carregando dados..." spin /> : <div className="mt-6 grid gap-4 sm:grid-cols-2"><label className="text-sm font-bold sm:col-span-2">Cotação<select value={form.cotacao_id} onChange={(event) => setForm({ ...form, cotacao_id: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3"><option value="">Selecione</option>{quotes.map((quote) => <option key={quote.id} value={quote.id}>{quote.protocolo || String(quote.id).slice(0, 8)} · {quote.categoria || quote.status}</option>)}</select></label><label className="text-sm font-bold">Parceiro<select value={form.parceiro_id} onChange={(event) => setForm({ ...form, parceiro_id: event.target.value, produto_id: '' })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3"><option value="">Selecione</option>{partners.map((partner) => <option key={partner.id} value={partner.id}>{partner.nome}</option>)}</select></label><label className="text-sm font-bold">Produto<select value={form.produto_id} onChange={(event) => setForm({ ...form, produto_id: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3"><option value="">Opcional</option>{products.filter((product) => !form.parceiro_id || product.parceiro_id === form.parceiro_id).map((product) => <option key={product.id} value={product.id}>{product.nome}</option>)}</select></label>{input('titulo', 'Título')}{input('valor', domain === 'saude' ? 'Mensalidade da operadora' : 'Prêmio da seguradora', 'number')}{domain === 'seguros' && input('franquia', 'Franquia', 'number')}{input('taxa_assessoria_gsa', 'Taxa de assessoria GSA', 'number')}{input('validade_dias', 'Validade em dias', 'number')}</div>}<div className="mt-8 flex justify-end gap-3"><button type="button" onClick={onClose} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving || loading} onClick={() => void save()} className="rounded-xl px-6 py-3 font-black text-white disabled:opacity-50" style={{ background: accent }}>{saving ? 'Salvando...' : 'Enviar proposta'}</button></div></Overlay>;
+}
+
+function PanelState({ icon: Icon, text, spin }: { icon: React.ElementType; text: string; spin?: boolean }) {
+  return <div className="p-14 text-center"><Icon className={`mx-auto h-9 w-9 text-neutral-300 ${spin ? 'animate-spin' : ''}`} /><p className="mt-4 font-bold text-neutral-500">{text}</p></div>;
+}
