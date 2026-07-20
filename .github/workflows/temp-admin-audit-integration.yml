@@ -39,7 +39,6 @@ jobs:
 
           if [ "$merge_status" -ne 0 ]; then
             for path in \
-              .github/workflows/quality.yml \
               package.json \
               scripts/check-admin-panel-contracts.ts \
               src/App.tsx \
@@ -61,6 +60,12 @@ jobs:
               fi
             done
           fi
+
+          # O GITHUB_TOKEN não pode publicar alterações de workflow. A versão
+          # da main já possui PostgreSQL e chama npm run test:admin, portanto
+          # preservamos o arquivo exatamente como estava antes do merge.
+          git checkout HEAD -- .github/workflows/quality.yml
+          git add .github/workflows/quality.yml
 
           unresolved="$(git diff --name-only --diff-filter=U)"
           printf '%s\n' "$unresolved" > /tmp/admin-audit-conflicts.txt
