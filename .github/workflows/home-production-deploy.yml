@@ -1,0 +1,142 @@
+name: Deploy Home Public Contracts
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-home-public-contracts-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.pull_request.head.ref == 'agent/finalizar-home-itens-2-a-10'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate production target and files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          test -f supabase/migrations/20260720215500_fix_public_home_contracts.sql
+          test -f supabase/migrations/20260720215530_minimize_public_referral_lookup.sql
+          test -f supabase/migrations/20260720215600_guard_legacy_budget_permissions.sql
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Build preview and production bundles
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20260720215500_fix_public_home_contracts.sql
+            cat supabase/migrations/20260720215530_minimize_public_referral_lookup.sql
+            cat supabase/migrations/20260720215600_guard_legacy_budget_permissions.sql
+            echo 'ROLLBACK;'
+          } > home-public-preview.sql
+          sed '$s/ROLLBACK;/COMMIT;/' home-public-preview.sql > home-public-production.sql
+
+      - name: Validate migrations against production with rollback
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file home-public-preview.sql 2>&1 | tee home-public-preview.log
+
+      - name: Apply migrations atomically
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file home-public-production.sql 2>&1 | tee home-public-production.log
+
+      - name: Inspect migration history
+        shell: bash
+        run: |
+          cat > home-public-history.sql <<'SQL'
+          SELECT version
+            FROM supabase_migrations.schema_migrations
+           WHERE version IN ('20260720215500','20260720215530','20260720215600')
+           ORDER BY version;
+          SQL
+          supabase db query --linked --file home-public-history.sql 2>&1 | tee home-public-history-before.log
+
+      - name: Register missing migration versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          for version in 20260720215500 20260720215530 20260720215600; do
+            if ! grep -q "$version" home-public-history-before.log; then
+              supabase migration repair "$version" --status applied --linked
+            fi
+          done
+
+      - name: Verify production contracts and migration history
+        shell: bash
+        run: |
+          cat > home-public-verification.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_versions integer;
+          BEGIN
+            SELECT count(*) INTO v_versions
+              FROM supabase_migrations.schema_migrations
+             WHERE version IN ('20260720215500','20260720215530','20260720215600');
+            IF v_versions <> 3 THEN
+              RAISE EXCEPTION 'Histórico da Home incompleto: % de 3 migrations', v_versions;
+            END IF;
+
+            IF to_regprocedure('public.gsa_public_lookup_referral(text)') IS NULL
+               OR to_regprocedure('public.gsa_public_register_client(text,jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_public_register_provider(jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_public_create_enterprise_budget(jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'Funções públicas protegidas da Home estão ausentes';
+            END IF;
+
+            IF NOT has_function_privilege('anon', 'public.gsa_public_lookup_referral(text)', 'EXECUTE')
+               OR NOT has_function_privilege('anon', 'public.gsa_public_register_client(text,jsonb)', 'EXECUTE')
+               OR NOT has_function_privilege('anon', 'public.gsa_public_register_provider(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Funções públicas necessárias não estão disponíveis para anon';
+            END IF;
+
+            IF to_regprocedure('public.gsa_public_create_enterprise_budget_v2(jsonb)') IS NOT NULL
+               AND has_function_privilege('anon', 'public.gsa_public_create_enterprise_budget(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Função legada de orçamento continua exposta apesar da versão v2';
+            END IF;
+          END $$;
+
+          SELECT 'HOME_PUBLIC_PRODUCTION_VERIFIED' AS result;
+          SQL
+          set -o pipefail
+          supabase db query --linked --file home-public-verification.sql 2>&1 | tee home-public-verification.log
+          grep -q 'HOME_PUBLIC_PRODUCTION_VERIFIED' home-public-verification.log
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-public-production-evidence
+          path: |
+            home-public-preview.log
+            home-public-production.log
+            home-public-history-before.log
+            home-public-verification.log
+          retention-days: 30
+          if-no-files-found: ignore
