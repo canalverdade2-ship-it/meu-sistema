@@ -28,40 +28,12 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          exec > >(tee /tmp/apply-products-subscriptions.log) 2>&1
           cat .patch/apply-interfaces.py.part* > /tmp/apply-interfaces.py
+          python -m py_compile /tmp/apply-interfaces.py
+          python /tmp/apply-interfaces.py
 
           python <<'PY'
-          from pathlib import Path
-
-          script_path = Path('/tmp/apply-interfaces.py')
-          script = script_path.read_text(encoding='utf-8')
-
-          product_start_marker = '# exclusão individual vira inativação'
-          product_end_marker = '# ---------------------------------------------------------------------------\n# AssinaturasModule'
-          product_start = script.find(product_start_marker)
-          product_end = script.find(product_end_marker, product_start)
-          if product_start < 0 or product_end < 0:
-              raise RuntimeError('Bloco temporário de exclusão de produto não localizado.')
-          script = script[:product_start] + script[product_end:]
-
-          subscription_needle = (
-              "replace_once(\n"
-              "    'src/components/admin/AssinaturasModule.tsx',\n"
-              "    \"                       const { error } = await supabase.from('assinaturas').delete()"
-          )
-          subscription_start = script.find(subscription_needle)
-          subscription_end_marker = '# ---------------------------------------------------------------------------\n# OrdensCompraModule'
-          subscription_end = script.find(subscription_end_marker, subscription_start)
-          if subscription_start < 0 or subscription_end < 0:
-              raise RuntimeError('Bloco temporário de exclusão de assinatura não localizado.')
-          script = script[:subscription_start] + script[subscription_end:]
-
-          script_path.write_text(script, encoding='utf-8')
-          PY
-
-          python /tmp/apply-interfaces.py 2>&1 | tee /tmp/apply-products-subscriptions.log
-
-          python <<'PY' 2>&1 | tee -a /tmp/apply-products-subscriptions.log
           import json
           from pathlib import Path
 
@@ -90,20 +62,8 @@ jobs:
               )
               file_path.write_text(content[:line_start] + replacement + content[handler_end:], encoding='utf-8')
 
-          replace_delete_handler(
-              'src/components/admin/ProdutosModule.tsx',
-              'produtos',
-              'selectedProduto',
-              'produto',
-              'fetchProdutos',
-          )
-          replace_delete_handler(
-              'src/components/admin/AssinaturasModule.tsx',
-              'assinaturas',
-              'selectedAssinatura',
-              'assinatura',
-              'fetchAssinaturas',
-          )
+          replace_delete_handler('src/components/admin/ProdutosModule.tsx', 'produtos', 'selectedProduto', 'produto', 'fetchProdutos')
+          replace_delete_handler('src/components/admin/AssinaturasModule.tsx', 'assinaturas', 'selectedAssinatura', 'assinatura', 'fetchAssinaturas')
 
           package_path = Path('package.json')
           package = json.loads(package_path.read_text(encoding='utf-8'))
