@@ -12,47 +12,41 @@ function replaceOnce(search, replacement, label) {
 
 replaceOnce(
   "import { PainelRentabilidade } from './PainelRentabilidade';\n",
-  "import { PainelRentabilidade } from './PainelRentabilidade';\nimport { SecureAttachmentButton } from '../ui/SecureAttachmentButton';\n",
-  'Importar botão seguro',
+  "import { PainelRentabilidade } from './PainelRentabilidade';\nimport { useFileViewer } from '../../contexts/FileViewerContext';\n",
+  'Importar visualizador seguro',
 );
 
 replaceOnce(
-  `                               <a
-                                 href={url}
-                                 target="_blank"
-                                 rel="noopener noreferrer"
-                                 className="p-2 rounded-lg bg-white text-amber-600 hover:bg-amber-50 ring-1 ring-inset ring-neutral-200/50 transition-colors"
-                                 title="Visualizar"
-                               >
-                                 <Download className="h-4 w-4" />
-                               </a>`,
-  `                               <SecureAttachmentButton
-                                 reference={url}
-                                 fileName={\`Anexo de briefing \${idx + 1}\`}
-                                 compact
-                                 className="bg-white text-amber-600 hover:bg-amber-50 ring-1 ring-inset ring-neutral-200/50"
-                               />`,
-  'Link do briefing privado',
+  `export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel: () => void, colaboradorNome?: string }) {
+  const [notas, setNotas] = useState<any[]>([]);`,
+  `export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel: () => void, colaboradorNome?: string }) {
+  const { openFile } = useFileViewer();
+  const [notas, setNotas] = useState<any[]>([]);`,
+  'Inicializar visualizador seguro',
 );
 
 replaceOnce(
-  `                             <a
-                               href={doc.url}
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               className="p-2 rounded-lg bg-white text-indigo-600 hover:bg-indigo-50 ring-1 ring-inset ring-neutral-200/50 transition-colors"
-                               title="Baixar Documento"
-                             >
-                               <Download className="h-4 w-4" />
-                             </a>`,
-  `                             <SecureAttachmentButton
-                               reference={doc.url}
-                               fileName={doc.nome}
-                               mimeType={doc.mime_type}
-                               compact
-                               className="bg-white text-indigo-600 hover:bg-indigo-50 ring-1 ring-inset ring-neutral-200/50"
-                             />`,
-  'Link do anexo privado da OS',
+  'href={url}',
+  `href={url.startsWith('gsa-private://') ? '#' : url}
+                                 onClick={(event) => {
+                                   if (url.startsWith('gsa-private://')) {
+                                     event.preventDefault();
+                                     void openFile(url, \`Anexo de briefing \${idx + 1}\`);
+                                   }
+                                 }}`,
+  'Interceptar briefing privado',
+);
+
+replaceOnce(
+  'href={doc.url}',
+  `href={doc.url.startsWith('gsa-private://') ? '#' : doc.url}
+                               onClick={(event) => {
+                                 if (doc.url.startsWith('gsa-private://')) {
+                                   event.preventDefault();
+                                   void openFile(doc.url, doc.nome);
+                                 }
+                               }}`,
+  'Interceptar anexo privado da OS',
 );
 
 fs.writeFileSync(file, source, 'utf8');
