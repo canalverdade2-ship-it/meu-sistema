@@ -32,6 +32,12 @@ async function main() {
   assert.equal(adminModulePath('viagens'), '/admin/viagens');
   assert.equal(adminModulePath('financeiro', 'faturas', 'abc'), '/admin/financeiro/faturas/abc');
 
+  await assertFileContains('package.json', [
+    '"validate:subscriptions"',
+    '"test:travel"',
+    '"test:admin"',
+  ]);
+
   await assertFileContains('src/pages/AdminPanel.tsx', [
     "import type React from 'react';",
     'canAccessAdminModule',
