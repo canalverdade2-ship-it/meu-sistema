@@ -1,5 +1,5 @@
-status=failure
+status=success
 migration=20260720213000
 project=ocgajvagxagutfvgxwsy
-commit=909773fa52ae2783c350e2d8ea19a2229339a22d
-run=https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/29777952917
+commit=715ca1fa699da5913a2a363538c2d433c8d0f2e1
+run=https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/29778138909
