@@ -1,18 +1,15 @@
-name: Aplicar documentos privados - Etapa 6
+name: Diagnosticar aplicação privada - Etapa 6
 
 on:
   push:
     branches:
       - agent/seguranca-documentos-servicos-etapa-6
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: write
 
 jobs:
-  apply:
+  diagnose:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -27,40 +24,46 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Apply client service documents
-        run: node scripts/fix-private-client-services-stage6.cjs
-
-      - name: Apply support ticket documents
-        run: node scripts/fix-private-ticket-support-stage6.cjs
-
-      - name: Apply admin service-order viewers
-        run: node scripts/fix-private-admin-service-orders-stage6.cjs
-
-      - name: Validate transformed contracts
+      - name: Run and capture every transformation
         shell: bash
         run: |
-          grep -q "uploadPrivateDocument" src/components/client/ClientServicos.tsx
-          grep -q "uploadPrivateDocument" src/components/client/ClientSuporte.tsx
-          grep -q "uploadPrivateDocument" src/components/admin/TicketsModule.tsx
-          grep -q "uploadPrivateDocument" src/components/prestador/PrestadorSuporte.tsx
-          grep -q "SecureAttachmentButton" src/components/admin/OrdensServicoModule.tsx
-          grep -q "anexo_nome" src/types.ts
-          ! grep -q "getPublicUrl" src/components/client/ClientServicos.tsx
-          ! grep -q "getPublicUrl" src/components/client/ClientSuporte.tsx
-          ! grep -q "getPublicUrl" src/components/admin/TicketsModule.tsx
-          ! grep -q "getPublicUrl" src/components/prestador/PrestadorSuporte.tsx
+          mkdir -p inspection
+          OUT=inspection/private-documents-apply-stage6.txt
+          : > "$OUT"
+          set +e
 
-      - name: Publish functional code
+          echo '=== CLIENT SERVICES ===' >> "$OUT"
+          node scripts/fix-private-client-services-stage6.cjs >> "$OUT" 2>&1
+          echo "exit_code=$?" >> "$OUT"
+
+          echo '=== SUPPORT TICKETS ===' >> "$OUT"
+          node scripts/fix-private-ticket-support-stage6.cjs >> "$OUT" 2>&1
+          echo "exit_code=$?" >> "$OUT"
+
+          echo '=== ADMIN SERVICE ORDERS ===' >> "$OUT"
+          node scripts/fix-private-admin-service-orders-stage6.cjs >> "$OUT" 2>&1
+          echo "exit_code=$?" >> "$OUT"
+
+          echo '=== CONTRACT CHECK ===' >> "$OUT"
+          grep -q "uploadPrivateDocument" src/components/client/ClientServicos.tsx
+          echo "client_services_private=$?" >> "$OUT"
+          grep -q "uploadPrivateDocument" src/components/client/ClientSuporte.tsx
+          echo "client_support_private=$?" >> "$OUT"
+          grep -q "uploadPrivateDocument" src/components/admin/TicketsModule.tsx
+          echo "admin_tickets_private=$?" >> "$OUT"
+          grep -q "uploadPrivateDocument" src/components/prestador/PrestadorSuporte.tsx
+          echo "provider_support_private=$?" >> "$OUT"
+          grep -q "SecureAttachmentButton" src/components/admin/OrdensServicoModule.tsx
+          echo "admin_os_secure_viewer=$?" >> "$OUT"
+
+          set -e
+          cat "$OUT"
+
+      - name: Publish temporary diagnostic
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            src/types.ts \
-            src/components/client/ClientServicos.tsx \
-            src/components/client/ClientSuporte.tsx \
-            src/components/admin/TicketsModule.tsx \
-            src/components/prestador/PrestadorSuporte.tsx \
-            src/components/admin/OrdensServicoModule.tsx
-          git commit -m "Protege documentos de servicos e suporte"
+          git add inspection/private-documents-apply-stage6.txt
+          git commit -m "Atualiza diagnóstico temporário de documentos privados"
           git push origin HEAD:agent/seguranca-documentos-servicos-etapa-6
