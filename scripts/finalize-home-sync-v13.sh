@@ -15,7 +15,7 @@ if [ "$merge_status" -ne 0 ]; then
   while IFS= read -r path; do
     [ -n "$path" ] || continue
     case "$path" in
-      index.html|public/logo.svg|scripts/check-admin-panel-contracts.ts|scripts/check-home-public-contracts.ts|scripts/test-home-public-migrations.sql|src/components/public/GSAEnterpriseHome.tsx|src/components/public/LoginHub.tsx|src/data/publicProjectTypes.ts|src/data/publicServiceCatalog.ts|src/hooks/usePublicPageMetadata.ts|src/pages/Home.tsx|src/routing/safeReturnTo.ts|supabase/migrations/20260720215500_fix_public_home_contracts.sql|supabase/migrations/20260720215530_minimize_public_referral_lookup.sql|supabase/migrations/20260720215600_guard_legacy_budget_permissions.sql|vite.config.ts)
+      index.html|public/logo.svg|scripts/check-home-public-contracts.ts|scripts/test-home-public-migrations.sql|src/components/public/GSAEnterpriseHome.tsx|src/components/public/LoginHub.tsx|src/data/publicProjectTypes.ts|src/data/publicServiceCatalog.ts|src/hooks/usePublicPageMetadata.ts|src/pages/Home.tsx|src/routing/safeReturnTo.ts|supabase/migrations/20260720215500_fix_public_home_contracts.sql|supabase/migrations/20260720215530_minimize_public_referral_lookup.sql|supabase/migrations/20260720215600_guard_legacy_budget_permissions.sql|vite.config.ts)
         git checkout --ours -- "$path"
         ;;
       *)
@@ -34,6 +34,10 @@ if [ -n "$unresolved" ]; then
   echo "$unresolved"
   exit 2
 fi
+
+# O isolamento administrativo validado na main prevalece integralmente.
+git checkout origin/main -- src/routing/adminAccess.ts scripts/check-admin-panel-contracts.ts
+git add src/routing/adminAccess.ts scripts/check-admin-panel-contracts.ts
 
 if [ -f scripts/resolve-home-current-main.py ]; then
   python scripts/resolve-home-current-main.py
@@ -76,6 +80,24 @@ if contracts.splitlines()[0] not in test:
         raise SystemExit('Âncora dos contratos públicos da Home não encontrada.')
     test = test.replace(anchor, contracts + anchor, 1)
 test_path.write_text(test)
+
+admin_path = Path('scripts/check-admin-panel-contracts.ts')
+admin = admin_path.read_text()
+legacy = "    \"localStorage.setItem('colaboradorModulos'\",\n"
+if legacy in admin:
+    admin = admin.replace(legacy, "    'colaboradorModulos: adminDetails.modulos',\n    'readSafeReturnTo',\n", 1)
+secure_anchor = "  await assertFileContains('src/pages/SecureAdminPanel.tsx', [\n"
+secure_block = """  await assertFileExcludes('src/App.tsx', [
+    "localStorage.setItem('adminType'",
+    "localStorage.setItem('colaboradorModulos'",
+  ]);
+
+"""
+if secure_block not in admin:
+    if secure_anchor not in admin:
+        raise SystemExit('Âncora do contrato administrativo não encontrada.')
+    admin = admin.replace(secure_anchor, secure_block + secure_anchor, 1)
+admin_path.write_text(admin)
 
 quality_path = Path('.github/workflows/quality.yml')
 quality = quality_path.read_text()
