@@ -31,8 +31,8 @@ export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId
   const load = async () => {
     try {
       const [promotionResult, activationResult] = await Promise.all([
-        supabase.from('prestador_promocoes').select('id,titulo,descricao,regras,status,data_inicio,data_fim,created_at').order('created_at', { ascending: false }),
-        supabase.from('prestador_promocoes_ativacoes').select('promocao_id,ativa').eq('prestador_id', prestadorId),
+        supabase.from('prestador_promocoes').select('id,titulo,descricao,regras,status,data_inicio,data_fim,created_at').order('created_at', { ascending: false }).limit(100),
+        supabase.from('prestador_promocoes_ativacoes').select('promocao_id,ativa').eq('prestador_id', prestadorId).limit(100),
       ]);
       if (promotionResult.error) throw promotionResult.error;
       if (activationResult.error) throw activationResult.error;
@@ -58,7 +58,8 @@ export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId
     if (!initialItemId || !promotions.length) return;
     const promotion = promotions.find((item) => item.id === initialItemId);
     if (!promotion) return;
-    setActiveTab(promotion.status === 'ativa' ? 'ativas' : 'historico');
+    const startsLater = !!promotion.data_inicio && new Date(promotion.data_inicio).getTime() > Date.now();
+    setActiveTab(promotion.status === 'ativa' && !startsLater ? 'ativas' : 'historico');
     setHighlightedId(promotion.id);
     const timer = window.setTimeout(() => setHighlightedId(null), 3000);
     return () => window.clearTimeout(timer);
@@ -67,8 +68,9 @@ export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId
   const activeIds = useMemo(() => new Set(activations.filter((item) => item.ativa).map((item) => item.promocao_id)), [activations]);
   const now = Date.now();
   const visible = promotions.filter((item) => {
+    const notStarted = !!item.data_inicio && new Date(item.data_inicio).getTime() > now;
     const ended = item.status !== 'ativa' || (!!item.data_fim && new Date(item.data_fim).getTime() < now);
-    return activeTab === 'ativas' ? !ended : ended || activeIds.has(item.id);
+    return activeTab === 'ativas' ? !notStarted && !ended : notStarted || ended || activeIds.has(item.id);
   });
 
   const activate = async (promotion: Promotion) => {
@@ -95,17 +97,19 @@ export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId
       </div>
 
       <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-        <div className="flex items-center justify-between border-b border-neutral-100 bg-fuchsia-50/50 p-5"><div><h2 className="text-xl font-black">{activeTab === 'ativas' ? 'Promoções e campanhas' : 'Campanhas encerradas'}</h2><p className="text-sm text-neutral-500">A participação é registrada uma única vez no banco.</p></div><span className="rounded-full bg-fuchsia-100 px-3 py-1 text-sm font-black text-fuchsia-700">{visible.length}</span></div>
+        <div className="flex items-center justify-between border-b border-neutral-100 bg-fuchsia-50/50 p-5"><div><h2 className="text-xl font-black">{activeTab === 'ativas' ? 'Promoções e campanhas' : 'Campanhas futuras ou encerradas'}</h2><p className="text-sm text-neutral-500">A participação é registrada uma única vez no banco.</p></div><span className="rounded-full bg-fuchsia-100 px-3 py-1 text-sm font-black text-fuchsia-700">{visible.length}</span></div>
         {visible.length === 0 ? <Empty active={activeTab === 'ativas'} /> : <div className="grid gap-4 p-5 md:grid-cols-2">{visible.map((promotion) => {
           const activated = activeIds.has(promotion.id);
+          const notStarted = !!promotion.data_inicio && new Date(promotion.data_inicio).getTime() > now;
           return <article id={`promo-${promotion.id}`} key={promotion.id} className={`relative rounded-2xl border p-5 transition ${highlightedId === promotion.id ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-300' : activated ? 'border-fuchsia-200 bg-fuchsia-50/40' : 'border-neutral-200'}`}>
             {activated && <span className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase text-emerald-700"><CheckCircle className="h-3.5 w-3.5" />Participando</span>}
             <span className="inline-flex rounded-xl bg-fuchsia-100 p-3 text-fuchsia-600"><Tag className="h-6 w-6" /></span>
             <h3 className="mt-4 pr-28 text-xl font-black">{promotion.titulo}</h3>
             <p className="mt-2 text-sm text-neutral-500">{promotion.descricao || 'Campanha especial para prestadores.'}</p>
             {promotion.regras && <div className="mt-4 rounded-xl bg-neutral-50 p-3 text-xs text-neutral-600"><strong>Regras:</strong> {promotion.regras}</div>}
-            {promotion.data_fim && <p className="mt-4 flex items-center gap-1.5 text-xs font-bold text-neutral-400"><Clock className="h-4 w-4" />{activeTab === 'ativas' ? `Válida até ${formatDate(promotion.data_fim)}` : `Encerrada em ${formatDate(promotion.data_fim)}`}</p>}
-            {activeTab === 'ativas' && !activated && <button disabled={!!submittingId} onClick={() => activate(promotion)} className="mt-5 w-full rounded-xl bg-neutral-900 py-3 text-sm font-black text-white disabled:opacity-50">{submittingId === promotion.id ? 'Confirmando...' : 'Quero participar'}</button>}
+            {promotion.data_inicio && notStarted && <p className="mt-4 flex items-center gap-1.5 text-xs font-bold text-amber-600"><Clock className="h-4 w-4" />Inicia em {formatDate(promotion.data_inicio)}</p>}
+            {promotion.data_fim && <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-neutral-400"><Clock className="h-4 w-4" />{activeTab === 'ativas' ? `Válida até ${formatDate(promotion.data_fim)}` : `Encerramento em ${formatDate(promotion.data_fim)}`}</p>}
+            {activeTab === 'ativas' && !activated && !notStarted && <button disabled={!!submittingId} onClick={() => activate(promotion)} className="mt-5 w-full rounded-xl bg-neutral-900 py-3 text-sm font-black text-white disabled:opacity-50">{submittingId === promotion.id ? 'Confirmando...' : 'Quero participar'}</button>}
           </article>;
         })}</div>}
       </section>
