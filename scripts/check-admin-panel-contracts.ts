@@ -72,6 +72,21 @@ async function main() {
     "localStorage.removeItem('colaboradorModulos')",
   ]);
 
+  await assertFileContains('src/lib/supabase.ts', [
+    "const LEGACY_LOAN_BUCKET = 'emprestimos'",
+    'uploadLegacyLoanContract',
+    'PRIVATE_ADMIN_PREFIX',
+    "functionName === 'gsa_admin_emprestimo_enviar_contrato'",
+    'legacyLoanReferences',
+  ]);
+
+  await assertFileContains('src/lib/privateStorage.ts', [
+    'resolveDocumentOwnerId',
+    ".from('ordens_fiscais')",
+    ".from('emprestimos')",
+    'createSignedUrl',
+  ]);
+
   await assertFileContains('src/components/admin/AcessosModule.tsx', [
     'gsa_admin_access_snapshot',
     'gsa_admin_save_collaborator',
@@ -189,12 +204,19 @@ async function main() {
   await assertFileContains('supabase/migrations/20260721001500_private_admin_documents.sql', [
     "'gsa-private-documents'",
     'gsa_admin_private_document_allowed',
+    'gsa_private_document_read_allowed',
     "public = false",
   ]);
   await assertFileContains('supabase/migrations/20260721002500_secure_admin_settings.sql', [
     'gsa_admin_allowed_setting_keys',
     'gsa_admin_settings_snapshot',
     'gsa_admin_update_settings_secure',
+  ]);
+  await assertFileContains('supabase/migrations/20260721003000_hash_collaborator_credentials.sql', [
+    'gsa_login_colaborador_legacy',
+    'crypt(v_code, c.credencial_hash)',
+    'GRANT EXECUTE ON FUNCTION public.gsa_login_colaborador(text) TO service_role',
+    'initial_credential',
   ]);
 
   console.log('Painel administrativo: contratos completos de segurança e operação validados.');
