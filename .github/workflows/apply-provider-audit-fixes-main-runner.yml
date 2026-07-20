@@ -33,6 +33,27 @@ jobs:
           set +e
           python scripts/apply-provider-audit-fixes.py > provider-patch.log 2>&1
           status=$?
+          if [ "$status" -eq 0 ]; then
+            python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/check-provider-portal-security-contracts.ts')
+          content = path.read_text(encoding='utf-8')
+          old = """  await includes('src/hooks/useProviderNotifications.tsx', [
+              'const HEARTBEAT_INTERVAL_MS = 60_000;',
+              'gsa_provider_pendency_snapshot',
+              'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)',
+            ]);"""
+          new = """  await includes('src/hooks/useProviderNotifications.tsx', [
+              'const HEARTBEAT_INTERVAL_MS = 60_000;',
+              'providerOperations.pendencySnapshot',
+              'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)',
+            ]);"""
+          if old not in content:
+              raise SystemExit('Contrato de pendências não encontrado para correção')
+          path.write_text(content.replace(old, new, 1), encoding='utf-8')
+          PY
+            status=$?
+          fi
           cat provider-patch.log
           echo "status=$status" >> "$GITHUB_OUTPUT"
           exit 0
