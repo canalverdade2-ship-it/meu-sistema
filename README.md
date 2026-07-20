@@ -1,20 +1,54 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Meu Sistema
 
-# Run and deploy your AI Studio app
+Sistema web da GSA desenvolvido com React, TypeScript, Vite e Supabase.
 
-This contains everything you need to run your app locally.
+## Executar localmente
 
-View your app in AI Studio: https://ai.studio/apps/9c58f914-3a2f-41e9-bf23-39cab0300dc9
+**Pré-requisitos:** Node.js 22 ou superior.
 
-## Run Locally
+```bash
+npm ci
+npm run dev
+```
 
-**Prerequisites:**  Node.js
+Configure as variáveis necessárias no ambiente local, incluindo as credenciais públicas do Supabase e integrações utilizadas pelo projeto. Nunca coloque chaves privilegiadas no código do navegador.
 
+## Verificações de qualidade
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+npm run lint
+npm run test:travel
+npm run build
+```
+
+O comando `test:travel` valida as rotas principais do GSA Viagens e os contratos críticos das migrações de orçamento, aceite, checkout, documentos e cancelamentos.
+
+## Implantação do GSA Viagens
+
+Antes de publicar as novas telas, aplique as migrações do Supabase na ordem cronológica:
+
+1. `20260720120000_fix_gsa_viagens_core_flow.sql`
+2. `20260720123000_gsa_viagens_storage_and_quotes.sql`
+3. `20260720130000_gsa_viagens_cancelamento_rpc.sql`
+
+Essas migrações:
+
+- corrigem o aceite de propostas e o checkout;
+- vinculam pacotes aos pedidos de orçamento;
+- criam buckets privados para documentos e vouchers;
+- habilitam orçamento público com dados de contato;
+- adicionam o fluxo seguro de cancelamento e reembolso.
+
+Os buckets `viagens-documentos` e `viagens-vouchers` são privados. Vouchers administrativos devem ser gravados seguindo o caminho:
+
+```text
+<cliente_id>/<transacao_id>/<nome-do-arquivo>
+```
+
+Documentos de passageiros usam:
+
+```text
+<cliente_id>/<passageiro_id>/<nome-do-arquivo>
+```
+
+Nunca exponha a chave `service_role` no navegador. Operações administrativas privilegiadas devem permanecer no backend, em RPCs protegidas ou Edge Functions.
