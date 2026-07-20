@@ -5,7 +5,7 @@ import { showAnimatedToast } from '../lib/notifications';
 import { providerOperations } from '../lib/providerOperations';
 import { isProviderRevoked } from '../lib/providerStatus';
 
-const HEARTBEAT_INTERVAL_MS = 30_000;
+const HEARTBEAT_INTERVAL_MS = 60_000;
 
 type ProviderProfile = {
   id: string;
@@ -121,45 +121,32 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
 
   const fetchPendencies = useCallback(async () => {
     if (!prestadorId) return;
-    const [{ data: rpcData, error: rpcError }, { data: demands, error: demandError }] = await Promise.all([
-      supabase.rpc('get_provider_pendency_counts', { p_prestador_id: prestadorId }),
-      supabase.from('prestador_demandas').select('status').eq('prestador_id', prestadorId),
-    ]);
-
-    if (rpcError) throw rpcError;
-    if (demandError) throw demandError;
-
-    const source = Array.isArray(rpcData) ? rpcData[0] || {} : rpcData || {};
-    const statuses = (demands || []).map((item: any) => item.status);
-    const novas = statuses.filter((status) => ['aguardando_aceite', 'aberta'].includes(status)).length;
-    const negociacao = statuses.filter((status) => ['em_negociacao', 'contraproposta_prestador', 'contraproposta_admin_final'].includes(status)).length;
-    const ativas = statuses.filter((status) => ['ativa', 'em_analise', 'em_ajuste'].includes(status)).length;
-
+    const source = await providerOperations.pendencySnapshot();
     const counts: ProviderPendencyCounts = {
-      demandas_novas: novas,
-      demandas_negociacao: negociacao,
-      demandas_pendentes: novas + negociacao,
-      demandas_em_execucao: ativas,
-      servicos_ativos: Number(source.servicos_ativos || 0),
-      financeiro_saques_pendentes: Number(source.financeiro_saques_pendentes || 0),
-      vouchers_ativos: Number(source.vouchers_ativos || 0),
-      suporte_tickets_ativos: Number(source.suporte_tickets_ativos || 0),
-      suporte_mensagens_nao_lidas: Number(source.suporte_mensagens_nao_lidas || 0),
-      promocoes_ativas: Number(source.promocoes_ativas || 0),
-      moduleDemandas: novas + negociacao + ativas,
-      moduleDemandasAbertas: novas + negociacao,
-      moduleDemandasAtivas: ativas,
-      moduleAgenda: Number(source.agendamentos_pendentes || 0),
-      moduleFinanceiro: Number(source.financeiro_saques_pendentes || 0),
-      moduleVouchers: Number(source.vouchers_ativos || 0),
-      moduleSuporte: Number(source.suporte_tickets_ativos || 0) + Number(source.suporte_mensagens_nao_lidas || 0),
-      moduleDocumentos: Number(source.documentos_pendentes || 0),
-      modulePremios: Number(source.premios_pendentes || 0),
-      modulePromocoes: Number(source.promocoes_ativas || 0),
-      total: 0,
+      ...emptyCounts,
+      ...source,
+      demandas_novas: Number(source?.demandas_novas || 0),
+      demandas_negociacao: Number(source?.demandas_negociacao || 0),
+      demandas_pendentes: Number(source?.demandas_pendentes || 0),
+      demandas_em_execucao: Number(source?.demandas_em_execucao || 0),
+      servicos_ativos: Number(source?.servicos_ativos || 0),
+      financeiro_saques_pendentes: Number(source?.financeiro_saques_pendentes || 0),
+      vouchers_ativos: Number(source?.vouchers_ativos || 0),
+      suporte_tickets_ativos: Number(source?.suporte_tickets_ativos || 0),
+      suporte_mensagens_nao_lidas: Number(source?.suporte_mensagens_nao_lidas || 0),
+      promocoes_ativas: Number(source?.promocoes_ativas || 0),
+      total: Number(source?.total || 0),
+      moduleDemandas: Number(source?.moduleDemandas || 0),
+      moduleDemandasAbertas: Number(source?.moduleDemandasAbertas || 0),
+      moduleDemandasAtivas: Number(source?.moduleDemandasAtivas || 0),
+      moduleAgenda: Number(source?.moduleAgenda || 0),
+      moduleFinanceiro: Number(source?.moduleFinanceiro || 0),
+      moduleVouchers: Number(source?.moduleVouchers || 0),
+      moduleSuporte: Number(source?.moduleSuporte || 0),
+      moduleDocumentos: Number(source?.moduleDocumentos || 0),
+      modulePremios: Number(source?.modulePremios || 0),
+      modulePromocoes: Number(source?.modulePromocoes || 0),
     };
-
-    counts.total = counts.moduleDemandasAbertas + counts.moduleAgenda + counts.moduleFinanceiro + counts.moduleSuporte + counts.moduleDocumentos + counts.modulePremios;
     if (mountedRef.current) setPendencies(counts);
   }, [prestadorId]);
 
@@ -172,7 +159,7 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
         .select('id,tipo,titulo,mensagem,lida,modulo,tab,item_id,data_criacao,prioridade,prestador_id,destinatario_tipo')
         .or(`prestador_id.eq.${prestadorId},destinatario_tipo.in.(broadcast_prestadores,broadcast_todos)`)
         .order('data_criacao', { ascending: false })
-        .limit(100),
+        .limit(50),
       supabase
         .from('notificacao_leituras')
         .select('notificacao_id')
@@ -236,11 +223,14 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {
         const row = payload.new as any;
-        const isOwn = row.prestador_id && String(row.prestador_id) === String(prestadorId);
-        const isBroadcast = ['broadcast_prestadores', 'broadcast_todos'].includes(row.destinatario_tipo);
-        if (!isOwn && !isBroadcast) return;
+        playPremiumBeep();
+        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');
+        scheduleRefresh();
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: 'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)' }, (payload) => {
+        const row = payload.new as any;
         playPremiumBeep();
         showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');
         scheduleRefresh();

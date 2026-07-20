@@ -4,7 +4,6 @@ import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { providerOperations } from '../../lib/providerOperations';
-import { notificationService } from '../../lib/notificationService';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { Modal } from '../ui/Modal';
 
@@ -33,7 +32,8 @@ export function PrestadorVouchers({ prestadorId, initialItemId }: { prestadorId:
         .from('prestador_vouchers')
         .select('id,codigo,valor,descricao,status,created_at,updated_at')
         .eq('prestador_id', prestadorId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
       if (error) throw error;
       setVouchers((data || []) as Voucher[]);
     } catch (error: any) {
@@ -69,10 +69,7 @@ export function PrestadorVouchers({ prestadorId, initialItemId }: { prestadorId:
     setSubmitting(true);
     try {
       const result = await providerOperations.redeemVoucher(selected.id);
-      await Promise.allSettled([
-        notificationService.notifyAdmin('Voucher resgatado pelo prestador', `Voucher ${selected.codigo} no valor de ${formatCurrency(Number(result?.valor || selected.valor))} foi resgatado e creditado.`, 'vouchers', 'voucher_resgate_solicitado', { tab: 'usados', itemId: selected.id }),
-        refreshCounts(),
-      ]);
+      await refreshCounts();
       toast.success('Voucher resgatado e creditado na carteira.');
       setSelected(null);
       await load();
