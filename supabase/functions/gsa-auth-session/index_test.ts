@@ -59,3 +59,23 @@ Deno.test('autoriza preflight somente para origem configurada', async () => {
     assertEquals(response.headers.get('vary'), 'Origin');
   });
 });
+
+Deno.test('autoriza todas as origens locais usadas no desenvolvimento', async () => {
+  const origins = [
+    'http://10.0.2.189:3000',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ];
+
+  await withAllowedOrigins(origins.join(','), async () => {
+    for (const origin of origins) {
+      const response = await handleRequest(new Request('https://gateway.example', {
+        method: 'OPTIONS',
+        headers: { origin },
+      }));
+
+      assertEquals(response.status, 204);
+      assertEquals(response.headers.get('access-control-allow-origin'), origin);
+    }
+  });
+});
