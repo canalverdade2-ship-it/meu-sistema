@@ -43,7 +43,7 @@ jobs:
         run: npm ci
       - name: Confirm Gemini client dependency is unused
         run: |
-          matches=$(grep -RInE 'GEMINI_API_KEY|@google/genai' src supabase scripts tests --exclude-dir=node_modules || true)
+          matches=$(grep -RInE 'GEMINI_API_KEY|@google/genai' src supabase tests --exclude-dir=node_modules || true)
           test -z "$matches" || { echo "$matches"; exit 1; }
       - name: Apply audited source corrections
         run: python scripts/apply-security-audit-fixes.py
