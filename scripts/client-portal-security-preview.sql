@@ -37,9 +37,9 @@ BEGIN
     )
   END;
 
-
   IF to_regprocedure('public.gsa_begin_client_recovery(text,text,uuid)') IS NULL
      OR to_regprocedure('public.gsa_client_operational_write(uuid,text,text,text,jsonb,jsonb)') IS NULL
+     OR to_regprocedure('public.cliente_operational_write(uuid,text,text,jsonb,jsonb)') IS NULL
      OR to_regprocedure('public.gsa_client_mark_notification_read(uuid,text,uuid)') IS NULL
      OR to_regprocedure('public.gsa_client_get_notification_read_ids(uuid,text,uuid[])') IS NULL THEN
     RAISE EXCEPTION 'Funções da auditoria final do cliente estão ausentes.';
@@ -66,10 +66,18 @@ BEGIN
 
   IF has_function_privilege(
     'authenticated',
-    'public.cliente_operational_write(uuid,text,text,text,jsonb,jsonb)',
+    'public.cliente_operational_write(uuid,text,text,jsonb,jsonb)',
     'EXECUTE'
   ) THEN
-    RAISE EXCEPTION 'RPC operacional legada ainda está exposta a authenticated.';
+    RAISE EXCEPTION 'Executor operacional privado ainda está exposto a authenticated.';
+  END IF;
+
+  IF NOT has_function_privilege(
+    'authenticated',
+    'public.gsa_client_operational_write(uuid,text,text,text,jsonb,jsonb)',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'RPC operacional vinculada à sessão não está disponível para authenticated.';
   END IF;
 
   IF v_missing IS NOT NULL THEN
@@ -120,11 +128,9 @@ BEGIN
     WHERE n.nspname = 'public'
       AND p.proname = 'cliente_operational_write'
   LOOP
-    IF has_function_privilege('anon', fn.oid, 'EXECUTE') THEN
-      RAISE EXCEPTION 'cliente_operational_write ainda é executável por anon.';
-    END IF;
-    IF NOT has_function_privilege('authenticated', fn.oid, 'EXECUTE') THEN
-      RAISE EXCEPTION 'cliente_operational_write não está disponível para authenticated.';
+    IF has_function_privilege('anon', fn.oid, 'EXECUTE')
+       OR has_function_privilege('authenticated', fn.oid, 'EXECUTE') THEN
+      RAISE EXCEPTION 'cliente_operational_write ainda possui execução pública em OID %.', fn.oid;
     END IF;
   END LOOP;
 
