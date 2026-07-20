@@ -25,7 +25,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
+      PGPASSWORD: postgres
       EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -96,6 +110,26 @@ jobs:
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
 
+      - name: Apply final audit correction idempotently
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee production-migrations-before.log
+
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260721020000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' production-migrations-before.log; then
+            echo 'A migration final de auditoria já está registrada em produção.' | tee final-migration-apply.log
+          else
+            supabase db query --linked --file supabase/migrations/20260721020000_fix_sensitive_admin_audit_revocation.sql 2>&1 | tee final-migration-apply.log
+            supabase migration repair --linked --status applied 20260721020000 2>&1 | tee -a final-migration-apply.log
+          fi
+
       - name: Verify migration history and critical production objects
         shell: bash
         run: |
@@ -103,6 +137,7 @@ jobs:
           DO $$
           DECLARE
             v_required integer;
+            v_audit_definition text;
           BEGIN
             SELECT count(*)
               INTO v_required
@@ -115,16 +150,24 @@ jobs:
                '20260720235450','20260720235500','20260721000500','20260721001500',
                '20260721002500','20260721003000','20260721003500','20260721003600',
                '20260721003700','20260721003800',
-               '20260721010000','20260721010100'
+               '20260721010000','20260721010100','20260721020000'
              );
-            IF v_required <> 21 THEN
-              RAISE EXCEPTION 'Histórico obrigatório incompleto: % de 21 migrations', v_required;
+            IF v_required <> 22 THEN
+              RAISE EXCEPTION 'Histórico obrigatório incompleto: % de 22 migrations', v_required;
             END IF;
 
             IF to_regprocedure('public.gsa_admin_context()') IS NULL
                OR to_regprocedure('public.gsa_admin_validate_context(uuid,text)') IS NULL
                OR to_regprocedure('public.gsa_admin_sensitive_change_audit()') IS NULL THEN
               RAISE EXCEPTION 'Contexto ou auditoria administrativa ausente';
+            END IF;
+
+            SELECT pg_get_functiondef(to_regprocedure('public.gsa_admin_sensitive_change_audit()'))
+              INTO v_audit_definition;
+            IF position('v_session_id_text' in v_audit_definition) = 0
+               OR position('Sessão administrativa inválida para auditoria' in v_audit_definition) = 0
+               OR position('PERFORM public.gsa_admin_context()' in v_audit_definition) > 0 THEN
+              RAISE EXCEPTION 'A versão corrigida do gatilho de auditoria não está ativa';
             END IF;
 
             IF NOT EXISTS (
@@ -187,7 +230,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: final-production-closure-evidence
-          path: final-production-verification.log
+          path: |
+            production-migrations-before.log
+            final-migration-apply.log
+            final-production-verification.log
           if-no-files-found: ignore
           retention-days: 30
 
