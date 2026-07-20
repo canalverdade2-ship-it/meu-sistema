@@ -1,1 +1,1 @@
-Validação final do painel administrativo após correção da sessão.
+Validação final do painel administrativo após correção da sessão e sequência completa de migrations.
