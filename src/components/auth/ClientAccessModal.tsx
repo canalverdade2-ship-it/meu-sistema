@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useEffect, useState } from 'react';
 import { Copy, Loader2, Lock, ShieldAlert, Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';

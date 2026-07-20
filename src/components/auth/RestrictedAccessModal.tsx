@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useEffect, useState } from 'react';
 import { BriefcaseBusiness, Lock, ShieldAlert } from 'lucide-react';
 import { toast } from 'react-hot-toast';
