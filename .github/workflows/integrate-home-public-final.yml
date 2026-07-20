@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fqx 'INTEGRATE_HOME_PUBLIC_FINAL_V1' .integrate-home-public-final-trigger
+          grep -Fqx 'INTEGRATE_HOME_PUBLIC_FINAL_V2' .integrate-home-public-final-trigger
           git fetch origin main "$SOURCE_BRANCH"
           test "$(git rev-parse "origin/$SOURCE_BRANCH")" = "$SOURCE_SHA"
 
@@ -117,7 +117,7 @@ jobs:
           npm run build
 
       - name: Publish integration branch
-        run: git push --force-with-lease origin "HEAD:$TARGET_BRANCH"
+        run: git push --force origin "HEAD:$TARGET_BRANCH"
 
       - name: Record integration success
         shell: bash
