@@ -5,7 +5,6 @@ import { supabase } from '../../lib/supabase';
 import { formatDateTime } from '../../lib/utils';
 import { providerOperations } from '../../lib/providerOperations';
 import { removeProviderPrivateFile, resolveProviderFileUrl, uploadProviderPrivateFile } from '../../lib/providerStorage';
-import { notificationService } from '../../lib/notificationService';
 import { logService } from '../../lib/logService';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { useFileViewer } from '../../contexts/FileViewerContext';
@@ -41,7 +40,8 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
         .from('prestador_documentos')
         .select('id,nome,tipo,urls,status,created_at,updated_at,motivo_rejeicao,enviado_por_admin')
         .eq('prestador_id', prestadorId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
       if (error) throw error;
       setDocuments((data || []) as ProviderDocument[]);
     } catch (error: any) {
@@ -97,11 +97,11 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
         setProgress(Math.round(((index + 1) / files.length) * 75));
       }
 
-      await providerOperations.submitDocument(selected.id, uploaded);
+      const submission = await providerOperations.submitDocument(selected.id, uploaded);
+      await Promise.allSettled(((submission?.old_urls || []) as string[]).map((reference) => removeProviderPrivateFile(reference)));
       setProgress(90);
       await Promise.allSettled([
         logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'UPLOAD_DOCUMENTO', detalhes: `Enviou ${uploaded.length} arquivo(s) para ${selected.nome}.` }),
-        notificationService.notifyAdmin('Documento de prestador enviado', `O prestador enviou arquivos para o documento "${selected.nome}".`, 'cadastro', 'documento_prestador_enviado', { tab: 'prestadores_documentos', itemId: prestadorId, contexto: { prestador_id: prestadorId, documento_id: selected.id } }),
         refreshCounts(),
       ]);
       setProgress(100);

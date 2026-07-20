@@ -20,12 +20,10 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { supabase } from '../../lib/supabase';
 import { providerOperations } from '../../lib/providerOperations';
 import { isProviderBlocked, isProviderPending, providerStatusLabel } from '../../lib/providerStatus';
 import { logService } from '../../lib/logService';
 import { maskCEP } from '../../lib/utils';
-import { createNotification } from '../../lib/notifications';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { useAppLocation } from '../../routing/useAppLocation';
 import { navigate } from '../../routing/navigationService';
@@ -125,18 +123,13 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
     let cancelled = false;
     const load = async () => {
       try {
-        const [snapshot, demands, schedules, documents] = await Promise.all([
-          providerOperations.financialSnapshot(),
-          supabase.from('prestador_demandas').select('status').eq('prestador_id', prestadorId),
-          supabase.from('prestador_agendamentos').select('status').eq('prestador_id', prestadorId),
-          supabase.from('prestador_documentos').select('status').eq('prestador_id', prestadorId),
-        ]);
+        const snapshot = await providerOperations.dashboardSnapshot();
         if (cancelled) return;
         setSaldo(Number(snapshot?.saldo || 0));
         setMetrics({
-          demandasConcluidas: (demands.data || []).filter((item: any) => ['concluida', 'finalizada', 'concluida_interna'].includes(item.status)).length,
-          agendamentosConcluidos: (schedules.data || []).filter((item: any) => item.status === 'concluido').length,
-          documentosAprovados: (documents.data || []).filter((item: any) => item.status === 'aprovado').length,
+          demandasConcluidas: Number(snapshot?.demandas_concluidas || 0),
+          agendamentosConcluidos: Number(snapshot?.agendamentos_concluidos || 0),
+          documentosAprovados: Number(snapshot?.documentos_aprovados || 0),
         });
       } catch (loadError) {
         console.error('Erro ao carregar indicadores do prestador:', loadError);
@@ -216,28 +209,19 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
 
   const submitChangeRequest = async () => {
     if (!requestField || !requestValue.trim() || !requestReason.trim() || requestSubmitting) return;
+    const fieldMap: Record<string, 'nome_razao' | 'documento' | 'email'> = {
+      'Nome / Razão Social': 'nome_razao',
+      Documento: 'documento',
+      'E-mail': 'email',
+    };
+    const field = fieldMap[requestField.label];
+    if (!field) {
+      toast.error('Campo cadastral inválido.');
+      return;
+    }
     setRequestSubmitting(true);
     try {
-      const subject = `Solicitação de alteração: ${requestField.label}`;
-      const { data: existing, error: existingError } = await supabase
-        .from('tickets')
-        .select('id')
-        .eq('prestador_id', prestadorId)
-        .eq('assunto', subject)
-        .neq('status', 'concluido')
-        .limit(1);
-      if (existingError) throw existingError;
-      if (existing?.length) throw new Error('Já existe uma solicitação aberta para este campo.');
-
-      const { data: ticket, error: ticketError } = await supabase.from('tickets').insert({
-        prestador_id: prestadorId,
-        assunto: subject,
-        descricao: `Valor atual: ${requestField.value}\nNovo valor solicitado: ${requestValue.trim()}\nMotivo: ${requestReason.trim()}`,
-        status: 'aberto',
-      }).select('id').single();
-      if (ticketError) throw ticketError;
-
-      await createNotification(null, 'Solicitação cadastral do prestador', `${prestador?.nome_razao || 'Um prestador'} solicitou alteração de ${requestField.label}.`, 'suporte', undefined, ticket?.id);
+      await providerOperations.requestProfileChange(field, requestValue.trim(), requestReason.trim());
       toast.success('Solicitação enviada para análise.');
       setRequestField(null);
       setRequestValue('');
@@ -253,24 +237,11 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
     if (!prestador || supportSubmitting) return;
     setSupportSubmitting(true);
     try {
-      const subject = 'Análise de cadastro pendente';
-      const { data: existing, error: existingError } = await supabase
-        .from('tickets')
-        .select('id')
-        .eq('prestador_id', prestadorId)
-        .eq('assunto', subject)
-        .neq('status', 'concluido')
-        .limit(1);
-      if (existingError) throw existingError;
-      if (!existing?.length) {
-        const { error: createError } = await supabase.from('tickets').insert({
-          prestador_id: prestadorId,
-          assunto: subject,
-          descricao: `Solicito informações sobre a análise do cadastro de ${prestador.nome_razao}.`,
-          status: 'aberto',
-        });
-        if (createError) throw createError;
-      }
+      await providerOperations.createTicket(
+        'Análise de cadastro pendente',
+        `Solicito informações sobre a análise do cadastro de ${prestador.nome_razao}.`,
+        true,
+      );
       navigate(routes.provider.support());
     } catch (supportError: any) {
       toast.error(supportError?.message || 'Não foi possível abrir o suporte.');

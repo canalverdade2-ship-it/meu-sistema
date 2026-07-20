@@ -3,8 +3,8 @@ import { Clock, FileText, LifeBuoy, MessageSquare, Paperclip, Plus, Send, X } fr
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { formatDateTime } from '../../lib/utils';
-import { notificationService } from '../../lib/notificationService';
-import { resolveProviderFileUrl, uploadProviderPrivateFile } from '../../lib/providerStorage';
+import { providerOperations } from '../../lib/providerOperations';
+import { removeProviderPrivateFile, resolveProviderFileUrl, uploadProviderPrivateFile } from '../../lib/providerStorage';
 import { useFileViewer } from '../../contexts/FileViewerContext';
 import { Modal } from '../ui/Modal';
 
@@ -54,7 +54,8 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
         .select('id,assunto,descricao,status,data_abertura,updated_at')
         .eq('prestador_id', prestadorId);
       if (!initialItemId) query = query.eq('status', activeTab);
-      const { data, error } = await query.order('data_abertura', { ascending: false });
+      const { data, error } = await query.order('data_abertura', { ascending: false })
+        .limit(100);
       if (error) throw error;
       const rows = (data || []) as ProviderTicket[];
       setTickets(rows);
@@ -79,7 +80,8 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
         .from('ticket_mensagens')
         .select('id,ticket_id,autor_id,autor_nome,mensagem,anexo_url,anexo_tipo,data_envio,tipo')
         .eq('ticket_id', ticketId)
-        .order('data_envio', { ascending: true });
+        .order('data_envio', { ascending: true })
+        .limit(200);
       if (error) throw error;
       setMessages((data || []) as TicketMessage[]);
     } catch (error: any) {
@@ -123,14 +125,7 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
     if (!subject.trim() || !description.trim() || submitting) return;
     setSubmitting(true);
     try {
-      const { data, error } = await supabase.from('tickets').insert({
-        prestador_id: prestadorId,
-        assunto: subject.trim(),
-        descricao: description.trim(),
-        status: 'aberto',
-      }).select('id').single();
-      if (error) throw error;
-      await notificationService.notifyAdmin('Novo ticket de prestador', `Novo atendimento aberto: ${subject.trim()}.`, 'suporte', 'ticket_aberto_prestador', { tab: 'abertos', itemId: data?.id, contexto: { prestador_id: prestadorId } });
+      await providerOperations.createTicket(subject.trim(), description.trim());
       toast.success('Atendimento aberto com sucesso.');
       setCreateOpen(false);
       setSubject('');
@@ -158,29 +153,17 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
           maxSizeMb: 15,
         });
       }
-      const { data: provider, error: providerError } = await supabase
-        .from('prestadores')
-        .select('nome_razao')
-        .eq('id', prestadorId)
-        .single();
-      if (providerError) throw providerError;
-
-      const { error } = await supabase.from('ticket_mensagens').insert({
-        ticket_id: selectedTicket.id,
-        autor_id: prestadorId,
-        autor_nome: provider?.nome_razao || 'Prestador',
-        mensagem: newMessage.trim(),
-        anexo_url: attachmentReference,
-        anexo_tipo: attachment?.type || null,
-        tipo: 'prestador',
+      await providerOperations.sendTicketMessage({
+        ticketId: selectedTicket.id,
+        message: newMessage.trim(),
+        attachmentReference,
+        attachmentType: attachment?.type || null,
       });
-      if (error) throw error;
-
-      await notificationService.notifyAdmin('Nova mensagem de prestador', `Nova mensagem no ticket #${selectedTicket.id.slice(0, 8)}.`, 'suporte', 'ticket_mensagem_recebida', { tab: selectedTicket.status === 'aberto' ? 'abertos' : 'em andamento', itemId: selectedTicket.id });
       setNewMessage('');
       setAttachment(null);
       await loadMessages(selectedTicket.id);
     } catch (error: any) {
+      if (attachmentReference) await Promise.allSettled([removeProviderPrivateFile(attachmentReference)]);
       toast.error(error?.message || 'Não foi possível enviar a mensagem.');
     } finally {
       setSubmitting(false);

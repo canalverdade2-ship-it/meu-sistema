@@ -4,7 +4,6 @@ import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { formatDate } from '../../lib/utils';
 import { providerOperations } from '../../lib/providerOperations';
-import { notificationService } from '../../lib/notificationService';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { Modal } from '../ui/Modal';
 
@@ -32,7 +31,8 @@ export function PrestadorPremios({ prestadorId, initialItemId }: { prestadorId: 
         .from('prestador_premios')
         .select('id,titulo,descricao,status,created_at,data_resgate')
         .eq('prestador_id', prestadorId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
       if (error) throw error;
       setPrizes((data || []) as Prize[]);
     } catch (error: any) {
@@ -65,10 +65,7 @@ export function PrestadorPremios({ prestadorId, initialItemId }: { prestadorId: 
     setSubmitting(true);
     try {
       await providerOperations.redeemPrize(selected.id);
-      await Promise.allSettled([
-        notificationService.notifyAdmin('Prêmio resgatado pelo prestador', `O prêmio "${selected.titulo}" foi resgatado. Entre em contato para organizar a entrega.`, 'premios', 'premio_resgate_solicitado', { tab: 'resgatados', itemId: selected.id }),
-        refreshCounts(),
-      ]);
+      await refreshCounts();
       toast.success('Resgate solicitado com sucesso.');
       setSelected(null);
       await load();
@@ -83,24 +80,11 @@ export function PrestadorPremios({ prestadorId, initialItemId }: { prestadorId: 
     if (submitting) return;
     setSubmitting(true);
     try {
-      const subject = `Dúvida sobre o prêmio: ${prize.titulo}`;
-      const { data: existing, error: existingError } = await supabase
-        .from('tickets')
-        .select('id')
-        .eq('prestador_id', prestadorId)
-        .eq('assunto', subject)
-        .neq('status', 'concluido')
-        .limit(1);
-      if (existingError) throw existingError;
-      if (existing?.length) throw new Error('Já existe um atendimento aberto para este prêmio.');
-      const { data: ticket, error } = await supabase.from('tickets').insert({
-        prestador_id: prestadorId,
-        assunto: subject,
-        descricao: `Solicito informações sobre o prêmio "${prize.titulo}".`,
-        status: 'aberto',
-      }).select('id').single();
-      if (error) throw error;
-      await notificationService.notifyAdmin('Novo ticket sobre prêmio', `Um prestador abriu uma dúvida sobre o prêmio ${prize.titulo}.`, 'suporte', 'ticket_aberto_prestador', { tab: 'abertos', itemId: ticket?.id });
+      await providerOperations.createTicket(
+        `Dúvida sobre o prêmio: ${prize.titulo}`,
+        `Solicito informações sobre o prêmio "${prize.titulo}".`,
+        true,
+      );
       toast.success('Atendimento aberto com sucesso.');
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível abrir o atendimento.');

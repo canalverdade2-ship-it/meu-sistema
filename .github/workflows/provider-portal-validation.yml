@@ -3,8 +3,10 @@ name: Provider Portal Validation
 on:
   push:
     branches:
-      - agent/corrigir-painel-prestador
+      - 'agent/**'
+      - 'fix/**'
   pull_request:
+    branches: [main]
     paths:
       - 'src/components/prestador/**'
       - 'src/pages/Prestador/**'
@@ -12,8 +14,11 @@ on:
       - 'src/lib/provider*.ts'
       - 'src/contexts/FileViewerContext.tsx'
       - 'src/types/react-namespace.d.ts'
+      - 'scripts/check-provider-portal-security-contracts.ts'
       - 'supabase/migrations/2026072021*_provider*.sql'
       - 'supabase/migrations/20260720210000_harden_provider_portal.sql'
+      - 'supabase/migrations/20260720232*_provider_portal*.sql'
+      - 'supabase/migrations/20260720233*_provider_portal*.sql'
       - '.github/workflows/provider-portal-validation.yml'
 
 permissions:
@@ -22,7 +27,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,5 +40,7 @@ jobs:
         run: npm ci
       - name: TypeScript validation
         run: npm run lint
+      - name: Provider portal security contracts
+        run: npm run test:provider
       - name: Production build
         run: npm run build

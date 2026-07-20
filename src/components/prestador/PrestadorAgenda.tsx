@@ -3,7 +3,6 @@ import { Calendar, CheckCircle, Clock, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { providerOperations } from '../../lib/providerOperations';
-import { notificationService } from '../../lib/notificationService';
 import { logService } from '../../lib/logService';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { Modal } from '../ui/Modal';
@@ -42,13 +41,15 @@ export function PrestadorAgenda({ prestadorId, initialItemId }: { prestadorId: s
           .from('prestador_agendamentos')
           .select('id,demanda_id,data_inicio,data_fim,observacoes,status,demanda:prestador_demandas(id,titulo,status)')
           .eq('prestador_id', prestadorId)
-          .order('data_inicio', { ascending: true }),
+          .order('data_inicio', { ascending: true })
+          .limit(100),
         supabase
           .from('prestador_demandas')
           .select('id,titulo,status')
           .eq('prestador_id', prestadorId)
           .in('status', ['ativa', 'em_ajuste'])
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .limit(100),
       ]);
       if (scheduleResult.error) throw scheduleResult.error;
       if (demandResult.error) throw demandResult.error;
@@ -100,10 +101,7 @@ export function PrestadorAgenda({ prestadorId, initialItemId }: { prestadorId: s
         observacoes: notes,
       });
       const selectedDemand = demands.find((item) => item.id === demandId);
-      await Promise.allSettled([
-        logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'CRIAR_AGENDAMENTO', detalhes: `Criou o agendamento ${result?.agendamento_id || ''} para a demanda ${demandId}.` }),
-        notificationService.notifyAdmin('Novo agendamento do prestador', `Foi criado um agendamento para a demanda "${selectedDemand?.titulo || demandId}".`, 'servicos', 'agendamento_criado' as any, { itemId: demandId }),
-      ]);
+      await logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'CRIAR_AGENDAMENTO', detalhes: `Criou o agendamento ${result?.agendamento_id || ''} para a demanda ${demandId}.` });
       toast.success('Agendamento criado sem conflito de horário.');
       setModalOpen(false);
       setDemandId('');
@@ -123,10 +121,7 @@ export function PrestadorAgenda({ prestadorId, initialItemId }: { prestadorId: s
     setSubmitting(true);
     try {
       await providerOperations.completeSchedule(schedule.id);
-      await Promise.allSettled([
-        logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'CONCLUIR_AGENDAMENTO', detalhes: `Concluiu o agendamento ${schedule.id}.` }),
-        notificationService.notifyAdmin('Agendamento concluído', `O agendamento da demanda "${schedule.demanda?.titulo || schedule.demanda_id}" foi concluído.`, 'servicos', 'agendamento_concluido' as any, { itemId: schedule.demanda_id }),
-      ]);
+      await logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'CONCLUIR_AGENDAMENTO', detalhes: `Concluiu o agendamento ${schedule.id}.` });
       toast.success('Agendamento concluído.');
       await Promise.all([load(), refreshCounts()]);
     } catch (error: any) {

@@ -4,7 +4,6 @@ import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { providerOperations } from '../../lib/providerOperations';
-import { notificationService } from '../../lib/notificationService';
 import { logService } from '../../lib/logService';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { Modal } from '../ui/Modal';
@@ -56,12 +55,14 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
           .from('prestador_transacoes')
           .select('id,tipo,valor,descricao,status,created_at')
           .eq('prestador_id', prestadorId)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .limit(100),
         supabase
           .from('prestador_saques')
           .select('id,valor,valor_liquido,taxa_aplicada,tipo_chave_pix,chave_pix,status,data_vencimento,created_at,motivo_cancelamento,observacao')
           .eq('prestador_id', prestadorId)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .limit(100),
       ]);
       if (transactionResult.error) throw transactionResult.error;
       if (withdrawalResult.error) throw withdrawalResult.error;
@@ -126,10 +127,7 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
     setSubmitting(true);
     try {
       const result = await providerOperations.requestWithdrawal(value, pixType, pixKey.trim());
-      await Promise.allSettled([
-        logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'SOLICITAR_SAQUE', detalhes: `Solicitou saque de ${formatCurrency(value)} via PIX.` }),
-        notificationService.notifyAdmin('Novo saque solicitado', `Um prestador solicitou saque de ${formatCurrency(value)}.`, 'financeiro', 'transferencia_solicitada', { itemId: result?.saque_id, tab: 'saques_rede' }),
-      ]);
+      await logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'SOLICITAR_SAQUE', detalhes: `Solicitou saque de ${formatCurrency(value)} via PIX.` });
       toast.success('Solicitação de saque enviada com segurança.');
       setRequestOpen(false);
       setPixKey('');
