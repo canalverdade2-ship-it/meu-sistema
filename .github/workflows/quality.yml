@@ -197,6 +197,12 @@ jobs:
           $test$;
           SQL
 
+      - name: Validate Home public migrations
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        env:
+          PGPASSWORD: postgres
+        run: psql -h 127.0.0.1 -U postgres -f scripts/test-home-public-migrations.sql
+
       - name: Build
         if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         run: npm run build
