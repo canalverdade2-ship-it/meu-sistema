@@ -1,0 +1,1047 @@
+{
+  "generatedAt": "2026-07-19T03:00:48.684Z",
+  "filesScanned": 239,
+  "rpcCount": 104,
+  "calls": {
+    "check_file_references": {
+      "count": 3,
+      "usages": [
+        {
+          "file": "src/components/admin/SystemMonitorModule.tsx",
+          "line": 112
+        },
+        {
+          "file": "src/components/admin/SystemMonitorModule.tsx",
+          "line": 129
+        },
+        {
+          "file": "src/validation/step4_integrity_audit.ts",
+          "line": 38
+        }
+      ]
+    },
+    "cliente_operational_write": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/clientOperationalWrite.ts",
+          "line": 18
+        }
+      ]
+    },
+    "delete_client_cascade": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 366
+        }
+      ]
+    },
+    "fn_marcar_faturas_vencidas": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 30
+        }
+      ]
+    },
+    "get_admin_counts": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/Dashboard.tsx",
+          "line": 192
+        }
+      ]
+    },
+    "get_admin_pendency_counts": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/hooks/useAdminNotifications.tsx",
+          "line": 180
+        }
+      ]
+    },
+    "get_client_pendency_counts": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/hooks/useClientNotifications.tsx",
+          "line": 108
+        }
+      ]
+    },
+    "get_database_details": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/validation/step4_integrity_audit.ts",
+          "line": 78
+        }
+      ]
+    },
+    "get_provider_pendency_counts": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/hooks/useProviderNotifications.tsx",
+          "line": 126
+        }
+      ]
+    },
+    "get_system_metrics": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/SystemMonitorModule.tsx",
+          "line": 195
+        }
+      ]
+    },
+    "gsa_admin_ajustar_limite_credito_cliente": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 768
+        }
+      ]
+    },
+    "gsa_admin_ajustar_saldo_cliente": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 1037
+        }
+      ]
+    },
+    "gsa_admin_alterar_status_cliente": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 296
+        }
+      ]
+    },
+    "gsa_admin_aplicar_ajuste_fatura": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 2389
+        }
+      ]
+    },
+    "gsa_admin_aprovar_aumento_credito": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 479
+        }
+      ]
+    },
+    "gsa_admin_atualizar_dados_cliente": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 1432
+        }
+      ]
+    },
+    "gsa_admin_atualizar_documento_credito": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 607
+        }
+      ]
+    },
+    "gsa_admin_atualizar_solicitacao_loja": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/LojaTrocasModule.tsx",
+          "line": 78
+        }
+      ]
+    },
+    "gsa_admin_atualizar_status_cliente": {
+      "count": 5,
+      "usages": [
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 1094
+        },
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 1138
+        },
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 1189
+        },
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 1277
+        },
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 1340
+        }
+      ]
+    },
+    "gsa_admin_baixar_cobranca_manual": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 612
+        }
+      ]
+    },
+    "gsa_admin_baixar_fatura": {
+      "count": 2,
+      "usages": [
+        {
+          "file": "src/components/admin/Dashboard.tsx",
+          "line": 307
+        },
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 800
+        }
+      ]
+    },
+    "gsa_admin_baixar_parcela_cobranca": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 569
+        }
+      ]
+    },
+    "gsa_admin_cancelar_acordo_cobranca": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 452
+        }
+      ]
+    },
+    "gsa_admin_cancelar_fatura": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 872
+        }
+      ]
+    },
+    "gsa_admin_check_product_barcode": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/ProdutosModule.tsx",
+          "line": 1735
+        }
+      ]
+    },
+    "gsa_admin_clear_access_history": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/AcessosModule.tsx",
+          "line": 445
+        }
+      ]
+    },
+    "gsa_admin_criar_cliente": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 225
+        }
+      ]
+    },
+    "gsa_admin_criar_cobranca_fatura": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 192
+        }
+      ]
+    },
+    "gsa_admin_criar_fatura_manual": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 990
+        }
+      ]
+    },
+    "gsa_admin_definir_parcelamento_credito": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 801
+        }
+      ]
+    },
+    "gsa_admin_desbloquear_pin_cliente": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/ClientesModule.tsx",
+          "line": 1928
+        }
+      ]
+    },
+    "gsa_admin_emprestimo_aprovar": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 291
+        }
+      ]
+    },
+    "gsa_admin_emprestimo_atualizar_documento": {
+      "count": 2,
+      "usages": [
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 427
+        },
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 450
+        }
+      ]
+    },
+    "gsa_admin_emprestimo_atualizar_status": {
+      "count": 4,
+      "usages": [
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 321
+        },
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 347
+        },
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 374
+        },
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 403
+        }
+      ]
+    },
+    "gsa_admin_emprestimo_enviar_comentario": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 193
+        }
+      ]
+    },
+    "gsa_admin_emprestimo_enviar_contrato": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 268
+        }
+      ]
+    },
+    "gsa_admin_emprestimo_enviar_oferta_quitacao": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 482
+        }
+      ]
+    },
+    "gsa_admin_emprestimo_enviar_proposta": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 228
+        }
+      ]
+    },
+    "gsa_admin_emprestimo_salvar_observacao": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/EmprestimosModule.tsx",
+          "line": 170
+        }
+      ]
+    },
+    "gsa_admin_enviar_fatura_cobranca": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 834
+        }
+      ]
+    },
+    "gsa_admin_enviar_oferta_quitacao_credito": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 160
+        }
+      ]
+    },
+    "gsa_admin_excluir_cobranca": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 485
+        }
+      ]
+    },
+    "gsa_admin_gerar_acordo_cobranca": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 403
+        }
+      ]
+    },
+    "gsa_admin_import_products_batch_v2": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/products/BulkProductImportModal.tsx",
+          "line": 337
+        }
+      ]
+    },
+    "gsa_admin_liberar_credito_contrato": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 716
+        }
+      ]
+    },
+    "gsa_admin_mudar_status_cobranca": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 312
+        }
+      ]
+    },
+    "gsa_admin_preaprovar_credito": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 437
+        }
+      ]
+    },
+    "gsa_admin_processar_saque": {
+      "count": 3,
+      "usages": [
+        {
+          "file": "src/components/admin/Dashboard.tsx",
+          "line": 342
+        },
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 499
+        },
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 550
+        }
+      ]
+    },
+    "gsa_admin_processar_saque_prestador": {
+      "count": 2,
+      "usages": [
+        {
+          "file": "src/components/admin/prestadores/PrestadoresFinanceiro.tsx",
+          "line": 142
+        },
+        {
+          "file": "src/components/admin/prestadores/PrestadoresFinanceiro.tsx",
+          "line": 201
+        }
+      ]
+    },
+    "gsa_admin_processar_transferencia": {
+      "count": 3,
+      "usages": [
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 637
+        },
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 696
+        },
+        {
+          "file": "src/components/admin/FinanceiroModule.tsx",
+          "line": 744
+        }
+      ]
+    },
+    "gsa_admin_protestar_cobranca": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 349
+        }
+      ]
+    },
+    "gsa_admin_recusar_credito": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 520
+        }
+      ]
+    },
+    "gsa_admin_registrar_cobranca_historico": {
+      "count": 2,
+      "usages": [
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 279
+        },
+        {
+          "file": "src/components/admin/CobrancaModule.tsx",
+          "line": 513
+        }
+      ]
+    },
+    "gsa_admin_rejeitar_contrato_credito": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 654
+        }
+      ]
+    },
+    "gsa_admin_solicitar_documento_credito": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/CreditoModule.tsx",
+          "line": 556
+        }
+      ]
+    },
+    "gsa_client_accept_loan_settlement": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientEmprestimos.tsx",
+          "line": 407
+        }
+      ]
+    },
+    "gsa_client_accept_store_credit_settlement": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientMeuCredito.tsx",
+          "line": 250
+        }
+      ]
+    },
+    "gsa_client_approve_budget": {
+      "count": 2,
+      "usages": [
+        {
+          "file": "src/components/client/ClientOrcamentos.tsx",
+          "line": 327
+        },
+        {
+          "file": "src/components/client/ClientOrcamentos.tsx",
+          "line": 441
+        }
+      ]
+    },
+    "gsa_client_cancel_store_order": {
+      "count": 3,
+      "usages": [
+        {
+          "file": "src/components/client/StoreHub.tsx",
+          "line": 973
+        },
+        {
+          "file": "src/components/client/StoreHub.tsx",
+          "line": 1020
+        },
+        {
+          "file": "src/components/client/StoreHub.tsx",
+          "line": 1051
+        }
+      ]
+    },
+    "gsa_client_cancel_transfer": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientTransferencias.tsx",
+          "line": 170
+        }
+      ]
+    },
+    "gsa_client_cancel_withdrawal": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/financeiro/SaquesList.tsx",
+          "line": 163
+        }
+      ]
+    },
+    "gsa_client_checkout_store": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/store/CheckoutModal.tsx",
+          "line": 589
+        }
+      ]
+    },
+    "gsa_client_checkout_travel": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/store/CheckoutModal.tsx",
+          "line": 576
+        }
+      ]
+    },
+    "gsa_client_convert_points": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientPontos.tsx",
+          "line": 314
+        }
+      ]
+    },
+    "gsa_client_extend_subscription": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientAssinaturas.tsx",
+          "line": 119
+        }
+      ]
+    },
+    "gsa_client_generate_loan_installment_invoice": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientEmprestimos.tsx",
+          "line": 1009
+        }
+      ]
+    },
+    "gsa_client_generate_store_invoice": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/StoreHub.tsx",
+          "line": 986
+        }
+      ]
+    },
+    "gsa_client_lookup_transfer_recipient": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientTransferencias.tsx",
+          "line": 122
+        }
+      ]
+    },
+    "gsa_client_pagar_fatura": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/financeiro/PaymentModal.tsx",
+          "line": 160
+        }
+      ]
+    },
+    "gsa_client_redeem_wallet_voucher": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientVouchers.tsx",
+          "line": 138
+        }
+      ]
+    },
+    "gsa_client_reject_loan_settlement": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientEmprestimos.tsx",
+          "line": 424
+        }
+      ]
+    },
+    "gsa_client_reject_store_credit_settlement": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientMeuCredito.tsx",
+          "line": 270
+        }
+      ]
+    },
+    "gsa_client_request_loan_settlement": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientEmprestimos.tsx",
+          "line": 390
+        }
+      ]
+    },
+    "gsa_client_request_store_credit_settlement": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientMeuCredito.tsx",
+          "line": 235
+        }
+      ]
+    },
+    "gsa_client_request_store_exchange": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/StoreHub.tsx",
+          "line": 1179
+        }
+      ]
+    },
+    "gsa_client_request_transfer": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientTransferencias.tsx",
+          "line": 144
+        }
+      ]
+    },
+    "gsa_client_request_withdrawal": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/financeiro/SaquesList.tsx",
+          "line": 140
+        }
+      ]
+    },
+    "gsa_client_reverse_transfer": {
+      "count": 3,
+      "usages": [
+        {
+          "file": "src/components/client/ClientPontos.tsx",
+          "line": 286
+        },
+        {
+          "file": "src/components/client/ClientTransferencias.tsx",
+          "line": 189
+        },
+        {
+          "file": "src/components/client/financeiro/ExtratoList.tsx",
+          "line": 56
+        }
+      ]
+    },
+    "gsa_client_seguros_criar_ocorrencia": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/marketplace/protection/ProtectionMarketplace.tsx",
+          "line": 372
+        }
+      ]
+    },
+    "gsa_client_seguros_listar": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/marketplace/protection/ProtectionMarketplace.tsx",
+          "line": 371
+        }
+      ]
+    },
+    "gsa_client_submit_exchange_tracking": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/StoreHub.tsx",
+          "line": 487
+        }
+      ]
+    },
+    "gsa_client_subscribe_vip": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientAreaVIP.tsx",
+          "line": 297
+        }
+      ]
+    },
+    "gsa_end_session": {
+      "count": 3,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 57
+        },
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 71
+        },
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 251
+        }
+      ]
+    },
+    "gsa_get_client_session_access_state": {
+      "count": 2,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 148
+        },
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 226
+        }
+      ]
+    },
+    "gsa_log_action": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/logService.ts",
+          "line": 30
+        }
+      ]
+    },
+    "gsa_login_admin": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 174
+        }
+      ]
+    },
+    "gsa_login_colaborador": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 181
+        }
+      ]
+    },
+    "gsa_login_pin": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 107
+        }
+      ]
+    },
+    "gsa_lookup_portal_account": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 98
+        }
+      ]
+    },
+    "gsa_ping_session": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 274
+        }
+      ]
+    },
+    "gsa_public_create_enterprise_budget": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/public/GSAEnterpriseHome.tsx",
+          "line": 1049
+        }
+      ]
+    },
+    "gsa_public_lookup_referral": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/pages/Home.tsx",
+          "line": 307
+        }
+      ]
+    },
+    "gsa_public_register_client": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/pages/Home.tsx",
+          "line": 364
+        }
+      ]
+    },
+    "gsa_public_register_provider": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/pages/Home.tsx",
+          "line": 564
+        }
+      ]
+    },
+    "gsa_recuperar_senha_cliente": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 118
+        }
+      ]
+    },
+    "gsa_set_pin_and_login": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 162
+        }
+      ]
+    },
+    "gsa_update_client_pin": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 132
+        }
+      ]
+    },
+    "gsa_validate_session": {
+      "count": 2,
+      "usages": [
+        {
+          "file": "src/lib/deleteRequest.ts",
+          "line": 31
+        },
+        {
+          "file": "src/lib/sessionService.ts",
+          "line": 213
+        }
+      ]
+    },
+    "gsa_verify_own_pin": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/ClientProfile.tsx",
+          "line": 256
+        }
+      ]
+    },
+    "increment_comentarios": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/demandas/DemandasComentarios.tsx",
+          "line": 81
+        }
+      ]
+    },
+    "process_expired_quitacoes": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/Dashboard.tsx",
+          "line": 190
+        }
+      ]
+    },
+    "processar_bonus_boas_vindas_seguro": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/pages/ClientPortal.tsx",
+          "line": 800
+        }
+      ]
+    },
+    "rpc_criar_anuncio_classificado": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/client/marketplace/classifieds/CreateListingWizard.tsx",
+          "line": 54
+        }
+      ]
+    },
+    "rpc_moderar_mensagem_classificado": {
+      "count": 1,
+      "usages": [
+        {
+          "file": "src/components/admin/ClassifiedsModule.tsx",
+          "line": 86
+        }
+      ]
+    }
+  }
+}

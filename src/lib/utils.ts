@@ -1,0 +1,216 @@
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+export const formatCurrency = (value: any) => {
+  const num = Number(value);
+  const safeValue = isNaN(num) ? 0 : num;
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2
+  }).format(safeValue);
+};
+
+export const formatDate = (date: string | Date | null | undefined) => {
+  if (!date) return '-';
+  try {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '-';
+
+    // Se a string é só data (yyyy-MM-dd), interpreta como local para não sofrer deslocamento de fuso
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const [year, month, day] = date.split('-').map(Number);
+      return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+    }
+
+    // Para timestamps com fuso, renderiza no timezone de Brasília (UTC-3)
+    return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  } catch (e) {
+    return '-';
+  }
+};
+
+export const formatDateTime = (date: string | Date | null | undefined) => {
+  if (!date) return '-';
+  try {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '-';
+
+    // Renderiza data e hora sempre no fuso de Brasília para evitar deslocamento UTC
+    return d.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch (e) {
+    return '-';
+  }
+};
+
+export const maskCPF = (value: string | null | undefined) => {
+  if (!value) return '';
+  return value
+    .replace(/\D/g, '')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+    .replace(/(-\d{2})\d+?$/, '$1');
+};
+
+export const maskCNPJ = (value: string | null | undefined) => {
+  if (!value) return '';
+  return value
+    .replace(/\D/g, '')
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})/, '$1-$2')
+    .replace(/(-\d{2})\d+?$/, '$1');
+};
+
+export const maskPhone = (value: string | null | undefined) => {
+  if (!value) return '';
+  return value
+    .replace(/\D/g, '')
+    .replace(/(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d{5})(\d)/, '$1-$2')
+    .replace(/(-\d{4})\d+?$/, '$1');
+};
+
+export const maskCEP = (value: string | null | undefined) => {
+  if (!value) return '';
+  return value
+    .replace(/\D/g, '')
+    .replace(/(\d{5})(\d)/, '$1-$2')
+    .replace(/(-\d{3})\d+?$/, '$1');
+};
+
+export const generateCode = (prefix: string) => {
+  const random = Math.floor(1000 + Math.random() * 9000);
+  const timestamp = Date.now().toString().slice(-4);
+  return `${prefix}-${timestamp}${random}`;
+};
+
+export const generateSequentialCode = (prefix: string, count: number) => {
+  return `${prefix}-${(count + 1).toString().padStart(6, '0')}`;
+};
+
+export const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    try {
+      return crypto.randomUUID();
+    } catch (e) {
+      // Fallback if randomUUID fails for some reason
+    }
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
+export const handleError = (error: any, defaultMessage: string) => {
+  console.error('Erro detalhado:', error);
+  const message = error?.message || error?.details || error?.hint || 'Erro desconhecido';
+  return `${defaultMessage}: ${message}`;
+};
+
+export const copyToClipboard = async (text: string) => {
+  if (!text) return false;
+  
+  // Try modern API first
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (err) {
+      console.error('Modern clipboard API failed:', err);
+    }
+  }
+
+  // Fallback to execCommand
+  try {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Ensure the textarea is off-screen
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    document.body.appendChild(textArea);
+    
+    textArea.focus();
+    textArea.select();
+    
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return successful;
+  } catch (err) {
+    console.error('Fallback clipboard copy failed:', err);
+    return false;
+  }
+};
+
+export const getMonthYearFromDate = (date: string | Date | null | undefined) => {
+  if (!date) return '';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '';
+  return format(d, 'MM/yyyy', { locale: ptBR });
+};
+
+export const playPremiumBeep = () => {
+  try {
+    const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    const audioContext = new AudioContextClass();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // Mi 5
+    oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.1); // La 4
+
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.3);
+  } catch (e) {
+    console.warn('Áudio não suportado ou bloqueado pelo navegador:', e);
+  }
+};
+export const maskCurrency = (value: number | string) => {
+  const num = typeof value === 'number' ? value : parseFloat(value) || 0;
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(num);
+};
+
+export const unmaskCurrency = (value: string): number => {
+  if (!value) return 0;
+  const cleanValue = value.replace(/\D/g, '');
+  return parseInt(cleanValue, 10) / 100;
+};
+
+export const handleCurrencyInputChange = (value: string, callback: (num: number) => void) => {
+  // Remove tudo que não é dígito
+  const digits = value.replace(/\D/g, '');
+  
+  // Se não houver dígitos, define como 0
+  if (!digits || digits === '') {
+    callback(0);
+    return;
+  }
+
+  // Converte para número dividindo por 100 para manter os centavos
+  const numericValue = parseInt(digits, 10) / 100;
+  callback(numericValue);
+};

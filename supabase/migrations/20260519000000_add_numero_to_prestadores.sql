@@ -1,0 +1,1 @@
+ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS numero TEXT;

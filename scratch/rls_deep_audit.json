@@ -1,0 +1,1304 @@
+{
+  "generatedAt": "2026-07-19T03:13:00.740Z",
+  "counts": {
+    "policies": 92,
+    "tables": 79,
+    "rlsEnabledTables": 79,
+    "tablesWithDirectWrites": 60,
+    "bySeverity": {
+      "critica": 25,
+      "alta": 24,
+      "media": 28,
+      "baixa": 2
+    },
+    "bySensitivity": {
+      "identidade_acesso": 10,
+      "financeiro": 13,
+      "documentos_fiscal": 6,
+      "operacional": 7,
+      "comunicacao_historico": 13,
+      "outro": 14,
+      "catalogo_config": 16
+    }
+  },
+  "conclusion": "As policies abertas procedem. Fechar tudo em uma migration unica quebraria o sistema porque a aplicacao usa anon key, sessao propria em localStorage/sistema_sessoes e muitas escritas diretas em tabelas protegidas.",
+  "rows": [
+    {
+      "table": "clientes",
+      "sensitivity": "identidade_acesso",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 4,
+      "sensitive_direct_write": true,
+      "code_refs": 76,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "faturas",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 4,
+      "sensitive_direct_write": true,
+      "code_refs": 56,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "loja_credito_movimentacoes",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 3,
+      "sensitive_direct_write": true,
+      "code_refs": 5,
+      "policies": [
+        "Public Full Access loja_credito_movimentacoes"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "colaboradores",
+      "sensitivity": "identidade_acesso",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 2,
+      "sensitive_direct_write": false,
+      "code_refs": 12,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "admin_notificacoes",
+      "sensitivity": "identidade_acesso",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 3,
+      "policies": [
+        "Enable all access for all users"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "carteira_lancamentos",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 3,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "cliente_documentos",
+      "sensitivity": "documentos_fiscal",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 4,
+      "commands": "DELETE,INSERT,UPDATE,SELECT",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 7,
+      "policies": [
+        "Admin pode deletar documentos",
+        "Admin pode inserir documentos",
+        "Clientes podem atualizar seus próprios documentos",
+        "Clientes podem ver seus próprios documentos"
+      ],
+      "recommendation": "Aplicar policies por dono/admin e paths de Storage por ator; upload via RPC/edge quando houver aprovacao."
+    },
+    {
+      "table": "cliente_notas_admin",
+      "sensitivity": "documentos_fiscal",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 4,
+      "policies": [
+        "Public Full Access"
+      ],
+      "recommendation": "Aplicar policies por dono/admin e paths de Storage por ator; upload via RPC/edge quando houver aprovacao."
+    },
+    {
+      "table": "colaborador_modulos",
+      "sensitivity": "identidade_acesso",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 2,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "emprestimos",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 13,
+      "policies": [
+        "emprestimos_all"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "extrato_financeiro",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 9,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "funcoes",
+      "sensitivity": "identidade_acesso",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 3,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "loja_credito_solicitacoes",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 8,
+      "policies": [
+        "Public Full Access loja_credito_solicitacoes"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "notificacoes",
+      "sensitivity": "identidade_acesso",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 2,
+      "commands": "ALL,INSERT",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 18,
+      "policies": [
+        "Acesso total",
+        "Permitir inserção de notificações por usuários anonimos"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "ordens_fiscais",
+      "sensitivity": "documentos_fiscal",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 12,
+      "policies": [
+        "Allow all access for authenticated users"
+      ],
+      "recommendation": "Aplicar policies por dono/admin e paths de Storage por ator; upload via RPC/edge quando houver aprovacao."
+    },
+    {
+      "table": "os_notas",
+      "sensitivity": "documentos_fiscal",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 14,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Aplicar policies por dono/admin e paths de Storage por ator; upload via RPC/edge quando houver aprovacao."
+    },
+    {
+      "table": "pagamentos",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 4,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "points_transactions",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 7,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "pontos_movimentacoes",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 10,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "prestador_documentos",
+      "sensitivity": "documentos_fiscal",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 8,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Aplicar policies por dono/admin e paths de Storage por ator; upload via RPC/edge quando houver aprovacao."
+    },
+    {
+      "table": "prestadores",
+      "sensitivity": "identidade_acesso",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 23,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "solicitacoes_exclusao",
+      "sensitivity": "identidade_acesso",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 7,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "cobrancas",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 5,
+      "policies": [
+        "Public Full Access"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "emprestimo_documentos",
+      "sensitivity": "documentos_fiscal",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 6,
+      "policies": [
+        "emprestimo_documentos_all"
+      ],
+      "recommendation": "Aplicar policies por dono/admin e paths de Storage por ator; upload via RPC/edge quando houver aprovacao."
+    },
+    {
+      "table": "loja_credito_documentos",
+      "sensitivity": "financeiro",
+      "severity": "critica",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 2,
+      "policies": [
+        "Public Full Access loja_credito_documentos"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "sistema_logs",
+      "sensitivity": "identidade_acesso",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "SELECT",
+      "direct_write_count": 7,
+      "sensitive_direct_write": true,
+      "code_refs": 10,
+      "policies": [
+        "sistema_logs_select_public_temp"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "ordens_assinatura",
+      "sensitivity": "operacional",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 4,
+      "sensitive_direct_write": true,
+      "code_refs": 24,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Migrar mudancas de status/aprovacao/cancelamento para RPCs; SELECT limitado por cliente/prestador/admin."
+    },
+    {
+      "table": "ordens_servico",
+      "sensitivity": "operacional",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 3,
+      "sensitive_direct_write": true,
+      "code_refs": 24,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Migrar mudancas de status/aprovacao/cancelamento para RPCs; SELECT limitado por cliente/prestador/admin."
+    },
+    {
+      "table": "ticket_mensagens",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 3,
+      "sensitive_direct_write": false,
+      "code_refs": 8,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "loja_solicitacoes",
+      "sensitivity": "operacional",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 2,
+      "commands": "ALL,SELECT",
+      "direct_write_count": 2,
+      "sensitive_direct_write": false,
+      "code_refs": 10,
+      "policies": [
+        "Acesso total loja_solicitacoes",
+        "Clientes veem suas proprias solicitacoes"
+      ],
+      "recommendation": "Migrar mudancas de status/aprovacao/cancelamento para RPCs; SELECT limitado por cliente/prestador/admin."
+    },
+    {
+      "table": "orcamentos",
+      "sensitivity": "operacional",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 2,
+      "sensitive_direct_write": true,
+      "code_refs": 49,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Migrar mudancas de status/aprovacao/cancelamento para RPCs; SELECT limitado por cliente/prestador/admin."
+    },
+    {
+      "table": "ordens_compra",
+      "sensitivity": "operacional",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 2,
+      "sensitive_direct_write": true,
+      "code_refs": 21,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Migrar mudancas de status/aprovacao/cancelamento para RPCs; SELECT limitado por cliente/prestador/admin."
+    },
+    {
+      "table": "prestador_historico",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 2,
+      "sensitive_direct_write": false,
+      "code_refs": 2,
+      "policies": [
+        "Acesso total prestador_historico"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "emprestimo_historico",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 8,
+      "policies": [
+        "emprestimo_historico_all"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "loja_estoque_historico",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 2,
+      "policies": [
+        "Acesso total para histórico de estoque"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "loja_reembolsos",
+      "sensitivity": "operacional",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 7,
+      "policies": [
+        "Acesso total para public"
+      ],
+      "recommendation": "Migrar mudancas de status/aprovacao/cancelamento para RPCs; SELECT limitado por cliente/prestador/admin."
+    },
+    {
+      "table": "prestador_demandas_historico",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 2,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 5,
+      "policies": [
+        "Allow all access",
+        "Permitir tudo"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "prestador_suporte_demandas",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 3,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "suporte_mensagens",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 2,
+      "commands": "INSERT,SELECT",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 2,
+      "policies": [
+        "Enable insert for all users",
+        "Enable read access for all users"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "tickets",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 21,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "cobranca_historico",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 0,
+      "policies": [
+        "Public Full Access"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "demanda_comentarios",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 2,
+      "policies": [
+        "Public Full Access"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "emprestimo_comentarios",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 9,
+      "policies": [
+        "emprestimo_comentarios_all"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "orcamento_timeline",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 3,
+      "commands": "INSERT,SELECT,UPDATE",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 0,
+      "policies": [
+        "orcamento_timeline_insert_public",
+        "orcamento_timeline_select_public",
+        "orcamento_timeline_update_public"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "os_suporte_mensagens",
+      "sensitivity": "comunicacao_historico",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 5,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Permitir INSERT limitado ao participante e SELECT apenas para participantes/admin; historico deve ser append-only."
+    },
+    {
+      "table": "promocoes_quantidade_uso",
+      "sensitivity": "operacional",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 2,
+      "policies": [
+        "Public Full Access"
+      ],
+      "recommendation": "Migrar mudancas de status/aprovacao/cancelamento para RPCs; SELECT limitado por cliente/prestador/admin."
+    },
+    {
+      "table": "saques",
+      "sensitivity": "financeiro",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "SELECT",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 7,
+      "policies": [
+        "saques_select_public_temp"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "sistema_sessoes",
+      "sensitivity": "identidade_acesso",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "SELECT",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 1,
+      "policies": [
+        "Permitir leitura publica sessoes"
+      ],
+      "recommendation": "Criar helpers de sessao/role no banco e policies por ator; sessoes e logs nao devem ser public true."
+    },
+    {
+      "table": "transferencias",
+      "sensitivity": "financeiro",
+      "severity": "alta",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "SELECT",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 7,
+      "policies": [
+        "transferencias_select_public_temp"
+      ],
+      "recommendation": "Fechar acesso direto e expor fluxo por RPC transacional SECURITY DEFINER com validacao de sessao/ator."
+    },
+    {
+      "table": "prestador_transacoes",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 6,
+      "sensitive_direct_write": true,
+      "code_refs": 9,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "prestador_demandas",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 5,
+      "sensitive_direct_write": false,
+      "code_refs": 52,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "cliente_promocoes",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 3,
+      "sensitive_direct_write": true,
+      "code_refs": 13,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "client_levels",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 2,
+      "sensitive_direct_write": false,
+      "code_refs": 10,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "empresa",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 2,
+      "sensitive_direct_write": false,
+      "code_refs": 14,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "indicacoes",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 2,
+      "sensitive_direct_write": false,
+      "code_refs": 19,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "assinaturas",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 18,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "cupons_loja",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 2,
+      "commands": "ALL,SELECT",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 15,
+      "policies": [
+        "Acesso total para cupons",
+        "Cupons visíveis para todos"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "fatura_contestacoes",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 3,
+      "policies": [
+        "service_role_all"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "formas_pagamento",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 4,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "level_history",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 3,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "loja_categorias",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 10,
+      "policies": [
+        "Public Full Access"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "prestador_agendamentos",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 5,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "prestador_premios",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 5,
+      "policies": [
+        "Allow all for authenticated users premios"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "prestador_promocoes",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 6,
+      "policies": [
+        "Allow all for authenticated users promocoes"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "prestador_promocoes_ativacoes",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 3,
+      "policies": [
+        "Public Access Ativacoes"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "prestador_saques",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 7,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "prestador_vouchers",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 2,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 6,
+      "policies": [
+        "Allow all for authenticated users",
+        "Allow all for authenticated users vouchers"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "produtos",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 27,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "promocoes",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 11,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "promocoes_quantidade",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 10,
+      "policies": [
+        "Public Full Access"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "servicos",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": false,
+      "code_refs": 13,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "vouchers",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 1,
+      "sensitive_direct_write": true,
+      "code_refs": 11,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "cupons_ativados",
+      "sensitivity": "catalogo_config",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 3,
+      "commands": "DELETE,INSERT,SELECT",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 4,
+      "policies": [
+        "cliente_delete_cupons_ativados",
+        "cliente_insert_cupons_ativados",
+        "cliente_select_cupons_ativados"
+      ],
+      "recommendation": "Separar leitura publica de catalogo e mover escrita para admin/RPC."
+    },
+    {
+      "table": "debug_admin_rpc",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 0,
+      "policies": [
+        "Allow all access"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "emprestimo_parcelas",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 8,
+      "policies": [
+        "emprestimo_parcelas_all"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "emprestimo_templates_contrato",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 0,
+      "policies": [
+        "emprestimo_templates_contrato_all"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "prestador_faturas",
+      "sensitivity": "outro",
+      "severity": "media",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "ALL",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 1,
+      "policies": [
+        "Acesso total"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "loja_avaliacoes",
+      "sensitivity": "outro",
+      "severity": "baixa",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "SELECT",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 2,
+      "policies": [
+        "Avaliacoes visiveis para todos"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    },
+    {
+      "table": "saude_configuracoes",
+      "sensitivity": "outro",
+      "severity": "baixa",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "open_policy_count": 1,
+      "commands": "SELECT",
+      "direct_write_count": 0,
+      "sensitive_direct_write": false,
+      "code_refs": 0,
+      "policies": [
+        "saude_config_public_select"
+      ],
+      "recommendation": "Revisar uso real e substituir policy aberta por policy especifica."
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "src/components/client/StoreHub.tsx": [
+    {
+      "line": 637,
+      "text": "const totalCarteira = extData.reduce((acc, curr) => acc + Number(curr.valor), 0);"
+    },
+    {
+      "line": 713,
+      "text": "const paidFatura = itemAssinatura.faturas.find((f: any) => f.status === 'pago');"
+    },
+    {
+      "line": 714,
+      "text": "const sortedFaturas = [...itemAssinatura.faturas].sort((a,b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime());"
+    },
+    {
+      "line": 1639,
+      "text": "const isInCart = exchangeCart.some(it => it.produto.id === prod.id);"
+    },
+    {
+      "line": 1716,
+      "text": "const totalNovosProdutos = exchangeCart.reduce((sum, item) => sum + item.produto.valor * item.quantidade, 0);"
+    },
+    {
+      "line": 2890,
+      "text": "const hadPaidFatura = selectedOrderTimeline.ordens_items?.some((item: any) => item.status === 'cancelado') &&"
+    }
+  ],
+  "src/components/client/ClientGSAStore.tsx": [
+    {
+      "line": 20,
+      "text": "const CartDrawer = React.lazy(() => import('./store/CartDrawer'));"
+    },
+    {
+      "line": 21,
+      "text": "const CheckoutModal = React.lazy(() => import('./store/CheckoutModal'));"
+    },
+    {
+      "line": 142,
+      "text": "const buildGuestCartItem = (item: any, tipo: ItemType, quantidade = 1, prazo_meses?: number): CartItem => ({"
+    },
+    {
+      "line": 151,
+      "text": "const savePendingStoreCheckout = () => {"
+    },
+    {
+      "line": 172,
+      "text": "const importPendingStoreCheckout = async () => {"
+    },
+    {
+      "line": 315,
+      "text": "const handleOpenCart = () => {"
+    },
+    {
+      "line": 413,
+      "text": "const fetchCart = async () => {"
+    },
+    {
+      "line": 434,
+      "text": "const enrichedCart = data.map((c: any) => {"
+    },
+    {
+      "line": 453,
+      "text": "const validItems = enrichedCart.filter(i => i.item_detalhes);"
+    },
+    {
+      "line": 464,
+      "text": "const addToCart = async (item: any, tipo: ItemType) => {"
+    },
+    {
+      "line": 479,
+      "text": "const existing = cartItems.find(c => c.item_id === item.id);"
+    },
+    {
+      "line": 513,
+      "text": "const confirmAddToCart = async (qty: number, prazo_meses?: number) => {"
+    },
+    {
+      "line": 582,
+      "text": "const updateCartQuantity = async (cartId: string, newQty: number, itemDetails: any) => {"
+    },
+    {
+      "line": 606,
+      "text": "const removeCartItem = async (cartId: string) => {"
+    },
+    {
+      "line": 661,
+      "text": "const itemNoCarrinho = cartItems.find((c: CartItem) => c.item_id === cupom.produto_id);"
+    },
+    {
+      "line": 668,
+      "text": "const temProdutosNoCarrinho = cartItems.some((c: CartItem) => c.tipo === 'produto');"
+    },
+    {
+      "line": 669,
+      "text": "const subtotalCarrinho = cartItems.reduce((acc: number, cur: CartItem) => acc + (cur.item_detalhes?.valor || 0) * cur.quantidade, 0);"
+    }
+  ]
+}
