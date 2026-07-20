@@ -22,6 +22,13 @@ async function assertFileContains(path: string, patterns: string[]) {
   }
 }
 
+async function assertFileDoesNotContain(path: string, patterns: string[]) {
+  const content = await readFile(resolve(root, path), 'utf8');
+  for (const pattern of patterns) {
+    assert.ok(!content.includes(pattern), `${path}: contrato inseguro ainda presente: ${pattern}`);
+  }
+}
+
 async function main() {
   assertRoute('/marketplace/menu/pacotes-viagem', {
     module: 'pacotes-viagem',
@@ -107,6 +114,36 @@ async function main() {
   );
 
   await assertFileContains(
+    'supabase/migrations/20260720140000_gsa_viagens_hardening.sql',
+    [
+      'Visitante insere orcamentos',
+      'Cliente insere seus orcamentos',
+      'quantidade_passageiros',
+      'gsa_travel_expected_passengers',
+      'Cadastre exatamente % passageiro(s)',
+      'transacao.status = \'pendente\'',
+      'trg_gsa_cleanup_deleted_travel_document_metadata',
+      'AFTER DELETE ON storage.objects',
+    ],
+  );
+
+  await assertFileDoesNotContain(
+    'supabase/migrations/20260720140000_gsa_viagens_hardening.sql',
+    ['GRANT EXECUTE ON FUNCTION public.gsa_jwt_session_is_valid() TO anon'],
+  );
+
+  await assertFileContains(
+    'scripts/gsa-viagens-hardening-verify.sql',
+    [
+      'SET LOCAL ROLE anon',
+      'anonymous_quote_rollback_test',
+      'passenger_count_contract',
+      'post_payment_write_protection',
+      'storage_metadata_cleanup_trigger',
+    ],
+  );
+
+  await assertFileContains(
     'src/components/client/marketplace/MarketplaceGSAStore.tsx',
     [
       'TravelCancellationsPage',
@@ -132,7 +169,7 @@ async function main() {
     ['callClientRpc', 'gsa_request_travel_cancellation'],
   );
 
-  console.log('GSA Viagens: rotas e contratos críticos validados com sucesso.');
+  console.log('GSA Viagens: rotas, segurança e contratos críticos validados com sucesso.');
 }
 
 main().catch((error) => {
