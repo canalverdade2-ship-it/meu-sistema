@@ -72,6 +72,7 @@ function KpiCard({
   icon: React.ElementType;
   caption: string;
   onClick?: () => void;
+  key?: React.Key;
 }) {
   return (
     <button
@@ -138,6 +139,7 @@ function Row({
   subtitle?: string;
   value?: string;
   action?: React.ReactNode;
+  key?: React.Key;
 }) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-neutral-100 p-4 sm:flex-row sm:items-center sm:justify-between">
