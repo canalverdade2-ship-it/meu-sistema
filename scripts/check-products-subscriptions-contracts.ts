@@ -81,7 +81,7 @@ assertContains('src/types.ts', [
   "tipo_cliente: 'pf' | 'pj' | 'ambos';",
 ]);
 
-assertContains('supabase/migrations/20260720233000_harden_products_and_subscriptions.sql', [
+assertContains('supabase/migrations/20260721010000_harden_products_and_subscriptions.sql', [
   'gsa_admin_operation_requests',
   'gsa_admin_adjust_product_stock',
   'gsa_admin_transition_store_order',
@@ -92,7 +92,7 @@ assertContains('supabase/migrations/20260720233000_harden_products_and_subscript
   'valor_mensal_contratado',
 ]);
 
-assertContains('supabase/migrations/20260720233100_secure_product_subscription_catalog.sql', [
+assertContains('supabase/migrations/20260721010100_secure_product_subscription_catalog.sql', [
   'gsa_admin_save_product_catalog',
   'gsa_admin_save_subscription_catalog',
   'gsa_admin_archive_catalog_items',
