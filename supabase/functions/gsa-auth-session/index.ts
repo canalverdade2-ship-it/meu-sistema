@@ -17,20 +17,11 @@ type AuthAction =
 const rpcByAction: Record<AuthAction, { name: string; params: (payload: Record<string, unknown>) => Record<string, unknown> }> = {
   login_pin: {
     name: 'gsa_login_pin',
-    params: (payload) => ({
-      p_documento: payload.documento,
-      p_pin: payload.pin,
-      p_tipo: payload.tipo,
-    }),
+    params: (payload) => ({ p_documento: payload.documento, p_pin: payload.pin, p_tipo: payload.tipo }),
   },
   set_pin_and_login: {
     name: 'gsa_set_pin_and_login',
-    params: (payload) => ({
-      p_documento: payload.documento,
-      p_telefone: payload.telefone,
-      p_pin: payload.pin,
-      p_tipo: payload.tipo,
-    }),
+    params: (payload) => ({ p_documento: payload.documento, p_telefone: payload.telefone, p_pin: payload.pin, p_tipo: payload.tipo }),
   },
   login_admin: {
     name: 'gsa_login_admin',
@@ -42,24 +33,12 @@ const rpcByAction: Record<AuthAction, { name: string; params: (payload: Record<s
   },
   recover_client: {
     name: 'gsa_recuperar_senha_cliente',
-    params: (payload) => ({
-      p_documento: payload.documento,
-      p_email: payload.email,
-    }),
+    params: (payload) => ({ p_documento: payload.documento, p_email: payload.email }),
   },
 };
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: corsHeaders });
-}
-
-function sanitizeFailure(data: any) {
-  return {
-    valid: false,
-    success: false,
-    error: data?.error === 'blocked' ? 'blocked' : 'invalid_credentials',
-    attempts_left: typeof data?.attempts_left === 'number' ? data.attempts_left : undefined,
-  };
 }
 
 Deno.serve(async (request) => {
@@ -82,11 +61,15 @@ Deno.serve(async (request) => {
     const { data, error } = await admin.rpc(operation.name, operation.params(body.payload || {}));
     if (error) {
       console.error(`Falha em ${operation.name}:`, error);
-      return json({ error: 'authentication_failed' }, 401);
+      return json({ error: 'authentication_failed' }, 500);
     }
 
     const successful = Boolean(data?.valid || data?.success);
-    if (!successful) return json(sanitizeFailure(data), 401);
+    if (!successful) {
+      // A mesma resposta é usada para conta inexistente, senha incorreta, bloqueio
+      // ou cadastro inativo. Isso impede enumeração de usuários.
+      return json({ valid: false, success: false, error: 'invalid_credentials' });
+    }
 
     const rpcSession = data?.session || data;
     const email = rpcSession?.auth?.email;
@@ -112,11 +95,7 @@ Deno.serve(async (request) => {
       ator_id: rpcSession.ator_id,
       ator_nome: rpcSession.ator_nome,
       metadata: rpcSession.metadata || {},
-      auth: {
-        email,
-        token_hash: tokenHash,
-        type: 'magiclink',
-      },
+      auth: { email, token_hash: tokenHash, type: 'magiclink' },
     };
 
     const response = data?.session
