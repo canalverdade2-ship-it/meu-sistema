@@ -1,0 +1,24 @@
+name: Export collaborator snapshot
+
+on:
+  pull_request:
+    branches:
+      - agent/export-collaborator-base
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create snapshot
+        run: tar --exclude=.git -czf /tmp/collaborator-repository.tar.gz .
+      - name: Upload snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: collaborator-repository-snapshot
+          path: /tmp/collaborator-repository.tar.gz
+          retention-days: 1
