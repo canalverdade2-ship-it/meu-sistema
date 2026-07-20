@@ -121,6 +121,19 @@ async function main() {
     'notificationService.notifyAdmin',
   ]);
 
+  await assertContains('src/components/prestador/PrestadorDemandas.tsx', [
+    'providerOperations.requestDemandSupport',
+    "transitionDemand(selected.id, 'deliver'",
+    "transitionDemand(selected.id, 'return'",
+    '.limit(100)',
+    '.limit(200)',
+  ]);
+  await assertExcludes('src/components/prestador/PrestadorDemandas.tsx', [
+    "from('prestador_suporte_demandas').insert",
+    "from('os_notas').insert",
+    'notificationService.notifyAdmin',
+  ]);
+
   await assertContains('src/components/prestador/PrestadorDocumentos.tsx', [
     'previousReferences',
     'removeProviderPrivateFile',
@@ -131,7 +144,7 @@ async function main() {
     '.limit(100)',
   ]);
 
-  console.log('Painel do Prestador: contratos de autorização, transação, Storage, suporte e desempenho validados.');
+  console.log('Painel do Prestador: contratos de autorização, transação, Storage, suporte, demandas e desempenho validados.');
 }
 
 main().catch((error) => {
