@@ -99,8 +99,7 @@ jobs:
 
           awk -F'|' '
             {
-              local=$1; remote=$2;
-              gsub(/[^0-9]/, "", local);
+              remote=$2;
               gsub(/[^0-9]/, "", remote);
               if (length(remote) == 14) print remote;
             }
@@ -214,7 +213,7 @@ jobs:
             (SELECT public FROM storage.buckets WHERE id = 'gsa-private-documents') AS private_bucket_public;
           SQL
 
-          supabase db query --linked -p "$SUPABASE_DB_PASSWORD" --file admin-production-verify.sql 2>&1 | tee admin-production-verification.log
+          supabase db query --linked --file admin-production-verify.sql 2>&1 | tee admin-production-verification.log
 
       - name: Verify schema evidence
         shell: bash
