@@ -31,7 +31,7 @@ assert.match(budgetGuard, /IF to_regprocedure\('public\.gsa_public_create_enterp
 assert.match(enterpriseHome, /minLength=\{20\}/, 'Descrição do orçamento deve validar mínimo no navegador');
 assert.match(enterpriseHome, /maxLength=\{5000\}/, 'Descrição do orçamento deve validar máximo no navegador');
 assert.match(enterpriseHome, /sessionStorage\.setItem\('gsa_pending_service_request'/, 'Solicitação pendente deve ficar limitada à aba');
-assert.match(app, /lazy\(\(\) => import\('\.\/pages\/AdminPanel'\)/, 'Painel administrativo deve ser carregado sob demanda');
+assert.match(app, /lazy\(\(\) => import\('\.\/pages\/SecureAdminPanel'\)/, 'Painel administrativo seguro deve ser carregado sob demanda');
 assert.match(app, /default: module\.MarketplaceGSAStore/, 'Marketplace deve mapear a exportação nomeada no carregamento lazy');
 assert.match(app, /readSafeReturnTo/, 'Redirecionamentos após login devem ser validados');
 assert.match(home, /params\.delete\('msg'\)/, 'Home deve remover somente o parâmetro de revogação');
