@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Calendar, Clock, Check, Info, Loader2, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, Check, Clock, Image as ImageIcon, Info, Loader2, MapPin } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
@@ -14,7 +14,7 @@ interface TravelPackageDetailPageProps {
   onRequireAuth?: () => void;
 }
 
-export function TravelPackageDetailPage({ slug, onBack, clientId, onRequireAuth }: TravelPackageDetailPageProps) {
+export function TravelPackageDetailPage({ slug, onBack }: TravelPackageDetailPageProps) {
   const [pkg, setPkg] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -29,126 +29,133 @@ export function TravelPackageDetailPage({ slug, onBack, clientId, onRequireAuth 
             viagens_pacote_imagens(url, is_capa, ordem)
           `)
           .eq('slug', slug)
+          .in('status', ['publicado', 'disponibilidade_sob_consulta'])
           .single();
 
         if (error) throw error;
-        
-        // Ordenar imagens
-        if (data && data.viagens_pacote_imagens) {
+        if (data?.viagens_pacote_imagens) {
           data.viagens_pacote_imagens.sort((a: any, b: any) => {
             if (a.is_capa) return -1;
             if (b.is_capa) return 1;
-            return a.ordem - b.ordem;
+            return Number(a.ordem || 0) - Number(b.ordem || 0);
           });
         }
-        
         setPkg(data);
-      } catch (err) {
-        console.error('Erro ao buscar pacote:', err);
-        toast.error('Pacote não encontrado.');
+      } catch (error) {
+        console.error('Erro ao buscar pacote:', error);
+        toast.error('Pacote não encontrado ou indisponível.');
         onBack();
       } finally {
         setLoading(false);
       }
     }
+
     fetchPackage();
-  }, [slug]);
+  }, [slug, onBack]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f4f1ea] flex flex-col items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-[#0c2340] mb-4" />
-        <p className="text-[#0c2340] font-bold">Carregando pacote...</p>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#f4f1ea]">
+        <Loader2 className="mb-4 h-10 w-10 animate-spin text-[#0c2340]" />
+        <p className="font-bold text-[#0c2340]">Carregando pacote...</p>
       </div>
     );
   }
 
   if (!pkg) return null;
 
-  const coverImg = pkg.viagens_pacote_imagens?.[0]?.url || 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200';
+  const coverImage =
+    pkg.viagens_pacote_imagens?.[0]?.url ||
+    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200';
   const gallery = pkg.viagens_pacote_imagens?.slice(1) || [];
+  const inclusions = Array.isArray(pkg.inclusoes) ? pkg.inclusoes : [];
+  const exclusions = Array.isArray(pkg.exclusoes) ? pkg.exclusoes : [];
+  const itinerary = Array.isArray(pkg.itinerario) ? pkg.itinerario : [];
+
+  const requestQuote = () => {
+    navigate(`${routes.marketplace.travelPackages.orcamento()}?pacote=${encodeURIComponent(pkg.id)}`);
+  };
 
   return (
-    <div className="bg-[#f4f1ea] min-h-screen font-sans pb-32">
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0c2340]/90 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-5 flex items-center justify-between h-16">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
-          >
+    <div className="min-h-screen bg-[#f4f1ea] pb-32 font-sans">
+      <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#0c2340]/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center px-5">
+          <button onClick={onBack} className="flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white">
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Voltar</span>
           </button>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <div className="relative h-[60vh] min-h-[400px] w-full bg-[#0c2340]">
-        <img src={coverImg} alt={pkg.titulo} className="w-full h-full object-cover opacity-60" />
+      <header className="relative h-[60vh] min-h-[400px] w-full bg-[#0c2340]">
+        <img src={coverImage} alt={pkg.titulo} className="h-full w-full object-cover opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0c2340] via-[#0c2340]/40 to-transparent" />
-        
-        <div className="absolute bottom-0 left-0 right-0 p-5 pb-12">
-          <div className="max-w-7xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full bg-[#38bdf8]/20 text-[#38bdf8] text-xs font-black uppercase tracking-wider backdrop-blur-md">
-                  {pkg.categoria}
-                </span>
-                <span className="px-3 py-1 rounded-full bg-white/10 text-white text-xs font-bold backdrop-blur-md flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> {pkg.dias} dias
-                </span>
-              </div>
-              <h1 className="text-4xl sm:text-6xl font-black text-white leading-tight mb-2 max-w-4xl" style={{ fontFamily: '"Cinzel", serif' }}>
-                {pkg.titulo}
-              </h1>
-              <div className="flex items-center gap-4 text-white/70 mt-4">
-                <div className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {pkg.origem} → {pkg.destino}</div>
-              </div>
-            </motion.div>
-          </div>
+        <div className="absolute inset-x-0 bottom-0 p-5 pb-12">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-7xl">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-[#38bdf8]/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-[#38bdf8] backdrop-blur-md">
+                {pkg.categoria}
+              </span>
+              <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+                <Clock className="h-3 w-3" /> {pkg.dias || '—'} dias · {pkg.noites || '—'} noites
+              </span>
+              {pkg.status === 'disponibilidade_sob_consulta' && (
+                <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-black uppercase text-amber-200">Sob consulta</span>
+              )}
+            </div>
+            <h1 className="max-w-4xl text-4xl font-black leading-tight text-white sm:text-6xl" style={{ fontFamily: '"Cinzel", serif' }}>
+              {pkg.titulo}
+            </h1>
+            <div className="mt-4 flex items-center gap-2 text-white/75">
+              <MapPin className="h-4 w-4" /> {pkg.origem || 'Origem flexível'} → {pkg.destino}
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-5 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          <div className="lg:col-span-2 space-y-12">
-            
-            {/* INCLUSÕES */}
-            <section className="bg-white rounded-3xl p-8 shadow-sm">
-              <h3 className="text-2xl font-black text-[#0c2340] mb-6">O que está incluso</h3>
-              {pkg.inclusoes && Array.isArray(pkg.inclusoes) && pkg.inclusoes.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {pkg.inclusoes.map((item: string, i: number) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="h-6 w-6 rounded-full bg-[#e6f4f1] flex items-center justify-center shrink-0 mt-0.5">
+      <main className="mx-auto mt-8 max-w-7xl px-5">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="space-y-10 lg:col-span-2">
+            <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+              <h2 className="mb-6 text-2xl font-black text-[#0c2340]">O que está incluso</h2>
+              {inclusions.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {inclusions.map((item: string, index: number) => (
+                    <div key={`${item}-${index}`} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e6f4f1]">
                         <Check className="h-3.5 w-3.5 text-[#0d7a71]" />
-                      </div>
-                      <span className="text-neutral-700 font-medium">{item}</span>
+                      </span>
+                      <span className="font-medium text-neutral-700">{item}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-neutral-500">Detalhes de inclusão não informados.</p>
+                <p className="text-neutral-500">As inclusões serão confirmadas na proposta final.</p>
               )}
             </section>
 
-            {/* ITINERÁRIO */}
-            {pkg.itinerario && Array.isArray(pkg.itinerario) && pkg.itinerario.length > 0 && (
-              <section className="bg-white rounded-3xl p-8 shadow-sm">
-                <h3 className="text-2xl font-black text-[#0c2340] mb-6">Itinerário Previsto</h3>
+            {exclusions.length > 0 && (
+              <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+                <h2 className="mb-5 text-2xl font-black text-[#0c2340]">Não incluso</h2>
+                <ul className="grid gap-3 text-sm text-neutral-600 sm:grid-cols-2">
+                  {exclusions.map((item: string, index: number) => <li key={`${item}-${index}`}>• {item}</li>)}
+                </ul>
+              </section>
+            )}
+
+            {itinerary.length > 0 && (
+              <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+                <h2 className="mb-6 text-2xl font-black text-[#0c2340]">Itinerário previsto</h2>
                 <div className="space-y-6">
-                  {pkg.itinerario.map((dia: any, i: number) => (
-                    <div key={i} className="flex gap-4">
+                  {itinerary.map((day: any, index: number) => (
+                    <div key={index} className="flex gap-4">
                       <div className="flex flex-col items-center">
-                        <div className="h-10 w-10 rounded-full bg-[#0c2340] text-white flex items-center justify-center font-black">
-                          {dia.dia || (i + 1)}
-                        </div>
-                        {i < pkg.itinerario.length - 1 && <div className="w-0.5 h-full bg-neutral-100 my-2" />}
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0c2340] font-black text-white">{day.dia || index + 1}</span>
+                        {index < itinerary.length - 1 && <div className="my-2 h-full w-0.5 bg-neutral-100" />}
                       </div>
-                      <div className="pt-2 pb-6 flex-1">
-                        <h4 className="text-lg font-bold text-[#1a1a1a] mb-2">{dia.titulo}</h4>
-                        <p className="text-neutral-600 text-sm leading-relaxed">{dia.descricao}</p>
+                      <div className="flex-1 pb-6 pt-2">
+                        <h3 className="mb-2 text-lg font-bold text-[#1a1a1a]">{day.titulo}</h3>
+                        <p className="text-sm leading-relaxed text-neutral-600">{day.descricao}</p>
                       </div>
                     </div>
                   ))}
@@ -156,65 +163,48 @@ export function TravelPackageDetailPage({ slug, onBack, clientId, onRequireAuth 
               </section>
             )}
 
-            {/* GALERIA */}
             {gallery.length > 0 && (
               <section>
-                <h3 className="text-2xl font-black text-[#0c2340] mb-6 flex items-center gap-2">
-                  <ImageIcon className="h-6 w-6" /> Galeria
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {gallery.map((img: any, i: number) => (
-                    <div key={i} className="aspect-square rounded-2xl overflow-hidden bg-neutral-100">
-                      <img src={img.url} alt="" className="w-full h-full object-cover hover:scale-110 transition-transform duration-500" />
+                <h2 className="mb-6 flex items-center gap-2 text-2xl font-black text-[#0c2340]"><ImageIcon className="h-6 w-6" /> Galeria</h2>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  {gallery.map((image: any, index: number) => (
+                    <div key={`${image.url}-${index}`} className="aspect-square overflow-hidden rounded-2xl bg-neutral-100">
+                      <img src={image.url} alt={`${pkg.titulo} ${index + 2}`} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" />
                     </div>
                   ))}
                 </div>
               </section>
             )}
-
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-black/5">
+          <aside>
+            <div className="sticky top-24 rounded-3xl border border-black/5 bg-white p-6 shadow-xl sm:p-8">
               <div className="mb-6">
-                <span className="text-neutral-500 text-sm font-bold uppercase tracking-wider">A partir de</span>
-                <div className="text-4xl font-black text-[#0c2340] my-2">{formatCurrency(pkg.preco_venda)}</div>
-                <p className="text-neutral-500 text-sm">Por pessoa em acomodação dupla</p>
+                <span className="text-sm font-bold uppercase tracking-wider text-neutral-500">A partir de</span>
+                <div className="my-2 text-4xl font-black text-[#0c2340]">{formatCurrency(pkg.preco_venda)}</div>
+                <p className="text-sm text-neutral-500">Por pessoa, conforme acomodação e disponibilidade.</p>
               </div>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3 text-sm font-medium text-neutral-700 bg-neutral-50 p-3 rounded-xl">
+              <div className="mb-8 space-y-3">
+                <div className="flex items-center gap-3 rounded-xl bg-neutral-50 p-3 text-sm font-medium text-neutral-700">
                   <Calendar className="h-5 w-5 text-[#38bdf8]" />
-                  <span>Datas flexíveis (Sob consulta)</span>
+                  <span>{pkg.data_ida && pkg.data_volta ? `${new Date(`${pkg.data_ida}T12:00:00`).toLocaleDateString('pt-BR')} a ${new Date(`${pkg.data_volta}T12:00:00`).toLocaleDateString('pt-BR')}` : 'Datas confirmadas na proposta'}</span>
                 </div>
-                {pkg.parcelamento_maximo > 1 && (
-                  <div className="flex items-center gap-3 text-sm font-medium text-neutral-700 bg-neutral-50 p-3 rounded-xl">
-                    <Info className="h-5 w-5 text-[#38bdf8]" />
-                    <span>Em até {pkg.parcelamento_maximo}x no cartão GSA</span>
+                {Number(pkg.parcelamento_maximo) > 1 && (
+                  <div className="flex items-center gap-3 rounded-xl bg-neutral-50 p-3 text-sm font-medium text-neutral-700">
+                    <Info className="h-5 w-5 text-[#38bdf8]" /> Em até {pkg.parcelamento_maximo}x, sujeito às condições finais
                   </div>
                 )}
               </div>
-
-              <button
-                onClick={() => {
-                  if (!clientId && onRequireAuth) {
-                    onRequireAuth();
-                  } else {
-                    navigate(routes.marketplace.travelPackages.orcamento() + `?pacote=${pkg.id}`);
-                  }
-                }}
-                className="w-full py-4 rounded-xl bg-[#0c2340] text-white font-black hover:bg-[#134e78] transition-colors shadow-lg hover:-translate-y-1"
-              >
-                Solicitar Reserva
+              <button onClick={requestQuote} className="w-full rounded-xl bg-[#0c2340] py-4 font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#134e78]">
+                Consultar disponibilidade
               </button>
-
-              <p className="text-center text-xs text-neutral-400 mt-4">
-                Sujeito a disponibilidade. O preço final será confirmado na elaboração da proposta.
+              <p className="mt-4 text-center text-xs text-neutral-400">
+                Você pode solicitar sem criar uma conta. O preço final será confirmado pela equipe GSA.
               </p>
             </div>
-          </div>
+          </aside>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
