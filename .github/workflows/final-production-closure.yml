@@ -81,7 +81,7 @@ jobs:
         run: npm run test:provider
 
       - name: Home public contracts
-        run: npm run test:home --if-present
+        run: npm run test:home
 
       - name: GSA Viagens contracts
         run: npm run test:travel
@@ -144,6 +144,7 @@ jobs:
               FROM supabase_migrations.schema_migrations
              WHERE version IN (
                '20260720213000',
+               '20260720215500','20260720215530','20260720215600',
                '20260720232000',
                '20260720233000','20260720233100','20260720233200',
                '20260720234400','20260720234500','20260720235300','20260720235425',
@@ -152,8 +153,8 @@ jobs:
                '20260721003700','20260721003800',
                '20260721010000','20260721010100','20260721020000'
              );
-            IF v_required <> 22 THEN
-              RAISE EXCEPTION 'Histórico obrigatório incompleto: % de 22 migrations', v_required;
+            IF v_required <> 25 THEN
+              RAISE EXCEPTION 'Histórico obrigatório incompleto: % de 25 migrations', v_required;
             END IF;
 
             IF to_regprocedure('public.gsa_admin_context()') IS NULL
@@ -183,8 +184,22 @@ jobs:
               RAISE EXCEPTION 'Operações administrativas críticas ausentes';
             END IF;
 
-            IF to_regprocedure('public.gsa_public_create_enterprise_budget_v2(jsonb)') IS NULL THEN
-              RAISE EXCEPTION 'Orçamento público protegido ausente';
+            IF to_regprocedure('public.gsa_public_lookup_referral(text)') IS NULL
+               OR to_regprocedure('public.gsa_public_register_client(text,jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_public_register_provider(jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_public_create_enterprise_budget_v2(jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'Objetos públicos protegidos da Home estão ausentes';
+            END IF;
+
+            IF NOT has_function_privilege('anon', 'public.gsa_public_lookup_referral(text)', 'EXECUTE')
+               OR NOT has_function_privilege('anon', 'public.gsa_public_register_client(text,jsonb)', 'EXECUTE')
+               OR NOT has_function_privilege('anon', 'public.gsa_public_register_provider(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Funções públicas necessárias da Home não estão disponíveis para anon';
+            END IF;
+
+            IF has_function_privilege('anon', 'public.gsa_public_create_enterprise_budget(jsonb)', 'EXECUTE')
+               OR has_function_privilege('authenticated', 'public.gsa_public_create_enterprise_budget(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Função legada de orçamento ainda possui acesso público';
             END IF;
 
             IF to_regprocedure('public.gsa_admin_adjust_product_stock(uuid,text,uuid,uuid,text,integer,text)') IS NULL
