@@ -39,7 +39,7 @@ jobs:
           grep -Fxq 'VERIFY_GSA_VIAGENS_20260720' .gsa-verify-trigger
 
       - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@v3
         with:
           version: latest
 
