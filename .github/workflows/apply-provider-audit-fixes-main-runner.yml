@@ -1,0 +1,48 @@
+name: Apply Provider Audit Fixes Main Runner
+
+on:
+  push:
+    branches: [agent/harden-provider-portal-audit]
+    paths: ['.provider-audit-fix-trigger']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-provider-audit-fixes-main-runner
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/harden-provider-portal-audit
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Apply reviewed corrections
+        run: python scripts/apply-provider-audit-fixes.py
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate TypeScript
+        run: npm run lint
+      - name: Validate provider security contracts
+        run: npm run test:provider
+      - name: Build production bundle
+        run: npm run build
+      - name: Publish definitive correction commit
+        run: |
+          rm -f scripts/apply-provider-audit-fixes.py
+          rm -f .github/workflows/apply-provider-audit-fixes.yml
+          rm -f .provider-audit-fix-trigger
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Corrigir integralmente os itens da auditoria do prestador'
+          git push origin HEAD:agent/harden-provider-portal-audit
