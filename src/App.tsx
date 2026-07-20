@@ -1,9 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Home } from './pages/Home';
-import { SecureAdminPanel } from './pages/SecureAdminPanel';
-import { ClientPortal } from './pages/ClientPortal';
-import { PrestadorDashboard } from './pages/Prestador/PrestadorDashboard';
 import { Toaster } from 'react-hot-toast';
 import { AdminNotificationProvider } from './hooks/useAdminNotifications';
 import { logService } from './lib/logService';
@@ -14,7 +11,6 @@ import { ProviderNotificationProvider } from './hooks/useProviderNotifications';
 import { FullscreenPrompt } from './components/ui/FullscreenPrompt';
 import { WhatsAppButton } from './components/ui/WhatsAppButton';
 import { FileViewerProvider } from './contexts/FileViewerContext';
-import { MarketplaceGSAStore } from './components/client/marketplace/MarketplaceGSAStore';
 
 // Roteamento
 import { useAppLocation } from './routing/useAppLocation';
@@ -22,9 +18,19 @@ import { resolveLegacyRoute } from './routing/legacyRouteResolver';
 import { routes } from './routing/routeCatalog';
 import { navigate, replace } from './routing/navigationService';
 import { isRouteAllowed } from './routing/routeSecurity';
+import { readSafeReturnTo } from './routing/safeReturnTo';
 import { defaultAdminPath } from './security/collaboratorAccess';
 
 const queryClient = new QueryClient();
+
+const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((module) => ({ default: module.SecureAdminPanel })));
+const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
+const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
+const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore').then((module) => ({ default: module.MarketplaceGSAStore })));
+
+function RouteLoading() {
+  return <div className="flex min-h-[50vh] items-center justify-center bg-neutral-50 text-sm font-semibold text-neutral-600" role="status">Carregando ambiente...</div>;
+}
 
 export default function App() {
   const route = useAppLocation();
@@ -104,54 +110,27 @@ export default function App() {
   // Helpers de Login
   const handleLoginClient = (clientId: string, isRecovery: boolean = false) => {
     setSession({ clientId });
-    
-    // Recuperar returnTo
-    const params = new URLSearchParams(window.location.search);
-    const returnTo = params.get('returnTo');
-
-    if (isRecovery) {
-      replace('/cliente/perfil?modal=alterar-senha&origem=recuperacao');
-    } else if (returnTo) {
-      replace(decodeURIComponent(returnTo));
-    } else {
-      replace(routes.client.dashboard());
-    }
+    const returnTo = readSafeReturnTo(window.location.search, ['/cliente', '/marketplace']);
+    if (isRecovery) replace('/cliente/perfil?modal=alterar-senha&origem=recuperacao');
+    else replace(returnTo || routes.client.dashboard());
   };
 
   const handleLoginAdmin = (adminDetails: { type: 'admin' | 'colaborador', id?: string, nome?: string, modulos?: string[] }) => {
-    localStorage.setItem('adminType', adminDetails.type);
-    if (adminDetails.id) localStorage.setItem('colaboradorId', adminDetails.id);
-    else localStorage.removeItem('colaboradorId');
-    if (adminDetails.nome) localStorage.setItem('colaboradorNome', adminDetails.nome);
-    else localStorage.removeItem('colaboradorNome');
-    localStorage.setItem('colaboradorModulos', JSON.stringify(adminDetails.modulos || []));
-
-    setSession({ 
-       adminAuth: true, 
-       adminType: adminDetails.type, 
-       colaboradorId: adminDetails.id, 
-       colaboradorNome: adminDetails.nome,
-       colaboradorModulos: adminDetails.modulos 
+    setSession({
+      adminAuth: true,
+      adminType: adminDetails.type,
+      colaboradorId: adminDetails.id,
+      colaboradorNome: adminDetails.nome,
+      colaboradorModulos: adminDetails.modulos,
     });
-
-    const params = new URLSearchParams(window.location.search);
-    const returnTo = params.get('returnTo');
-    if (returnTo) {
-      replace(decodeURIComponent(returnTo));
-    } else {
-      replace(routes.admin.dashboard());
-    }
+    const returnTo = readSafeReturnTo(window.location.search, ['/admin']);
+    replace(returnTo || defaultAdminPath(adminDetails.type, adminDetails.modulos || []));
   };
 
   const handleLoginPrestador = (prestadorId: string) => {
     setSession({ prestadorId });
-    const params = new URLSearchParams(window.location.search);
-    const returnTo = params.get('returnTo');
-    if (returnTo) {
-      replace(decodeURIComponent(returnTo));
-    } else {
-      replace(routes.provider.dashboard());
-    }
+    const returnTo = readSafeReturnTo(window.location.search, ['/prestador']);
+    replace(returnTo || routes.provider.dashboard());
   };
 
   const handleLogout = async (isAuto = false) => {
@@ -191,6 +170,7 @@ export default function App() {
     <FileViewerProvider>
       <QueryClientProvider client={queryClient}>
         <div className="min-h-screen bg-[#f8f7f5] font-sans text-neutral-900">
+          <Suspense fallback={<RouteLoading />}>
           
           {/* 1. VISÕES PÚBLICAS */}
           {activeView === 'public' && (
@@ -200,6 +180,8 @@ export default function App() {
               onLoginPrestador={handleLoginPrestador} 
               onGuestStore={() => navigate(routes.marketplace.root())}
               initialPublicPage={route.module === 'services' ? 'services' : route.module === 'systems' ? 'systems' : 'home'}
+              initialServiceSlug={route.module === 'services' ? route.itemId : undefined}
+              onServiceDetailChange={(slug) => navigate(slug ? routes.public.serviceDetail(slug) : routes.public.services())}
               onPublicPageChange={(page) => navigate(page === 'home' ? routes.public.home() : page === 'services' ? routes.public.services() : routes.public.systems())}
               onLoginPage={() => navigate(routes.login.root())}
             />
@@ -298,6 +280,8 @@ export default function App() {
             </ProviderNotificationProvider>
           )}
           
+          </Suspense>
+
           {/* Elementos flutuantes adicionais */}
           {isSessionActive && <FullscreenPrompt />}
           {isSessionActive && <WhatsAppButton />}

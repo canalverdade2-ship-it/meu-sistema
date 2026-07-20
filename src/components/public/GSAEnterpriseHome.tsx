@@ -23,7 +23,8 @@ import { LogoGSA } from '../ui/LogoGSA';
 import { AccessibleDialog } from '../ui/AccessibleDialog';
 import { supabase } from '../../lib/supabase';
 import { maskPhone } from '../../lib/utils';
-import type { Audience, IconItem, PublicPage, ServicePackage } from '../../data/publicServiceCatalog';
+import { getServicePackageSlug, type Audience, type IconItem, type PublicPage, type ServicePackage } from '../../data/publicServiceCatalog';
+import { PUBLIC_PROJECT_TYPES, isPublicProjectType, type PublicProjectType } from '../../data/publicProjectTypes';
 
 const WHATSAPP_NUMBER = '5511920857756';
 const CONTACT_EMAIL = 'gsa.doc.adm@gmail.com';
@@ -36,6 +37,8 @@ interface GSAEnterpriseHomeProps {
   servicePackages: ServicePackage[];
   publicProducts: IconItem[];
   publicServices: IconItem[];
+  initialServiceSlug?: string;
+  onServiceDetailChange?: (slug: string | null) => void;
   onGuestStore?: () => void;
   onClientLogin: () => void;
   onAdminLogin: () => void;
@@ -49,6 +52,8 @@ export function GSAEnterpriseHome({
   servicePackages,
   publicProducts,
   publicServices,
+  initialServiceSlug,
+  onServiceDetailChange,
   onGuestStore,
   onClientLogin,
   onAdminLogin,
@@ -64,6 +69,19 @@ export function GSAEnterpriseHome({
     () => servicePackages.filter((item) => item.audience === publicAudience),
     [publicAudience, servicePackages],
   );
+
+
+  useEffect(() => {
+    if (publicPage !== 'services' || !initialServiceSlug) {
+      if (!initialServiceSlug) setSelectedPackage(null);
+      return;
+    }
+    const servicePackage = servicePackages.find(
+      (item) => getServicePackageSlug(item) === initialServiceSlug,
+    );
+    setSelectedPackage(servicePackage || null);
+    if (servicePackage) setPublicAudience(servicePackage.audience);
+  }, [initialServiceSlug, publicPage, servicePackages, setPublicAudience]);
 
   useEffect(() => {
     if (reduceMotion || window.innerWidth >= 768 || localStorage.getItem('gsa_intro_seen')) return;
@@ -95,7 +113,7 @@ export function GSAEnterpriseHome({
   };
 
   const requestViaPortal = (servicePackage: ServicePackage) => {
-    localStorage.setItem('gsa_pending_service_request', JSON.stringify({
+    sessionStorage.setItem('gsa_pending_service_request', JSON.stringify({
       title: servicePackage.title,
       description: servicePackage.description,
       services: servicePackage.services,
@@ -140,7 +158,7 @@ export function GSAEnterpriseHome({
       {publicPage === 'home' && (
         <main>
           <section className="relative min-h-[100svh] overflow-hidden bg-neutral-950 pt-24 text-white">
-            <img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=2200&q=85" alt="Ambiente corporativo da GSA" className="absolute inset-0 h-full w-full object-cover opacity-45" />
+            <img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=76" srcSet="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=768&q=72 768w, https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1280&q=74 1280w, https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1920&q=76 1920w" sizes="100vw" alt="Ambiente corporativo da GSA" fetchPriority="high" decoding="async" referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover opacity-45" />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,6,8,0.96)_0%,rgba(5,6,8,0.78)_44%,rgba(5,6,8,0.52)_100%)]" />
             <div className="relative mx-auto flex min-h-[calc(100svh-6rem)] max-w-7xl flex-col items-center justify-center px-4 pb-16 text-center sm:px-6 lg:px-8">
               <motion.div initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-4xl">
@@ -194,7 +212,7 @@ export function GSAEnterpriseHome({
                     <h2 className="mt-3 text-2xl font-black">{item.title}</h2>
                     <p className="mt-3 text-sm leading-6 text-neutral-600">{item.description}</p>
                     <ul className="mt-5 space-y-2 text-sm text-neutral-700">{item.services.slice(0, 3).map((service) => <li key={service.name} className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#8a6e2f]" />{service.name}</li>)}</ul>
-                    <button type="button" onClick={() => setSelectedPackage(item)} className="mt-6 inline-flex items-center gap-2 font-bold text-[#142030]">Ver detalhes <ArrowRight className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => { setSelectedPackage(item); onServiceDetailChange?.(getServicePackageSlug(item)); }} className="mt-6 inline-flex items-center gap-2 font-bold text-[#142030]">Ver detalhes <ArrowRight className="h-4 w-4" /></button>
                   </article>
                 ))}
               </div>
@@ -233,7 +251,7 @@ export function GSAEnterpriseHome({
         </div>
       </footer>
 
-      <ServiceDetailsModal selectedPackage={selectedPackage} onClose={() => setSelectedPackage(null)} onInterest={(item) => { setSelectedPackage(null); setRequestPackage(item); }} />
+      <ServiceDetailsModal selectedPackage={selectedPackage} onClose={() => { setSelectedPackage(null); onServiceDetailChange?.(null); }} onInterest={(item) => { setSelectedPackage(null); onServiceDetailChange?.(null); setRequestPackage(item); }} />
       <RequestChannelModal selectedPackage={requestPackage} onClose={() => setRequestPackage(null)} onWhatsApp={(item) => { setRequestPackage(null); openWhatsApp(`Olá! Gostaria de atendimento sobre o pacote ${item.title}.`); }} onEmail={(item) => { window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Atendimento - ${item.title}`)}&body=${encodeURIComponent(item.description)}`; }} onPortal={requestViaPortal} />
       <SystemsBudgetModal isOpen={budgetOpen} onClose={() => setBudgetOpen(false)} />
     </div>
@@ -280,13 +298,16 @@ function ChannelButton({ icon: Icon, title, onClick }: { icon: typeof MessageCir
 }
 
 function SystemsBudgetModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [form, setForm] = useState({ nome: '', email: '', telefone: '', tipo: '', solicitacao: '' });
+  const [form, setForm] = useState<{ nome: string; email: string; telefone: string; tipo: PublicProjectType | ''; solicitacao: string }>({ nome: '', email: '', telefone: '', tipo: '', solicitacao: '' });
   const [submitting, setSubmitting] = useState(false);
   const update = (field: keyof typeof form, value: string) => setForm((previous) => ({ ...previous, [field]: value }));
   const closeSafely = () => { if (!submitting) onClose(); };
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form.nome.trim() || !form.email.trim() || !form.telefone.trim() || !form.tipo || !form.solicitacao.trim()) return toast.error('Preencha todos os campos.');
+    if (!form.nome.trim() || !form.email.trim() || !form.telefone.trim() || !isPublicProjectType(form.tipo) || form.solicitacao.trim().length < 20) {
+      toast.error('Preencha todos os campos e descreva a necessidade com pelo menos 20 caracteres.');
+      return;
+    }
     setSubmitting(true);
     try {
       const { error } = await supabase.rpc('gsa_public_create_enterprise_budget', { p_payload: { ...form, nome: form.nome.trim(), email: form.email.trim(), telefone: form.telefone.replace(/\D/g, ''), solicitacao: form.solicitacao.trim() } });
@@ -304,9 +325,29 @@ function SystemsBudgetModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
     <AccessibleDialog isOpen={isOpen} onClose={closeSafely} closeOnBackdrop={!submitting} ariaLabel="Solicitar orçamento de sistema" panelClassName="max-w-4xl rounded-2xl bg-white p-6 shadow-2xl">
       <form onSubmit={submit} className="space-y-4">
         <div className="flex items-start justify-between"><div><p className="text-xs font-black uppercase tracking-widest text-[#8a6e2f]">Solicitar orçamento</p><h2 className="mt-2 text-2xl font-black">Criação de site ou sistema</h2></div><button type="button" onClick={closeSafely} aria-label="Fechar orçamento" className="rounded-lg bg-neutral-100 p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]"><X className="h-5 w-5" /></button></div>
-        <div className="grid gap-4 sm:grid-cols-2"><input required data-dialog-autofocus value={form.nome} onChange={(event) => update('nome', event.target.value)} placeholder="Nome" className="input-field" /><input required type="email" value={form.email} onChange={(event) => update('email', event.target.value)} placeholder="E-mail" className="input-field" /></div>
-        <div className="grid gap-4 sm:grid-cols-2"><input required value={form.telefone} onChange={(event) => update('telefone', maskPhone(event.target.value))} placeholder="Telefone" className="input-field" /><select required value={form.tipo} onChange={(event) => update('tipo', event.target.value)} className="input-field"><option value="">Tipo de projeto</option><option value="site">Site</option><option value="loja">Loja virtual</option><option value="sistema">Sistema web</option><option value="aplicativo">Aplicativo</option><option value="automacao">Automação</option></select></div>
-        <textarea required rows={5} value={form.solicitacao} onChange={(event) => update('solicitacao', event.target.value)} placeholder="Descreva sua necessidade" className="input-field resize-none" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700">Nome completo
+            <input required data-dialog-autofocus name="nome" autoComplete="name" value={form.nome} onChange={(event) => update('nome', event.target.value)} className="input-field" maxLength={180} />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700">E-mail
+            <input required type="email" name="email" autoComplete="email" value={form.email} onChange={(event) => update('email', event.target.value)} className="input-field" maxLength={254} />
+          </label>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700">Telefone
+            <input required type="tel" name="telefone" autoComplete="tel" value={form.telefone} onChange={(event) => update('telefone', maskPhone(event.target.value))} className="input-field" maxLength={15} />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-neutral-700">Tipo de projeto
+            <select required name="tipo" value={form.tipo} onChange={(event) => update('tipo', event.target.value as PublicProjectType)} className="input-field">
+              <option value="">Selecione</option>
+              {PUBLIC_PROJECT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
+          </label>
+        </div>
+        <label className="grid gap-2 text-sm font-semibold text-neutral-700">Descreva sua necessidade
+          <textarea required name="solicitacao" minLength={20} maxLength={5000} rows={5} value={form.solicitacao} onChange={(event) => update('solicitacao', event.target.value)} className="input-field resize-none" aria-describedby="budget-description-help" />
+        </label>
+        <p id="budget-description-help" className="text-xs text-neutral-500">Mínimo de 20 caracteres. {form.solicitacao.trim().length}/5000.</p>
         <button type="submit" disabled={submitting} className="btn-primary w-full">{submitting ? 'Enviando...' : 'Enviar solicitação'}</button>
       </form>
     </AccessibleDialog>

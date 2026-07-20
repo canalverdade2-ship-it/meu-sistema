@@ -33,8 +33,7 @@ function readStoredSession(): StoredSession | null {
 
 function writeStoredSession(sessionData: StoredSession) {
   getSessionStorage()?.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
-  // Mantido apenas por compatibilidade com telas antigas. Não contém o token da sessão.
-  localStorage.setItem('sessaoId', sessionData.sessaoId);
+  localStorage.removeItem('sessaoId');
   localStorage.removeItem('_gsa_sess');
 }
 
