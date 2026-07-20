@@ -1,0 +1,176 @@
+name: Apply GSA travel installment fix
+
+on:
+  push:
+    branches: [fix/gsa-viagens-parcelamento-checkout-20260720]
+    paths:
+      - '.github/workflows/temp-fix-gsa-travel-installments.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/gsa-viagens-parcelamento-checkout-20260720
+          fetch-depth: 0
+
+      - name: Apply frontend changes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: Path, old: str, new: str):
+              text = path.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one match, found {count}: {old[:100]!r}')
+              path.write_text(text.replace(old, new), encoding='utf-8')
+
+          reservation = Path('src/components/client/marketplace/travel/TravelReservationPage.tsx')
+          replace_once(
+              reservation,
+              '''            quantidade_passageiros,\n            viagens_passageiros (''',
+              '''            quantidade_passageiros,\n            parcelamento_permitido,\n            viagens_passageiros (''',
+          )
+          replace_once(
+              reservation,
+              '''  const snapshot = trip.viagens_propostas?.snapshot_completo || {};\n  const vouchers = trip.viagens_vouchers || [];''',
+              '''  const snapshot = trip.viagens_propostas?.snapshot_completo || {};\n  const maxInstallments = Math.max(\n    Number(trip.viagens_propostas?.parcelamento_permitido) || 1,\n    1,\n  );\n  const installmentValue = Number(trip.valor_pago || 0) / maxInstallments;\n  const vouchers = trip.viagens_vouchers || [];''',
+          )
+          replace_once(
+              reservation,
+              '''                <div className="flex justify-between text-sm"><span className="text-neutral-500">Valor do pacote</span><span className="font-bold text-[#1a1a1a]">{formatCurrency(trip.valor_pago)}</span></div>\n                <div className="flex justify-between text-sm"><span className="text-neutral-500">Passageiros</span>''',
+              '''                <div className="flex justify-between text-sm"><span className="text-neutral-500">Valor do pacote</span><span className="font-bold text-[#1a1a1a]">{formatCurrency(trip.valor_pago)}</span></div>\n                <div className="flex justify-between text-sm"><span className="text-neutral-500">Condição de pagamento</span><span className="font-bold text-[#1a1a1a]">{maxInstallments}x de {formatCurrency(installmentValue)}</span></div>\n                <div className="flex justify-between text-sm"><span className="text-neutral-500">Passageiros</span>''',
+          )
+          replace_once(
+              reservation,
+              '''            tipo: 'pacote_viagem',\n            quantidade: 1,\n            item_detalhes: {\n              titulo: snapshot.titulo,\n              valor: trip.valor_pago,\n              preco_venda: trip.valor_pago,\n              is_digital: true,''',
+              '''            tipo: 'pacote_viagem',\n            quantidade: 1,\n            item_detalhes: {\n              nome: snapshot.titulo || 'Pacote de viagem',\n              titulo: snapshot.titulo,\n              valor: trip.valor_pago,\n              preco_venda: trip.valor_pago,\n              valor_total_contrato: trip.valor_pago,\n              parcelamento_permitido: maxInstallments,\n              is_digital: true,''',
+          )
+
+          proposals = Path('src/components/client/marketplace/travel/TravelProposalsPage.tsx')
+          replace_once(
+              proposals,
+              '''                      <div className="flex justify-between items-center border-b border-black/5 pb-3">\n                        <span className="text-neutral-600 text-sm">Valor Total</span>\n                        <span className="text-2xl font-black text-[#0c2340]">{formatCurrency(proposta.valor_total)}</span>\n                      </div>''',
+              '''                      <div className="flex justify-between items-center border-b border-black/5 pb-3">\n                        <span className="text-neutral-600 text-sm">Valor Total</span>\n                        <div className="text-right">\n                          <span className="block text-2xl font-black text-[#0c2340]">{formatCurrency(proposta.valor_total)}</span>\n                          <span className="mt-1 block text-xs font-bold text-neutral-500">\n                            Até {Math.max(Number(proposta.parcelamento_permitido) || 1, 1)}x de {formatCurrency(Number(proposta.valor_total || 0) / Math.max(Number(proposta.parcelamento_permitido) || 1, 1))}\n                          </span>\n                        </div>\n                      </div>''',
+          )
+
+          checkout = Path('src/components/client/store/CheckoutModal.tsx')
+          replace_once(
+              checkout,
+              '''  tipo: 'produto' | 'servico' | 'assinatura';''',
+              '''  tipo: 'produto' | 'servico' | 'assinatura' | 'pacote_viagem';''',
+          )
+          replace_once(
+              checkout,
+              '''  const [numParcelas, setNumParcelas] = useState(1);''',
+              '''  const [numParcelas, setNumParcelas] = useState(1);\n  const [travelInstallments, setTravelInstallments] = useState(1);''',
+          )
+          replace_once(
+              checkout,
+              '''      setFormaPagamento('outros');\n      setNumParcelas(1);\n      setEndereco({ cep: '', logradouro: '', bairro: '', cidade: '', uf: '', numero: '', complemento: '' });''',
+              '''      setFormaPagamento('outros');\n      setNumParcelas(1);\n      const travelItem = cartItems.find((item: any) => item.tipo === 'pacote_viagem');\n      setTravelInstallments(Math.max(1, Number(travelItem?.item_detalhes?.parcelamento_permitido || 1)));\n      setEndereco({ cep: '', logradouro: '', bairro: '', cidade: '', uf: '', numero: '', complemento: '' });''',
+          )
+          replace_once(
+              checkout,
+              '''  const temProdutos = cartItems.some((c: CartItem) => c.tipo === 'produto');''',
+              '''  const travelItem = cartItems.find((item: any) => item.tipo === 'pacote_viagem');\n  const isTravelCheckout = Boolean(travelItem);\n  const travelMaxInstallments = Math.max(1, Number(travelItem?.item_detalhes?.parcelamento_permitido || 1));\n  const normalizedTravelInstallments = Math.min(Math.max(travelInstallments, 1), travelMaxInstallments);\n  const travelContractTotal = Number(travelItem?.item_detalhes?.valor_total_contrato ?? travelItem?.item_detalhes?.valor ?? 0) * Number(travelItem?.quantidade || 1);\n  const travelInstallmentValue = travelContractTotal / normalizedTravelInstallments;\n\n  const temProdutos = cartItems.some((c: CartItem) => c.tipo === 'produto');''',
+          )
+          replace_once(
+              checkout,
+              '''    if (cur.tipo === 'produto') {\n      return acc + getProductQuantityPriceBreakdown(cur.item_detalhes, cur.quantidade).subtotalFinal;\n    }\n    return acc + ((cur.item_detalhes?.valor || 0) * cur.quantidade);''',
+              '''    if (cur.tipo === 'produto') {\n      return acc + getProductQuantityPriceBreakdown(cur.item_detalhes, cur.quantidade).subtotalFinal;\n    }\n    if (cur.tipo === 'pacote_viagem') {\n      return acc + (((cur.item_detalhes?.valor_total_contrato ?? cur.item_detalhes?.valor) || 0) * cur.quantidade / normalizedTravelInstallments);\n    }\n    return acc + ((cur.item_detalhes?.valor || 0) * cur.quantidade);''',
+          )
+          replace_once(
+              checkout,
+              '''      const isTravelCheckout = cartItems.some((c: any) => c.tipo === 'pacote_viagem');\n      \n      if (isTravelCheckout) {''',
+              '''      if (isTravelCheckout) {''',
+          )
+          replace_once(
+              checkout,
+              '''            proposta_id: pacote.item_id,\n            forma_pagamento: formaPagamento,''',
+              '''            proposta_id: pacote.item_id,\n            forma_pagamento: formaPagamento,\n            parcelas: normalizedTravelInstallments,''',
+          )
+          replace_once(
+              checkout,
+              '''        toast.success('🎉 Viagem Confirmada com Sucesso!');''',
+              '''        toast.success(`Cobrança gerada em ${normalizedTravelInstallments} parcela(s).`);''',
+          )
+          replace_once(
+              checkout,
+              '''          {/* Sessão Cupons */}\n          <div className="space-y-4">''',
+              '''          {isTravelCheckout && (\n            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5">\n              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">\n                <div>\n                  <h3 className="text-sm font-black uppercase tracking-widest text-neutral-900">Parcelamento da viagem</h3>\n                  <p className="mt-1 text-xs font-medium text-neutral-500">Total do contrato: {formatCurrency(travelContractTotal)}</p>\n                </div>\n                <select\n                  value={normalizedTravelInstallments}\n                  onChange={(event) => setTravelInstallments(Number(event.target.value))}\n                  className="rounded-xl border border-indigo-200 bg-white px-4 py-3 text-sm font-black text-indigo-900 outline-none focus:ring-2 focus:ring-indigo-500"\n                >\n                  {Array.from({ length: travelMaxInstallments }, (_, index) => index + 1).map((installments) => (\n                    <option key={installments} value={installments}>\n                      {installments}x de {formatCurrency(travelContractTotal / installments)}\n                    </option>\n                  ))}\n                </select>\n              </div>\n              <div className="mt-4 flex items-center justify-between rounded-xl bg-white px-4 py-3">\n                <span className="text-xs font-bold text-neutral-500">Primeira parcela</span>\n                <span className="text-lg font-black text-indigo-700">{formatCurrency(travelInstallmentValue)}</span>\n              </div>\n            </div>\n          )}\n\n          {/* Sessão Cupons */}\n          <div className={isTravelCheckout ? 'hidden' : 'space-y-4'}>''',
+          )
+          replace_once(
+              checkout,
+              '''          <div className="bg-gradient-to-r from-purple-50 via-indigo-50/30 to-purple-50 rounded-2xl p-5 border border-purple-100/80 shadow-sm relative overflow-hidden">''',
+              '''          <div className={`${isTravelCheckout ? 'hidden' : ''} bg-gradient-to-r from-purple-50 via-indigo-50/30 to-purple-50 rounded-2xl p-5 border border-purple-100/80 shadow-sm relative overflow-hidden`}>''',
+          )
+          replace_once(
+              checkout,
+              '''          <div className="bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-emerald-50 rounded-2xl p-5 border border-emerald-100/80 shadow-sm relative overflow-hidden mt-4">''',
+              '''          <div className={`${isTravelCheckout ? 'hidden' : ''} bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-emerald-50 rounded-2xl p-5 border border-emerald-100/80 shadow-sm relative overflow-hidden mt-4`}>''',
+          )
+          replace_once(
+              checkout,
+              '''          <div className="bg-[#fcfcfc] rounded-[2rem] p-6 border-2 border-neutral-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">''',
+              '''          <div className={`${isTravelCheckout ? 'hidden' : ''} bg-[#fcfcfc] rounded-[2rem] p-6 border-2 border-neutral-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)]`}>''',
+          )
+          replace_once(
+              checkout,
+              '''                    {c.quantidade}x {c.tipo} · <span className="font-mono text-indigo-300">''',
+              '''                    {c.tipo === 'pacote_viagem' ? `1ª de ${normalizedTravelInstallments} parcela(s)` : `${c.quantidade}x ${c.tipo}`} · <span className="font-mono text-indigo-300">''',
+          )
+          replace_once(
+              checkout,
+              '''                      {formatCurrency((c.item_detalhes?.valor || 0) * c.quantidade)}''',
+              '''                      {formatCurrency(((c.item_detalhes?.valor || 0) * c.quantidade) / (c.tipo === 'pacote_viagem' ? normalizedTravelInstallments : 1))}''',
+          )
+          replace_once(
+              checkout,
+              '''              {cartItems.some(c => c.tipo === 'assinatura') ? (''',
+              '''              {cartItems.some(c => c.tipo === 'assinatura') || (isTravelCheckout && normalizedTravelInstallments > 1) ? (''',
+          )
+
+          contracts = Path('scripts/check-gsa-travel-contracts.ts')
+          text = contracts.read_text(encoding='utf-8')
+          marker = "  console.log('GSA Viagens: rotas, segurança e contratos críticos validados com sucesso.');"
+          if marker not in text:
+              raise SystemExit('Travel contract marker not found')
+          additions = '''  await assertFileContains(\n    'supabase/migrations/20260720230000_gsa_viagens_parcelamento_checkout.sql',\n    [\n      'parcelas INTEGER NOT NULL DEFAULT 1',\n      'valor_parcela NUMERIC(10, 2)',\n      \"p_payload ->> 'parcelas'\",\n      \"'parcela_numero'\",\n      \"'parcelas_total'\",\n      'valor_primeira_parcela',\n    ],\n  );\n\n  await assertFileContains(\n    'src/components/client/store/CheckoutModal.tsx',\n    [\n      'travelInstallments',\n      'normalizedTravelInstallments',\n      'Parcelamento da viagem',\n      'parcelas: normalizedTravelInstallments',\n      'Total do contrato',\n    ],\n  );\n\n'''
+          contracts.write_text(text.replace(marker, additions + marker), encoding='utf-8')
+          PY
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - name: TypeScript
+        run: npm run lint
+      - name: Admin contracts
+        run: npm run test:admin
+      - name: Travel contracts
+        run: npm run test:travel
+      - name: Build
+        run: npm run build
+
+      - name: Commit validated changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/client/marketplace/travel/TravelReservationPage.tsx \
+                  src/components/client/marketplace/travel/TravelProposalsPage.tsx \
+                  src/components/client/store/CheckoutModal.tsx \
+                  scripts/check-gsa-travel-contracts.ts
+          git commit -m 'Corrigir parcelamento exibido e cobrado no checkout de viagens'
+          git push origin HEAD:fix/gsa-viagens-parcelamento-checkout-20260720
