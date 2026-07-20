@@ -5,6 +5,9 @@ on:
     branches: [ops/deploy-assinaturas-documentos-production]
     paths:
       - '.gsa-assinaturas-documentos-deploy-trigger'
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read
@@ -17,6 +20,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy assinaturas e documentos
+    if: github.event_name == 'push' || github.head_ref == 'ops/deploy-assinaturas-documentos-production'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -33,6 +37,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
+            test "$GITHUB_HEAD_REF" = 'ops/deploy-assinaturas-documentos-production'
+          fi
           test -n "$SUPABASE_ACCESS_TOKEN" || { echo 'SUPABASE_ACCESS_TOKEN não configurado.'; exit 1; }
           test -n "$SUPABASE_DB_PASSWORD" || { echo 'SUPABASE_DB_PASSWORD não configurado.'; exit 1; }
           test -n "$SUPABASE_PROJECT_ID" || { echo 'SUPABASE_PROJECT_ID não configurado.'; exit 1; }
