@@ -14,6 +14,34 @@ const sessionStorageAdapter = {
   },
 };
 
+function legacySupabaseStorageKey(supabaseUrl: string) {
+  try {
+    const hostname = new URL(supabaseUrl).hostname;
+    if (!hostname.endsWith('.supabase.co')) return null;
+    const projectRef = hostname.split('.')[0];
+    return projectRef ? `sb-${projectRef}-auth-token` : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearLegacySupabaseLocalStorage(supabaseUrl: string) {
+  if (typeof window === 'undefined') return;
+
+  const storageKey = legacySupabaseStorageKey(supabaseUrl);
+  if (!storageKey) return;
+
+  // Versões anteriores do cliente persistiam a sessão Auth no localStorage.
+  // A limpeza é repetida em cada inicialização para também alcançar abas antigas
+  // que ainda possam regravar a chave durante a transição de versão.
+  for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+    const key = window.localStorage.key(index);
+    if (key === storageKey || key?.startsWith(`${storageKey}.`)) {
+      window.localStorage.removeItem(key);
+    }
+  }
+}
+
 export const getSupabase = (): SupabaseClient => {
   if (!supabaseInstance) {
     const meta = import.meta as any;
@@ -27,6 +55,8 @@ export const getSupabase = (): SupabaseClient => {
         'Erro Crítico: Credenciais do Supabase não encontradas. Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para ativar o banco de dados real.'
       );
     }
+
+    clearLegacySupabaseLocalStorage(supabaseUrl);
 
     supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
