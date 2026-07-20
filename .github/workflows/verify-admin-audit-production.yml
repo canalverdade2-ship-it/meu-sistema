@@ -1,0 +1,207 @@
+name: Verify Admin Audit Production
+
+on:
+  push:
+    branches: [ops/verify-admin-audit-production]
+    paths: ['.verify-admin-audit-production-trigger']
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: verify-admin-audit-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          grep -Fqx 'VERIFY_ADMIN_AUDIT_PRODUCTION_V1' .verify-admin-audit-production-trigger
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Verify migration history and production objects
+        shell: bash
+        run: |
+          cat > admin-audit-verification.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_applied integer;
+            v_private_policies integer;
+          BEGIN
+            SELECT count(*)
+              INTO v_applied
+              FROM supabase_migrations.schema_migrations
+             WHERE version IN (
+               '20260720234400','20260720234500','20260720235300','20260720235425',
+               '20260720235450','20260720235500','20260721000500','20260721001500',
+               '20260721002500','20260721003000','20260721003500','20260721003600',
+               '20260721003700','20260721003800'
+             );
+            IF v_applied <> 14 THEN
+              RAISE EXCEPTION 'Histórico administrativo incompleto: % de 14 migrations', v_applied;
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_access_snapshot'
+            ) THEN
+              RAISE EXCEPTION 'Snapshot seguro de acessos ausente';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_save_collaborator'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_rotate_collaborator_credential'
+            ) THEN
+              RAISE EXCEPTION 'Operações seguras de colaboradores ausentes';
+            END IF;
+
+            IF to_regprocedure('public.gsa_admin_settings_snapshot(uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_update_settings_secure(uuid,text,jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'Configurações administrativas seguras ausentes';
+            END IF;
+
+            IF to_regprocedure('public.gsa_admin_validate_context(uuid,text)') IS NULL THEN
+              RAISE EXCEPTION 'Validação segura da sessão administrativa ausente';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_schema = 'public' AND table_name = 'colaboradores'
+                AND column_name IN ('credencial_hash','senha_hash','credential_hash')
+            ) THEN
+              RAISE EXCEPTION 'Hash de credenciais de colaboradores ausente';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM storage.buckets
+              WHERE id = 'gsa-private-documents' AND public = false
+            ) THEN
+              RAISE EXCEPTION 'Bucket administrativo privado ausente';
+            END IF;
+
+            SELECT count(*)
+              INTO v_private_policies
+              FROM pg_policies
+             WHERE schemaname = 'storage'
+               AND tablename = 'objects'
+               AND policyname IN (
+                 'gsa_admin_private_documents_select',
+                 'gsa_admin_private_documents_insert',
+                 'gsa_admin_private_documents_update',
+                 'gsa_admin_private_documents_delete'
+               );
+            IF v_private_policies <> 4 THEN
+              RAISE EXCEPTION 'Políticas do armazenamento privado incompletas: % de 4', v_private_policies;
+            END IF;
+
+            IF to_regprocedure('public.gsa_admin_private_document_allowed(text)') IS NULL
+               OR to_regprocedure('public.gsa_private_document_read_allowed(text)') IS NULL THEN
+              RAISE EXCEPTION 'Controles de leitura do armazenamento privado ausentes';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_classifieds_snapshot'
+            ) THEN
+              RAISE EXCEPTION 'Operações seguras de classificados ausentes';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public' AND p.proname LIKE 'gsa_admin_%protection%'
+            ) THEN
+              RAISE EXCEPTION 'Operações administrativas de proteção ausentes';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname LIKE '%admin%audit%' AND NOT tgisinternal
+            ) THEN
+              RAISE EXCEPTION 'Triggers de auditoria administrativa ausentes';
+            END IF;
+          END $$;
+
+          SELECT 'ADMIN_AUDIT_PRODUCTION_OK' AS result;
+          SELECT version
+          FROM supabase_migrations.schema_migrations
+          WHERE version IN (
+            '20260720234400','20260720234500','20260720235300','20260720235425',
+            '20260720235450','20260720235500','20260721000500','20260721001500',
+            '20260721002500','20260721003000','20260721003500','20260721003600',
+            '20260721003700','20260721003800'
+          )
+          ORDER BY version;
+          SQL
+          set -o pipefail
+          supabase db query --linked --file admin-audit-verification.sql 2>&1 | tee admin-audit-verification.log
+          grep -q 'ADMIN_AUDIT_PRODUCTION_OK' admin-audit-verification.log
+          for version in \
+            20260720234400 20260720234500 20260720235300 20260720235425 \
+            20260720235450 20260720235500 20260721000500 20260721001500 \
+            20260721002500 20260721003000 20260721003500 20260721003600 \
+            20260721003700 20260721003800; do
+            grep -q "$version" admin-audit-verification.log
+          done
+
+      - name: Record production success
+        shell: bash
+        run: |
+          printf 'SUCCESS\nproject=%s\nrun=%s\nmigrations=14\nrange=20260720234400..20260721003800\n' "$SUPABASE_PROJECT_ID" "$GITHUB_RUN_ID" > .verify-admin-audit-production-success
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .verify-admin-audit-production-success
+          git commit -m 'Registrar verificação da auditoria administrativa'
+          git push
+
+      - name: Publish failure diagnostic
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          touch admin-audit-verification.log
+          {
+            echo '## Falha na verificação definitiva da auditoria administrativa'
+            echo
+            echo "- Projeto: $EXPECTED_PROJECT_ID"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo '```text'
+            cat admin-audit-verification.log
+            echo '```'
+          } > failure.md
+          gh issue create --title 'Falha verificação auditoria administrativa' --body-file failure.md
+
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-audit-production-verification
+          path: admin-audit-verification.log
+          if-no-files-found: ignore
+          retention-days: 30
