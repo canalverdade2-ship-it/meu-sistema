@@ -1,0 +1,31 @@
+name: Agent Sync Main
+
+on:
+  push:
+    branches:
+      - agent/corrigir-home-seguranca-arquitetura
+    paths:
+      - '.github/workflows/agent-sync-main.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-home-seguranca-arquitetura
+          fetch-depth: 0
+
+      - name: Merge latest main
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git merge --no-edit origin/main
+          git push origin HEAD:agent/corrigir-home-seguranca-arquitetura
