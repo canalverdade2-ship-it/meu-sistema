@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Validate trigger
-        run: grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V9' .sync-home-current-main-trigger
+        run: grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V10' .sync-home-current-main-trigger
 
       - name: Merge current main with reviewed conflict policy
         shell: bash
@@ -44,7 +44,7 @@ jobs:
             while IFS= read -r path; do
               [ -n "$path" ] || continue
               case "$path" in
-                index.html|public/logo.svg|scripts/check-home-public-contracts.ts|scripts/test-home-public-migrations.sql|src/components/auth/ClientAccessModal.tsx|src/components/auth/RestrictedAccessModal.tsx|src/components/public/GSAEnterpriseHome.tsx|src/components/public/LoginHub.tsx|src/data/publicProjectTypes.ts|src/data/publicServiceCatalog.ts|src/hooks/usePublicPageMetadata.ts|src/pages/Home.tsx|src/routing/safeReturnTo.ts|supabase/migrations/20260720215500_fix_public_home_contracts.sql|supabase/migrations/20260720215530_minimize_public_referral_lookup.sql|supabase/migrations/20260720215600_guard_legacy_budget_permissions.sql|vite.config.ts)
+                index.html|public/logo.svg|scripts/check-home-public-contracts.ts|scripts/test-home-public-migrations.sql|src/components/public/GSAEnterpriseHome.tsx|src/components/public/LoginHub.tsx|src/data/publicProjectTypes.ts|src/data/publicServiceCatalog.ts|src/hooks/usePublicPageMetadata.ts|src/pages/Home.tsx|src/routing/safeReturnTo.ts|supabase/migrations/20260720215500_fix_public_home_contracts.sql|supabase/migrations/20260720215530_minimize_public_referral_lookup.sql|supabase/migrations/20260720215600_guard_legacy_budget_permissions.sql|vite.config.ts)
                   git checkout --ours -- "$path"
                   ;;
                 *)
@@ -92,13 +92,12 @@ jobs:
           )
           anchor = "assert.match(migration, /v_default_active AND upper\\(v_token\\)/, 'Código público depende da configuração ativa');"
           secure_contracts = """assert.match(sessionService, /request_client_recovery/, 'Recuperação deve iniciar desafio sem abrir sessão');
-          assert.match(sessionService, /verifyOtp/, 'Código recebido por e-mail deve ser verificado pelo Supabase Auth');
           assert.match(sessionService, /complete_client_recovery/, 'Recuperação só pode criar sessão após desafio concluído');
           assert.doesNotMatch(sessionService, /['\"]recover_client['\"]/, 'Fluxo antigo de recuperação direta deve permanecer removido');
           assert.match(authGateway, /request_client_recovery/, 'Gateway deve oferecer solicitação protegida');
           assert.match(authGateway, /complete_client_recovery/, 'Gateway deve concluir somente o desafio autenticado');
           assert.match(authGateway, /gsa_client_recovery_challenges/, 'Desafio deve ser único, expirar e ser consumido');
-          assert.match(clientModal, /verifyClientRecoveryOtp/, 'Interface deve confirmar o código antes de criar a sessão');
+          assert.match(clientModal, /verifyOtp/, 'Código recebido por e-mail deve ser verificado pelo Supabase Auth');
           assert.match(clientModal, /autoComplete=\"one-time-code\"/, 'Home deve solicitar o código de uso único');
           """
           if secure_contracts.splitlines()[0] not in test:
@@ -113,7 +112,8 @@ jobs:
                 if: steps.typescript.outputs.exit_code == '0'
                 run: npm run test:home
 
-          """.replace('                if:', '        if:').replace('                run:', '        run:').replace('\n          """', '\n"""')
+          """
+          home_step = home_step.replace('                if:', '        if:').replace('                run:', '        run:')
           marker = "      - name: Client portal security contracts\n"
           if 'name: Public Home contracts' not in quality:
               if marker not in quality:
