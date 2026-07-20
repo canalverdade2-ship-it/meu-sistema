@@ -19,16 +19,46 @@ jobs:
           ref: agent/corrigir-painel-administrativo
           fetch-depth: 0
 
-      - name: Merge current main
+      - name: Merge current main safely
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
-          git merge --no-ff origin/main -m "Sincronizar correções do painel com a main"
+
+          set +e
+          git merge --no-ff --no-commit origin/main
+          merge_code=$?
+          set -e
+
+          if [ "$merge_code" -ne 0 ]; then
+            conflicts="$(git diff --name-only --diff-filter=U)"
+            unexpected="$(printf '%s\n' "$conflicts" | grep -v '^package.json$' || true)"
+            if [ -n "$unexpected" ]; then
+              echo "Conflitos não previstos:"
+              printf '%s\n' "$unexpected"
+              exit 1
+            fi
+
+            git checkout --theirs package.json
+            python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('package.json')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          scripts = data.setdefault('scripts', {})
+          scripts['validate:subscriptions'] = 'tsx src/validation/step6_subscriptions.ts'
+          scripts['test:travel'] = 'tsx scripts/check-gsa-travel-contracts.ts'
+          scripts['test:admin'] = 'tsx scripts/check-admin-panel-contracts.ts'
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+            git add package.json
+          fi
+
           rm -f .gsa-admin-sync-main-trigger
           rm -f .github/workflows/admin-panel-sync-main.yml
           git add -A
-          git commit --amend --no-edit
+          git commit -m "Sincronizar correções do painel com a main"
           git push origin HEAD:agent/corrigir-painel-administrativo
