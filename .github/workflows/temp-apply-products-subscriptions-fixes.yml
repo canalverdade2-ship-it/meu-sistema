@@ -130,7 +130,18 @@ jobs:
         run: npm ci
 
       - name: TypeScript
-        run: npm run lint
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run lint 2>&1 | tee /tmp/products-subscriptions-typescript.log
+
+      - name: Upload TypeScript diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: products-subscriptions-typescript-log
+          path: /tmp/products-subscriptions-typescript.log
+          retention-days: 3
 
       - name: Products and subscriptions contracts
         run: npm run test:products-subscriptions
