@@ -2,17 +2,32 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, MoreHorizontal, Calendar, CheckCircle, XCircle, Layers, ShieldCheck, AlertTriangle, Receipt, DollarSign, Info } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Modal } from '../ui/Modal';
-import { formatCurrency, formatDate, generateCode, handleError } from '../../lib/utils';
+import { formatCurrency, formatDate, handleError, generateUUID } from '../../lib/utils';
 import { GlobalFilter } from '../ui/GlobalFilter';
 import { toast } from 'react-hot-toast';
-import { createNotification } from '../../lib/notifications';
 import { notificationService } from '../../lib/notificationService';
 import { logService } from '../../lib/logService';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
+import { sessionService } from '../../lib/sessionService';
 
-export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaboradorNome }: { activeSubTab?: 'processamento' | 'concluido', initialItemId?: string, colaboradorNome?: string }) {
-  const [activeTab, setActiveTab] = useState<'processamento' | 'concluido'>('processamento');
+const getAdminSessionForRpc = () => {
+  const session = sessionService.getCurrentSession();
+  if (!session?.sessaoId || !session?.sessionToken) {
+    throw new Error('Sessao administrativa expirada. Faca login novamente.');
+  }
+  return session;
+};
+
+const getLocalDateInputValue = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaboradorNome }: { activeSubTab?: 'processamento' | 'concluido' | 'cancelado', initialItemId?: string, colaboradorNome?: string }) {
+  const [activeTab, setActiveTab] = useState<'processamento' | 'concluido' | 'cancelado'>('processamento');
 
   useEffect(() => {
     if (activeSubTab) setActiveTab(activeSubTab);
@@ -30,6 +45,9 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
   const [mesesProrrogacao, setMesesProrrogacao] = useState<number>(1);
   const [dataCancelamento, setDataCancelamento] = useState<string>('');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [isSubmittingSubscriptionAction, setIsSubmittingSubscriptionAction] = useState(false);
+  const extensionRequestId = useRef(generateUUID());
+  const cancellationRequestId = useRef(generateUUID());
 
   const hasAutoOpened = useRef<string | null>(null);
 
@@ -87,8 +105,10 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
 
     if (activeTab === 'processamento') {
       query = query.in('status', ['em_analise', 'pendente', 'pago']);
-    } else {
+    } else if (activeTab === 'concluido') {
       query = query.in('status', ['concluido', 'em_cancelamento']);
+    } else {
+      query = query.eq('status', 'cancelado');
     }
     
     if (search) {
@@ -112,166 +132,188 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
     }
   };
 
-  const handleUpdateStatus = async (id: string, status: 'concluido' | 'cancelado', motivo?: string) => {
-    const { error } = await supabase
-      .from('ordens_assinatura')
-      .update({ 
-        status, 
-        motivo_cancelamento: motivo ? `${motivo}${colaboradorNome ? ` [POR: ${colaboradorNome}]` : ''}` : (colaboradorNome ? `[POR: ${colaboradorNome}]` : null), 
-        data_conclusao: status === 'concluido' ? new Date().toISOString() : null 
-      })
-      .eq('id', id);
+  const executeSubscriptionCancellation = async (
+    ordem: any,
+    cancellationDate: string,
+    motivo?: string
+  ) => {
+    const session = getAdminSessionForRpc();
+    const { data, error } = await supabase.rpc('gsa_admin_cancel_subscription', {
+      p_sessao_id: session.sessaoId,
+      p_session_token: session.sessionToken,
+      p_request_id: cancellationRequestId.current,
+      p_ordem_assinatura_id: ordem.id,
+      p_data_cancelamento: cancellationDate,
+      p_motivo: motivo || null,
+    });
 
-    if (error) {
-      toast.error('Erro ao atualizar status.');
-    } else {
-      toast.success('Status atualizado com sucesso.');
-      
-      const ordem = ordens.find(o => o.id === id);
-      if (ordem) {
-        await notificationService.notifyClient(
-          ordem.cliente_id,
-          status === 'concluido' ? '✅ Assinatura Concluída' : '❌ Assinatura Cancelada',
-          `Sua ordem de assinatura para ${ordem.assinaturas.nome} foi ${status === 'concluido' ? 'concluída com sucesso! 🎉' : 'cancelada pelo administrador. ⚠️'}`,
-          'assinaturas',
-          status === 'concluido' ? 'assinatura_criada' : 'assinatura_cancelada',
-          { tab: status === 'concluido' ? 'ativas' : 'canceladas', itemId: ordem.id, prioridade: 'alta', contexto: { assinatura_id: ordem.id, nome: ordem.assinaturas?.nome } }
+    if (error) throw error;
+    if (!(data as any)?.success) {
+      throw new Error('Nao foi possivel cancelar a assinatura.');
+    }
+
+    cancellationRequestId.current = generateUUID();
+    return data as any;
+  };
+
+  const handleUpdateStatus = async (id: string, status: 'concluido' | 'cancelado', motivo?: string) => {
+    const ordem = ordens.find(o => o.id === id);
+    if (!ordem) {
+      toast.error('Ordem de assinatura nao encontrada.');
+      return;
+    }
+
+    setIsSubmittingSubscriptionAction(true);
+    try {
+      if (status === 'cancelado') {
+        const data = await executeSubscriptionCancellation(
+          ordem,
+          getLocalDateInputValue(),
+          motivo || 'Cancelamento imediato da ordem pelo administrador'
         );
+
+        toast.success((data as any)?.already_processed
+          ? 'Esta ordem ja estava cancelada.'
+          : 'Ordem de assinatura cancelada com seguranca.');
+        setIsDetailOpen(false);
+        await fetchOrdens();
+        return;
       }
 
-      setIsDetailOpen(false);
-      
-      // Log Action
-      await logService.logAction({ acao: 'ACAO_SISTEMA', detalhes: JSON.stringify({}), ator_tipo: 'admin', ator_nome: 'Administrador' });
+      const { error } = await supabase
+        .from('ordens_assinatura')
+        .update({
+          status: 'concluido',
+          motivo_cancelamento: null,
+          data_cancelamento: null,
+          data_conclusao: new Date().toISOString(),
+        })
+        .eq('id', id);
 
-      fetchOrdens();
+      if (error) throw error;
+
+      await notificationService.notifyClient(
+        ordem.cliente_id,
+        '✅ Assinatura Concluida',
+        `Sua ordem de assinatura para ${ordem.assinaturas.nome} foi concluida com sucesso! 🎉`,
+        'assinaturas',
+        'assinatura_criada',
+        { tab: 'ativas', itemId: ordem.id, prioridade: 'alta', contexto: { assinatura_id: ordem.id, nome: ordem.assinaturas?.nome } }
+      );
+
+      await logService.logAction({
+        acao: 'ATIVAR_ASSINATURA',
+        detalhes: JSON.stringify({ ordem_assinatura_id: ordem.id, cliente_id: ordem.cliente_id }),
+        ator_tipo: 'admin',
+        ator_nome: colaboradorNome || 'Administrador'
+      });
+
+      toast.success('Assinatura ativada com sucesso.');
+      setIsDetailOpen(false);
+      await fetchOrdens();
+    } catch (error) {
+      toast.error(handleError(error, status === 'concluido' ? 'ativar assinatura' : 'cancelar assinatura'));
+    } finally {
+      setIsSubmittingSubscriptionAction(false);
     }
   };
 
   const handleProrrogarAssinatura = async () => {
     if (!selectedOrdem) return;
+    if (!Number.isInteger(mesesProrrogacao) || mesesProrrogacao < 1 || mesesProrrogacao > 36) {
+      toast.error('Informe um periodo entre 1 e 36 meses.');
+      return;
+    }
+
+    setIsSubmittingSubscriptionAction(true);
     try {
-      // 1. Atualizar meses da assinatura
-      const { error: updateError } = await supabase
-        .from('ordens_assinatura')
-        .update({
-          prazo_meses: (selectedOrdem.prazo_meses || 0) + mesesProrrogacao,
-          observacoes_admin: `${selectedOrdem.observacoes_admin || ''} [Prorrogado ${mesesProrrogacao} meses em ${formatDate(new Date())}${colaboradorNome ? ` POR: ${colaboradorNome}` : ''}]`.trim()
-        })
-        .eq('id', selectedOrdem.id);
+      const session = getAdminSessionForRpc();
+      const { data, error } = await supabase.rpc('gsa_admin_extend_subscription', {
+        p_sessao_id: session.sessaoId,
+        p_session_token: session.sessionToken,
+        p_request_id: extensionRequestId.current,
+        p_ordem_assinatura_id: selectedOrdem.id,
+        p_meses: mesesProrrogacao,
+      });
 
-      if (updateError) throw updateError;
-
-      // 2. Gerar faturas futuras
-      const faturas = [];
-      const baseDate = new Date();
-      
-      for (let i = 1; i <= mesesProrrogacao; i++) {
-        const vencimento = new Date(baseDate);
-        vencimento.setMonth(baseDate.getMonth() + i);
-        
-        faturas.push({
-          codigo_fatura: generateCode('FAT'),
-          ordem_assinatura_id: selectedOrdem.id,
-          cliente_id: selectedOrdem.cliente_id,
-          valor_total: Number(selectedOrdem.assinaturas.valor) || 0,
-          valor_final_pendente: Number(selectedOrdem.assinaturas.valor) || 0,
-          status: 'pendente',
-          tipo: 'assinatura',
-          data_vencimento: vencimento.toISOString().split('T')[0]
-        });
+      if (error) throw error;
+      if (!(data as any)?.success) {
+        throw new Error('Nao foi possivel prorrogar a assinatura.');
       }
 
-      const { error: faturasError } = await supabase
-        .from('faturas')
-        .insert(faturas);
+      extensionRequestId.current = generateUUID();
+      toast.success((data as any)?.already_exists
+        ? 'Esta prorrogacao ja havia sido processada.'
+        : 'Assinatura prorrogada e faturas geradas em uma unica transacao.');
 
-      if (faturasError) throw faturasError;
-
-      await notificationService.notifyClient(
-        selectedOrdem.cliente_id,
-        '⏳ Assinatura Prorrogada',
-        `Sua assinatura de ${selectedOrdem.assinaturas.nome} foi prorrogada por mais ${mesesProrrogacao} meses. 📅`,
-        'assinaturas',
-        'assinatura_prorrogada',
-        { tab: 'processamento', itemId: selectedOrdem.id, contexto: { assinatura_id: selectedOrdem.id, prorrogacao: mesesProrrogacao } }
-      );
-
-      toast.success('Assinatura prorrogada e faturas geradas com sucesso!');
+      setMesesProrrogacao(1);
       setIsProrrogarModalOpen(false);
       setIsDetailOpen(false);
-      
-      // Log Action
-      await logService.logAction({ acao: 'ACAO_SISTEMA', detalhes: JSON.stringify({}), ator_tipo: 'admin', ator_nome: 'Administrador' });
-
-      fetchOrdens();
+      await fetchOrdens();
     } catch (error) {
       toast.error(handleError(error, 'prorrogar assinatura'));
+    } finally {
+      setIsSubmittingSubscriptionAction(false);
     }
   };
 
   const handleCancelarAssinatura = async () => {
     if (!selectedOrdem || !dataCancelamento) return;
-    
-    const cancelDate = new Date(dataCancelamento);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (cancelDate < today) {
-      toast.error('A data de cancelamento não pode ser retroativa.');
+
+    const today = getLocalDateInputValue();
+    if (dataCancelamento < today) {
+      toast.error('A data de cancelamento nao pode ser retroativa.');
       return;
     }
 
+    setIsSubmittingSubscriptionAction(true);
     try {
-      const diffTime = cancelDate.getTime() - today.getTime();
-      const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24))); 
-      
-      let valorProporcional = Number(selectedOrdem.assinaturas.valor) || 0;
-      if (diffDays < 30) {
-        valorProporcional = ((Number(selectedOrdem.assinaturas.valor) || 0) / 30) * diffDays;
-      }
-
-      const isFuture = cancelDate > today;
-      const newStatus = isFuture ? 'em_cancelamento' : 'cancelado';
-
-      const { error } = await supabase
-        .from('ordens_assinatura')
-        .update({
-          status: newStatus,
-          data_cancelamento: dataCancelamento,
-          valor_proporcional_cancelamento: valorProporcional,
-          motivo_cancelamento: `Cancelamento agendado via painel${colaboradorNome ? ` [POR: ${colaboradorNome}]` : ''}`
-        })
-        .eq('id', selectedOrdem.id);
-
-      if (error) throw error;
-
-      await notificationService.notifyClient(
-        selectedOrdem.cliente_id,
-        isFuture ? '📅 Cancelamento de Assinatura Agendado' : '❌ Assinatura Cancelada',
-        isFuture 
-          ? `O cancelamento da sua assinatura de ${selectedOrdem.assinaturas.nome} foi agendado para ${formatDate(dataCancelamento)}. ⏳`
-          : `Sua assinatura de ${selectedOrdem.assinaturas.nome} foi cancelada. ⚠️`,
-        'assinaturas',
-        'assinatura_cancelada',
-        { tab: isFuture ? 'em_cancelamento' : 'canceladas', itemId: selectedOrdem.id, prioridade: 'alta', contexto: { assinatura_id: selectedOrdem.id, data_cancelamento: dataCancelamento } }
+      const data = await executeSubscriptionCancellation(
+        selectedOrdem,
+        dataCancelamento,
+        'Cancelamento solicitado pelo painel administrativo'
       );
 
-      toast.success(isFuture ? 'Cancelamento agendado com sucesso!' : 'Assinatura cancelada com sucesso!');
+      toast.success((data as any)?.status === 'em_cancelamento'
+        ? 'Cancelamento agendado e cobrancas futuras ajustadas.'
+        : (data as any)?.already_processed
+          ? 'Esta assinatura ja estava cancelada.'
+          : 'Assinatura cancelada e cobrancas futuras ajustadas.');
+
+      setDataCancelamento('');
       setIsCancelarModalOpen(false);
       setIsDetailOpen(false);
-      
-      // Log Action
-      await logService.logAction({ acao: 'ACAO_SISTEMA', detalhes: JSON.stringify({}), ator_tipo: 'admin', ator_nome: 'Administrador' });
-
-      fetchOrdens();
+      await fetchOrdens();
     } catch (error) {
       toast.error(handleError(error, 'cancelar assinatura'));
+    } finally {
+      setIsSubmittingSubscriptionAction(false);
     }
   };
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+      <div className="grid grid-cols-1 gap-2 rounded-2xl bg-neutral-100 p-1 sm:grid-cols-3">
+        {[
+          { id: 'processamento' as const, label: 'Processamento' },
+          { id: 'concluido' as const, label: 'Ativas' },
+          { id: 'cancelado' as const, label: 'Canceladas' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`rounded-xl px-4 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+              activeTab === tab.id
+                ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-neutral-200'
+                : 'text-neutral-500 hover:bg-white/60 hover:text-neutral-900'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-4 px-2 mb-8">
         <GlobalFilter 
           searchValue={search}
@@ -331,13 +373,15 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
             >
               <div className={`absolute top-0 right-0 h-32 w-32 translate-x-12 -translate-y-12 rounded-full opacity-5 group-hover:opacity-10 transition-opacity ${
                 ordem.status === 'concluido' ? 'bg-emerald-500' : 
-                ordem.status === 'em_cancelamento' ? 'bg-indigo-500' : 'bg-amber-500'
+                ordem.status === 'em_cancelamento' ? 'bg-indigo-500' :
+                ordem.status === 'cancelado' ? 'bg-red-500' : 'bg-amber-500'
               }`} />
               
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 relative z-10">
                 <div className={`flex h-16 w-16 items-center justify-center rounded-2xl shadow-inner group-hover:scale-110 transition-all ${
                   ordem.status === 'concluido' ? 'bg-emerald-50 text-emerald-600' : 
-                  ordem.status === 'em_cancelamento' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
+                  ordem.status === 'em_cancelamento' ? 'bg-indigo-50 text-indigo-600' :
+                  ordem.status === 'cancelado' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
                 }`}>
                   <Calendar className="h-8 w-8" />
                 </div>
@@ -351,11 +395,13 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
                     <p className="text-xl font-black text-[#1a1a1a] tracking-tighter">{formatCurrency(ordem.assinaturas.valor)}</p>
                     <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-sm ${
                       ordem.status === 'concluido' ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200' : 
-                      ordem.status === 'em_cancelamento' ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200' : 
+                      ordem.status === 'em_cancelamento' ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200' :
+                      ordem.status === 'cancelado' ? 'bg-red-50 text-red-600 ring-1 ring-red-200' :
                       'bg-amber-50 text-amber-600 ring-1 ring-amber-200'
                     }`}>
                       {ordem.status === 'concluido' ? 'Ativa' : 
-                       ordem.status === 'em_cancelamento' ? 'Em Cancelamento' : 'Pendente'}
+                       ordem.status === 'em_cancelamento' ? 'Em Cancelamento' :
+                       ordem.status === 'cancelado' ? 'Cancelada' : 'Pendente'}
                     </span>
                     {fatura && (
                       <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-sm ${
@@ -379,7 +425,7 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
         }) : (
           <div className="py-24 text-center">
             <Calendar className="h-16 w-16 text-neutral-100 mx-auto mb-4" />
-            <p className="text-[10px] font-black text-neutral-300 uppercase tracking-widest">Nenhuma ordem de assinatura {activeTab === 'processamento' ? 'em processamento' : 'ativa ou agendada'}</p>
+            <p className="text-[10px] font-black text-neutral-300 uppercase tracking-widest">Nenhuma ordem de assinatura {activeTab === 'processamento' ? 'em processamento' : activeTab === 'cancelado' ? 'cancelada' : 'ativa ou agendada'}</p>
           </div>
         )}
       </div>
@@ -416,10 +462,11 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
             />
           </div>
           <button
+            disabled={isSubmittingSubscriptionAction}
             onClick={handleProrrogarAssinatura}
-            className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700"
+            className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Confirmar Prorrogação
+            {isSubmittingSubscriptionAction ? 'Processando...' : 'Confirmar Prorrogação'}
           </button>
         </div>
       </Modal>
@@ -431,23 +478,24 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
       >
         <div className="space-y-6">
           <p className="text-sm text-neutral-600">
-            Selecione a data em que deseja cancelar a assinatura. Lembre-se que cancelamentos com menos de 30 dias de antecedência podem gerar cobranças proporcionais.
+            Selecione a data efetiva do encerramento. Faturas pagas serao preservadas, cobrancas com vencimento ate essa data permanecerao validas e somente faturas nao pagas posteriores serao canceladas.
           </p>
           <div>
             <label className="block text-sm font-bold text-neutral-700 mb-1">Data de Cancelamento</label>
             <input
               type="date"
-              min={new Date().toISOString().split('T')[0]}
+              min={getLocalDateInputValue()}
               value={dataCancelamento}
               onChange={(e) => setDataCancelamento(e.target.value)}
               className="w-full rounded-xl border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>
           <button
+            disabled={!dataCancelamento || isSubmittingSubscriptionAction}
             onClick={handleCancelarAssinatura}
-            className="w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-700"
+            className="w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Confirmar Cancelamento
+            {isSubmittingSubscriptionAction ? 'Processando...' : 'Confirmar Cancelamento'}
           </button>
         </div>
       </Modal>
@@ -621,7 +669,7 @@ export function AssinaturaDetails({
               </div>
             )}
             
-            {activeTab === 'ativas' && (
+            {activeTab === 'concluido' && (
               <div className="space-y-3">
                 {onOpenProrrogar && (
                   <button

@@ -47,7 +47,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
   const [categorias, setCategorias] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from('loja_categorias').select('*').eq('status', 'ativo').order('ordem').then(({data}) => {
+    supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['servico', 'todos']).order('ordem').then(({data}) => {
       if (data) setCategorias(data);
     });
   }, []);
@@ -128,7 +128,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
     }
 
     if (search) {
-      query = query.ilike('nome', `%${search}%`);
+      query = query.or(`nome.ilike.%${search}%,codigo_servico.ilike.%${search}%`);
     }
 
     const { data } = await query.order('codigo_servico', { ascending: false });
@@ -142,7 +142,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
     const { data, error } = await supabase.from('servicos').insert([{
       ...otherData,
       ...galleryCols,
-      descricao: `${otherData.descricao || ''} ${colaboradorNome ? `[Cadastrado por: ${colaboradorNome}]` : ''}`.trim(),
+      descricao: otherData.descricao || '',
       codigo_servico: generateCode('SRV'),
       status: 'ativo'
     }]).select().single();
@@ -180,7 +180,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
     const { error } = await supabase.from('servicos').update({
       ...otherData,
       ...galleryCols,
-      descricao: `${otherData.descricao || ''} ${colaboradorNome ? `[Editado por: ${colaboradorNome}]` : ''}`.trim(),
+      descricao: otherData.descricao || '',
     }).eq('id', selectedServico.id);
 
     if (error) {
@@ -525,10 +525,8 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                   <button 
                     onClick={async () => {
                       const newStatus = selectedServico.status === 'ativo' ? 'inativo' : 'ativo';
-                      const auditTag = colaboradorNome ? ` [Alterado por: ${colaboradorNome}]` : '';
                       const { error } = await supabase.from('servicos').update({ 
-                        status: newStatus,
-                        descricao: `${selectedServico.descricao || ''} ${auditTag}`.trim()
+                        status: newStatus
                       }).eq('id', selectedServico.id);
                       if (error) {
                         toast.error('Erro ao alterar status.');
@@ -715,6 +713,46 @@ function ServicoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
           className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
         />
       </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-bold text-neutral-700">Categoria</label>
+        <select
+          value={formData.categoria_id}
+          onChange={e => {
+            const categoriaId = e.target.value;
+            const categoriaNome = categorias.find(categoria => categoria.id === categoriaId)?.nome || '';
+            setFormData({
+              ...formData,
+              categoria_id: categoriaId,
+              categoria: categoriaNome,
+            });
+          }}
+          className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
+        >
+          <option value="">Sem categoria</option>
+          {categorias.map(categoria => (
+            <option key={categoria.id} value={categoria.id}>{categoria.nome}</option>
+          ))}
+        </select>
+        <p className="mt-1 text-[10px] font-medium text-neutral-400">Opcional. Agrupa o serviço na vitrine da loja.</p>
+      </div>
+
+      <label className="flex items-center gap-3 cursor-pointer group">
+        <div className="relative">
+          <input
+            type="checkbox"
+            className="sr-only peer"
+            checked={formData.visivel_na_loja}
+            onChange={e => setFormData({...formData, visivel_na_loja: e.target.checked})}
+          />
+          <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+        </div>
+        <div>
+          <span className="text-sm font-bold text-neutral-700 group-hover:text-indigo-600 transition-colors">Visível na Vitrine da Loja</span>
+          <p className="text-[10px] font-medium text-neutral-400">Disponibiliza o serviço para solicitação no GSA Store Hub.</p>
+        </div>
+      </label>
+
       <div>
         <label className="flex items-center gap-3 cursor-pointer group">
           <div className="relative">
