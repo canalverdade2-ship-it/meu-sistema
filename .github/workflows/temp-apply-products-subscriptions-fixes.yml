@@ -35,11 +35,25 @@ jobs:
           from pathlib import Path
           script_path = Path('/tmp/apply-interfaces.py')
           script = script_path.read_text(encoding='utf-8')
-          old = r'''r"  const handleCancelAndRefundConfirm = async \(\) => \{.*?\n  \};\n\n  return \("'''
-          new = r'''r"const handleCancelAndRefundConfirm = async \(\) => \{.*?\n\s*\};\n\s*return \("'''
-          if old not in script:
-              raise RuntimeError('Padrão de cancelamento administrativo não localizado no aplicador.')
-          script_path.write_text(script.replace(old, new, 1), encoding='utf-8')
+
+          replacements = {
+              r'''r"  const handleCancelAndRefundConfirm = async \(\) => \{.*?\n  \};\n\n  return \("''':
+                  r'''r"const handleCancelAndRefundConfirm = async \(\) => \{.*?\n\s*\};\n\s*return \("''',
+              '''"                       A assinatura está programada para ser cancelada permanentemente''':
+                  '''"A assinatura está programada para ser cancelada permanentemente''',
+              '''"                       A assinatura está programada para ser encerrada''':
+                  '''"A assinatura está programada para ser encerrada''',
+              '''"                           {formatCurrency(selectedAssinatura.assinaturas?.valor || 0)}"''':
+                  '''"{formatCurrency(selectedAssinatura.assinaturas?.valor || 0)}"''',
+              '''"                           {formatCurrency(selectedAssinatura.valor_mensal_contratado ?? selectedAssinatura.assinaturas?.valor ?? 0)}"''':
+                  '''"{formatCurrency(selectedAssinatura.valor_mensal_contratado ?? selectedAssinatura.assinaturas?.valor ?? 0)}"''',
+          }
+          for old, new in replacements.items():
+              if old not in script:
+                  raise RuntimeError(f'Padrão não localizado no aplicador: {old[:80]}')
+              script = script.replace(old, new, 1)
+
+          script_path.write_text(script, encoding='utf-8')
           PY
 
           python -m py_compile /tmp/apply-interfaces.py
