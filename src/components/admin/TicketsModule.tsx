@@ -12,6 +12,8 @@ import { useAdminNotifications } from '../../hooks/useAdminNotifications';
 import { logService } from '../../lib/logService';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
+import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
+import { SecureAttachmentButton } from '../ui/SecureAttachmentButton';
 
 export function TicketsModule({ initialTab, initialItemId, adminType, colaboradorId, colaboradorNome }: { initialTab?: string, initialItemId?: string, adminType?: string, colaboradorId?: string, colaboradorNome?: string }) {
   const { pendencies, refreshCounts } = useAdminNotifications();
@@ -262,62 +264,63 @@ export function TicketsModule({ initialTab, initialItemId, adminType, colaborado
   const handleSendMessage = async () => {
     if ((!newMessage.trim() && !attachment) || !selectedTicket) return;
 
-    let anexo_url = '';
-    let anexo_tipo = '';
+    let uploadedReference: string | null = null;
+    let messagePersisted = false;
 
-    if (attachment) {
-      const fileExt = attachment.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
-      const filePath = `chat/admin/${fileName}`;
-      const bucketName = selectedTicket.prestador_id ? 'documentos_prestador' : 'documentos_cliente';
+    try {
+      let anexoUrl = '';
+      let anexoTipo = '';
+      let anexoNome = '';
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, attachment);
+      if (attachment) {
+        const ownerId = selectedTicket.prestador_id || selectedTicket.cliente_id;
+        if (!ownerId) throw new Error('O ticket não possui um destinatário válido.');
 
-      if (uploadError) {
-        toast.error('Erro ao enviar anexo.');
-        console.error('Erro ao enviar anexo do ticket:', uploadError);
-        return;
-      } else {
-        const { data: { publicUrl } } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(filePath);
-        anexo_url = publicUrl;
+        const uploaded = await uploadPrivateDocument(attachment, {
+          scope: selectedTicket.prestador_id ? 'prestadores' : 'clientes',
+          ownerId,
+          context: 'tickets',
+          contextId: selectedTicket.id,
+        });
+        uploadedReference = uploaded.reference;
+        anexoUrl = uploaded.reference;
+        anexoTipo = uploaded.mimeType;
+        anexoNome = uploaded.fileName;
       }
-      anexo_tipo = attachment.type;
-    }
 
-    const tempMessage: TicketMensagem = {
-      id: Date.now().toString(),
-      ticket_id: selectedTicket.id,
-      autor_id: colaboradorId || 'admin',
-      autor_nome: colaboradorNome || 'Suporte GSA',
-      mensagem: newMessage,
-      anexo_url: anexo_url || undefined,
-      anexo_tipo: anexo_tipo || undefined,
-      data_envio: new Date().toISOString(),
-      tipo: 'admin'
-    };
-    setMessages(prev => [...prev, tempMessage]);
-    setNewMessage('');
-    setAttachment(null);
+      const tempMessage: TicketMensagem = {
+        id: Date.now().toString(),
+        ticket_id: selectedTicket.id,
+        autor_id: colaboradorId || 'admin',
+        autor_nome: colaboradorNome || 'Suporte GSA',
+        mensagem: newMessage,
+        anexo_url: anexoUrl || undefined,
+        anexo_tipo: anexoTipo || undefined,
+        anexo_nome: anexoNome || undefined,
+        data_envio: new Date().toISOString(),
+        tipo: 'admin',
+      };
 
-    const { error } = await supabase.from('ticket_mensagens').insert([{
-      ticket_id: selectedTicket.id,
-      autor_id: colaboradorId || 'admin',
-      autor_nome: colaboradorNome || 'Suporte GSA',
-      mensagem: newMessage,
-      anexo_url: anexo_url || null,
-      anexo_tipo: anexo_tipo || null,
-      tipo: 'admin'
-    }]);
+      setMessages(prev => [...prev, tempMessage]);
+      setNewMessage('');
+      setAttachment(null);
 
-    if (error) {
-      setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
-      console.error('Erro detalhado ao enviar mensagem:', error);
-      toast.error(`Erro: ${error.message || JSON.stringify(error)}`);
-    } else {
+      const { error } = await supabase.from('ticket_mensagens').insert([{
+        ticket_id: selectedTicket.id,
+        autor_id: colaboradorId || 'admin',
+        autor_nome: colaboradorNome || 'Suporte GSA',
+        mensagem: newMessage,
+        anexo_url: anexoUrl || null,
+        anexo_tipo: anexoTipo || null,
+        anexo_nome: anexoNome || null,
+        tipo: 'admin',
+      }]);
+      if (error) {
+        setMessages(prev => prev.filter(message => message.id !== tempMessage.id));
+        throw error;
+      }
+      messagePersisted = true;
+
       if (selectedTicket.cliente_id) {
         await notificationService.notifyClient(
           selectedTicket.cliente_id,
@@ -325,29 +328,33 @@ export function TicketsModule({ initialTab, initialItemId, adminType, colaborado
           `Você recebeu uma nova mensagem no ticket: ${selectedTicket.assunto}`,
           'suporte',
           'ticket_respondido',
-          { itemId: selectedTicket.id, prioridade: 'alta', contexto: { ticket_id: selectedTicket.id, assunto: selectedTicket.assunto } }
+          { itemId: selectedTicket.id, prioridade: 'alta', contexto: { ticket_id: selectedTicket.id, assunto: selectedTicket.assunto } },
         );
       } else if (selectedTicket.prestador_id) {
-        // Notificar Prestador
         await createNotification(
           selectedTicket.prestador_id,
           'Suporte GSA',
           `Nova mensagem no ticket: ${selectedTicket.assunto}`,
           'suporte',
           'mensagens',
-          selectedTicket.id
+          selectedTicket.id,
         );
       }
-    }
 
-    // Log Action
-    await logService.logAction({
-      acao: 'RESPONDER_TICKET',
-      ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-      ator_id: colaboradorId || undefined,
-      ator_nome: colaboradorNome || 'Administrador',
-      detalhes: `Respondendo ticket #${selectedTicket.id.slice(0, 8)} - ${selectedTicket.assunto}`
-    });
+      await logService.logAction({
+        acao: 'RESPONDER_TICKET',
+        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+        ator_id: colaboradorId || undefined,
+        ator_nome: colaboradorNome || 'Administrador',
+        detalhes: `Respondendo ticket #${selectedTicket.id.slice(0, 8)} - ${selectedTicket.assunto}`,
+      });
+    } catch (error: any) {
+      if (!messagePersisted && uploadedReference) {
+        await removePrivateDocument(uploadedReference).catch(() => undefined);
+      }
+      console.error('Erro detalhado ao enviar mensagem:', error);
+      toast.error(error?.message || 'Erro ao enviar mensagem.');
+    }
   };
 
   const handleUpdateStatus = async (id: string, status: string) => {
@@ -672,17 +679,14 @@ export function TicketsModule({ initialTab, initialItemId, adminType, colaborado
                          <p className="font-black text-[9px] uppercase tracking-widest opacity-80 mb-2 border-b border-white/10 pb-1">{msg.autor_nome}</p>
                          {msg.anexo_url && (
                            <div className="mb-2">
-                             {msg.anexo_tipo?.startsWith('image/') ? (
-                               <a href={msg.anexo_url} target="_blank" rel="noopener noreferrer">
-                                 <img src={msg.anexo_url} alt="Anexo" className="rounded-lg max-h-48 object-cover mb-2 ring-1 ring-black/10" />
-                               </a>
-                             ) : (
-                               <a href={msg.anexo_url} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 p-2 rounded-lg text-xs font-bold transition-all ${msg.tipo === 'admin' ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'}`}>
-                                 <FileIcon className="h-4 w-4" />
-                                 Baixar Anexo
-                                 <Download className="h-3 w-3 ml-auto opacity-50" />
-                               </a>
-                             )}
+                             <SecureAttachmentButton
+                               reference={msg.anexo_url}
+                               fileName={msg.anexo_nome || 'Anexo do suporte'}
+                               mimeType={msg.anexo_tipo}
+                               className={msg.tipo === 'admin'
+                                 ? 'bg-white/10 text-white hover:bg-white/20'
+                                 : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'}
+                             />
                            </div>
                          )}
                          {msg.mensagem && <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.mensagem}</p>}

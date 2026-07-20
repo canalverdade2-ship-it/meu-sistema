@@ -124,12 +124,14 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
       .select('*')
       .eq('status', activeTab === 'ativos' ? 'ativo' : 'inativo');
     
-    if (tipoClienteFilter !== 'todos') {
-      query = query.eq('tipo_cliente', tipoClienteFilter);
+    if (tipoClienteFilter === 'pf' || tipoClienteFilter === 'pj') {
+      query = query.in('tipo_cliente', [tipoClienteFilter, 'ambos']);
+    } else if (tipoClienteFilter === 'ambos') {
+      query = query.eq('tipo_cliente', 'ambos');
     }
 
     if (search) {
-      query = query.ilike('nome', `%${search}%`);
+      query = query.or(`nome.ilike.%${search}%,codigo_assinatura.ilike.%${search}%`);
     }
 
     const { data } = await query.order('codigo_assinatura', { ascending: false });
@@ -143,7 +145,7 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
     const { data, error } = await supabase.from('assinaturas').insert([{
       ...otherData,
       ...galleryCols,
-      descricao: `${otherData.descricao || ''} ${colaboradorNome ? `[Cadastrado por: ${colaboradorNome}]` : ''}`.trim(),
+      descricao: otherData.descricao || '',
       codigo_assinatura: generateCode('ASS'),
       status: 'ativo'
     }]).select().single();
@@ -192,7 +194,7 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
     const { error } = await supabase.from('assinaturas').update({
       ...otherData,
       ...galleryCols,
-      descricao: `${otherData.descricao || ''} ${colaboradorNome ? `[Editado por: ${colaboradorNome}]` : ''}`.trim(),
+      descricao: otherData.descricao || '',
     }).eq('id', selectedAssinatura.id);
 
     if (error) {
@@ -411,11 +413,9 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
                           if (next === current) return;
 
                           setSelectedAssinatura({ ...selectedAssinatura, tipo_cliente: next });
-                          const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
-                          const { error } = await supabase.from('assinaturas').update({ 
-                            tipo_cliente: next,
-                            descricao: `${selectedAssinatura.descricao || ''} ${auditTag}`.trim()
-                          }).eq('id', selectedAssinatura.id);
+                           const { error } = await supabase.from('assinaturas').update({
+                             tipo_cliente: next
+                           }).eq('id', selectedAssinatura.id);
                           if (error) toast.error('Erro ao atualizar tipo de cliente.');
                           else { 
                             toast.success('Tipo de cliente atualizado.');
@@ -452,12 +452,10 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
                       const catId = e.target.value;
                       const catNome = categorias.find(c => c.id === catId)?.nome || '';
                       setSelectedAssinatura({ ...selectedAssinatura, categoria_id: catId, categoria: catNome });
-                      const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
-                      const { error } = await supabase.from('assinaturas').update({ 
-                        categoria_id: catId || null,
-                        categoria: catNome || null,
-                        descricao: `${selectedAssinatura.descricao || ''} ${auditTag}`.trim()
-                      }).eq('id', selectedAssinatura.id);
+                       const { error } = await supabase.from('assinaturas').update({
+                         categoria_id: catId || null,
+                         categoria: catNome || null
+                       }).eq('id', selectedAssinatura.id);
                       if (error) toast.error('Erro ao salvar categoria.');
                       else { 
                         toast.success('Categoria atualizada.');
@@ -495,11 +493,9 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
                       onChange={async (e) => {
                         const newOcultar = e.target.checked;
                         setSelectedAssinatura({ ...selectedAssinatura, ocultar_valor: newOcultar });
-                        const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
-                        const { error } = await supabase.from('assinaturas').update({ 
-                          ocultar_valor: newOcultar,
-                          descricao: `${selectedAssinatura.descricao || ''} ${auditTag}`.trim()
-                        }).eq('id', selectedAssinatura.id);
+                         const { error } = await supabase.from('assinaturas').update({
+                           ocultar_valor: newOcultar
+                         }).eq('id', selectedAssinatura.id);
                         if (error) {
                           toast.error('Erro ao atualizar visibilidade de preço.');
                         } else {
@@ -614,10 +610,8 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
                   <button 
                     onClick={async () => {
                       const newStatus = selectedAssinatura.status === 'ativo' ? 'inativo' : 'ativo';
-                      const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
-                      const { error } = await supabase.from('assinaturas').update({ 
-                        status: newStatus,
-                        descricao: `${selectedAssinatura.descricao || ''} ${auditTag}`.trim()
+                      const { error } = await supabase.from('assinaturas').update({
+                        status: newStatus
                       }).eq('id', selectedAssinatura.id);
                       if (error) {
                         toast.error('Erro ao alterar status.');

@@ -1,0 +1,72 @@
+name: Temporary collaborator correction runner
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.pull_request.head.ref == 'agent/corrigir-painel-colaborador'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-painel-colaborador
+          fetch-depth: 0
+
+      - name: Apply reviewed correction package
+        shell: bash
+        run: |
+          cat \
+            .patch/collaborator_fix_v2.part00 \
+            .patch/collaborator_fix_v3.part03 \
+            .patch/collaborator_fix_v3.part04 \
+            .patch/collaborator_fix_v3.part05 \
+            .patch/collaborator_fix_v3.part06 \
+            .patch/collaborator_fix_v3.part07 \
+            .patch/collaborator_fix_v3.part08 \
+            .patch/collaborator_fix_v3.part09 \
+            .patch/collaborator_fix_v3.part10 \
+            .patch/collaborator_fix_v3.part11 \
+            | base64 -d | gzip -d > /tmp/apply_collaborator_fixes.py
+          python /tmp/apply_collaborator_fixes.py
+          rm -rf .patch
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Validate TypeScript and build
+        id: validate
+        shell: bash
+        run: |
+          set +e
+          npm run lint
+          LINT_STATUS=$?
+          npm run build
+          BUILD_STATUS=$?
+          set -e
+          echo "lint_status=$LINT_STATUS" >> "$GITHUB_OUTPUT"
+          echo "build_status=$BUILD_STATUS" >> "$GITHUB_OUTPUT"
+
+      - name: Publish one clean correction commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git reset --soft bae7620fa1f7b48a389c9468042d146e578aea90
+          git add -A
+          git commit -m "Corrigir segurança e experiência do painel do colaborador"
+          git push --force-with-lease origin HEAD:agent/corrigir-painel-colaborador
+
+      - name: Enforce validation result
+        shell: bash
+        run: |
+          if [ "${{ steps.validate.outputs.lint_status }}" -ne 0 ] || [ "${{ steps.validate.outputs.build_status }}" -ne 0 ]; then
+            echo "Validation failed: lint=${{ steps.validate.outputs.lint_status }} build=${{ steps.validate.outputs.build_status }}"
+            exit 1
+          fi

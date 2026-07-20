@@ -105,7 +105,7 @@ export type Servico = {
   descricao: string;
   valor: number;
   status: 'ativo' | 'inativo';
-  tipo_cliente: 'pf' | 'pj';
+  tipo_cliente: 'pf' | 'pj' | 'ambos';
   categoria?: string;
   categoria_id?: string;
   ocultar_valor?: boolean;
@@ -183,7 +183,7 @@ export type Assinatura = {
   descricao: string;
   valor: number;
   status: 'ativo' | 'inativo';
-  tipo_cliente: 'pf' | 'pj';
+  tipo_cliente: 'pf' | 'pj' | 'ambos';
   categoria?: string;
   categoria_id?: string;
   ocultar_valor?: boolean;
@@ -303,7 +303,7 @@ export type OS = {
   data_entrega?: string;
   link_documento?: string;
   documentos_solicitados_os?: string[];
-  anexos_os?: { nome: string; url: string }[];
+  anexos_os?: { nome: string; url: string; mime_type?: string; size?: number }[];
 };
 
 export type Fatura = {
@@ -386,6 +386,7 @@ export type TicketMensagem = {
   mensagem: string;
   anexo_url?: string;
   anexo_tipo?: string;
+  anexo_nome?: string;
   data_envio: string;
   tipo: 'cliente' | 'admin' | 'prestador';
 };

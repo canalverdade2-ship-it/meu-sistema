@@ -10,6 +10,7 @@ import { Modal } from '../ui/Modal';
 import { toast } from 'react-hot-toast';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
+import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
 
 export function ClientServicos({ 
   clientId, 
@@ -154,52 +155,56 @@ export function ClientServicos({
 
   const handleSubmitOSDocuments = async () => {
     if (!selectedOS) return;
-    
+
     const docsSolicitados = selectedOS.documentos_solicitados_os || [];
     if (Object.keys(pendencyFiles).length < docsSolicitados.length) {
       toast.error('Envie todos os documentos solicitados.');
       return;
     }
 
+    const uploadedReferences: string[] = [];
+    let documentsPersisted = false;
     setIsSubmittingDocs(true);
+
     try {
-      const novosAnexos: { nome: string; url: string }[] = [];
+      const novosAnexos: Array<{
+        nome: string;
+        url: string;
+        mime_type: string;
+        size: number;
+      }> = [];
 
       for (let i = 0; i < docsSolicitados.length; i++) {
-        const file = pendencyFiles[i];
-        if (file) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-          const filePath = `os-documentos/${selectedOS.id}/${fileName}`;
+        const pendingFile = pendencyFiles[i];
+        if (!pendingFile) continue;
 
-          const { error: uploadError } = await supabase.storage
-            .from('orcamentos')
-            .upload(filePath, file);
+        const uploaded = await uploadPrivateDocument(pendingFile, {
+          scope: 'clientes',
+          ownerId: selectedOS.cliente_id || clientId,
+          context: 'ordens-servico',
+          contextId: selectedOS.id,
+        });
 
-          if (uploadError) throw uploadError;
-
-          const { data: { publicUrl } } = supabase.storage
-            .from('orcamentos')
-            .getPublicUrl(filePath);
-
-          novosAnexos.push({
-            nome: docsSolicitados[i],
-            url: publicUrl
-          });
-        }
+        uploadedReferences.push(uploaded.reference);
+        novosAnexos.push({
+          nome: docsSolicitados[i],
+          url: uploaded.reference,
+          mime_type: uploaded.mimeType,
+          size: uploaded.size,
+        });
       }
 
-      // Os documentos antigos continuam acumulados.
       const anexosFinais = [...(selectedOS.anexos_os || []), ...novosAnexos];
 
       await clientOperationalWrite(clientId, 'ordens_servico', 'update', {
         anexos_os: anexosFinais,
-        documentos_solicitados_os: null
+        documentos_solicitados_os: null,
       }, { id: selectedOS.id });
+      documentsPersisted = true;
 
       await clientOperationalWrite(clientId, 'os_notas', 'insert', {
         os_id: selectedOS.id,
-        nota: 'Cliente enviou os documentos solicitados.'
+        nota: 'Cliente enviou os documentos solicitados.',
       });
 
       await notificationService.notifyAdmin(
@@ -207,17 +212,20 @@ export function ClientServicos({
         `O cliente enviou os documentos solicitados para a OS ${selectedOS.codigo_os}.`,
         'vendas',
         'os_documento_enviado',
-        { tab: 'os', itemId: selectedOS.id, prioridade: 'alta' }
+        { tab: 'os', itemId: selectedOS.id, prioridade: 'alta' },
       );
 
-      toast.success('Documentos enviados com sucesso!');
+      toast.success('Documentos enviados com segurança!');
       setPendencyFiles({});
       setSelectedOS({
         ...selectedOS,
         anexos_os: anexosFinais,
-        documentos_solicitados_os: null
+        documentos_solicitados_os: null,
       });
     } catch (err: any) {
+      if (!documentsPersisted && uploadedReferences.length > 0) {
+        await Promise.allSettled(uploadedReferences.map(reference => removePrivateDocument(reference)));
+      }
       toast.error(handleError(err, 'enviar documentos'));
     } finally {
       setIsSubmittingDocs(false);
@@ -483,7 +491,8 @@ export function ClientServicos({
                           type="file"
                           id={`os-doc-${idx}`}
                           className="hidden"
-                          onChange={(e) => handleFileChange(idx, e.target.files?.[0] || null)}
+                          accept="image/*,.pdf,.txt,.doc,.docx,.xls,.xlsx"
+                           onChange={(e) => handleFileChange(idx, e.target.files?.[0] || null)}
                         />
                         <label
                           htmlFor={`os-doc-${idx}`}
@@ -666,20 +675,23 @@ export function OSSuporteChat({ osId, clientId, remetenteId, remetenteTipo, isCo
     if ((!novaMensagem.trim() && !anexoFile) || enviando) return;
 
     setEnviando(true);
+    let uploadedReference: string | null = null;
+    let messagePersisted = false;
+
     try {
       let mensagemTexto = novaMensagem.trim();
-      
+
       if (anexoFile) {
-        const fileExt = anexoFile.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-        const path = `suporte/${osId}/${fileName}`;
-        
-        const { error: uErr } = await supabase.storage.from('entregas_demandas').upload(path, anexoFile);
-        if (uErr) throw uErr;
-        
-        const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
-        
-        const anexoStr = `[ANEXO|${anexoFile.name}|${publicUrl}]`;
+        const uploaded = await uploadPrivateDocument(anexoFile, {
+          scope: 'clientes',
+          ownerId: clientId,
+          context: 'ordens-servico',
+          contextId: osId,
+        });
+        uploadedReference = uploaded.reference;
+
+        const safeDisplayName = uploaded.fileName.replace(/\|/g, '_');
+        const anexoStr = `[ANEXO|${safeDisplayName}|${uploaded.reference}|${uploaded.mimeType}]`;
         mensagemTexto = mensagemTexto ? `${mensagemTexto}\n\n${anexoStr}` : anexoStr;
       }
 
@@ -687,20 +699,24 @@ export function OSSuporteChat({ osId, clientId, remetenteId, remetenteTipo, isCo
         os_id: osId,
         remetente_tipo: remetenteTipo,
         remetente_id: remetenteId,
-        mensagem: mensagemTexto
+        mensagem: mensagemTexto,
       });
-      
+      messagePersisted = true;
+
       await notificationService.notifyAdmin(
         '💬 Nova Mensagem do Cliente',
         `O cliente enviou uma nova mensagem na OS #${osId.slice(0, 8)}.`,
         'demandas',
         'sistema',
-        { itemId: osId, tab: 'ativas', prioridade: 'normal' }
+        { itemId: osId, tab: 'ativas', prioridade: 'normal' },
       );
-      
+
       setNovaMensagem('');
       setAnexoFile(null);
     } catch (err) {
+      if (!messagePersisted && uploadedReference) {
+        await removePrivateDocument(uploadedReference).catch(() => undefined);
+      }
       console.error('Erro ao enviar mensagem', err);
       toast.error('Erro ao enviar mensagem.');
     } finally {
@@ -728,11 +744,10 @@ export function OSSuporteChat({ osId, clientId, remetenteId, remetenteTipo, isCo
         ) : (
           mensagens.map((msg) => {
             const isMe = msg.remetente_tipo === remetenteTipo;
-            const anexoMatch = msg.mensagem.match(/\[ANEXO\|(.*?)\|(.*?)\]/);
-            const textContent = msg.mensagem.replace(/\[ANEXO\|.*?\|.*?\]/, '').trim();
+            const anexoMatch = msg.mensagem.match(/\[ANEXO\|(.*?)\|(.*?)(?:\|(.*?))?\]/);
+            const textContent = msg.mensagem.replace(/\[ANEXO\|.*?\|.*?(?:\|.*?)?\]/, '').trim();
             const fileName = anexoMatch ? anexoMatch[1] : null;
             const fileUrl = anexoMatch ? anexoMatch[2] : null;
-            const isImage = fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
 
             return (
               <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
@@ -746,15 +761,14 @@ export function OSSuporteChat({ osId, clientId, remetenteId, remetenteTipo, isCo
                   {textContent && <p className="text-sm whitespace-pre-wrap">{textContent}</p>}
                   
                   {anexoMatch && (
-                    <button type="button" onClick={() => openFile(fileUrl!, fileName!)} className={`block mt-1 overflow-hidden rounded-xl border ${isMe ? 'border-white/20' : 'border-neutral-200'} transition-opacity hover:opacity-90 cursor-pointer`}>
-                      {isImage ? (
-                        <img src={fileUrl!} alt={fileName!} className="max-w-[200px] max-h-[200px] object-cover" />
-                      ) : (
-                        <div className={`flex items-center gap-2 p-3 ${isMe ? 'bg-white/10' : 'bg-neutral-50'}`}>
-                          <Paperclip className={`h-5 w-5 shrink-0 ${isMe ? 'text-white' : 'text-indigo-600'}`} />
-                          <span className={`text-xs font-semibold truncate max-w-[150px] ${isMe ? 'text-white' : 'text-neutral-700'}`}>{fileName}</span>
-                        </div>
-                      )}
+                    <button
+                      type="button"
+                      onClick={() => void openFile(fileUrl!, fileName!)}
+                      className={`mt-1 flex max-w-[240px] items-center gap-2 rounded-xl border p-3 transition-opacity hover:opacity-90 ${isMe ? 'border-white/20 bg-white/10' : 'border-neutral-200 bg-neutral-50'}`}
+                    >
+                      <Paperclip className={`h-5 w-5 shrink-0 ${isMe ? 'text-white' : 'text-indigo-600'}`} />
+                      <span className={`truncate text-xs font-semibold ${isMe ? 'text-white' : 'text-neutral-700'}`}>{fileName}</span>
+                      <Download className="ml-auto h-3.5 w-3.5 shrink-0 opacity-60" />
                     </button>
                   )}
                 </div>
