@@ -69,7 +69,7 @@ BEGIN
   SELECT id
     INTO v_cliente_id
   FROM public.clientes
-  ORDER BY created_at NULLS LAST, id
+  ORDER BY id
   LIMIT 1;
 
   IF v_cliente_id IS NULL THEN
