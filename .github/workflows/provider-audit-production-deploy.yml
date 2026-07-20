@@ -36,7 +36,7 @@ jobs:
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$SUPABASE_DB_PASSWORD"
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          for version in 20260720235900 20260720235910 20260720235920 20260720235930; do
+          for version in 20260720235850 20260720235900 20260720235910 20260720235920 20260720235930; do
             test -f "supabase/migrations/${version}_"*.sql
           done
 
@@ -55,11 +55,11 @@ jobs:
           cat > provider-audit-state.sql <<'SQL'
           SELECT count(*) AS applied_count
           FROM supabase_migrations.schema_migrations
-          WHERE version IN ('20260720235900', '20260720235910', '20260720235920', '20260720235930');
+          WHERE version IN ('20260720235850', '20260720235900', '20260720235910', '20260720235920', '20260720235930');
           SQL
           set -o pipefail
           supabase db query --linked --file provider-audit-state.sql 2>&1 | tee provider-audit-state.log
-          if grep -Eq '(^|[^0-9])4([^0-9]|$)' provider-audit-state.log; then
+          if grep -Eq '(^|[^0-9])5([^0-9]|$)' provider-audit-state.log; then
             echo 'applied=true' >> "$GITHUB_OUTPUT"
           else
             echo 'applied=false' >> "$GITHUB_OUTPUT"
@@ -73,6 +73,7 @@ jobs:
           {
             echo 'BEGIN;'
             for file in \
+              supabase/migrations/20260720235850_provider_admin_module_fallback.sql \
               supabase/migrations/20260720235900_provider_portal_audit_hardening.sql \
               supabase/migrations/20260720235910_provider_portal_runtime_guards.sql \
               supabase/migrations/20260720235920_provider_portal_event_contracts.sql \
@@ -99,7 +100,7 @@ jobs:
 
       - name: Register migration history
         if: steps.state.outputs.applied != 'true'
-        run: supabase migration repair 20260720235900 20260720235910 20260720235920 20260720235930 --status applied --linked
+        run: supabase migration repair 20260720235850 20260720235900 20260720235910 20260720235920 20260720235930 --status applied --linked
 
       - name: Verify definitive production state
         shell: bash
@@ -107,6 +108,7 @@ jobs:
           cat > provider-audit-verify.sql <<'SQL'
           DO $$
           BEGIN
+            IF to_regprocedure('public.gsa_admin_has_module(text)') IS NULL THEN RAISE EXCEPTION 'Compatibilidade de módulos ausente'; END IF;
             IF to_regprocedure('public.gsa_assert_current_provider_any_status()') IS NULL THEN RAISE EXCEPTION 'Contexto seguro ausente'; END IF;
             IF to_regprocedure('public.gsa_assert_current_provider()') IS NULL THEN RAISE EXCEPTION 'Validação ativa ausente'; END IF;
             IF to_regprocedure('public.gsa_provider_create_ticket(text,text)') IS NULL THEN RAISE EXCEPTION 'RPC de ticket ausente'; END IF;
@@ -125,11 +127,12 @@ jobs:
 
           SELECT version
           FROM supabase_migrations.schema_migrations
-          WHERE version IN ('20260720235900', '20260720235910', '20260720235920', '20260720235930')
+          WHERE version IN ('20260720235850', '20260720235900', '20260720235910', '20260720235920', '20260720235930')
           ORDER BY version;
           SQL
           set -o pipefail
           supabase db query --linked --file provider-audit-verify.sql 2>&1 | tee provider-audit-verification.log
+          grep -q '20260720235850' provider-audit-verification.log
           grep -q '20260720235900' provider-audit-verification.log
           grep -q '20260720235910' provider-audit-verification.log
           grep -q '20260720235920' provider-audit-verification.log
