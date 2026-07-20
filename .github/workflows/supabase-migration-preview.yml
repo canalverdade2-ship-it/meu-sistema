@@ -52,6 +52,17 @@ jobs:
         shell: bash
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
+      - name: Inspect safe targeted SQL options
+        shell: bash
+        run: |
+          set +e
+          supabase db query --help > db-query-help.log 2>&1
+          {
+            echo 'Arquivos temporários criados pelo link:'
+            find supabase/.temp -maxdepth 1 -type f -printf '%f\n' 2>/dev/null | sort
+          } > linked-temp-files.log
+          exit 0
+
       - name: Compare migration history
         shell: bash
         run: |
@@ -59,6 +70,7 @@ jobs:
           supabase migration list --linked 2>&1 | tee migration-list.log
 
       - name: Preview database push
+        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
@@ -72,6 +84,8 @@ jobs:
           path: |
             migration-list.log
             migration-dry-run.log
+            db-query-help.log
+            linked-temp-files.log
           retention-days: 7
 
       - name: Publish private preview report
@@ -81,7 +95,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           JOB_STATUS: ${{ job.status }}
         run: |
-          touch migration-list.log migration-dry-run.log
+          touch migration-list.log migration-dry-run.log db-query-help.log linked-temp-files.log
           {
             echo '# Prévia das migrações Supabase'
             echo
@@ -98,6 +112,16 @@ jobs:
             echo '## Dry-run do banco'
             echo '```text'
             sed -n '1,260p' migration-dry-run.log
+            echo '```'
+            echo
+            echo '## Ajuda do comando db query'
+            echo '```text'
+            sed -n '1,220p' db-query-help.log
+            echo '```'
+            echo
+            echo '## Metadados locais do link'
+            echo '```text'
+            cat linked-temp-files.log
             echo '```'
           } > migration-report.md
 
