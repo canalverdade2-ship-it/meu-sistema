@@ -66,18 +66,19 @@ BEGIN
     INTO v_missing_policies
   FROM (
     VALUES
-      ('viagens_orcamentos', 'Cliente ou visitante insere orcamentos'),
-      ('viagens_propostas', 'Cliente ve suas propostas'),
-      ('viagens_passageiros', 'Cliente ve seus passageiros'),
-      ('viagens_transacoes', 'Cliente ve suas transacoes'),
-      ('viagens_cancelamentos', 'Cliente ve seus cancelamentos'),
-      ('storage.objects', 'Cliente envia documentos de viagem'),
-      ('storage.objects', 'Cliente baixa vouchers de viagem')
-  ) AS expected(target, policy_name)
+      ('public', 'viagens_orcamentos', 'Cliente ou visitante insere orcamentos'),
+      ('public', 'viagens_propostas', 'Cliente ve suas propostas'),
+      ('public', 'viagens_passageiros', 'Cliente ve seus passageiros'),
+      ('public', 'viagens_transacoes', 'Cliente ve suas transacoes'),
+      ('public', 'viagens_cancelamentos', 'Cliente ve seus cancelamentos'),
+      ('storage', 'objects', 'Cliente envia documentos de viagem'),
+      ('storage', 'objects', 'Cliente baixa vouchers de viagem')
+  ) AS expected(schema_name, table_name, policy_name)
   WHERE NOT EXISTS (
     SELECT 1
     FROM pg_policies policy
-    WHERE format('%I.%I', policy.schemaname, policy.tablename) = expected.target
+    WHERE policy.schemaname = expected.schema_name
+      AND policy.tablename = expected.table_name
       AND policy.policyname = expected.policy_name
   );
 
