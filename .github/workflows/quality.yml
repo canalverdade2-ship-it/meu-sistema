@@ -53,6 +53,10 @@ jobs:
           cat typescript.log
           test "${{ steps.typescript.outputs.exit_code }}" = "0"
 
+      - name: GSA Viagens contracts
+        if: steps.typescript.outputs.exit_code == '0'
+        run: npm run test:travel
+
       - name: Build
         if: steps.typescript.outputs.exit_code == '0'
         run: npm run build
