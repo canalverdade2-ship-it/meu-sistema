@@ -1,0 +1,240 @@
+name: Final Production Closure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/final-production-closure.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/**'
+      - 'src/**'
+      - 'supabase/migrations/**'
+      - 'supabase/functions/gsa-auth-session/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: final-production-closure
+  cancel-in-progress: false
+
+jobs:
+  validate-deploy-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGPASSWORD: postgres
+      EXPECTED_PROJECT_ID: ${{ secrets.EXPECTED_PROJECT_ID }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript
+        run: npm run lint
+
+      - name: Administrative and collaborator contracts
+        run: npm run test:admin
+
+      - name: Products and subscriptions contracts
+        run: npm run test:products-subscriptions
+
+      - name: Client portal security contracts
+        run: npm run test:client-security
+
+      - name: Provider portal security contracts
+        run: npm run test:provider
+
+      - name: GSA Viagens contracts
+        run: npm run test:travel
+
+      - name: Validate authentication Edge Function
+        run: |
+          deno check supabase/functions/gsa-auth-session/index.ts supabase/functions/gsa-auth-session/index_test.ts
+          deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
+
+      - name: Production build
+        run: npm run build
+
+      - name: Validate deployment secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_ID"
+          if [ -n "$EXPECTED_PROJECT_ID" ] && [ "$SUPABASE_PROJECT_ID" != "$EXPECTED_PROJECT_ID" ]; then
+            echo 'O projeto Supabase informado não corresponde ao projeto de produção esperado.' >&2
+            exit 1
+          fi
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Capture migration state before deployment
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee production-migrations-before.log
+
+      - name: Apply every pending migration
+        shell: bash
+        run: |
+          set +e
+          supabase db push --linked --include-all --yes > db-push.log 2>&1
+          code=$?
+          cat db-push.log
+          exit "$code"
+
+      - name: Verify migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked > production-migrations.log
+          cat production-migrations.log
+          for version in \
+            20260720234400 \
+            20260720234500 \
+            20260720235300 \
+            20260720235425 \
+            20260720235450 \
+            20260720235500 \
+            20260721000500 \
+            20260721001500 \
+            20260721002500 \
+            20260721003000 \
+            20260721003500 \
+            20260721003600 \
+            20260721003700 \
+            20260721003800
+          do
+            grep -q "$version" production-migrations.log || {
+              echo "Migration obrigatória ausente em produção: $version" >&2
+              exit 1
+            }
+          done
+
+      - name: Verify critical production objects
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db dump --linked --schema public --file production-public-schema.sql
+          for object in \
+            gsa_admin_context \
+            gsa_admin_validate_context \
+            gsa_admin_has_module \
+            gsa_admin_save_collaborator \
+            gsa_admin_rotate_collaborator_credential \
+            gsa_admin_sensitive_change_audit \
+            gsa_admin_access_snapshot \
+            gsa_admin_list_notifications \
+            gsa_admin_system_snapshot \
+            gsa_admin_update_settings_secure
+          do
+            grep -q "$object" production-public-schema.sql || {
+              echo "Objeto crítico ausente em produção: $object" >&2
+              exit 1
+            }
+          done
+          grep -q 'collaborator_' production-public-schema.sql || {
+            echo 'As políticas de isolamento do colaborador não foram encontradas.' >&2
+            exit 1
+          }
+
+      - name: Publish authentication gateway
+        run: supabase functions deploy gsa-auth-session --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Upload final evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-production-closure-evidence
+          path: |
+            production-migrations-before.log
+            db-push.log
+            production-migrations.log
+            production-public-schema.sql
+          if-no-files-found: ignore
+          retention-days: 30
+
+  report-result:
+    name: Register final result
+    needs: validate-deploy-verify
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Record closure result in main
+        shell: bash
+        env:
+          RESULT: ${{ needs.validate-deploy-verify.result }}
+          RUN_ID: ${{ github.run_id }}
+          VALIDATED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          cat > deployment-status/final-production-closure.json <<JSON
+          {
+            "status": "${RESULT}",
+            "workflow_run_id": "${RUN_ID}",
+            "validated_sha": "${VALIDATED_SHA}",
+            "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "scope": "admin-collaborator-client-provider-travel-products-subscriptions-supabase",
+            "migrations": "${RESULT}",
+            "database_objects": "${RESULT}",
+            "edge_function": "${RESULT}",
+            "frontend_build": "${RESULT}"
+          }
+          JSON
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add deployment-status/final-production-closure.json
+          git commit -m "Registrar fechamento definitivo de produção: ${RESULT}"
+          git pull --rebase origin main
+          git push origin HEAD:main

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Tags, MessageCircle, Landmark, CheckCircle2, XCircle, Search, Eye } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Landmark, MessageCircle, RefreshCcw, Search, Tags, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { callAdminRpc } from '../../lib/adminRpc';
+import { formatCurrency, formatDateTime } from '../../lib/utils';
 
 interface ClassifiedsModuleProps {
   initialTab?: string;
@@ -11,217 +11,132 @@ interface ClassifiedsModuleProps {
   colaboradorNome?: string | null;
 }
 
-export function ClassifiedsModule({ initialTab = 'anuncios' }: ClassifiedsModuleProps) {
-  const [activeTab, setActiveTab] = useState(initialTab);
-  const [ads, setAds] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+type Tab = 'anuncios' | 'mensagens' | 'financeiro';
+
+type PagedResult = {
+  items: any[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
+const PAGE_SIZE = 40;
+
+const configByTab: Record<Tab, { resource: string; status: string; label: string; icon: typeof Tags }> = {
+  anuncios: { resource: 'classificados_anuncios', status: 'aguardando_revisao', label: 'Anúncios pendentes', icon: Tags },
+  mensagens: { resource: 'classificados_mensagens', status: 'pendente', label: 'Mensagens pendentes', icon: MessageCircle },
+  financeiro: { resource: 'classificados_transacoes', status: 'pendente_pagamento', label: 'Transações pendentes', icon: Landmark },
+};
+
+export function ClassifiedsModule({ initialTab = 'anuncios', initialItemId }: ClassifiedsModuleProps) {
+  const normalizedInitial = (['anuncios', 'mensagens', 'financeiro'].includes(initialTab) ? initialTab : 'anuncios') as Tab;
+  const [activeTab, setActiveTab] = useState<Tab>(normalizedInitial);
+  const [result, setResult] = useState<PagedResult>({ items: [], total: 0, page: 1, page_size: PAGE_SIZE });
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (activeTab === 'anuncios') fetchAds();
-    if (activeTab === 'mensagens') fetchMessages();
-    if (activeTab === 'financeiro') fetchTransactions();
+    if (['anuncios', 'mensagens', 'financeiro'].includes(initialTab)) setActiveTab(initialTab as Tab);
+  }, [initialTab]);
+
+  useEffect(() => {
+    setPage(1);
+    setAppliedSearch('');
+    setSearch('');
   }, [activeTab]);
 
-  const fetchAds = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('classificados_anuncios')
-      .select('*, clientes(nome, email)')
-      .eq('status', 'aguardando_revisao')
-      .order('created_at', { ascending: false });
-    setAds(data || []);
-    setLoading(false);
-  };
-
-  const fetchMessages = async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from('classificados_mensagens')
-      .select('*, classificados_propostas(id, valor_proposta, classificados_anuncios(titulo))')
-      .eq('status_moderacao', 'pendente')
-      .order('created_at', { ascending: true });
-    setMessages(data || []);
-    setLoading(false);
-  };
-
-  const fetchTransactions = async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from('classificados_transacoes')
-      .select('*, classificados_propostas(valor_proposta, classificados_anuncios(titulo))')
-      .eq('status', 'pendente_pagamento')
-      .order('created_at', { ascending: false });
-    setTransactions(data || []);
-    setLoading(false);
-  };
-
-  const handleApproveAd = async (id: string) => {
+    const config = configByTab[activeTab];
     try {
-      const { error } = await supabase.from('classificados_anuncios').update({ status: 'publicado' }).eq('id', id);
-      if (error) throw error;
-      toast.success('Anúncio aprovado e publicado!');
-      fetchAds();
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  };
-
-  const handleRejectAd = async (id: string) => {
-    try {
-      const motivo = prompt('Motivo da rejeição:');
-      if (!motivo) return;
-      const { error } = await supabase.from('classificados_anuncios').update({ status: 'rejeitado', motivo_rejeicao: motivo }).eq('id', id);
-      if (error) throw error;
-      toast.success('Anúncio rejeitado.');
-      fetchAds();
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  };
-
-  const handleModerateMessage = async (msgId: string, propId: string, action: 'approve' | 'reject') => {
-    try {
-      const { data, error } = await supabase.rpc('rpc_moderar_mensagem_classificado', {
-        p_mensagem_id: msgId,
-        p_proposta_id: propId,
-        p_acao: action
+      const data = await callAdminRpc<PagedResult>('gsa_admin_list_resource', {
+        p_resource: config.resource,
+        p_page: page,
+        p_page_size: PAGE_SIZE,
+        p_search: appliedSearch || null,
+        p_status: config.status,
       });
-      if (error || !data?.success) throw error || new Error(data?.error);
-      toast.success(action === 'approve' ? 'Mensagem liberada!' : 'Mensagem bloqueada.');
-      fetchMessages();
-    } catch (err: any) {
-      toast.error(err.message);
+      const items = Array.isArray(data?.items) ? data.items : [];
+      setResult({
+        items,
+        total: Number(data?.total || 0),
+        page: Number(data?.page || page),
+        page_size: Number(data?.page_size || PAGE_SIZE),
+      });
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível carregar os classificados.');
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, appliedSearch, page]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const act = async (entity: 'anuncio' | 'mensagem', item: any, action: 'aprovar' | 'rejeitar') => {
+    let reason: string | null = null;
+    if (entity === 'anuncio' && action === 'rejeitar') {
+      reason = window.prompt('Motivo da rejeição do anúncio:')?.trim() || null;
+      if (!reason) return;
+    }
+    setProcessingId(item.id);
+    try {
+      await callAdminRpc('gsa_admin_classified_action', {
+        p_entity: entity,
+        p_id: item.id,
+        p_related_id: entity === 'mensagem' ? item.proposta_id : null,
+        p_action: action,
+        p_reason: reason,
+      });
+      toast.success(action === 'aprovar' ? 'Registro aprovado e auditado.' : 'Registro rejeitado e auditado.');
+      await load();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível concluir a moderação.');
+    } finally {
+      setProcessingId(null);
     }
   };
+
+  const totalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+  const tabs = Object.entries(configByTab) as Array<[Tab, (typeof configByTab)[Tab]]>;
+  const highlighted = useMemo(() => initialItemId ? result.items.find((item) => item.id === initialItemId) : null, [initialItemId, result.items]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-black text-[#1a1a1a]">Gestão de Classificados</h2>
-          <p className="text-neutral-500">Moderação de anúncios, mensagens e transações da plataforma GSA.</p>
+    <div className="space-y-6 pb-10">
+      <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Moderação segura</p><h1 className="mt-2 text-2xl font-black">Gestão de Classificados</h1><p className="mt-2 text-sm text-white/55">Listagens paginadas e decisões registradas no servidor.</p></div>
+          <button type="button" onClick={() => void load()} disabled={loading} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-60"><RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar</button>
         </div>
+      </header>
+
+      <div className="grid grid-cols-3 gap-2 rounded-2xl border border-neutral-200 bg-white p-2">
+        {tabs.map(([id, config]) => { const Icon = config.icon; return <button key={id} type="button" onClick={() => setActiveTab(id)} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold ${activeTab === id ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-neutral-500 hover:bg-neutral-50'}`}><Icon className="h-4 w-4" />{config.label}</button>; })}
       </div>
 
-      <div className="flex bg-neutral-100 p-1 rounded-xl w-fit">
-        <button
-          onClick={() => setActiveTab('anuncios')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
-            activeTab === 'anuncios' ? 'bg-white text-black shadow-sm' : 'text-neutral-500 hover:text-black'
-          }`}
-        >
-          <Tags className="h-4 w-4" /> Anúncios Pendentes
-        </button>
-        <button
-          onClick={() => setActiveTab('mensagens')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
-            activeTab === 'mensagens' ? 'bg-white text-black shadow-sm' : 'text-neutral-500 hover:text-black'
-          }`}
-        >
-          <MessageCircle className="h-4 w-4" /> Mensagens
-        </button>
-        <button
-          onClick={() => setActiveTab('financeiro')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${
-            activeTab === 'financeiro' ? 'bg-white text-black shadow-sm' : 'text-neutral-500 hover:text-black'
-          }`}
-        >
-          <Landmark className="h-4 w-4" /> Transações
-        </button>
+      <div className="flex gap-2">
+        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { setPage(1); setAppliedSearch(search.trim()); } }} placeholder="Pesquisar nos registros" className="w-full rounded-xl border border-neutral-200 py-3 pl-10 pr-4 text-sm outline-none focus:border-indigo-500" /></div>
+        <button type="button" onClick={() => { setPage(1); setAppliedSearch(search.trim()); }} className="rounded-xl bg-indigo-600 px-5 text-sm font-black text-white">Buscar</button>
       </div>
 
-      <div className="bg-white rounded-3xl border border-black/5 overflow-hidden min-h-[400px]">
-        {loading ? (
-          <div className="p-10 flex justify-center">
-            <div className="animate-spin h-8 w-8 border-4 border-[#1a1a1a] border-t-transparent rounded-full" />
-          </div>
-        ) : (
-          <div className="p-6">
-            
-            {activeTab === 'anuncios' && (
-              ads.length === 0 ? <p className="text-neutral-500">Nenhum anúncio pendente de revisão.</p> : (
-                <div className="space-y-4">
-                  {ads.map(ad => (
-                    <div key={ad.id} className="p-4 border border-black/5 rounded-2xl flex items-center justify-between hover:bg-neutral-50">
-                      <div>
-                        <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{ad.categoria}</div>
-                        <h4 className="font-black text-lg text-[#1a1a1a]">{ad.titulo}</h4>
-                        <div className="text-sm text-neutral-500">
-                          Preço: R$ {ad.preco} • Vendedor: {ad.clientes?.nome}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleApproveAd(ad.id)} className="px-4 py-2 bg-emerald-100 text-emerald-700 font-bold rounded-lg hover:bg-emerald-200">
-                          Aprovar
-                        </button>
-                        <button onClick={() => handleRejectAd(ad.id)} className="px-4 py-2 bg-red-100 text-red-700 font-bold rounded-lg hover:bg-red-200">
-                          Rejeitar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
-            )}
+      <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+        {loading ? <div className="flex min-h-[320px] items-center justify-center"><RefreshCcw className="h-8 w-8 animate-spin text-indigo-600" /></div> : result.items.length === 0 ? <div className="p-14 text-center text-neutral-400">Nenhum registro pendente.</div> : <div className="divide-y divide-neutral-100">{result.items.map((item) => (
+          <article key={item.id} className={`p-5 ${highlighted?.id === item.id ? 'bg-indigo-50/70 ring-1 ring-inset ring-indigo-200' : ''}`}>
+            <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+              <div className="min-w-0">
+                {activeTab === 'anuncios' && <><p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">{item.categoria || 'Anúncio'}</p><h2 className="mt-1 truncate font-black text-neutral-900">{item.titulo || `Anúncio ${String(item.id).slice(0, 8)}`}</h2><p className="mt-1 text-sm text-neutral-500">{item.preco != null ? formatCurrency(Number(item.preco)) : 'Preço não informado'} · {item.created_at ? formatDateTime(item.created_at) : 'sem data'}</p></>}
+                {activeTab === 'mensagens' && <><p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Mensagem para moderação</p><p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm font-medium text-neutral-800">{item.conteudo || item.mensagem || 'Mensagem sem conteúdo.'}</p><p className="mt-2 text-xs text-neutral-400">Proposta {String(item.proposta_id || '').slice(0, 8)} · {item.created_at ? formatDateTime(item.created_at) : 'sem data'}</p></>}
+                {activeTab === 'financeiro' && <><p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Transação pendente</p><h2 className="mt-1 font-black text-neutral-900">Comissão GSA: {formatCurrency(Number(item.valor_comissao || 0))}</h2><p className="mt-1 text-sm text-neutral-500">Valor total: {formatCurrency(Number(item.valor_total || item.valor_proposta || 0))} · {item.created_at ? formatDateTime(item.created_at) : 'sem data'}</p></>}
+              </div>
+              {activeTab !== 'financeiro' && <div className="flex shrink-0 gap-2"><button type="button" disabled={processingId === item.id} onClick={() => void act(activeTab === 'anuncios' ? 'anuncio' : 'mensagem', item, 'rejeitar')} className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2.5 text-xs font-black text-red-700 disabled:opacity-50"><XCircle className="h-4 w-4" /> Rejeitar</button><button type="button" disabled={processingId === item.id} onClick={() => void act(activeTab === 'anuncios' ? 'anuncio' : 'mensagem', item, 'aprovar')} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white disabled:opacity-50"><CheckCircle2 className="h-4 w-4" /> Aprovar</button></div>}
+            </div>
+          </article>
+        ))}</div>}
+      </section>
 
-            {activeTab === 'mensagens' && (
-              messages.length === 0 ? <p className="text-neutral-500">Nenhuma mensagem pendente de moderação.</p> : (
-                <div className="space-y-4">
-                  {messages.map(msg => (
-                    <div key={msg.id} className="p-4 border border-amber-200 bg-amber-50 rounded-2xl flex flex-col md:flex-row gap-4 justify-between">
-                      <div className="flex-1">
-                        <div className="text-xs font-bold text-neutral-500 mb-1">
-                          Anúncio: {msg.classificados_propostas?.classificados_anuncios?.titulo}
-                        </div>
-                        <p className="font-medium text-neutral-900 bg-white p-3 rounded-lg border border-black/5">
-                          "{msg.conteudo}"
-                        </p>
-                        <div className="text-xs text-neutral-400 mt-2">Remetente: {msg.remetente_id}</div>
-                      </div>
-                      <div className="flex flex-col gap-2 shrink-0 justify-center">
-                        <button onClick={() => handleModerateMessage(msg.id, msg.proposta_id, 'approve')} className="px-4 py-2 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4" /> Aprovar Envio
-                        </button>
-                        <button onClick={() => handleModerateMessage(msg.id, msg.proposta_id, 'reject')} className="px-4 py-2 bg-neutral-200 text-neutral-700 font-bold rounded-lg hover:bg-neutral-300 flex items-center gap-2">
-                          <XCircle className="h-4 w-4" /> Bloquear (Contato direto)
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
-            )}
-
-            {activeTab === 'financeiro' && (
-              transactions.length === 0 ? <p className="text-neutral-500">Nenhuma transação pendente.</p> : (
-                <div className="space-y-4">
-                  {transactions.map(txn => (
-                    <div key={txn.id} className="p-4 border border-black/5 rounded-2xl flex items-center justify-between hover:bg-neutral-50">
-                      <div>
-                        <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                          Venda: {txn.classificados_propostas?.classificados_anuncios?.titulo}
-                        </div>
-                        <h4 className="font-black text-lg text-[#1a1a1a]">Comissão GSA: R$ {txn.valor_comissao}</h4>
-                        <div className="text-sm text-neutral-500">
-                          Valor total: R$ {txn.classificados_propostas?.valor_proposta}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="px-3 py-1 bg-amber-100 text-amber-700 font-bold rounded-full text-xs">
-                          Aguardando Pagamento da Fatura
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
-            )}
-
-          </div>
-        )}
-      </div>
+      <div className="flex items-center justify-between"><p className="text-xs font-bold text-neutral-400">Página {page} de {totalPages} · {result.total} registro(s)</p><div className="flex gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-xl border border-neutral-200 p-2 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button><button type="button" disabled={page >= totalPages || loading} onClick={() => setPage((value) => value + 1)} className="rounded-xl border border-neutral-200 p-2 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button></div></div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   adminModulePath,
   canAccessAdminModule,
   normalizeAdminModule,
+  normalizeGrantedAdminModules,
 } from '../src/routing/adminAccess';
 
 const root = process.cwd();
@@ -16,12 +17,22 @@ async function assertFileContains(path: string, patterns: string[]) {
   }
 }
 
+async function assertFileExcludes(path: string, patterns: string[]) {
+  const content = await readFile(resolve(root, path), 'utf8');
+  for (const pattern of patterns) {
+    assert.ok(!content.includes(pattern), `${path}: padrão inseguro ainda presente: ${pattern}`);
+  }
+}
+
 async function main() {
   assert.equal(normalizeAdminModule('tickets'), 'atendimento');
   assert.equal(normalizeAdminModule('cobranca'), 'cobranca');
   assert.equal(normalizeAdminModule('fiscal'), 'fiscal');
   assert.equal(normalizeAdminModule('clientes'), 'cadastro');
   assert.equal(normalizeAdminModule('prestadores'), 'prestadores');
+  assert.equal(normalizeAdminModule('emprestimos'), 'emprestimos');
+  assert.equal(normalizeAdminModule('credito_loja'), 'credito_loja');
+  assert.deepEqual(normalizeGrantedAdminModules(['clientes', 'vendas', 'tickets', 'viagens']), ['cadastro', 'operacoes', 'atendimento', 'viagens']);
 
   assert.equal(canAccessAdminModule('admin', [], 'financeiro'), true);
   assert.equal(canAccessAdminModule('colaborador', [], 'dashboard'), true);
@@ -30,14 +41,23 @@ async function main() {
   assert.equal(canAccessAdminModule('colaborador', ['demandas'], 'operacoes'), false);
   assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'operacoes'), true);
   assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'demandas'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'loja'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'classificados'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'viagens'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'saude'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'seguros'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['viagens'], 'viagens'), true);
   assert.equal(canAccessAdminModule('colaborador', ['financeiro'], 'financeiro'), true);
   assert.equal(canAccessAdminModule('colaborador', ['financeiro'], 'cobranca'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['financeiro'], 'emprestimos'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['financeiro'], 'credito_loja'), false);
   assert.equal(canAccessAdminModule('colaborador', ['cobranca'], 'cobranca'), true);
   assert.equal(canAccessAdminModule('colaborador', ['cobranca'], 'financeiro'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['emprestimos'], 'emprestimos'), true);
+  assert.equal(canAccessAdminModule('colaborador', ['credito_loja'], 'credito_loja'), true);
   assert.equal(canAccessAdminModule('colaborador', ['prestadores'], 'prestadores'), true);
   assert.equal(canAccessAdminModule('colaborador', ['prestadores'], 'cadastro', 'clientes'), false);
   assert.equal(canAccessAdminModule('colaborador', ['prestadores'], 'cadastro', 'prestadores'), true);
-  assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'viagens'), true);
 
   assert.equal(adminModulePath('dashboard'), '/admin/dashboard');
   assert.equal(adminModulePath('cadastro', 'clientes'), '/admin/cadastros/clientes');
@@ -46,6 +66,8 @@ async function main() {
   assert.equal(adminModulePath('cobranca'), '/admin/cobranca');
   assert.equal(adminModulePath('fiscal'), '/admin/fiscal');
   assert.equal(adminModulePath('viagens'), '/admin/viagens');
+  assert.equal(adminModulePath('emprestimos'), '/admin/financeiro/emprestimos');
+  assert.equal(adminModulePath('credito_loja'), '/admin/financeiro/credito');
   assert.equal(adminModulePath('financeiro', 'faturas', 'abc'), '/admin/financeiro/faturas/abc');
 
   await assertFileContains('package.json', [
@@ -53,6 +75,9 @@ async function main() {
     '"test:travel"',
     '"test:admin"',
     '"test:client-security"',
+    '"test:provider"',
+    '"test:products-subscriptions"',
+    'scripts/run-admin-migrations-runtime.cjs',
   ]);
 
   await assertFileContains('src/App.tsx', [
@@ -76,6 +101,61 @@ async function main() {
     "id: 'cobranca'",
     "id: 'fiscal'",
     'Você não possui permissão para acessar este módulo.',
+  ]);
+
+  await assertFileContains('src/components/admin/AcessosModule.tsx', [
+    'gsa_admin_access_snapshot',
+    'gsa_admin_save_collaborator',
+    'gsa_admin_set_collaborator_status',
+    'gsa_admin_rotate_collaborator_credential',
+    'gsa_admin_review_deletion_request',
+  ]);
+  await assertFileExcludes('src/components/admin/AcessosModule.tsx', [
+    "from('colaborador_modulos')",
+    'credencial_acesso',
+  ]);
+
+  await assertFileContains('src/components/admin/ClassifiedsModule.tsx', [
+    'gsa_admin_list_resource',
+    'gsa_admin_classified_action',
+    'PAGE_SIZE',
+  ]);
+
+  await assertFileContains('src/components/admin/ProtectionAdminModule.tsx', [
+    'gsa_admin_list_resource',
+    'gsa_admin_save_protection_entity',
+    'gsa_admin_create_protection_proposal',
+  ]);
+
+  await assertFileContains('src/components/admin/FiscalModule.tsx', [
+    "scope: 'fiscal'",
+    'gsa_admin_fiscal_update',
+    'SecureAttachmentButton',
+    'removePrivateDocument',
+  ]);
+  await assertFileExcludes('src/components/admin/FiscalModule.tsx', [
+    'getPublicUrl',
+    'document.write',
+    '.delete()',
+  ]);
+
+  await assertFileContains('src/components/admin/ConfiguracoesModule.tsx', [
+    'gsa_admin_settings_snapshot',
+    'gsa_admin_update_settings_secure',
+    'gsa_admin_save_company',
+    'gsa_admin_save_payment_method',
+  ]);
+
+  await assertFileContains('src/components/admin/SystemMonitorModule.tsx', [
+    'gsa_admin_system_snapshot',
+    'Visão somente leitura',
+  ]);
+
+  await assertFileContains('src/components/admin/RelatoriosModule.tsx', [
+    'normalizeGrantedAdminModules',
+    "requiredModules: ['cobranca']",
+    "requiredModules: ['fiscal']",
+    "requiredModules: ['emprestimos']",
   ]);
 
   await assertFileContains('src/hooks/useAdminNotifications.tsx', [
@@ -128,6 +208,45 @@ async function main() {
     "WHEN 'fiscal' THEN ARRAY['fiscal']",
     'collaborator_assigned_demands_only',
     'gsa_close_collaborator_sessions',
+  ]);
+
+  await assertFileContains('supabase/migrations/20260720235500_admin_secure_operations.sql', [
+    'gsa_admin_save_collaborator',
+    'gsa_admin_review_deletion_request',
+    'gsa_admin_create_protection_proposal',
+    'gsa_admin_system_snapshot',
+    'FOR UPDATE',
+  ]);
+
+  await assertFileContains('supabase/migrations/20260721000500_admin_module_rls_boundaries.sql', [
+    'AS RESTRICTIVE',
+    'gsa_admin_restrict_collaborator_to_module',
+    'gsa_enforce_admin_log_identity',
+  ]);
+
+  await assertFileContains('supabase/migrations/20260721001500_private_admin_documents.sql', [
+    "'gsa-private-documents'",
+    'gsa_admin_private_document_allowed',
+    'gsa_private_document_read_allowed',
+    'public = false',
+  ]);
+
+  await assertFileContains('supabase/migrations/20260721002500_secure_admin_settings.sql', [
+    'gsa_admin_allowed_setting_keys',
+    'gsa_admin_settings_snapshot',
+    'gsa_admin_update_settings_secure',
+  ]);
+
+  await assertFileContains('supabase/migrations/20260721003000_hash_collaborator_credentials.sql', [
+    'gsa_login_colaborador_legacy',
+    'crypt(v_code, c.credencial_hash)',
+    'initial_credential',
+  ]);
+
+  await assertFileContains('supabase/migrations/20260721003800_admin_session_token_validation_compat.sql', [
+    'session_token_hash',
+    "digest(p_session_token, 'sha256')",
+    'gsa_admin_validate_context',
   ]);
 
   console.log('Painel administrativo e painel do colaborador: contratos de segurança e operação validados.');
