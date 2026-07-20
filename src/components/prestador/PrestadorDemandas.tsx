@@ -18,7 +18,6 @@ import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { providerOperations, type ProviderDemandAction } from '../../lib/providerOperations';
 import { removeProviderPrivateFile, resolveProviderFileUrl, uploadProviderPrivateFile } from '../../lib/providerStorage';
-import { notificationService, type AcaoOrigem } from '../../lib/notificationService';
 import { logService } from '../../lib/logService';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { useFileViewer } from '../../contexts/FileViewerContext';
@@ -77,22 +76,6 @@ const OPEN_STATUSES: DemandStatus[] = ['aguardando_aceite', 'aberta', 'em_negoci
 const ACTIVE_STATUSES: DemandStatus[] = ['ativa', 'em_analise', 'em_ajuste'];
 const CLOSED_STATUSES: DemandStatus[] = ['concluida', 'finalizada', 'cancelada', 'concluida_interna'];
 
-const NOTIFICATION_ACTIONS: Record<ProviderDemandAction, AcaoOrigem> = {
-  accept: 'manual',
-  reject: 'demanda_recusada',
-  counteroffer: 'demanda_contraproposta_prestador',
-  deliver: 'demanda_entregue',
-  return: 'demanda_transferida',
-};
-
-const NOTIFICATION_TITLES: Record<ProviderDemandAction, string> = {
-  accept: 'Demanda aceita pelo prestador',
-  reject: 'Demanda recusada pelo prestador',
-  counteroffer: 'Contraproposta do prestador',
-  deliver: 'Demanda entregue pelo prestador',
-  return: 'Demanda devolvida pelo prestador',
-};
-
 function nowForInput() {
   const date = new Date();
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
@@ -138,7 +121,8 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
           )
         `)
         .eq('prestador_id', prestadorId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
       if (error) throw error;
       setDemands((data || []) as unknown as Demand[]);
     } catch (error: any) {
@@ -213,21 +197,12 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
   };
 
   const notifyAndLog = async (action: ProviderDemandAction, demand: Demand, detail: string) => {
-    await Promise.allSettled([
-      logService.logAction({
-        ator_tipo: 'prestador',
-        ator_id: prestadorId,
-        acao: `DEMANDA_${action.toUpperCase()}`,
-        detalhes: `${demand.id}: ${detail}`,
-      }),
-      notificationService.notifyAdmin(
-        NOTIFICATION_TITLES[action],
-        detail,
-        'demandas',
-        NOTIFICATION_ACTIONS[action],
-        { itemId: demand.id, prioridade: action === 'deliver' || action === 'return' ? 'alta' : 'normal' },
-      ),
-    ]);
+    await logService.logAction({
+      ator_tipo: 'prestador',
+      ator_id: prestadorId,
+      acao: `DEMANDA_${action.toUpperCase()}`,
+      detalhes: `${demand.id}: ${detail}`,
+    });
   };
 
   const finishMutation = async () => {
@@ -288,34 +263,15 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
           link: resultLink.trim(),
           arquivos: uploaded,
         });
-        if (selected.os_id) {
-          await supabase.from('os_notas').insert({ os_id: selected.os_id, nota: 'Serviço entregue pelo prestador e enviado para análise.' });
-        }
         await notifyAndLog('deliver', selected, `A demanda "${selected.titulo || selected.id}" foi entregue e aguarda análise.`);
       } else if (actionMode === 'return') {
         if (!reason.trim()) throw new Error('Informe o motivo da devolução.');
         uploaded.push(...await uploadFiles(selected, 'devolucao'));
         await providerOperations.transitionDemand(selected.id, 'return', { motivo: reason.trim(), arquivos: uploaded });
-        if (selected.os_id) {
-          await supabase.from('os_notas').insert({ os_id: selected.os_id, nota: 'Demanda devolvida pelo prestador para reatribuição.' });
-        }
         await notifyAndLog('return', selected, `A demanda "${selected.titulo || selected.id}" foi devolvida. Motivo: ${reason.trim()}`);
       } else {
         if (!supportMessage.trim()) throw new Error('Informe a mensagem de suporte.');
-        const { error } = await supabase.from('prestador_suporte_demandas').insert({
-          demanda_id: selected.id,
-          prestador_id: prestadorId,
-          mensagem: supportMessage.trim(),
-          status: 'aberto',
-        });
-        if (error) throw error;
-        await notificationService.notifyAdmin(
-          'Suporte solicitado em demanda',
-          `O prestador solicitou suporte na demanda "${selected.titulo || selected.id}".`,
-          'demandas',
-          'ticket_aberto_prestador',
-          { itemId: selected.id, prioridade: 'alta' },
-        );
+        await providerOperations.requestDemandSupport(selected.id, supportMessage.trim());
       }
 
       toast.success(actionMode === 'support' ? 'Solicitação de suporte enviada.' : 'Demanda atualizada com sucesso.');

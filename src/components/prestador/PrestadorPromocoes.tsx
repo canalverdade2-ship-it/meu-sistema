@@ -31,8 +31,8 @@ export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId
   const load = async () => {
     try {
       const [promotionResult, activationResult] = await Promise.all([
-        supabase.from('prestador_promocoes').select('id,titulo,descricao,regras,status,data_inicio,data_fim,created_at').order('created_at', { ascending: false }),
-        supabase.from('prestador_promocoes_ativacoes').select('promocao_id,ativa').eq('prestador_id', prestadorId),
+        supabase.from('prestador_promocoes').select('id,titulo,descricao,regras,status,data_inicio,data_fim,created_at').order('created_at', { ascending: false }).limit(100),
+        supabase.from('prestador_promocoes_ativacoes').select('promocao_id,ativa').eq('prestador_id', prestadorId).limit(100),
       ]);
       if (promotionResult.error) throw promotionResult.error;
       if (activationResult.error) throw activationResult.error;
@@ -67,7 +67,8 @@ export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId
   const activeIds = useMemo(() => new Set(activations.filter((item) => item.ativa).map((item) => item.promocao_id)), [activations]);
   const now = Date.now();
   const visible = promotions.filter((item) => {
-    const ended = item.status !== 'ativa' || (!!item.data_fim && new Date(item.data_fim).getTime() < now);
+    const notStarted = !!item.data_inicio && new Date(item.data_inicio).getTime() > now;
+    const ended = item.status !== 'ativa' || notStarted || (!!item.data_fim && new Date(item.data_fim).getTime() < now);
     return activeTab === 'ativas' ? !ended : ended || activeIds.has(item.id);
   });
 
