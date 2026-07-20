@@ -1,0 +1,216 @@
+name: Deploy Sites Systems Budget Production
+
+on:
+  push:
+    branches: [ops/deploy-sites-systems-budget-production]
+    paths: ['.sites-systems-budget-production-trigger']
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: deploy-sites-systems-budget-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      EXPECTED_SOURCE_SHA: b02df99b208f08d8628200022676a8a56815f982
+      MIGRATION_VERSION: '20260720232000'
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate authorization and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          grep -Fqx 'APPLY_SITES_SYSTEMS_BUDGET_20260720_V1' .sites-systems-budget-production-trigger
+          git fetch origin agent/corrigir-pagina-sites-sistemas
+          test "$(git rev-parse FETCH_HEAD)" = "$EXPECTED_SOURCE_SHA"
+          git show FETCH_HEAD:supabase/migrations/20260720232000_secure_public_sites_systems_budget.sql > /tmp/20260720232000.sql
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Check current migration state
+        id: state
+        shell: bash
+        run: |
+          cat > /tmp/sites-systems-budget-state.sql <<'SQL'
+          SELECT CASE WHEN EXISTS (
+            SELECT 1
+            FROM supabase_migrations.schema_migrations
+            WHERE version = '20260720232000'
+          ) THEN 'ALREADY_APPLIED' ELSE 'PENDING' END AS migration_state;
+          SQL
+          supabase db query --linked --file /tmp/sites-systems-budget-state.sql 2>&1 | tee sites-systems-budget-state.log
+          if grep -q 'ALREADY_APPLIED' sites-systems-budget-state.log; then
+            echo 'applied=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'applied=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build transactional bundles
+        if: steps.state.outputs.applied != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            sed '/^[[:space:]]*BEGIN;[[:space:]]*$/d; /^[[:space:]]*COMMIT;[[:space:]]*$/d' /tmp/20260720232000.sql
+            echo 'ROLLBACK;'
+          } > /tmp/sites-systems-budget-preview.sql
+          sed 's/^ROLLBACK;$/COMMIT;/' /tmp/sites-systems-budget-preview.sql > /tmp/sites-systems-budget-production.sql
+
+      - name: Validate migration with rollback
+        if: steps.state.outputs.applied != 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file /tmp/sites-systems-budget-preview.sql 2>&1 | tee sites-systems-budget-preview.log
+
+      - name: Apply migration atomically
+        if: steps.state.outputs.applied != 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file /tmp/sites-systems-budget-production.sql 2>&1 | tee sites-systems-budget-deployment.log
+
+      - name: Register migration history
+        if: steps.state.outputs.applied != 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration repair "$MIGRATION_VERSION" --status applied --linked 2>&1 | tee sites-systems-budget-history.log
+
+      - name: Verify production deployment
+        shell: bash
+        run: |
+          cat > /tmp/sites-systems-budget-verify.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regclass('public.gsa_public_budget_rate_limits') IS NULL THEN
+              RAISE EXCEPTION 'Tabela de rate limit do orçamento público ausente';
+            END IF;
+
+            IF to_regprocedure('public.gsa_public_create_enterprise_budget_v2(jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'RPC protegida do orçamento público ausente';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1
+              FROM pg_class c
+              JOIN pg_namespace n ON n.oid = c.relnamespace
+              WHERE n.nspname = 'public'
+                AND c.relname = 'gsa_public_budget_rate_limits'
+                AND c.relrowsecurity
+            ) THEN
+              RAISE EXCEPTION 'RLS não está ativo na tabela de rate limit';
+            END IF;
+
+            IF NOT has_function_privilege('anon', 'public.gsa_public_create_enterprise_budget_v2(jsonb)', 'EXECUTE')
+               OR NOT has_function_privilege('authenticated', 'public.gsa_public_create_enterprise_budget_v2(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'A RPC protegida não está acessível aos papéis esperados';
+            END IF;
+
+            IF EXISTS (
+              SELECT 1
+              FROM pg_proc p
+              JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public'
+                AND p.proname = 'gsa_public_create_enterprise_budget'
+                AND (
+                  has_function_privilege('anon', p.oid, 'EXECUTE')
+                  OR has_function_privilege('authenticated', p.oid, 'EXECUTE')
+                )
+            ) THEN
+              RAISE EXCEPTION 'A função legada ainda possui acesso público';
+            END IF;
+
+            IF has_table_privilege('anon', 'public.gsa_public_budget_rate_limits', 'SELECT')
+               OR has_table_privilege('authenticated', 'public.gsa_public_budget_rate_limits', 'SELECT') THEN
+              RAISE EXCEPTION 'Tabela de rate limit exposta para leitura pública';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1
+              FROM pg_proc p
+              JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public'
+                AND p.proname = 'gsa_public_create_enterprise_budget_v2'
+                AND p.prosecdef
+                AND array_to_string(p.proconfig, ',') LIKE '%search_path=public, pg_temp%'
+            ) THEN
+              RAISE EXCEPTION 'SECURITY DEFINER ou search_path seguro não confirmado';
+            END IF;
+          END $$;
+
+          SELECT version
+          FROM supabase_migrations.schema_migrations
+          WHERE version = '20260720232000';
+          SQL
+          set -o pipefail
+          supabase db query --linked --file /tmp/sites-systems-budget-verify.sql 2>&1 | tee sites-systems-budget-verification.log
+          grep -q '20260720232000' sites-systems-budget-verification.log
+
+      - name: Record production success
+        run: |
+          printf 'SUCCESS\nproject=%s\nsource=%s\nrun=%s\nmigration=%s\n' "$SUPABASE_PROJECT_ID" "$EXPECTED_SOURCE_SHA" "$GITHUB_RUN_ID" "$MIGRATION_VERSION" > .sites-systems-budget-production-success
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .sites-systems-budget-production-success
+          if ! git diff --cached --quiet; then
+            git commit -m 'Registrar implantação do orçamento público'
+            git push
+          fi
+
+      - name: Publish failure diagnostic
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          touch sites-systems-budget-state.log sites-systems-budget-preview.log sites-systems-budget-deployment.log sites-systems-budget-history.log sites-systems-budget-verification.log
+          {
+            echo '## Falha na implantação do orçamento público de Sites e Sistemas'
+            echo
+            echo "- Projeto: $EXPECTED_PROJECT_ID"
+            echo "- Fonte: $EXPECTED_SOURCE_SHA"
+            echo "- Migration: $MIGRATION_VERSION"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo '```text'
+            sed -n '1,100p' sites-systems-budget-state.log
+            sed -n '1,180p' sites-systems-budget-preview.log
+            sed -n '1,180p' sites-systems-budget-deployment.log
+            sed -n '1,100p' sites-systems-budget-history.log
+            sed -n '1,180p' sites-systems-budget-verification.log
+            echo '```'
+          } > sites-systems-budget-failure.md
+          gh issue create --title 'Falha implantação orçamento público Sites e Sistemas' --body-file sites-systems-budget-failure.md
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sites-systems-budget-production-evidence
+          path: |
+            sites-systems-budget-state.log
+            sites-systems-budget-preview.log
+            sites-systems-budget-deployment.log
+            sites-systems-budget-history.log
+            sites-systems-budget-verification.log
+          if-no-files-found: ignore
+          retention-days: 30
