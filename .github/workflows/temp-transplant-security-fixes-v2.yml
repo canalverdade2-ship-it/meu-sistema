@@ -1,0 +1,49 @@
+name: Temporary transplant security fixes v2
+
+on:
+  push:
+    branches:
+      - agent/finalizar-seguranca-home-v2
+
+permissions:
+  contents: write
+
+jobs:
+  transplant:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest main-based branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/finalizar-seguranca-home-v2
+          fetch-depth: 0
+
+      - name: Copy validated security files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin agent/finalizar-seguranca-home
+          git checkout origin/agent/finalizar-seguranca-home -- \
+            src/components/auth/ClientAccessModal.tsx \
+            src/components/auth/RestrictedAccessModal.tsx \
+            src/components/public/GSAEnterpriseHome.tsx \
+            src/components/ui/AccessibleDialog.tsx \
+            src/components/ui/Modal.tsx \
+            src/hooks/useDialogAccessibility.ts \
+            src/lib/sessionService.ts \
+            src/lib/supabase.ts \
+            supabase/functions/gsa-auth-session/index.ts \
+            supabase/functions/gsa-auth-session/index_test.ts \
+            supabase/migrations/20260720193000_auth_gateway_rate_limit.sql
+          rm -f .github/workflows/temp-transplant-security-fixes-v2.yml
+
+      - name: Publish clean integration commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Integrar correções finais de sessão, gateway e modais"
+          git push origin HEAD:agent/finalizar-seguranca-home-v2
