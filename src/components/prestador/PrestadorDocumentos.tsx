@@ -41,7 +41,8 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
         .from('prestador_documentos')
         .select('id,nome,tipo,urls,status,created_at,updated_at,motivo_rejeicao,enviado_por_admin')
         .eq('prestador_id', prestadorId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
       if (error) throw error;
       setDocuments((data || []) as ProviderDocument[]);
     } catch (error: any) {
@@ -74,8 +75,7 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
 
   const chooseFiles = (list: FileList | null) => {
     if (!list) return;
-    const selectedFiles = Array.from(list).slice(0, 5);
-    setFiles(selectedFiles);
+    setFiles(Array.from(list).slice(0, 5));
   };
 
   const submit = async (event: React.FormEvent) => {
@@ -84,6 +84,7 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
     setUploading(true);
     setProgress(5);
     const uploaded: string[] = [];
+    const previousReferences = selected.urls || [];
     try {
       for (let index = 0; index < files.length; index += 1) {
         const reference = await uploadProviderPrivateFile({
@@ -103,6 +104,7 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
         logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'UPLOAD_DOCUMENTO', detalhes: `Enviou ${uploaded.length} arquivo(s) para ${selected.nome}.` }),
         notificationService.notifyAdmin('Documento de prestador enviado', `O prestador enviou arquivos para o documento "${selected.nome}".`, 'cadastro', 'documento_prestador_enviado', { tab: 'prestadores_documentos', itemId: prestadorId, contexto: { prestador_id: prestadorId, documento_id: selected.id } }),
         refreshCounts(),
+        ...previousReferences.filter((reference) => !uploaded.includes(reference)).map((reference) => removeProviderPrivateFile(reference)),
       ]);
       setProgress(100);
       toast.success('Arquivos enviados de forma privada para análise.');
@@ -122,8 +124,7 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
 
   const view = async (reference: string, name: string) => {
     try {
-      const signedUrl = await resolveProviderFileUrl(reference);
-      openFile(signedUrl, name);
+      openFile(await resolveProviderFileUrl(reference), name);
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível abrir o arquivo.');
     }
@@ -135,14 +136,7 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
     <div className="space-y-6">
       <div className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 className="text-xl font-black">Documentos do prestador</h2><p className="text-sm text-neutral-500">Os arquivos ficam privados e são abertos por link temporário.</p></div>
-        <select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)} className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-bold">
-          <option value="">Todos os meses</option>
-          {Array.from({ length: 12 }, (_, index) => {
-            const month = String(index + 1).padStart(2, '0');
-            const year = new Date().getFullYear();
-            return <option key={month} value={`${year}-${month}`}>{new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(new Date(year, index))}</option>;
-          })}
-        </select>
+        <select value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)} className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-bold"><option value="">Todos os meses</option>{Array.from({ length: 12 }, (_, index) => { const month = String(index + 1).padStart(2, '0'); const year = new Date().getFullYear(); return <option key={month} value={`${year}-${month}`}>{new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(new Date(year, index))}</option>; })}</select>
       </div>
 
       <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
