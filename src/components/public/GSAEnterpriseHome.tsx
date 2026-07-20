@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { LogoGSA } from '../ui/LogoGSA';
+import { AccessibleDialog } from '../ui/AccessibleDialog';
 import { supabase } from '../../lib/supabase';
 import { maskPhone } from '../../lib/utils';
 import type { Audience, IconItem, PublicPage, ServicePackage } from '../../data/publicServiceCatalog';
@@ -121,16 +122,19 @@ export function GSAEnterpriseHome({
 
   return (
     <div className="min-h-screen bg-[#f4f1ea] text-neutral-950">
-      <AnimatePresence>
-        {showIntro && (
-          <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050608] px-6 text-center md:hidden" role="dialog" aria-modal="true" aria-label="Introdução GSA">
-            <LogoGSA size="xl" variant="light" />
-            <h1 className="mt-6 text-5xl font-serif tracking-[0.14em] text-[#d8bd73]">GSA HUB</h1>
-            <p className="mt-3 text-sm uppercase tracking-[0.24em] text-white/65">Soluções Digitais</p>
-            <button type="button" onClick={dismissIntro} className="mt-10 rounded-full border border-white/25 px-5 py-2 text-sm font-bold text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]">Pular introdução</button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AccessibleDialog
+        isOpen={showIntro}
+        onClose={dismissIntro}
+        ariaLabel="Introdução GSA"
+        zIndexClassName="z-[100]"
+        overlayClassName="items-center justify-center bg-[#050608] px-6 text-center md:hidden"
+        panelClassName="max-w-lg bg-transparent text-center text-white shadow-none"
+      >
+        <LogoGSA size="xl" variant="light" />
+        <h1 className="mt-6 text-5xl font-serif tracking-[0.14em] text-[#d8bd73]">GSA HUB</h1>
+        <p className="mt-3 text-sm uppercase tracking-[0.24em] text-white/65">Soluções Digitais</p>
+        <button type="button" data-dialog-autofocus onClick={dismissIntro} className="mt-10 rounded-full border border-white/25 px-5 py-2 text-sm font-bold text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]">Pular introdução</button>
+      </AccessibleDialog>
 
       {nav}
       {publicPage === 'home' && (
@@ -236,31 +240,50 @@ export function GSAEnterpriseHome({
   );
 }
 
-function DialogShell({ children, onClose, label }: { children: React.ReactNode; onClose: () => void; label: string }) {
-  useEffect(() => {
-    const handleKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [onClose]);
-  return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] overflow-y-auto bg-black/65 p-4 backdrop-blur-sm" onMouseDown={onClose} role="dialog" aria-modal="true" aria-label={label}><div className="mx-auto flex min-h-full max-w-4xl items-center justify-center"><motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="w-full rounded-2xl bg-white p-6 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>{children}</motion.div></div></motion.div>;
-}
-
 function ServiceDetailsModal({ selectedPackage, onClose, onInterest }: { selectedPackage: ServicePackage | null; onClose: () => void; onInterest: (item: ServicePackage) => void }) {
-  return <AnimatePresence>{selectedPackage && <DialogShell onClose={onClose} label={`Detalhes do pacote ${selectedPackage.title}`}><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-widest text-[#8a6e2f]">{selectedPackage.subtitle}</p><h2 className="mt-2 text-3xl font-black">{selectedPackage.title}</h2><p className="mt-3 text-sm leading-6 text-neutral-600">{selectedPackage.description}</p></div><button type="button" onClick={onClose} aria-label="Fechar detalhes" className="rounded-lg bg-neutral-100 p-2"><X className="h-5 w-5" /></button></div><div className="mt-7 grid gap-3 sm:grid-cols-2">{selectedPackage.services.map((service) => <div key={service.name} className="rounded-xl bg-neutral-50 p-4"><strong>{service.name}</strong><p className="mt-2 text-sm leading-6 text-neutral-600">{service.desc}</p></div>)}</div><button type="button" onClick={() => onInterest(selectedPackage)} className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 py-4 font-black text-white">Tenho interesse <ArrowRight className="h-4 w-4" /></button></DialogShell>}</AnimatePresence>;
+  return (
+    <AccessibleDialog
+      isOpen={Boolean(selectedPackage)}
+      onClose={onClose}
+      ariaLabel={selectedPackage ? `Detalhes do pacote ${selectedPackage.title}` : 'Detalhes do pacote'}
+      panelClassName="max-w-4xl rounded-2xl bg-white p-6 shadow-2xl"
+    >
+      {selectedPackage && (
+        <>
+          <div className="flex items-start justify-between gap-4">
+            <div><p className="text-xs font-black uppercase tracking-widest text-[#8a6e2f]">{selectedPackage.subtitle}</p><h2 className="mt-2 text-3xl font-black">{selectedPackage.title}</h2><p className="mt-3 text-sm leading-6 text-neutral-600">{selectedPackage.description}</p></div>
+            <button type="button" onClick={onClose} data-dialog-autofocus aria-label="Fechar detalhes" className="rounded-lg bg-neutral-100 p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]"><X className="h-5 w-5" /></button>
+          </div>
+          <div className="mt-7 grid gap-3 sm:grid-cols-2">{selectedPackage.services.map((service) => <div key={service.name} className="rounded-xl bg-neutral-50 p-4"><strong>{service.name}</strong><p className="mt-2 text-sm leading-6 text-neutral-600">{service.desc}</p></div>)}</div>
+          <button type="button" onClick={() => onInterest(selectedPackage)} className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 py-4 font-black text-white">Tenho interesse <ArrowRight className="h-4 w-4" /></button>
+        </>
+      )}
+    </AccessibleDialog>
+  );
 }
 
 function RequestChannelModal({ selectedPackage, onClose, onWhatsApp, onEmail, onPortal }: { selectedPackage: ServicePackage | null; onClose: () => void; onWhatsApp: (item: ServicePackage) => void; onEmail: (item: ServicePackage) => void; onPortal: (item: ServicePackage) => void }) {
-  return <AnimatePresence>{selectedPackage && <DialogShell onClose={onClose} label="Escolher canal de atendimento"><div className="flex items-start justify-between"><div><p className="text-xs font-black uppercase tracking-widest text-[#8a6e2f]">Solicitar atendimento</p><h2 className="mt-2 text-2xl font-black">{selectedPackage.title}</h2></div><button type="button" onClick={onClose} aria-label="Fechar canais de atendimento" className="rounded-lg bg-neutral-100 p-2"><X className="h-5 w-5" /></button></div><div className="mt-6 grid gap-3 sm:grid-cols-3"><ChannelButton icon={MessageCircle} title="WhatsApp" onClick={() => onWhatsApp(selectedPackage)} /><ChannelButton icon={Mail} title="E-mail" onClick={() => onEmail(selectedPackage)} /><ChannelButton icon={LogIn} title="Portal" onClick={() => onPortal(selectedPackage)} /></div></DialogShell>}</AnimatePresence>;
+  return (
+    <AccessibleDialog isOpen={Boolean(selectedPackage)} onClose={onClose} ariaLabel="Escolher canal de atendimento" panelClassName="max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+      {selectedPackage && (
+        <>
+          <div className="flex items-start justify-between"><div><p className="text-xs font-black uppercase tracking-widest text-[#8a6e2f]">Solicitar atendimento</p><h2 className="mt-2 text-2xl font-black">{selectedPackage.title}</h2></div><button type="button" onClick={onClose} data-dialog-autofocus aria-label="Fechar canais de atendimento" className="rounded-lg bg-neutral-100 p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]"><X className="h-5 w-5" /></button></div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3"><ChannelButton icon={MessageCircle} title="WhatsApp" onClick={() => onWhatsApp(selectedPackage)} /><ChannelButton icon={Mail} title="E-mail" onClick={() => onEmail(selectedPackage)} /><ChannelButton icon={LogIn} title="Portal" onClick={() => onPortal(selectedPackage)} /></div>
+        </>
+      )}
+    </AccessibleDialog>
+  );
 }
 
 function ChannelButton({ icon: Icon, title, onClick }: { icon: typeof MessageCircle; title: string; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="rounded-xl border border-neutral-200 p-5 text-left transition hover:bg-neutral-50"><Icon className="h-6 w-6 text-[#8a6e2f]" /><strong className="mt-4 block">{title}</strong></button>;
+  return <button type="button" onClick={onClick} className="rounded-xl border border-neutral-200 p-5 text-left transition hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]"><Icon className="h-6 w-6 text-[#8a6e2f]" /><strong className="mt-4 block">{title}</strong></button>;
 }
 
 function SystemsBudgetModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [form, setForm] = useState({ nome: '', email: '', telefone: '', tipo: '', solicitacao: '' });
   const [submitting, setSubmitting] = useState(false);
   const update = (field: keyof typeof form, value: string) => setForm((previous) => ({ ...previous, [field]: value }));
+  const closeSafely = () => { if (!submitting) onClose(); };
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.nome.trim() || !form.email.trim() || !form.telefone.trim() || !form.tipo || !form.solicitacao.trim()) return toast.error('Preencha todos os campos.');
@@ -277,5 +300,15 @@ function SystemsBudgetModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
       setSubmitting(false);
     }
   };
-  return <AnimatePresence>{isOpen && <DialogShell onClose={() => { if (!submitting) onClose(); }} label="Solicitar orçamento de sistema"><form onSubmit={submit} className="space-y-4"><div className="flex items-start justify-between"><div><p className="text-xs font-black uppercase tracking-widest text-[#8a6e2f]">Solicitar orçamento</p><h2 className="mt-2 text-2xl font-black">Criação de site ou sistema</h2></div><button type="button" onClick={onClose} aria-label="Fechar orçamento" className="rounded-lg bg-neutral-100 p-2"><X className="h-5 w-5" /></button></div><div className="grid gap-4 sm:grid-cols-2"><input required value={form.nome} onChange={(event) => update('nome', event.target.value)} placeholder="Nome" className="input-field" /><input required type="email" value={form.email} onChange={(event) => update('email', event.target.value)} placeholder="E-mail" className="input-field" /></div><div className="grid gap-4 sm:grid-cols-2"><input required value={form.telefone} onChange={(event) => update('telefone', maskPhone(event.target.value))} placeholder="Telefone" className="input-field" /><select required value={form.tipo} onChange={(event) => update('tipo', event.target.value)} className="input-field"><option value="">Tipo de projeto</option><option value="site">Site</option><option value="loja">Loja virtual</option><option value="sistema">Sistema web</option><option value="aplicativo">Aplicativo</option><option value="automacao">Automação</option></select></div><textarea required rows={5} value={form.solicitacao} onChange={(event) => update('solicitacao', event.target.value)} placeholder="Descreva sua necessidade" className="input-field resize-none" /><button type="submit" disabled={submitting} className="btn-primary w-full">{submitting ? 'Enviando...' : 'Enviar solicitação'}</button></form></DialogShell>}</AnimatePresence>;
+  return (
+    <AccessibleDialog isOpen={isOpen} onClose={closeSafely} closeOnBackdrop={!submitting} ariaLabel="Solicitar orçamento de sistema" panelClassName="max-w-4xl rounded-2xl bg-white p-6 shadow-2xl">
+      <form onSubmit={submit} className="space-y-4">
+        <div className="flex items-start justify-between"><div><p className="text-xs font-black uppercase tracking-widest text-[#8a6e2f]">Solicitar orçamento</p><h2 className="mt-2 text-2xl font-black">Criação de site ou sistema</h2></div><button type="button" onClick={closeSafely} aria-label="Fechar orçamento" className="rounded-lg bg-neutral-100 p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]"><X className="h-5 w-5" /></button></div>
+        <div className="grid gap-4 sm:grid-cols-2"><input required data-dialog-autofocus value={form.nome} onChange={(event) => update('nome', event.target.value)} placeholder="Nome" className="input-field" /><input required type="email" value={form.email} onChange={(event) => update('email', event.target.value)} placeholder="E-mail" className="input-field" /></div>
+        <div className="grid gap-4 sm:grid-cols-2"><input required value={form.telefone} onChange={(event) => update('telefone', maskPhone(event.target.value))} placeholder="Telefone" className="input-field" /><select required value={form.tipo} onChange={(event) => update('tipo', event.target.value)} className="input-field"><option value="">Tipo de projeto</option><option value="site">Site</option><option value="loja">Loja virtual</option><option value="sistema">Sistema web</option><option value="aplicativo">Aplicativo</option><option value="automacao">Automação</option></select></div>
+        <textarea required rows={5} value={form.solicitacao} onChange={(event) => update('solicitacao', event.target.value)} placeholder="Descreva sua necessidade" className="input-field resize-none" />
+        <button type="submit" disabled={submitting} className="btn-primary w-full">{submitting ? 'Enviando...' : 'Enviar solicitação'}</button>
+      </form>
+    </AccessibleDialog>
+  );
 }
