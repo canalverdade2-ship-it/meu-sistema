@@ -13,7 +13,20 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
@@ -34,6 +47,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
 
       - name: Install dependencies
         run: npm ci
@@ -98,6 +116,89 @@ jobs:
         if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run test:travel
 
-      - name: Build
+      - name: Check authentication Edge Function
         if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        id: deno_check
+        shell: bash
+        run: |
+          set +e
+          deno check supabase/functions/gsa-auth-session/index.ts supabase/functions/gsa-auth-session/index_test.ts > deno-check.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload Deno check log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deno-check-log
+          path: deno-check.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Report Deno check result
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          cat deno-check.log
+          test "${{ steps.deno_check.outputs.exit_code }}" = "0"
+
+      - name: Test authentication Edge Function
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        run: deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
+
+      - name: Validate authentication migration
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        env:
+          PGPASSWORD: postgres
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql -h 127.0.0.1 -U postgres -v ON_ERROR_STOP=1 <<'SQL'
+          DO $roles$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+              EXECUTE 'CREATE ROLE anon NOLOGIN';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+              EXECUTE 'CREATE ROLE authenticated NOLOGIN';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+              EXECUTE 'CREATE ROLE service_role NOLOGIN';
+            END IF;
+          END;
+          $roles$;
+
+          \i supabase/migrations/20260720193000_auth_gateway_rate_limit.sql
+
+          DO $test$
+          DECLARE
+            v_first jsonb;
+            v_second jsonb;
+            v_third jsonb;
+          BEGIN
+            DELETE FROM public.gsa_auth_rate_limits;
+
+            v_first := public.gsa_auth_rate_limit_check(repeat('a', 64), 2, 60, 120);
+            v_second := public.gsa_auth_rate_limit_check(repeat('a', 64), 2, 60, 120);
+            v_third := public.gsa_auth_rate_limit_check(repeat('a', 64), 2, 60, 120);
+
+            IF NOT (v_first->>'allowed')::boolean
+               OR NOT (v_second->>'allowed')::boolean
+               OR (v_third->>'allowed')::boolean
+               OR (v_third->>'retry_after')::integer <= 0 THEN
+              RAISE EXCEPTION 'Comportamento inesperado do rate limiting: %, %, %', v_first, v_second, v_third;
+            END IF;
+
+            IF has_function_privilege('anon', 'public.gsa_auth_rate_limit_check(text,integer,integer,integer)', 'EXECUTE')
+               OR has_function_privilege('authenticated', 'public.gsa_auth_rate_limit_check(text,integer,integer,integer)', 'EXECUTE')
+               OR NOT has_function_privilege('service_role', 'public.gsa_auth_rate_limit_check(text,integer,integer,integer)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Permissões incorretas na função de rate limiting.';
+            END IF;
+          END;
+          $test$;
+          SQL
+
+      - name: Build
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         run: npm run build
