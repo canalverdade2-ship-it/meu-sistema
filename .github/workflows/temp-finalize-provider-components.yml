@@ -1,0 +1,131 @@
+name: Finalize Provider Components
+
+on:
+  push:
+    branches: [agent/corrigir-auditoria-painel-prestador]
+    paths: ['.provider-components-finalize-trigger']
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-auditoria-painel-prestador
+      - name: Apply final component corrections
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def edit(path, transform):
+              p = Path(path)
+              before = p.read_text()
+              after = transform(before)
+              if after == before:
+                  raise SystemExit(f'Nenhuma alteração aplicada em {path}')
+              p.write_text(after)
+
+          def finance(s):
+              s = s.replace("import { notificationService } from '../../lib/notificationService';\n", '')
+              s = s.replace("import { logService } from '../../lib/logService';\n", '')
+              s = s.replace(".order('created_at', { ascending: false }),", ".order('created_at', { ascending: false }).limit(100),")
+              s = s.replace("const result = await providerOperations.requestWithdrawal(value, pixType, pixKey.trim());", "await providerOperations.requestWithdrawal(value, pixType, pixKey.trim());")
+              s, n1 = re.subn(r"\n\s*await Promise\.allSettled\(\[\n\s*logService\.logAction\(\{.*?\n\s*\]\);", '', s, count=1, flags=re.S)
+              s, n2 = re.subn(r"\n\s*await logService\.logAction\(\{.*?\}\);", '', s, count=1, flags=re.S)
+              if n1 != 1 or n2 != 1: raise SystemExit(f'Financeiro: blocos não encontrados {n1}/{n2}')
+              return s
+
+          def agenda(s):
+              s = s.replace("import { notificationService } from '../../lib/notificationService';\n", '')
+              s = s.replace("import { logService } from '../../lib/logService';\n", '')
+              s = s.replace(".order('data_inicio', { ascending: true }),", ".order('data_inicio', { ascending: true }).limit(100),")
+              s = s.replace(".order('created_at', { ascending: false }),", ".order('created_at', { ascending: false }).limit(100),")
+              s = s.replace("const result = await providerOperations.createSchedule({", "await providerOperations.createSchedule({")
+              s, n1 = re.subn(r"\n\s*const selectedDemand = demands\.find\(.*?\n\s*await Promise\.allSettled\(\[.*?\n\s*\]\);", '', s, count=1, flags=re.S)
+              s, n2 = re.subn(r"\n\s*await Promise\.allSettled\(\[.*?\n\s*\]\);", '', s, count=1, flags=re.S)
+              s, n3 = re.subn(r"\n\s*await logService\.logAction\(.*?\);", '', s, count=1, flags=re.S)
+              if (n1,n2,n3) != (1,1,1): raise SystemExit(f'Agenda: blocos não encontrados {n1}/{n2}/{n3}')
+              return s
+
+          def vouchers(s):
+              s = s.replace("import { notificationService } from '../../lib/notificationService';\n", '')
+              s = s.replace(".order('created_at', { ascending: false });", ".order('created_at', { ascending: false }).limit(100);")
+              s, n = re.subn(r"\n\s*await Promise\.allSettled\(\[.*?refreshCounts\(\),\n\s*\]\);", "\n      await refreshCounts();", s, count=1, flags=re.S)
+              if n != 1: raise SystemExit('Vouchers: bloco não encontrado')
+              return s
+
+          def prizes(s):
+              s = s.replace("import { notificationService } from '../../lib/notificationService';\n", '')
+              s = s.replace(".order('created_at', { ascending: false });", ".order('created_at', { ascending: false }).limit(100);")
+              s, n1 = re.subn(r"\n\s*await Promise\.allSettled\(\[.*?refreshCounts\(\),\n\s*\]\);", "\n      await refreshCounts();", s, count=1, flags=re.S)
+              pattern = r"\s*const subject = `Dúvida sobre o prêmio: \$\{prize\.titulo\}`;.*?toast\.success\('Atendimento aberto com sucesso\.'\);"
+              replacement = "\n      await providerOperations.createTicket(\n        `Dúvida sobre o prêmio: ${prize.titulo}`,\n        `Solicito informações sobre o prêmio \\\"${prize.titulo}\\\".`,\n      );\n      toast.success('Atendimento aberto com sucesso.');"
+              s, n2 = re.subn(pattern, replacement, s, count=1, flags=re.S)
+              if n1 != 1 or n2 != 1: raise SystemExit(f'Prêmios: blocos não encontrados {n1}/{n2}')
+              return s
+
+          def documents(s):
+              s = s.replace("import { notificationService } from '../../lib/notificationService';\n", '')
+              s = s.replace("import { logService } from '../../lib/logService';\n", '')
+              pattern = r"\s*await Promise\.allSettled\(\[\n\s*logService\.logAction\(.*?\n\s*\]\);"
+              replacement = "\n      await Promise.allSettled(\n        previousReferences\n          .filter((reference) => !uploaded.includes(reference))\n          .map((reference) => removeProviderPrivateFile(reference)),\n      );\n      await refreshCounts();"
+              s, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
+              if n != 1: raise SystemExit('Documentos: bloco não encontrado')
+              return s
+
+          edit('src/components/prestador/PrestadorFinanceiro.tsx', finance)
+          edit('src/components/prestador/PrestadorAgenda.tsx', agenda)
+          edit('src/components/prestador/PrestadorVouchers.tsx', vouchers)
+          edit('src/components/prestador/PrestadorPremios.tsx', prizes)
+          edit('src/components/prestador/PrestadorDocumentos.tsx', documents)
+          PY
+      - name: Extend provider contracts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/check-provider-portal-security-contracts.ts')
+          s = p.read_text()
+          marker = "  await assertContains('src/components/prestador/PrestadorPromocoes.tsx', ["
+          block = """  for (const path of [
+            'src/components/prestador/PrestadorFinanceiro.tsx',
+            'src/components/prestador/PrestadorAgenda.tsx',
+            'src/components/prestador/PrestadorVouchers.tsx',
+            'src/components/prestador/PrestadorPremios.tsx',
+            'src/components/prestador/PrestadorDocumentos.tsx',
+          ]) {
+            await assertExcludes(path, ['notificationService.notifyAdmin']);
+          }
+          await assertContains('src/components/prestador/PrestadorFinanceiro.tsx', ['.limit(100)']);
+          await assertContains('src/components/prestador/PrestadorAgenda.tsx', ['.limit(100)']);
+          await assertContains('src/components/prestador/PrestadorVouchers.tsx', ['.limit(100)']);
+          await assertContains('src/components/prestador/PrestadorPremios.tsx', ['providerOperations.createTicket', '.limit(100)']);
+
+"""
+          if s.count(marker) != 1: raise SystemExit('Marcador do contrato não encontrado')
+          p.write_text(s.replace(marker, block + marker))
+          PY
+      - name: Remove temporary files
+        run: rm -f .provider-components-finalize-trigger .github/workflows/temp-finalize-provider-components.yml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:provider
+      - run: npm run test:admin
+      - run: npm run test:client-security
+      - run: npm run test:travel
+      - run: npm run build
+      - name: Publish final components
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Finalizar componentes auditados do Painel do Prestador'
+          git push
