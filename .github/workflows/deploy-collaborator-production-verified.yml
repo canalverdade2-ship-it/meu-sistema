@@ -1,0 +1,104 @@
+name: Deploy Collaborator Production Verified
+
+on:
+  push:
+    branches: [ops/deploy-collaborator-production]
+    paths: ['.deploy-collaborator-production-trigger']
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: deploy-collaborator-production-verified
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      MIGRATION_VERSION: '20260720213000'
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Validate authorization
+        run: |
+          set -euo pipefail
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          grep -Fqx 'DEPLOY_COLLABORATOR_PRODUCTION_V1' .deploy-collaborator-production-trigger
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: Link project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - name: Check migration state
+        id: state
+        shell: bash
+        run: |
+          cat > /tmp/state.sql <<'SQL'
+          SELECT CASE WHEN EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20260720213000') THEN 'APPLIED' ELSE 'PENDING' END AS state;
+          SQL
+          supabase db query --linked --file /tmp/state.sql 2>&1 | tee collaborator-state.log
+          if grep -q 'APPLIED' collaborator-state.log; then echo 'applied=true' >> "$GITHUB_OUTPUT"; else echo 'applied=false' >> "$GITHUB_OUTPUT"; fi
+      - name: Build preview and production bundle
+        if: steps.state.outputs.applied != 'true'
+        run: |
+          { echo 'BEGIN;'; sed '/^[[:space:]]*BEGIN;[[:space:]]*$/d; /^[[:space:]]*COMMIT;[[:space:]]*$/d' supabase/migrations/20260720213000_secure_collaborator_panel.sql; echo 'ROLLBACK;'; } > /tmp/preview.sql
+          sed 's/^ROLLBACK;$/COMMIT;/' /tmp/preview.sql > /tmp/production.sql
+      - name: Preview with rollback
+        if: steps.state.outputs.applied != 'true'
+        run: supabase db query --linked --file /tmp/preview.sql 2>&1 | tee collaborator-preview.log
+      - name: Apply migration
+        if: steps.state.outputs.applied != 'true'
+        run: supabase db query --linked --file /tmp/production.sql 2>&1 | tee collaborator-deployment.log
+      - name: Register history
+        if: steps.state.outputs.applied != 'true'
+        run: supabase migration repair "$MIGRATION_VERSION" --status applied --linked 2>&1 | tee collaborator-history.log
+      - name: Verify contracts
+        shell: bash
+        run: |
+          cat > /tmp/verify.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regprocedure('public.gsa_admin_context()') IS NULL
+               OR to_regprocedure('public.gsa_admin_has_module(text)') IS NULL
+               OR to_regprocedure('public.gsa_get_collaborator_session_access_state(uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_replace_collaborator_modules(uuid,text,uuid,text[])') IS NULL
+               OR to_regprocedure('public.gsa_close_collaborator_sessions(uuid)') IS NULL THEN
+              RAISE EXCEPTION 'Funções obrigatórias do colaborador ausentes';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='colaboradores' AND column_name='credencial_hash') THEN
+              RAISE EXCEPTION 'credencial_hash ausente';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_hash_collaborator_credential' AND NOT tgisinternal)
+               OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_revoke_collaborator_status' AND NOT tgisinternal)
+               OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_revoke_collaborator_modules' AND NOT tgisinternal) THEN
+              RAISE EXCEPTION 'Triggers obrigatórios ausentes';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20260720213000') THEN
+              RAISE EXCEPTION 'Histórico da migration ausente';
+            END IF;
+          END $$;
+          SELECT 'COLLABORATOR_DEPLOY_OK' AS result;
+          SQL
+          supabase db query --linked --file /tmp/verify.sql 2>&1 | tee collaborator-verification.log
+          grep -q 'COLLABORATOR_DEPLOY_OK' collaborator-verification.log
+      - name: Record success
+        run: |
+          printf 'SUCCESS\nproject=%s\nrun=%s\nmigration=%s\n' "$SUPABASE_PROJECT_ID" "$GITHUB_RUN_ID" "$MIGRATION_VERSION" > .deploy-collaborator-production-success
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .deploy-collaborator-production-success
+          git commit -m 'Registrar implantação do Painel do Colaborador'
+          git push
+      - name: Publish failure
+        if: failure()
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          touch collaborator-state.log collaborator-preview.log collaborator-deployment.log collaborator-history.log collaborator-verification.log
+          { echo '## Falha na implantação do Painel do Colaborador'; echo; echo "Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; echo '```text'; cat collaborator-state.log collaborator-preview.log collaborator-deployment.log collaborator-history.log collaborator-verification.log; echo '```'; } > failure.md
+          gh issue create --title 'Falha implantação Painel do Colaborador' --body-file failure.md
