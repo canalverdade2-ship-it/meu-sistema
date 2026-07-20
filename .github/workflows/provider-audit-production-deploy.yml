@@ -26,6 +26,9 @@ jobs:
       - name: Checkout PR merge candidate
         uses: actions/checkout@v4
 
+      - name: Initialize logs
+        run: touch provider-audit-state.log provider-audit-preview.log provider-audit-production.log provider-audit-verification.log
+
       - name: Validate target and files
         shell: bash
         run: |
@@ -54,7 +57,8 @@ jobs:
           FROM supabase_migrations.schema_migrations
           WHERE version IN ('20260720235900', '20260720235910', '20260720235920', '20260720235930');
           SQL
-          supabase db query --linked --file provider-audit-state.sql | tee provider-audit-state.log
+          set -o pipefail
+          supabase db query --linked --file provider-audit-state.sql 2>&1 | tee provider-audit-state.log
           if grep -Eq '(^|[^0-9])4([^0-9]|$)' provider-audit-state.log; then
             echo 'applied=true' >> "$GITHUB_OUTPUT"
           else
@@ -81,11 +85,17 @@ jobs:
 
       - name: Validate migrations with rollback
         if: steps.state.outputs.applied != 'true'
-        run: supabase db query --linked --file provider-audit-preview.sql
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file provider-audit-preview.sql 2>&1 | tee provider-audit-preview.log
 
       - name: Apply migrations atomically
         if: steps.state.outputs.applied != 'true'
-        run: supabase db query --linked --file provider-audit-production.sql
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file provider-audit-production.sql 2>&1 | tee provider-audit-production.log
 
       - name: Register migration history
         if: steps.state.outputs.applied != 'true'
@@ -118,8 +128,21 @@ jobs:
           WHERE version IN ('20260720235900', '20260720235910', '20260720235920', '20260720235930')
           ORDER BY version;
           SQL
-          supabase db query --linked --file provider-audit-verify.sql | tee provider-audit-verification.log
+          set -o pipefail
+          supabase db query --linked --file provider-audit-verify.sql 2>&1 | tee provider-audit-verification.log
           grep -q '20260720235900' provider-audit-verification.log
           grep -q '20260720235910' provider-audit-verification.log
           grep -q '20260720235920' provider-audit-verification.log
           grep -q '20260720235930' provider-audit-verification.log
+
+      - name: Upload private deployment diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-audit-production-diagnostics
+          path: |
+            provider-audit-state.log
+            provider-audit-preview.log
+            provider-audit-production.log
+            provider-audit-verification.log
+          retention-days: 7
