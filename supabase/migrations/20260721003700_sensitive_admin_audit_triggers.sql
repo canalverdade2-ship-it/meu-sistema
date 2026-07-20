@@ -9,6 +9,11 @@ AS $$
 DECLARE
   v_claims jsonb := COALESCE(auth.jwt(), '{}'::jsonb);
   v_actor_type text := COALESCE(v_claims -> 'app_metadata' ->> 'gsa_actor_type', '');
+  v_actor_id_text text := COALESCE(v_claims -> 'app_metadata' ->> 'gsa_actor_id', '');
+  v_session_id_text text := COALESCE(v_claims -> 'app_metadata' ->> 'gsa_session_id', '');
+  v_actor_id uuid;
+  v_session_id uuid;
+  v_session jsonb;
   v_row jsonb;
   v_old jsonb := CASE WHEN TG_OP = 'INSERT' THEN '{}'::jsonb ELSE to_jsonb(OLD) END;
   v_new jsonb := CASE WHEN TG_OP = 'DELETE' THEN '{}'::jsonb ELSE to_jsonb(NEW) END;
@@ -19,7 +24,29 @@ BEGIN
     RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
   END IF;
 
-  PERFORM public.gsa_admin_context();
+  BEGIN
+    v_actor_id := v_actor_id_text::uuid;
+    v_session_id := v_session_id_text::uuid;
+  EXCEPTION WHEN invalid_text_representation THEN
+    RAISE EXCEPTION 'Identidade administrativa inválida para auditoria.' USING ERRCODE = '42501';
+  END;
+
+  -- O gatilho é AFTER. Ao suspender um colaborador, consultar gsa_admin_context()
+  -- neste ponto enxergaria o status novo e impediria a própria auditoria. Por
+  -- isso validamos a sessão diretamente, ainda exigindo vínculo e estado ativo.
+  SELECT to_jsonb(s)
+    INTO v_session
+    FROM public.sistema_sessoes s
+   WHERE s.id = v_session_id
+   LIMIT 1;
+
+  IF v_session IS NULL
+     OR lower(COALESCE(v_session ->> 'status', v_session ->> 'situacao', '')) NOT IN ('ativo', 'ativa', 'active')
+     OR COALESCE(v_session ->> 'ator_tipo', v_session ->> 'tipo_ator', v_actor_type) <> v_actor_type
+     OR COALESCE(v_session ->> 'ator_id', v_session ->> 'usuario_id', v_session ->> 'colaborador_id', v_actor_id::text) <> v_actor_id::text THEN
+    RAISE EXCEPTION 'Sessão administrativa inválida para auditoria.' USING ERRCODE = '42501';
+  END IF;
+
   v_row := CASE WHEN TG_OP = 'DELETE' THEN v_old ELSE v_new END;
 
   BEGIN
@@ -75,12 +102,23 @@ BEGIN
     ELSE 'administrativo'
   END;
 
-  PERFORM public.gsa_admin_write_audit(
+  INSERT INTO public.gsa_admin_audit_events (
+    actor_type,
+    actor_id,
+    module,
+    action,
+    target_type,
+    target_id,
+    details
+  ) VALUES (
+    v_actor_type,
+    v_actor_id,
     v_module,
     TG_OP || '_' || upper(TG_TABLE_NAME),
     TG_TABLE_NAME,
     v_target_id,
     jsonb_strip_nulls(jsonb_build_object(
+      'session_id', v_session_id,
       'old_status', v_old ->> 'status',
       'new_status', v_new ->> 'status',
       'old_emission_status', v_old ->> 'status_emissao',
