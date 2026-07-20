@@ -1,40 +1,94 @@
 export type AdminActorType = 'admin' | 'colaborador';
 
-const MODULE_ALIASES: Record<string, string[]> = {
-  dashboard: [],
-  cadastro: ['cadastro'],
-  prestadores: ['prestadores', 'cadastro'],
-  catalogo: ['catalogo', 'cadastro'],
-  operacoes: ['operacoes', 'vendas'],
-  vendas: ['vendas'],
-  demandas: ['demandas'],
-  loja: ['loja', 'vendas'],
-  classificados: ['classificados', 'loja', 'vendas'],
-  viagens: ['viagens', 'loja', 'vendas'],
-  saude: ['saude', 'loja', 'vendas'],
-  seguros: ['seguros', 'loja', 'vendas'],
-  financeiro: ['financeiro'],
-  cobranca: ['cobranca'],
-  fiscal: ['fiscal'],
-  fidelidade: ['fidelidade', 'cadastro', 'area_vip', 'promocoes'],
-  atendimento: ['atendimento', 'tickets', 'suporte'],
-  relatorios: ['relatorios'],
-  configuracoes: ['configuracoes'],
-  acessos: ['acessos'],
-  sistema: ['sistema'],
-  promocoes: ['promocoes', 'area_vip', 'vendas'],
-  area_vip: ['area_vip'],
-};
+export type AdminModule =
+  | 'dashboard'
+  | 'cadastro'
+  | 'prestadores'
+  | 'catalogo'
+  | 'operacoes'
+  | 'demandas'
+  | 'loja'
+  | 'classificados'
+  | 'viagens'
+  | 'saude'
+  | 'seguros'
+  | 'financeiro'
+  | 'cobranca'
+  | 'fiscal'
+  | 'emprestimos'
+  | 'credito_loja'
+  | 'fidelidade'
+  | 'atendimento'
+  | 'relatorios'
+  | 'configuracoes'
+  | 'acessos'
+  | 'sistema'
+  | 'promocoes'
+  | 'area_vip';
 
-export function normalizeAdminModule(module?: string): string {
-  const value = module || 'dashboard';
+const VALID_MODULES = new Set<AdminModule>([
+  'dashboard',
+  'cadastro',
+  'prestadores',
+  'catalogo',
+  'operacoes',
+  'demandas',
+  'loja',
+  'classificados',
+  'viagens',
+  'saude',
+  'seguros',
+  'financeiro',
+  'cobranca',
+  'fiscal',
+  'emprestimos',
+  'credito_loja',
+  'fidelidade',
+  'atendimento',
+  'relatorios',
+  'configuracoes',
+  'acessos',
+  'sistema',
+  'promocoes',
+  'area_vip',
+]);
+
+/**
+ * Normaliza apenas nomes legados pertencentes ao mesmo domínio funcional.
+ * Vendas, Loja, Classificados, Viagens, Saúde e Seguros exigem concessões
+ * próprias e nunca herdam acesso uns dos outros.
+ */
+export function normalizeAdminModule(module?: string | null): AdminModule {
+  const value = String(module || 'dashboard').trim().toLowerCase();
+
   if (value === 'tickets' || value === 'suporte') return 'atendimento';
-  if (['vendas', 'orcamentos', 'servicos', 'produtos', 'assinaturas'].includes(value)) return 'operacoes';
-  if (value === 'clientes') return 'cadastro';
+  if (value === 'cadastros' || value === 'clientes') return 'cadastro';
   if (value === 'prestadores') return 'prestadores';
-  if (value === 'emprestimos' || value === 'credito_loja') return 'financeiro';
+  if (['vendas', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'os'].includes(value)) return 'operacoes';
   if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';
-  return value;
+
+  return VALID_MODULES.has(value as AdminModule) ? value as AdminModule : 'dashboard';
+}
+
+function normalizeGrantedModule(module: string): AdminModule | null {
+  const value = String(module || '').trim().toLowerCase();
+  if (!value) return null;
+
+  if (value === 'clientes' || value === 'cadastros') return 'cadastro';
+  if (value === 'prestadores') return 'prestadores';
+  if (value === 'vendas') return 'operacoes';
+  if (value === 'tickets' || value === 'suporte') return 'atendimento';
+  if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';
+
+  return VALID_MODULES.has(value as AdminModule) ? value as AdminModule : null;
+}
+
+export function normalizeGrantedAdminModules(modules: string[] | null | undefined): AdminModule[] {
+  return Array.from(new Set(
+    (modules || [])
+      .map(normalizeGrantedModule)
+      .filter((module): module is AdminModule => Boolean(module)),
+  ));
 }
 
 export function canAccessAdminModule(
@@ -49,7 +103,9 @@ export function canAccessAdminModule(
   const normalized = normalizeAdminModule(module);
   if (normalized === 'dashboard') return true;
 
-  const granted = new Set(modules.filter(Boolean));
+  const granted = new Set(normalizeGrantedAdminModules(modules));
+
+  // Cadastro de prestadores pode ser concedido isoladamente sem abrir clientes.
   if (normalized === 'cadastro' && submodule === 'prestadores') {
     return granted.has('cadastro') || granted.has('prestadores');
   }
@@ -57,13 +113,12 @@ export function canAccessAdminModule(
     return granted.has('prestadores') || granted.has('cadastro');
   }
 
-  const aliases = MODULE_ALIASES[normalized] || [normalized];
-  return aliases.some((alias) => granted.has(alias));
+  return granted.has(normalized);
 }
 
 export function adminModulePath(module: string, tab?: string, itemId?: string): string {
-  const original = module;
-  const normalized = normalizeAdminModule(module);
+  const original = String(module || 'dashboard').trim().toLowerCase();
+  const normalized = normalizeAdminModule(original);
   const parts = (...values: Array<string | undefined>) =>
     `/${values.filter(Boolean).map((value) => encodeURIComponent(value as string)).join('/')}`;
 
@@ -88,6 +143,8 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     case 'financeiro': return parts('admin', 'financeiro', tab, itemId);
     case 'cobranca': return parts('admin', 'cobranca', tab, itemId);
     case 'fiscal': return parts('admin', 'fiscal', tab, itemId);
+    case 'emprestimos': return parts('admin', 'financeiro', 'emprestimos', itemId);
+    case 'credito_loja': return parts('admin', 'financeiro', 'credito', itemId);
     case 'fidelidade': return parts('admin', 'fidelidade', tab, itemId);
     case 'atendimento': return parts('admin', 'atendimento', tab, itemId);
     case 'relatorios': return '/admin/relatorios';
