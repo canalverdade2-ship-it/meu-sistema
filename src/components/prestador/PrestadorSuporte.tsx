@@ -3,8 +3,8 @@ import { Clock, FileText, LifeBuoy, MessageSquare, Paperclip, Plus, Send, X } fr
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import { formatDateTime } from '../../lib/utils';
-import { notificationService } from '../../lib/notificationService';
-import { resolveProviderFileUrl, uploadProviderPrivateFile } from '../../lib/providerStorage';
+import { providerOperations } from '../../lib/providerOperations';
+import { removeProviderPrivateFile, resolveProviderFileUrl, uploadProviderPrivateFile } from '../../lib/providerStorage';
 import { useFileViewer } from '../../contexts/FileViewerContext';
 import { Modal } from '../ui/Modal';
 
@@ -54,7 +54,7 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
         .select('id,assunto,descricao,status,data_abertura,updated_at')
         .eq('prestador_id', prestadorId);
       if (!initialItemId) query = query.eq('status', activeTab);
-      const { data, error } = await query.order('data_abertura', { ascending: false });
+      const { data, error } = await query.order('data_abertura', { ascending: false }).limit(100);
       if (error) throw error;
       const rows = (data || []) as ProviderTicket[];
       setTickets(rows);
@@ -79,7 +79,8 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
         .from('ticket_mensagens')
         .select('id,ticket_id,autor_id,autor_nome,mensagem,anexo_url,anexo_tipo,data_envio,tipo')
         .eq('ticket_id', ticketId)
-        .order('data_envio', { ascending: true });
+        .order('data_envio', { ascending: true })
+        .limit(200);
       if (error) throw error;
       setMessages((data || []) as TicketMessage[]);
     } catch (error: any) {
@@ -123,14 +124,7 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
     if (!subject.trim() || !description.trim() || submitting) return;
     setSubmitting(true);
     try {
-      const { data, error } = await supabase.from('tickets').insert({
-        prestador_id: prestadorId,
-        assunto: subject.trim(),
-        descricao: description.trim(),
-        status: 'aberto',
-      }).select('id').single();
-      if (error) throw error;
-      await notificationService.notifyAdmin('Novo ticket de prestador', `Novo atendimento aberto: ${subject.trim()}.`, 'suporte', 'ticket_aberto_prestador', { tab: 'abertos', itemId: data?.id, contexto: { prestador_id: prestadorId } });
+      await providerOperations.createTicket(subject.trim(), description.trim());
       toast.success('Atendimento aberto com sucesso.');
       setCreateOpen(false);
       setSubject('');
@@ -158,29 +152,17 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
           maxSizeMb: 15,
         });
       }
-      const { data: provider, error: providerError } = await supabase
-        .from('prestadores')
-        .select('nome_razao')
-        .eq('id', prestadorId)
-        .single();
-      if (providerError) throw providerError;
-
-      const { error } = await supabase.from('ticket_mensagens').insert({
-        ticket_id: selectedTicket.id,
-        autor_id: prestadorId,
-        autor_nome: provider?.nome_razao || 'Prestador',
-        mensagem: newMessage.trim(),
-        anexo_url: attachmentReference,
-        anexo_tipo: attachment?.type || null,
-        tipo: 'prestador',
+      await providerOperations.sendTicketMessage({
+        ticketId: selectedTicket.id,
+        message: newMessage.trim(),
+        attachment: attachmentReference,
+        attachmentType: attachment?.type || null,
       });
-      if (error) throw error;
-
-      await notificationService.notifyAdmin('Nova mensagem de prestador', `Nova mensagem no ticket #${selectedTicket.id.slice(0, 8)}.`, 'suporte', 'ticket_mensagem_recebida', { tab: selectedTicket.status === 'aberto' ? 'abertos' : 'em andamento', itemId: selectedTicket.id });
       setNewMessage('');
       setAttachment(null);
       await loadMessages(selectedTicket.id);
     } catch (error: any) {
+      if (attachmentReference) await Promise.allSettled([removeProviderPrivateFile(attachmentReference)]);
       toast.error(error?.message || 'Não foi possível enviar a mensagem.');
     } finally {
       setSubmitting(false);
@@ -190,8 +172,7 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
   const openAttachment = async (message: TicketMessage) => {
     if (!message.anexo_url) return;
     try {
-      const url = await resolveProviderFileUrl(message.anexo_url);
-      openFile(url, `Anexo do atendimento ${message.ticket_id.slice(0, 8)}`);
+      openFile(await resolveProviderFileUrl(message.anexo_url), `Anexo do atendimento ${message.ticket_id.slice(0, 8)}`);
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível abrir o anexo.');
     }
@@ -214,11 +195,11 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
       </section>
 
       <Modal isOpen={createOpen} onClose={() => !submitting && setCreateOpen(false)} title="Novo atendimento">
-        <form onSubmit={createTicket} className="space-y-4"><Field label="Assunto" value={subject} onChange={setSubject} /><div><label className="mb-1 block text-sm font-bold">Descrição</label><textarea required value={description} onChange={(event) => setDescription(event.target.value)} className="h-32 w-full rounded-xl border border-neutral-200 p-3" /></div><button disabled={submitting} className="w-full rounded-xl bg-neutral-900 py-3 font-black text-white disabled:opacity-50">{submitting ? 'Abrindo...' : 'Abrir atendimento'}</button></form>
+        <form onSubmit={createTicket} className="space-y-4"><Field label="Assunto" value={subject} onChange={setSubject} /><div><label className="mb-1 block text-sm font-bold">Descrição</label><textarea required maxLength={4000} value={description} onChange={(event) => setDescription(event.target.value)} className="h-32 w-full rounded-xl border border-neutral-200 p-3" /></div><button disabled={submitting} className="w-full rounded-xl bg-neutral-900 py-3 font-black text-white disabled:opacity-50">{submitting ? 'Abrindo...' : 'Abrir atendimento'}</button></form>
       </Modal>
 
       <Modal isOpen={!!selectedTicket} onClose={() => !submitting && setSelectedTicket(null)} title={selectedTicket?.assunto || 'Atendimento'} size="wide">
-        {selectedTicket && <div className="flex h-[65vh] flex-col"><div className="mb-3 flex items-center justify-between rounded-xl bg-neutral-50 p-3"><span className="text-xs font-bold text-neutral-500">Ticket #{selectedTicket.id.slice(0, 8)}</span><Status status={selectedTicket.status} /></div><div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto rounded-2xl bg-neutral-50 p-4">{loadingMessages ? <p className="text-center text-sm text-neutral-400">Carregando mensagens...</p> : messages.length === 0 ? <p className="text-center text-sm text-neutral-400">Nenhuma mensagem ainda.</p> : messages.map((message) => { const own = message.tipo === 'prestador' || message.autor_id === prestadorId; return <div key={message.id} className={`flex ${own ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[85%] rounded-2xl p-3 ${own ? 'bg-indigo-600 text-white' : 'bg-white text-neutral-800 shadow-sm'}`}><p className="text-xs font-black opacity-70">{message.autor_nome || (own ? 'Prestador' : 'Atendimento')}</p>{message.mensagem && <p className="mt-1 whitespace-pre-wrap text-sm">{message.mensagem}</p>}{message.anexo_url && <button onClick={() => openAttachment(message)} className={`mt-2 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-black ${own ? 'bg-white/15 text-white' : 'bg-neutral-100 text-indigo-700'}`}><FileText className="h-4 w-4" />Abrir anexo</button>}<p className="mt-2 text-[10px] opacity-60">{formatDateTime(message.data_envio)}</p></div></div>; })}</div>{selectedTicket.status !== 'concluido' && <div className="mt-3 space-y-3"><div className="flex items-end gap-2"><button onClick={() => document.getElementById('provider-support-file')?.click()} className="rounded-xl bg-neutral-100 p-3 text-neutral-600" aria-label="Anexar arquivo"><Paperclip className="h-5 w-5" /></button><input id="provider-support-file" type="file" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} /><textarea value={newMessage} onChange={(event) => setNewMessage(event.target.value)} className="min-h-12 flex-1 rounded-xl border border-neutral-200 p-3" placeholder="Digite sua mensagem..." /><button disabled={submitting || (!newMessage.trim() && !attachment)} onClick={sendMessage} className="rounded-xl bg-indigo-600 p-3 text-white disabled:opacity-50" aria-label="Enviar mensagem"><Send className="h-5 w-5" /></button></div>{attachment && <div className="flex items-center justify-between rounded-xl bg-indigo-50 p-3 text-xs font-bold text-indigo-700"><span className="truncate">{attachment.name}</span><button onClick={() => setAttachment(null)} aria-label="Remover anexo"><X className="h-4 w-4" /></button></div>}</div>}</div>}
+        {selectedTicket && <div className="flex h-[65vh] flex-col"><div className="mb-3 flex items-center justify-between rounded-xl bg-neutral-50 p-3"><span className="text-xs font-bold text-neutral-500">Ticket #{selectedTicket.id.slice(0, 8)}</span><Status status={selectedTicket.status} /></div><div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto rounded-2xl bg-neutral-50 p-4">{loadingMessages ? <p className="text-center text-sm text-neutral-400">Carregando mensagens...</p> : messages.length === 0 ? <p className="text-center text-sm text-neutral-400">Nenhuma mensagem ainda.</p> : messages.map((message) => { const own = message.tipo === 'prestador' || message.autor_id === prestadorId; return <div key={message.id} className={`flex ${own ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[85%] rounded-2xl p-3 ${own ? 'bg-indigo-600 text-white' : 'bg-white text-neutral-800 shadow-sm'}`}><p className="text-xs font-black opacity-70">{message.autor_nome || (own ? 'Prestador' : 'Atendimento')}</p>{message.mensagem && <p className="mt-1 whitespace-pre-wrap text-sm">{message.mensagem}</p>}{message.anexo_url && <button onClick={() => openAttachment(message)} className={`mt-2 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-black ${own ? 'bg-white/15 text-white' : 'bg-neutral-100 text-indigo-700'}`}><FileText className="h-4 w-4" />Abrir anexo</button>}<p className="mt-2 text-[10px] opacity-60">{formatDateTime(message.data_envio)}</p></div></div>; })}</div>{selectedTicket.status !== 'concluido' && <div className="mt-3 space-y-3"><div className="flex items-end gap-2"><button onClick={() => document.getElementById('provider-support-file')?.click()} className="rounded-xl bg-neutral-100 p-3 text-neutral-600" aria-label="Anexar arquivo"><Paperclip className="h-5 w-5" /></button><input id="provider-support-file" type="file" className="hidden" onChange={(event) => setAttachment(event.target.files?.[0] || null)} /><textarea maxLength={4000} value={newMessage} onChange={(event) => setNewMessage(event.target.value)} className="min-h-12 flex-1 rounded-xl border border-neutral-200 p-3" placeholder="Digite sua mensagem..." /><button disabled={submitting || (!newMessage.trim() && !attachment)} onClick={sendMessage} className="rounded-xl bg-indigo-600 p-3 text-white disabled:opacity-50" aria-label="Enviar mensagem"><Send className="h-5 w-5" /></button></div>{attachment && <div className="flex items-center justify-between rounded-xl bg-indigo-50 p-3 text-xs font-bold text-indigo-700"><span className="truncate">{attachment.name}</span><button onClick={() => setAttachment(null)} aria-label="Remover anexo"><X className="h-4 w-4" /></button></div>}</div>}</div>}
       </Modal>
     </div>
   );
@@ -230,5 +211,5 @@ function Status({ status }: { status: TicketStatus }) {
 }
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <div><label className="mb-1 block text-sm font-bold">{label}</label><input required value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-xl border border-neutral-200 p-3" /></div>;
+  return <div><label className="mb-1 block text-sm font-bold">{label}</label><input required maxLength={180} value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-xl border border-neutral-200 p-3" /></div>;
 }
