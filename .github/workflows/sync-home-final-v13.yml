@@ -1,0 +1,67 @@
+name: Sync Home Final V13
+
+on:
+  pull_request:
+    branches: [agent/corrigir-home-itens-2-a-10]
+    paths: ['audit/trigger-home-final-sync.txt']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-home-final-v13
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.event.pull_request.head.ref == 'ops/trigger-home-final-sync'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-home-itens-2-a-10
+          fetch-depth: 0
+      - name: Synchronize reviewed package
+        run: bash scripts/finalize-home-sync-v13.sh | tee /tmp/home-sync-v13.log
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate final package
+        shell: bash
+        run: |
+          set -o pipefail
+          : > /tmp/home-validation-v13.log
+          for command in \
+            'npm run lint' \
+            'npm run test:admin' \
+            'npm run test:products-subscriptions' \
+            'npm run test:client-security' \
+            'npm run test:provider' \
+            'npm run test:home' \
+            'npm run test:travel' \
+            'npm run build'; do
+            echo "===== $command =====" | tee -a /tmp/home-validation-v13.log
+            set +e
+            bash -lc "$command" 2>&1 | tee -a /tmp/home-validation-v13.log
+            code=${PIPESTATUS[0]}
+            set -e
+            echo "exit_code=$code" | tee -a /tmp/home-validation-v13.log
+            if [ "$code" -ne 0 ]; then exit "$code"; fi
+          done
+      - name: Publish definitive branch
+        run: git push origin HEAD:agent/corrigir-home-itens-2-a-10
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-final-v13
+          path: |
+            /tmp/home-sync-v13.log
+            /tmp/home-validation-v13.log
+            /tmp/home-conflicts.log
+          retention-days: 7
+          if-no-files-found: ignore
