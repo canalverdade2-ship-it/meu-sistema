@@ -1,0 +1,24 @@
+=== CLIENT SERVICES ===
+ClientServicos atualizado para documentos privados.
+exit_code=0
+=== SUPPORT TICKETS ===
+Tickets de cliente, administrador e prestador atualizados para armazenamento privado.
+exit_code=0
+=== ADMIN SERVICE ORDERS ===
+/home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:16
+  if (!matches || matches.length !== 1) throw new Error(`${label}: esperado 1 trecho, encontrado ${matches?.length || 0}.`);
+                                        ^
+
+Error: Briefings privados: esperado 1 trecho, encontrado 0.
+    at replaceRegexOnce (/home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:16:47)
+    at Object.<anonymous> (/home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:26:1)
+    at Module._compile (node:internal/modules/cjs/loader:1871:14)
+    at Object..js (node:internal/modules/cjs/loader:2002:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.18.0
+exit_code=1
