@@ -5,12 +5,18 @@ CREATE INDEX IF NOT EXISTS idx_viagens_orcamentos_pacote
 
 -- Mantém o pedido de orçamento público possível, sem liberar acesso aos dados enviados.
 DROP POLICY IF EXISTS "Cliente insere orcamentos" ON public.viagens_orcamentos;
+DROP POLICY IF EXISTS "Cliente ou visitante insere orcamentos" ON public.viagens_orcamentos;
 CREATE POLICY "Cliente ou visitante insere orcamentos"
   ON public.viagens_orcamentos
   FOR INSERT
   TO anon, authenticated
   WITH CHECK (
-    (cliente_id IS NULL AND nome IS NOT NULL AND email IS NOT NULL AND telefone IS NOT NULL)
+    (
+      cliente_id IS NULL
+      AND nome IS NOT NULL
+      AND email IS NOT NULL
+      AND telefone IS NOT NULL
+    )
     OR auth.uid() IN (
       SELECT user_id
       FROM public.clientes
@@ -55,8 +61,8 @@ ON CONFLICT (id) DO UPDATE SET
   file_size_limit = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
--- O primeiro segmento do caminho é sempre o cliente_id.
--- Exemplo: <cliente_id>/<passageiro_id>/<arquivo>.
+-- O caminho de documentos deve seguir:
+-- <cliente_id>/<passageiro_id>/<arquivo>.
 DROP POLICY IF EXISTS "Cliente envia documentos de viagem" ON storage.objects;
 CREATE POLICY "Cliente envia documentos de viagem"
   ON storage.objects
@@ -67,8 +73,11 @@ CREATE POLICY "Cliente envia documentos de viagem"
     AND EXISTS (
       SELECT 1
       FROM public.clientes c
+      JOIN public.viagens_passageiros p
+        ON p.cliente_id = c.id
       WHERE c.user_id = auth.uid()
         AND c.id::text = split_part(name, '/', 1)
+        AND p.id::text = split_part(name, '/', 2)
     )
   );
 
@@ -82,8 +91,11 @@ CREATE POLICY "Cliente le documentos de viagem"
     AND EXISTS (
       SELECT 1
       FROM public.clientes c
+      JOIN public.viagens_passageiros p
+        ON p.cliente_id = c.id
       WHERE c.user_id = auth.uid()
         AND c.id::text = split_part(name, '/', 1)
+        AND p.id::text = split_part(name, '/', 2)
     )
   );
 
@@ -97,8 +109,11 @@ CREATE POLICY "Cliente remove documentos de viagem"
     AND EXISTS (
       SELECT 1
       FROM public.clientes c
+      JOIN public.viagens_passageiros p
+        ON p.cliente_id = c.id
       WHERE c.user_id = auth.uid()
         AND c.id::text = split_part(name, '/', 1)
+        AND p.id::text = split_part(name, '/', 2)
     )
   );
 
@@ -114,7 +129,10 @@ CREATE POLICY "Cliente baixa vouchers de viagem"
     AND EXISTS (
       SELECT 1
       FROM public.clientes c
+      JOIN public.viagens_transacoes t
+        ON t.cliente_id = c.id
       WHERE c.user_id = auth.uid()
         AND c.id::text = split_part(name, '/', 1)
+        AND t.id::text = split_part(name, '/', 2)
     )
   );
