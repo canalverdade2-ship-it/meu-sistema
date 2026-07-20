@@ -2,6 +2,8 @@ import { supabase } from './supabase';
 
 export const PRIVATE_DOCUMENT_BUCKET = 'gsa-private-documents';
 export const PRIVATE_DOCUMENT_PREFIX = `gsa-private://${PRIVATE_DOCUMENT_BUCKET}/`;
+export const CLIENT_DOCUMENT_BUCKET = 'documentos_cliente';
+export const CLIENT_DOCUMENT_PREFIX = `storage://${CLIENT_DOCUMENT_BUCKET}/`;
 export const MAX_PRIVATE_DOCUMENT_SIZE = 10 * 1024 * 1024;
 
 const ALLOWED_EXTENSIONS = new Set([
@@ -41,9 +43,22 @@ export interface PrivateDocumentUploadResult {
   size: number;
 }
 
+interface StorageReference {
+  bucket: string;
+  path: string;
+}
+
 const getExtension = (fileName: string) => {
   const extension = fileName.split('.').pop()?.toLowerCase();
   return extension && extension !== fileName.toLowerCase() ? extension : '';
+};
+
+const normalizeStoragePath = (path: string) => {
+  const normalized = path.replace(/^\/+/, '').replace(/\\/g, '/');
+  if (!normalized || normalized.includes('..') || normalized.includes('//')) {
+    throw new Error('Referência de arquivo inválida.');
+  }
+  return normalized;
 };
 
 export const sanitizePrivateFileName = (fileName: string) => {
@@ -76,15 +91,40 @@ export const validatePrivateDocument = (file: File) => {
 };
 
 export const buildPrivateDocumentReference = (path: string) =>
-  `${PRIVATE_DOCUMENT_PREFIX}${path.replace(/^\/+/, '')}`;
+  `${PRIVATE_DOCUMENT_PREFIX}${normalizeStoragePath(path)}`;
+
+export const buildClientDocumentReference = (path: string) =>
+  `${CLIENT_DOCUMENT_PREFIX}${normalizeStoragePath(path)}`;
 
 export const isPrivateDocumentReference = (reference?: string | null) =>
-  Boolean(reference?.startsWith(PRIVATE_DOCUMENT_PREFIX));
+  Boolean(
+    reference?.startsWith(PRIVATE_DOCUMENT_PREFIX)
+    || reference?.startsWith(CLIENT_DOCUMENT_PREFIX)
+    || reference?.includes(`/storage/v1/object/public/${CLIENT_DOCUMENT_BUCKET}/`),
+  );
 
-export const parsePrivateDocumentReference = (reference: string) => {
-  if (!isPrivateDocumentReference(reference)) return null;
-  const path = reference.slice(PRIVATE_DOCUMENT_PREFIX.length).replace(/^\/+/, '');
-  return path ? { bucket: PRIVATE_DOCUMENT_BUCKET, path } : null;
+export const parsePrivateDocumentReference = (reference: string): StorageReference | null => {
+  if (reference.startsWith(PRIVATE_DOCUMENT_PREFIX)) {
+    const path = normalizeStoragePath(reference.slice(PRIVATE_DOCUMENT_PREFIX.length));
+    return { bucket: PRIVATE_DOCUMENT_BUCKET, path };
+  }
+
+  if (reference.startsWith(CLIENT_DOCUMENT_PREFIX)) {
+    const path = normalizeStoragePath(reference.slice(CLIENT_DOCUMENT_PREFIX.length));
+    return { bucket: CLIENT_DOCUMENT_BUCKET, path };
+  }
+
+  // Compatibilidade com registros antigos que armazenaram a URL pública completa.
+  try {
+    const url = new URL(reference);
+    const marker = `/storage/v1/object/public/${CLIENT_DOCUMENT_BUCKET}/`;
+    const markerIndex = url.pathname.indexOf(marker);
+    if (markerIndex === -1) return null;
+    const path = normalizeStoragePath(decodeURIComponent(url.pathname.slice(markerIndex + marker.length)));
+    return { bucket: CLIENT_DOCUMENT_BUCKET, path };
+  } catch {
+    return null;
+  }
 };
 
 export async function uploadPrivateDocument(
