@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 
 const STORAGE_PREFIX = 'storage://';
 const PRIVATE_BUCKETS = new Set(['documentos_prestador', 'entregas_demandas']);
+const ALLOWED_EXTENSIONS = new Set(['pdf', 'jpg', 'jpeg', 'png', 'webp', 'txt', 'zip', 'doc', 'docx', 'xls', 'xlsx']);
 
 export function toStorageReference(bucket: string, path: string) {
   return `${STORAGE_PREFIX}${bucket}/${path}`;
@@ -14,13 +15,9 @@ export function parseStorageReference(reference: string) {
     const value = reference.slice(STORAGE_PREFIX.length);
     const slashIndex = value.indexOf('/');
     if (slashIndex <= 0) return null;
-    return {
-      bucket: value.slice(0, slashIndex),
-      path: value.slice(slashIndex + 1),
-    };
+    return { bucket: value.slice(0, slashIndex), path: value.slice(slashIndex + 1) };
   }
 
-  // Compatibilidade com URLs públicas antigas salvas antes dos buckets se tornarem privados.
   try {
     const parsedUrl = new URL(reference);
     const markers = ['/storage/v1/object/public/', '/storage/v1/object/sign/'];
@@ -39,7 +36,7 @@ export function parseStorageReference(reference: string) {
 
 function safeExtension(file: File) {
   const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '');
-  return extension || 'bin';
+  return extension || '';
 }
 
 export function validateProviderFile(file: File, options?: { maxSizeMb?: number; allowedMimeTypes?: string[] }) {
@@ -51,15 +48,19 @@ export function validateProviderFile(file: File, options?: { maxSizeMb?: number;
     'image/webp',
     'text/plain',
     'application/zip',
+    'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   ];
+  const extension = safeExtension(file);
 
+  if (!file.type || !allowed.includes(file.type) || !ALLOWED_EXTENSIONS.has(extension)) {
+    throw new Error(`O tipo do arquivo ${file.name} não é permitido.`);
+  }
+  if (file.size <= 0) throw new Error(`O arquivo ${file.name} está vazio.`);
   if (file.size > maxSizeMb * 1024 * 1024) {
     throw new Error(`O arquivo ${file.name} ultrapassa ${maxSizeMb} MB.`);
-  }
-  if (file.type && !allowed.includes(file.type)) {
-    throw new Error(`O tipo do arquivo ${file.name} não é permitido.`);
   }
 }
 
@@ -76,7 +77,7 @@ export async function uploadProviderPrivateFile(input: {
   const path = `${input.providerId}/${cleanScope}/${Date.now()}_${crypto.randomUUID()}.${extension}`;
   const { error } = await supabase.storage.from(input.bucket).upload(path, input.file, {
     upsert: false,
-    contentType: input.file.type || undefined,
+    contentType: input.file.type,
   });
   if (error) throw error;
   return toStorageReference(input.bucket, path);
@@ -85,9 +86,7 @@ export async function uploadProviderPrivateFile(input: {
 export async function resolveProviderFileUrl(reference: string, expiresInSeconds = 300) {
   const parsed = parseStorageReference(reference);
   if (!parsed) return reference;
-  const { data, error } = await supabase.storage
-    .from(parsed.bucket)
-    .createSignedUrl(parsed.path, expiresInSeconds);
+  const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, expiresInSeconds);
   if (error || !data?.signedUrl) throw error || new Error('Não foi possível abrir o arquivo.');
   return data.signedUrl;
 }
