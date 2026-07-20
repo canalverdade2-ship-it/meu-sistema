@@ -1,12 +1,12 @@
 name: Apply Provider Audit Fixes Main Runner
 
 on:
-  push:
-    branches: [agent/harden-provider-portal-audit]
-    paths: ['.provider-audit-fix-trigger']
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: apply-provider-audit-fixes-main-runner
@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   apply:
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]' && github.event.pull_request.head.ref == 'agent/harden-provider-portal-audit'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -27,20 +27,51 @@ jobs:
           node-version: 22
           cache: npm
       - name: Apply reviewed corrections
-        run: python scripts/apply-provider-audit-fixes.py
+        id: patch
+        shell: bash
+        run: |
+          set +e
+          python scripts/apply-provider-audit-fixes.py > provider-patch.log 2>&1
+          status=$?
+          cat provider-patch.log
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Publish patch diagnostic
+        if: steps.patch.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo '## Falha ao aplicar correções do Painel do Prestador'
+            echo
+            echo "Commit: $GITHUB_SHA"
+            echo '```text'
+            sed -n '1,240p' provider-patch.log
+            echo '```'
+          } > provider-patch-report.md
+          gh issue create --title 'Diagnóstico correção Painel do Prestador' --body-file provider-patch-report.md
+      - name: Enforce patch result
+        if: steps.patch.outputs.status != '0'
+        run: exit 1
       - name: Install dependencies
+        if: steps.patch.outputs.status == '0'
         run: npm ci
       - name: Validate TypeScript
+        if: steps.patch.outputs.status == '0'
         run: npm run lint
       - name: Validate provider security contracts
+        if: steps.patch.outputs.status == '0'
         run: npm run test:provider
       - name: Build production bundle
+        if: steps.patch.outputs.status == '0'
         run: npm run build
       - name: Publish definitive correction commit
+        if: steps.patch.outputs.status == '0'
         run: |
           rm -f scripts/apply-provider-audit-fixes.py
           rm -f .github/workflows/apply-provider-audit-fixes.yml
           rm -f .provider-audit-fix-trigger
+          rm -f provider-patch.log
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
