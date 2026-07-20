@@ -22,6 +22,14 @@ const DOCUMENT_BUCKET = 'viagens-documentos';
 const VOUCHER_BUCKET = 'viagens-vouchers';
 const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024;
 const ALLOWED_DOCUMENT_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const DOCUMENT_EDITABLE_STATUSES = [
+  'pendente',
+  'pagamento_confirmado',
+  'compra_fornecedor_pendente',
+  'compra_fornecedor_em_andamento',
+  'pacote_adquirido',
+  'emissao_em_andamento',
+];
 
 const statusLabels: Record<string, string> = {
   pendente: 'Aguardando pagamento',
@@ -61,7 +69,9 @@ export function TravelReservationPage({
   const [showPassengerForm, setShowPassengerForm] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [savingPassenger, setSavingPassenger] = useState(false);
+  const [deletingPassengerId, setDeletingPassengerId] = useState<string | null>(null);
   const [uploadingPassengerId, setUploadingPassengerId] = useState<string | null>(null);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
   const [downloadingVoucherId, setDownloadingVoucherId] = useState<string | null>(null);
   const [passengerForm, setPassengerForm] = useState({
     nome_completo: '',
@@ -70,6 +80,15 @@ export function TravelReservationPage({
     tipo_documento: 'RG',
     tipo_passageiro: 'adulto',
   });
+
+  const expectedPassengerCount = Math.max(
+    Number(trip?.viagens_propostas?.quantidade_passageiros) || 1,
+    1,
+  );
+  const canEditPassengers = trip?.status === 'pendente';
+  const canManageDocuments = DOCUMENT_EDITABLE_STATUSES.includes(String(trip?.status || ''));
+  const passengerCountComplete = passageiros.length === expectedPassengerCount;
+  const canAddPassenger = canEditPassengers && passageiros.length < expectedPassengerCount;
 
   useEffect(() => {
     fetchTripDetails();
@@ -85,6 +104,7 @@ export function TravelReservationPage({
           viagens_propostas (
             id,
             snapshot_completo,
+            quantidade_passageiros,
             viagens_passageiros (
               id,
               nome_completo,
@@ -127,8 +147,29 @@ export function TravelReservationPage({
     }
   };
 
+  const handleOpenPassengerForm = () => {
+    if (!canEditPassengers) {
+      toast.error('Os passageiros não podem mais ser alterados após o pagamento.');
+      return;
+    }
+    if (passageiros.length >= expectedPassengerCount) {
+      toast.error(`A proposta permite exatamente ${expectedPassengerCount} passageiro(s).`);
+      return;
+    }
+    setShowPassengerForm((value) => !value);
+  };
+
   const handleSavePassenger = async () => {
     if (!trip?.viagens_propostas?.id) return;
+    if (!canEditPassengers) {
+      toast.error('Os passageiros não podem mais ser alterados após o pagamento.');
+      return;
+    }
+    if (passageiros.length >= expectedPassengerCount) {
+      toast.error(`A proposta permite exatamente ${expectedPassengerCount} passageiro(s).`);
+      setShowPassengerForm(false);
+      return;
+    }
     if (
       !passengerForm.nome_completo.trim() ||
       !passengerForm.data_nascimento ||
@@ -170,8 +211,41 @@ export function TravelReservationPage({
     }
   };
 
+  const handleDeletePassenger = async (passenger: any) => {
+    if (!canEditPassengers) {
+      toast.error('Os passageiros não podem mais ser alterados após o pagamento.');
+      return;
+    }
+    if ((passenger.viagens_passageiro_documentos || []).length > 0) {
+      toast.error('Remova os documentos deste passageiro antes de excluí-lo.');
+      return;
+    }
+
+    try {
+      setDeletingPassengerId(passenger.id);
+      const { error } = await supabase
+        .from('viagens_passageiros')
+        .delete()
+        .eq('id', passenger.id)
+        .eq('cliente_id', clientId);
+
+      if (error) throw error;
+      toast.success('Passageiro removido.');
+      await fetchTripDetails();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.message || 'Não foi possível remover o passageiro.');
+    } finally {
+      setDeletingPassengerId(null);
+    }
+  };
+
   const handleDocumentUpload = async (passengerId: string, file?: File) => {
     if (!file) return;
+    if (!canManageDocuments) {
+      toast.error('Os documentos desta viagem não podem mais ser alterados.');
+      return;
+    }
     if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) {
       toast.error('Envie um arquivo PDF, JPG, PNG ou WEBP.');
       return;
@@ -222,23 +296,27 @@ export function TravelReservationPage({
   };
 
   const handleDeleteDocument = async (document: any) => {
+    if (!canManageDocuments) {
+      toast.error('Os documentos desta viagem não podem mais ser alterados.');
+      return;
+    }
+
     try {
-      const { error: storageError } = await supabase.storage
+      setDeletingDocumentId(document.id);
+      const { error } = await supabase.storage
         .from(DOCUMENT_BUCKET)
         .remove([document.storage_path]);
-      if (storageError) throw storageError;
 
-      const { error: metadataError } = await supabase
-        .from('viagens_passageiro_documentos')
-        .delete()
-        .eq('id', document.id);
-      if (metadataError) throw metadataError;
+      if (error) throw error;
 
+      // O trigger do banco remove o metadado na mesma operação do Storage.
       toast.success('Documento removido.');
       await fetchTripDetails();
     } catch (error: any) {
       console.error(error);
       toast.error(error?.message || 'Não foi possível remover o documento.');
+    } finally {
+      setDeletingDocumentId(null);
     }
   };
 
@@ -261,8 +339,10 @@ export function TravelReservationPage({
   };
 
   const handleCheckout = () => {
-    if (passageiros.length === 0) {
-      toast.error('É obrigatório preencher pelo menos um passageiro.');
+    if (!passengerCountComplete) {
+      toast.error(
+        `Cadastre exatamente ${expectedPassengerCount} passageiro(s). Atualmente: ${passageiros.length}.`,
+      );
       return;
     }
     setShowCheckout(true);
@@ -316,18 +396,32 @@ export function TravelReservationPage({
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             <section className="rounded-3xl border border-black/5 bg-white p-6 shadow-sm sm:p-8">
-              <div className="mb-6 flex items-center justify-between gap-4">
-                <h2 className="flex items-center gap-2 text-xl font-black text-[#0c2340]"><Users className="h-5 w-5" /> Passageiros</h2>
-                <button onClick={() => setShowPassengerForm((value) => !value)} className="text-sm font-bold text-[#168ac1] hover:text-[#0c2340]">
-                  + Adicionar passageiro
-                </button>
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h2 className="flex items-center gap-2 text-xl font-black text-[#0c2340]"><Users className="h-5 w-5" /> Passageiros</h2>
+                  <p className="mt-1 text-xs font-medium text-neutral-500">
+                    {passageiros.length} de {expectedPassengerCount} cadastrado(s)
+                  </p>
+                </div>
+                {canAddPassenger && (
+                  <button onClick={handleOpenPassengerForm} className="text-sm font-bold text-[#168ac1] hover:text-[#0c2340]">
+                    + Adicionar passageiro
+                  </button>
+                )}
               </div>
+
+              {!canEditPassengers && (
+                <div className="mb-5 flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                  <Lock className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" />
+                  <p className="text-xs font-medium text-neutral-600">A lista de passageiros foi bloqueada após o pagamento.</p>
+                </div>
+              )}
 
               {passageiros.length === 0 ? (
                 <div className="rounded-2xl border border-neutral-100 bg-neutral-50 p-8 text-center">
                   <AlertCircle className="mx-auto mb-3 h-10 w-10 text-neutral-400" />
                   <p className="font-medium text-neutral-500">Nenhum passageiro adicionado.</p>
-                  <p className="mt-1 text-xs text-neutral-400">Cadastre os viajantes antes de realizar o pagamento.</p>
+                  <p className="mt-1 text-xs text-neutral-400">Cadastre exatamente {expectedPassengerCount} viajante(s) antes do pagamento.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -340,21 +434,35 @@ export function TravelReservationPage({
                             <h3 className="font-bold text-[#1a1a1a]">{passenger.nome_completo}</h3>
                             <p className="text-sm text-neutral-500">{passenger.tipo_documento}: {passenger.numero_documento}</p>
                           </div>
-                          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#0c2340]/10 bg-white px-3 py-2 text-xs font-bold text-[#0c2340] hover:border-[#168ac1]">
-                            {uploadingPassengerId === passenger.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                            {uploadingPassengerId === passenger.id ? 'Enviando...' : 'Anexar documento'}
-                            <input
-                              type="file"
-                              accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
-                              disabled={uploadingPassengerId === passenger.id}
-                              onChange={(event) => {
-                                const file = event.target.files?.[0];
-                                event.target.value = '';
-                                handleDocumentUpload(passenger.id, file);
-                              }}
-                              className="hidden"
-                            />
-                          </label>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {canManageDocuments && (
+                              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#0c2340]/10 bg-white px-3 py-2 text-xs font-bold text-[#0c2340] hover:border-[#168ac1]">
+                                {uploadingPassengerId === passenger.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                                {uploadingPassengerId === passenger.id ? 'Enviando...' : 'Anexar documento'}
+                                <input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                                  disabled={uploadingPassengerId === passenger.id}
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    event.target.value = '';
+                                    handleDocumentUpload(passenger.id, file);
+                                  }}
+                                  className="hidden"
+                                />
+                              </label>
+                            )}
+                            {canEditPassengers && (
+                              <button
+                                onClick={() => handleDeletePassenger(passenger)}
+                                disabled={deletingPassengerId === passenger.id}
+                                aria-label={`Remover ${passenger.nome_completo}`}
+                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-100 bg-white text-red-500 hover:bg-red-50 disabled:opacity-50"
+                              >
+                                {deletingPassengerId === passenger.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         {documents.length > 0 && (
@@ -366,9 +474,16 @@ export function TravelReservationPage({
                                   <span className="truncate font-bold text-neutral-700">{document.file_name}</span>
                                   {document.verificado && <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />}
                                 </div>
-                                <button onClick={() => handleDeleteDocument(document)} aria-label="Remover documento" className="text-neutral-400 hover:text-red-500">
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
+                                {canManageDocuments && (
+                                  <button
+                                    onClick={() => handleDeleteDocument(document)}
+                                    disabled={deletingDocumentId === document.id}
+                                    aria-label="Remover documento"
+                                    className="text-neutral-400 hover:text-red-500 disabled:opacity-50"
+                                  >
+                                    {deletingDocumentId === document.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                  </button>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -380,7 +495,7 @@ export function TravelReservationPage({
               )}
             </section>
 
-            {showPassengerForm && (
+            {showPassengerForm && canAddPassenger && (
               <motion.section initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-3xl border border-[#38bdf8]/30 bg-white p-6 shadow-sm sm:p-8">
                 <h2 className="mb-4 font-black text-[#0c2340]">Novo passageiro</h2>
                 <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -429,6 +544,7 @@ export function TravelReservationPage({
               <h2 className="mb-6 text-xl font-black text-[#0c2340]">Resumo financeiro</h2>
               <div className="mb-6 space-y-4">
                 <div className="flex justify-between text-sm"><span className="text-neutral-500">Valor do pacote</span><span className="font-bold text-[#1a1a1a]">{formatCurrency(trip.valor_pago)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-neutral-500">Passageiros</span><span className="font-bold text-[#1a1a1a]">{passageiros.length}/{expectedPassengerCount}</span></div>
                 <div className="flex justify-between text-sm"><span className="text-neutral-500">Taxas de emissão</span><span className="font-bold text-emerald-600">Inclusas</span></div>
                 <div className="h-px bg-neutral-100" />
                 <div className="flex justify-between text-lg"><span className="font-black text-[#0c2340]">Total</span><span className="font-black text-[#0c2340]">{formatCurrency(trip.valor_pago)}</span></div>
@@ -438,9 +554,9 @@ export function TravelReservationPage({
                 <>
                   <div className="mb-6 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
                     <Lock className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
-                    <p className="text-xs font-medium text-blue-800">Pagamento seguro pelo Checkout GSA. Cadastre pelo menos um passageiro antes de continuar.</p>
+                    <p className="text-xs font-medium text-blue-800">Pagamento seguro pelo Checkout GSA. Cadastre exatamente {expectedPassengerCount} passageiro(s) antes de continuar.</p>
                   </div>
-                  <button onClick={handleCheckout} disabled={passageiros.length === 0} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0c2340] py-4 font-black text-white shadow-lg transition hover:bg-[#134e78] disabled:cursor-not-allowed disabled:opacity-50">
+                  <button onClick={handleCheckout} disabled={!passengerCountComplete} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0c2340] py-4 font-black text-white shadow-lg transition hover:bg-[#134e78] disabled:cursor-not-allowed disabled:opacity-50">
                     <CreditCard className="h-5 w-5" /> Ir para pagamento
                   </button>
                 </>

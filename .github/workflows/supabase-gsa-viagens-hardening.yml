@@ -1,0 +1,114 @@
+name: Deploy GSA Viagens Hardening
+
+on:
+  push:
+    branches: [ops/deploy-gsa-viagens-hardening-production]
+    paths:
+      - '.gsa-hardening-trigger'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: deploy-gsa-viagens-hardening-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy GSA Viagens Hardening
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate deployment authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          grep -Fxq 'APPLY_GSA_VIAGENS_HARDENING_20260720' .gsa-hardening-trigger
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link authorized project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Build atomic hardening bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20260720140000_gsa_viagens_hardening.sql
+            echo 'COMMIT;'
+          } > gsa-viagens-hardening-production.sql
+
+      - name: Apply hardening atomically
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file gsa-viagens-hardening-production.sql \
+            2>&1 | tee gsa-hardening-deployment.log
+
+      - name: Verify hardening
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file scripts/gsa-viagens-hardening-verify.sql \
+            2>&1 | tee gsa-hardening-verification.log
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-viagens-hardening-evidence
+          path: |
+            gsa-hardening-deployment.log
+            gsa-hardening-verification.log
+          retention-days: 30
+
+      - name: Publish private deployment report
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          touch gsa-hardening-deployment.log gsa-hardening-verification.log
+          {
+            echo '# Hardening do GSA Viagens'
+            echo
+            echo "- Projeto: \`$EXPECTED_PROJECT_ID\`"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Resultado: **$JOB_STATUS**"
+            echo
+            echo '## Aplicação'
+            echo '```text'
+            sed -n '1,220p' gsa-hardening-deployment.log
+            echo '```'
+            echo
+            echo '## Verificação'
+            echo '```text'
+            sed -n '1,260p' gsa-hardening-verification.log
+            echo '```'
+          } > gsa-hardening-report.md
+
+          gh issue create \
+            --title "Hardening GSA Viagens - $JOB_STATUS" \
+            --body-file gsa-hardening-report.md
