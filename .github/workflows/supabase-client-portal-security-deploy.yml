@@ -12,9 +12,11 @@ on:
       - 'supabase/migrations/20260720204000_harden_client_operational_permissions.sql'
       - 'supabase/migrations/20260720205000_optional_client_block_state_compat.sql'
       - '.github/workflows/supabase-client-portal-security-deploy.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: deploy-client-portal-security-production
@@ -51,7 +53,34 @@ jobs:
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
+      - name: Check current migration history
+        id: history
+        shell: bash
+        run: |
+          set +e
+          supabase migration list --linked > client-portal-security-migration-before.log 2>&1
+          list_status=$?
+          all_applied=true
+          if [ "$list_status" -ne 0 ]; then
+            all_applied=false
+          else
+            for version in \
+              20260720200600 \
+              20260720201000 \
+              20260720201100 \
+              20260720202000 \
+              20260720203000 \
+              20260720204000 \
+              20260720205000; do
+              grep -q "$version" client-portal-security-migration-before.log || all_applied=false
+            done
+          fi
+          echo "all_applied=$all_applied" >> "$GITHUB_OUTPUT"
+          cat client-portal-security-migration-before.log
+          exit 0
+
       - name: Build atomic production bundle
+        if: steps.history.outputs.all_applied != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -68,6 +97,7 @@ jobs:
           } > client-portal-security-production.sql
 
       - name: Apply migrations permanently
+        if: steps.history.outputs.all_applied != 'true'
         shell: bash
         run: |
           set -o pipefail
@@ -76,6 +106,7 @@ jobs:
             2>&1 | tee client-portal-security-deployment.log
 
       - name: Record migration history
+        if: steps.history.outputs.all_applied != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -121,9 +152,47 @@ jobs:
         with:
           name: client-portal-security-production-evidence
           path: |
+            client-portal-security-migration-before.log
             client-portal-security-deployment.log
             client-portal-security-migration-repair.log
             client-portal-security-verification.log
             client-portal-security-migration-list.log
           retention-days: 30
           if-no-files-found: ignore
+
+      - name: Publish deployment report
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+          ALREADY_APPLIED: ${{ steps.history.outputs.all_applied }}
+        run: |
+          touch \
+            client-portal-security-migration-before.log \
+            client-portal-security-deployment.log \
+            client-portal-security-migration-repair.log \
+            client-portal-security-verification.log \
+            client-portal-security-migration-list.log
+          {
+            echo '# Deploy definitivo do painel do cliente'
+            echo
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Resultado: **$JOB_STATUS**"
+            echo "- Migrações já estavam registradas: **$ALREADY_APPLIED**"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo '## Verificação dos contratos'
+            echo '```text'
+            tail -n 160 client-portal-security-verification.log
+            echo '```'
+            echo
+            echo '## Histórico das migrações'
+            echo '```text'
+            tail -n 160 client-portal-security-migration-list.log
+            echo '```'
+          } > client-portal-security-deployment-report.md
+
+          gh issue create \
+            --title "Deploy painel do cliente - $JOB_STATUS - $GITHUB_SHA" \
+            --body-file client-portal-security-deployment-report.md
