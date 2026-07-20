@@ -32,11 +32,31 @@ jobs:
 
           python <<'PY'
           from pathlib import Path
+
           script_path = Path('/tmp/apply-interfaces.py')
-          lines = script_path.read_text(encoding='utf-8').splitlines(keepends=True)
-          # As exclusões individuais são aplicadas por um patch estrutural logo depois.
-          lines = lines[:251] + lines[262:407] + lines[417:]
-          script_path.write_text(''.join(lines), encoding='utf-8')
+          script = script_path.read_text(encoding='utf-8')
+
+          product_start_marker = '# exclusão individual vira inativação'
+          product_end_marker = '# ---------------------------------------------------------------------------\n# AssinaturasModule'
+          product_start = script.find(product_start_marker)
+          product_end = script.find(product_end_marker, product_start)
+          if product_start < 0 or product_end < 0:
+              raise RuntimeError('Bloco temporário de exclusão de produto não localizado.')
+          script = script[:product_start] + script[product_end:]
+
+          subscription_needle = (
+              "replace_once(\n"
+              "    'src/components/admin/AssinaturasModule.tsx',\n"
+              "    \"                       const { error } = await supabase.from('assinaturas').delete()"
+          )
+          subscription_start = script.find(subscription_needle)
+          subscription_end_marker = '# ---------------------------------------------------------------------------\n# OrdensCompraModule'
+          subscription_end = script.find(subscription_end_marker, subscription_start)
+          if subscription_start < 0 or subscription_end < 0:
+              raise RuntimeError('Bloco temporário de exclusão de assinatura não localizado.')
+          script = script[:subscription_start] + script[subscription_end:]
+
+          script_path.write_text(script, encoding='utf-8')
           PY
 
           python /tmp/apply-interfaces.py 2>&1 | tee /tmp/apply-products-subscriptions.log
