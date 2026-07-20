@@ -16,44 +16,137 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Validate trigger
-        run: grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V1' .sync-home-current-main-trigger
-      - name: Merge current main
-        id: merge
+        run: grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V2' .sync-home-current-main-trigger
+      - name: Merge current main and resolve reviewed overlaps
         shell: bash
         run: |
-          set +e
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git fetch origin main
+          set +e
           git merge origin/main --no-edit > merge.log 2>&1
-          code=$?
-          if [ "$code" -ne 0 ]; then
-            git diff --name-only --diff-filter=U > conflicts.log
+          merge_code=$?
+          set -e
+          if [ "$merge_code" -ne 0 ]; then
+            git diff --name-only --diff-filter=U | sort > conflicts.log
+            printf '%s\n' src/App.tsx src/components/auth/RestrictedAccessModal.tsx | sort > expected.log
+            diff -u expected.log conflicts.log
+            git checkout --theirs src/App.tsx
+            git checkout --ours src/components/auth/RestrictedAccessModal.tsx
+            python - <<'PY'
+          from pathlib import Path
+          import re
+
+          app_path = Path('src/App.tsx')
+          app = app_path.read_text()
+          app = app.replace("import { useState, useEffect } from 'react';", "import { lazy, Suspense, useEffect, useState } from 'react';")
+          for line in [
+              "import { SecureAdminPanel } from './pages/SecureAdminPanel';\n",
+              "import { ClientPortal } from './pages/ClientPortal';\n",
+              "import { PrestadorDashboard } from './pages/Prestador/PrestadorDashboard';\n",
+              "import { MarketplaceGSAStore } from './components/client/marketplace/MarketplaceGSAStore';\n",
+          ]:
+              app = app.replace(line, '')
+          marker = "import { isRouteAllowed } from './routing/routeSecurity';\n"
+          assert marker in app
+          app = app.replace(marker, marker + "import { readSafeReturnTo } from './routing/safeReturnTo';\n")
+          marker = "const queryClient = new QueryClient();\n"
+          lazy_block = """
+          const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((module) => ({ default: module.SecureAdminPanel })));
+          const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
+          const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
+          const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore').then((module) => ({ default: module.MarketplaceGSAStore })));
+
+          function RouteLoading() {
+            return <div className="flex min-h-[50vh] items-center justify-center bg-neutral-50 text-sm font-semibold text-neutral-600" role="status">Carregando ambiente...</div>;
+          }
+          """
+          assert marker in app
+          app = app.replace(marker, marker + lazy_block)
+
+          app = re.sub(
+              r"  const handleLoginClient = \(clientId: string, isRecovery: boolean = false\) => \{.*?\n  \};\n\n  const handleLoginAdmin",
+              """  const handleLoginClient = (clientId: string, isRecovery: boolean = false) => {
+              setSession({ clientId });
+              const returnTo = readSafeReturnTo(window.location.search, ['/cliente', '/marketplace']);
+              if (isRecovery) replace('/cliente/perfil?modal=alterar-senha&origem=recuperacao');
+              else replace(returnTo || routes.client.dashboard());
+            };
+
+            const handleLoginAdmin""",
+              app,
+              flags=re.S,
+              count=1,
+          )
+          app = re.sub(
+              r"  const handleLoginAdmin = \(adminDetails: \{ type: 'admin' \| 'colaborador', id\?: string, nome\?: string, modulos\?: string\[\] \}\) => \{.*?\n  \};\n\n  const handleLoginPrestador",
+              """  const handleLoginAdmin = (adminDetails: { type: 'admin' | 'colaborador', id?: string, nome?: string, modulos?: string[] }) => {
+              setSession({
+                adminAuth: true,
+                adminType: adminDetails.type,
+                colaboradorId: adminDetails.id,
+                colaboradorNome: adminDetails.nome,
+                colaboradorModulos: adminDetails.modulos,
+              });
+              const returnTo = readSafeReturnTo(window.location.search, ['/admin']);
+              replace(returnTo || defaultAdminPath(adminDetails.type, adminDetails.modulos || []));
+            };
+
+            const handleLoginPrestador""",
+              app,
+              flags=re.S,
+              count=1,
+          )
+          app = re.sub(
+              r"  const handleLoginPrestador = \(prestadorId: string\) => \{.*?\n  \};",
+              """  const handleLoginPrestador = (prestadorId: string) => {
+              setSession({ prestadorId });
+              const returnTo = readSafeReturnTo(window.location.search, ['/prestador']);
+              replace(returnTo || routes.provider.dashboard());
+            };""",
+              app,
+              flags=re.S,
+              count=1,
+          )
+          public_page = "              initialPublicPage={route.module === 'services' ? 'services' : route.module === 'systems' ? 'systems' : 'home'}\n"
+          assert public_page in app
+          app = app.replace(public_page, public_page + "              initialServiceSlug={route.module === 'services' ? route.itemId : undefined}\n              onServiceDetailChange={(slug) => navigate(slug ? routes.public.serviceDetail(slug) : routes.public.services())}\n", 1)
+          div_marker = '        <div className="min-h-screen bg-[#f8f7f5] font-sans text-neutral-900">'
+          assert div_marker in app
+          app = app.replace(div_marker, div_marker + '\n          <Suspense fallback={<RouteLoading />}>', 1)
+          floating_marker = '          {/* Elementos flutuantes adicionais */}'
+          assert floating_marker in app
+          app = app.replace(floating_marker, '          </Suspense>\n\n' + floating_marker, 1)
+          app_path.write_text(app)
+
+          modal_path = Path('src/components/auth/RestrictedAccessModal.tsx')
+          modal = modal_path.read_text()
+          modal = modal.replace(
+              "onLoginAdmin: (details: { type: 'admin' | 'colaborador'; id?: string; modulos?: string[] }) => void;",
+              "onLoginAdmin: (details: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => void;",
+          )
+          modal = modal.replace(
+              "onLoginAdmin({ type: 'colaborador', id: data.id, modulos: data.modulos || [] });",
+              "onLoginAdmin({ type: 'colaborador', id: data.id, nome: data.nome, modulos: data.modulos || [] });",
+          )
+          modal_path.write_text(modal)
+          PY
+            git add src/App.tsx src/components/auth/RestrictedAccessModal.tsx
+            git commit --no-edit
           fi
-          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          exit 0
-      - name: Report conflicts
-        if: steps.merge.outputs.exit_code != '0'
-        env: { GH_TOKEN: '${{ github.token }}' }
-        run: |
-          { echo '## Falha na sincronização final da Home'; echo; echo "Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; echo '### Conflitos'; echo '```text'; cat conflicts.log; echo '```'; echo '### Log'; echo '```text'; cat merge.log; echo '```'; } > failure.md
-          gh issue create --title 'Conflitos na integração final da Home' --body-file failure.md
-          exit 1
       - name: Remove temporary executor
-        if: steps.merge.outputs.exit_code == '0'
         run: |
           git rm .github/workflows/sync-home-current-main.yml .sync-home-current-main-trigger
           git commit -m 'Remover sincronização temporária da Home'
       - name: Install dependencies
-        if: steps.merge.outputs.exit_code == '0'
         run: npm ci
       - name: Validate final branch
-        if: steps.merge.outputs.exit_code == '0'
         run: |
           npm run lint
           npm run test:admin
@@ -63,5 +156,4 @@ jobs:
           npm run test:travel
           npm run build
       - name: Push final branch
-        if: steps.merge.outputs.exit_code == '0'
         run: git push origin HEAD:agent/corrigir-home-itens-2-a-10
