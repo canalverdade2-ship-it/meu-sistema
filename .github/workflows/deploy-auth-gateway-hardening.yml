@@ -1,0 +1,204 @@
+name: Deploy Auth Gateway Hardening
+
+on:
+  push:
+    branches:
+      - ops/deploy-auth-gateway-20260720
+    paths:
+      - '.github/workflows/deploy-auth-gateway-hardening.yml'
+      - '.auth-gateway-deploy-trigger'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-auth-gateway-hardening
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      ALLOWED_ORIGINS: http://10.0.2.189:3000,http://localhost:3000,http://127.0.0.1:3000
+
+    steps:
+      - name: Checkout deployment branch
+        uses: actions/checkout@v4
+        with:
+          ref: ops/deploy-auth-gateway-20260720
+          fetch-depth: 0
+
+      - name: Validate authorization and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          test -f supabase/migrations/20260720193000_auth_gateway_rate_limit.sql
+          test -f supabase/functions/gsa-auth-session/index.ts
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link authorized project
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase link --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee link.log
+
+      - name: Configure allowed development origins
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase secrets set \
+            ALLOWED_ORIGINS="$ALLOWED_ORIGINS" \
+            --project-ref "$SUPABASE_PROJECT_ID" \
+            2>&1 | tee secrets.log
+
+      - name: Apply rate-limit migration atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20260720193000_auth_gateway_rate_limit.sql
+            echo 'COMMIT;'
+          } > auth-gateway-rate-limit-production.sql
+
+          set -o pipefail
+          supabase db query --linked \
+            --file auth-gateway-rate-limit-production.sql \
+            2>&1 | tee migration-apply.log
+
+          supabase migration list --linked 2>&1 | tee migration-list.log
+          if ! grep -E '20260720193000.*20260720193000' migration-list.log >/dev/null; then
+            supabase migration repair 20260720193000 \
+              --status applied \
+              --linked \
+              2>&1 | tee migration-repair.log
+          else
+            echo 'Migration history already recorded.' | tee migration-repair.log
+          fi
+
+      - name: Verify database hardening
+        shell: bash
+        run: |
+          cat > verify-auth-gateway.sql <<'SQL'
+          DO $verify$
+          BEGIN
+            IF to_regclass('public.gsa_auth_rate_limits') IS NULL THEN
+              RAISE EXCEPTION 'gsa_auth_rate_limits table is missing';
+            END IF;
+
+            IF to_regprocedure('public.gsa_auth_rate_limit_check(text,integer,integer,integer)') IS NULL THEN
+              RAISE EXCEPTION 'gsa_auth_rate_limit_check function is missing';
+            END IF;
+
+            IF has_function_privilege('anon', 'public.gsa_auth_rate_limit_check(text,integer,integer,integer)', 'EXECUTE')
+               OR has_function_privilege('authenticated', 'public.gsa_auth_rate_limit_check(text,integer,integer,integer)', 'EXECUTE')
+               OR NOT has_function_privilege('service_role', 'public.gsa_auth_rate_limit_check(text,integer,integer,integer)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Unexpected rate-limit function permissions';
+            END IF;
+          END;
+          $verify$;
+          SQL
+
+          set -o pipefail
+          supabase db query --linked \
+            --file verify-auth-gateway.sql \
+            2>&1 | tee migration-verify.log
+
+      - name: Deploy public authentication gateway
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase functions deploy gsa-auth-session \
+            --project-ref "$SUPABASE_PROJECT_ID" \
+            --no-verify-jwt \
+            2>&1 | tee function-deploy.log
+
+      - name: Verify deployed CORS policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          function_url="https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/gsa-auth-session"
+          : > cors-verify.log
+
+          for origin in \
+            'http://10.0.2.189:3000' \
+            'http://localhost:3000' \
+            'http://127.0.0.1:3000'; do
+            headers="$(mktemp)"
+            status="$(curl -sS -D "$headers" -o /dev/null -w '%{http_code}' \
+              -X OPTIONS "$function_url" \
+              -H "Origin: $origin" \
+              -H 'Access-Control-Request-Method: POST')"
+            echo "$origin -> $status" | tee -a cors-verify.log
+            test "$status" = '204'
+            grep -Fqi "access-control-allow-origin: $origin" "$headers"
+          done
+
+          blocked_status="$(curl -sS -o blocked-origin.json -w '%{http_code}' \
+            -X OPTIONS "$function_url" \
+            -H 'Origin: https://blocked.example' \
+            -H 'Access-Control-Request-Method: POST')"
+          echo "https://blocked.example -> $blocked_status" | tee -a cors-verify.log
+          test "$blocked_status" = '403'
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-gateway-deployment-evidence
+          path: |
+            link.log
+            secrets.log
+            migration-apply.log
+            migration-list.log
+            migration-repair.log
+            migration-verify.log
+            function-deploy.log
+            cors-verify.log
+            blocked-origin.json
+          retention-days: 30
+
+      - name: Publish deployment report
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-reports
+          report="deployment-reports/auth-gateway-20260720.md"
+          {
+            echo '# Auth Gateway deployment'
+            echo
+            echo "- Status: **$JOB_STATUS**"
+            echo "- Project: \`$EXPECTED_PROJECT_ID\`"
+            echo "- Source commit: \`$GITHUB_SHA\`"
+            echo "- Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Allowed origins: \`$ALLOWED_ORIGINS\`"
+            echo
+            for file in link.log secrets.log migration-apply.log migration-repair.log migration-verify.log function-deploy.log cors-verify.log; do
+              echo "## $file"
+              echo '```text'
+              sed -n '1,220p' "$file" 2>/dev/null || true
+              echo '```'
+              echo
+            done
+          } > "$report"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$report"
+          git commit -m "Registrar resultado da implantação do gateway" || true
+          git push origin HEAD:ops/deploy-auth-gateway-20260720
