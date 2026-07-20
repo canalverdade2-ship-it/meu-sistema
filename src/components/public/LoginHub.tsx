@@ -19,7 +19,7 @@ export function LoginHub({ onBack, onClientLogin, onClientRegister, onRestricted
     <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#fff7e6_0%,#f8f7f5_40%,#f2efe8_100%)] px-4 py-8">
       <div className="w-full max-w-5xl">
         <div className="mb-6 flex items-center justify-between gap-4">
-          <button type="button" onClick={onBack} className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-black text-neutral-700 shadow-sm hover:border-[#d8bd73]">Voltar</button>
+          <button type="button" onClick={onBack} className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-black text-neutral-700 shadow-sm hover:border-[#d8bd73] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]">Voltar</button>
           <LogoGSA size="md" variant="dark" />
         </div>
 
@@ -34,14 +34,14 @@ export function LoginHub({ onBack, onClientLogin, onClientRegister, onRestricted
 
             <div className="bg-[#fbfaf7] p-5 sm:p-8">
               <div className="grid gap-4 sm:grid-cols-2">
-                <motion.button {...cardAnimation} transition={{ delay: 0.05 }} type="button" onClick={onClientLogin} className="group relative min-h-[150px] rounded-[1.5rem] border border-[#d8bd73]/55 bg-white p-5 text-left shadow-lg transition hover:-translate-y-0.5 hover:border-[#c19a43]">
+                <motion.button {...cardAnimation} transition={{ delay: 0.05 }} type="button" onClick={onClientLogin} className="group relative min-h-[150px] rounded-[1.5rem] border border-[#d8bd73]/55 bg-white p-5 text-left shadow-lg transition hover:-translate-y-0.5 hover:border-[#c19a43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]">
                   <Users className="h-10 w-10 text-[#8a651f]" />
                   <h2 className="mt-5 text-xl font-black text-[#142030]">Área do Cliente</h2>
                   <p className="mt-2 text-sm text-neutral-600">Entrar com CPF/CNPJ e senha.</p>
                   <ArrowRight className="absolute bottom-5 right-5 h-5 w-5 text-[#8a651f] transition-transform group-hover:translate-x-1" />
                 </motion.button>
 
-                <motion.button {...cardAnimation} transition={{ delay: 0.12 }} type="button" onClick={onClientRegister} className="group relative min-h-[150px] rounded-[1.5rem] border border-[#d8bd73]/55 bg-white p-5 text-left shadow-lg transition hover:-translate-y-0.5 hover:border-[#c19a43]">
+                <motion.button {...cardAnimation} transition={{ delay: 0.12 }} type="button" onClick={onClientRegister} className="group relative min-h-[150px] rounded-[1.5rem] border border-[#d8bd73]/55 bg-white p-5 text-left shadow-lg transition hover:-translate-y-0.5 hover:border-[#c19a43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]">
                   <Sparkles className="h-10 w-10 text-[#8a651f]" />
                   <h2 className="mt-5 text-xl font-black text-[#142030]">Novo cadastro</h2>
                   <p className="mt-2 text-sm text-neutral-600">Validar indicação e criar conta.</p>
@@ -49,7 +49,7 @@ export function LoginHub({ onBack, onClientLogin, onClientRegister, onRestricted
                 </motion.button>
               </div>
 
-              <button type="button" onClick={onRestrictedAccess} className="mx-auto mt-6 flex items-center gap-2 rounded-full border border-[#d8bd73]/40 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-[0.15em] text-[#142030]/70 hover:border-[#c19a43] hover:text-[#142030]">
+              <button type="button" onClick={onRestrictedAccess} className="mx-auto mt-6 flex items-center gap-2 rounded-full border border-[#d8bd73]/40 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-[0.15em] text-[#142030]/70 hover:border-[#c19a43] hover:text-[#142030] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]">
                 <BriefcaseBusiness className="h-4 w-4 text-[#8a651f]" />
                 Prestador e equipe
               </button>

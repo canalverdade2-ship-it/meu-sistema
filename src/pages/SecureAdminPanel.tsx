@@ -32,10 +32,15 @@ export function SecureAdminPanel(props: SecureAdminPanelProps) {
   useEffect(() => { setModules(normalizeCollaboratorModules(props.colaboradorModulos)); }, [props.colaboradorModulos]);
 
   const persistIdentity = useCallback((nextName: string | undefined, nextModules: string[]) => {
-    localStorage.setItem('adminType', props.adminType);
-    if (props.colaboradorId) localStorage.setItem('colaboradorId', props.colaboradorId);
-    if (nextName) localStorage.setItem('colaboradorNome', nextName);
-    localStorage.setItem('colaboradorModulos', JSON.stringify(nextModules));
+    sessionStorage.setItem('adminType', props.adminType);
+    if (props.colaboradorId) sessionStorage.setItem('colaboradorId', props.colaboradorId);
+    else sessionStorage.removeItem('colaboradorId');
+    if (nextName) sessionStorage.setItem('colaboradorNome', nextName);
+    else sessionStorage.removeItem('colaboradorNome');
+    sessionStorage.setItem('colaboradorModulos', JSON.stringify(nextModules));
+    for (const key of ['adminType', 'colaboradorId', 'colaboradorNome', 'colaboradorModulos']) {
+      localStorage.removeItem(key);
+    }
   }, [props.adminType, props.colaboradorId]);
 
   const revoke = useCallback(async (message: string) => {
