@@ -4,16 +4,25 @@ import { sessionService } from './sessionService';
 type WriteAction = 'insert' | 'update' | 'delete';
 
 export async function clientOperationalWrite<T = any>(
-  clienteId: string, // Kept for backward compatibility in calls, but ignored for auth
+  clienteId: string, // Mantido somente para compatibilidade com chamadas antigas.
   table: string,
   action: WriteAction,
   data: Record<string, any> = {},
-  filter: Record<string, any> = {}
+  filter: Record<string, any> = {},
 ): Promise<T | null> {
   const sessionData = sessionService.getCurrentSession();
-  if (!sessionData?.sessaoId || !sessionData?.sessionToken) {
-    throw new Error('Sessão inválida para escrita operacional.');
+  if (
+    !sessionData?.sessaoId
+    || !sessionData?.sessionToken
+    || sessionData.atorTipo !== 'cliente'
+    || !sessionData.atorId
+  ) {
+    throw new Error('Sessão de cliente inválida para escrita operacional.');
   }
+
+  // Nunca usamos o ID recebido pelo componente como identidade. A RPC deve derivar
+  // o cliente exclusivamente da sessão GSA validada no servidor.
+  void clienteId;
 
   const { data: result, error } = await supabase.rpc('cliente_operational_write', {
     p_sessao_id: sessionData.sessaoId,
@@ -25,7 +34,7 @@ export async function clientOperationalWrite<T = any>(
   });
 
   if (error || !(result as any)?.success) {
-    throw new Error(error?.message || 'Erro ao executar operação.');
+    throw new Error(error?.message || (result as any)?.error || 'Erro ao executar operação.');
   }
 
   return ((result as any).data || null) as T | null;
