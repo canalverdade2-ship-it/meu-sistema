@@ -1,10 +1,7 @@
-=== CLIENT SERVICES ===
 ClientServicos atualizado para documentos privados.
-exit_code=0
-=== SUPPORT TICKETS ===
+client_services_exit_code=0
 Tickets de cliente, administrador e prestador atualizados para armazenamento privado.
-exit_code=0
-=== ADMIN SERVICE ORDERS ===
+support_tickets_exit_code=0
 /home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:17
     throw new Error(`${label}: marcadores nao encontrados.`);
     ^
@@ -21,10 +18,9 @@ Error: Briefings privados: marcadores nao encontrados.
     at node:internal/main/run_main_module:33:47
 
 Node.js v24.18.0
-exit_code=1
-=== CONTRACT CHECK ===
-client_services_private=0
-client_support_private=0
-admin_tickets_private=0
-provider_support_private=0
-admin_os_secure_viewer=1
+admin_service_orders_exit_code=1
+client_services_contract=0
+client_support_contract=0
+admin_tickets_contract=0
+provider_support_contract=0
+admin_os_contract=1
