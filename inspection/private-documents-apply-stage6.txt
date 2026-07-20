@@ -22,3 +22,9 @@ Error: Briefings privados: esperado 1 trecho, encontrado 0.
 
 Node.js v24.18.0
 exit_code=1
+=== CONTRACT CHECK ===
+client_services_private=0
+client_support_private=0
+admin_tickets_private=0
+provider_support_private=0
+admin_os_secure_viewer=1
