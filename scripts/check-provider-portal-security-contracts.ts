@@ -23,6 +23,15 @@ async function excludes(path: string, patterns: string[]) {
 }
 
 async function main() {
+  await includes('supabase/migrations/20260720232900_provider_portal_admin_module_compat.sql', [
+    'gsa_admin_has_module',
+    "v_actor_type = 'admin'",
+    "v_actor_type <> 'colaborador'",
+    "WHEN 'cadastro' THEN ARRAY['cadastro', 'prestadores', 'clientes']",
+    "WHEN 'operacoes' THEN ARRAY['operacoes', 'vendas', 'demandas']",
+    "WHEN 'atendimento' THEN ARRAY['atendimento', 'tickets', 'suporte']",
+  ]);
+
   await includes('supabase/migrations/20260720233000_provider_portal_audit_hardening.sql', [
     'gsa_provider_context',
     "p_require_active AND COALESCE(v_provider.status, '') <> 'ativo'",
