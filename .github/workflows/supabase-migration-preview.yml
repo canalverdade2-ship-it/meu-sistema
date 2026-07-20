@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/supabase-migration-preview.yml'
       - 'supabase/migrations/**'
+      - 'scripts/gsa-viagens-remote-preflight.sql'
   workflow_dispatch:
 
 permissions:
@@ -52,16 +53,32 @@ jobs:
         shell: bash
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
-      - name: Inspect safe targeted SQL options
+      - name: Inspect remote GSA schema
         shell: bash
         run: |
-          set +e
-          supabase db query --help > db-query-help.log 2>&1
+          set -o pipefail
+          supabase db query --linked \
+            --file scripts/gsa-viagens-remote-preflight.sql \
+            2>&1 | tee gsa-remote-preflight.log
+
+      - name: Build reversible GSA migration transaction
+        shell: bash
+        run: |
           {
-            echo 'Arquivos temporários criados pelo link:'
-            find supabase/.temp -maxdepth 1 -type f -printf '%f\n' 2>/dev/null | sort
-          } > linked-temp-files.log
-          exit 0
+            echo 'BEGIN;'
+            cat supabase/migrations/20260720120000_fix_gsa_viagens_core_flow.sql
+            cat supabase/migrations/20260720123000_gsa_viagens_storage_and_quotes.sql
+            cat supabase/migrations/20260720130000_gsa_viagens_cancelamento_rpc.sql
+            echo 'ROLLBACK;'
+          } > gsa-targeted-validation.sql
+
+      - name: Validate GSA migrations with rollback
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file gsa-targeted-validation.sql \
+            2>&1 | tee gsa-targeted-validation.log
 
       - name: Compare migration history
         shell: bash
@@ -69,7 +86,7 @@ jobs:
           set -o pipefail
           supabase migration list --linked 2>&1 | tee migration-list.log
 
-      - name: Preview database push
+      - name: Preview normal database push
         continue-on-error: true
         shell: bash
         run: |
@@ -82,10 +99,10 @@ jobs:
         with:
           name: supabase-migration-preview
           path: |
+            gsa-remote-preflight.log
+            gsa-targeted-validation.log
             migration-list.log
             migration-dry-run.log
-            db-query-help.log
-            linked-temp-files.log
           retention-days: 7
 
       - name: Publish private preview report
@@ -95,7 +112,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           JOB_STATUS: ${{ job.status }}
         run: |
-          touch migration-list.log migration-dry-run.log db-query-help.log linked-temp-files.log
+          touch gsa-remote-preflight.log gsa-targeted-validation.log migration-list.log migration-dry-run.log
           {
             echo '# Prévia das migrações Supabase'
             echo
@@ -104,24 +121,24 @@ jobs:
             echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "- Resultado do job: **$JOB_STATUS**"
             echo
+            echo '## Inspeção remota do GSA Viagens'
+            echo '```text'
+            sed -n '1,420p' gsa-remote-preflight.log
+            echo '```'
+            echo
+            echo '## Validação transacional com rollback'
+            echo '```text'
+            sed -n '1,260p' gsa-targeted-validation.log
+            echo '```'
+            echo
             echo '## Histórico local e remoto'
             echo '```text'
-            sed -n '1,260p' migration-list.log
+            sed -n '1,180p' migration-list.log
             echo '```'
             echo
-            echo '## Dry-run do banco'
+            echo '## Dry-run normal do banco'
             echo '```text'
-            sed -n '1,260p' migration-dry-run.log
-            echo '```'
-            echo
-            echo '## Ajuda do comando db query'
-            echo '```text'
-            sed -n '1,220p' db-query-help.log
-            echo '```'
-            echo
-            echo '## Metadados locais do link'
-            echo '```text'
-            cat linked-temp-files.log
+            sed -n '1,120p' migration-dry-run.log
             echo '```'
           } > migration-report.md
 
