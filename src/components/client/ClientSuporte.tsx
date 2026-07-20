@@ -9,6 +9,8 @@ import { createNotification } from '../../lib/notifications';
 import { notificationService } from '../../lib/notificationService';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
+import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
+import { SecureAttachmentButton } from '../ui/SecureAttachmentButton';
 
 export function ClientSuporte({ clientId, initialItemId }: { clientId: string, initialItemId?: string }) {
   const { containerRef: suporteTabsRef, setButtonRef: setSuporteTabButtonRef } = useAutoFitTabs(16, 10);
@@ -160,31 +162,27 @@ export function ClientSuporte({ clientId, initialItemId }: { clientId: string, i
     if ((!newMessage.trim() && !attachment) || !selectedTicket || isSendingMessage) return;
 
     setIsSendingMessage(true);
+    let uploadedReference: string | null = null;
+    let messagePersisted = false;
+
     try {
       const { data: cliente } = await supabase.from('clientes').select('nome').eq('id', clientId).single();
-      
-      let anexo_url = '';
-      let anexo_tipo = '';
+
+      let anexoUrl = '';
+      let anexoTipo = '';
+      let anexoNome = '';
 
       if (attachment) {
-        const fileExt = attachment.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
-        const filePath = `suporte/chat/${clientId}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('documentos_cliente')
-          .upload(filePath, attachment);
-
-        if (uploadError) {
-          throw uploadError;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('documentos_cliente')
-          .getPublicUrl(filePath);
-        anexo_url = publicUrl;
-        
-        anexo_tipo = attachment.type;
+        const uploaded = await uploadPrivateDocument(attachment, {
+          scope: 'clientes',
+          ownerId: clientId,
+          context: 'tickets',
+          contextId: selectedTicket.id,
+        });
+        uploadedReference = uploaded.reference;
+        anexoUrl = uploaded.reference;
+        anexoTipo = uploaded.mimeType;
+        anexoNome = uploaded.fileName;
       }
 
       const tempMessage: TicketMensagem = {
@@ -193,11 +191,13 @@ export function ClientSuporte({ clientId, initialItemId }: { clientId: string, i
         autor_id: clientId,
         autor_nome: cliente?.nome || 'Cliente',
         mensagem: newMessage,
-        anexo_url: anexo_url || undefined,
-        anexo_tipo: anexo_tipo || undefined,
+        anexo_url: anexoUrl || undefined,
+        anexo_tipo: anexoTipo || undefined,
+        anexo_nome: anexoNome || undefined,
         data_envio: new Date().toISOString(),
-        tipo: 'cliente'
+        tipo: 'cliente',
       };
+
       setMessages(prev => [...prev, tempMessage]);
       setNewMessage('');
       setAttachment(null);
@@ -208,25 +208,31 @@ export function ClientSuporte({ clientId, initialItemId }: { clientId: string, i
           autor_id: clientId,
           autor_nome: cliente?.nome || 'Cliente',
           mensagem: newMessage,
-          anexo_url: anexo_url || null,
-          anexo_tipo: anexo_tipo || null,
-          tipo: 'cliente'
+          anexo_url: anexoUrl || null,
+          anexo_tipo: anexoTipo || null,
+          anexo_nome: anexoNome || null,
+          tipo: 'cliente',
         });
+        messagePersisted = true;
       } catch (error) {
-        setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
-        console.error('Erro ao enviar mensagem:', error);
-        toast.error('Erro ao enviar mensagem.');
-        return;
+        setMessages(prev => prev.filter(message => message.id !== tempMessage.id));
+        throw error;
       }
-        // Notify Admin com notifyAdmin para gerar badge no sininho
-        const adminTab = selectedTicket.status === 'aberto' ? 'abertos' : 'em_andamento';
-        await notificationService.notifyAdmin(
-          '💬 Nova Mensagem no Suporte',
-          `O cliente ${cliente?.nome || clientId} enviou uma mensagem no ticket #${selectedTicket.id.slice(0, 8)}.`,
-          'suporte',
-          'ticket_mensagem_cliente',
-          { itemId: selectedTicket.id, tab: adminTab }
-        );
+
+      const adminTab = selectedTicket.status === 'aberto' ? 'abertos' : 'em_andamento';
+      await notificationService.notifyAdmin(
+        '💬 Nova Mensagem no Suporte',
+        `O cliente ${cliente?.nome || clientId} enviou uma mensagem no ticket #${selectedTicket.id.slice(0, 8)}.`,
+        'suporte',
+        'ticket_mensagem_cliente',
+        { itemId: selectedTicket.id, tab: adminTab },
+      );
+    } catch (error) {
+      if (!messagePersisted && uploadedReference) {
+        await removePrivateDocument(uploadedReference).catch(() => undefined);
+      }
+      console.error('Erro ao enviar mensagem:', error);
+      toast.error('Erro ao enviar mensagem.');
     } finally {
       setIsSendingMessage(false);
     }
@@ -382,17 +388,14 @@ export function ClientSuporte({ clientId, initialItemId }: { clientId: string, i
                       <p className="font-bold text-[10px] opacity-70 mb-1">{msg.autor_nome}</p>
                       {msg.anexo_url && (
                         <div className="mb-2">
-                          {msg.anexo_tipo?.startsWith('image/') ? (
-                            <a href={msg.anexo_url} target="_blank" rel="noopener noreferrer">
-                              <img src={msg.anexo_url} alt="Anexo" className="rounded-lg max-h-48 object-cover mb-2 ring-1 ring-black/10" />
-                            </a>
-                          ) : (
-                            <a href={msg.anexo_url} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 p-2 rounded-lg text-xs font-bold transition-all ${msg.tipo === 'cliente' ? 'bg-black/10 hover:bg-black/20 text-white' : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'}`}>
-                              <FileIcon className="h-4 w-4" />
-                              Baixar Anexo
-                              <Download className="h-3 w-3 ml-auto opacity-50" />
-                            </a>
-                          )}
+                          <SecureAttachmentButton
+                            reference={msg.anexo_url}
+                            fileName={msg.anexo_nome || 'Anexo do suporte'}
+                            mimeType={msg.anexo_tipo}
+                            className={msg.tipo === 'cliente'
+                              ? 'bg-black/10 text-white hover:bg-black/20'
+                              : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'}
+                          />
                         </div>
                       )}
                       {msg.mensagem && <p className="whitespace-pre-wrap">{msg.mensagem}</p>}

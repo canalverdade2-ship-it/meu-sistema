@@ -16,6 +16,7 @@ import { osService } from '../../lib/osService';
 import { canDeleteRecord } from '../../lib/deleteRequest';
 import { logService } from '../../lib/logService';
 import { PainelRentabilidade } from './PainelRentabilidade';
+import { useFileViewer } from '../../contexts/FileViewerContext';
 
 export function OrdensServicoModule({ activeSubTab, initialItemId, colaboradorNome }: { activeSubTab?: 'abertas' | 'concluidas' | 'canceladas', initialItemId?: string, colaboradorNome?: string }) {
   const [activeTab, setActiveTab] = useState<'andamento' | 'concluido' | 'cancelado'>('andamento');
@@ -363,6 +364,7 @@ export function OrdensServicoModule({ activeSubTab, initialItemId, colaboradorNo
 }
 
 export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel: () => void, colaboradorNome?: string }) {
+  const { openFile } = useFileViewer();
   const [notas, setNotas] = useState<any[]>([]);
   const [novaNota, setNovaNota] = useState('');
   const [isDocRequestModalOpen, setIsDocRequestModalOpen] = useState(false);
@@ -683,7 +685,13 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
                                 <span className="text-xs font-bold text-neutral-700 truncate">Anexo {idx + 1}</span>
                               </div>
                               <a
-                                href={url}
+                                href={url.startsWith('gsa-private://') ? '#' : url}
+                                 onClick={(event) => {
+                                   if (url.startsWith('gsa-private://')) {
+                                     event.preventDefault();
+                                     void openFile(url, `Anexo de briefing ${idx + 1}`);
+                                   }
+                                 }}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-2 rounded-lg bg-white text-amber-600 hover:bg-amber-50 ring-1 ring-inset ring-neutral-200/50 transition-colors"
@@ -711,7 +719,13 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
                               <span className="text-xs font-bold text-neutral-700 truncate">{doc.nome}</span>
                             </div>
                             <a
-                              href={doc.url}
+                              href={doc.url.startsWith('gsa-private://') ? '#' : doc.url}
+                               onClick={(event) => {
+                                 if (doc.url.startsWith('gsa-private://')) {
+                                   event.preventDefault();
+                                   void openFile(doc.url, doc.nome);
+                                 }
+                               }}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-2 rounded-lg bg-white text-indigo-600 hover:bg-indigo-50 ring-1 ring-inset ring-neutral-200/50 transition-colors"

@@ -7,6 +7,8 @@ import { Modal } from '../ui/Modal';
 import { toast } from 'react-hot-toast';
 import { notificationService } from '../../lib/notificationService';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
+import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
+import { SecureAttachmentButton } from '../ui/SecureAttachmentButton';
 
 export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: string, initialItemId?: string }) {
   const { containerRef: suporteTabsRef, setButtonRef: setSuporteTabButtonRef } = useAutoFitTabs(16, 9);
@@ -131,31 +133,27 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
     if ((!newMessage.trim() && !attachment) || !selectedTicket || isSubmitting) return;
 
     setIsSubmitting(true);
+    let uploadedReference: string | null = null;
+    let messagePersisted = false;
+
     try {
       const { data: prestador } = await supabase.from('prestadores').select('nome_razao').eq('id', prestadorId).single();
 
-      let anexo_url = '';
-      let anexo_tipo = '';
+      let anexoUrl = '';
+      let anexoTipo = '';
+      let anexoNome = '';
 
       if (attachment) {
-        const fileExt = attachment.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
-        const filePath = `chat/prestador/${prestadorId}/${fileName}`;
-
-        const bucketName = 'documentos_prestador';
-        const { error: uploadError } = await supabase.storage
-          .from(bucketName)
-          .upload(filePath, attachment);
-
-        if (uploadError) {
-          throw uploadError;
-        } else {
-          const { data: { publicUrl } } = supabase.storage
-            .from(bucketName)
-            .getPublicUrl(filePath);
-          anexo_url = publicUrl;
-        }
-        anexo_tipo = attachment.type;
+        const uploaded = await uploadPrivateDocument(attachment, {
+          scope: 'prestadores',
+          ownerId: prestadorId,
+          context: 'tickets',
+          contextId: selectedTicket.id,
+        });
+        uploadedReference = uploaded.reference;
+        anexoUrl = uploaded.reference;
+        anexoTipo = uploaded.mimeType;
+        anexoNome = uploaded.fileName;
       }
 
       const tempMessage: TicketMensagem = {
@@ -164,11 +162,13 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
         autor_id: prestadorId,
         autor_nome: prestador?.nome_razao || 'Prestador',
         mensagem: newMessage,
-        anexo_url: anexo_url || undefined,
-        anexo_tipo: anexo_tipo || undefined,
+        anexo_url: anexoUrl || undefined,
+        anexo_tipo: anexoTipo || undefined,
+        anexo_nome: anexoNome || undefined,
         data_envio: new Date().toISOString(),
-        tipo: 'prestador' as any
+        tipo: 'prestador',
       };
+
       setMessages(prev => [...prev, tempMessage]);
       setNewMessage('');
       setAttachment(null);
@@ -178,25 +178,31 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
         autor_id: prestadorId,
         autor_nome: prestador?.nome_razao || 'Prestador',
         mensagem: newMessage,
-        anexo_url: anexo_url || null,
-        anexo_tipo: anexo_tipo || null,
-        tipo: 'prestador' as any
+        anexo_url: anexoUrl || null,
+        anexo_tipo: anexoTipo || null,
+        anexo_nome: anexoNome || null,
+        tipo: 'prestador',
       }]);
-
       if (error) {
-        setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
-        console.error('Erro ao enviar mensagem:', error);
-        toast.error('Erro ao enviar mensagem.');
-      } else {
-        const adminTab = selectedTicket.status === 'aberto' ? 'abertos' : 'em andamento';
-        await notificationService.notifyAdmin(
-          'Nova Mensagem (Prestador)',
-          `O prestador ${prestador?.nome_razao || prestadorId} enviou uma mensagem no ticket #${selectedTicket.id.slice(0, 8)}.`,
-          'suporte',
-          'ticket_mensagem_recebida',
-          { tab: adminTab, itemId: selectedTicket.id, contexto: { prestador_id: prestadorId, ticket_id: selectedTicket.id } }
-        );
+        setMessages(prev => prev.filter(message => message.id !== tempMessage.id));
+        throw error;
       }
+      messagePersisted = true;
+
+      const adminTab = selectedTicket.status === 'aberto' ? 'abertos' : 'em andamento';
+      await notificationService.notifyAdmin(
+        'Nova Mensagem (Prestador)',
+        `O prestador ${prestador?.nome_razao || prestadorId} enviou uma mensagem no ticket #${selectedTicket.id.slice(0, 8)}.`,
+        'suporte',
+        'ticket_mensagem_recebida',
+        { tab: adminTab, itemId: selectedTicket.id, contexto: { prestador_id: prestadorId, ticket_id: selectedTicket.id } },
+      );
+    } catch (error) {
+      if (!messagePersisted && uploadedReference) {
+        await removePrivateDocument(uploadedReference).catch(() => undefined);
+      }
+      console.error('Erro ao enviar mensagem:', error);
+      toast.error('Erro ao enviar mensagem.');
     } finally {
       setIsSubmitting(false);
     }
@@ -373,17 +379,14 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
                         </div>
                         {msg.anexo_url && (
                           <div className="mb-2">
-                            {msg.anexo_tipo?.startsWith('image/') ? (
-                              <a href={msg.anexo_url} target="_blank" rel="noopener noreferrer">
-                                <img src={msg.anexo_url} alt="Anexo" className="rounded-lg max-h-48 object-cover mb-2 ring-1 ring-black/10" />
-                              </a>
-                            ) : (
-                              <a href={msg.anexo_url} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 p-2 rounded-lg text-xs font-bold transition-all ${msg.tipo === 'prestador' ? 'bg-black/10 hover:bg-black/20 text-white' : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'}`}>
-                                <FileIcon className="h-4 w-4" />
-                                Baixar Anexo
-                                <Download className="h-3 w-3 ml-auto opacity-50" />
-                              </a>
-                            )}
+                            <SecureAttachmentButton
+                              reference={msg.anexo_url}
+                              fileName={msg.anexo_nome || 'Anexo do suporte'}
+                              mimeType={msg.anexo_tipo}
+                              className={msg.tipo === 'prestador'
+                                ? 'bg-black/10 text-white hover:bg-black/20'
+                                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'}
+                            />
                           </div>
                         )}
                         {msg.mensagem && <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.mensagem}</p>}
