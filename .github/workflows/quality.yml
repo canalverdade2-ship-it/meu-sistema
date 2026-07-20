@@ -110,6 +110,10 @@ jobs:
         if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run test:provider
 
+      - name: Home public contracts
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        run: npm run test:home
+
       - name: GSA Viagens contracts
         if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run test:travel
@@ -196,6 +200,35 @@ jobs:
           END;
           $test$;
           SQL
+
+      - name: Validate Home public migrations
+        id: home_migrations
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        env:
+          PGPASSWORD: postgres
+        shell: bash
+        run: |
+          set +e
+          psql -h 127.0.0.1 -U postgres -f scripts/test-home-public-migrations.sql > home-migrations.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload Home migration log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-migration-log
+          path: home-migrations.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Report Home migration result
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          cat home-migrations.log
+          test "${{ steps.home_migrations.outputs.exit_code }}" = "0"
 
       - name: Build
         if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
