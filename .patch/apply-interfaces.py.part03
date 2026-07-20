@@ -1,0 +1,6 @@
+
+replace_once(
+    'src/components/admin/ProdutosModule.tsx',
+    "    const ids = Array.from(selectedIds);",
+    "    const ids = Array.from(selectedIds) as string[];",
+)
