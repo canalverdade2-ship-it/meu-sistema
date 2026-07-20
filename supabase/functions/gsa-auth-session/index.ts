@@ -114,7 +114,10 @@ function text(value: unknown, maxLength: number) {
   return value.trim().slice(0, maxLength);
 }
 
-export function normalizePayload(action: AuthAction, payload: Record<string, unknown>) {
+export function normalizePayload(
+  action: AuthAction,
+  payload: Record<string, unknown>,
+): Record<string, string> | null {
   if (action === 'login_pin') {
     const documento = digits(payload.documento);
     const pin = digits(payload.pin);
@@ -167,7 +170,7 @@ async function hashBucket(secret: string, scope: string, value: string) {
 }
 
 async function checkRateLimit(
-  admin: ReturnType<typeof createClient>,
+  admin: any,
   bucketKey: string,
   rule: RateLimitRule,
 ): Promise<RateLimitResult> {
@@ -187,7 +190,7 @@ async function checkRateLimit(
 }
 
 async function clearSubjectRateLimit(
-  admin: ReturnType<typeof createClient>,
+  admin: any,
   bucketKey: string,
 ) {
   const { error } = await admin
@@ -249,7 +252,7 @@ export async function handleRequest(request: Request) {
     const normalizedPayload = normalizePayload(body.action, body.payload || {});
     if (!normalizedPayload) return json({ error: 'invalid_payload' }, 400, allowedOrigin);
 
-    const admin = createClient(supabaseUrl, serviceRoleKey, {
+    const admin = createClient<any>(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
