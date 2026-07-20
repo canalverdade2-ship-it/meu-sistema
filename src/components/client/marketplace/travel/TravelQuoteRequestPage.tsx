@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   BedDouble,
@@ -28,6 +28,17 @@ interface TravelQuoteRequestPageProps {
 
 type TravelerField = 'adultos' | 'criancas' | 'bebes';
 
+type SelectedPackage = {
+  id: string;
+  titulo: string;
+  origem: string | null;
+  destino: string | null;
+  data_ida: string | null;
+  data_volta: string | null;
+  preco_venda: number;
+  status: string;
+};
+
 const fieldClassName =
   'h-12 w-full rounded-xl border border-[#0c2340]/15 bg-[#fbfbfa] px-4 text-sm font-medium text-[#172033] outline-none transition focus:border-[#168ac1] focus:bg-white focus:ring-4 focus:ring-[#38bdf8]/10';
 const iconFieldClassName = `${fieldClassName} pl-11`;
@@ -44,11 +55,17 @@ const accommodationLabels: Record<string, string> = {
 
 function formatTravelDate(value: string) {
   if (!value) return 'A definir';
-
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit',
     month: 'short',
   }).format(new Date(`${value}T12:00:00`));
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value || 0);
 }
 
 interface PassengerStepperProps {
@@ -98,8 +115,10 @@ function PassengerStepper({
   );
 }
 
-export function TravelQuoteRequestPage({ clientId, onBack, onRequireAuth }: TravelQuoteRequestPageProps) {
+export function TravelQuoteRequestPage({ clientId, onBack }: TravelQuoteRequestPageProps) {
   const [loading, setLoading] = useState(false);
+  const [packageLoading, setPackageLoading] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<SelectedPackage | null>(null);
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -116,7 +135,48 @@ export function TravelQuoteRequestPage({ clientId, onBack, onRequireAuth }: Trav
     observacoes: '',
   });
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    const packageId = new URLSearchParams(window.location.search).get('pacote');
+    if (!packageId) return;
+
+    async function loadPackage() {
+      try {
+        setPackageLoading(true);
+        const { data, error } = await supabase
+          .from('viagens_pacotes')
+          .select('id, titulo, origem, destino, data_ida, data_volta, preco_venda, status')
+          .eq('id', packageId)
+          .in('status', ['publicado', 'disponibilidade_sob_consulta'])
+          .single();
+
+        if (error) throw error;
+        setSelectedPackage(data as SelectedPackage);
+        setFormData((previous) => ({
+          ...previous,
+          origem: data.origem || previous.origem,
+          destino: data.destino || previous.destino,
+          data_ida: data.data_ida || previous.data_ida,
+          data_volta: data.data_volta || previous.data_volta,
+          observacoes: previous.observacoes || `Tenho interesse no pacote: ${data.titulo}.`,
+        }));
+      } catch (error) {
+        console.error('Erro ao carregar pacote selecionado:', error);
+        toast.error('O pacote selecionado não está mais disponível. Você ainda pode solicitar uma viagem personalizada.');
+      } finally {
+        setPackageLoading(false);
+      }
+    }
+
+    loadPackage();
+  }, []);
+
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const totalTravelers =
+    Number(formData.adultos) + Number(formData.criancas) + Number(formData.bebes);
+
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));
   };
@@ -131,40 +191,41 @@ export function TravelQuoteRequestPage({ clientId, onBack, onRequireAuth }: Trav
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!clientId && onRequireAuth) {
-      toast('Faça login para enviar o orçamento', { icon: '🔒' });
-      onRequireAuth();
+    if (formData.data_volta < formData.data_ida) {
+      toast.error('A data de volta não pode ser anterior à data de ida.');
+      return;
+    }
+
+    if (!clientId && (!formData.nome.trim() || !formData.email.trim() || !formData.telefone.trim())) {
+      toast.error('Informe seus dados de contato para receber a proposta.');
       return;
     }
 
     setLoading(true);
     try {
-      const protocolo = `VIAGEM-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
+      const protocolo = `VIAGEM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
       const { error } = await supabase.from('viagens_orcamentos').insert({
-        cliente_id: clientId,
+        cliente_id: clientId || null,
+        pacote_id: selectedPackage?.id || null,
         protocolo,
         ...formData,
       });
 
       if (error) throw error;
 
-      toast.success('Orçamento solicitado com sucesso!');
+      toast.success(`Solicitação enviada! Protocolo ${protocolo}`);
       navigate(routes.marketplace.travelPackages.root());
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao solicitar orçamento:', error);
-      toast.error('Erro ao enviar solicitação.');
+      toast.error(error?.message || 'Erro ao enviar solicitação.');
     } finally {
       setLoading(false);
     }
   };
 
-  const totalTravelers =
-    Number(formData.adultos) + Number(formData.criancas) + Number(formData.bebes);
-
   return (
     <div className="min-h-screen bg-[#f5f3ee] pb-24 font-sans text-[#172033]">
-      <nav className="sticky top-0 z-50 shrink-0 border-b border-black/[0.06] bg-[#f5f3ee]/95 backdrop-blur-xl">
+      <nav className="sticky top-0 z-50 border-b border-black/[0.06] bg-[#f5f3ee]/95 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -187,287 +248,119 @@ export function TravelQuoteRequestPage({ clientId, onBack, onRequireAuth }: Trav
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
         <header className="max-w-3xl border-b border-[#0c2340]/10 pb-7 sm:pb-9">
           <p className="mb-3 text-[11px] font-black uppercase tracking-[0.2em] text-[#168ac1]">
-            Roteiro personalizado
+            {selectedPackage ? 'Pacote selecionado' : 'Roteiro personalizado'}
           </p>
-          <h1
-            className="max-w-2xl text-3xl font-bold leading-[1.08] text-[#0c2340] sm:text-5xl"
-            style={{ fontFamily: '"Cinzel", serif' }}
-          >
-            Conte como quer viajar.
+          <h1 className="max-w-2xl text-3xl font-bold leading-[1.08] text-[#0c2340] sm:text-5xl" style={{ fontFamily: '"Cinzel", serif' }}>
+            {selectedPackage ? 'Confirme os detalhes da sua viagem.' : 'Conte como quer viajar.'}
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-neutral-600 sm:text-base">
-            Destino, datas e viajantes. Nossa equipe cuida das melhores opções.
+            Destino, datas e viajantes. Nossa equipe confirma disponibilidade e envia a proposta final.
           </p>
         </header>
 
-        <form onSubmit={handleSubmit} className="mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="overflow-hidden rounded-[24px] border border-[#0c2340]/10 bg-white shadow-[0_18px_50px_rgba(12,35,64,0.08)] sm:rounded-[28px]">
-            <div className="grid grid-cols-3 border-b border-[#0c2340]/10 bg-[#f8fafb]">
-              {[
-                { number: '01', label: 'Rota' },
-                { number: '02', label: 'Viajantes' },
-                { number: '03', label: 'Contato' },
-              ].map((step) => (
-                <div key={step.number} className="flex items-center justify-center gap-2 border-r border-[#0c2340]/10 px-2 py-3 last:border-r-0">
-                  <span className="text-[10px] font-black text-[#168ac1]">{step.number}</span>
-                  <span className="text-[11px] font-bold text-[#0c2340] sm:text-xs">{step.label}</span>
-                </div>
-              ))}
-            </div>
+        {packageLoading && (
+          <div className="mt-6 flex items-center gap-3 rounded-2xl border border-[#0c2340]/10 bg-white p-5 text-sm font-bold text-[#0c2340]">
+            <Loader2 className="h-5 w-5 animate-spin" /> Carregando pacote selecionado...
+          </div>
+        )}
 
+        {selectedPackage && (
+          <div className="mt-6 flex flex-col gap-4 rounded-3xl border border-[#38bdf8]/30 bg-[#eaf8fd] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#168ac1]">Pacote de referência</p>
+              <h2 className="mt-1 text-xl font-black text-[#0c2340]">{selectedPackage.titulo}</h2>
+              <p className="mt-1 text-sm text-neutral-600">
+                {selectedPackage.destino || 'Destino sob consulta'} · a partir de {formatCurrency(selectedPackage.preco_venda)}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate(routes.marketplace.travelPackages.ofertas())}
+              className="rounded-xl border border-[#0c2340]/15 bg-white px-4 py-2 text-sm font-bold text-[#0c2340] hover:bg-[#f8fafb]"
+            >
+              Escolher outro pacote
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="mt-7 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="overflow-hidden rounded-[28px] border border-[#0c2340]/10 bg-white shadow-[0_18px_50px_rgba(12,35,64,0.08)]">
             <section className="border-b border-[#0c2340]/10 p-5 sm:p-7">
               <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f6fb] text-[#0f789d]">
-                  <Route className="h-5 w-5" />
-                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f6fb] text-[#0f789d]"><Route className="h-5 w-5" /></div>
                 <h2 className="text-lg font-black text-[#0c2340]">Rota e datas</h2>
               </div>
-
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="travel-origin" className={labelClassName}>Origem</label>
-                  <div className="relative">
-                    <MapPin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#168ac1]" />
-                    <input
-                      id="travel-origin"
-                      type="text"
-                      name="origem"
-                      value={formData.origem}
-                      onChange={handleChange}
-                      placeholder="Cidade de partida"
-                      required
-                      className={iconFieldClassName}
-                    />
+                <label className={labelClassName}>Origem
+                  <div className="relative mt-2"><MapPin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#168ac1]" />
+                    <input name="origem" value={formData.origem} onChange={handleChange} placeholder="Cidade de partida" required className={iconFieldClassName} />
                   </div>
-                </div>
-                <div>
-                  <label htmlFor="travel-destination" className={labelClassName}>Destino</label>
-                  <div className="relative">
-                    <Plane className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#168ac1]" />
-                    <input
-                      id="travel-destination"
-                      type="text"
-                      name="destino"
-                      value={formData.destino}
-                      onChange={handleChange}
-                      placeholder="Para onde deseja ir?"
-                      required
-                      className={iconFieldClassName}
-                    />
+                </label>
+                <label className={labelClassName}>Destino
+                  <div className="relative mt-2"><Plane className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#168ac1]" />
+                    <input name="destino" value={formData.destino} onChange={handleChange} placeholder="Para onde deseja ir?" required className={iconFieldClassName} />
                   </div>
-                </div>
+                </label>
               </div>
-
               <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                <div>
-                  <label htmlFor="travel-departure" className={labelClassName}>Ida</label>
-                  <div className="relative">
-                    <CalendarDays className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#168ac1]" />
-                    <input
-                      id="travel-departure"
-                      type="date"
-                      name="data_ida"
-                      value={formData.data_ida}
-                      onChange={handleChange}
-                      required
-                      className={iconFieldClassName}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="travel-return" className={labelClassName}>Volta</label>
-                  <div className="relative">
-                    <CalendarDays className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#168ac1]" />
-                    <input
-                      id="travel-return"
-                      type="date"
-                      name="data_volta"
-                      value={formData.data_volta}
-                      onChange={handleChange}
-                      required
-                      className={iconFieldClassName}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="travel-flexibility" className={labelClassName}>Flexibilidade</label>
-                  <select
-                    id="travel-flexibility"
-                    name="flexibilidade"
-                    value={formData.flexibilidade}
-                    onChange={handleChange}
-                    className={fieldClassName}
-                  >
+                <label className={labelClassName}>Ida
+                  <input type="date" name="data_ida" min={today} value={formData.data_ida} onChange={handleChange} required className={`${fieldClassName} mt-2`} />
+                </label>
+                <label className={labelClassName}>Volta
+                  <input type="date" name="data_volta" min={formData.data_ida || today} value={formData.data_volta} onChange={handleChange} required className={`${fieldClassName} mt-2`} />
+                </label>
+                <label className={labelClassName}>Flexibilidade
+                  <select name="flexibilidade" value={formData.flexibilidade} onChange={handleChange} className={`${fieldClassName} mt-2`}>
                     <option value="exata">Datas exatas</option>
                     <option value="3_dias">± 3 dias</option>
                     <option value="mes_inteiro">Mês inteiro</option>
                   </select>
-                </div>
+                </label>
               </div>
             </section>
 
             <section className="border-b border-[#0c2340]/10 p-5 sm:p-7">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#edf0ff] text-[#4655d8]">
-                  <Users className="h-5 w-5" />
-                </div>
-                <h2 className="text-lg font-black text-[#0c2340]">Viajantes</h2>
-              </div>
-
+              <div className="mb-5 flex items-center gap-3"><Users className="h-5 w-5 text-[#4655d8]" /><h2 className="text-lg font-black text-[#0c2340]">Viajantes</h2></div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
-                <PassengerStepper
-                  label="Adultos"
-                  detail="12+ anos"
-                  value={Number(formData.adultos)}
-                  minimum={1}
-                  onDecrease={() => changeTravelerCount('adultos', -1, 1)}
-                  onIncrease={() => changeTravelerCount('adultos', 1, 1)}
-                />
-                <PassengerStepper
-                  label="Crianças"
-                  detail="2 a 11"
-                  value={Number(formData.criancas)}
-                  minimum={0}
-                  onDecrease={() => changeTravelerCount('criancas', -1, 0)}
-                  onIncrease={() => changeTravelerCount('criancas', 1, 0)}
-                />
-                <PassengerStepper
-                  label="Bebês"
-                  detail="0 a 23m"
-                  value={Number(formData.bebes)}
-                  minimum={0}
-                  onDecrease={() => changeTravelerCount('bebes', -1, 0)}
-                  onIncrease={() => changeTravelerCount('bebes', 1, 0)}
-                />
+                <PassengerStepper label="Adultos" detail="12+ anos" value={formData.adultos} minimum={1} onDecrease={() => changeTravelerCount('adultos', -1, 1)} onIncrease={() => changeTravelerCount('adultos', 1, 1)} />
+                <PassengerStepper label="Crianças" detail="2 a 11 anos" value={formData.criancas} minimum={0} onDecrease={() => changeTravelerCount('criancas', -1, 0)} onIncrease={() => changeTravelerCount('criancas', 1, 0)} />
+                <PassengerStepper label="Bebês" detail="0 a 23 meses" value={formData.bebes} minimum={0} onDecrease={() => changeTravelerCount('bebes', -1, 0)} onIncrease={() => changeTravelerCount('bebes', 1, 0)} />
               </div>
             </section>
 
             <section className="border-b border-[#0c2340]/10 p-5 sm:p-7">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f3edff] text-[#7c3aed]">
-                  <BedDouble className="h-5 w-5" />
-                </div>
-                <h2 className="text-lg font-black text-[#0c2340]">Preferências</h2>
-              </div>
-
+              <div className="mb-5 flex items-center gap-3"><BedDouble className="h-5 w-5 text-[#7c3aed]" /><h2 className="text-lg font-black text-[#0c2340]">Preferências</h2></div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="travel-accommodation" className={labelClassName}>Hospedagem</label>
-                  <select
-                    id="travel-accommodation"
-                    name="preferencia_hospedagem"
-                    value={formData.preferencia_hospedagem}
-                    onChange={handleChange}
-                    className={fieldClassName}
-                  >
+                <label className={labelClassName}>Hospedagem
+                  <select name="preferencia_hospedagem" value={formData.preferencia_hospedagem} onChange={handleChange} className={`${fieldClassName} mt-2`}>
                     <option value="economico">Econômico / 3 estrelas</option>
                     <option value="4_estrelas">Conforto / 4 estrelas</option>
                     <option value="5_estrelas">Luxo / 5 estrelas</option>
                     <option value="resort_all_inclusive">Resort all inclusive</option>
                     <option value="indiferente">Melhor oportunidade</option>
                   </select>
-                </div>
-                <div>
-                  <label htmlFor="travel-notes" className={labelClassName}>Pedido especial</label>
-                  <textarea
-                    id="travel-notes"
-                    name="observacoes"
-                    value={formData.observacoes}
-                    onChange={handleChange}
-                    placeholder="Lua de mel, acessibilidade..."
-                    rows={3}
-                    className="min-h-[48px] w-full resize-y rounded-xl border border-[#0c2340]/15 bg-[#fbfbfa] px-4 py-3 text-sm font-medium text-[#172033] outline-none transition focus:border-[#168ac1] focus:bg-white focus:ring-4 focus:ring-[#38bdf8]/10"
-                  />
-                </div>
+                </label>
+                <label className={labelClassName}>Pedido especial
+                  <textarea name="observacoes" value={formData.observacoes} onChange={handleChange} placeholder="Lua de mel, acessibilidade, bagagem..." rows={4} className="mt-2 w-full resize-y rounded-xl border border-[#0c2340]/15 bg-[#fbfbfa] px-4 py-3 text-sm font-medium outline-none focus:border-[#168ac1] focus:ring-4 focus:ring-[#38bdf8]/10" />
+                </label>
               </div>
             </section>
 
             {!clientId && (
               <section className="border-b border-[#0c2340]/10 p-5 sm:p-7">
-                <div className="mb-5 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#edf8f4] text-[#128765]">
-                    <UserRound className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-black text-[#0c2340]">Seus dados</h2>
-                    <p className="text-xs text-neutral-500">Para retornarmos sobre esta solicitação.</p>
-                  </div>
-                </div>
-
+                <div className="mb-5 flex items-center gap-3"><UserRound className="h-5 w-5 text-[#128765]" /><div><h2 className="text-lg font-black text-[#0c2340]">Seus dados</h2><p className="text-xs text-neutral-500">Não é necessário criar conta para pedir o orçamento.</p></div></div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <label htmlFor="travel-name" className={labelClassName}>Nome completo</label>
-                    <div className="relative">
-                      <UserRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#128765]" />
-                      <input
-                        id="travel-name"
-                        type="text"
-                        name="nome"
-                        value={formData.nome}
-                        onChange={handleChange}
-                        autoComplete="name"
-                        required
-                        className={iconFieldClassName}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="travel-email" className={labelClassName}>E-mail</label>
-                    <div className="relative">
-                      <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#128765]" />
-                      <input
-                        id="travel-email"
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        autoComplete="email"
-                        required
-                        className={iconFieldClassName}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="travel-phone" className={labelClassName}>Telefone</label>
-                    <div className="relative">
-                      <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#128765]" />
-                      <input
-                        id="travel-phone"
-                        type="tel"
-                        name="telefone"
-                        value={formData.telefone}
-                        onChange={handleChange}
-                        autoComplete="tel"
-                        placeholder="(00) 00000-0000"
-                        required
-                        className={iconFieldClassName}
-                      />
-                    </div>
-                  </div>
+                  <label className={`${labelClassName} sm:col-span-2`}>Nome completo<input name="nome" value={formData.nome} onChange={handleChange} autoComplete="name" required className={`${fieldClassName} mt-2`} /></label>
+                  <label className={labelClassName}>E-mail<div className="relative mt-2"><Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#128765]" /><input type="email" name="email" value={formData.email} onChange={handleChange} autoComplete="email" required className={iconFieldClassName} /></div></label>
+                  <label className={labelClassName}>Telefone<div className="relative mt-2"><Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#128765]" /><input type="tel" name="telefone" value={formData.telefone} onChange={handleChange} autoComplete="tel" placeholder="(00) 00000-0000" required className={iconFieldClassName} /></div></label>
                 </div>
               </section>
             )}
 
             <div className="bg-[#f8fafb] p-5 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:p-7">
-              <p className="mb-4 text-xs leading-5 text-neutral-500 sm:mb-0 sm:max-w-[15rem]">
-                {clientId ? 'Retorno em até 48 horas úteis.' : 'Você entrará na sua conta antes do envio.'}
-              </p>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#0c2340] px-6 text-sm font-black text-white shadow-[0_10px_24px_rgba(12,35,64,0.2)] transition hover:bg-[#168ac1] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Solicitar orçamento
-                  </>
-                )}
+              <p className="mb-4 text-xs leading-5 text-neutral-500 sm:mb-0">Retorno estimado em até 48 horas úteis.</p>
+              <button type="submit" disabled={loading || packageLoading} className="flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#0c2340] px-6 text-sm font-black text-white shadow-[0_10px_24px_rgba(12,35,64,0.2)] transition hover:bg-[#168ac1] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
+                {loading ? <><Loader2 className="h-5 w-5 animate-spin" />Processando...</> : <><Send className="h-4 w-4" />Solicitar orçamento</>}
               </button>
             </div>
           </div>
@@ -475,28 +368,15 @@ export function TravelQuoteRequestPage({ clientId, onBack, onRequireAuth }: Trav
           <aside className="hidden rounded-[24px] bg-[#0c2340] p-6 text-white shadow-[0_18px_50px_rgba(12,35,64,0.16)] lg:sticky lg:top-24 lg:block">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#76d3f5]">Resumo da viagem</p>
             <div className="mt-6 border-b border-white/15 pb-5">
-              <div className="flex items-start gap-3">
-                <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#76d3f5]" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold">{formData.origem || 'Origem'}</p>
-                  <p className="my-1 text-xs text-white/45">para</p>
-                  <p className="truncate text-sm font-bold">{formData.destino || 'Destino'}</p>
-                </div>
-              </div>
+              <p className="truncate text-sm font-bold">{formData.origem || 'Origem'}</p>
+              <p className="my-1 text-xs text-white/45">para</p>
+              <p className="truncate text-sm font-bold">{formData.destino || 'Destino'}</p>
             </div>
             <dl className="divide-y divide-white/10 text-sm">
-              <div className="flex items-center justify-between gap-3 py-4">
-                <dt className="text-white/55">Datas</dt>
-                <dd className="text-right font-bold">{formatTravelDate(formData.data_ida)} · {formatTravelDate(formData.data_volta)}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3 py-4">
-                <dt className="text-white/55">Viajantes</dt>
-                <dd className="font-bold">{totalTravelers}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3 py-4">
-                <dt className="text-white/55">Hospedagem</dt>
-                <dd className="text-right font-bold">{accommodationLabels[formData.preferencia_hospedagem]}</dd>
-              </div>
+              <div className="flex items-center justify-between gap-3 py-4"><dt className="text-white/55">Datas</dt><dd className="text-right font-bold">{formatTravelDate(formData.data_ida)} · {formatTravelDate(formData.data_volta)}</dd></div>
+              <div className="flex items-center justify-between gap-3 py-4"><dt className="text-white/55">Viajantes</dt><dd className="font-bold">{totalTravelers}</dd></div>
+              <div className="flex items-center justify-between gap-3 py-4"><dt className="text-white/55">Hospedagem</dt><dd className="text-right font-bold">{accommodationLabels[formData.preferencia_hospedagem]}</dd></div>
+              {selectedPackage && <div className="flex items-center justify-between gap-3 py-4"><dt className="text-white/55">Referência</dt><dd className="max-w-[9rem] text-right text-xs font-bold">{selectedPackage.titulo}</dd></div>}
             </dl>
           </aside>
         </form>
