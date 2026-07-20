@@ -1,0 +1,44 @@
+name: Sync GSA installment fix with main
+
+on:
+  push:
+    branches: [fix/gsa-viagens-parcelamento-checkout-20260720]
+    paths:
+      - '.github/workflows/temp-sync-gsa-installments.yml'
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/gsa-viagens-parcelamento-checkout-20260720
+          fetch-depth: 0
+
+      - name: Merge current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+          git merge origin/main --no-edit
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:admin
+      - run: npm run test:travel
+      - run: npm run build
+
+      - name: Push synchronized branch
+        run: git push origin HEAD:fix/gsa-viagens-parcelamento-checkout-20260720
