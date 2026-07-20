@@ -111,10 +111,10 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
       setPin('');
       setAttemptsLeft(typeof data?.attempts_left === 'number' ? data.attempts_left : null);
       toast.error(data?.error === 'blocked' ? 'Acesso temporariamente bloqueado. Entre em contato com o suporte.' : 'Documento ou senha inválidos.');
-    } catch {
+    } catch (error: any) {
       setPinError(true);
       setPin('');
-      toast.error('Documento ou senha inválidos.');
+      toast.error(error?.message || 'Documento ou senha inválidos.');
     } finally {
       setLoading(false);
     }
@@ -138,8 +138,8 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
       await logService.logAction({ ator_tipo: 'cliente', ator_id: data.id, ator_nome: data.nome, acao: 'LOGIN', detalhes: 'Primeiro acesso com criação de senha' });
       toast.success('Senha criada com sucesso.');
       onLoginClient(data.id);
-    } catch {
-      toast.error('Não foi possível confirmar o primeiro acesso. Confira os dados informados.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível confirmar o primeiro acesso. Confira os dados informados.');
     } finally {
       setLoading(false);
     }
@@ -156,8 +156,8 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
       if (!data?.success) throw new Error('Dados inválidos.');
       toast.success('Sessão de recuperação iniciada.');
       onLoginClient(data.id, true);
-    } catch {
-      toast.error('Não foi possível iniciar a recuperação com os dados informados.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível iniciar a recuperação com os dados informados.');
     } finally {
       setLoading(false);
     }

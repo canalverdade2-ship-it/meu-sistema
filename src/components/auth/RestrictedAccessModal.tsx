@@ -79,8 +79,8 @@ export function RestrictedAccessModal({ isOpen, initialTab = 'prestador', onClos
       await logService.logAction({ ator_tipo: 'admin', acao: 'LOGIN', detalhes: 'Acesso Master' });
       toast.success('Acesso autorizado.');
       onLoginAdmin({ type: 'admin' });
-    } catch {
-      toast.error('Credencial inválida.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Credencial inválida.');
     } finally {
       setLoading(false);
     }
@@ -95,8 +95,8 @@ export function RestrictedAccessModal({ isOpen, initialTab = 'prestador', onClos
       await logService.logAction({ ator_tipo: 'colaborador', ator_id: data.id, ator_nome: data.nome, acao: 'LOGIN', detalhes: 'Acesso ao painel administrativo' });
       toast.success('Acesso autorizado.');
       onLoginAdmin({ type: 'colaborador', id: data.id, modulos: data.modulos || [] });
-    } catch {
-      toast.error('Credencial inválida ou usuário inativo.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Credencial inválida ou usuário inativo.');
     } finally {
       setLoading(false);
     }
@@ -154,8 +154,8 @@ export function RestrictedAccessModal({ isOpen, initialTab = 'prestador', onClos
       await logService.logAction({ ator_tipo: 'prestador', ator_id: data.id, ator_nome: data.nome, acao: 'LOGIN', detalhes: 'Primeiro acesso com criação de senha' });
       toast.success('Senha criada com sucesso.');
       onLoginPrestador(data.id);
-    } catch {
-      toast.error('Não foi possível confirmar o primeiro acesso. Confira os dados informados.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível confirmar o primeiro acesso. Confira os dados informados.');
     } finally {
       setLoading(false);
     }
