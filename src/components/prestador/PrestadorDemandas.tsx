@@ -18,8 +18,6 @@ import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { providerOperations, type ProviderDemandAction } from '../../lib/providerOperations';
 import { removeProviderPrivateFile, resolveProviderFileUrl, uploadProviderPrivateFile } from '../../lib/providerStorage';
-import { notificationService, type AcaoOrigem } from '../../lib/notificationService';
-import { logService } from '../../lib/logService';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { useFileViewer } from '../../contexts/FileViewerContext';
 import { Modal } from '../ui/Modal';
@@ -77,27 +75,6 @@ const OPEN_STATUSES: DemandStatus[] = ['aguardando_aceite', 'aberta', 'em_negoci
 const ACTIVE_STATUSES: DemandStatus[] = ['ativa', 'em_analise', 'em_ajuste'];
 const CLOSED_STATUSES: DemandStatus[] = ['concluida', 'finalizada', 'cancelada', 'concluida_interna'];
 
-const NOTIFICATION_ACTIONS: Record<ProviderDemandAction, AcaoOrigem> = {
-  accept: 'manual',
-  reject: 'demanda_recusada',
-  counteroffer: 'demanda_contraproposta_prestador',
-  deliver: 'demanda_entregue',
-  return: 'demanda_transferida',
-};
-
-const NOTIFICATION_TITLES: Record<ProviderDemandAction, string> = {
-  accept: 'Demanda aceita pelo prestador',
-  reject: 'Demanda recusada pelo prestador',
-  counteroffer: 'Contraproposta do prestador',
-  deliver: 'Demanda entregue pelo prestador',
-  return: 'Demanda devolvida pelo prestador',
-};
-
-function nowForInput() {
-  const date = new Date();
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-}
-
 function tabForStatus(status: DemandStatus): DemandTab {
   if (OPEN_STATUSES.includes(status)) return 'abertas';
   if (ACTIVE_STATUSES.includes(status)) return 'ativas';
@@ -116,7 +93,6 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
   const [actionMode, setActionMode] = useState<ActionMode>(null);
   const [reason, setReason] = useState('');
   const [counterValue, setCounterValue] = useState('');
-  const [deliveryDate, setDeliveryDate] = useState(nowForInput());
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [resultLink, setResultLink] = useState('');
   const [files, setFiles] = useState<File[]>([]);
@@ -138,7 +114,8 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
           )
         `)
         .eq('prestador_id', prestadorId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
       if (error) throw error;
       setDemands((data || []) as unknown as Demand[]);
     } catch (error: any) {
@@ -153,7 +130,8 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
       .from('prestador_demandas_historico')
       .select('id,tipo_evento,motivo,created_at')
       .eq('demanda_id', demandId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .limit(200);
     if (!error) setHistory((data || []) as DemandHistory[]);
   };
 
@@ -205,29 +183,10 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
     setActionMode(null);
     setReason('');
     setCounterValue('');
-    setDeliveryDate(nowForInput());
     setDeliveryNotes('');
     setResultLink('');
     setFiles([]);
     setSupportMessage('');
-  };
-
-  const notifyAndLog = async (action: ProviderDemandAction, demand: Demand, detail: string) => {
-    await Promise.allSettled([
-      logService.logAction({
-        ator_tipo: 'prestador',
-        ator_id: prestadorId,
-        acao: `DEMANDA_${action.toUpperCase()}`,
-        detalhes: `${demand.id}: ${detail}`,
-      }),
-      notificationService.notifyAdmin(
-        NOTIFICATION_TITLES[action],
-        detail,
-        'demandas',
-        NOTIFICATION_ACTIONS[action],
-        { itemId: demand.id, prioridade: action === 'deliver' || action === 'return' ? 'alta' : 'normal' },
-      ),
-    ]);
   };
 
   const finishMutation = async () => {
@@ -241,7 +200,6 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
     setSubmitting(true);
     try {
       await providerOperations.transitionDemand(selected.id, 'accept');
-      await notifyAndLog('accept', selected, `A demanda "${selected.titulo || selected.id}" foi aceita por ${formatCurrency(Number(selected.valor_proposto_admin || selected.valor_final || 0))}.`);
       toast.success('Demanda aceita e iniciada.');
       await finishMutation();
     } catch (error: any) {
@@ -251,9 +209,9 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
     }
   };
 
-  const uploadFiles = async (demand: Demand, scope: string) => {
+  const uploadFiles = async (demand: Demand, scope: 'entrega' | 'devolucao') => {
     const references: string[] = [];
-    for (const file of files) {
+    for (const file of files.slice(0, 10)) {
       references.push(await uploadProviderPrivateFile({
         bucket: 'entregas_demandas',
         providerId: prestadorId,
@@ -273,49 +231,24 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
       if (actionMode === 'reject') {
         if (!reason.trim()) throw new Error('Informe o motivo da recusa.');
         await providerOperations.transitionDemand(selected.id, 'reject', { motivo: reason.trim() });
-        await notifyAndLog('reject', selected, `A demanda "${selected.titulo || selected.id}" foi recusada. Motivo: ${reason.trim()}`);
       } else if (actionMode === 'counteroffer') {
         const value = Number(counterValue.replace(/\./g, '').replace(',', '.'));
         if (!Number.isFinite(value) || value <= 0) throw new Error('Informe um valor válido.');
         await providerOperations.transitionDemand(selected.id, 'counteroffer', { valor: value, motivo: reason.trim() });
-        await notifyAndLog('counteroffer', selected, `Contraproposta de ${formatCurrency(value)} para "${selected.titulo || selected.id}".`);
       } else if (actionMode === 'deliver') {
-        if (!deliveryDate) throw new Error('Informe a data da entrega.');
         uploaded.push(...await uploadFiles(selected, 'entrega'));
         await providerOperations.transitionDemand(selected.id, 'deliver', {
-          data_entrega: new Date(deliveryDate).toISOString(),
           observacao: deliveryNotes.trim(),
           link: resultLink.trim(),
           arquivos: uploaded,
         });
-        if (selected.os_id) {
-          await supabase.from('os_notas').insert({ os_id: selected.os_id, nota: 'Serviço entregue pelo prestador e enviado para análise.' });
-        }
-        await notifyAndLog('deliver', selected, `A demanda "${selected.titulo || selected.id}" foi entregue e aguarda análise.`);
       } else if (actionMode === 'return') {
         if (!reason.trim()) throw new Error('Informe o motivo da devolução.');
         uploaded.push(...await uploadFiles(selected, 'devolucao'));
         await providerOperations.transitionDemand(selected.id, 'return', { motivo: reason.trim(), arquivos: uploaded });
-        if (selected.os_id) {
-          await supabase.from('os_notas').insert({ os_id: selected.os_id, nota: 'Demanda devolvida pelo prestador para reatribuição.' });
-        }
-        await notifyAndLog('return', selected, `A demanda "${selected.titulo || selected.id}" foi devolvida. Motivo: ${reason.trim()}`);
       } else {
         if (!supportMessage.trim()) throw new Error('Informe a mensagem de suporte.');
-        const { error } = await supabase.from('prestador_suporte_demandas').insert({
-          demanda_id: selected.id,
-          prestador_id: prestadorId,
-          mensagem: supportMessage.trim(),
-          status: 'aberto',
-        });
-        if (error) throw error;
-        await notificationService.notifyAdmin(
-          'Suporte solicitado em demanda',
-          `O prestador solicitou suporte na demanda "${selected.titulo || selected.id}".`,
-          'demandas',
-          'ticket_aberto_prestador',
-          { itemId: selected.id, prioridade: 'alta' },
-        );
+        await providerOperations.requestDemandSupport(selected.id, supportMessage.trim());
       }
 
       toast.success(actionMode === 'support' ? 'Solicitação de suporte enviada.' : 'Demanda atualizada com sucesso.');
@@ -379,13 +312,13 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
         )}
       </Modal>
 
-      <Modal isOpen={!!actionMode} onClose={() => !submitting && resetAction()} title={actionTitle(actionMode)} size="wide">
+      <Modal isOpen={!!actionMode} onClose={() => !submitting && resetAction()} title={actionTitle(actionMode)}>
         <div className="space-y-4">
-          {(actionMode === 'reject' || actionMode === 'return') && <TextArea label="Motivo" value={reason} onChange={setReason} placeholder="Explique o motivo..." />}
-          {actionMode === 'counteroffer' && <><Field label="Valor da contraproposta" value={counterValue} onChange={setCounterValue} inputMode="decimal" /><TextArea label="Justificativa" value={reason} onChange={setReason} placeholder="Explique sua contraproposta..." /></>}
-          {actionMode === 'deliver' && <><Field label="Data da entrega" value={deliveryDate} onChange={setDeliveryDate} type="datetime-local" /><Field label="Link do resultado (opcional)" value={resultLink} onChange={setResultLink} /><TextArea label="Observações" value={deliveryNotes} onChange={setDeliveryNotes} placeholder="Descreva o que está sendo entregue..." /></>}
-          {(actionMode === 'deliver' || actionMode === 'return') && <FilePicker files={files} onChange={setFiles} />}
-          {actionMode === 'support' && <TextArea label="Mensagem para a administração" value={supportMessage} onChange={setSupportMessage} placeholder="Descreva sua dúvida ou dificuldade..." />}
+          {(actionMode === 'reject' || actionMode === 'return') && <TextArea label="Motivo" value={reason} onChange={setReason} maxLength={1500} />}
+          {actionMode === 'counteroffer' && <><Field label="Valor da contraproposta" value={counterValue} onChange={setCounterValue} inputMode="decimal" /><TextArea label="Justificativa opcional" value={reason} onChange={setReason} maxLength={1500} /></>}
+          {actionMode === 'deliver' && <><TextArea label="Observações da entrega" value={deliveryNotes} onChange={setDeliveryNotes} maxLength={3000} /><Field label="Link HTTPS opcional" value={resultLink} onChange={setResultLink} /><FilePicker files={files} onChange={setFiles} /></>}
+          {actionMode === 'return' && <FilePicker files={files} onChange={setFiles} />}
+          {actionMode === 'support' && <TextArea label="Mensagem para o suporte" value={supportMessage} onChange={setSupportMessage} maxLength={3000} />}
           <button disabled={submitting} onClick={submitAction} className="w-full rounded-xl bg-neutral-900 py-3 font-black text-white disabled:opacity-50">{submitting ? 'Processando...' : 'Confirmar'}</button>
         </div>
       </Modal>
@@ -394,31 +327,36 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
 }
 
 function TabButton({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
-  return <button onClick={onClick} className={`rounded-xl px-2 py-3 text-xs font-black sm:text-sm ${active ? 'bg-white shadow-sm' : 'text-neutral-500'}`}>{label} ({count})</button>;
+  return <button onClick={onClick} className={`rounded-xl px-2 py-3 text-xs font-black sm:text-sm ${active ? 'bg-white shadow-sm' : 'text-neutral-500'}`}>{label}{count > 0 ? ` (${count})` : ''}</button>;
 }
 
 function StatusBadge({ status }: { status: DemandStatus }) {
-  const config = status === 'cancelada'
-    ? { label: 'Cancelada', className: 'bg-red-50 text-red-700', icon: XCircle }
-    : CLOSED_STATUSES.includes(status)
-      ? { label: 'Concluída', className: 'bg-emerald-50 text-emerald-700', icon: CheckCircle }
-      : status === 'em_ajuste'
-        ? { label: 'Ajuste solicitado', className: 'bg-orange-50 text-orange-700', icon: AlertCircle }
-        : status === 'em_analise'
-          ? { label: 'Em análise', className: 'bg-amber-50 text-amber-700', icon: Eye }
-          : ACTIVE_STATUSES.includes(status)
-            ? { label: 'Em execução', className: 'bg-emerald-50 text-emerald-700', icon: CheckCircle }
-            : status.includes('contraproposta') || status === 'em_negociacao'
-              ? { label: 'Em negociação', className: 'bg-purple-50 text-purple-700', icon: DollarSign }
-              : { label: 'Aguardando aceite', className: 'bg-blue-50 text-blue-700', icon: Clock };
-  const Icon = config.icon;
-  return <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-black uppercase ${config.className}`}><Icon className="h-3.5 w-3.5" />{config.label}</span>;
+  const config: Partial<Record<DemandStatus, { text: string; style: string }>> = {
+    aguardando_aceite: { text: 'Aguardando aceite', style: 'bg-blue-50 text-blue-700' },
+    aberta: { text: 'Aberta', style: 'bg-blue-50 text-blue-700' },
+    em_negociacao: { text: 'Em negociação', style: 'bg-amber-50 text-amber-700' },
+    contraproposta_prestador: { text: 'Contraproposta enviada', style: 'bg-amber-50 text-amber-700' },
+    contraproposta_admin_final: { text: 'Proposta final', style: 'bg-violet-50 text-violet-700' },
+    ativa: { text: 'Em execução', style: 'bg-emerald-50 text-emerald-700' },
+    em_analise: { text: 'Em análise', style: 'bg-indigo-50 text-indigo-700' },
+    em_ajuste: { text: 'Ajuste solicitado', style: 'bg-orange-50 text-orange-700' },
+    concluida: { text: 'Concluída', style: 'bg-emerald-50 text-emerald-700' },
+    finalizada: { text: 'Finalizada', style: 'bg-emerald-50 text-emerald-700' },
+    concluida_interna: { text: 'Concluída internamente', style: 'bg-neutral-100 text-neutral-700' },
+    cancelada: { text: 'Cancelada', style: 'bg-red-50 text-red-700' },
+  };
+  const item = config[status] || { text: status.replaceAll('_', ' '), style: 'bg-neutral-100 text-neutral-700' };
+  return <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase ${item.style}`}>{item.text}</span>;
 }
 
-function DemandActions({ demand, submitting, onAccept, onAction }: { demand: Demand; submitting: boolean; onAccept: () => void; onAction: (mode: Exclude<ActionMode, null>) => void }) {
-  const open = OPEN_STATUSES.includes(demand.status);
-  const executable = demand.status === 'ativa' || demand.status === 'em_ajuste';
-  return <div className="grid gap-2 border-t border-neutral-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">{open && <><button disabled={submitting} onClick={onAccept} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><CheckCircle className="h-4 w-4" />Aceitar</button><button disabled={submitting} onClick={() => onAction('counteroffer')} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><DollarSign className="h-4 w-4" />Contraproposta</button><button disabled={submitting} onClick={() => onAction('reject')} className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><XCircle className="h-4 w-4" />Recusar</button></>}{executable && <><button disabled={submitting} onClick={() => onAction('deliver')} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><Upload className="h-4 w-4" />Entregar</button><button disabled={submitting} onClick={() => onAction('return')} className="flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><ArrowRightLeft className="h-4 w-4" />Devolver</button></>}<button disabled={submitting} onClick={() => onAction('support')} className="flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><MessageSquare className="h-4 w-4" />Suporte</button></div>;
+function DemandActions({ demand, submitting, onAccept, onAction }: { demand: Demand; submitting: boolean; onAccept: () => void; onAction: (mode: ActionMode) => void }) {
+  if (OPEN_STATUSES.includes(demand.status)) {
+    return <div className="grid gap-2 border-t border-neutral-100 pt-4 sm:grid-cols-3"><button disabled={submitting} onClick={onAccept} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><CheckCircle className="h-4 w-4" />Aceitar</button><button disabled={submitting} onClick={() => onAction('counteroffer')} className="flex items-center justify-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-black text-amber-700 disabled:opacity-50"><DollarSign className="h-4 w-4" />Contraproposta</button><button disabled={submitting} onClick={() => onAction('reject')} className="flex items-center justify-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-black text-red-700 disabled:opacity-50"><XCircle className="h-4 w-4" />Recusar</button></div>;
+  }
+  if (['ativa', 'em_ajuste'].includes(demand.status)) {
+    return <div className="grid gap-2 border-t border-neutral-100 pt-4 sm:grid-cols-3"><button disabled={submitting} onClick={() => onAction('deliver')} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><Upload className="h-4 w-4" />Entregar</button><button disabled={submitting} onClick={() => onAction('return')} className="flex items-center justify-center gap-2 rounded-xl bg-orange-50 px-4 py-3 text-sm font-black text-orange-700 disabled:opacity-50"><ArrowRightLeft className="h-4 w-4" />Devolver</button><button disabled={submitting} onClick={() => onAction('support')} className="flex items-center justify-center gap-2 rounded-xl bg-sky-50 px-4 py-3 text-sm font-black text-sky-700 disabled:opacity-50"><MessageSquare className="h-4 w-4" />Suporte</button></div>;
+  }
+  return null;
 }
 
 function FileList({ title, references, onOpen }: { title: string; references: string[]; onOpen: (reference: string, name: string) => void }) {
@@ -426,34 +364,23 @@ function FileList({ title, references, onOpen }: { title: string; references: st
   return <div><h3 className="text-sm font-black uppercase tracking-widest text-neutral-400">{title}</h3><div className="mt-2 flex flex-wrap gap-2">{references.map((reference, index) => <button key={`${reference}-${index}`} onClick={() => onOpen(reference, `${title} ${index + 1}`)} className="flex items-center gap-2 rounded-xl bg-neutral-100 px-3 py-2 text-xs font-black text-neutral-700"><FileText className="h-4 w-4" />Arquivo {index + 1}</button>)}</div></div>;
 }
 
-function actionTitle(mode: ActionMode) {
-  if (mode === 'reject') return 'Recusar demanda';
-  if (mode === 'counteroffer') return 'Enviar contraproposta';
-  if (mode === 'deliver') return 'Entregar demanda';
-  if (mode === 'return') return 'Devolver para a administração';
-  if (mode === 'support') return 'Solicitar suporte';
-  return 'Ação da demanda';
-}
-
-function Field({ label, value, onChange, type = 'text', inputMode }: { label: string; value: string; onChange: (value: string) => void; type?: string; inputMode?: 'decimal' | 'text' }) {
-  return <div><label className="mb-1 block text-sm font-bold">{label}</label><input type={type} inputMode={inputMode} value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-xl border border-neutral-200 p-3" /></div>;
-}
-
-function TextArea({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
-  return <div><label className="mb-1 block text-sm font-bold">{label}</label><textarea value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-28 w-full rounded-xl border border-neutral-200 p-3" /></div>;
-}
-
 function FilePicker({ files, onChange }: { files: File[]; onChange: (files: File[]) => void }) {
-  const selectFiles = (list: FileList | null) => {
-    const selectedFiles: File[] = [];
-    if (list) {
-      for (let index = 0; index < Math.min(list.length, 5); index += 1) {
-        const file = list.item(index);
-        if (file) selectedFiles.push(file);
-      }
-    }
-    onChange(selectedFiles);
-  };
+  return <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 p-7 text-center"><Upload className="h-7 w-7 text-neutral-400" /><span className="mt-2 text-sm font-black">Selecionar arquivos</span><span className="mt-1 text-xs text-neutral-400">Até 10 arquivos privados</span><input type="file" multiple className="hidden" onChange={(event) => onChange(Array.from(event.target.files || []).slice(0, 10))} />{files.length > 0 && <span className="mt-3 text-xs font-bold text-indigo-600">{files.length} arquivo(s) selecionado(s)</span>}</label>;
+}
 
-  return <div><label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 p-6 text-center"><Upload className="h-7 w-7 text-neutral-400" /><span className="mt-2 text-sm font-black">Anexar arquivos privados</span><span className="mt-1 text-xs text-neutral-400">Até 5 arquivos de 25 MB</span><input type="file" multiple className="hidden" onChange={(event) => selectFiles(event.currentTarget.files)} /></label>{files.length > 0 && <div className="mt-2 space-y-1">{files.map((file) => <p key={`${file.name}-${file.size}`} className="truncate rounded-lg bg-neutral-50 px-3 py-2 text-xs font-bold">{file.name}</p>)}</div>}</div>;
+function Field({ label, value, onChange, inputMode }: { label: string; value: string; onChange: (value: string) => void; inputMode?: 'decimal' | 'text' }) {
+  return <div><label className="mb-1 block text-sm font-bold">{label}</label><input value={value} inputMode={inputMode} onChange={(event) => onChange(event.target.value)} className="w-full rounded-xl border border-neutral-200 p-3" /></div>;
+}
+
+function TextArea({ label, value, onChange, maxLength }: { label: string; value: string; onChange: (value: string) => void; maxLength: number }) {
+  return <div><label className="mb-1 block text-sm font-bold">{label}</label><textarea maxLength={maxLength} value={value} onChange={(event) => onChange(event.target.value)} className="h-28 w-full rounded-xl border border-neutral-200 p-3" /></div>;
+}
+
+function actionTitle(action: ActionMode) {
+  if (action === 'reject') return 'Recusar demanda';
+  if (action === 'counteroffer') return 'Enviar contraproposta';
+  if (action === 'deliver') return 'Entregar serviço';
+  if (action === 'return') return 'Devolver demanda';
+  if (action === 'support') return 'Solicitar suporte';
+  return 'Ação da demanda';
 }
