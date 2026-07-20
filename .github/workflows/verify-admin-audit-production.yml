@@ -34,7 +34,7 @@ jobs:
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$SUPABASE_DB_PASSWORD"
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          grep -Fqx 'VERIFY_ADMIN_AUDIT_PRODUCTION_V1' .verify-admin-audit-production-trigger
+          grep -Fqx 'VERIFY_ADMIN_AUDIT_PRODUCTION_V2' .verify-admin-audit-production-trigger
 
       - uses: supabase/setup-cli@v1
         with:
@@ -128,21 +128,37 @@ jobs:
 
             IF NOT EXISTS (
               SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_classifieds_snapshot'
+              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_list_resource'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_classified_action'
             ) THEN
               RAISE EXCEPTION 'Operações seguras de classificados ausentes';
             END IF;
 
             IF NOT EXISTS (
               SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-              WHERE n.nspname = 'public' AND p.proname LIKE 'gsa_admin_%protection%'
+              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_update_resource_status'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_save_protection_entity'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public' AND p.proname = 'gsa_admin_create_protection_proposal'
             ) THEN
               RAISE EXCEPTION 'Operações administrativas de proteção ausentes';
             END IF;
 
+            IF to_regprocedure('public.gsa_admin_sensitive_change_audit()') IS NULL THEN
+              RAISE EXCEPTION 'Função de auditoria administrativa sensível ausente';
+            END IF;
+
             IF NOT EXISTS (
               SELECT 1 FROM pg_trigger
-              WHERE tgname LIKE '%admin%audit%' AND NOT tgisinternal
+              WHERE tgname = 'trg_gsa_admin_audit_colaboradores' AND NOT tgisinternal
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_gsa_admin_audit_classificados_anuncios' AND NOT tgisinternal
             ) THEN
               RAISE EXCEPTION 'Triggers de auditoria administrativa ausentes';
             END IF;
