@@ -33,6 +33,7 @@ async function main() {
   assert.equal(adminModulePath('financeiro', 'faturas', 'abc'), '/admin/financeiro/faturas/abc');
 
   await assertFileContains('src/pages/AdminPanel.tsx', [
+    "import type React from 'react';",
     'canAccessAdminModule',
     'adminModulePath',
     "select('nome, modulos, status')",
@@ -47,6 +48,7 @@ async function main() {
   ]);
 
   await assertFileContains('src/components/admin/Dashboard.tsx', [
+    "import type React from 'react';",
     'gsa_admin_dashboard_snapshot',
     'Faturamento dos últimos 6 meses',
     'credito_pendente_total',
@@ -54,6 +56,7 @@ async function main() {
   ]);
 
   await assertFileContains('src/components/admin/TravelAdminModule.tsx', [
+    "import type React from 'react';",
     'gsa_admin_travel_list',
     'gsa_admin_travel_create_proposal',
     'gsa_admin_travel_create_package',
