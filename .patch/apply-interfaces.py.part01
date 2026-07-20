@@ -1,45 +1,3 @@
-      }
-      return true;
-    } catch (error) {
-      toast.error(handleError(error, 'Erro ao cadastrar assinatura'));
-      return false;
-    }
-  };
-
-  const handleUpdate = async (formData: any) => {
-    if (!selectedAssinatura) return false;
-    const { imagens_adicionais, ...otherData } = formData;
-    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-    const previousImages = mapColumnsToGallery(selectedAssinatura);
-    try {
-      await saveAdminSubscriptionCatalog({
-        assinaturaId: selectedAssinatura.id,
-        payload: {
-          ...otherData,
-          ...galleryCols,
-          descricao: otherData.descricao || '',
-        },
-      });
-      await removeUnusedPublicStoreImages(previousImages, imagens_adicionais || []);
-      toast.success('Assinatura atualizada com sucesso.');
-      await logService.logAction({
-        acao: 'EDITAR_ASSINATURA',
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-        ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
-        detalhes: `Editou a assinatura: ${formData.nome} (#${selectedAssinatura.codigo_assinatura})`,
-      });
-      setIsEditModalOpen(false);
-      await fetchAssinaturas();
-      return true;
-    } catch (error) {
-      toast.error(handleError(error, 'Erro ao atualizar assinatura'));
-      return false;
-    }
-  };
-
-  return ('''),
-)
 regex_once(
     'src/components/admin/AssinaturasModule.tsx',
     r"  const handleGalleryUpload = async \(e: React\.ChangeEvent<HTMLInputElement>\) => \{.*?\n  \};\n\n  const removeGalleryImage",
@@ -77,9 +35,6 @@ replace_once(
     "                         fetchAssinaturas();\n                       } catch (error) {\n                         toast.error(handleError(error, 'Erro ao inativar assinatura'));\n                       }\n                     }}",
 )
 
-# ---------------------------------------------------------------------------
-# OrdensCompraModule: transições e cancelamento atômicos
-# ---------------------------------------------------------------------------
 replace_once(
     'src/components/admin/OrdensCompraModule.tsx',
     "import { formatCurrency, formatDate, generateCode, handleError, maskPhone } from '../../lib/utils';",
@@ -167,9 +122,6 @@ replace_once(
     "      const endDate = `${year}-${filters.mes}-${String(new Date(Number(year), Number(filters.mes), 0).getDate()).padStart(2, '0')}`;",
 )
 
-# ---------------------------------------------------------------------------
-# OrdensAssinaturaModule: ativação transacional e data local
-# ---------------------------------------------------------------------------
 replace_once(
     'src/components/admin/OrdensAssinaturaModule.tsx',
     "import { sessionService } from '../../lib/sessionService';",
@@ -199,9 +151,6 @@ replace_once(
     "      const endDate = `${year}-${filters.mes}-${String(new Date(Number(year), Number(filters.mes), 0).getDate()).padStart(2, '0')}`;",
 )
 
-# ---------------------------------------------------------------------------
-# Portal do cliente: produtos e assinaturas
-# ---------------------------------------------------------------------------
 replace_once(
     'src/components/client/ClientProdutos.tsx',
     "        if (item.status === 'em_analise' || item.status === 'concluido') setMeusTab('comprados');",
@@ -227,7 +176,6 @@ replace_once(
     "    } catch (error) {\n      toast.error('Erro ao adicionar produto ao carrinho.');",
     "    } catch (error: any) {\n      toast.error(error?.message || 'Erro ao adicionar produto ao carrinho.');",
 )
-
 replace_once(
     'src/components/client/ClientAssinaturas.tsx',
     "        if (item.status === 'em_analise' || item.status === 'concluido' || item.status === 'em_cancelamento') setMinhasTab('ativas');",
@@ -249,9 +197,6 @@ replace_once(
     "                           {formatCurrency(selectedAssinatura.valor_mensal_contratado ?? selectedAssinatura.assinaturas?.valor ?? 0)}",
 )
 
-# ---------------------------------------------------------------------------
-# Checkout: validação de catálogo e estoque antes da RPC
-# ---------------------------------------------------------------------------
 replace_once(
     'src/components/client/store/CheckoutModal.tsx',
     "          .select('id, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada')",
