@@ -33,7 +33,7 @@ jobs:
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$SUPABASE_DB_PASSWORD"
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          grep -Fqx 'DEPLOY_PRODUCTS_SUBSCRIPTIONS_V1' .deploy-products-subscriptions-trigger
+          grep -Fqx 'DEPLOY_PRODUCTS_SUBSCRIPTIONS_V2' .deploy-products-subscriptions-trigger
           test -f supabase/migrations/20260721010000_harden_products_and_subscriptions.sql
           test -f supabase/migrations/20260721010100_secure_product_subscription_catalog.sql
 
@@ -115,7 +115,7 @@ jobs:
             IF to_regprocedure('public.gsa_admin_adjust_product_stock(uuid,text,uuid,uuid,text,integer,text)') IS NULL
                OR to_regprocedure('public.gsa_admin_transition_store_order(uuid,text,uuid,uuid,text)') IS NULL
                OR to_regprocedure('public.gsa_admin_cancel_store_order(uuid,text,uuid,uuid,text)') IS NULL
-               OR to_regprocedure('public.gsa_admin_activate_subscription(uuid,text,uuid,uuid,integer)') IS NULL
+               OR to_regprocedure('public.gsa_admin_activate_subscription(uuid,text,uuid,uuid)') IS NULL
                OR to_regprocedure('public.gsa_process_due_subscription_cancellations()') IS NULL
                OR to_regprocedure('public.gsa_admin_save_product_catalog(uuid,text,uuid,jsonb,jsonb)') IS NULL
                OR to_regprocedure('public.gsa_admin_save_subscription_catalog(uuid,text,uuid,jsonb)') IS NULL
