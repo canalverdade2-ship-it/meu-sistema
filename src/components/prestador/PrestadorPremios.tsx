@@ -15,7 +15,6 @@ type Prize = {
   status: string;
   created_at: string;
   data_resgate?: string | null;
-  instrucoes_resgate?: string | null;
 };
 
 export function PrestadorPremios({ prestadorId, initialItemId }: { prestadorId: string; initialItemId?: string }) {
@@ -31,7 +30,7 @@ export function PrestadorPremios({ prestadorId, initialItemId }: { prestadorId: 
     try {
       const { data, error } = await supabase
         .from('prestador_premios')
-        .select('id,titulo,descricao,status,created_at,data_resgate,instrucoes_resgate')
+        .select('id,titulo,descricao,status,created_at,data_resgate')
         .eq('prestador_id', prestadorId)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -129,7 +128,7 @@ export function PrestadorPremios({ prestadorId, initialItemId }: { prestadorId: 
       </Modal>
 
       <Modal isOpen={!!details} onClose={() => setDetails(null)} title="Detalhes do prêmio">
-        {details && <div className="space-y-4"><div><p className="text-xs font-black uppercase tracking-widest text-neutral-400">Prêmio</p><p className="mt-1 text-xl font-black">{details.titulo}</p></div><p className="text-sm text-neutral-600">{details.descricao || 'Sem descrição adicional.'}</p>{details.instrucoes_resgate && <div className="rounded-xl bg-neutral-50 p-4 text-sm text-neutral-700"><strong>Instruções:</strong> {details.instrucoes_resgate}</div>}</div>}
+        {details && <div className="space-y-4"><div><p className="text-xs font-black uppercase tracking-widest text-neutral-400">Prêmio</p><p className="mt-1 text-xl font-black">{details.titulo}</p></div><p className="text-sm text-neutral-600">{details.descricao || 'Sem descrição adicional.'}</p><div className="rounded-xl bg-neutral-50 p-4 text-sm text-neutral-700">A equipe administrativa fará contato para confirmar a forma e o prazo de entrega.</div></div>}
       </Modal>
     </div>
   );
