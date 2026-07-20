@@ -1,0 +1,41 @@
+name: Temporary fix Home lazy import
+
+on:
+  push:
+    branches: [agent/corrigir-home-itens-2-a-10]
+    paths: ['.home-lazy-fix-ready']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-home-lazy-import
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix named marketplace export
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/App.tsx')
+          text = path.read_text()
+          old = "const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore'));"
+          new = "const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore').then((module) => ({ default: module.MarketplaceGSAStore })));"
+          if text.count(old) != 1:
+              raise SystemExit('Importação esperada não encontrada exatamente uma vez.')
+          path.write_text(text.replace(old, new))
+          PY
+          rm .home-lazy-fix-ready .github/workflows/fix-home-lazy-import.yml
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Corrigir carregamento lazy do marketplace'
+          git push
