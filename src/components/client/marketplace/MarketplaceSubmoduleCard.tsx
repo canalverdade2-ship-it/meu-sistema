@@ -1,8 +1,9 @@
-import type { ElementType, ReactNode } from 'react';
+import type { ElementType, Key, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 interface MarketplaceSubmoduleCardProps {
+  key?: Key;
   icon: ElementType;
   title: string;
   description: string;
