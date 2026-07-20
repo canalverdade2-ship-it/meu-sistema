@@ -1,0 +1,180 @@
+name: Deploy Products Subscriptions Production
+
+on:
+  push:
+    branches: [ops/deploy-products-subscriptions-production]
+    paths: ['.deploy-products-subscriptions-trigger']
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: deploy-products-subscriptions-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Validate authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          grep -Fqx 'DEPLOY_PRODUCTS_SUBSCRIPTIONS_V1' .deploy-products-subscriptions-trigger
+          test -f supabase/migrations/20260721010000_harden_products_and_subscriptions.sql
+          test -f supabase/migrations/20260721010100_secure_product_subscription_catalog.sql
+
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Detect pending migrations
+        id: state
+        shell: bash
+        run: |
+          cat > /tmp/product-state.sql <<'SQL'
+          SELECT CASE WHEN EXISTS (
+            SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = '20260721010000'
+          ) THEN 'APPLIED_20260721010000' ELSE 'PENDING_20260721010000' END;
+          SELECT CASE WHEN EXISTS (
+            SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = '20260721010100'
+          ) THEN 'APPLIED_20260721010100' ELSE 'PENDING_20260721010100' END;
+          SQL
+          supabase db query --linked --file /tmp/product-state.sql 2>&1 | tee products-state.log
+          pending=''
+          grep -q 'PENDING_20260721010000' products-state.log && pending="$pending 20260721010000"
+          grep -q 'PENDING_20260721010100' products-state.log && pending="$pending 20260721010100"
+          echo "pending=$pending" >> "$GITHUB_OUTPUT"
+
+      - name: Build transactional bundles
+        if: steps.state.outputs.pending != ''
+        env:
+          PENDING: ${{ steps.state.outputs.pending }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            for version in $PENDING; do
+              case "$version" in
+                20260721010000) file='supabase/migrations/20260721010000_harden_products_and_subscriptions.sql' ;;
+                20260721010100) file='supabase/migrations/20260721010100_secure_product_subscription_catalog.sql' ;;
+                *) echo "Versão inesperada: $version" >&2; exit 1 ;;
+              esac
+              sed '/^[[:space:]]*BEGIN;[[:space:]]*$/d; /^[[:space:]]*COMMIT;[[:space:]]*$/d' "$file"
+            done
+            echo 'ROLLBACK;'
+          } > /tmp/products-preview.sql
+          sed 's/^ROLLBACK;$/COMMIT;/' /tmp/products-preview.sql > /tmp/products-production.sql
+
+      - name: Validate migrations with rollback
+        if: steps.state.outputs.pending != ''
+        run: supabase db query --linked --file /tmp/products-preview.sql 2>&1 | tee products-preview.log
+
+      - name: Apply migrations atomically
+        if: steps.state.outputs.pending != ''
+        run: supabase db query --linked --file /tmp/products-production.sql 2>&1 | tee products-deployment.log
+
+      - name: Register migration history
+        if: steps.state.outputs.pending != ''
+        env:
+          PENDING: ${{ steps.state.outputs.pending }}
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration repair $PENDING --status applied --linked 2>&1 | tee products-history.log
+
+      - name: Verify production contracts
+        shell: bash
+        run: |
+          cat > /tmp/products-verify.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regclass('public.gsa_admin_operation_requests') IS NULL THEN
+              RAISE EXCEPTION 'Tabela de idempotência administrativa ausente';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='ordens_compra' AND column_name='valor_unitario_contratado')
+               OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='ordens_assinatura' AND column_name='valor_mensal_contratado') THEN
+              RAISE EXCEPTION 'Snapshots históricos ausentes';
+            END IF;
+            IF to_regprocedure('public.gsa_admin_adjust_product_stock(uuid,text,uuid,uuid,text,integer,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_transition_store_order(uuid,text,uuid,uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_cancel_store_order(uuid,text,uuid,uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_activate_subscription(uuid,text,uuid,uuid,integer)') IS NULL
+               OR to_regprocedure('public.gsa_process_due_subscription_cancellations()') IS NULL
+               OR to_regprocedure('public.gsa_admin_save_product_catalog(uuid,text,uuid,jsonb,jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_admin_save_subscription_catalog(uuid,text,uuid,jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_admin_archive_catalog_items(uuid,text,text,uuid[])') IS NULL THEN
+              RAISE EXCEPTION 'Uma ou mais RPCs de Produtos e Assinaturas estão ausentes';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_gsa_snapshot_store_order' AND NOT tgisinternal)
+               OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_gsa_snapshot_subscription_order' AND NOT tgisinternal) THEN
+              RAISE EXCEPTION 'Triggers de snapshot ausentes';
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20260721010000')
+               OR NOT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20260721010100') THEN
+              RAISE EXCEPTION 'Histórico das migrations ausente';
+            END IF;
+            IF has_function_privilege('anon', 'public.gsa_admin_save_product_catalog(uuid,text,uuid,jsonb,jsonb)', 'EXECUTE')
+               OR NOT has_function_privilege('authenticated', 'public.gsa_admin_save_product_catalog(uuid,text,uuid,jsonb,jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Permissões do catálogo de produtos incorretas';
+            END IF;
+          END $$;
+          SELECT 'PRODUCTS_SUBSCRIPTIONS_DEPLOY_OK' AS result;
+          SQL
+          supabase db query --linked --file /tmp/products-verify.sql 2>&1 | tee products-verification.log
+          grep -q 'PRODUCTS_SUBSCRIPTIONS_DEPLOY_OK' products-verification.log
+
+      - name: Record production success
+        run: |
+          printf 'SUCCESS\nproject=%s\nrun=%s\nmigrations=20260721010000,20260721010100\n' "$SUPABASE_PROJECT_ID" "$GITHUB_RUN_ID" > .deploy-products-subscriptions-success
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .deploy-products-subscriptions-success
+          git commit -m 'Registrar implantação de Produtos e Assinaturas'
+          git push
+
+      - name: Publish failure diagnostic
+        if: failure()
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          touch products-state.log products-preview.log products-deployment.log products-history.log products-verification.log
+          {
+            echo '## Falha na implantação de Produtos e Assinaturas'
+            echo
+            echo "- Projeto: $EXPECTED_PROJECT_ID"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo '```text'
+            cat products-state.log products-preview.log products-deployment.log products-history.log products-verification.log
+            echo '```'
+          } > failure.md
+          gh issue create --title 'Falha implantação Produtos e Assinaturas' --body-file failure.md
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: products-subscriptions-production-evidence
+          path: |
+            products-state.log
+            products-preview.log
+            products-deployment.log
+            products-history.log
+            products-verification.log
+          if-no-files-found: ignore
+          retention-days: 30
