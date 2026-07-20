@@ -1,248 +1,118 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useEffect, useMemo, useState } from 'react';
+import { CheckCircle, Clock, History, Tag, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { Tag, CheckCircle, Clock, Zap, History } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import { formatDate } from '../../lib/utils';
+import { providerOperations } from '../../lib/providerOperations';
+import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 
-interface PrestadorPromocoesProps {
-  prestadorId: string;
-  initialItemId?: string;
-}
+type Promotion = {
+  id: string;
+  titulo: string;
+  descricao?: string | null;
+  regras?: string | null;
+  status: string;
+  data_inicio?: string | null;
+  data_fim?: string | null;
+  created_at: string;
+};
 
-export function PrestadorPromocoes({ prestadorId, initialItemId }: PrestadorPromocoesProps) {
-  const [promocoes, setPromocoes] = useState<any[]>([]);
-  const [ativacoes, setAtivacoes] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'ativas' | 'encerradas'>('ativas');
+type Activation = { promocao_id: string; ativa: boolean };
+
+export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId: string; initialItemId?: string }) {
+  const { refreshCounts } = useProviderNotifications();
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [activations, setActivations] = useState<Activation[]>([]);
+  const [activeTab, setActiveTab] = useState<'ativas' | 'historico'>('ativas');
   const [loading, setLoading] = useState(true);
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
-  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (initialItemId && promocoes.length > 0) {
-      const promo = promocoes.find(p => p.id === initialItemId);
-      if (promo) {
-        setTimeout(() => {
-          const element = document.getElementById(`promo-${initialItemId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setHighlightedItemId(initialItemId);
-            setTimeout(() => setHighlightedItemId(null), 3000);
-          }
-        }, 400);
-      }
-    }
-  }, [initialItemId, promocoes.length]);
-
-  useEffect(() => {
-    fetchData();
-    const channel = supabase
-      .channel(`prestador-promocoes-${prestadorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, fetchData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, fetchData)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [prestadorId, activeTab]);
-
-  const fetchData = async () => {
+  const load = async () => {
     try {
-      setLoading(true);
-
-      // Fetch promotions
-      // Note: expiration is now handled automatically by a DB trigger (trg_auto_expire_promocoes)
-      let query = supabase
-        .from('prestador_promocoes')
-        .select('*');
-
-      if (!initialItemId) {
-        query = query.eq('status', activeTab === 'ativas' ? 'ativa' : 'encerrada');
-      }
-
-      const { data: promoData, error: promoError } = await query.order('created_at', { ascending: false });
-
-      if (promoError) {
-        if (promoError.code === '42P01') {
-          console.warn('Tabela prestador_promocoes não existe ainda.');
-          setPromocoes([]);
-          setAtivacoes([]);
-          return;
-        }
-        throw promoError;
-      }
-
-      if (promoData && initialItemId) {
-        const target = promoData.find(p => p.id === initialItemId);
-        if (target) {
-          setActiveTab(target.status === 'ativa' ? 'ativas' : 'encerradas');
-        }
-      }
-
-      // Fetch activations for this provider
-      const { data: ativData, error: ativError } = await supabase
-        .from('prestador_promocoes_ativacoes')
-        .select('*')
-        .eq('prestador_id', prestadorId);
-
-      if (ativError) throw ativError;
-
-      setPromocoes(promoData || []);
-      setAtivacoes(ativData || []);
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao buscar promoções.');
+      const [promotionResult, activationResult] = await Promise.all([
+        supabase.from('prestador_promocoes').select('id,titulo,descricao,regras,status,data_inicio,data_fim,created_at').order('created_at', { ascending: false }),
+        supabase.from('prestador_promocoes_ativacoes').select('promocao_id,ativa').eq('prestador_id', prestadorId),
+      ]);
+      if (promotionResult.error) throw promotionResult.error;
+      if (activationResult.error) throw activationResult.error;
+      setPromotions((promotionResult.data || []) as Promotion[]);
+      setActivations((activationResult.data || []) as Activation[]);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível carregar as promoções.');
     } finally {
       setLoading(false);
     }
   };
 
-  const ativarPromocao = async (promocaoId: string) => {
+  useEffect(() => {
+    void load();
+    const channel = supabase.channel(`provider-promotions-${prestadorId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load())
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [prestadorId]);
+
+  useEffect(() => {
+    if (!initialItemId || !promotions.length) return;
+    const promotion = promotions.find((item) => item.id === initialItemId);
+    if (!promotion) return;
+    setActiveTab(promotion.status === 'ativa' ? 'ativas' : 'historico');
+    setHighlightedId(promotion.id);
+    const timer = window.setTimeout(() => setHighlightedId(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [initialItemId, promotions]);
+
+  const activeIds = useMemo(() => new Set(activations.filter((item) => item.ativa).map((item) => item.promocao_id)), [activations]);
+  const now = Date.now();
+  const visible = promotions.filter((item) => {
+    const ended = item.status !== 'ativa' || (!!item.data_fim && new Date(item.data_fim).getTime() < now);
+    return activeTab === 'ativas' ? !ended : ended || activeIds.has(item.id);
+  });
+
+  const activate = async (promotion: Promotion) => {
+    if (submittingId) return;
+    setSubmittingId(promotion.id);
     try {
-      const { error } = await supabase
-        .from('prestador_promocoes_ativacoes')
-        .insert([{
-          prestador_id: prestadorId,
-          promocao_id: promocaoId,
-          ativa: true
-        }]);
-      
-      if (error) throw error;
-      toast.success('Promoção ativada com sucesso!');
-      fetchData();
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao ativar a promoção.');
+      await providerOperations.activatePromotion(promotion.id);
+      toast.success('Participação confirmada.');
+      await Promise.all([load(), refreshCounts()]);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível ativar a promoção.');
+    } finally {
+      setSubmittingId(null);
     }
   };
 
-  if (loading) return <div className="py-12 flex justify-center"><div className="w-8 h-8 rounded-full border-4 border-fuchsia-600 border-t-transparent animate-spin"/></div>;
-
-  const isAtivada = (promoId: string) => ativacoes.some(a => a.promocao_id === promoId && a.ativa);
+  if (loading) return <div className="flex justify-center py-16"><div className="h-9 w-9 animate-spin rounded-full border-4 border-fuchsia-600 border-t-transparent" /></div>;
 
   return (
     <div className="space-y-6">
-      {/* Tab Switcher */}
-      <div className="flex gap-2 p-1 bg-neutral-100 rounded-2xl w-max border border-neutral-200">
-        <button
-          onClick={() => setActiveTab('ativas')}
-          className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'ativas' 
-              ? 'bg-white text-fuchsia-600 shadow-sm' 
-              : 'text-neutral-500 hover:text-neutral-700'
-          }`}
-        >
-          <Zap className="w-4 h-4" />
-          Campanhas Ativas
-        </button>
-        <button
-          onClick={() => setActiveTab('encerradas')}
-          className={`flex items-center gap-2 px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'encerradas' 
-              ? 'bg-white text-fuchsia-600 shadow-sm' 
-              : 'text-neutral-500 hover:text-neutral-700'
-          }`}
-        >
-          <History className="w-4 h-4" />
-          Meu Histórico
-        </button>
+      <div className="flex gap-2 rounded-2xl bg-neutral-100 p-1 sm:w-max">
+        <button onClick={() => setActiveTab('ativas')} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black sm:flex-none ${activeTab === 'ativas' ? 'bg-white text-fuchsia-600 shadow-sm' : 'text-neutral-500'}`}><Zap className="h-4 w-4" />Campanhas ativas</button>
+        <button onClick={() => setActiveTab('historico')} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black sm:flex-none ${activeTab === 'historico' ? 'bg-white text-fuchsia-600 shadow-sm' : 'text-neutral-500'}`}><History className="h-4 w-4" />Histórico</button>
       </div>
 
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 overflow-hidden">
-        <div className="p-6 border-b border-neutral-100 flex justify-between items-center bg-fuchsia-50/50">
-          <div>
-            <h3 className="text-lg font-medium text-neutral-900 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-fuchsia-600" />
-              {activeTab === 'ativas' ? 'Promoções e Campanhas' : 'Histórico de Campanhas'}
-            </h3>
-            <p className="text-sm text-neutral-500 mt-1">
-              {activeTab === 'ativas' 
-                ? 'Participe das campanhas para aumentar seus ganhos.' 
-                : 'Veja as campanhas em que você já participou.'}
-            </p>
-          </div>
-          <span className="bg-fuchsia-100 text-fuchsia-700 px-3 py-1 rounded-full text-sm font-bold">
-            {promocoes.length} campanhas
-          </span>
-        </div>
-        
-        {promocoes.length === 0 ? (
-          <div className="p-12 text-center text-neutral-500">
-            {activeTab === 'ativas' ? (
-              <>
-                <Tag className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
-                <p className="font-medium text-neutral-900">Nenhuma promoção ativa no momento</p>
-                <p className="text-sm mt-1">Fique atento, novas promoções podem surgir a qualquer momento.</p>
-              </>
-            ) : (
-              <>
-                <History className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
-                <p className="font-medium text-neutral-900">Sem histórico de campanhas</p>
-                <p className="text-sm mt-1">Sua participação em campanhas encerradas aparecerá aqui.</p>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
-            {promocoes.map(promo => {
-              const ativada = isAtivada(promo.id);
-              return (
-                <div 
-                  id={`promo-${promo.id}`}
-                  key={promo.id} 
-                  className={`relative overflow-hidden rounded-2xl border transition-all duration-500 ${
-                    highlightedItemId === promo.id 
-                      ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500 scale-[1.02] z-10 shadow-lg' 
-                      : ativada ? 'border-fuchsia-200 bg-fuchsia-50/30' : 'border-neutral-200 bg-white'
-                  } p-6`}
-                >
-                  {ativada && (
-                    <div className="absolute top-0 right-0 p-4">
-                      <div className="bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        Participando
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="w-12 h-12 bg-fuchsia-100 text-fuchsia-600 rounded-xl flex items-center justify-center mb-4">
-                    <Tag className="w-6 h-6" />
-                  </div>
-                  
-                  <h4 className="text-xl font-bold text-neutral-900 mb-2">{promo.titulo}</h4>
-                  <p className="text-sm text-neutral-600 mb-4">{promo.descricao}</p>
-                  
-                  {promo.regras && (
-                    <div className="bg-neutral-50 rounded-lg p-3 text-xs text-neutral-500 mb-6 border border-neutral-100">
-                      <strong>Regras: </strong> {promo.regras}
-                    </div>
-                  )}
-                  
-                  {activeTab === 'ativas' ? (
-                    promo.data_fim && (
-                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-4 font-medium">
-                        <Clock className="w-3.5 h-3.5" />
-                        Válido até: {formatDate(promo.data_fim)}
-                      </div>
-                    )
-                  ) : (
-                    <div className="flex items-center gap-1.5 text-xs text-red-500 mb-4 font-bold uppercase tracking-widest">
-                      <Clock className="w-3.5 h-3.5" />
-                      Campanha Encerrada
-                    </div>
-                  )}
-
-                  {!ativada && activeTab === 'ativas' && (
-                    <button
-                      onClick={() => ativarPromocao(promo.id)}
-                      className="w-full bg-[#1a1a1a] hover:bg-black text-white font-medium py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
-                    >
-                      Quero Participar
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        <div className="flex items-center justify-between border-b border-neutral-100 bg-fuchsia-50/50 p-5"><div><h2 className="text-xl font-black">{activeTab === 'ativas' ? 'Promoções e campanhas' : 'Campanhas encerradas'}</h2><p className="text-sm text-neutral-500">A participação é registrada uma única vez no banco.</p></div><span className="rounded-full bg-fuchsia-100 px-3 py-1 text-sm font-black text-fuchsia-700">{visible.length}</span></div>
+        {visible.length === 0 ? <Empty active={activeTab === 'ativas'} /> : <div className="grid gap-4 p-5 md:grid-cols-2">{visible.map((promotion) => {
+          const activated = activeIds.has(promotion.id);
+          return <article id={`promo-${promotion.id}`} key={promotion.id} className={`relative rounded-2xl border p-5 transition ${highlightedId === promotion.id ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-300' : activated ? 'border-fuchsia-200 bg-fuchsia-50/40' : 'border-neutral-200'}`}>
+            {activated && <span className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black uppercase text-emerald-700"><CheckCircle className="h-3.5 w-3.5" />Participando</span>}
+            <span className="inline-flex rounded-xl bg-fuchsia-100 p-3 text-fuchsia-600"><Tag className="h-6 w-6" /></span>
+            <h3 className="mt-4 pr-28 text-xl font-black">{promotion.titulo}</h3>
+            <p className="mt-2 text-sm text-neutral-500">{promotion.descricao || 'Campanha especial para prestadores.'}</p>
+            {promotion.regras && <div className="mt-4 rounded-xl bg-neutral-50 p-3 text-xs text-neutral-600"><strong>Regras:</strong> {promotion.regras}</div>}
+            {promotion.data_fim && <p className="mt-4 flex items-center gap-1.5 text-xs font-bold text-neutral-400"><Clock className="h-4 w-4" />{activeTab === 'ativas' ? `Válida até ${formatDate(promotion.data_fim)}` : `Encerrada em ${formatDate(promotion.data_fim)}`}</p>}
+            {activeTab === 'ativas' && !activated && <button disabled={!!submittingId} onClick={() => activate(promotion)} className="mt-5 w-full rounded-xl bg-neutral-900 py-3 text-sm font-black text-white disabled:opacity-50">{submittingId === promotion.id ? 'Confirmando...' : 'Quero participar'}</button>}
+          </article>;
+        })}</div>}
+      </section>
     </div>
   );
+}
+
+function Empty({ active }: { active: boolean }) {
+  return <div className="p-12 text-center text-neutral-400"><Tag className="mx-auto h-10 w-10" /><p className="mt-3 text-sm font-bold">{active ? 'Nenhuma promoção ativa no momento.' : 'Nenhuma campanha no histórico.'}</p></div>;
 }

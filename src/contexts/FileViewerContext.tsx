@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { toast } from 'react-hot-toast';
 import { FileViewerModal } from '../components/ui/FileViewerModal';
 import { resolvePrivateFileReference } from '../lib/privateStorage';
+import { resolveProviderFileUrl } from '../lib/providerStorage';
 
 interface FileViewerContextType {
   openFile: (url: string, fileName?: string) => Promise<void>;
@@ -22,19 +23,20 @@ export function FileViewerProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const resolvedUrl = await resolvePrivateFileReference(url);
+      const privateUrl = await resolvePrivateFileReference(url);
+      const resolvedUrl = await resolveProviderFileUrl(privateUrl);
       setFileUrl(resolvedUrl);
       setFileName(name || null);
       setIsOpen(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao abrir arquivo protegido:', error);
-      toast.error('Não foi possível autorizar o acesso ao arquivo.');
+      toast.error(error?.message || 'Não foi possível autorizar o acesso ao arquivo.');
     }
   };
 
   const closeFile = () => {
     setIsOpen(false);
-    setTimeout(() => {
+    window.setTimeout(() => {
       setFileUrl(null);
       setFileName(null);
     }, 300);
@@ -43,20 +45,13 @@ export function FileViewerProvider({ children }: { children: ReactNode }) {
   return (
     <FileViewerContext.Provider value={{ openFile, closeFile }}>
       {children}
-      <FileViewerModal
-        isOpen={isOpen}
-        onClose={closeFile}
-        fileUrl={fileUrl}
-        fileName={fileName}
-      />
+      <FileViewerModal isOpen={isOpen} onClose={closeFile} fileUrl={fileUrl} fileName={fileName} />
     </FileViewerContext.Provider>
   );
 }
 
 export function useFileViewer() {
   const context = useContext(FileViewerContext);
-  if (context === undefined) {
-    throw new Error('useFileViewer must be used within a FileViewerProvider');
-  }
+  if (!context) throw new Error('useFileViewer must be used within a FileViewerProvider');
   return context;
 }
