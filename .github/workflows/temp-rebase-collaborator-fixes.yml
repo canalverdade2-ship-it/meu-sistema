@@ -1,0 +1,67 @@
+name: Temporary collaborator correction rebase
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  rebase:
+    if: github.actor != 'github-actions[bot]' && github.event.pull_request.head.ref == 'agent/corrigir-painel-colaborador'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-painel-colaborador
+          fetch-depth: 0
+
+      - name: Extract only collaborator-panel changes
+        shell: bash
+        run: |
+          git diff --binary 7fa64f7d1fb58f0c8b190439ed54eeda5d74ffab -- \
+            src/App.tsx \
+            src/components/admin/AcessosModule.tsx \
+            src/components/admin/CollaboratorDashboard.tsx \
+            src/components/auth/RestrictedAccessModal.tsx \
+            src/hooks/useAdminNotifications.tsx \
+            src/hooks/useAutoLogout.ts \
+            src/hooks/useAutoLogout.tsx \
+            src/lib/sessionService.ts \
+            src/lib/utils.ts \
+            src/pages/AdminPanel.tsx \
+            src/pages/Home.tsx \
+            src/pages/SecureAdminPanel.tsx \
+            src/routing/routeSecurity.ts \
+            src/security/collaboratorAccess.ts \
+            supabase/migrations/20260720213000_secure_collaborator_panel.sql \
+            > /tmp/collaborator-panel.patch
+          test -s /tmp/collaborator-panel.patch
+
+      - name: Rebuild branch on current main
+        shell: bash
+        run: |
+          git reset --hard 7fa64f7d1fb58f0c8b190439ed54eeda5d74ffab
+          git apply --index /tmp/collaborator-panel.patch
+          rm -rf .validation-diagnostics .correction-diagnostics .patch
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Validate TypeScript
+        run: npm run lint
+
+      - name: Validate production build
+        run: npm run build
+
+      - name: Publish rebased correction
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Corrigir segurança e experiência do painel do colaborador"
+          git push --force-with-lease origin HEAD:agent/corrigir-painel-colaborador
