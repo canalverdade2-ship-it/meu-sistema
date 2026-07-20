@@ -32,6 +32,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Discover local GSA migration dependencies
+        shell: bash
+        run: |
+          find supabase/migrations -maxdepth 1 -type f -name '*.sql' -print0 \
+            | xargs -0 grep -IlE 'viagens_|GSA Viagens|pacote_viagem' \
+            | sort > gsa-related-migrations.txt
+
+          : > gsa-related-migrations.sql
+          while IFS= read -r migration; do
+            printf '\n\n-- FILE: %s\n' "$migration" >> gsa-related-migrations.sql
+            cat "$migration" >> gsa-related-migrations.sql
+          done < gsa-related-migrations.txt
+
       - name: Validate protected configuration
         shell: bash
         run: |
@@ -99,6 +112,8 @@ jobs:
         with:
           name: supabase-migration-preview
           path: |
+            gsa-related-migrations.txt
+            gsa-related-migrations.sql
             gsa-remote-preflight.log
             gsa-targeted-validation.log
             migration-list.log
@@ -112,7 +127,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           JOB_STATUS: ${{ job.status }}
         run: |
-          touch gsa-remote-preflight.log gsa-targeted-validation.log migration-list.log migration-dry-run.log
+          touch gsa-related-migrations.txt gsa-remote-preflight.log gsa-targeted-validation.log migration-list.log migration-dry-run.log
           {
             echo '# Prévia das migrações Supabase'
             echo
@@ -120,6 +135,11 @@ jobs:
             echo "- Commit: \`$GITHUB_SHA\`"
             echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "- Resultado do job: **$JOB_STATUS**"
+            echo
+            echo '## Migrações locais relacionadas ao GSA Viagens'
+            echo '```text'
+            cat gsa-related-migrations.txt
+            echo '```'
             echo
             echo '## Inspeção remota do GSA Viagens'
             echo '```text'
