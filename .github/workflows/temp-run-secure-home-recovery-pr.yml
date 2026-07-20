@@ -1,0 +1,53 @@
+name: Run Secure Home Recovery Patch
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: run-secure-home-recovery-patch
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.ref == 'agent/corrigir-home-itens-2-a-10'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-home-itens-2-a-10
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Execute reviewed recovery patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -n "/python - <<'PY'/,/^          PY$/p" .github/workflows/temp-secure-home-recovery.yml \
+            | sed '1d;$d;s/^          //' > /tmp/secure-home-recovery.py
+          test -s /tmp/secure-home-recovery.py
+          python /tmp/secure-home-recovery.py
+
+      - name: Validate TypeScript
+        run: |
+          npm ci
+          npm run lint
+
+      - name: Publish patch and remove executors
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/temp-secure-home-recovery.yml
+          rm -f .github/workflows/temp-run-secure-home-recovery-pr.yml
+          rm -f .secure-home-recovery-trigger
+          git add -A
+          git commit -m 'Implementar recuperação segura da conta na Home'
+          git push origin HEAD:agent/corrigir-home-itens-2-a-10
