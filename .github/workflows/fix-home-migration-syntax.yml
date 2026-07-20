@@ -1,0 +1,45 @@
+name: Temporary fix Home migration syntax
+
+on:
+  push:
+    branches: [agent/corrigir-home-itens-2-a-10]
+    paths: ['.home-migration-syntax-ready']
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply exact fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          migration = Path('supabase/migrations/20260720215500_fix_public_home_contracts.sql')
+          text = migration.read_text()
+          old = "v_email text := lower(trim(coalesce(v_payload->>'email', ''));"
+          new = "v_email text := lower(trim(coalesce(v_payload->>'email', '')));"
+          if text.count(old) != 1:
+              raise SystemExit('Declaração incorreta não encontrada exatamente uma vez.')
+          migration.write_text(text.replace(old, new))
+
+          modal = Path('src/components/auth/ClientAccessModal.tsx')
+          modal_text = modal.read_text()
+          old_modal = "        id: data.indicacao_id || null,\n"
+          if modal_text.count(old_modal) != 1:
+              raise SystemExit('Referência ao ID da indicação não encontrada exatamente uma vez.')
+          modal.write_text(modal_text.replace(old_modal, ''))
+          PY
+          rm .home-migration-syntax-ready .github/workflows/fix-home-migration-syntax.yml
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Corrigir sintaxe e minimizar indicação pública'
+          git push
