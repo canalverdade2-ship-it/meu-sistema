@@ -27,11 +27,11 @@ jobs:
       - name: Apply reviewed interface package
         shell: bash
         run: |
-          set -euo pipefail
+          set -o pipefail
           cat .patch/apply-interfaces.py.part* > /tmp/apply-interfaces.py
-          python /tmp/apply-interfaces.py
+          python /tmp/apply-interfaces.py 2>&1 | tee /tmp/apply-products-subscriptions.log
 
-          python <<'PY'
+          python <<'PY' 2>&1 | tee -a /tmp/apply-products-subscriptions.log
           import json
           from pathlib import Path
 
@@ -53,6 +53,14 @@ jobs:
 
           rm -rf .patch
           rm -f .github/workflows/temp-apply-products-subscriptions-fixes.yml
+
+      - name: Upload application diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: products-subscriptions-apply-log
+          path: /tmp/apply-products-subscriptions.log
+          retention-days: 3
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
