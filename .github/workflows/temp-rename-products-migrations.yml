@@ -1,0 +1,46 @@
+name: Rename Products Migrations
+
+on:
+  push:
+    branches: [agent/corrigir-produtos-assinaturas]
+    paths: ['.products-migration-rename-trigger']
+
+permissions:
+  contents: write
+
+jobs:
+  rename:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-produtos-assinaturas
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Rename conflicting migration versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git mv supabase/migrations/20260720233000_harden_products_and_subscriptions.sql supabase/migrations/20260721010000_harden_products_and_subscriptions.sql
+          git mv supabase/migrations/20260720233100_secure_product_subscription_catalog.sql supabase/migrations/20260721011000_secure_product_subscription_catalog.sql
+          grep -RIl --exclude-dir=.git '20260720233000_harden_products_and_subscriptions.sql' . | xargs -r sed -i 's/20260720233000_harden_products_and_subscriptions.sql/20260721010000_harden_products_and_subscriptions.sql/g'
+          grep -RIl --exclude-dir=.git '20260720233100_secure_product_subscription_catalog.sql' . | xargs -r sed -i 's/20260720233100_secure_product_subscription_catalog.sql/20260721011000_secure_product_subscription_catalog.sql/g'
+          rm -f .products-migration-rename-trigger
+      - name: Validate package
+        run: |
+          npm ci
+          npm run lint
+          npm run test:products-subscriptions
+          npm run build
+      - name: Publish corrected branch
+        run: |
+          git add -A
+          git commit -m 'Renomear migrations de Produtos e Assinaturas sem colisão'
+          git push origin HEAD:agent/corrigir-produtos-assinaturas
