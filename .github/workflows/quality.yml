@@ -102,6 +102,10 @@ jobs:
           cat client-security.log
           test "${{ steps.client_security.outputs.exit_code }}" = "0"
 
+      - name: Provider portal security contracts
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        run: npm run test:provider
+
       - name: Home public contracts
         if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run test:home
