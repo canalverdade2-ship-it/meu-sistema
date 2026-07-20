@@ -1,0 +1,80 @@
+name: Fix checkout summary contrast
+
+on:
+  push:
+    branches: [fix/checkout-summary-contrast-20260720]
+    paths:
+      - '.github/workflows/fix-checkout-summary-contrast.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: fix/checkout-summary-contrast-20260720
+          fetch-depth: 0
+
+      - name: Corrigir contraste dos valores
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/components/client/store/CheckoutModal.tsx')
+          content = path.read_text(encoding='utf-8')
+
+          replacements = {
+              '''<span className="font-bold text-indigo-700">
+                        {formatCurrency(getProductQuantityPriceBreakdown(c.item_detalhes, c.quantidade).subtotalFinal)}''': '''<span className="font-bold text-indigo-200">
+                        {formatCurrency(getProductQuantityPriceBreakdown(c.item_detalhes, c.quantidade).subtotalFinal)}''',
+              '''<span className="font-bold text-neutral-900">
+                       {formatCurrency((c.item_detalhes?.valor || 0) * c.quantidade)}''': '''<span className="font-bold text-white">
+                       {formatCurrency((c.item_detalhes?.valor || 0) * c.quantidade)}''',
+          }
+
+          for old, new in replacements.items():
+              count = content.count(old)
+              if count != 1:
+                  raise SystemExit(f'Trecho esperado apareceu {count} vez(es), esperado: 1')
+              content = content.replace(old, new)
+
+          path.write_text(content, encoding='utf-8')
+          PY
+
+      - name: Remover workflow temporário
+        run: rm .github/workflows/fix-checkout-summary-contrast.yml
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: TypeScript
+        run: npm run lint
+
+      - name: Contratos GSA Viagens
+        run: npm run test:travel
+
+      - name: Build
+        run: npm run build
+
+      - name: Commitar correção validada
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/client/store/CheckoutModal.tsx .github/workflows/fix-checkout-summary-contrast.yml
+          git commit -m 'Corrigir contraste dos valores no resumo do checkout'
+          git push origin HEAD:fix/checkout-summary-contrast-20260720
