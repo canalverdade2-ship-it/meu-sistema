@@ -11,8 +11,8 @@ import { logService } from '../../lib/logService';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 
-export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaboradorNome }: { activeSubTab?: 'processamento' | 'concluido', initialItemId?: string, colaboradorNome?: string }) {
-  const [activeTab, setActiveTab] = useState<'processamento' | 'concluido'>('processamento');
+export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaboradorNome }: { activeSubTab?: 'processamento' | 'concluido' | 'cancelado', initialItemId?: string, colaboradorNome?: string }) {
+  const [activeTab, setActiveTab] = useState<'processamento' | 'concluido' | 'cancelado'>('processamento');
 
   useEffect(() => {
     if (activeSubTab) setActiveTab(activeSubTab);
@@ -87,8 +87,10 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
 
     if (activeTab === 'processamento') {
       query = query.in('status', ['em_analise', 'pendente', 'pago']);
-    } else {
+    } else if (activeTab === 'concluido') {
       query = query.in('status', ['concluido', 'em_cancelamento']);
+    } else {
+      query = query.eq('status', 'cancelado');
     }
     
     if (search) {
@@ -118,7 +120,8 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
       .update({ 
         status, 
         motivo_cancelamento: motivo ? `${motivo}${colaboradorNome ? ` [POR: ${colaboradorNome}]` : ''}` : (colaboradorNome ? `[POR: ${colaboradorNome}]` : null), 
-        data_conclusao: status === 'concluido' ? new Date().toISOString() : null 
+        data_conclusao: status === 'concluido' ? new Date().toISOString() : null,
+        data_cancelamento: status === 'cancelado' ? new Date().toISOString() : null
       })
       .eq('id', id);
 
@@ -272,6 +275,27 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+      <div className="grid grid-cols-1 gap-2 rounded-2xl bg-neutral-100 p-1 sm:grid-cols-3">
+        {[
+          { id: 'processamento' as const, label: 'Processamento' },
+          { id: 'concluido' as const, label: 'Ativas' },
+          { id: 'cancelado' as const, label: 'Canceladas' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`rounded-xl px-4 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+              activeTab === tab.id
+                ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-neutral-200'
+                : 'text-neutral-500 hover:bg-white/60 hover:text-neutral-900'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-4 px-2 mb-8">
         <GlobalFilter 
           searchValue={search}
@@ -331,13 +355,15 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
             >
               <div className={`absolute top-0 right-0 h-32 w-32 translate-x-12 -translate-y-12 rounded-full opacity-5 group-hover:opacity-10 transition-opacity ${
                 ordem.status === 'concluido' ? 'bg-emerald-500' : 
-                ordem.status === 'em_cancelamento' ? 'bg-indigo-500' : 'bg-amber-500'
+                ordem.status === 'em_cancelamento' ? 'bg-indigo-500' :
+                ordem.status === 'cancelado' ? 'bg-red-500' : 'bg-amber-500'
               }`} />
               
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 relative z-10">
                 <div className={`flex h-16 w-16 items-center justify-center rounded-2xl shadow-inner group-hover:scale-110 transition-all ${
                   ordem.status === 'concluido' ? 'bg-emerald-50 text-emerald-600' : 
-                  ordem.status === 'em_cancelamento' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
+                  ordem.status === 'em_cancelamento' ? 'bg-indigo-50 text-indigo-600' :
+                  ordem.status === 'cancelado' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
                 }`}>
                   <Calendar className="h-8 w-8" />
                 </div>
@@ -351,11 +377,13 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
                     <p className="text-xl font-black text-[#1a1a1a] tracking-tighter">{formatCurrency(ordem.assinaturas.valor)}</p>
                     <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-sm ${
                       ordem.status === 'concluido' ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200' : 
-                      ordem.status === 'em_cancelamento' ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200' : 
+                      ordem.status === 'em_cancelamento' ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200' :
+                      ordem.status === 'cancelado' ? 'bg-red-50 text-red-600 ring-1 ring-red-200' :
                       'bg-amber-50 text-amber-600 ring-1 ring-amber-200'
                     }`}>
                       {ordem.status === 'concluido' ? 'Ativa' : 
-                       ordem.status === 'em_cancelamento' ? 'Em Cancelamento' : 'Pendente'}
+                       ordem.status === 'em_cancelamento' ? 'Em Cancelamento' :
+                       ordem.status === 'cancelado' ? 'Cancelada' : 'Pendente'}
                     </span>
                     {fatura && (
                       <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-sm ${
@@ -379,7 +407,7 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
         }) : (
           <div className="py-24 text-center">
             <Calendar className="h-16 w-16 text-neutral-100 mx-auto mb-4" />
-            <p className="text-[10px] font-black text-neutral-300 uppercase tracking-widest">Nenhuma ordem de assinatura {activeTab === 'processamento' ? 'em processamento' : 'ativa ou agendada'}</p>
+            <p className="text-[10px] font-black text-neutral-300 uppercase tracking-widest">Nenhuma ordem de assinatura {activeTab === 'processamento' ? 'em processamento' : activeTab === 'cancelado' ? 'cancelada' : 'ativa ou agendada'}</p>
           </div>
         )}
       </div>
@@ -621,7 +649,7 @@ export function AssinaturaDetails({
               </div>
             )}
             
-            {activeTab === 'ativas' && (
+            {activeTab === 'concluido' && (
               <div className="space-y-3">
                 {onOpenProrrogar && (
                   <button

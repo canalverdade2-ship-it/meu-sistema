@@ -231,6 +231,7 @@ export function ClientAssinaturas({
               <button 
                 key={t}
                 ref={setMinhasTabButtonRef(index)}
+                onClick={() => setMinhasTab(t as 'ativas' | 'canceladas')}
                 className={`min-w-0 flex-1 whitespace-nowrap rounded-2xl px-1.5 py-2.5 font-black capitalize leading-none transition-all sm:px-6 ${minhasTab === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-neutral-500 hover:text-neutral-900'}`}
               >
                 {t}
