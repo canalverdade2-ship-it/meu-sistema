@@ -26,6 +26,7 @@ jobs:
       - name: Merge audited branch with explicit conflict policy
         shell: bash
         run: |
+          exec > >(tee /tmp/admin-audit-integration.log) 2>&1
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -77,16 +78,17 @@ jobs:
           NODE
 
           rm -f audit/admin-ci-trigger.txt
-          rm -f .github/workflows/temp-admin-audit-integration.yml
           git add -A
           git commit -m "Integrar auditoria administrativa sobre a main atual"
           git push origin HEAD:agent/corrigir-auditoria-admin-final
 
-      - name: Upload conflict evidence
+      - name: Upload integration evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: admin-audit-integration-conflicts
-          path: /tmp/admin-audit-conflicts.txt
+          name: admin-audit-integration-evidence
+          path: |
+            /tmp/admin-audit-conflicts.txt
+            /tmp/admin-audit-integration.log
           retention-days: 1
           if-no-files-found: ignore
