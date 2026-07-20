@@ -12,56 +12,79 @@ export type AdminModule =
   | 'seguros'
   | 'fidelidade'
   | 'atendimento'
-  | 'vendas'
   | 'financeiro'
   | 'cobranca'
   | 'fiscal'
-  | 'tickets'
+  | 'emprestimos'
+  | 'credito_loja'
   | 'relatorios'
   | 'configuracoes'
-  | 'area_vip'
-  | 'prestadores'
   | 'acessos'
   | 'demandas'
   | 'sistema'
   | 'promocoes';
 
-const MODULE_ACCESS_ALIASES: Record<string, string[]> = {
-  dashboard: [],
-  cadastro: ['cadastro', 'prestadores', 'clientes'],
-  catalogo: ['catalogo', 'cadastro'],
-  operacoes: ['operacoes', 'vendas', 'demandas'],
-  loja: ['loja', 'cadastro', 'vendas'],
-  classificados: ['classificados', 'loja', 'vendas'],
-  viagens: ['viagens', 'loja', 'vendas'],
-  saude: ['saude', 'loja', 'vendas'],
-  seguros: ['seguros', 'loja', 'vendas'],
-  fidelidade: ['fidelidade', 'cadastro', 'area_vip', 'promocoes'],
-  atendimento: ['atendimento', 'tickets', 'suporte'],
-  vendas: ['vendas', 'operacoes'],
-  financeiro: ['financeiro', 'cobranca', 'fiscal', 'emprestimos', 'credito_loja'],
-  cobranca: ['cobranca', 'financeiro'],
-  fiscal: ['fiscal', 'financeiro'],
-  tickets: ['tickets', 'atendimento'],
-  relatorios: ['relatorios'],
-  configuracoes: ['configuracoes'],
-  area_vip: ['area_vip', 'fidelidade'],
-  prestadores: ['prestadores', 'cadastro'],
-  acessos: ['acessos'],
-  demandas: ['demandas', 'operacoes'],
-  sistema: ['sistema'],
-  promocoes: ['promocoes', 'fidelidade', 'vendas'],
-};
+const VALID_MODULES = new Set<AdminModule>([
+  'dashboard',
+  'cadastro',
+  'catalogo',
+  'operacoes',
+  'loja',
+  'classificados',
+  'viagens',
+  'saude',
+  'seguros',
+  'fidelidade',
+  'atendimento',
+  'financeiro',
+  'cobranca',
+  'fiscal',
+  'emprestimos',
+  'credito_loja',
+  'relatorios',
+  'configuracoes',
+  'acessos',
+  'demandas',
+  'sistema',
+  'promocoes',
+]);
 
+/**
+ * Normaliza somente nomes legados que pertencem ao mesmo domínio funcional.
+ * Não existe mais herança entre vendas, loja, classificados, viagens, saúde ou
+ * seguros; cada ramo precisa ser concedido explicitamente.
+ */
 export function normalizeAdminModule(module?: string | null): AdminModule {
-  const value = module || 'dashboard';
+  const value = String(module || 'dashboard').trim().toLowerCase();
+
   if (value === 'suporte' || value === 'tickets') return 'atendimento';
-  if (value === 'cobranca' || value === 'fiscal') return 'financeiro';
-  if (['orcamentos', 'servicos', 'produtos', 'assinaturas', 'os'].includes(value)) return 'operacoes';
-  if (value === 'prestadores' || value === 'clientes' || value === 'cadastros') return 'cadastro';
-  if (value === 'emprestimos' || value === 'credito_loja') return 'financeiro';
-  if (['vouchers', 'premios', 'promocoes', 'indique-ganhe', 'area_vip'].includes(value)) return 'fidelidade';
-  return value as AdminModule;
+  if (value === 'cadastros' || value === 'clientes' || value === 'prestadores') return 'cadastro';
+  if (['orcamentos', 'servicos', 'produtos', 'assinaturas', 'os', 'vendas'].includes(value)) return 'operacoes';
+  if (value === 'area_vip') return 'fidelidade';
+  if (value === 'promocoes' || value === 'vouchers' || value === 'premios' || value === 'indique-ganhe') return 'promocoes';
+
+  return VALID_MODULES.has(value as AdminModule) ? value as AdminModule : 'dashboard';
+}
+
+function normalizeGrantedModule(module: string): AdminModule | null {
+  const value = String(module || '').trim().toLowerCase();
+  if (!value) return null;
+
+  if (value === 'clientes' || value === 'prestadores' || value === 'cadastros') return 'cadastro';
+  if (value === 'vendas') return 'operacoes';
+  if (value === 'tickets' || value === 'suporte') return 'atendimento';
+  if (value === 'area_vip') return 'fidelidade';
+  if (value === 'promocoes' || value === 'vouchers' || value === 'premios') return 'promocoes';
+
+  return VALID_MODULES.has(value as AdminModule) ? value as AdminModule : null;
+}
+
+export function normalizeGrantedAdminModules(modules: string[] | null | undefined): AdminModule[] {
+  return Array.from(new Set(
+    (modules || [])
+      .map(normalizeGrantedModule)
+      .filter((module): module is AdminModule => Boolean(module)),
+  ));
 }
 
 export function canAccessAdminModule(
@@ -70,17 +93,18 @@ export function canAccessAdminModule(
   requestedModule?: string | null,
 ): boolean {
   if (actorType === 'admin') return true;
+
   const normalized = normalizeAdminModule(requestedModule);
-  if (normalized === 'dashboard' || normalized === 'demandas') return true;
-  const granted = new Set((modules || []).map((item) => String(item).trim()).filter(Boolean));
-  const aliases = MODULE_ACCESS_ALIASES[normalized] || [normalized];
-  return aliases.some((alias) => granted.has(alias));
+  if (normalized === 'dashboard') return true;
+
+  const granted = new Set(normalizeGrantedAdminModules(modules));
+  return granted.has(normalized);
 }
 
 export function adminModulePath(module: string, tab?: string, itemId?: string): string {
   const normalized = normalizeAdminModule(module);
-  const suffix = [tab, itemId].filter(Boolean).map(encodeURIComponent).join('/');
-  const baseByModule: Record<string, string> = {
+  const suffix = [tab, itemId].filter(Boolean).map((value) => encodeURIComponent(String(value))).join('/');
+  const baseByModule: Record<AdminModule, string> = {
     dashboard: '/admin/dashboard',
     cadastro: '/admin/cadastros',
     catalogo: '/admin/catalogo',
@@ -92,8 +116,11 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     seguros: '/admin/seguros',
     fidelidade: '/admin/fidelidade',
     atendimento: '/admin/atendimento',
-    vendas: '/admin/operacoes',
     financeiro: '/admin/financeiro',
+    cobranca: '/admin/cobranca',
+    fiscal: '/admin/fiscal',
+    emprestimos: '/admin/financeiro/emprestimos',
+    credito_loja: '/admin/financeiro/credito',
     relatorios: '/admin/relatorios',
     configuracoes: '/admin/configuracoes',
     acessos: '/admin/acessos',
@@ -101,6 +128,6 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     sistema: '/admin/sistema',
     promocoes: '/admin/fidelidade/promocoes',
   };
-  const base = baseByModule[normalized] || '/admin/dashboard';
+  const base = baseByModule[normalized];
   return suffix ? `${base}/${suffix}` : base;
 }
