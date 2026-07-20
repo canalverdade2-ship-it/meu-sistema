@@ -46,9 +46,26 @@ function lockApplicationBackground() {
   };
 }
 
+function isVisibleFocusableElement(element: HTMLElement) {
+  if (
+    element.hasAttribute('disabled')
+    || element.hidden
+    || element.closest('[hidden], [inert], [aria-hidden="true"]')
+  ) {
+    return false;
+  }
+
+  const style = window.getComputedStyle(element);
+  if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') {
+    return false;
+  }
+
+  return element.getClientRects().length > 0;
+}
+
 function getFocusableElements(container: HTMLElement) {
   return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
-    .filter((element) => !element.hasAttribute('disabled') && element.getAttribute('aria-hidden') !== 'true');
+    .filter(isVisibleFocusableElement);
 }
 
 interface UseDialogAccessibilityOptions {
@@ -77,7 +94,9 @@ export function useDialogAccessibility({ isOpen, containerRef, onClose }: UseDia
       const container = containerRef.current;
       if (!container) return;
       const preferredElement = container.querySelector<HTMLElement>('[data-dialog-autofocus]');
-      const firstFocusable = preferredElement || getFocusableElements(container)[0];
+      const firstFocusable = preferredElement && isVisibleFocusableElement(preferredElement)
+        ? preferredElement
+        : getFocusableElements(container)[0];
       (firstFocusable || container).focus({ preventScroll: true });
     });
 
