@@ -124,7 +124,7 @@ export type Produto = {
   descricao: string;
   valor: number;
   status: 'ativo' | 'inativo';
-  tipo_cliente: 'pf' | 'pj';
+  tipo_cliente: 'pf' | 'pj' | 'ambos';
   categoria?: string;
   categoria_id?: string;
   ocultar_valor?: boolean;

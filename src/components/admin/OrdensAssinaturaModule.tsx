@@ -10,6 +10,7 @@ import { logService } from '../../lib/logService';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { sessionService } from '../../lib/sessionService';
+import { activateAdminSubscription } from '../../lib/adminStoreOperations';
 
 const getAdminSessionForRpc = () => {
   const session = sessionService.getCurrentSession();
@@ -48,6 +49,7 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
   const [isSubmittingSubscriptionAction, setIsSubmittingSubscriptionAction] = useState(false);
   const extensionRequestId = useRef(generateUUID());
   const cancellationRequestId = useRef(generateUUID());
+  const activationRequestId = useRef(generateUUID());
 
   const hasAutoOpened = useRef<string | null>(null);
 
@@ -118,7 +120,7 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
     if (filters.mes) {
       const year = filters.ano || new Date().getFullYear();
       const startDate = `${year}-${filters.mes}-01`;
-      const endDate = new Date(Number(year), Number(filters.mes), 0).toISOString().split('T')[0];
+      const endDate = `${year}-${filters.mes}-${String(new Date(Number(year), Number(filters.mes), 0).getDate()).padStart(2, '0')}`;
       query = query.gte('data_criacao', startDate).lte('data_criacao', endDate);
     }
 
@@ -180,35 +182,14 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
         return;
       }
 
-      const { error } = await supabase
-        .from('ordens_assinatura')
-        .update({
-          status: 'concluido',
-          motivo_cancelamento: null,
-          data_cancelamento: null,
-          data_conclusao: new Date().toISOString(),
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await notificationService.notifyClient(
-        ordem.cliente_id,
-        '✅ Assinatura Concluida',
-        `Sua ordem de assinatura para ${ordem.assinaturas.nome} foi concluida com sucesso! 🎉`,
-        'assinaturas',
-        'assinatura_criada',
-        { tab: 'ativas', itemId: ordem.id, prioridade: 'alta', contexto: { assinatura_id: ordem.id, nome: ordem.assinaturas?.nome } }
-      );
-
-      await logService.logAction({
-        acao: 'ATIVAR_ASSINATURA',
-        detalhes: JSON.stringify({ ordem_assinatura_id: ordem.id, cliente_id: ordem.cliente_id }),
-        ator_tipo: 'admin',
-        ator_nome: colaboradorNome || 'Administrador'
-      });
-
-      toast.success('Assinatura ativada com sucesso.');
+const result = await activateAdminSubscription({
+  requestId: activationRequestId.current,
+  ordemId: id,
+});
+activationRequestId.current = generateUUID();
+toast.success(result?.already_processed
+  ? 'Esta ativação já havia sido processada.'
+  : 'Assinatura ativada com segurança.');
       setIsDetailOpen(false);
       await fetchOrdens();
     } catch (error) {

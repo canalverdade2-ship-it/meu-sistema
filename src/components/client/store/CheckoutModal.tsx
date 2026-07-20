@@ -504,7 +504,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       if (productIds.length > 0) {
         const { data: dbProducts } = await supabase
           .from('produtos')
-          .select('id, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada')
+          .select('id, status, visivel_na_loja, controle_estoque, estoque_disponivel, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada')
           .in('id', productIds);
         if (dbProducts) {
           let priceChanged = false;
@@ -512,6 +512,14 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
             if (item.tipo !== 'produto') continue;
             const dbProd = dbProducts.find((p: any) => p.id === item.item_id);
             if (dbProd) {
+              if (dbProd.status !== 'ativo' || !dbProd.visivel_na_loja) {
+                toast.error('Um produto do carrinho não está mais disponível.');
+                return;
+              }
+              if (dbProd.controle_estoque && Number(dbProd.estoque_disponivel || 0) < Number(item.quantidade || 0)) {
+                toast.error(`Estoque insuficiente para ${item.item_detalhes?.nome || 'um dos produtos'}.`);
+                return;
+              }
               // Verifica se a promoção expirou no banco
               let isStillActive = dbProd.desconto_ativo;
               if (isStillActive && dbProd.desconto_prazo_tipo === 'determinado' && dbProd.desconto_fim_em) {
@@ -545,6 +553,8 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       }
     } catch (err) {
       console.error('Erro ao validar alteração de preço:', err);
+      toast.error('Não foi possível validar preços e estoque. Tente novamente.');
+      return;
     }
 
     const hasOutOfStock = cartItems.some((c: any) => c.tipo === 'produto' && c.item_detalhes?.controle_estoque && (c.item_detalhes?.estoque_disponivel <= 0));
