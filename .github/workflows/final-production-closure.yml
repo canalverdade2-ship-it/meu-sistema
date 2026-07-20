@@ -111,8 +111,20 @@ jobs:
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
 
+      - name: Capture migration state before deployment
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee production-migrations-before.log
+
       - name: Apply every pending migration
-        run: supabase db push --linked --include-all --yes
+        shell: bash
+        run: |
+          set +e
+          supabase db push --linked --include-all --yes > db-push.log 2>&1
+          code=$?
+          cat db-push.log
+          exit "$code"
 
       - name: Verify migration history
         shell: bash
@@ -178,6 +190,8 @@ jobs:
         with:
           name: final-production-closure-evidence
           path: |
+            production-migrations-before.log
+            db-push.log
             production-migrations.log
             production-public-schema.sql
           if-no-files-found: ignore
