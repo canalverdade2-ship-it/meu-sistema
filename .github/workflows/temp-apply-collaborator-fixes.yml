@@ -24,6 +24,7 @@ jobs:
         shell: bash
         run: |
           set +e
+          rm -rf .correction-diagnostics
           mkdir -p .correction-diagnostics
           cat \
             .patch/collaborator_fix_v2.part00 \
@@ -39,18 +40,18 @@ jobs:
             > /tmp/collaborator_patch.b64
           CAT_STATUS=$?
           wc -c /tmp/collaborator_patch.b64 | tee .correction-diagnostics/package-size.txt
-          base64 -d /tmp/collaborator_patch.b64 > /tmp/collaborator_patch.gz 2> .correction-diagnostics/decode.log
+          base64 -d /tmp/collaborator_patch.b64 > /tmp/collaborator_patch.gz 2> .correction-diagnostics/decode.txt
           DECODE_STATUS=$?
-          gzip -t /tmp/collaborator_patch.gz 2> .correction-diagnostics/gzip-test.log
+          gzip -t /tmp/collaborator_patch.gz 2> .correction-diagnostics/gzip-test.txt
           GZIP_STATUS=$?
           if [ "$CAT_STATUS" -eq 0 ] && [ "$DECODE_STATUS" -eq 0 ] && [ "$GZIP_STATUS" -eq 0 ]; then
-            gzip -d -c /tmp/collaborator_patch.gz > /tmp/apply_collaborator_fixes.py 2> .correction-diagnostics/gzip-decode.log
+            gzip -d -c /tmp/collaborator_patch.gz > /tmp/apply_collaborator_fixes.py 2> .correction-diagnostics/gzip-decode.txt
             GZIP_DECODE_STATUS=$?
           else
             GZIP_DECODE_STATUS=1
           fi
           if [ "$GZIP_DECODE_STATUS" -eq 0 ]; then
-            python /tmp/apply_collaborator_fixes.py > .correction-diagnostics/apply.log 2>&1
+            python /tmp/apply_collaborator_fixes.py > .correction-diagnostics/apply.txt 2>&1
             APPLY_STATUS=$?
           else
             APPLY_STATUS=1
@@ -59,7 +60,7 @@ jobs:
             "$CAT_STATUS" "$DECODE_STATUS" "$GZIP_STATUS" "$GZIP_DECODE_STATUS" "$APPLY_STATUS" \
             > .correction-diagnostics/status.txt
           cat .correction-diagnostics/status.txt
-          cat .correction-diagnostics/apply.log 2>/dev/null || true
+          cat .correction-diagnostics/apply.txt 2>/dev/null || true
           echo "status=$APPLY_STATUS" >> "$GITHUB_OUTPUT"
           exit 0
 
@@ -69,8 +70,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .correction-diagnostics
-          git commit -m "Registrar diagnóstico da correção do colaborador"
+          git add -f .correction-diagnostics
+          git commit -m "Atualizar diagnóstico da correção do colaborador"
           git push origin HEAD:agent/corrigir-painel-colaborador
 
       - name: Stop after application failure
