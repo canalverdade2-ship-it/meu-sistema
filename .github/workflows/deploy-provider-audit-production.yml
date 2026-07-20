@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: deploy-provider-audit-production
@@ -32,12 +33,12 @@ jobs:
         run: |
           set -euo pipefail
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          grep -Fqx 'APPLY_PROVIDER_AUDIT_20260720' .provider-audit-production-trigger
+          grep -Fqx 'APPLY_PROVIDER_AUDIT_20260720_V2' .provider-audit-production-trigger
           git fetch origin agent/harden-provider-portal-audit
           test "$(git rev-parse FETCH_HEAD)" = "$EXPECTED_SOURCE_SHA"
-          for version in 20260720233000 20260720233100 20260720233200; do
-            git show "FETCH_HEAD:supabase/migrations/${version}_$(case "$version" in 20260720233000) echo provider_portal_audit_hardening;; 20260720233100) echo provider_portal_secure_snapshots;; *) echo provider_portal_final_guards;; esac).sql" > "/tmp/${version}.sql"
-          done
+          git show FETCH_HEAD:supabase/migrations/20260720233000_provider_portal_audit_hardening.sql > /tmp/20260720233000.sql
+          git show FETCH_HEAD:supabase/migrations/20260720233100_provider_portal_secure_snapshots.sql > /tmp/20260720233100.sql
+          git show FETCH_HEAD:supabase/migrations/20260720233200_provider_portal_final_guards.sql > /tmp/20260720233200.sql
 
       - uses: supabase/setup-cli@v1
         with:
@@ -46,7 +47,24 @@ jobs:
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
+      - name: Check current migration state
+        id: state
+        shell: bash
+        run: |
+          cat > /tmp/provider-audit-state.sql <<'SQL'
+          SELECT CASE WHEN count(*) = 3 THEN 'ALL_APPLIED' ELSE 'PENDING' END AS provider_audit_state
+          FROM supabase_migrations.schema_migrations
+          WHERE version IN ('20260720233000', '20260720233100', '20260720233200');
+          SQL
+          supabase db query --linked --file /tmp/provider-audit-state.sql 2>&1 | tee provider-audit-state.log
+          if grep -q 'ALL_APPLIED' provider-audit-state.log; then
+            echo 'applied=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'applied=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build transactional bundles
+        if: steps.state.outputs.applied != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -60,18 +78,21 @@ jobs:
           sed 's/^ROLLBACK;$/COMMIT;/' /tmp/provider-audit-preview.sql > /tmp/provider-audit-production.sql
 
       - name: Validate migrations with rollback
+        if: steps.state.outputs.applied != 'true'
         shell: bash
         run: |
           set -o pipefail
           supabase db query --linked --file /tmp/provider-audit-preview.sql 2>&1 | tee provider-audit-preview.log
 
       - name: Apply migrations atomically
+        if: steps.state.outputs.applied != 'true'
         shell: bash
         run: |
           set -o pipefail
           supabase db query --linked --file /tmp/provider-audit-production.sql 2>&1 | tee provider-audit-deployment.log
 
       - name: Register migration history
+        if: steps.state.outputs.applied != 'true'
         shell: bash
         run: |
           set -o pipefail
@@ -94,16 +115,9 @@ jobs:
                OR to_regprocedure('public.gsa_provider_request_demand_support(uuid,text)') IS NULL THEN
               RAISE EXCEPTION 'Uma ou mais RPCs seguras do prestador estão ausentes';
             END IF;
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_guard_provider_direct_prestadores' AND NOT tgisinternal
-            ) OR NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_guard_provider_schedule' AND NOT tgisinternal
-            ) OR NOT EXISTS (
-              SELECT 1 FROM pg_trigger
-              WHERE tgname = 'trg_gsa_revoke_provider_sessions_update' AND NOT tgisinternal
-            ) THEN
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_guard_provider_direct_prestadores' AND NOT tgisinternal)
+               OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_guard_provider_schedule' AND NOT tgisinternal)
+               OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_gsa_revoke_provider_sessions_update' AND NOT tgisinternal) THEN
               RAISE EXCEPTION 'Triggers obrigatórios do prestador estão ausentes';
             END IF;
             IF NOT EXISTS (
@@ -144,8 +158,32 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add .provider-audit-production-success
-          git commit -m 'Registrar implantação definitiva do Painel do Prestador'
-          git push
+          if ! git diff --cached --quiet; then
+            git commit -m 'Registrar implantação definitiva do Painel do Prestador'
+            git push
+          fi
+
+      - name: Publish failure diagnostic
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          touch provider-audit-state.log provider-audit-preview.log provider-audit-deployment.log provider-audit-history.log provider-audit-verification.log
+          {
+            echo '## Falha na implantação do Painel do Prestador'
+            echo
+            echo "- Projeto: $EXPECTED_PROJECT_ID"
+            echo "- Fonte: $EXPECTED_SOURCE_SHA"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo '```text'
+            sed -n '1,100p' provider-audit-state.log
+            sed -n '1,180p' provider-audit-preview.log
+            sed -n '1,180p' provider-audit-deployment.log
+            sed -n '1,100p' provider-audit-history.log
+            sed -n '1,180p' provider-audit-verification.log
+            echo '```'
+          } > provider-audit-failure.md
+          gh issue create --title 'Falha implantação Painel do Prestador' --body-file provider-audit-failure.md
 
       - name: Upload deployment evidence
         if: always()
@@ -153,6 +191,7 @@ jobs:
         with:
           name: provider-audit-production-evidence
           path: |
+            provider-audit-state.log
             provider-audit-preview.log
             provider-audit-deployment.log
             provider-audit-history.log
