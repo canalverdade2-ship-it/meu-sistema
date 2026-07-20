@@ -1,0 +1,182 @@
+
+# ---------------------------------------------------------------------------
+# OrdensCompraModule: transições e cancelamento atômicos
+# ---------------------------------------------------------------------------
+replace_once(
+    'src/components/admin/OrdensCompraModule.tsx',
+    "import { formatCurrency, formatDate, generateCode, handleError, maskPhone } from '../../lib/utils';",
+    "import { formatCurrency, formatDate, generateCode, handleError, maskPhone, generateUUID } from '../../lib/utils';",
+)
+replace_once(
+    'src/components/admin/OrdensCompraModule.tsx',
+    "import { ProdutoFornecedorConfig } from '../../types';",
+    "import { ProdutoFornecedorConfig } from '../../types';\nimport { cancelAdminStoreOrder, transitionAdminStoreOrder } from '../../lib/adminStoreOperations';",
+)
+replace_once(
+    'src/components/admin/OrdensCompraModule.tsx',
+    "  const [isCanceling, setIsCanceling] = useState(false);",
+    "  const [isCanceling, setIsCanceling] = useState(false);\n  const transitionRequestId = useRef(generateUUID());\n  const cancellationRequestId = useRef(generateUUID());",
+)
+regex_once(
+    'src/components/admin/OrdensCompraModule.tsx',
+    r"  const handleUpdateStatus = async \(id: string, status: 'pago' \| 'em_expedicao' \| 'em_transporte' \| 'concluido' \| 'cancelado', motivo\?: string\) => \{.*?\n  \};\n\n  const handleCancelAndRefundConfirm",
+    textwrap.dedent('''\
+  const handleUpdateStatus = async (id: string, status: 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido' | 'cancelado', motivo?: string) => {
+    if (status === 'cancelado') {
+      setCancelReason(motivo || 'Cancelamento solicitado pelo administrador');
+      setIsCancelModalOpen(true);
+      return;
+    }
+    try {
+      const result = await transitionAdminStoreOrder({
+        requestId: transitionRequestId.current,
+        ordemId: id,
+        status,
+      });
+      transitionRequestId.current = generateUUID();
+      toast.success(result?.already_processed ? 'Esta transição já havia sido processada.' : 'Status atualizado com segurança.');
+      setIsDetailOpen(false);
+      await fetchOrdens();
+    } catch (error) {
+      toast.error(handleError(error, 'atualizar status do pedido'));
+    }
+  };
+
+  const handleCancelAndRefundConfirm'''),
+)
+regex_once(
+    'src/components/admin/OrdensCompraModule.tsx',
+    r"  const handleCancelAndRefundConfirm = async \(\) => \{.*?\n  \};\n\n  return \(",
+    textwrap.dedent('''\
+  const handleCancelAndRefundConfirm = async () => {
+    if (!selectedOrdem || !cancelReason.trim()) {
+      toast.error('Informe o motivo do cancelamento.');
+      return;
+    }
+
+    setIsCanceling(true);
+    try {
+      const result = await cancelAdminStoreOrder({
+        requestId: cancellationRequestId.current,
+        ordemId: selectedOrdem.id,
+        motivo: cancelReason.trim(),
+      });
+      cancellationRequestId.current = generateUUID();
+      toast.success(result?.already_processed
+        ? 'Este cancelamento já havia sido processado.'
+        : result?.refund_created
+          ? 'Compra cancelada, estoque restaurado e reembolso aberto.'
+          : 'Compra cancelada e saldos restaurados com segurança.');
+      setIsCancelModalOpen(false);
+      setIsDetailOpen(false);
+      setCancelReason('');
+      await fetchOrdens();
+      if (result?.refund_created && onNavigate) {
+        onNavigate('cadastro', 'reembolsos');
+      }
+    } catch (error) {
+      toast.error(handleError(error, 'cancelar compra'));
+    } finally {
+      setIsCanceling(false);
+    }
+  };
+
+  return ('''),
+)
+replace_once(
+    'src/components/admin/OrdensCompraModule.tsx',
+    "      const endDate = new Date(Number(year), Number(filters.mes), 0).toISOString().split('T')[0];",
+    "      const endDate = `${year}-${filters.mes}-${String(new Date(Number(year), Number(filters.mes), 0).getDate()).padStart(2, '0')}`;",
+)
+
+replace_once(
+    'src/components/admin/OrdensAssinaturaModule.tsx',
+    "import { sessionService } from '../../lib/sessionService';",
+    "import { sessionService } from '../../lib/sessionService';\nimport { activateAdminSubscription } from '../../lib/adminStoreOperations';",
+)
+replace_once(
+    'src/components/admin/OrdensAssinaturaModule.tsx',
+    "  const cancellationRequestId = useRef(generateUUID());",
+    "  const cancellationRequestId = useRef(generateUUID());\n  const activationRequestId = useRef(generateUUID());",
+)
+regex_once(
+    'src/components/admin/OrdensAssinaturaModule.tsx',
+    r"      const \{ error \} = await supabase\n        \.from\('ordens_assinatura'\)\n        \.update\(\{.*?\n      toast\.success\('Assinatura ativada com sucesso\.'\);",
+    textwrap.dedent('''\
+      const result = await activateAdminSubscription({
+        requestId: activationRequestId.current,
+        ordemId: id,
+      });
+      activationRequestId.current = generateUUID();
+      toast.success(result?.already_processed
+        ? 'Esta ativação já havia sido processada.'
+        : 'Assinatura ativada com segurança.');'''),
+)
+replace_once(
+    'src/components/admin/OrdensAssinaturaModule.tsx',
+    "      const endDate = new Date(Number(year), Number(filters.mes), 0).toISOString().split('T')[0];",
+    "      const endDate = `${year}-${filters.mes}-${String(new Date(Number(year), Number(filters.mes), 0).getDate()).padStart(2, '0')}`;",
+)
+
+replace_once(
+    'src/components/client/ClientProdutos.tsx',
+    "        if (item.status === 'em_analise' || item.status === 'concluido') setMeusTab('comprados');",
+    "        if (['em_analise', 'pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(item.status)) setMeusTab('comprados');",
+)
+replace_once(
+    'src/components/client/ClientProdutos.tsx',
+    "      return p.status === 'concluido' || p.status === 'em_analise';",
+    "      return ['em_analise', 'pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(p.status);",
+)
+replace_once(
+    'src/components/client/ClientProdutos.tsx',
+    "                            {formatCurrency((p.produtos?.valor || 0) * (p.quantidade || 1))}",
+    "                            {formatCurrency((p.valor_unitario_contratado ?? p.produtos?.valor ?? 0) * (p.quantidade || 1))}",
+)
+replace_once(
+    'src/components/client/ClientProdutos.tsx',
+    "      // Check if item is already in cart\n      const { data: existingCart } = await supabase.from('loja_carrinhos')",
+    "      const { data: catalogProduct, error: catalogError } = await supabase\n        .from('produtos')\n        .select('id, status, visivel_na_loja, controle_estoque, estoque_disponivel, tipo_cliente')\n        .eq('id', produto.produto_id)\n        .single();\n      if (catalogError || !catalogProduct || catalogProduct.status !== 'ativo' || !catalogProduct.visivel_na_loja) {\n        throw new Error('Este produto não está disponível para recompra.');\n      }\n      if (catalogProduct.controle_estoque && Number(catalogProduct.estoque_disponivel || 0) < 1) {\n        throw new Error('Este produto está sem estoque.');\n      }\n\n      // Check if item is already in cart\n      const { data: existingCart } = await supabase.from('loja_carrinhos')",
+)
+replace_once(
+    'src/components/client/ClientProdutos.tsx',
+    "    } catch (error) {\n      toast.error('Erro ao adicionar produto ao carrinho.');",
+    "    } catch (error: any) {\n      toast.error(error?.message || 'Erro ao adicionar produto ao carrinho.');",
+)
+replace_once(
+    'src/components/client/ClientAssinaturas.tsx',
+    "        if (item.status === 'em_analise' || item.status === 'concluido' || item.status === 'em_cancelamento') setMinhasTab('ativas');",
+    "        if (['em_analise', 'pendente', 'pago', 'concluido', 'em_cancelamento'].includes(item.status)) setMinhasTab('ativas');",
+)
+replace_once(
+    'src/components/client/ClientAssinaturas.tsx',
+    "      return a.status === 'concluido' || a.status === 'em_cancelamento' || a.status === 'em_analise';",
+    "      return ['em_analise', 'pendente', 'pago', 'concluido', 'em_cancelamento'].includes(a.status);",
+)
+replace_once(
+    'src/components/client/ClientAssinaturas.tsx',
+    "                       A assinatura está programada para ser cancelada permanentemente em {formatDate(selectedAssinatura.data_cancelamento)}. O valor proporcional estimado creditado é de {formatCurrency(selectedAssinatura.valor_proporcional_cancelamento || 0)}.",
+    "                       A assinatura está programada para ser encerrada em {formatDate(selectedAssinatura.data_cancelamento)}. Cobranças futuras não pagas serão canceladas conforme a regra financeira do contrato.",
+)
+replace_once(
+    'src/components/client/ClientAssinaturas.tsx',
+    "                           {formatCurrency(selectedAssinatura.assinaturas?.valor || 0)}",
+    "                           {formatCurrency(selectedAssinatura.valor_mensal_contratado ?? selectedAssinatura.assinaturas?.valor ?? 0)}",
+)
+replace_once(
+    'src/components/client/store/CheckoutModal.tsx',
+    "          .select('id, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada')",
+    "          .select('id, status, visivel_na_loja, controle_estoque, estoque_disponivel, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada')",
+)
+replace_once(
+    'src/components/client/store/CheckoutModal.tsx',
+    "            if (dbProd) {\n              // Verifica se a promoção expirou no banco",
+    "            if (dbProd) {\n              if (dbProd.status !== 'ativo' || !dbProd.visivel_na_loja) {\n                toast.error('Um produto do carrinho não está mais disponível.');\n                return;\n              }\n              if (dbProd.controle_estoque && Number(dbProd.estoque_disponivel || 0) < Number(item.quantidade || 0)) {\n                toast.error(`Estoque insuficiente para ${item.item_detalhes?.nome || 'um dos produtos'}.`);\n                return;\n              }\n              // Verifica se a promoção expirou no banco",
+)
+replace_once(
+    'src/components/client/store/CheckoutModal.tsx',
+    "    } catch (err) {\n      console.error('Erro ao validar alteração de preço:', err);\n    }",
+    "    } catch (err) {\n      console.error('Erro ao validar alteração de preço:', err);\n      toast.error('Não foi possível validar preços e estoque. Tente novamente.');\n      return;\n    }",
+)
+
+print("Interfaces de Produtos e Assinaturas corrigidas.")
