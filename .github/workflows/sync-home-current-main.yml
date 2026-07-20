@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Validate trigger
-        run: grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V5' .sync-home-current-main-trigger
+        run: grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V6' .sync-home-current-main-trigger
       - name: Merge current main and resolve reviewed overlaps
         shell: bash
         run: |
