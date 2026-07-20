@@ -10,6 +10,43 @@ const ALLOWED_CLIENT_FILE_EXTENSIONS = new Set([
 let supabaseInstance: SupabaseClient | null = null;
 let storageProxy: any = null;
 
+const sessionStorageAdapter = {
+  getItem(key: string) {
+    return typeof window === 'undefined' ? null : window.sessionStorage.getItem(key);
+  },
+  setItem(key: string, value: string) {
+    if (typeof window !== 'undefined') window.sessionStorage.setItem(key, value);
+  },
+  removeItem(key: string) {
+    if (typeof window !== 'undefined') window.sessionStorage.removeItem(key);
+  },
+};
+
+function legacySupabaseStorageKey(supabaseUrl: string) {
+  try {
+    const hostname = new URL(supabaseUrl).hostname;
+    if (!hostname.endsWith('.supabase.co')) return null;
+    const projectRef = hostname.split('.')[0];
+    return projectRef ? `sb-${projectRef}-auth-token` : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearLegacySupabaseLocalStorage(supabaseUrl: string) {
+  if (typeof window === 'undefined') return;
+
+  const storageKey = legacySupabaseStorageKey(supabaseUrl);
+  if (!storageKey) return;
+
+  for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+    const key = window.localStorage.key(index);
+    if (key === storageKey || key?.startsWith(`${storageKey}.`)) {
+      window.localStorage.removeItem(key);
+    }
+  }
+}
+
 function normalizeStoragePath(path: string): string {
   const normalized = String(path || '').replace(/^\/+/, '').replace(/\\/g, '/');
   if (!normalized || normalized.includes('..') || normalized.includes('//')) {
@@ -138,7 +175,16 @@ export const getSupabase = (): SupabaseClient => {
       );
     }
 
+    clearLegacySupabaseLocalStorage(supabaseUrl);
+
     supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        storage: sessionStorageAdapter,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+      },
       realtime: {
         params: {
           eventsPerSecond: 10,
