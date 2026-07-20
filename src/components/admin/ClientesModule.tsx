@@ -27,6 +27,7 @@ import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { sessionService } from '../../lib/sessionService';
 import { callAdminRpc } from '../../lib/adminRpc';
+import { removePrivateDocument } from '../../lib/privateStorage';
 
 const getAdminSessionForRpc = () => {
   const session = sessionService.getCurrentSession();
@@ -380,6 +381,11 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
         }
         for (const url of urls) {
           try {
+            if (typeof url !== 'string' || !url.trim()) continue;
+            if (url.startsWith('gsa-private://')) {
+              await removePrivateDocument(url);
+              continue;
+            }
             if (!url.startsWith('http')) {
               await supabase.storage.from(bucket).remove([url]);
               continue;
