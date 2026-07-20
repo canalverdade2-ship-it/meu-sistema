@@ -1,0 +1,215 @@
+name: Deploy Home Public Production
+
+on:
+  push:
+    branches: [ops/deploy-home-public-production]
+    paths: ['.deploy-home-public-production-trigger']
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: deploy-home-public-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SOURCE_SHA: 1e6aa3e6f3037149ce7fe9336ad589acef170679
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate authorization and frozen source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          grep -Fqx 'DEPLOY_HOME_PUBLIC_PRODUCTION_V1' .deploy-home-public-production-trigger
+          git fetch origin integration/home-public-final
+          git cat-file -e "$SOURCE_SHA^{commit}"
+          test "$(git rev-parse origin/integration/home-public-final)" = "$SOURCE_SHA"
+
+          mkdir -p supabase/migrations
+          for file in \
+            20260720215500_fix_public_home_contracts.sql \
+            20260720215530_minimize_public_referral_lookup.sql \
+            20260720215600_guard_legacy_budget_permissions.sql; do
+            git show "$SOURCE_SHA:supabase/migrations/$file" > "/tmp/$file"
+            cp "/tmp/$file" "supabase/migrations/$file"
+          done
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Detect pending Home migrations
+        id: state
+        shell: bash
+        run: |
+          cat > /tmp/home-state.sql <<'SQL'
+          SELECT version
+          FROM supabase_migrations.schema_migrations
+          WHERE version IN ('20260720215500','20260720215530','20260720215600')
+          ORDER BY version;
+          SQL
+          supabase db query --linked --file /tmp/home-state.sql 2>&1 | tee home-state.log
+          pending=''
+          for version in 20260720215500 20260720215530 20260720215600; do
+            grep -q "$version" home-state.log || pending="$pending $version"
+          done
+          echo "pending=$pending" >> "$GITHUB_OUTPUT"
+
+      - name: Build transactional bundles
+        if: steps.state.outputs.pending != ''
+        env:
+          PENDING: ${{ steps.state.outputs.pending }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            for version in $PENDING; do
+              case "$version" in
+                20260720215500) file='/tmp/20260720215500_fix_public_home_contracts.sql' ;;
+                20260720215530) file='/tmp/20260720215530_minimize_public_referral_lookup.sql' ;;
+                20260720215600) file='/tmp/20260720215600_guard_legacy_budget_permissions.sql' ;;
+                *) echo "Versão inesperada: $version" >&2; exit 1 ;;
+              esac
+              sed '/^[[:space:]]*BEGIN;[[:space:]]*$/d; /^[[:space:]]*COMMIT;[[:space:]]*$/d' "$file"
+            done
+            echo 'ROLLBACK;'
+          } > /tmp/home-preview.sql
+          sed 's/^ROLLBACK;$/COMMIT;/' /tmp/home-preview.sql > /tmp/home-production.sql
+
+      - name: Validate migrations with rollback
+        if: steps.state.outputs.pending != ''
+        run: supabase db query --linked --file /tmp/home-preview.sql 2>&1 | tee home-preview.log
+
+      - name: Apply migrations atomically
+        if: steps.state.outputs.pending != ''
+        run: supabase db query --linked --file /tmp/home-production.sql 2>&1 | tee home-deployment.log
+
+      - name: Register migration history
+        if: steps.state.outputs.pending != ''
+        env:
+          PENDING: ${{ steps.state.outputs.pending }}
+        run: supabase migration repair $PENDING --status applied --linked 2>&1 | tee home-history.log
+
+      - name: Verify Home production contracts
+        shell: bash
+        run: |
+          cat > /tmp/home-verify.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_lookup_definition text;
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version='20260720215500'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version='20260720215530'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version='20260720215600'
+            ) THEN
+              RAISE EXCEPTION 'Histórico das migrations da Home incompleto';
+            END IF;
+
+            IF to_regprocedure('public.gsa_public_lookup_referral(text)') IS NULL
+               OR to_regprocedure('public.gsa_public_register_client(text,jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_public_register_provider(jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'Uma ou mais RPCs públicas da Home estão ausentes';
+            END IF;
+
+            IF NOT has_function_privilege('anon', 'public.gsa_public_lookup_referral(text)', 'EXECUTE')
+               OR NOT has_function_privilege('anon', 'public.gsa_public_register_client(text,jsonb)', 'EXECUTE')
+               OR NOT has_function_privilege('anon', 'public.gsa_public_register_provider(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Permissões públicas da Home incorretas';
+            END IF;
+
+            SELECT pg_get_functiondef('public.gsa_public_lookup_referral(text)'::regprocedure)
+              INTO v_lookup_definition;
+            IF position('indicacao_id' in v_lookup_definition) > 0
+               OR position('indicado_nome' in v_lookup_definition) > 0 THEN
+              RAISE EXCEPTION 'Consulta pública de indicação ainda expõe dados internos';
+            END IF;
+            IF position('jsonb_build_object(''valid'', true, ''kind'', ''referral'')' in v_lookup_definition) = 0 THEN
+              RAISE EXCEPTION 'Contrato minimizado da indicação não foi confirmado';
+            END IF;
+
+            IF to_regprocedure('public.gsa_public_create_enterprise_budget_v2(jsonb)') IS NULL
+               OR NOT has_function_privilege('anon', 'public.gsa_public_create_enterprise_budget_v2(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Orçamento público protegido v2 ausente ou sem permissão';
+            END IF;
+
+            IF to_regprocedure('public.gsa_public_create_enterprise_budget(jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'Função legada de orçamento ausente';
+            END IF;
+            IF has_function_privilege('anon', 'public.gsa_public_create_enterprise_budget(jsonb)', 'EXECUTE')
+               OR has_function_privilege('authenticated', 'public.gsa_public_create_enterprise_budget(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Função legada de orçamento ainda está acessível ao navegador';
+            END IF;
+          END $$;
+
+          SELECT 'HOME_PUBLIC_PRODUCTION_OK' AS result;
+          SQL
+          supabase db query --linked --file /tmp/home-verify.sql 2>&1 | tee home-verification.log
+          grep -q 'HOME_PUBLIC_PRODUCTION_OK' home-verification.log
+
+      - name: Record production success
+        shell: bash
+        run: |
+          printf 'SUCCESS\nproject=%s\nsource=%s\nrun=%s\nmigrations=20260720215500,20260720215530,20260720215600\n' "$SUPABASE_PROJECT_ID" "$SOURCE_SHA" "$GITHUB_RUN_ID" > .deploy-home-public-production-success
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .deploy-home-public-production-success
+          git commit -m 'Registrar implantação da Home pública'
+          git push
+
+      - name: Publish failure diagnostic
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          touch home-state.log home-preview.log home-deployment.log home-history.log home-verification.log
+          {
+            echo '## Falha na implantação da Home pública'
+            echo
+            echo "- Projeto: $EXPECTED_PROJECT_ID"
+            echo "- Fonte: $SOURCE_SHA"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo '```text'
+            cat home-state.log home-preview.log home-deployment.log home-history.log home-verification.log
+            echo '```'
+          } > home-failure.md
+          gh issue create --title 'Falha implantação Home pública' --body-file home-failure.md
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-public-production-evidence
+          path: |
+            home-state.log
+            home-preview.log
+            home-deployment.log
+            home-history.log
+            home-verification.log
+          if-no-files-found: ignore
+          retention-days: 30
