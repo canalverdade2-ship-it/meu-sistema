@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/seguranca-documentos-servicos-etapa-6
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
