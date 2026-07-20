@@ -6,14 +6,19 @@ const sourcePath = resolve(process.cwd(), 'scripts/check-admin-migrations-runtim
 const generatedPath = resolve(process.cwd(), 'scripts/.check-admin-migrations-runtime.generated.cjs');
 const source = readFileSync(sourcePath, 'utf8');
 const marker = "const migrations = [\n";
+const hardeningEntry = "  'supabase/migrations/20260720234500_admin_identity_permissions_hardening.sql',\n";
 
-if (!source.includes(marker)) {
+if (!source.includes(marker) || !source.includes(hardeningEntry)) {
   throw new Error('Não foi possível localizar a lista de migrations administrativas.');
 }
 
-const generated = source.replace(
+let generated = source.replace(
   marker,
   `${marker}  'supabase/migrations/20260720234400_admin_security_baseline_compat.sql',\n`,
+);
+generated = generated.replace(
+  hardeningEntry,
+  `${hardeningEntry}  'supabase/migrations/20260720235300_admin_security_state_restore.sql',\n`,
 );
 
 writeFileSync(generatedPath, generated);
