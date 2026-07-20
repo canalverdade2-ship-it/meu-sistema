@@ -1,0 +1,1 @@
+Trigger técnico temporário para executar a substituição segura do upload de contratos.
