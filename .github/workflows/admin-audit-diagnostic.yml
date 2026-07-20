@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - agent/corrigir-auditoria-admin-final
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
