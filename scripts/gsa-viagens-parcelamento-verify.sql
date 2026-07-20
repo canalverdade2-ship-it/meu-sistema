@@ -61,9 +61,51 @@ BEGIN
 END;
 $audit$;
 
+DO $invoice_contract$
+DECLARE
+  v_cliente_id UUID;
+  v_fatura_id UUID;
+BEGIN
+  SELECT id
+    INTO v_cliente_id
+  FROM public.clientes
+  ORDER BY created_at NULLS LAST, id
+  LIMIT 1;
+
+  IF v_cliente_id IS NULL THEN
+    RAISE EXCEPTION 'Não existe cliente para validar o contrato de faturas.';
+  END IF;
+
+  INSERT INTO public.faturas (
+    cliente_id,
+    valor_total,
+    status,
+    data_vencimento,
+    tipo,
+    metadata
+  ) VALUES (
+    v_cliente_id,
+    1.00,
+    'pendente',
+    CURRENT_DATE,
+    'compra_viagem',
+    jsonb_build_object(
+      'audit', TRUE,
+      'parcela_numero', 1,
+      'parcelas_total', 2,
+      'valor_total_contrato', 2.00
+    )
+  )
+  RETURNING id INTO v_fatura_id;
+
+  DELETE FROM public.faturas WHERE id = v_fatura_id;
+END;
+$invoice_contract$;
+
 SELECT
   'gsa_viagens_parcelamento' AS module,
   true AS transaction_installments_ready,
   true AS invoice_metadata_ready,
+  true AS invoice_insert_contract_ready,
   true AS installment_invoices_ready,
   true AS checkout_rpc_ready;
