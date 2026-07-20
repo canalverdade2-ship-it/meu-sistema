@@ -1,0 +1,60 @@
+name: Apply Provider Audit Corrections
+
+on:
+  push:
+    branches:
+      - agent/corrigir-auditoria-painel-prestador
+    paths:
+      - '.provider-audit-corrections-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-auditoria-painel-prestador
+          fetch-depth: 0
+
+      - name: Apply audited corrections
+        run: python scripts/apply-provider-audit-corrections.py
+
+      - name: Remove temporary executor
+        run: |
+          rm -f scripts/apply-provider-audit-corrections.py
+          rm -f .provider-audit-corrections-trigger
+          rm -f .github/workflows/temp-apply-provider-audit-corrections.yml
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate TypeScript
+        run: npm run lint
+
+      - name: Validate provider contracts
+        run: npm run test:provider
+
+      - name: Validate admin contracts
+        run: npm run test:admin
+
+      - name: Validate client contracts
+        run: npm run test:client-security
+
+      - name: Validate travel contracts
+        run: npm run test:travel
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Publish definitive correction
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Corrigir integralmente a auditoria do Painel do Prestador'
+          git push origin HEAD:agent/corrigir-auditoria-painel-prestador
