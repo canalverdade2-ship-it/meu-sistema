@@ -133,6 +133,34 @@ function assertScopeContext(options: PrivateDocumentUploadOptions) {
   }
 }
 
+async function resolveDocumentOwnerId(options: PrivateDocumentUploadOptions) {
+  if (options.scope === 'fiscal') {
+    const { data, error } = await supabase
+      .from('ordens_fiscais')
+      .select('cliente_id')
+      .eq('id', options.contextId)
+      .maybeSingle();
+    if (error) throw error;
+    if (data?.cliente_id && UUID_PATTERN.test(data.cliente_id)) return data.cliente_id;
+    if (options.ownerId !== options.contextId) return options.ownerId;
+    throw new Error('A ordem fiscal não possui cliente associado.');
+  }
+
+  if (options.scope === 'emprestimos') {
+    const { data, error } = await supabase
+      .from('emprestimos')
+      .select('cliente_id')
+      .eq('id', options.contextId)
+      .maybeSingle();
+    if (error) throw error;
+    if (data?.cliente_id && UUID_PATTERN.test(data.cliente_id)) return data.cliente_id;
+    if (options.ownerId !== options.contextId) return options.ownerId;
+    throw new Error('O empréstimo não possui cliente associado.');
+  }
+
+  return options.ownerId;
+}
+
 export async function uploadPrivateDocument(
   file: File,
   options: PrivateDocumentUploadOptions,
@@ -144,9 +172,10 @@ export async function uploadPrivateDocument(
   }
   assertScopeContext(options);
 
+  const ownerId = await resolveDocumentOwnerId(options);
   const safeName = sanitizePrivateFileName(file.name);
   const uniqueName = `${crypto.randomUUID()}-${safeName}`;
-  const path = `${options.scope}/${options.ownerId}/${options.context}/${options.contextId}/${uniqueName}`;
+  const path = `${options.scope}/${ownerId}/${options.context}/${options.contextId}/${uniqueName}`;
 
   const { error } = await supabase.storage
     .from(PRIVATE_DOCUMENT_BUCKET)
