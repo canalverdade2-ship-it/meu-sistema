@@ -1,15 +1,16 @@
 name: Apply Security Audit Fixes
 
 on:
-  push:
-    branches: [agent/corrigir-auditoria-seguranca]
-    paths: ['.security-audit-fix-trigger']
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   fix-validate-publish:
+    if: github.head_ref == 'agent/corrigir-auditoria-seguranca'
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
@@ -33,6 +34,7 @@ jobs:
       - name: Checkout audit branch
         uses: actions/checkout@v4
         with:
+          ref: agent/corrigir-auditoria-seguranca
           fetch-depth: 0
 
       - name: Setup Node.js
