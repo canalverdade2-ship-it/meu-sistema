@@ -1,18 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Plane, MapPin, Calendar, Clock, Receipt, Download, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, Download, Loader2, MapPin, Plane } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
 import { formatCurrency } from '../../../../lib/utils';
+import { toast } from 'react-hot-toast';
 
-export function MyTripsPage({ clientId, onBack }: { clientId: string, onBack: () => void }) {
+const VOUCHER_BUCKET = 'viagens-vouchers';
+
+const statusConfig: Record<string, { label: string; color: string }> = {
+  pendente: { label: 'Aguardando Pagamento', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  pagamento_confirmado: { label: 'Pagamento Confirmado', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  compra_fornecedor_pendente: { label: 'Compra Pendente', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+  compra_fornecedor_em_andamento: { label: 'Compra em Andamento', color: 'bg-sky-100 text-sky-800 border-sky-200' },
+  pacote_adquirido: { label: 'Pacote Adquirido', color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+  emissao_em_andamento: { label: 'Emissão em Andamento', color: 'bg-violet-100 text-violet-800 border-violet-200' },
+  documentos_disponiveis: { label: 'Vouchers Disponíveis', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  viagem_confirmada: { label: 'Viagem Confirmada', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  concluida: { label: 'Concluída', color: 'bg-neutral-100 text-neutral-800 border-neutral-200' },
+  cancelada: { label: 'Cancelada', color: 'bg-red-100 text-red-800 border-red-200' },
+  reembolso_em_analise: { label: 'Reembolso em Análise', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  reembolsada: { label: 'Reembolsada', color: 'bg-neutral-100 text-neutral-800 border-neutral-200' },
+};
+
+export function MyTripsPage({ clientId, onBack }: { clientId: string; onBack: () => void }) {
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingVoucherId, setDownloadingVoucherId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTrips() {
       try {
+        setLoading(true);
         const { data, error } = await supabase
           .from('viagens_transacoes')
           .select(`
@@ -25,6 +44,13 @@ export function MyTripsPage({ clientId, onBack }: { clientId: string, onBack: ()
               snapshot_completo,
               reserva_id,
               viagens_solicitacoes_reserva (protocolo)
+            ),
+            viagens_vouchers (
+              id,
+              storage_path,
+              file_name,
+              descricao,
+              created_at
             )
           `)
           .eq('cliente_id', clientId)
@@ -32,125 +58,125 @@ export function MyTripsPage({ clientId, onBack }: { clientId: string, onBack: ()
 
         if (error) throw error;
         setTrips(data || []);
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error(error);
+        toast.error('Não foi possível carregar suas viagens.');
       } finally {
         setLoading(false);
       }
     }
+
     fetchTrips();
   }, [clientId]);
 
+  const downloadVoucher = async (voucher: any) => {
+    try {
+      setDownloadingVoucherId(voucher.id);
+      const { data, error } = await supabase.storage
+        .from(VOUCHER_BUCKET)
+        .createSignedUrl(voucher.storage_path, 60);
+
+      if (error) throw error;
+      if (!data?.signedUrl) throw new Error('Link de download não gerado.');
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.message || 'Não foi possível baixar o voucher.');
+    } finally {
+      setDownloadingVoucherId(null);
+    }
+  };
+
   return (
-    <div className="bg-[#f4f1ea] min-h-screen font-sans pb-32">
-      <nav className="sticky top-0 z-50 border-b border-black/[0.06] bg-[#f4f1ea]/80 backdrop-blur-xl shrink-0">
-        <div className="max-w-7xl mx-auto px-5 flex items-center justify-between h-16">
-          <div className="flex items-center gap-4">
-            <button onClick={onBack} className="flex items-center gap-2 text-sm font-medium text-neutral-500 hover:text-[#1a1a1a] transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Voltar</span>
-            </button>
-            <div className="h-5 w-px bg-black/10" />
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1a1a2e]">
-                <Plane className="h-4 w-4 text-[#4dc9f6]" />
-              </div>
-              <span className="text-sm font-black tracking-tight text-[#1a1a2e]">Minhas Viagens</span>
+    <div className="min-h-screen bg-[#f4f1ea] pb-32 font-sans">
+      <nav className="sticky top-0 z-50 border-b border-black/[0.06] bg-[#f4f1ea]/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center px-5">
+          <button onClick={onBack} className="flex items-center gap-2 text-sm font-medium text-neutral-500 hover:text-[#1a1a1a]">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Voltar</span>
+          </button>
+          <div className="mx-4 h-5 w-px bg-black/10" />
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1a1a2e]">
+              <Plane className="h-4 w-4 text-[#4dc9f6]" />
             </div>
+            <span className="text-sm font-black tracking-tight text-[#1a1a2e]">Minhas Viagens</span>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-5 py-12">
+      <div className="mx-auto max-w-7xl px-5 py-12">
         <div className="mb-10">
-          <h1 className="text-3xl sm:text-4xl font-black text-[#1a1a2e] mb-3" style={{ fontFamily: '"Cinzel", serif', fontWeight: 700 }}>
+          <h1 className="mb-3 text-3xl font-black text-[#1a1a2e] sm:text-4xl" style={{ fontFamily: '"Cinzel", serif' }}>
             Minhas Viagens
           </h1>
-          <p className="text-neutral-600">
-            Acompanhe o status das suas viagens, vouchers e documentação.
-          </p>
+          <p className="text-neutral-600">Acompanhe pagamentos, emissões, passageiros e vouchers.</p>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-neutral-400">
-            <Loader2 className="h-10 w-10 animate-spin mb-4" />
+            <Loader2 className="mb-4 h-10 w-10 animate-spin" />
             <p className="font-medium">Carregando viagens...</p>
           </div>
         ) : trips.length === 0 ? (
-          <div className="bg-white rounded-3xl p-10 text-center border border-black/5">
-            <div className="h-20 w-20 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-6">
+          <div className="rounded-3xl border border-black/5 bg-white p-10 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-neutral-100">
               <Plane className="h-10 w-10 text-neutral-400" />
             </div>
-            <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">Nenhuma viagem encontrada</h3>
-            <p className="text-neutral-500 mb-8 max-w-md mx-auto">
-              Você ainda não possui viagens confirmadas. Explore nossos pacotes ou solicite um orçamento.
-            </p>
-            <button
-              onClick={() => navigate(routes.marketplace.travelPackages.ofertas())}
-              className="px-6 py-3 rounded-xl bg-[#1a1a2e] text-white font-bold hover:bg-[#0c2340] transition-colors"
-            >
+            <h2 className="mb-2 text-xl font-bold text-[#1a1a1a]">Nenhuma viagem encontrada</h2>
+            <p className="mx-auto mb-8 max-w-md text-neutral-500">Explore nossos pacotes ou solicite um orçamento personalizado.</p>
+            <button onClick={() => navigate(routes.marketplace.travelPackages.ofertas())} className="rounded-xl bg-[#1a1a2e] px-6 py-3 font-bold text-white hover:bg-[#0c2340]">
               Explorar Ofertas
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {trips.map((trip) => {
               const snapshot = trip.viagens_propostas?.snapshot_completo || {};
               const protocolo = trip.viagens_propostas?.viagens_solicitacoes_reserva?.protocolo || 'N/A';
-              
-              let statusLabel = 'Pendente';
-              let statusColor = 'bg-yellow-100 text-yellow-800 border-yellow-200';
-              if (trip.status === 'pagamento_confirmado') { statusLabel = 'Pagamento Confirmado'; statusColor = 'bg-blue-100 text-blue-800 border-blue-200'; }
-              if (trip.status === 'documentos_disponiveis') { statusLabel = 'Vouchers Disponíveis'; statusColor = 'bg-emerald-100 text-emerald-800 border-emerald-200'; }
-              if (trip.status === 'viagem_confirmada') { statusLabel = 'Viagem Confirmada'; statusColor = 'bg-emerald-100 text-emerald-800 border-emerald-200'; }
-              if (trip.status === 'concluida') { statusLabel = 'Concluída'; statusColor = 'bg-neutral-100 text-neutral-800 border-neutral-200'; }
+              const config = statusConfig[trip.status] || {
+                label: String(trip.status).replace(/_/g, ' '),
+                color: 'bg-neutral-100 text-neutral-800 border-neutral-200',
+              };
+              const vouchers = trip.viagens_vouchers || [];
+              const firstVoucher = vouchers[0];
 
               return (
-                <div key={trip.id} className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all border border-black/5 flex flex-col">
-                  <div className="flex items-start justify-between mb-6">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusColor}`}>
-                      {statusLabel}
-                    </span>
+                <article key={trip.id} className="flex flex-col rounded-[2rem] border border-black/5 bg-white p-6 shadow-sm transition-all hover:shadow-xl sm:p-8">
+                  <div className="mb-6 flex items-start justify-between gap-3">
+                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${config.color}`}>{config.label}</span>
                     <span className="text-xs font-medium text-neutral-400">Ref: {protocolo}</span>
                   </div>
-                  
+
                   <div className="mb-6 flex-1">
-                    <h3 className="text-xl font-black text-[#1a1a1a] leading-tight mb-2">
-                      {snapshot.titulo || 'Viagem Personalizada'}
-                    </h3>
-                    <div className="flex items-center gap-2 text-sm text-neutral-500 font-medium mb-4">
+                    <h2 className="mb-2 text-xl font-black leading-tight text-[#1a1a1a]">{snapshot.titulo || 'Viagem Personalizada'}</h2>
+                    <div className="mb-4 flex items-center gap-2 text-sm font-medium text-neutral-500">
                       <MapPin className="h-4 w-4 text-[#4dc9f6]" />
                       <span>{snapshot.destino || 'Destino a definir'}</span>
                     </div>
-                    
-                    <div className="bg-neutral-50 rounded-xl p-4 space-y-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-neutral-500">Valor Total</span>
-                        <span className="font-bold text-[#1a1a1a]">{formatCurrency(trip.valor_pago)}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-neutral-500">Data da Compra</span>
-                        <span className="font-medium text-neutral-700">
-                          {new Date(trip.created_at).toLocaleDateString('pt-BR')}
-                        </span>
-                      </div>
+                    <div className="space-y-3 rounded-xl bg-neutral-50 p-4">
+                      <div className="flex items-center justify-between text-sm"><span className="text-neutral-500">Valor total</span><span className="font-bold text-[#1a1a1a]">{formatCurrency(trip.valor_pago)}</span></div>
+                      <div className="flex items-center justify-between text-sm"><span className="text-neutral-500">Criada em</span><span className="font-medium text-neutral-700">{new Date(trip.created_at).toLocaleDateString('pt-BR')}</span></div>
+                      <div className="flex items-center justify-between text-sm"><span className="text-neutral-500">Vouchers</span><span className="font-bold text-[#1a1a1a]">{vouchers.length}</span></div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 mt-auto">
-                    <button 
-                      onClick={() => navigate(routes.marketplace.travelPackages.minhaViagem(trip.id))}
-                      className="flex-1 py-3 rounded-xl bg-neutral-100 text-[#1a1a1a] font-bold hover:bg-neutral-200 transition-colors text-sm"
-                    >
+                  <div className="mt-auto flex items-center gap-3">
+                    <button onClick={() => navigate(routes.marketplace.travelPackages.minhaViagem(trip.id))} className="flex-1 rounded-xl bg-neutral-100 py-3 text-sm font-bold text-[#1a1a1a] hover:bg-neutral-200">
                       Ver Detalhes
                     </button>
-                    {trip.status === 'documentos_disponiveis' && (
-                      <button className="h-11 w-11 rounded-xl bg-[#1a1a2e] text-white flex items-center justify-center hover:bg-[#0c2340] transition-colors shrink-0">
-                        <Download className="h-5 w-5" />
+                    {firstVoucher && (
+                      <button
+                        onClick={() => downloadVoucher(firstVoucher)}
+                        disabled={downloadingVoucherId === firstVoucher.id}
+                        aria-label={`Baixar ${firstVoucher.descricao || firstVoucher.file_name}`}
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1a1a2e] text-white hover:bg-[#0c2340] disabled:opacity-60"
+                      >
+                        {downloadingVoucherId === firstVoucher.id ? <Loader2 className="h-5 w-5 animate-spin" /> : <Download className="h-5 w-5" />}
                       </button>
                     )}
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>

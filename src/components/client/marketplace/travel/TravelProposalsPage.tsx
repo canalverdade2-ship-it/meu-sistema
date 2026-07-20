@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle, FileText, XCircle, Clock, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, Check, Loader2 } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
@@ -10,6 +9,7 @@ import { toast } from 'react-hot-toast';
 export function TravelProposalsPage({ clientId, onBack }: { clientId: string, onBack: () => void }) {
   const [propostas, setPropostas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchPropostas() {
@@ -27,6 +27,7 @@ export function TravelProposalsPage({ clientId, onBack }: { clientId: string, on
         setPropostas(data || []);
       } catch (err) {
         console.error(err);
+        toast.error('Não foi possível carregar suas propostas.');
       } finally {
         setLoading(false);
       }
@@ -35,22 +36,26 @@ export function TravelProposalsPage({ clientId, onBack }: { clientId: string, on
   }, [clientId]);
 
   const handleAceitarProposta = async (propostaId: string) => {
+    if (acceptingId) return;
+
     try {
-      const { error } = await supabase
-        .from('viagens_propostas')
-        .update({ 
-          status: 'aceita',
-          aceito_em: new Date().toISOString()
-        })
-        .eq('id', propostaId)
-        .eq('cliente_id', clientId);
-        
+      setAcceptingId(propostaId);
+      const { data, error } = await supabase.rpc('gsa_accept_travel_proposal', {
+        p_proposta_id: propostaId,
+      });
+
       if (error) throw error;
-      toast.success('Proposta aceita! Siga para o preenchimento de passageiros e pagamento.');
-      navigate(routes.marketplace.travelPackages.minhasViagens());
-    } catch (err) {
+      if (!(data as any)?.success || !(data as any)?.transacao_id) {
+        throw new Error((data as any)?.error || 'Não foi possível iniciar a reserva.');
+      }
+
+      toast.success('Proposta aceita! Agora cadastre os passageiros e conclua o pagamento.');
+      navigate(routes.marketplace.travelPackages.minhaViagem((data as any).transacao_id));
+    } catch (err: any) {
       console.error(err);
-      toast.error('Erro ao aceitar proposta.');
+      toast.error(err?.message || 'Erro ao aceitar proposta.');
+    } finally {
+      setAcceptingId(null);
     }
   };
 
@@ -111,7 +116,8 @@ export function TravelProposalsPage({ clientId, onBack }: { clientId: string, on
               const snapshot = proposta.snapshot_completo || {};
               const isPendente = proposta.status === 'enviada' || proposta.status === 'visualizada';
               const isExpirada = new Date(proposta.prazo_aceitacao) < new Date();
-              
+              const isAccepting = acceptingId === proposta.id;
+
               return (
                 <div key={proposta.id} className="bg-white rounded-[2rem] p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all border border-black/5 flex flex-col">
                   <div className="flex items-start justify-between mb-6">
@@ -126,7 +132,7 @@ export function TravelProposalsPage({ clientId, onBack }: { clientId: string, on
                       Ref: {proposta.viagens_solicitacoes_reserva?.protocolo}
                     </span>
                   </div>
-                  
+
                   <div className="mb-6 flex-1">
                     <h3 className="text-2xl font-black text-[#1a1a1a] leading-tight mb-2">
                       {snapshot.titulo || 'Proposta Personalizada'}
@@ -134,13 +140,13 @@ export function TravelProposalsPage({ clientId, onBack }: { clientId: string, on
                     <p className="text-neutral-500 text-sm mb-4 line-clamp-2">
                       {snapshot.destino}
                     </p>
-                    
+
                     <div className="bg-[#f4f1ea] rounded-xl p-5 space-y-4">
                       <div className="flex justify-between items-center border-b border-black/5 pb-3">
                         <span className="text-neutral-600 text-sm">Valor Total</span>
                         <span className="text-2xl font-black text-[#0c2340]">{formatCurrency(proposta.valor_total)}</span>
                       </div>
-                      
+
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-neutral-500 flex items-center gap-1"><Clock className="h-4 w-4" /> Válida até</span>
                         <span className={`font-bold ${isExpirada && isPendente ? 'text-red-500' : 'text-[#1a1a1a]'}`}>
@@ -152,21 +158,18 @@ export function TravelProposalsPage({ clientId, onBack }: { clientId: string, on
 
                   {isPendente && !isExpirada ? (
                     <div className="flex gap-3">
-                      <button 
+                      <button
                         onClick={() => handleAceitarProposta(proposta.id)}
-                        className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                        disabled={Boolean(acceptingId)}
+                        className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        <Check className="h-5 w-5" /> Aceitar Proposta
+                        {isAccepting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
+                        {isAccepting ? 'Preparando reserva...' : 'Aceitar Proposta'}
                       </button>
                     </div>
                   ) : proposta.status === 'aceita' ? (
-                    <div className="flex gap-3">
-                      <button 
-                        onClick={() => navigate(routes.marketplace.travelPackages.minhasViagens())}
-                        className="flex-1 py-3 rounded-xl bg-[#0c2340] text-white font-bold hover:bg-[#134e78] transition-colors flex items-center justify-center gap-2"
-                      >
-                        Ver Detalhes e Pagar
-                      </button>
+                    <div className="py-3 text-center text-sm font-bold text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-100">
+                      Proposta aceita. Acesse “Minhas Viagens” para continuar.
                     </div>
                   ) : (
                     <div className="py-3 text-center text-sm font-bold text-neutral-400 bg-neutral-100 rounded-xl">
