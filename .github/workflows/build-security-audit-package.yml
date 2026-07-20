@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-audited-package:
@@ -31,6 +31,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: agent/corrigir-auditoria-seguranca
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -87,3 +88,16 @@ jobs:
             security-audit-package.tar.gz
             security-audit-package.sha256
           retention-days: 30
+      - name: Commit validated application files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            package.json \
+            package-lock.json \
+            vite.config.ts \
+            supabase/functions/gsa-auth-session/index.ts \
+            supabase/functions/gsa-auth-session/index_test.ts \
+            tests/e2e/0-stress-real-data.spec.ts
+          git commit -m 'Corrigir achados críticos da auditoria de segurança'
+          git push origin HEAD:agent/corrigir-auditoria-seguranca
