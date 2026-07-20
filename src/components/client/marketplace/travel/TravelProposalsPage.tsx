@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, FileText, Clock, Check, Loader2 } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
+import { callClientRpc } from '../../../../lib/clientRpc';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
 import { formatCurrency } from '../../../../lib/utils';
@@ -40,17 +41,16 @@ export function TravelProposalsPage({ clientId, onBack }: { clientId: string, on
 
     try {
       setAcceptingId(propostaId);
-      const { data, error } = await supabase.rpc('gsa_accept_travel_proposal', {
+      const data = await callClientRpc<any>('gsa_accept_travel_proposal', {
         p_proposta_id: propostaId,
       });
 
-      if (error) throw error;
-      if (!(data as any)?.success || !(data as any)?.transacao_id) {
-        throw new Error((data as any)?.error || 'Não foi possível iniciar a reserva.');
+      if (!data?.success || !data?.transacao_id) {
+        throw new Error(data?.error || 'Não foi possível iniciar a reserva.');
       }
 
       toast.success('Proposta aceita! Agora cadastre os passageiros e conclua o pagamento.');
-      navigate(routes.marketplace.travelPackages.minhaViagem((data as any).transacao_id));
+      navigate(routes.marketplace.travelPackages.minhaViagem(data.transacao_id));
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || 'Erro ao aceitar proposta.');

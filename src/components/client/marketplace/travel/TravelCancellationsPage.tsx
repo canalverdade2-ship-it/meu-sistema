@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, RefreshCcw, Send } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
+import { callClientRpc } from '../../../../lib/clientRpc';
 import { formatCurrency } from '../../../../lib/utils';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../../../ui/Modal';
@@ -94,13 +95,12 @@ export function TravelCancellationsPage({
 
     try {
       setSubmitting(true);
-      const { data, error } = await supabase.rpc('gsa_request_travel_cancellation', {
+      const data = await callClientRpc<any>('gsa_request_travel_cancellation', {
         p_transacao_id: selectedTrip.id,
         p_motivo: reason.trim(),
       });
 
-      if (error) throw error;
-      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Solicitação não processada.');
+      if (!data?.success) throw new Error(data?.error || 'Solicitação não processada.');
 
       toast.success('Solicitação enviada para análise da GSA.');
       setSelectedTrip(null);

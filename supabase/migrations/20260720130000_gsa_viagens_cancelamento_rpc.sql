@@ -1,6 +1,11 @@
 -- Solicitação transacional de cancelamento pelo titular da viagem.
 
+DROP FUNCTION IF EXISTS public.gsa_request_travel_cancellation(UUID, TEXT);
+DROP FUNCTION IF EXISTS public.gsa_request_travel_cancellation(UUID, TEXT, UUID, TEXT);
+
 CREATE OR REPLACE FUNCTION public.gsa_request_travel_cancellation(
+  p_sessao_id UUID,
+  p_session_token TEXT,
   p_transacao_id UUID,
   p_motivo TEXT
 )
@@ -14,9 +19,9 @@ DECLARE
   v_transacao public.viagens_transacoes%ROWTYPE;
   v_cancelamento_id UUID;
 BEGIN
-  SELECT id INTO v_cliente_id
-  FROM public.clientes
-  WHERE user_id = auth.uid()
+  SELECT actor.cliente_id
+    INTO v_cliente_id
+  FROM public.gsa_client_session_actor(p_sessao_id, p_session_token) actor
   LIMIT 1;
 
   IF v_cliente_id IS NULL THEN
@@ -85,5 +90,5 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.gsa_request_travel_cancellation(UUID, TEXT) FROM public, anon;
-GRANT EXECUTE ON FUNCTION public.gsa_request_travel_cancellation(UUID, TEXT) TO authenticated;
+REVOKE ALL ON FUNCTION public.gsa_request_travel_cancellation(UUID, TEXT, UUID, TEXT) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.gsa_request_travel_cancellation(UUID, TEXT, UUID, TEXT) TO authenticated;

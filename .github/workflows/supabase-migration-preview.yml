@@ -2,7 +2,7 @@ name: Supabase Migration Preview
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/gsa-viagens-custom-session]
     paths:
       - '.github/workflows/supabase-migration-preview.yml'
       - 'supabase/migrations/**'
@@ -77,9 +77,17 @@ jobs:
       - name: Build reversible GSA migration transaction
         shell: bash
         run: |
+          # A migração histórica continha políticas baseadas em clientes.user_id,
+          # coluna inexistente neste projeto. Aproveitamos somente o DDL anterior
+          # ao marcador de políticas e aplicamos a segurança personalizada abaixo.
+          sed '/^-- POLÍTICAS/,$d' \
+            supabase/migrations/20260717220000_gsa_viagens_schema.sql \
+            > gsa-schema-without-legacy-policies.sql
+
           {
             echo 'BEGIN;'
-            cat supabase/migrations/20260717220000_gsa_viagens_schema.sql
+            cat gsa-schema-without-legacy-policies.sql
+            cat supabase/migrations/20260720110000_gsa_viagens_custom_session_security.sql
             cat supabase/migrations/20260720120000_fix_gsa_viagens_core_flow.sql
             cat supabase/migrations/20260720123000_gsa_viagens_storage_and_quotes.sql
             cat supabase/migrations/20260720130000_gsa_viagens_cancelamento_rpc.sql
@@ -149,7 +157,7 @@ jobs:
             echo
             echo '## Validação transacional com rollback'
             echo '```text'
-            sed -n '1,260p' gsa-targeted-validation.log
+            sed -n '1,320p' gsa-targeted-validation.log
             echo '```'
             echo
             echo '## Histórico local e remoto'

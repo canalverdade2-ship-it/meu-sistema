@@ -1,5 +1,6 @@
 -- Corrige o fluxo principal do GSA Viagens:
 -- proposta aceita -> transação pendente -> passageiros -> checkout.
+-- As RPCs seguem o contrato de sessão personalizada do portal.
 
 ALTER TABLE public.viagens_orcamentos
   ADD COLUMN IF NOT EXISTS pacote_id UUID REFERENCES public.viagens_pacotes(id) ON DELETE SET NULL;
@@ -7,7 +8,12 @@ ALTER TABLE public.viagens_orcamentos
 ALTER TABLE public.viagens_transacoes
   ADD COLUMN IF NOT EXISTS forma_pagamento TEXT;
 
+DROP FUNCTION IF EXISTS public.gsa_accept_travel_proposal(UUID);
+DROP FUNCTION IF EXISTS public.gsa_accept_travel_proposal(UUID, TEXT, UUID);
+
 CREATE OR REPLACE FUNCTION public.gsa_accept_travel_proposal(
+  p_sessao_id UUID,
+  p_session_token TEXT,
   p_proposta_id UUID
 )
 RETURNS JSONB
@@ -20,9 +26,9 @@ DECLARE
   v_proposta public.viagens_propostas%ROWTYPE;
   v_transacao_id UUID;
 BEGIN
-  SELECT id INTO v_cliente_id
-  FROM public.clientes
-  WHERE user_id = auth.uid()
+  SELECT actor.cliente_id
+    INTO v_cliente_id
+  FROM public.gsa_client_session_actor(p_sessao_id, p_session_token) actor
   LIMIT 1;
 
   IF v_cliente_id IS NULL THEN
@@ -80,10 +86,15 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.gsa_accept_travel_proposal(UUID) FROM public, anon;
-GRANT EXECUTE ON FUNCTION public.gsa_accept_travel_proposal(UUID) TO authenticated;
+REVOKE ALL ON FUNCTION public.gsa_accept_travel_proposal(UUID, TEXT, UUID) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.gsa_accept_travel_proposal(UUID, TEXT, UUID) TO authenticated;
+
+DROP FUNCTION IF EXISTS public.gsa_client_checkout_travel(JSONB);
+DROP FUNCTION IF EXISTS public.gsa_client_checkout_travel(UUID, TEXT, JSONB);
 
 CREATE OR REPLACE FUNCTION public.gsa_client_checkout_travel(
+  p_sessao_id UUID,
+  p_session_token TEXT,
   p_payload JSONB
 )
 RETURNS JSONB
@@ -100,9 +111,9 @@ DECLARE
   v_transacao_id UUID;
   v_passageiros_count INTEGER;
 BEGIN
-  SELECT id INTO v_cliente_id
-  FROM public.clientes
-  WHERE user_id = auth.uid()
+  SELECT actor.cliente_id
+    INTO v_cliente_id
+  FROM public.gsa_client_session_actor(p_sessao_id, p_session_token) actor
   LIMIT 1;
 
   IF v_cliente_id IS NULL THEN
@@ -198,5 +209,5 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.gsa_client_checkout_travel(JSONB) FROM public, anon;
-GRANT EXECUTE ON FUNCTION public.gsa_client_checkout_travel(JSONB) TO authenticated;
+REVOKE ALL ON FUNCTION public.gsa_client_checkout_travel(UUID, TEXT, JSONB) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.gsa_client_checkout_travel(UUID, TEXT, JSONB) TO authenticated;
