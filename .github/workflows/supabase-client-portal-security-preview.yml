@@ -1,0 +1,86 @@
+name: Preview Client Portal Security
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/20260720200600_secure_client_portal_critical_flows.sql'
+      - 'supabase/migrations/20260720201000_schedule_and_guard_store_credit_release.sql'
+      - 'supabase/migrations/20260720201100_compat_secure_legacy_credit_release.sql'
+      - 'supabase/migrations/20260720202000_revoke_client_sessions_on_access_change.sql'
+      - 'supabase/migrations/20260720203000_private_client_documents_storage.sql'
+      - 'supabase/migrations/20260720204000_harden_client_operational_permissions.sql'
+      - 'supabase/migrations/20260720205000_optional_client_block_state_compat.sql'
+      - 'scripts/client-portal-security-preview.sql'
+      - '.github/workflows/supabase-client-portal-security-preview.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-client-portal-security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    name: Validate migrations with rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link authorized project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Build transactional preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20260720200600_secure_client_portal_critical_flows.sql
+            cat supabase/migrations/20260720201000_schedule_and_guard_store_credit_release.sql
+            cat supabase/migrations/20260720201100_compat_secure_legacy_credit_release.sql
+            cat supabase/migrations/20260720202000_revoke_client_sessions_on_access_change.sql
+            cat supabase/migrations/20260720203000_private_client_documents_storage.sql
+            cat supabase/migrations/20260720204000_harden_client_operational_permissions.sql
+            cat supabase/migrations/20260720205000_optional_client_block_state_compat.sql
+            cat scripts/client-portal-security-preview.sql
+            echo 'ROLLBACK;'
+          } > client-portal-security-preview.sql
+
+      - name: Validate against linked schema without persisting
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file client-portal-security-preview.sql \
+            2>&1 | tee client-portal-security-preview.log
+
+      - name: Upload preview evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-portal-security-preview
+          path: client-portal-security-preview.log
+          retention-days: 14

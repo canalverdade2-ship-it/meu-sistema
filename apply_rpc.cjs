@@ -1,28 +1,44 @@
+require('dotenv').config();
+
 const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
-const connectionString = 'postgresql://postgres:%40Ad98653200%40@db.ocgajvagxagutfvgxwsy.supabase.co:5432/postgres';
+const connectionString = process.env.SUPABASE_DB_URL;
+const sqlArgument = process.argv[2];
+
+if (!connectionString) {
+  console.error('SUPABASE_DB_URL não configurada. Operação cancelada.');
+  process.exit(1);
+}
+
+if (!sqlArgument) {
+  console.error('Uso: node apply_rpc.cjs <arquivo.sql>');
+  process.exit(1);
+}
+
+const sqlPath = path.resolve(process.cwd(), sqlArgument);
+if (!fs.existsSync(sqlPath)) {
+  console.error(`Arquivo SQL não encontrado: ${sqlPath}`);
+  process.exit(1);
+}
 
 const client = new Client({
   connectionString,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
 async function run() {
   try {
     await client.connect();
-    console.log('Connected to Supabase');
-    
-    const sql = fs.readFileSync(path.join('C:', 'Users', 'Adriano Farias', '.gemini', 'antigravity-ide', 'brain', '19932f5b-a793-4675-ba9b-69c62af8e6fa', 'rpc_cancelar_pedido_loja.sql'), 'utf8');
-    
-    await client.query(sql);
-    console.log('Successfully executed rpc_cancelar_pedido_loja.sql');
-    
+    await client.query(fs.readFileSync(sqlPath, 'utf8'));
+    console.log(`RPC aplicada a partir de: ${sqlPath}`);
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Erro ao aplicar RPC:', error);
+    process.exitCode = 1;
   } finally {
     await client.end();
   }
 }
+
 run();

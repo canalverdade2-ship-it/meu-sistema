@@ -1,30 +1,9 @@
 require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
 
-const migrationPath = process.argv[2];
+console.error([
+  'Este executor foi desativado por segurança.',
+  'Migrações não podem ser aplicadas pela chave pública VITE_SUPABASE_ANON_KEY nem por uma RPC execute_sql.',
+  'Use: SUPABASE_DB_URL="..." node apply_pg_migration.cjs <arquivo.sql>',
+].join('\n'));
 
-if (!migrationPath) {
-  console.error('Uso: node apply_migration.cjs <arquivo.sql>');
-  process.exit(1);
-}
-
-const sqlPath = path.resolve(process.cwd(), migrationPath);
-const sql = fs.readFileSync(sqlPath, 'utf8');
-
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
-);
-
-async function run() {
-  const { error } = await supabase.rpc('execute_sql', { query: sql });
-  if (error) {
-    console.error(error);
-    process.exit(1);
-  }
-  console.log(`Migration aplicada: ${migrationPath}`);
-}
-
-run();
+process.exit(1);

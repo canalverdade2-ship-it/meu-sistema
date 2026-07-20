@@ -57,10 +57,37 @@ jobs:
         if: steps.typescript.outputs.exit_code == '0'
         run: npm run test:admin
 
-      - name: GSA Viagens contracts
+      - name: Client portal security contracts
+        id: client_security
         if: steps.typescript.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          set +e
+          npm run test:client-security > client-security.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload client security log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-security-log
+          path: client-security.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Report client security result
+        if: steps.typescript.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          cat client-security.log
+          test "${{ steps.client_security.outputs.exit_code }}" = "0"
+
+      - name: GSA Viagens contracts
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run test:travel
 
       - name: Build
-        if: steps.typescript.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run build
