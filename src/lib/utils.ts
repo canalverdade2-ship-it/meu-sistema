@@ -88,8 +88,24 @@ export const maskCEP = (value: string | null | undefined) => {
     .replace(/(-\d{3})\d+?$/, '$1');
 };
 
+function secureRandomInt(maxExclusive: number): number {
+  if (maxExclusive <= 0) throw new Error('maxExclusive deve ser positivo');
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const limit = Math.floor(0x100000000 / maxExclusive) * maxExclusive;
+    const buffer = new Uint32Array(1);
+    do crypto.getRandomValues(buffer); while (buffer[0] >= limit);
+    return buffer[0] % maxExclusive;
+  }
+  throw new Error('Gerador criptográfico indisponível neste ambiente.');
+}
+
+export const generateSecureNumericCode = (length = 8) => {
+  if (!Number.isInteger(length) || length < 6 || length > 12) throw new Error('Comprimento de credencial inválido.');
+  return Array.from({ length }, () => String(secureRandomInt(10))).join('');
+};
+
 export const generateCode = (prefix: string) => {
-  const random = Math.floor(1000 + Math.random() * 9000);
+  const random = generateSecureNumericCode(8);
   const timestamp = Date.now().toString().slice(-4);
   return `${prefix}-${timestamp}${random}`;
 };
