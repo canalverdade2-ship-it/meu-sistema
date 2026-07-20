@@ -1,0 +1,70 @@
+name: Run Pending Provider Patches
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.event.pull_request.head.ref == 'agent/corrigir-auditoria-painel-prestador'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-auditoria-painel-prestador
+          fetch-depth: 0
+
+      - name: Execute embedded correction scripts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import textwrap
+
+          workflows = [
+              Path('.github/workflows/temp-align-provider-rpc-contracts.yml'),
+              Path('.github/workflows/temp-finalize-provider-components.yml'),
+          ]
+          for workflow in workflows:
+              content = workflow.read_text()
+              scripts = re.findall(r"python - <<'PY'\n(.*?)\n          PY", content, flags=re.S)
+              if not scripts:
+                  raise SystemExit(f'Nenhum script Python encontrado em {workflow}')
+              for index, script in enumerate(scripts, start=1):
+                  code = textwrap.dedent(script)
+                  print(f'Executando {workflow} bloco {index}')
+                  exec(compile(code, f'{workflow}:{index}', 'exec'), {'__name__': '__main__'})
+          PY
+
+      - name: Remove temporary patch machinery
+        run: |
+          rm -f .provider-rpc-contracts-trigger
+          rm -f .provider-components-finalize-trigger
+          rm -f .github/workflows/temp-align-provider-rpc-contracts.yml
+          rm -f .github/workflows/temp-finalize-provider-components.yml
+          rm -f .github/workflows/temp-run-pending-provider-patches.yml
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:provider
+      - run: npm run test:admin
+      - run: npm run test:client-security
+      - run: npm run test:travel
+      - run: npm run build
+
+      - name: Publish definitive patch set
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Consolidar correções finais do Painel do Prestador'
+          git push
