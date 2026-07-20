@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/corrigir-painel-colaborador
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
