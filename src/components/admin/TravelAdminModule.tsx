@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-  CheckCircle2,
   FileText,
+  Link2,
   Loader2,
   PackagePlus,
   Plane,
@@ -49,7 +49,6 @@ function StatusBadge({ status }: { status: string }) {
     encerrado: 'bg-neutral-100 text-neutral-700',
     cancelado: 'bg-red-100 text-red-700',
     rascunho: 'bg-neutral-100 text-neutral-700',
-    publicada: 'bg-emerald-100 text-emerald-700',
     publicado: 'bg-emerald-100 text-emerald-700',
     disponibilidade_sob_consulta: 'bg-sky-100 text-sky-700',
     pausado: 'bg-amber-100 text-amber-700',
@@ -79,7 +78,6 @@ function StatusBadge({ status }: { status: string }) {
 
 export function TravelAdminModule() {
   const [activeTab, setActiveTab] = useState<AdminTab>('solicitacoes');
-
   const tabs: Array<{ id: AdminTab; label: string; icon: React.ElementType }> = [
     { id: 'solicitacoes', label: 'Orçamentos', icon: Users },
     { id: 'pacotes', label: 'Pacotes', icon: Plane },
@@ -100,11 +98,7 @@ export function TravelAdminModule() {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800'}`}
-            >
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800'}`}>
               <Icon className="h-4 w-4" /> {tab.label}
             </button>
           );
@@ -126,6 +120,10 @@ function SolicitacoesTab() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<any>(null);
   const [savingProposal, setSavingProposal] = useState(false);
+  const [linkingLead, setLinkingLead] = useState<any>(null);
+  const [clientSearch, setClientSearch] = useState('');
+  const [clientResults, setClientResults] = useState<any[]>([]);
+  const [searchingClients, setSearchingClients] = useState(false);
   const [proposalForm, setProposalForm] = useState({
     titulo: '',
     valor_total: '',
@@ -158,7 +156,9 @@ function SolicitacoesTab() {
 
   const openProposal = (quote: any) => {
     if (!quote.cliente_id) {
-      toast.error('Este orçamento foi enviado como visitante. Vincule o lead a um cliente antes de gerar a proposta.');
+      setLinkingLead(quote);
+      setClientSearch(quote.email || quote.telefone || quote.nome || '');
+      setClientResults([]);
       return;
     }
     setSelected(quote);
@@ -170,6 +170,49 @@ function SolicitacoesTab() {
       prazo_pagamento_dias: '2',
       condicoes: 'Valores sujeitos à disponibilidade até a confirmação do pagamento.',
     });
+  };
+
+  const searchClients = async () => {
+    const search = clientSearch.trim();
+    if (search.length < 3) {
+      toast.error('Digite pelo menos 3 caracteres.');
+      return;
+    }
+    try {
+      setSearchingClients(true);
+      const safeSearch = search.replace(/[%_]/g, '');
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('id, nome, email, telefone, codigo_cliente, status')
+        .or(`nome.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%,telefone.ilike.%${safeSearch}%,codigo_cliente.ilike.%${safeSearch}%`)
+        .limit(10);
+      if (error) throw error;
+      setClientResults(data || []);
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao pesquisar clientes.');
+    } finally {
+      setSearchingClients(false);
+    }
+  };
+
+  const linkLeadToClient = async (client: any) => {
+    if (!linkingLead) return;
+    try {
+      const { error } = await supabase
+        .from('viagens_orcamentos')
+        .update({ cliente_id: client.id, updated_at: new Date().toISOString() })
+        .eq('id', linkingLead.id)
+        .is('cliente_id', null);
+      if (error) throw error;
+
+      const linkedQuote = { ...linkingLead, cliente_id: client.id };
+      setSolicitacoes((items) => items.map((item) => item.id === linkingLead.id ? linkedQuote : item));
+      setLinkingLead(null);
+      toast.success(`Lead vinculado a ${client.nome}.`);
+      openProposal(linkedQuote);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível vincular o cliente.');
+    }
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -285,10 +328,8 @@ function SolicitacoesTab() {
                   <p className="mt-1 text-sm text-neutral-500">{quote.nome || 'Cliente cadastrado'} · {quote.email || quote.telefone || 'Contato pelo cadastro'} · {formatDate(quote.created_at)}</p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <select value={quote.status} onChange={(event) => updateStatus(quote.id, event.target.value)} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold">
-                    <option value="recebido">Recebido</option><option value="em_analise">Em análise</option><option value="buscando_opcoes">Buscando opções</option><option value="propostas_disponiveis">Proposta disponível</option><option value="aguardando_cliente">Aguardando cliente</option><option value="encerrado">Encerrado</option><option value="cancelado">Cancelado</option>
-                  </select>
-                  <button onClick={() => openProposal(quote)} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700"><Send className="h-4 w-4" /> Gerar proposta</button>
+                  <select value={quote.status} onChange={(event) => updateStatus(quote.id, event.target.value)} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold"><option value="recebido">Recebido</option><option value="em_analise">Em análise</option><option value="buscando_opcoes">Buscando opções</option><option value="propostas_disponiveis">Proposta disponível</option><option value="aguardando_cliente">Aguardando cliente</option><option value="encerrado">Encerrado</option><option value="cancelado">Cancelado</option></select>
+                  <button onClick={() => openProposal(quote)} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700">{quote.cliente_id ? <Send className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}{quote.cliente_id ? 'Gerar proposta' : 'Vincular cliente'}</button>
                 </div>
               </div>
             </article>
@@ -296,17 +337,22 @@ function SolicitacoesTab() {
         </div>
       )}
 
+      <Modal isOpen={Boolean(linkingLead)} onClose={() => setLinkingLead(null)} title="Vincular lead a cliente" size="lg">
+        {linkingLead && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-cyan-50 p-4 text-sm text-cyan-900"><strong>{linkingLead.nome}</strong><br />{linkingLead.email} · {linkingLead.telefone}</div>
+            <div className="flex gap-2"><input value={clientSearch} onChange={(event) => setClientSearch(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') searchClients(); }} placeholder="Nome, e-mail, telefone ou código" className={inputClass} /><button onClick={searchClients} disabled={searchingClients} className="rounded-xl bg-indigo-600 px-5 font-black text-white disabled:opacity-60">{searchingClients ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Buscar'}</button></div>
+            <div className="space-y-2">{clientResults.map((client) => <button key={client.id} onClick={() => linkLeadToClient(client)} className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 p-4 text-left hover:border-indigo-300 hover:bg-indigo-50"><div><p className="font-black text-neutral-900">{client.nome}</p><p className="text-sm text-neutral-500">{client.email || client.telefone} · {client.codigo_cliente}</p></div><span className="text-xs font-black uppercase text-indigo-600">Selecionar</span></button>)}</div>
+          </div>
+        )}
+      </Modal>
+
       <Modal isOpen={Boolean(selected)} onClose={() => setSelected(null)} title="Gerar proposta de viagem" size="xl">
         {selected && (
           <div className="space-y-5">
             <div className="rounded-2xl bg-neutral-50 p-4 text-sm text-neutral-600"><strong>{selected.protocolo}</strong> · {selected.origem} → {selected.destino} · {selected.adultos || 1} adulto(s)</div>
             <label className={labelClass}>Título da proposta<input value={proposalForm.titulo} onChange={(event) => setProposalForm((value) => ({ ...value, titulo: event.target.value }))} className={`${inputClass} mt-2`} /></label>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className={labelClass}>Valor total<input value={proposalForm.valor_total} onChange={(event) => setProposalForm((value) => ({ ...value, valor_total: event.target.value }))} placeholder="0,00" className={`${inputClass} mt-2`} /></label>
-              <label className={labelClass}>Parcelamento máximo<input type="number" min="1" max="24" value={proposalForm.parcelamento_permitido} onChange={(event) => setProposalForm((value) => ({ ...value, parcelamento_permitido: event.target.value }))} className={`${inputClass} mt-2`} /></label>
-              <label className={labelClass}>Validade do aceite (horas)<input type="number" min="1" value={proposalForm.validade_horas} onChange={(event) => setProposalForm((value) => ({ ...value, validade_horas: event.target.value }))} className={`${inputClass} mt-2`} /></label>
-              <label className={labelClass}>Prazo para pagamento (dias)<input type="number" min="1" value={proposalForm.prazo_pagamento_dias} onChange={(event) => setProposalForm((value) => ({ ...value, prazo_pagamento_dias: event.target.value }))} className={`${inputClass} mt-2`} /></label>
-            </div>
+            <div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Valor total<input value={proposalForm.valor_total} onChange={(event) => setProposalForm((value) => ({ ...value, valor_total: event.target.value }))} placeholder="0,00" className={`${inputClass} mt-2`} /></label><label className={labelClass}>Parcelamento máximo<input type="number" min="1" max="24" value={proposalForm.parcelamento_permitido} onChange={(event) => setProposalForm((value) => ({ ...value, parcelamento_permitido: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Validade do aceite (horas)<input type="number" min="1" value={proposalForm.validade_horas} onChange={(event) => setProposalForm((value) => ({ ...value, validade_horas: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Prazo para pagamento (dias)<input type="number" min="1" value={proposalForm.prazo_pagamento_dias} onChange={(event) => setProposalForm((value) => ({ ...value, prazo_pagamento_dias: event.target.value }))} className={`${inputClass} mt-2`} /></label></div>
             <label className={labelClass}>Condições<textarea rows={4} value={proposalForm.condicoes} onChange={(event) => setProposalForm((value) => ({ ...value, condicoes: event.target.value }))} className={`${inputClass} mt-2 h-auto`} /></label>
             <button onClick={createProposal} disabled={savingProposal} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-black text-white hover:bg-indigo-700 disabled:opacity-60">{savingProposal ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}{savingProposal ? 'Criando proposta...' : 'Enviar proposta ao cliente'}</button>
           </div>
@@ -346,48 +392,19 @@ function PacotesTab() {
     }
     try {
       setSaving(true);
-      const { data, error } = await supabase.from('viagens_pacotes').insert({
-        titulo: form.titulo.trim(), slug: createSlug(form.titulo), categoria: form.categoria, origem: form.origem.trim() || null, destino: form.destino.trim(), data_ida: form.data_ida || null, data_volta: form.data_volta || null, dias: Number(form.dias) || null, noites: Number(form.noites) || null, preco_venda: price, parcelamento_maximo: Number(form.parcelamento_maximo) || 1, status: 'rascunho',
-      }).select('id').single();
+      const { data, error } = await supabase.from('viagens_pacotes').insert({ titulo: form.titulo.trim(), slug: createSlug(form.titulo), categoria: form.categoria, origem: form.origem.trim() || null, destino: form.destino.trim(), data_ida: form.data_ida || null, data_volta: form.data_volta || null, dias: Number(form.dias) || null, noites: Number(form.noites) || null, preco_venda: price, parcelamento_maximo: Number(form.parcelamento_maximo) || 1, status: 'rascunho' }).select('id').single();
       if (error) throw error;
-      if (form.imagem_url.trim()) {
-        const { error: imageError } = await supabase.from('viagens_pacote_imagens').insert({ pacote_id: data.id, url: form.imagem_url.trim(), is_capa: true, ordem: 0 });
-        if (imageError) throw imageError;
-      }
+      if (form.imagem_url.trim()) { const { error: imageError } = await supabase.from('viagens_pacote_imagens').insert({ pacote_id: data.id, url: form.imagem_url.trim(), is_capa: true, ordem: 0 }); if (imageError) throw imageError; }
       toast.success('Pacote criado como rascunho.');
       setShowForm(false);
       setForm({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1', imagem_url: '' });
       await fetchPackages();
-    } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível criar o pacote.');
-    } finally {
-      setSaving(false);
-    }
+    } catch (error: any) { toast.error(error?.message || 'Não foi possível criar o pacote.'); } finally { setSaving(false); }
   };
 
-  const updatePackageStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from('viagens_pacotes').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
-    if (error) return toast.error(error.message);
-    setPackages((items) => items.map((item) => (item.id === id ? { ...item, status } : item)));
-    toast.success('Pacote atualizado.');
-  };
+  const updatePackageStatus = async (id: string, status: string) => { const { error } = await supabase.from('viagens_pacotes').update({ status, updated_at: new Date().toISOString() }).eq('id', id); if (error) return toast.error(error.message); setPackages((items) => items.map((item) => item.id === id ? { ...item, status } : item)); toast.success('Pacote atualizado.'); };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4"><div><h3 className="text-lg font-bold">Catálogo de pacotes</h3><p className="text-sm text-neutral-500">Cadastre ofertas e controle a publicação.</p></div><button onClick={() => setShowForm(true)} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700"><Plus className="h-4 w-4" /> Novo pacote</button></div>
-      {loading ? <div className="flex justify-center p-10"><Loader2 className="h-7 w-7 animate-spin text-indigo-600" /></div> : packages.length === 0 ? <p className="py-10 text-center text-neutral-500">Nenhum pacote cadastrado.</p> : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {packages.map((pkg) => {
-            const cover = pkg.viagens_pacote_imagens?.find((image: any) => image.is_capa)?.url || pkg.viagens_pacote_imagens?.[0]?.url;
-            return <article key={pkg.id} className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">{cover ? <img src={cover} alt={pkg.titulo} className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center bg-neutral-100"><Plane className="h-10 w-10 text-neutral-300" /></div>}<div className="p-5"><div className="mb-2 flex items-center justify-between gap-2"><StatusBadge status={pkg.status} /><span className="text-xs font-bold uppercase text-neutral-400">{pkg.categoria}</span></div><h4 className="line-clamp-2 font-black text-neutral-900">{pkg.titulo}</h4><p className="mt-1 text-sm text-neutral-500">{pkg.destino} · {pkg.dias || '—'} dias</p><p className="mt-4 text-lg font-black text-indigo-700">{formatCurrency(pkg.preco_venda)}</p><select value={pkg.status} onChange={(event) => updatePackageStatus(pkg.id, event.target.value)} className="mt-4 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold"><option value="rascunho">Rascunho</option><option value="aguardando_revisao">Aguardando revisão</option><option value="publicado">Publicado</option><option value="disponibilidade_sob_consulta">Sob consulta</option><option value="pausado">Pausado</option><option value="esgotado">Esgotado</option><option value="arquivado">Arquivado</option></select></div></article>;
-          })}
-        </div>
-      )}
-      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Novo pacote de viagem" size="2xl">
-        <div className="space-y-4"><label className={labelClass}>Título<input value={form.titulo} onChange={(event) => setForm((value) => ({ ...value, titulo: event.target.value }))} className={`${inputClass} mt-2`} /></label><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Categoria<select value={form.categoria} onChange={(event) => setForm((value) => ({ ...value, categoria: event.target.value }))} className={`${inputClass} mt-2`}><option value="nacional">Nacional</option><option value="internacional">Internacional</option><option value="excursao">Excursão</option></select></label><label className={labelClass}>Preço de venda<input value={form.preco_venda} onChange={(event) => setForm((value) => ({ ...value, preco_venda: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Origem<input value={form.origem} onChange={(event) => setForm((value) => ({ ...value, origem: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Destino<input value={form.destino} onChange={(event) => setForm((value) => ({ ...value, destino: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de ida<input type="date" value={form.data_ida} onChange={(event) => setForm((value) => ({ ...value, data_ida: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de volta<input type="date" value={form.data_volta} onChange={(event) => setForm((value) => ({ ...value, data_volta: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Dias<input type="number" value={form.dias} onChange={(event) => setForm((value) => ({ ...value, dias: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Noites<input type="number" value={form.noites} onChange={(event) => setForm((value) => ({ ...value, noites: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Parcelas máximas<input type="number" min="1" value={form.parcelamento_maximo} onChange={(event) => setForm((value) => ({ ...value, parcelamento_maximo: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>URL da imagem de capa<input value={form.imagem_url} onChange={(event) => setForm((value) => ({ ...value, imagem_url: event.target.value }))} className={`${inputClass} mt-2`} /></label></div><button onClick={savePackage} disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-black text-white disabled:opacity-60">{saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <PackagePlus className="h-5 w-5" />}{saving ? 'Salvando...' : 'Criar pacote'}</button></div>
-      </Modal>
-    </div>
-  );
+  return <div className="space-y-4"><div className="flex items-center justify-between gap-4"><div><h3 className="text-lg font-bold">Catálogo de pacotes</h3><p className="text-sm text-neutral-500">Cadastre ofertas e controle a publicação.</p></div><button onClick={() => setShowForm(true)} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700"><Plus className="h-4 w-4" /> Novo pacote</button></div>{loading ? <div className="flex justify-center p-10"><Loader2 className="h-7 w-7 animate-spin text-indigo-600" /></div> : packages.length === 0 ? <p className="py-10 text-center text-neutral-500">Nenhum pacote cadastrado.</p> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{packages.map((pkg) => { const cover = pkg.viagens_pacote_imagens?.find((image: any) => image.is_capa)?.url || pkg.viagens_pacote_imagens?.[0]?.url; return <article key={pkg.id} className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">{cover ? <img src={cover} alt={pkg.titulo} className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center bg-neutral-100"><Plane className="h-10 w-10 text-neutral-300" /></div>}<div className="p-5"><div className="mb-2 flex items-center justify-between gap-2"><StatusBadge status={pkg.status} /><span className="text-xs font-bold uppercase text-neutral-400">{pkg.categoria}</span></div><h4 className="line-clamp-2 font-black text-neutral-900">{pkg.titulo}</h4><p className="mt-1 text-sm text-neutral-500">{pkg.destino} · {pkg.dias || '—'} dias</p><p className="mt-4 text-lg font-black text-indigo-700">{formatCurrency(pkg.preco_venda)}</p><select value={pkg.status} onChange={(event) => updatePackageStatus(pkg.id, event.target.value)} className="mt-4 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold"><option value="rascunho">Rascunho</option><option value="aguardando_revisao">Aguardando revisão</option><option value="publicado">Publicado</option><option value="disponibilidade_sob_consulta">Sob consulta</option><option value="pausado">Pausado</option><option value="esgotado">Esgotado</option><option value="arquivado">Arquivado</option></select></div></article>; })}</div>}<Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Novo pacote de viagem" size="2xl"><div className="space-y-4"><label className={labelClass}>Título<input value={form.titulo} onChange={(event) => setForm((value) => ({ ...value, titulo: event.target.value }))} className={`${inputClass} mt-2`} /></label><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Categoria<select value={form.categoria} onChange={(event) => setForm((value) => ({ ...value, categoria: event.target.value }))} className={`${inputClass} mt-2`}><option value="nacional">Nacional</option><option value="internacional">Internacional</option><option value="excursao">Excursão</option></select></label><label className={labelClass}>Preço de venda<input value={form.preco_venda} onChange={(event) => setForm((value) => ({ ...value, preco_venda: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Origem<input value={form.origem} onChange={(event) => setForm((value) => ({ ...value, origem: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Destino<input value={form.destino} onChange={(event) => setForm((value) => ({ ...value, destino: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de ida<input type="date" value={form.data_ida} onChange={(event) => setForm((value) => ({ ...value, data_ida: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de volta<input type="date" value={form.data_volta} onChange={(event) => setForm((value) => ({ ...value, data_volta: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Dias<input type="number" value={form.dias} onChange={(event) => setForm((value) => ({ ...value, dias: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Noites<input type="number" value={form.noites} onChange={(event) => setForm((value) => ({ ...value, noites: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Parcelas máximas<input type="number" min="1" value={form.parcelamento_maximo} onChange={(event) => setForm((value) => ({ ...value, parcelamento_maximo: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>URL da imagem de capa<input value={form.imagem_url} onChange={(event) => setForm((value) => ({ ...value, imagem_url: event.target.value }))} className={`${inputClass} mt-2`} /></label></div><button onClick={savePackage} disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-black text-white disabled:opacity-60">{saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <PackagePlus className="h-5 w-5" />}{saving ? 'Salvando...' : 'Criar pacote'}</button></div></Modal></div>;
 }
 
 function PropostasTab() {
