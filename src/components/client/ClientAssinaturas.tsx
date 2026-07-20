@@ -1,13 +1,36 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import { formatCurrency, formatDate, generateCode, handleError, generateUUID } from '../../lib/utils';
+import { formatCurrency, formatDate, handleError, generateUUID } from '../../lib/utils';
 import { Calendar, Clock, CheckCircle, XCircle, Info, ArrowRight, Layers, ShieldCheck, AlertTriangle, Receipt, DollarSign } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
-import { createNotification } from '../../lib/notifications';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
-import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { callClientRpc } from '../../lib/clientRpc';
+
+const getLocalDateInputValue = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getInvoiceStatusInfo = (status?: string) => {
+  const statuses: Record<string, { label: string; className: string }> = {
+    pago: { label: 'Pago', className: 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100' },
+    pendente: { label: 'Pendente', className: 'bg-amber-50 text-amber-600 ring-1 ring-amber-100' },
+    vencida: { label: 'Vencida', className: 'bg-red-50 text-red-600 ring-1 ring-red-100' },
+    cancelado: { label: 'Cancelada', className: 'bg-neutral-100 text-neutral-500 ring-1 ring-neutral-200' },
+    cancelada: { label: 'Cancelada', className: 'bg-neutral-100 text-neutral-500 ring-1 ring-neutral-200' },
+    revisada: { label: 'Revisada', className: 'bg-blue-50 text-blue-600 ring-1 ring-blue-100' },
+    aguardando_link: { label: 'Aguardando Link', className: 'bg-violet-50 text-violet-600 ring-1 ring-violet-100' },
+    pendente_pagamento: { label: 'Pendente de Pagamento', className: 'bg-amber-50 text-amber-600 ring-1 ring-amber-100' },
+  };
+
+  return statuses[status || ''] || {
+    label: status ? status.replace(/_/g, ' ') : 'Sem status',
+    className: 'bg-neutral-100 text-neutral-600 ring-1 ring-neutral-200',
+  };
+};
 
 export function ClientAssinaturas({ 
   clientId, 
@@ -22,16 +45,11 @@ export function ClientAssinaturas({
 }) {
   const { containerRef: minhasTabsRef, setButtonRef: setMinhasTabButtonRef } = useAutoFitTabs(16, 10);
   const extensionRequestId = useRef(generateUUID());
+  const cancellationRequestId = useRef(generateUUID());
   const [minhasTab, setMinhasTab] = useState<'ativas' | 'canceladas' | 'em_cancelamento'>(
     (initialTab as any) || 'ativas'
   );
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     if (initialTab) setMinhasTab(initialTab as any);
@@ -43,6 +61,7 @@ export function ClientAssinaturas({
   const [isCancelarModalOpen, setIsCancelarModalOpen] = useState(false);
   const [mesesProrrogacao, setMesesProrrogacao] = useState<number>(1);
   const [dataCancelamento, setDataCancelamento] = useState<string>('');
+  const [isSubmittingSubscriptionAction, setIsSubmittingSubscriptionAction] = useState(false);
   const hasAutoOpened = useRef<string | null>(null);
 
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
@@ -115,96 +134,79 @@ export function ClientAssinaturas({
 
   const handleProrrogarAssinatura = async () => {
     if (!selectedAssinatura) return;
+    if (!Number.isInteger(mesesProrrogacao) || mesesProrrogacao < 1 || mesesProrrogacao > 36) {
+      toast.error('Informe um periodo entre 1 e 36 meses.');
+      return;
+    }
+
+    setIsSubmittingSubscriptionAction(true);
     try {
       const data = await callClientRpc<any>('gsa_client_extend_subscription', {
         p_request_id: extensionRequestId.current,
         p_ordem_assinatura_id: selectedAssinatura.id,
         p_meses: mesesProrrogacao,
       });
-      if (!data?.success) {
-        throw new Error('Erro ao prorrogar assinatura.');
-      }
+      if (!data?.success) throw new Error('Erro ao prorrogar assinatura.');
+
       extensionRequestId.current = generateUUID();
+      toast.success(data?.already_exists
+        ? 'Esta prorrogacao ja havia sido processada.'
+        : 'Assinatura prorrogada e faturas geradas com sucesso!');
 
-      toast.success('Assinatura prorrogada e faturas geradas com sucesso!');
-
+      setMesesProrrogacao(1);
       setIsProrrogarModalOpen(false);
       setIsModalOpen(false);
-      fetchMinhasAssinaturas();
+      await fetchMinhasAssinaturas();
     } catch (error) {
-      console.error('Erro ao prorrogar assinatura:', error);
-      toast.error('Erro ao prorrogar assinatura.');
+      toast.error(handleError(error, 'prorrogar assinatura'));
+    } finally {
+      setIsSubmittingSubscriptionAction(false);
     }
   };
 
   const handleCancelarAssinatura = async () => {
     if (!selectedAssinatura || !dataCancelamento) return;
-    
-    const cancelDate = new Date(dataCancelamento);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (cancelDate < today) {
-      toast.error('A data de cancelamento não pode ser retroativa.');
+
+    const today = getLocalDateInputValue();
+    if (dataCancelamento < today) {
+      toast.error('A data de cancelamento nao pode ser retroativa.');
       return;
     }
 
+    setIsSubmittingSubscriptionAction(true);
     try {
-      const { valorProporcional } = calculateProportionalPreview();
-      
-      const isFuture = cancelDate > today;
-      const newStatus = isFuture ? 'em_cancelamento' : 'cancelado';
+      const data = await callClientRpc<any>('gsa_client_cancel_subscription', {
+        p_request_id: cancellationRequestId.current,
+        p_ordem_assinatura_id: selectedAssinatura.id,
+        p_data_cancelamento: dataCancelamento,
+      });
+      if (!data?.success) throw new Error('Erro ao cancelar assinatura.');
 
-      await clientOperationalWrite(clientId, 'ordens_assinatura', 'update', {
-        status: newStatus,
-        data_cancelamento: dataCancelamento,
-        valor_proporcional_cancelamento: valorProporcional
-      }, { id: selectedAssinatura.id });
+      cancellationRequestId.current = generateUUID();
+      toast.success(data?.status === 'em_cancelamento'
+        ? 'Cancelamento agendado com sucesso.'
+        : data?.already_processed
+          ? 'Esta assinatura ja estava cancelada.'
+          : 'Assinatura cancelada com sucesso.');
 
-      toast.success(isFuture ? 'Cancelamento agendado com sucesso!' : 'Assinatura cancelada com sucesso!');
-      
-      await createNotification(
-        clientId,
-        isFuture ? 'Cancelamento Agendado' : 'Assinatura Cancelada',
-        `Você ${isFuture ? 'agendou o cancelamento' : 'cancelou'} sua assinatura "${selectedAssinatura.assinaturas.nome}".`,
-        'assinaturas'
-      );
-
-      // Notificar Admin
-      await createNotification(
-        null,
-        isFuture ? 'Cancelamento de Assinatura Agendado' : 'Assinatura Cancelada pelo Cliente',
-        `O cliente ${isFuture ? 'agendou o cancelamento' : 'cancelou'} a assinatura: ${selectedAssinatura.assinaturas.nome}.`,
-        'assinaturas',
-        isFuture ? 'em_cancelamento' : 'canceladas',
-        selectedAssinatura.id
-      );
-
+      setDataCancelamento('');
       setIsCancelarModalOpen(false);
       setIsModalOpen(false);
-      fetchMinhasAssinaturas();
+      await fetchMinhasAssinaturas();
     } catch (error) {
       toast.error(handleError(error, 'cancelar assinatura'));
+    } finally {
+      setIsSubmittingSubscriptionAction(false);
     }
   };
 
-  const calculateProportionalPreview = () => {
-    if (!selectedAssinatura || !dataCancelamento) return { valorProporcional: 0, diasRestantes: 0 };
-    
-    const cancelDate = new Date(dataCancelamento);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // Calculate difference in days from today to cancel date
+  const calculateCancellationPreview = () => {
+    if (!dataCancelamento) return { diasRestantes: 0 };
+
+    const cancelDate = new Date(`${dataCancelamento}T00:00:00`);
+    const today = new Date(`${getLocalDateInputValue()}T00:00:00`);
     const diffTime = cancelDate.getTime() - today.getTime();
-    const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-    
-    let valorProporcional = selectedAssinatura.assinaturas.valor;
-    if (diffDays < 30) {
-      valorProporcional = (selectedAssinatura.assinaturas.valor / 30) * diffDays;
-    }
-    
-    return { valorProporcional, diasRestantes: diffDays };
+    return { diasRestantes: Math.max(0, Math.ceil(diffTime / 86400000)) };
   };
 
   const handleOpenDetails = (assinatura: any) => {
@@ -212,7 +214,7 @@ export function ClientAssinaturas({
     setIsModalOpen(true);
   };
 
-  const filteredMinhas = isMobile ? minhasAssinaturas : minhasAssinaturas.filter(a => {
+  const filteredMinhas = minhasAssinaturas.filter(a => {
     if (minhasTab === 'ativas') {
       return a.status === 'concluido' || a.status === 'em_cancelamento' || a.status === 'em_analise';
     } else if (minhasTab === 'em_cancelamento') {
@@ -225,7 +227,7 @@ export function ClientAssinaturas({
   return (
     <div className="space-y-8">
       <div className="space-y-6">
-        <div className="w-full min-w-0 sm:w-auto overflow-hidden hidden sm:block">
+        <div className="w-full min-w-0 overflow-x-auto sm:w-auto">
           <div ref={minhasTabsRef} className="flex w-full gap-1 rounded-3xl bg-neutral-200/50 p-1 ring-1 ring-neutral-300 shadow-inner">
             {['ativas', 'canceladas'].map((t, index) => (
               <button 
@@ -512,9 +514,9 @@ export function ClientAssinaturas({
                             <div className="text-right">
                               <p className="text-sm font-black text-neutral-900">{formatCurrency(f.valor_total)}</p>
                               <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider mt-1 ${
-                                f.status === 'pago' ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100' : 'bg-amber-50 text-amber-600 ring-1 ring-amber-100'
+                                getInvoiceStatusInfo(f.status).className
                               }`}>
-                                {f.status === 'pago' ? 'Pago' : 'Aberto'}
+                                {getInvoiceStatusInfo(f.status).label}
                               </span>
                             </div>
                           </div>
@@ -554,10 +556,11 @@ export function ClientAssinaturas({
             />
           </div>
           <button
+            disabled={isSubmittingSubscriptionAction}
             onClick={handleProrrogarAssinatura}
-            className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700"
+            className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Confirmar Prorrogação
+            {isSubmittingSubscriptionAction ? 'Processando...' : 'Confirmar Prorrogação'}
           </button>
         </div>
       </Modal>
@@ -572,7 +575,7 @@ export function ClientAssinaturas({
           <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200 flex gap-3">
             <Info className="h-5 w-5 text-amber-600 shrink-0" />
             <p className="text-xs text-amber-800 leading-relaxed">
-              Ao cancelar com data futura, sua assinatura permanecerá ativa com o status <strong>"Em Cancelamento"</strong> até a data escolhida.
+              Ao escolher uma data futura, sua assinatura permanecera ativa com o status <strong>"Em Cancelamento"</strong> ate o dia selecionado. Faturas pagas serao preservadas e somente cobrancas nao pagas posteriores ao encerramento serao canceladas.
             </p>
           </div>
 
@@ -581,7 +584,7 @@ export function ClientAssinaturas({
               <label className="block text-sm font-bold text-neutral-700 mb-1">Data de Cancelamento</label>
               <input
                 type="date"
-                min={new Date().toISOString().split('T')[0]}
+                min={getLocalDateInputValue()}
                 value={dataCancelamento}
                 onChange={(e) => setDataCancelamento(e.target.value)}
                 className="w-full rounded-xl border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -593,24 +596,21 @@ export function ClientAssinaturas({
                 <p className="text-xs font-bold text-neutral-400 uppercase">Prévia do Cancelamento</p>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-neutral-600">Dias restantes:</span>
-                  <span className="font-bold text-neutral-900">{calculateProportionalPreview().diasRestantes} dias</span>
+                  <span className="font-bold text-neutral-900">{calculateCancellationPreview().diasRestantes} dias</span>
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t border-neutral-100">
-                  <span className="text-sm text-neutral-600">Valor proporcional:</span>
-                  <span className="text-lg font-black text-indigo-600">
-                    {formatCurrency(calculateProportionalPreview().valorProporcional)}
-                  </span>
+                <div className="pt-2 border-t border-neutral-200 text-xs leading-relaxed text-neutral-600">
+                  Nao sera criado estorno automatico. Cobrancas vencidas ou com vencimento ate a data escolhida permanecerao para conferencia.
                 </div>
               </div>
             )}
           </div>
 
           <button
-            disabled={!dataCancelamento}
+            disabled={!dataCancelamento || isSubmittingSubscriptionAction}
             onClick={handleCancelarAssinatura}
-            className="w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50"
+            className="w-full rounded-xl bg-red-600 py-3 text-sm font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Confirmar Cancelamento
+            {isSubmittingSubscriptionAction ? 'Processando...' : 'Confirmar Cancelamento'}
           </button>
         </div>
       </Modal>
