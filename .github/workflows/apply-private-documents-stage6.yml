@@ -1,4 +1,4 @@
-name: Aplicar e diagnosticar documentos privados - Etapa 6
+name: Validar documentos privados - Etapa 6
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  apply:
+  validate:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -23,76 +23,47 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: npm
 
-      - name: Transform, validate and publish
+      - name: Validate security contracts
+        shell: bash
+        run: |
+          grep -q "gsa-private-documents" supabase/migrations/20260720200000_private_service_support_documents.sql
+          grep -q "createSignedUrl" src/lib/privateStorage.ts
+          grep -q "resolvePrivateFileReference" src/contexts/FileViewerContext.tsx
+          grep -q "uploadPrivateDocument" src/components/client/ClientServicos.tsx
+          grep -q "uploadPrivateDocument" src/components/client/ClientSuporte.tsx
+          grep -q "uploadPrivateDocument" src/components/admin/TicketsModule.tsx
+          grep -q "uploadPrivateDocument" src/components/prestador/PrestadorSuporte.tsx
+          grep -q "gsa-private://" src/components/admin/OrdensServicoModule.tsx
+          ! grep -q "getPublicUrl" src/components/client/ClientServicos.tsx
+          ! grep -q "getPublicUrl" src/components/client/ClientSuporte.tsx
+          ! grep -q "getPublicUrl" src/components/admin/TicketsModule.tsx
+          ! grep -q "getPublicUrl" src/components/prestador/PrestadorSuporte.tsx
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Run build and publish result
         shell: bash
         run: |
           mkdir -p inspection
-          OUT=inspection/private-documents-apply-stage6.txt
-          : > "$OUT"
           set +e
-
-          node scripts/fix-private-client-services-stage6.cjs >> "$OUT" 2>&1
-          client_code=$?
-          echo "client_services_exit_code=$client_code" >> "$OUT"
-
-          node scripts/fix-private-ticket-support-stage6.cjs >> "$OUT" 2>&1
-          support_code=$?
-          echo "support_tickets_exit_code=$support_code" >> "$OUT"
-
-          node scripts/fix-private-admin-service-orders-stage6.cjs >> "$OUT" 2>&1
-          admin_os_code=$?
-          echo "admin_service_orders_exit_code=$admin_os_code" >> "$OUT"
-
-          grep -q "uploadPrivateDocument" src/components/client/ClientServicos.tsx
-          client_contract=$?
-          echo "client_services_contract=$client_contract" >> "$OUT"
-
-          grep -q "uploadPrivateDocument" src/components/client/ClientSuporte.tsx
-          client_support_contract=$?
-          echo "client_support_contract=$client_support_contract" >> "$OUT"
-
-          grep -q "uploadPrivateDocument" src/components/admin/TicketsModule.tsx
-          admin_tickets_contract=$?
-          echo "admin_tickets_contract=$admin_tickets_contract" >> "$OUT"
-
-          grep -q "uploadPrivateDocument" src/components/prestador/PrestadorSuporte.tsx
-          provider_support_contract=$?
-          echo "provider_support_contract=$provider_support_contract" >> "$OUT"
-
-          grep -q "useFileViewer" src/components/admin/OrdensServicoModule.tsx
-          viewer_contract=$?
-          grep -q "gsa-private://" src/components/admin/OrdensServicoModule.tsx
-          private_link_contract=$?
-          if [ "$viewer_contract" -eq 0 ] && [ "$private_link_contract" -eq 0 ]; then
-            admin_os_contract=0
-          else
-            admin_os_contract=1
-          fi
-          echo "admin_os_contract=$admin_os_contract" >> "$OUT"
-
+          npm run build > inspection/stage6-build.txt 2>&1
+          build_code=$?
           set -e
-          cat "$OUT"
+
+          {
+            echo "build_exit_code=$build_code"
+            echo "validated_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > inspection/stage6-validation.txt
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add inspection/stage6-validation.txt inspection/stage6-build.txt
+          git commit -m "Registra validação temporária da etapa 6"
+          git push origin HEAD:agent/seguranca-documentos-servicos-etapa-6
 
-          if [ "$client_code" -eq 0 ] && [ "$support_code" -eq 0 ] && [ "$admin_os_code" -eq 0 ] \
-             && [ "$client_contract" -eq 0 ] && [ "$client_support_contract" -eq 0 ] \
-             && [ "$admin_tickets_contract" -eq 0 ] && [ "$provider_support_contract" -eq 0 ] \
-             && [ "$admin_os_contract" -eq 0 ]; then
-            git add \
-              src/types.ts \
-              src/components/client/ClientServicos.tsx \
-              src/components/client/ClientSuporte.tsx \
-              src/components/admin/TicketsModule.tsx \
-              src/components/prestador/PrestadorSuporte.tsx \
-              src/components/admin/OrdensServicoModule.tsx
-            git commit -m "Protege documentos de servicos e suporte"
-            git push origin HEAD:agent/seguranca-documentos-servicos-etapa-6
-          else
-            git add "$OUT"
-            git commit -m "Atualiza diagnóstico temporário de documentos privados"
-            git push origin HEAD:agent/seguranca-documentos-servicos-etapa-6
-            exit 1
-          fi
+          test "$build_code" -eq 0
