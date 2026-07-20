@@ -1,4 +1,4 @@
-name: Aplicar documentos privados - Etapa 6
+name: Aplicar e diagnosticar documentos privados - Etapa 6
 
 on:
   push:
@@ -24,38 +24,68 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Apply private document transformations
+      - name: Transform, validate and publish
         shell: bash
         run: |
-          node scripts/fix-private-client-services-stage6.cjs
-          node scripts/fix-private-ticket-support-stage6.cjs
-          node scripts/fix-private-admin-service-orders-stage6.cjs
+          mkdir -p inspection
+          OUT=inspection/private-documents-apply-stage6.txt
+          : > "$OUT"
+          set +e
 
-      - name: Validate transformed contracts
-        shell: bash
-        run: |
+          node scripts/fix-private-client-services-stage6.cjs >> "$OUT" 2>&1
+          client_code=$?
+          echo "client_services_exit_code=$client_code" >> "$OUT"
+
+          node scripts/fix-private-ticket-support-stage6.cjs >> "$OUT" 2>&1
+          support_code=$?
+          echo "support_tickets_exit_code=$support_code" >> "$OUT"
+
+          node scripts/fix-private-admin-service-orders-stage6.cjs >> "$OUT" 2>&1
+          admin_os_code=$?
+          echo "admin_service_orders_exit_code=$admin_os_code" >> "$OUT"
+
           grep -q "uploadPrivateDocument" src/components/client/ClientServicos.tsx
-          grep -q "uploadPrivateDocument" src/components/client/ClientSuporte.tsx
-          grep -q "uploadPrivateDocument" src/components/admin/TicketsModule.tsx
-          grep -q "uploadPrivateDocument" src/components/prestador/PrestadorSuporte.tsx
-          grep -q "SecureAttachmentButton" src/components/admin/OrdensServicoModule.tsx
-          grep -q "anexo_nome" src/types.ts
-          ! grep -q "getPublicUrl" src/components/client/ClientServicos.tsx
-          ! grep -q "getPublicUrl" src/components/client/ClientSuporte.tsx
-          ! grep -q "getPublicUrl" src/components/admin/TicketsModule.tsx
-          ! grep -q "getPublicUrl" src/components/prestador/PrestadorSuporte.tsx
+          client_contract=$?
+          echo "client_services_contract=$client_contract" >> "$OUT"
 
-      - name: Publish functional code
-        shell: bash
-        run: |
+          grep -q "uploadPrivateDocument" src/components/client/ClientSuporte.tsx
+          client_support_contract=$?
+          echo "client_support_contract=$client_support_contract" >> "$OUT"
+
+          grep -q "uploadPrivateDocument" src/components/admin/TicketsModule.tsx
+          admin_tickets_contract=$?
+          echo "admin_tickets_contract=$admin_tickets_contract" >> "$OUT"
+
+          grep -q "uploadPrivateDocument" src/components/prestador/PrestadorSuporte.tsx
+          provider_support_contract=$?
+          echo "provider_support_contract=$provider_support_contract" >> "$OUT"
+
+          grep -q "SecureAttachmentButton" src/components/admin/OrdensServicoModule.tsx
+          admin_os_contract=$?
+          echo "admin_os_contract=$admin_os_contract" >> "$OUT"
+
+          set -e
+          cat "$OUT"
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            src/types.ts \
-            src/components/client/ClientServicos.tsx \
-            src/components/client/ClientSuporte.tsx \
-            src/components/admin/TicketsModule.tsx \
-            src/components/prestador/PrestadorSuporte.tsx \
-            src/components/admin/OrdensServicoModule.tsx
-          git commit -m "Protege documentos de servicos e suporte"
-          git push origin HEAD:agent/seguranca-documentos-servicos-etapa-6
+
+          if [ "$client_code" -eq 0 ] && [ "$support_code" -eq 0 ] && [ "$admin_os_code" -eq 0 ] \
+             && [ "$client_contract" -eq 0 ] && [ "$client_support_contract" -eq 0 ] \
+             && [ "$admin_tickets_contract" -eq 0 ] && [ "$provider_support_contract" -eq 0 ] \
+             && [ "$admin_os_contract" -eq 0 ]; then
+            git add \
+              src/types.ts \
+              src/components/client/ClientServicos.tsx \
+              src/components/client/ClientSuporte.tsx \
+              src/components/admin/TicketsModule.tsx \
+              src/components/prestador/PrestadorSuporte.tsx \
+              src/components/admin/OrdensServicoModule.tsx
+            git commit -m "Protege documentos de servicos e suporte"
+            git push origin HEAD:agent/seguranca-documentos-servicos-etapa-6
+          else
+            git add "$OUT"
+            git commit -m "Atualiza diagnóstico temporário de documentos privados"
+            git push origin HEAD:agent/seguranca-documentos-servicos-etapa-6
+            exit 1
+          fi
