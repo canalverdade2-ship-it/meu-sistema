@@ -47,7 +47,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fqx 'INTEGRATE_HOME_PUBLIC_FINAL_V6' .integrate-home-public-final-trigger
+          grep -Fqx 'INTEGRATE_HOME_PUBLIC_FINAL_V8' .integrate-home-public-final-trigger
           git fetch origin main "$SOURCE_BRANCH"
           git cat-file -e "$SOURCE_SHA^{commit}"
 
