@@ -11,6 +11,7 @@ on:
       - 'supabase/migrations/20260720203000_private_client_documents_storage.sql'
       - 'supabase/migrations/20260720204000_harden_client_operational_permissions.sql'
       - 'supabase/migrations/20260720205000_optional_client_block_state_compat.sql'
+      - 'supabase/migrations/20260720232000_harden_client_portal_audit_findings.sql'
       - '.github/workflows/supabase-client-portal-security-deploy.yml'
   workflow_dispatch:
 
@@ -71,7 +72,8 @@ jobs:
               20260720202000 \
               20260720203000 \
               20260720204000 \
-              20260720205000; do
+              20260720205000 \
+              20260720232000; do
               grep -q "$version" client-portal-security-migration-before.log || all_applied=false
             done
           fi
@@ -93,6 +95,7 @@ jobs:
             cat supabase/migrations/20260720203000_private_client_documents_storage.sql
             cat supabase/migrations/20260720204000_harden_client_operational_permissions.sql
             cat supabase/migrations/20260720205000_optional_client_block_state_compat.sql
+            cat supabase/migrations/20260720232000_harden_client_portal_audit_findings.sql
             echo 'COMMIT;'
           } > client-portal-security-production.sql
 
@@ -118,6 +121,7 @@ jobs:
             20260720203000 \
             20260720204000 \
             20260720205000 \
+            20260720232000 \
             --status applied \
             --linked \
             2>&1 | tee client-portal-security-migration-repair.log
@@ -142,7 +146,8 @@ jobs:
             20260720202000 \
             20260720203000 \
             20260720204000 \
-            20260720205000; do
+            20260720205000 \
+            20260720232000; do
             grep -q "$version" client-portal-security-migration-list.log
           done
 
