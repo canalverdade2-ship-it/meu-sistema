@@ -1,0 +1,310 @@
+name: Deploy Admin Audit Migrations
+
+on:
+  pull_request:
+    branches:
+      - agent/deploy-admin-audit-production
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: deploy-admin-audit-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.pull_request.head.ref == 'agent/deploy-admin-audit-trigger'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      EXPECTED_SOURCE_SHA: a701a355b60ca67818356f6a8e9bf0c7223bd187
+      APPROVED_QUALITY_RUN_ID: '29780040489'
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout approved deployment branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/deploy-admin-audit-production
+          fetch-depth: 0
+
+      - name: Validate authorization and approved source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_ID"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+          git fetch origin agent/corrigir-auditoria-admin-final
+          source_sha="$(git rev-parse origin/agent/corrigir-auditoria-admin-final)"
+          test "$source_sha" = "$EXPECTED_SOURCE_SHA"
+
+          run_conclusion="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$APPROVED_QUALITY_RUN_ID" --jq '.conclusion')"
+          run_head="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$APPROVED_QUALITY_RUN_ID" --jq '.head_sha')"
+          test "$run_conclusion" = 'success'
+          test "$run_head" = "$EXPECTED_SOURCE_SHA"
+
+      - name: Validate authorized migration files
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > admin-expected-versions.txt <<'VERSIONS'
+          20260720234400
+          20260720234500
+          20260720235300
+          20260720235425
+          20260720235450
+          20260720235500
+          20260721000500
+          20260721001500
+          20260721002500
+          20260721003000
+          20260721003500
+          20260721003600
+          20260721003700
+          20260721003800
+          VERSIONS
+
+          while read -r version; do
+            matches=(supabase/migrations/${version}_*.sql)
+            test "${#matches[@]}" -eq 1
+            test -f "${matches[0]}"
+          done < admin-expected-versions.txt
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" -p "$SUPABASE_DB_PASSWORD"
+
+      - name: Capture production schema before migration
+        run: supabase db dump --linked -p "$SUPABASE_DB_PASSWORD" --schema public,storage --file admin-production-schema-before.sql
+
+      - name: Read remote migration state
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee admin-migration-list-before.log
+          sed 's/│/|/g' admin-migration-list-before.log > admin-migration-list-before.normalized.log
+
+          : > admin-applied-before.txt
+          : > admin-pending-from-history.txt
+          awk -F'|' '
+            {
+              local=$1; remote=$2;
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", local);
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", remote);
+              if (length(local) == 14 && local ~ /^[0-9]+$/ && remote == "") print local;
+              if (length(remote) == 14 && remote ~ /^[0-9]+$/) print remote > "/tmp/remote_versions";
+            }
+          ' admin-migration-list-before.normalized.log > admin-pending-from-history.txt
+          sort -u -o admin-pending-from-history.txt admin-pending-from-history.txt
+          if [ -f /tmp/remote_versions ]; then sort -u /tmp/remote_versions > admin-remote-versions-before.txt; else : > admin-remote-versions-before.txt; fi
+
+          grep -Fxf admin-expected-versions.txt admin-remote-versions-before.txt > admin-applied-before.txt || true
+
+          comm -23 admin-pending-from-history.txt admin-expected-versions.txt > admin-unauthorized-pending.txt
+          if [ -s admin-unauthorized-pending.txt ]; then
+            echo 'Migrations pendentes não autorizadas:'
+            cat admin-unauthorized-pending.txt
+            exit 2
+          fi
+
+      - name: Preview exact pending migration set
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db push --linked --include-all --dry-run -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee admin-dry-run.log
+
+          find supabase/migrations -maxdepth 1 -type f -printf '%f\n' \
+            | grep -E '^[0-9]{14}_.*\.sql$' \
+            | cut -d_ -f1 \
+            | sort -u > admin-local-versions.txt
+
+          grep -Eo '20[0-9]{12}' admin-dry-run.log \
+            | sort -u \
+            | grep -Fxf admin-local-versions.txt \
+            > admin-pending-dry-run.txt || true
+
+          comm -23 admin-pending-dry-run.txt admin-expected-versions.txt > admin-unauthorized-dry-run.txt
+          if [ -s admin-unauthorized-dry-run.txt ]; then
+            echo 'O dry-run encontrou migrations fora do pacote autorizado:'
+            cat admin-unauthorized-dry-run.txt
+            exit 3
+          fi
+
+          while read -r version; do
+            if ! grep -Fxq "$version" admin-applied-before.txt && ! grep -Fxq "$version" admin-pending-dry-run.txt; then
+              echo "Migration autorizada não está aplicada nem aparece no dry-run: $version"
+              exit 4
+            fi
+          done < admin-expected-versions.txt
+
+          if ! diff -u admin-pending-from-history.txt admin-pending-dry-run.txt; then
+            echo 'A lista do histórico e o dry-run não concordam sobre as migrations pendentes.'
+            exit 5
+          fi
+
+      - name: Apply authorized migrations
+        if: hashFiles('admin-pending-dry-run.txt') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -s admin-pending-dry-run.txt ]; then
+            supabase db push --linked --include-all -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee admin-deployment.log
+          else
+            echo 'Todas as migrations autorizadas já estavam aplicadas.' | tee admin-deployment.log
+          fi
+
+      - name: Verify migration history after deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee admin-migration-list-after.log
+          sed 's/│/|/g' admin-migration-list-after.log > admin-migration-list-after.normalized.log
+
+          while read -r version; do
+            awk -F'|' -v expected="$version" '
+              {
+                local=$1; remote=$2;
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", local);
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", remote);
+                if (local == expected && remote == expected) found=1;
+              }
+              END { exit found ? 0 : 1 }
+            ' admin-migration-list-after.normalized.log
+          done < admin-expected-versions.txt
+
+      - name: Verify production database contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > admin-production-verify.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_function text;
+          BEGIN
+            FOREACH v_function IN ARRAY ARRAY[
+              'gsa_admin_access_snapshot',
+              'gsa_admin_save_collaborator',
+              'gsa_admin_set_collaborator_status',
+              'gsa_admin_rotate_collaborator_credential',
+              'gsa_admin_review_deletion_request',
+              'gsa_admin_list_resource',
+              'gsa_admin_create_protection_proposal',
+              'gsa_admin_system_snapshot',
+              'gsa_admin_settings_snapshot',
+              'gsa_admin_update_settings_secure',
+              'gsa_admin_validate_context',
+              'gsa_admin_sensitive_change_audit',
+              'gsa_admin_private_document_allowed',
+              'gsa_private_document_read_allowed'
+            ]::text[] LOOP
+              IF NOT EXISTS (
+                SELECT 1 FROM pg_proc p
+                JOIN pg_namespace n ON n.oid = p.pronamespace
+                WHERE n.nspname = 'public' AND p.proname = v_function
+              ) THEN
+                RAISE EXCEPTION 'Função obrigatória ausente: %', v_function;
+              END IF;
+            END LOOP;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_schema = 'public'
+                AND table_name = 'colaboradores'
+                AND column_name = 'credencial_hash'
+            ) THEN
+              RAISE EXCEPTION 'Coluna colaboradores.credencial_hash ausente.';
+            END IF;
+
+            IF to_regclass('public.gsa_admin_audit_events') IS NULL
+               OR to_regclass('public.gsa_admin_notification_state') IS NULL THEN
+              RAISE EXCEPTION 'Tabelas internas de auditoria/notificação ausentes.';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM storage.buckets
+              WHERE id = 'gsa-private-documents' AND public = false
+            ) THEN
+              RAISE EXCEPTION 'Bucket privado administrativo ausente ou público.';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_policies
+              WHERE schemaname = 'storage' AND tablename = 'objects'
+                AND policyname = 'gsa_admin_private_documents_select'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_policies
+              WHERE schemaname = 'storage' AND tablename = 'objects'
+                AND policyname = 'gsa_admin_private_documents_insert'
+            ) THEN
+              RAISE EXCEPTION 'Políticas privadas de documentos ausentes.';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_policies
+              WHERE schemaname = 'public'
+                AND tablename = 'viagens_orcamentos'
+                AND policyname = 'gsa_collaborator_module_viagens_orcamentos'
+                AND permissive = 'RESTRICTIVE'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_policies
+              WHERE schemaname = 'public'
+                AND tablename = 'ordens_fiscais'
+                AND policyname = 'gsa_collaborator_module_ordens_fiscais'
+                AND permissive = 'RESTRICTIVE'
+            ) THEN
+              RAISE EXCEPTION 'Fronteiras RLS administrativas obrigatórias ausentes.';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger
+              WHERE tgname = 'trg_gsa_admin_audit_colaboradores' AND NOT tgisinternal
+            ) THEN
+              RAISE EXCEPTION 'Gatilho de auditoria de colaboradores ausente.';
+            END IF;
+          END;
+          $$;
+
+          SELECT
+            (SELECT count(*) FROM public.gsa_admin_audit_events) AS audit_events,
+            (SELECT count(*) FROM pg_policies WHERE policyname LIKE 'gsa_collaborator_module_%') AS restrictive_module_policies,
+            (SELECT public FROM storage.buckets WHERE id = 'gsa-private-documents') AS private_bucket_public;
+          SQL
+
+          supabase db query --linked -p "$SUPABASE_DB_PASSWORD" --file admin-production-verify.sql 2>&1 | tee admin-production-verification.log
+
+      - name: Capture production schema after migration
+        if: always()
+        run: supabase db dump --linked -p "$SUPABASE_DB_PASSWORD" --schema public,storage --file admin-production-schema-after.sql
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-audit-production-evidence
+          path: |
+            admin-expected-versions.txt
+            admin-production-schema-before.sql
+            admin-migration-list-before.log
+            admin-pending-from-history.txt
+            admin-applied-before.txt
+            admin-dry-run.log
+            admin-pending-dry-run.txt
+            admin-deployment.log
+            admin-migration-list-after.log
+            admin-production-verification.log
+            admin-production-schema-after.sql
+          retention-days: 30
+          if-no-files-found: ignore
