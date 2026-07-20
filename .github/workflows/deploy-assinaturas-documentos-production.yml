@@ -1,0 +1,159 @@
+name: Deploy correcoes de assinaturas e documentos
+
+on:
+  push:
+    branches: [ops/deploy-assinaturas-documentos-production]
+    paths:
+      - '.gsa-assinaturas-documentos-deploy-trigger'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: deploy-assinaturas-documentos-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy assinaturas e documentos
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar autorização
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo 'SUPABASE_ACCESS_TOKEN não configurado.'; exit 1; }
+          test -n "$SUPABASE_DB_PASSWORD" || { echo 'SUPABASE_DB_PASSWORD não configurado.'; exit 1; }
+          test -n "$SUPABASE_PROJECT_ID" || { echo 'SUPABASE_PROJECT_ID não configurado.'; exit 1; }
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID" || {
+            echo 'O Project Reference não corresponde ao projeto autorizado.'
+            exit 1
+          }
+          grep -Fxq 'APPLY_ASSINATURAS_DOCUMENTOS_20260720' .gsa-assinaturas-documentos-deploy-trigger || {
+            echo 'Gatilho de implantação inválido.'
+            exit 1
+          }
+
+      - name: Configurar Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Vincular projeto autorizado
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Montar pacote transacional
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20260720170000_secure_admin_subscription_lifecycle.sql
+            cat supabase/migrations/20260720180000_secure_client_subscription_cancellation.sql
+            cat supabase/migrations/20260720200000_private_service_support_documents.sql
+            cat supabase/migrations/20260720200500_ticket_attachment_names.sql
+            echo 'COMMIT;'
+          } > assinaturas-documentos-production-bundle.sql
+
+      - name: Aplicar pacote atômico
+        id: apply
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file assinaturas-documentos-production-bundle.sql \
+            2>&1 | tee assinaturas-documentos-deployment.log
+
+      - name: Verificar objetos implantados
+        id: verify
+        shell: bash
+        run: |
+          cat > assinaturas-documentos-verify.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regclass('public.gsa_admin_operation_requests') IS NULL THEN
+              RAISE EXCEPTION 'Tabela de idempotência administrativa ausente.';
+            END IF;
+            IF to_regprocedure('public.gsa_admin_extend_subscription(uuid,text,uuid,uuid,integer)') IS NULL THEN
+              RAISE EXCEPTION 'RPC administrativa de prorrogação ausente.';
+            END IF;
+            IF to_regprocedure('public.gsa_admin_cancel_subscription(uuid,text,uuid,uuid,date,text)') IS NULL THEN
+              RAISE EXCEPTION 'RPC administrativa de cancelamento ausente.';
+            END IF;
+            IF to_regprocedure('public.gsa_client_cancel_subscription(uuid,text,uuid,uuid,date)') IS NULL THEN
+              RAISE EXCEPTION 'RPC de cancelamento do cliente ausente.';
+            END IF;
+            IF NOT EXISTS (
+              SELECT 1 FROM storage.buckets
+              WHERE id = 'gsa-private-documents' AND public = false
+            ) THEN
+              RAISE EXCEPTION 'Bucket privado ausente ou público.';
+            END IF;
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_schema = 'public'
+                AND table_name = 'ticket_mensagens'
+                AND column_name = 'anexo_nome'
+            ) THEN
+              RAISE EXCEPTION 'Coluna anexo_nome ausente.';
+            END IF;
+          END;
+          $$;
+          SQL
+          set -o pipefail
+          supabase db query --linked \
+            --file assinaturas-documentos-verify.sql \
+            2>&1 | tee assinaturas-documentos-verification.log
+
+      - name: Preservar evidências
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: assinaturas-documentos-production-evidence
+          path: |
+            assinaturas-documentos-deployment.log
+            assinaturas-documentos-verification.log
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Publicar relatório privado
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          touch assinaturas-documentos-deployment.log assinaturas-documentos-verification.log
+          {
+            echo '# Implantação — assinaturas e documentos'
+            echo
+            echo "- Projeto: \`$EXPECTED_PROJECT_ID\`"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Resultado: **$JOB_STATUS**"
+            echo
+            echo '## Aplicação'
+            echo '```text'
+            sed -n '1,180p' assinaturas-documentos-deployment.log
+            echo '```'
+            echo
+            echo '## Verificação'
+            echo '```text'
+            sed -n '1,120p' assinaturas-documentos-verification.log
+            echo '```'
+          } > assinaturas-documentos-report.md
+
+          gh issue create \
+            --title "Implantação assinaturas e documentos - $JOB_STATUS" \
+            --body-file assinaturas-documentos-report.md
