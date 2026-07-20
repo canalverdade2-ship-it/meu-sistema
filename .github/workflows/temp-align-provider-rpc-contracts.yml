@@ -1,0 +1,300 @@
+name: Align Provider RPC Contracts
+
+on:
+  push:
+    branches: [agent/corrigir-auditoria-painel-prestador]
+    paths: ['.provider-rpc-contracts-trigger']
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-auditoria-painel-prestador
+      - name: Align migration and frontend RPC contracts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace_block(path, start, end_next, replacement):
+              p = Path(path)
+              s = p.read_text()
+              pattern = re.escape(start) + r'.*?(?=' + re.escape(end_next) + r')'
+              updated, count = re.subn(pattern, replacement.rstrip() + '\n\n', s, count=1, flags=re.S)
+              if count != 1:
+                  raise SystemExit(f'{path}: bloco não encontrado: {start}')
+              p.write_text(updated)
+
+          migration = 'supabase/migrations/20260720235900_provider_portal_audit_hardening.sql'
+
+          replace_block(migration,
+            'CREATE OR REPLACE FUNCTION public.gsa_provider_create_ticket(',
+            'CREATE OR REPLACE FUNCTION public.gsa_provider_send_ticket_message(',
+            r'''CREATE OR REPLACE FUNCTION public.gsa_provider_create_ticket(
+  p_subject text,
+  p_description text,
+  p_deduplicate boolean DEFAULT false
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_provider_id uuid := public.gsa_assert_current_provider_any_status();
+  v_ticket_id uuid;
+BEGIN
+  IF length(trim(COALESCE(p_subject, ''))) < 3 OR length(trim(COALESCE(p_subject, ''))) > 180 THEN
+    RAISE EXCEPTION 'Assunto inválido';
+  END IF;
+  IF length(trim(COALESCE(p_description, ''))) < 3 OR length(trim(COALESCE(p_description, ''))) > 5000 THEN
+    RAISE EXCEPTION 'Descrição inválida';
+  END IF;
+
+  IF p_deduplicate THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(v_provider_id::text || ':' || lower(trim(p_subject)), 517));
+    SELECT id INTO v_ticket_id
+    FROM public.tickets
+    WHERE prestador_id = v_provider_id
+      AND assunto = trim(p_subject)
+      AND status <> 'concluido'
+    ORDER BY data_abertura DESC
+    LIMIT 1;
+    IF v_ticket_id IS NOT NULL THEN
+      RETURN jsonb_build_object('success', true, 'ticket_id', v_ticket_id, 'existing', true);
+    END IF;
+  END IF;
+
+  PERFORM set_config('gsa.provider_internal_write', 'on', true);
+  INSERT INTO public.tickets(prestador_id, assunto, descricao, status)
+  VALUES (v_provider_id, trim(p_subject), trim(p_description), 'aberto')
+  RETURNING id INTO v_ticket_id;
+  PERFORM set_config('gsa.provider_internal_write', 'off', true);
+
+  PERFORM public.gsa_provider_write_audit(v_provider_id, 'TICKET_CREATED', 'ticket', v_ticket_id);
+  PERFORM public.gsa_provider_notify_admin(
+    'Novo ticket de prestador', 'Novo atendimento aberto: ' || trim(p_subject) || '.',
+    'suporte', 'ticket_aberto_prestador', v_ticket_id, 'normal', jsonb_build_object('prestador_id', v_provider_id)
+  );
+  RETURN jsonb_build_object('success', true, 'ticket_id', v_ticket_id, 'existing', false);
+END;
+$$;''')
+
+          replace_block(migration,
+            'CREATE OR REPLACE FUNCTION public.gsa_provider_send_ticket_message(',
+            'CREATE OR REPLACE FUNCTION public.gsa_provider_request_profile_change(',
+            r'''CREATE OR REPLACE FUNCTION public.gsa_provider_send_ticket_message(
+  p_ticket_id uuid,
+  p_message text DEFAULT NULL,
+  p_attachment_reference text DEFAULT NULL,
+  p_attachment_type text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_provider_id uuid := public.gsa_assert_current_provider_any_status();
+  v_provider_name text;
+  v_status text;
+  v_message_id uuid;
+  v_attachment text := NULLIF(trim(COALESCE(p_attachment_reference, '')), '');
+BEGIN
+  IF COALESCE(trim(p_message), '') = '' AND v_attachment IS NULL THEN
+    RAISE EXCEPTION 'Informe uma mensagem ou anexo';
+  END IF;
+  IF length(COALESCE(p_message, '')) > 5000 THEN RAISE EXCEPTION 'Mensagem acima do tamanho permitido'; END IF;
+
+  SELECT t.status INTO v_status
+  FROM public.tickets t
+  WHERE t.id = p_ticket_id AND t.prestador_id = v_provider_id
+  FOR UPDATE;
+  IF NOT FOUND OR v_status = 'concluido' THEN RAISE EXCEPTION 'Atendimento não encontrado ou concluído'; END IF;
+
+  IF v_attachment IS NOT NULL
+     AND v_attachment !~ ('^storage://documentos_prestador/' || v_provider_id::text || '/chat/' || p_ticket_id::text || '/') THEN
+    RAISE EXCEPTION 'Referência de anexo inválida';
+  END IF;
+
+  SELECT nome_razao INTO v_provider_name FROM public.prestadores WHERE id = v_provider_id;
+  PERFORM set_config('gsa.provider_internal_write', 'on', true);
+  INSERT INTO public.ticket_mensagens(
+    ticket_id, autor_id, autor_nome, mensagem, anexo_url, anexo_tipo, tipo
+  ) VALUES (
+    p_ticket_id, v_provider_id, COALESCE(v_provider_name, 'Prestador'),
+    NULLIF(trim(COALESCE(p_message, '')), ''), v_attachment,
+    NULLIF(left(trim(COALESCE(p_attachment_type, '')), 150), ''), 'prestador'
+  ) RETURNING id INTO v_message_id;
+  UPDATE public.tickets SET updated_at = now() WHERE id = p_ticket_id;
+  PERFORM set_config('gsa.provider_internal_write', 'off', true);
+
+  PERFORM public.gsa_provider_write_audit(v_provider_id, 'TICKET_MESSAGE_SENT', 'ticket', p_ticket_id,
+    jsonb_build_object('message_id', v_message_id, 'has_attachment', v_attachment IS NOT NULL));
+  PERFORM public.gsa_provider_notify_admin(
+    'Nova mensagem de prestador', 'Nova mensagem no ticket #' || left(p_ticket_id::text, 8) || '.',
+    'suporte', 'ticket_mensagem_recebida', p_ticket_id, 'normal', jsonb_build_object('prestador_id', v_provider_id)
+  );
+  RETURN jsonb_build_object('success', true, 'message_id', v_message_id);
+END;
+$$;''')
+
+          replace_block(migration,
+            'CREATE OR REPLACE FUNCTION public.gsa_provider_request_profile_change(',
+            'CREATE OR REPLACE FUNCTION public.gsa_provider_request_demand_support(',
+            r'''CREATE OR REPLACE FUNCTION public.gsa_provider_request_profile_change(
+  p_field text,
+  p_new_value text,
+  p_reason text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_provider_id uuid := public.gsa_assert_current_provider_any_status();
+  v_field text := lower(trim(COALESCE(p_field, '')));
+  v_current text;
+  v_label text;
+BEGIN
+  IF v_field = 'nome_razao' THEN
+    v_label := 'Nome / Razão Social';
+    SELECT nome_razao INTO v_current FROM public.prestadores WHERE id = v_provider_id;
+  ELSIF v_field = 'documento' THEN
+    v_label := 'Documento';
+    SELECT documento INTO v_current FROM public.prestadores WHERE id = v_provider_id;
+  ELSIF v_field = 'email' THEN
+    v_label := 'E-mail';
+    SELECT email INTO v_current FROM public.prestadores WHERE id = v_provider_id;
+  ELSE
+    RAISE EXCEPTION 'Campo cadastral não permitido';
+  END IF;
+
+  IF length(trim(COALESCE(p_new_value, ''))) < 1 OR length(trim(COALESCE(p_reason, ''))) < 3 THEN
+    RAISE EXCEPTION 'Preencha a alteração e o motivo';
+  END IF;
+
+  RETURN public.gsa_provider_create_ticket(
+    'Solicitação de alteração: ' || v_label,
+    'Valor atual: ' || left(COALESCE(v_current, '-'), 1000) || E'\nNovo valor solicitado: ' ||
+      left(trim(p_new_value), 1000) || E'\nMotivo: ' || left(trim(p_reason), 2000),
+    true
+  );
+END;
+$$;''')
+
+          replace_block(migration,
+            'CREATE OR REPLACE FUNCTION public.gsa_provider_request_demand_support(',
+            '-- Snapshot seguro para o dashboard',
+            r'''CREATE OR REPLACE FUNCTION public.gsa_provider_request_demand_support(p_demand_id uuid, p_message text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_provider_id uuid := public.gsa_assert_current_provider();
+  v_title text;
+  v_id uuid;
+BEGIN
+  IF length(trim(COALESCE(p_message, ''))) < 3 OR length(trim(COALESCE(p_message, ''))) > 5000 THEN
+    RAISE EXCEPTION 'Mensagem de suporte inválida';
+  END IF;
+
+  SELECT COALESCE(titulo, p_demand_id::text) INTO v_title
+  FROM public.prestador_demandas
+  WHERE id = p_demand_id AND prestador_id = v_provider_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Demanda não encontrada para este prestador'; END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.prestador_suporte_demandas
+    WHERE demanda_id = p_demand_id AND prestador_id = v_provider_id AND status IN ('aberto', 'em andamento')
+  ) THEN
+    RAISE EXCEPTION 'Já existe uma solicitação de suporte aberta para esta demanda';
+  END IF;
+
+  PERFORM set_config('gsa.provider_internal_write', 'on', true);
+  INSERT INTO public.prestador_suporte_demandas(demanda_id, prestador_id, mensagem, status)
+  VALUES (p_demand_id, v_provider_id, trim(p_message), 'aberto')
+  RETURNING id INTO v_id;
+  PERFORM set_config('gsa.provider_internal_write', 'off', true);
+
+  PERFORM public.gsa_provider_write_audit(v_provider_id, 'DEMAND_SUPPORT_REQUESTED', 'demanda', p_demand_id,
+    jsonb_build_object('support_id', v_id));
+  PERFORM public.gsa_provider_notify_admin(
+    'Suporte solicitado em demanda', 'O prestador solicitou suporte na demanda "' || left(v_title, 160) || '".',
+    'demandas', 'ticket_aberto_prestador', p_demand_id, 'alta',
+    jsonb_build_object('prestador_id', v_provider_id, 'support_id', v_id)
+  );
+  RETURN jsonb_build_object('success', true, 'support_id', v_id);
+END;
+$$;''')
+
+          # A migration de runtime redefine ticket; alinha a mesma assinatura.
+          runtime = Path('supabase/migrations/20260720235910_provider_portal_runtime_guards.sql')
+          rs = runtime.read_text()
+          rs = rs.replace(
+            'CREATE OR REPLACE FUNCTION public.gsa_provider_create_ticket(p_subject text, p_description text)',
+            'CREATE OR REPLACE FUNCTION public.gsa_provider_create_ticket(p_subject text, p_description text, p_deduplicate boolean DEFAULT false)',
+          )
+          rs = rs.replace(
+            "  SELECT id INTO v_ticket_id FROM public.tickets\n  WHERE prestador_id = v_provider_id AND assunto = trim(p_subject) AND status <> 'concluido'\n  ORDER BY data_abertura DESC LIMIT 1;\n  IF v_ticket_id IS NOT NULL THEN\n    RETURN jsonb_build_object('success', true, 'ticket_id', v_ticket_id, 'existing', true);\n  END IF;",
+            "  IF p_deduplicate THEN\n    PERFORM pg_advisory_xact_lock(hashtextextended(v_provider_id::text || ':' || lower(trim(p_subject)), 517));\n    SELECT id INTO v_ticket_id FROM public.tickets\n    WHERE prestador_id = v_provider_id AND assunto = trim(p_subject) AND status <> 'concluido'\n    ORDER BY data_abertura DESC LIMIT 1;\n    IF v_ticket_id IS NOT NULL THEN\n      RETURN jsonb_build_object('success', true, 'ticket_id', v_ticket_id, 'existing', true);\n    END IF;\n  END IF;",
+          )
+          runtime.write_text(rs)
+
+          operations = Path('src/lib/providerOperations.ts')
+          os = operations.read_text()
+          os = os.replace('async createTicket(subject: string, description: string) {', 'async createTicket(subject: string, description: string, deduplicate = false) {')
+          os = os.replace('p_description: description,\n    });', 'p_description: description,\n      p_deduplicate: deduplicate,\n    });', 1)
+          os = os.replace('p_attachment: input.attachment || null,', 'p_attachment_reference: input.attachment || null,')
+          old_profile = "async requestProfileChange(input: { label: string; currentValue: string; newValue: string; reason: string }) {\n    const { data, error } = await supabase.rpc('gsa_provider_request_profile_change', {\n      p_label: input.label,\n      p_current_value: input.currentValue,\n      p_new_value: input.newValue,\n      p_reason: input.reason,\n    });"
+          new_profile = "async requestProfileChange(input: { field: 'nome_razao' | 'documento' | 'email'; newValue: string; reason: string }) {\n    const { data, error } = await supabase.rpc('gsa_provider_request_profile_change', {\n      p_field: input.field,\n      p_new_value: input.newValue,\n      p_reason: input.reason,\n    });"
+          if old_profile not in os: raise SystemExit('Contrato de perfil não encontrado')
+          os = os.replace(old_profile, new_profile)
+          os = os.replace('p_demanda_id: demandId,\n      p_message: message,', 'p_demand_id: demandId,\n      p_message: message,', 1)
+          operations.write_text(os)
+
+          dashboard = Path('src/pages/Prestador/PrestadorDashboard.tsx')
+          ds = dashboard.read_text()
+          ds = ds.replace("useState<{ label: string; value: string } | null>(null)", "useState<{ field: 'nome_razao' | 'documento' | 'email'; label: string; value: string } | null>(null)")
+          ds = ds.replace('label: requestField.label,\n        currentValue: requestField.value,', 'field: requestField.field,')
+          ds = ds.replace("setRequestField({ label: 'Nome / Razão Social', value: prestador.nome_razao })", "setRequestField({ field: 'nome_razao', label: 'Nome / Razão Social', value: prestador.nome_razao })")
+          ds = ds.replace("setRequestField({ label: 'Documento', value: prestador.documento })", "setRequestField({ field: 'documento', label: 'Documento', value: prestador.documento })")
+          ds = ds.replace("setRequestField({ label: 'E-mail', value: prestador.email || '' })", "setRequestField({ field: 'email', label: 'E-mail', value: prestador.email || '' })")
+          ds = ds.replace("'Análise de cadastro pendente',\n        `Solicito informações sobre a análise do cadastro de ${prestador.nome_razao}.`,\n      );", "'Análise de cadastro pendente',\n        `Solicito informações sobre a análise do cadastro de ${prestador.nome_razao}.`,\n        true,\n      );")
+          dashboard.write_text(ds)
+
+          prizes = Path('src/components/prestador/PrestadorPremios.tsx')
+          ps = prizes.read_text()
+          ps = ps.replace('`Solicito informações sobre o prêmio \\"${prize.titulo}\\".`,\n      );', '`Solicito informações sobre o prêmio \\"${prize.titulo}\\".`,\n        true,\n      );')
+          prizes.write_text(ps)
+
+          deploy = Path('.github/workflows/provider-audit-production-deploy.yml')
+          ws = deploy.read_text().replace("to_regprocedure('public.gsa_provider_create_ticket(text,text)')", "to_regprocedure('public.gsa_provider_create_ticket(text,text,boolean)')")
+          deploy.write_text(ws)
+          PY
+      - name: Remove temporary files
+        run: rm -f .provider-rpc-contracts-trigger .github/workflows/temp-align-provider-rpc-contracts.yml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:provider
+      - run: npm run build
+      - name: Publish aligned contracts
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Alinhar contratos RPC do Painel do Prestador'
+          git push
