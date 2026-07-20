@@ -54,32 +54,9 @@ jobs:
           test "${{ steps.typescript.outputs.exit_code }}" = "0"
 
       - name: GSA Viagens contracts
-        id: travel
         if: steps.typescript.outputs.exit_code == '0'
-        shell: bash
-        run: |
-          set +e
-          npm run test:travel > travel-contracts.log 2>&1
-          code=$?
-          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      - name: Upload travel contracts log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: travel-contracts-log
-          path: travel-contracts.log
-          if-no-files-found: ignore
-          retention-days: 7
+        run: npm run test:travel
 
       - name: Build
         if: steps.typescript.outputs.exit_code == '0'
         run: npm run build
-
-      - name: Report travel contracts result
-        if: always() && steps.typescript.outputs.exit_code == '0'
-        shell: bash
-        run: |
-          cat travel-contracts.log
-          test "${{ steps.travel.outputs.exit_code }}" = "0"
