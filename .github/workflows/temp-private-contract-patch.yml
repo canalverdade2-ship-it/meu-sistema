@@ -19,6 +19,9 @@ jobs:
           ref: agent/corrigir-auditoria-painel-adm
           fetch-depth: 0
 
+      - name: Synchronize latest branch
+        run: git pull --rebase origin agent/corrigir-auditoria-painel-adm
+
       - name: Patch private fiscal and loan documents
         shell: bash
         run: |
@@ -30,91 +33,72 @@ jobs:
           let loan = fs.readFileSync(loanPath, 'utf8');
 
           const importNeedle = "import { sessionService } from '../../lib/sessionService';";
-          const importReplacement = `${importNeedle}\nimport { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';`;
           if (!loan.includes("from '../../lib/privateStorage'")) {
             if (!loan.includes(importNeedle)) throw new Error('Import anchor not found in EmprestimosModule.');
-            loan = loan.replace(importNeedle, importReplacement);
+            loan = loan.replace(
+              importNeedle,
+              `${importNeedle}\nimport { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';`,
+            );
           }
 
-          const oldBlock = `  const enviarContrato = async () => {
-            if (!contratoFile || !selected) {
-              toast.error('Selecione o arquivo do contrato.');
-              return;
-            }
-            const sanitizedName = contratoFile.name.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
-            const uploadPath = \`contratos/\${selected.id}/\${Date.now()}-\${sanitizedName}\`;
-            const { error } = await supabase.storage.from('emprestimos').upload(uploadPath, contratoFile);
-            if (error) {
-              toast.error('Erro ao enviar contrato.');
-              return;
-            }
-            const { data: { publicUrl } } = supabase.storage.from('emprestimos').getPublicUrl(uploadPath);
-        
-            try {
-              const session = getAdminSessionForRpc();
-              const { error: rpcError } = await supabase.rpc('gsa_admin_emprestimo_enviar_contrato', {
-                p_sessao_id: session.sessaoId,
-                p_session_token: session.sessionToken,
-                p_emprestimo_id: selected.id,
-                p_contrato_url: publicUrl
-              });
-              if (rpcError) throw rpcError;
-        
-              await notificationService.notifyClient(selected.cliente_id, 'Contrato Disponivel', 'Seu contrato de emprestimo esta disponivel para assinatura.', 'emprestimos', 'ativos', selected.id);
-              toast.success('Contrato enviado!');
-              await logService.logAction({ acao: 'ACAO_SISTEMA', detalhes: JSON.stringify({}), ator_tipo: 'admin', ator_nome: 'Administrador' });
-        
-              setShowModal(false);
-              fetchAll();
-            } catch (err: any) {
-              toast.error(err?.message || 'Erro ao registrar contrato.');
-            }
-          };`;
-
           const newBlock = `  const enviarContrato = async () => {
-            if (!contratoFile || !selected) {
-              toast.error('Selecione o arquivo do contrato.');
-              return;
-            }
+    if (!contratoFile || !selected) {
+      toast.error('Selecione o arquivo do contrato.');
+      return;
+    }
 
-            let uploadedReference: string | null = null;
-            try {
-              const uploaded = await uploadPrivateDocument(contratoFile, {
-                scope: 'emprestimos',
-                ownerId: selected.cliente_id,
-                context: 'contratos',
-                contextId: selected.id,
-              });
-              uploadedReference = uploaded.reference;
+    let uploadedReference: string | null = null;
+    try {
+      const uploaded = await uploadPrivateDocument(contratoFile, {
+        scope: 'emprestimos',
+        ownerId: selected.cliente_id,
+        context: 'contratos',
+        contextId: selected.id,
+      });
+      uploadedReference = uploaded.reference;
 
-              const session = getAdminSessionForRpc();
-              const { error: rpcError } = await supabase.rpc('gsa_admin_emprestimo_enviar_contrato', {
-                p_sessao_id: session.sessaoId,
-                p_session_token: session.sessionToken,
-                p_emprestimo_id: selected.id,
-                p_contrato_url: uploaded.reference,
-              });
-              if (rpcError) throw rpcError;
+      const session = getAdminSessionForRpc();
+      const { error: rpcError } = await supabase.rpc('gsa_admin_emprestimo_enviar_contrato', {
+        p_sessao_id: session.sessaoId,
+        p_session_token: session.sessionToken,
+        p_emprestimo_id: selected.id,
+        p_contrato_url: uploaded.reference,
+      });
+      if (rpcError) throw rpcError;
 
-              await notificationService.notifyClient(selected.cliente_id, 'Contrato Disponivel', 'Seu contrato de emprestimo esta disponivel para assinatura.', 'emprestimos', 'ativos', selected.id);
-              toast.success('Contrato enviado com armazenamento privado!');
-              await logService.logAction({ acao: 'ENVIAR_CONTRATO_EMPRESTIMO_PRIVADO', detalhes: JSON.stringify({ emprestimo_id: selected.id }), ator_tipo: 'admin', ator_nome: 'Administrador' });
+      await notificationService.notifyClient(
+        selected.cliente_id,
+        'Contrato Disponivel',
+        'Seu contrato de emprestimo esta disponivel para assinatura.',
+        'emprestimos',
+        'ativos',
+        selected.id,
+      );
+      toast.success('Contrato enviado com armazenamento privado!');
+      await logService.logAction({
+        acao: 'ENVIAR_CONTRATO_EMPRESTIMO_PRIVADO',
+        detalhes: JSON.stringify({ emprestimo_id: selected.id }),
+        ator_tipo: 'admin',
+        ator_nome: 'Administrador',
+      });
 
-              setContratoFile(null);
-              setShowModal(false);
-              fetchAll();
-            } catch (err: any) {
-              if (uploadedReference) {
-                await removePrivateDocument(uploadedReference).catch(() => undefined);
-              }
-              toast.error(err?.message || 'Erro ao registrar contrato.');
-            }
-          };`;
+      setContratoFile(null);
+      setShowModal(false);
+      fetchAll();
+    } catch (err: any) {
+      if (uploadedReference) {
+        await removePrivateDocument(uploadedReference).catch(() => undefined);
+      }
+      toast.error(err?.message || 'Erro ao registrar contrato.');
+    }
+  };
+`;
 
-          if (loan.includes(oldBlock)) {
-            loan = loan.replace(oldBlock, newBlock);
-          } else if (!loan.includes("scope: 'emprestimos'")) {
-            throw new Error('Contract upload block not found in EmprestimosModule.');
+          if (!loan.includes("scope: 'emprestimos'")) {
+            const start = loan.indexOf('  const enviarContrato = async () => {');
+            const end = loan.indexOf('\n  const aprovar = async () => {', start);
+            if (start < 0 || end < 0) throw new Error('Contract function markers not found.');
+            loan = loan.slice(0, start) + newBlock + loan.slice(end + 1);
           }
           fs.writeFileSync(loanPath, loan);
 
@@ -134,7 +118,9 @@ jobs:
               else if (/\.(ts|tsx)$/.test(entry.name)) {
                 const lines = fs.readFileSync(full, 'utf8').split(/\r?\n/);
                 lines.forEach((line, index) => {
-                  if (/contrato_url|contratoUrl/.test(line)) matches.push(`${full}:${index + 1}: ${line.trim()}`);
+                  if (/contrato_url|contratoUrl/.test(line)) {
+                    matches.push(`${full}:${index + 1}: ${line.trim()}`);
+                  }
                 });
               }
             }
