@@ -6,6 +6,7 @@ type StoredSession = {
   atorTipo: string;
   atorId: string;
   atorNome: string;
+  modulos?: string[];
   [key: string]: any;
 };
 
@@ -31,11 +32,20 @@ function readStoredSession(): StoredSession | null {
   }
 }
 
+function clearLegacyAdminIdentity() {
+  localStorage.removeItem('adminType');
+  localStorage.removeItem('colaboradorId');
+  localStorage.removeItem('colaboradorNome');
+  localStorage.removeItem('colaboradorModulos');
+}
+
 function writeStoredSession(sessionData: StoredSession) {
   getSessionStorage()?.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
-  // Mantido apenas por compatibilidade com telas antigas. Não contém o token da sessão.
+  // Mantido apenas para telas antigas que usam o identificador da sessão.
+  // Identidade, módulos e token nunca são persistidos no localStorage.
   localStorage.setItem('sessaoId', sessionData.sessaoId);
   localStorage.removeItem('_gsa_sess');
+  clearLegacyAdminIdentity();
 }
 
 function clearStoredSession() {
@@ -43,6 +53,7 @@ function clearStoredSession() {
   localStorage.removeItem('sessaoId');
   localStorage.removeItem('_gsa_sess');
   localStorage.removeItem('lastPing');
+  clearLegacyAdminIdentity();
 }
 
 function gatewayErrorMessage(code: string, retryAfter: number) {
@@ -149,6 +160,36 @@ async function authenticate(action: string, payload: Record<string, unknown>) {
   return data;
 }
 
+async function refreshAdminContext(sessionData: StoredSession) {
+  if (!['admin', 'colaborador'].includes(sessionData.atorTipo)) return sessionData;
+
+  const { data, error } = await supabase.rpc('gsa_admin_get_context_secure', {
+    p_sessao_id: sessionData.sessaoId,
+    p_session_token: sessionData.sessionToken,
+  });
+
+  if (error || !data) {
+    throw new Error(error?.message || 'Não foi possível validar o contexto administrativo.');
+  }
+
+  const context = data as any;
+  if (
+    context.actor_type !== sessionData.atorTipo ||
+    context.actor_id !== sessionData.atorId ||
+    context.session_id !== sessionData.sessaoId
+  ) {
+    throw new Error('O contexto administrativo retornado não corresponde à sessão atual.');
+  }
+
+  const refreshed: StoredSession = {
+    ...sessionData,
+    atorNome: context.actor_name || sessionData.atorNome,
+    modulos: Array.isArray(context.modules) ? context.modules : [],
+  };
+  writeStoredSession(refreshed);
+  return refreshed;
+}
+
 export const sessionService = {
   getCurrentSession() {
     return readStoredSession();
@@ -251,12 +292,13 @@ export const sessionService = {
           sessionData.precisa_trocar_senha = (accessData as any).precisa_trocar_senha;
           writeStoredSession(sessionData);
         }
+        return sessionData;
       }
 
-      return sessionData;
+      return await refreshAdminContext(sessionData);
     } catch (error) {
       console.error('Falha ao restaurar a sessão:', error);
-      clearStoredSession();
+      await this.endSession();
       return null;
     }
   },
@@ -283,10 +325,11 @@ export const sessionService = {
     try {
       const sessionData = readStoredSession();
       if (!sessionData?.sessaoId || !sessionData?.sessionToken) return;
-      await supabase.rpc('gsa_ping_session', {
+      const { error } = await supabase.rpc('gsa_ping_session', {
         p_sessao_id: sessionData.sessaoId,
         p_session_token: sessionData.sessionToken,
       });
+      if (error) throw error;
     } catch (error) {
       console.error('Falha ao atualizar a sessão:', error);
     }
