@@ -26,7 +26,7 @@ jobs:
       - name: Apply reviewed correction package
         shell: bash
         run: |
-          cat .patch/collaborator-final.part00 .patch/collaborator-final.part01 \
+          cat .patch/collaborator-final.part* \
             | base64 -d \
             | gzip -d \
             > /tmp/apply-collaborator-final.py
