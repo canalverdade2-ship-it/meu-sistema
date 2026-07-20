@@ -1,4 +1,4 @@
-# retry with real clientes schema
+# inspect the current faturas type constraint before validating
 name: Final preview GSA travel installments
 
 on:
@@ -41,6 +41,17 @@ jobs:
       - name: Link authorized project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
+      - name: Inspect faturas constraints
+        shell: bash
+        run: |
+          cat > inspect-faturas.sql <<'SQL'
+          SELECT conname, pg_get_constraintdef(oid) AS definition
+          FROM pg_constraint
+          WHERE conrelid = 'public.faturas'::regclass
+          ORDER BY conname;
+          SQL
+          supabase db query --linked --file inspect-faturas.sql 2>&1 | tee installment-preview.log
+
       - name: Build rollback bundle
         shell: bash
         run: |
@@ -55,7 +66,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          supabase db query --linked --file installment-preview.sql 2>&1 | tee installment-preview.log
+          supabase db query --linked --file installment-preview.sql 2>&1 | tee -a installment-preview.log
 
       - name: Publish report
         if: always()
@@ -73,7 +84,7 @@ jobs:
             echo "- Resultado: **$JOB_STATUS**"
             echo
             echo '```text'
-            sed -n '1,280p' installment-preview.log
+            sed -n '1,360p' installment-preview.log
             echo '```'
           } > report.md
           gh issue create --title "Prévia final parcelamento GSA Viagens - $JOB_STATUS" --body-file report.md
