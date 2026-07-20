@@ -10,6 +10,7 @@ src/components/admin/prestadores/PrestadoresDemandas.tsx
 src/components/client/ClientServicos.tsx
 
 === FILES USING FILE VIEWER ===
+src/components/admin/OrdensServicoModule.tsx
 src/components/admin/demandas/DemandasDetalhesModal.tsx
 src/components/admin/prestadores/PrestadoresDemandas.tsx
 src/components/client/ClientEmprestimos.tsx
