@@ -16,12 +16,12 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Validate trigger
-        run: grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V3' .sync-home-current-main-trigger
+        run: grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V4' .sync-home-current-main-trigger
       - name: Merge current main and resolve reviewed overlaps
         shell: bash
         run: |
@@ -43,26 +43,42 @@ jobs:
             git add src/App.tsx src/components/auth/RestrictedAccessModal.tsx
             git commit --no-edit
           fi
-      - name: Remove temporary executor
+      - name: Remove temporary executor locally
         run: |
           git rm .github/workflows/sync-home-current-main.yml .sync-home-current-main-trigger scripts/resolve-home-current-main.py
           git commit -m 'Remover sincronização temporária da Home'
       - name: Install dependencies
         run: npm ci
-      - name: Validate final branch
+      - name: Validate final branch with diagnostics
+        id: validation
+        shell: bash
         run: |
-          npm run lint
-          npm run test:admin
-          npm run test:client-security
-          npm run test:provider
-          npm run test:home
-          npm run test:travel
-          npm run build
-      - name: Push final branch
-        run: git push origin HEAD:agent/corrigir-home-itens-2-a-10
-      - name: Publish diagnostic
-        if: failure()
+          set +e
+          : > validation.log
+          failed=0
+          for command in \
+            'npm run lint' \
+            'npm run test:admin' \
+            'npm run test:client-security' \
+            'npm run test:provider' \
+            'npm run test:home' \
+            'npm run test:travel' \
+            'npm run build'; do
+            echo "===== $command =====" | tee -a validation.log
+            bash -lc "$command" 2>&1 | tee -a validation.log
+            code=${PIPESTATUS[0]}
+            echo "exit_code=$code" | tee -a validation.log
+            if [ "$code" -ne 0 ]; then failed=1; break; fi
+          done
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Publish validation failure
+        if: steps.validation.outputs.failed == '1'
         env: { GH_TOKEN: '${{ github.token }}' }
         run: |
-          { echo '## Falha na integração resolvida da Home'; echo; echo "Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; echo '```text'; test -f merge.log && cat merge.log || true; echo '```'; } > failure.md
-          gh issue create --title 'Falha na validação final da Home' --body-file failure.md
+          { echo '## Falha detalhada na validação final da Home'; echo; echo "Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; echo '```text'; tail -n 260 validation.log; echo '```'; } > failure.md
+          gh issue create --title 'Falha detalhada na validação final da Home' --body-file failure.md
+          exit 1
+      - name: Push final branch
+        if: steps.validation.outputs.failed == '0'
+        run: git push origin HEAD:agent/corrigir-home-itens-2-a-10
