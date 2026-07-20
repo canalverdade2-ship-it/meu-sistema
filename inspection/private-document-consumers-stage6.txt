@@ -93,6 +93,179 @@ supabase/migrations/20260718120000_gsa_saude_complete.sql-263-CREATE POLICY gsa_
 supabase/migrations/20260718120000_gsa_saude_complete.sql:264:USING (bucket_id='gsa-saude-documentos' AND coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_type','') IN ('admin','colaborador'))
 supabase/migrations/20260718120000_gsa_saude_complete.sql:265:WITH CHECK (bucket_id='gsa-saude-documentos' AND coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_type','') IN ('admin','colaborador'));
 --
+supabase/migrations/20260720200000_private_service_support_documents.sql-29-ON CONFLICT (id) DO UPDATE
+supabase/migrations/20260720200000_private_service_support_documents.sql-30-SET public = false,
+supabase/migrations/20260720200000_private_service_support_documents.sql-31-    file_size_limit = EXCLUDED.file_size_limit,
+supabase/migrations/20260720200000_private_service_support_documents.sql-32-    allowed_mime_types = EXCLUDED.allowed_mime_types;
+supabase/migrations/20260720200000_private_service_support_documents.sql-33-
+supabase/migrations/20260720200000_private_service_support_documents.sql-34-DROP POLICY IF EXISTS gsa_private_documents_admin_manage ON storage.objects;
+supabase/migrations/20260720200000_private_service_support_documents.sql-35-DROP POLICY IF EXISTS gsa_private_documents_client_insert ON storage.objects;
+supabase/migrations/20260720200000_private_service_support_documents.sql-36-DROP POLICY IF EXISTS gsa_private_documents_client_select ON storage.objects;
+supabase/migrations/20260720200000_private_service_support_documents.sql-37-DROP POLICY IF EXISTS gsa_private_documents_client_delete ON storage.objects;
+supabase/migrations/20260720200000_private_service_support_documents.sql-38-DROP POLICY IF EXISTS gsa_private_documents_provider_insert ON storage.objects;
+supabase/migrations/20260720200000_private_service_support_documents.sql-39-DROP POLICY IF EXISTS gsa_private_documents_provider_select ON storage.objects;
+supabase/migrations/20260720200000_private_service_support_documents.sql-40-DROP POLICY IF EXISTS gsa_private_documents_provider_delete ON storage.objects;
+supabase/migrations/20260720200000_private_service_support_documents.sql-41-DROP POLICY IF EXISTS gsa_private_documents_provider_assigned_os_select ON storage.objects;
+supabase/migrations/20260720200000_private_service_support_documents.sql-42-
+supabase/migrations/20260720200000_private_service_support_documents.sql-43-CREATE POLICY gsa_private_documents_admin_manage
+supabase/migrations/20260720200000_private_service_support_documents.sql-44-ON storage.objects
+supabase/migrations/20260720200000_private_service_support_documents.sql-45-FOR ALL
+supabase/migrations/20260720200000_private_service_support_documents.sql-46-TO authenticated
+supabase/migrations/20260720200000_private_service_support_documents.sql-47-USING (
+supabase/migrations/20260720200000_private_service_support_documents.sql-48-  bucket_id = 'gsa-private-documents'
+supabase/migrations/20260720200000_private_service_support_documents.sql:49:  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') IN ('admin', 'colaborador')
+supabase/migrations/20260720200000_private_service_support_documents.sql-50-)
+supabase/migrations/20260720200000_private_service_support_documents.sql-51-WITH CHECK (
+supabase/migrations/20260720200000_private_service_support_documents.sql-52-  bucket_id = 'gsa-private-documents'
+supabase/migrations/20260720200000_private_service_support_documents.sql:53:  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') IN ('admin', 'colaborador')
+supabase/migrations/20260720200000_private_service_support_documents.sql-54-);
+supabase/migrations/20260720200000_private_service_support_documents.sql-55-
+supabase/migrations/20260720200000_private_service_support_documents.sql-56-CREATE POLICY gsa_private_documents_client_insert
+supabase/migrations/20260720200000_private_service_support_documents.sql-57-ON storage.objects
+supabase/migrations/20260720200000_private_service_support_documents.sql-58-FOR INSERT
+supabase/migrations/20260720200000_private_service_support_documents.sql-59-TO authenticated
+supabase/migrations/20260720200000_private_service_support_documents.sql-60-WITH CHECK (
+supabase/migrations/20260720200000_private_service_support_documents.sql-61-  bucket_id = 'gsa-private-documents'
+supabase/migrations/20260720200000_private_service_support_documents.sql:62:  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'cliente'
+supabase/migrations/20260720200000_private_service_support_documents.sql-63-  AND (storage.foldername(name))[1] = 'clientes'
+supabase/migrations/20260720200000_private_service_support_documents.sql:64:  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-65-  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+supabase/migrations/20260720200000_private_service_support_documents.sql-66-  AND (
+supabase/migrations/20260720200000_private_service_support_documents.sql-67-    (
+supabase/migrations/20260720200000_private_service_support_documents.sql-68-      (storage.foldername(name))[3] = 'ordens-servico'
+supabase/migrations/20260720200000_private_service_support_documents.sql-69-      AND EXISTS (
+supabase/migrations/20260720200000_private_service_support_documents.sql-70-        SELECT 1
+supabase/migrations/20260720200000_private_service_support_documents.sql-71-        FROM public.ordens_servico os
+supabase/migrations/20260720200000_private_service_support_documents.sql-72-        WHERE os.id = ((storage.foldername(name))[4])::uuid
+supabase/migrations/20260720200000_private_service_support_documents.sql:73:          AND os.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-74-      )
+supabase/migrations/20260720200000_private_service_support_documents.sql-75-    )
+supabase/migrations/20260720200000_private_service_support_documents.sql-76-    OR
+supabase/migrations/20260720200000_private_service_support_documents.sql-77-    (
+supabase/migrations/20260720200000_private_service_support_documents.sql-78-      (storage.foldername(name))[3] = 'tickets'
+supabase/migrations/20260720200000_private_service_support_documents.sql-79-      AND EXISTS (
+supabase/migrations/20260720200000_private_service_support_documents.sql-80-        SELECT 1
+supabase/migrations/20260720200000_private_service_support_documents.sql-81-        FROM public.tickets t
+supabase/migrations/20260720200000_private_service_support_documents.sql-82-        WHERE t.id = ((storage.foldername(name))[4])::uuid
+supabase/migrations/20260720200000_private_service_support_documents.sql:83:          AND t.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-84-      )
+supabase/migrations/20260720200000_private_service_support_documents.sql-85-    )
+supabase/migrations/20260720200000_private_service_support_documents.sql-86-  )
+supabase/migrations/20260720200000_private_service_support_documents.sql-87-);
+supabase/migrations/20260720200000_private_service_support_documents.sql-88-
+supabase/migrations/20260720200000_private_service_support_documents.sql-89-CREATE POLICY gsa_private_documents_client_select
+supabase/migrations/20260720200000_private_service_support_documents.sql-90-ON storage.objects
+supabase/migrations/20260720200000_private_service_support_documents.sql-91-FOR SELECT
+supabase/migrations/20260720200000_private_service_support_documents.sql-92-TO authenticated
+supabase/migrations/20260720200000_private_service_support_documents.sql-93-USING (
+supabase/migrations/20260720200000_private_service_support_documents.sql-94-  bucket_id = 'gsa-private-documents'
+supabase/migrations/20260720200000_private_service_support_documents.sql:95:  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'cliente'
+supabase/migrations/20260720200000_private_service_support_documents.sql-96-  AND (storage.foldername(name))[1] = 'clientes'
+supabase/migrations/20260720200000_private_service_support_documents.sql:97:  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-98-  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+supabase/migrations/20260720200000_private_service_support_documents.sql-99-  AND (
+supabase/migrations/20260720200000_private_service_support_documents.sql-100-    (
+supabase/migrations/20260720200000_private_service_support_documents.sql-101-      (storage.foldername(name))[3] = 'ordens-servico'
+supabase/migrations/20260720200000_private_service_support_documents.sql-102-      AND EXISTS (
+supabase/migrations/20260720200000_private_service_support_documents.sql-103-        SELECT 1
+supabase/migrations/20260720200000_private_service_support_documents.sql-104-        FROM public.ordens_servico os
+supabase/migrations/20260720200000_private_service_support_documents.sql-105-        WHERE os.id = ((storage.foldername(name))[4])::uuid
+supabase/migrations/20260720200000_private_service_support_documents.sql:106:          AND os.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-107-      )
+supabase/migrations/20260720200000_private_service_support_documents.sql-108-    )
+supabase/migrations/20260720200000_private_service_support_documents.sql-109-    OR
+supabase/migrations/20260720200000_private_service_support_documents.sql-110-    (
+supabase/migrations/20260720200000_private_service_support_documents.sql-111-      (storage.foldername(name))[3] = 'tickets'
+supabase/migrations/20260720200000_private_service_support_documents.sql-112-      AND EXISTS (
+supabase/migrations/20260720200000_private_service_support_documents.sql-113-        SELECT 1
+supabase/migrations/20260720200000_private_service_support_documents.sql-114-        FROM public.tickets t
+supabase/migrations/20260720200000_private_service_support_documents.sql-115-        WHERE t.id = ((storage.foldername(name))[4])::uuid
+supabase/migrations/20260720200000_private_service_support_documents.sql:116:          AND t.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-117-      )
+supabase/migrations/20260720200000_private_service_support_documents.sql-118-    )
+supabase/migrations/20260720200000_private_service_support_documents.sql-119-  )
+supabase/migrations/20260720200000_private_service_support_documents.sql-120-);
+supabase/migrations/20260720200000_private_service_support_documents.sql-121-
+supabase/migrations/20260720200000_private_service_support_documents.sql-122-CREATE POLICY gsa_private_documents_client_delete
+supabase/migrations/20260720200000_private_service_support_documents.sql-123-ON storage.objects
+supabase/migrations/20260720200000_private_service_support_documents.sql-124-FOR DELETE
+supabase/migrations/20260720200000_private_service_support_documents.sql-125-TO authenticated
+supabase/migrations/20260720200000_private_service_support_documents.sql-126-USING (
+supabase/migrations/20260720200000_private_service_support_documents.sql-127-  bucket_id = 'gsa-private-documents'
+supabase/migrations/20260720200000_private_service_support_documents.sql:128:  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'cliente'
+supabase/migrations/20260720200000_private_service_support_documents.sql-129-  AND (storage.foldername(name))[1] = 'clientes'
+supabase/migrations/20260720200000_private_service_support_documents.sql:130:  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-131-  AND (storage.foldername(name))[3] IN ('ordens-servico', 'tickets')
+supabase/migrations/20260720200000_private_service_support_documents.sql-132-);
+supabase/migrations/20260720200000_private_service_support_documents.sql-133-
+supabase/migrations/20260720200000_private_service_support_documents.sql-134-CREATE POLICY gsa_private_documents_provider_insert
+supabase/migrations/20260720200000_private_service_support_documents.sql-135-ON storage.objects
+supabase/migrations/20260720200000_private_service_support_documents.sql-136-FOR INSERT
+supabase/migrations/20260720200000_private_service_support_documents.sql-137-TO authenticated
+supabase/migrations/20260720200000_private_service_support_documents.sql-138-WITH CHECK (
+supabase/migrations/20260720200000_private_service_support_documents.sql-139-  bucket_id = 'gsa-private-documents'
+supabase/migrations/20260720200000_private_service_support_documents.sql:140:  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'prestador'
+supabase/migrations/20260720200000_private_service_support_documents.sql-141-  AND (storage.foldername(name))[1] = 'prestadores'
+supabase/migrations/20260720200000_private_service_support_documents.sql:142:  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-143-  AND (storage.foldername(name))[3] = 'tickets'
+supabase/migrations/20260720200000_private_service_support_documents.sql-144-  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+supabase/migrations/20260720200000_private_service_support_documents.sql-145-  AND EXISTS (
+supabase/migrations/20260720200000_private_service_support_documents.sql-146-    SELECT 1
+supabase/migrations/20260720200000_private_service_support_documents.sql-147-    FROM public.tickets t
+supabase/migrations/20260720200000_private_service_support_documents.sql-148-    WHERE t.id = ((storage.foldername(name))[4])::uuid
+supabase/migrations/20260720200000_private_service_support_documents.sql:149:      AND t.prestador_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-150-  )
+supabase/migrations/20260720200000_private_service_support_documents.sql-151-);
+supabase/migrations/20260720200000_private_service_support_documents.sql-152-
+supabase/migrations/20260720200000_private_service_support_documents.sql-153-CREATE POLICY gsa_private_documents_provider_select
+supabase/migrations/20260720200000_private_service_support_documents.sql-154-ON storage.objects
+supabase/migrations/20260720200000_private_service_support_documents.sql-155-FOR SELECT
+supabase/migrations/20260720200000_private_service_support_documents.sql-156-TO authenticated
+supabase/migrations/20260720200000_private_service_support_documents.sql-157-USING (
+supabase/migrations/20260720200000_private_service_support_documents.sql-158-  bucket_id = 'gsa-private-documents'
+supabase/migrations/20260720200000_private_service_support_documents.sql:159:  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'prestador'
+supabase/migrations/20260720200000_private_service_support_documents.sql-160-  AND (storage.foldername(name))[1] = 'prestadores'
+supabase/migrations/20260720200000_private_service_support_documents.sql:161:  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-162-  AND (storage.foldername(name))[3] = 'tickets'
+supabase/migrations/20260720200000_private_service_support_documents.sql-163-  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+supabase/migrations/20260720200000_private_service_support_documents.sql-164-  AND EXISTS (
+supabase/migrations/20260720200000_private_service_support_documents.sql-165-    SELECT 1
+supabase/migrations/20260720200000_private_service_support_documents.sql-166-    FROM public.tickets t
+supabase/migrations/20260720200000_private_service_support_documents.sql-167-    WHERE t.id = ((storage.foldername(name))[4])::uuid
+supabase/migrations/20260720200000_private_service_support_documents.sql:168:      AND t.prestador_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-169-  )
+supabase/migrations/20260720200000_private_service_support_documents.sql-170-);
+supabase/migrations/20260720200000_private_service_support_documents.sql-171-
+supabase/migrations/20260720200000_private_service_support_documents.sql-172-CREATE POLICY gsa_private_documents_provider_delete
+supabase/migrations/20260720200000_private_service_support_documents.sql-173-ON storage.objects
+supabase/migrations/20260720200000_private_service_support_documents.sql-174-FOR DELETE
+supabase/migrations/20260720200000_private_service_support_documents.sql-175-TO authenticated
+supabase/migrations/20260720200000_private_service_support_documents.sql-176-USING (
+supabase/migrations/20260720200000_private_service_support_documents.sql-177-  bucket_id = 'gsa-private-documents'
+supabase/migrations/20260720200000_private_service_support_documents.sql:178:  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'prestador'
+supabase/migrations/20260720200000_private_service_support_documents.sql-179-  AND (storage.foldername(name))[1] = 'prestadores'
+supabase/migrations/20260720200000_private_service_support_documents.sql:180:  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-181-  AND (storage.foldername(name))[3] = 'tickets'
+supabase/migrations/20260720200000_private_service_support_documents.sql-182-);
+supabase/migrations/20260720200000_private_service_support_documents.sql-183-
+supabase/migrations/20260720200000_private_service_support_documents.sql-184-CREATE POLICY gsa_private_documents_provider_assigned_os_select
+supabase/migrations/20260720200000_private_service_support_documents.sql-185-ON storage.objects
+supabase/migrations/20260720200000_private_service_support_documents.sql-186-FOR SELECT
+supabase/migrations/20260720200000_private_service_support_documents.sql-187-TO authenticated
+supabase/migrations/20260720200000_private_service_support_documents.sql-188-USING (
+supabase/migrations/20260720200000_private_service_support_documents.sql-189-  bucket_id = 'gsa-private-documents'
+supabase/migrations/20260720200000_private_service_support_documents.sql:190:  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'prestador'
+supabase/migrations/20260720200000_private_service_support_documents.sql-191-  AND (storage.foldername(name))[1] = 'clientes'
+supabase/migrations/20260720200000_private_service_support_documents.sql-192-  AND (storage.foldername(name))[3] = 'ordens-servico'
+supabase/migrations/20260720200000_private_service_support_documents.sql-193-  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+supabase/migrations/20260720200000_private_service_support_documents.sql-194-  AND EXISTS (
+supabase/migrations/20260720200000_private_service_support_documents.sql-195-    SELECT 1
+supabase/migrations/20260720200000_private_service_support_documents.sql-196-    FROM public.prestador_demandas pd
+supabase/migrations/20260720200000_private_service_support_documents.sql-197-    WHERE pd.os_id = ((storage.foldername(name))[4])::uuid
+supabase/migrations/20260720200000_private_service_support_documents.sql:198:      AND pd.prestador_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')
+supabase/migrations/20260720200000_private_service_support_documents.sql-199-  )
+supabase/migrations/20260720200000_private_service_support_documents.sql-200-);
+--
 supabase/migrations/20260714053000_supabase_auth_session_bridge.sql-16-  CHECK (ator_tipo IN ('admin', 'colaborador', 'cliente', 'prestador'))
 supabase/migrations/20260714053000_supabase_auth_session_bridge.sql-17-);
 supabase/migrations/20260714053000_supabase_auth_session_bridge.sql-18-
