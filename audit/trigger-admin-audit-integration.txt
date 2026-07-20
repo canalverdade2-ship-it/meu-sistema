@@ -1,1 +1,1 @@
-Executar integração controlada da auditoria administrativa.
+Executar integração controlada da auditoria administrativa com a política de conflitos atualizada.
