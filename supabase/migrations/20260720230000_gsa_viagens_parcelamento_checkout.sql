@@ -8,6 +8,25 @@ ALTER TABLE public.viagens_transacoes
 ALTER TABLE public.faturas
   ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::JSONB;
 
+ALTER TABLE public.faturas
+  DROP CONSTRAINT IF EXISTS faturas_tipo_check;
+
+ALTER TABLE public.faturas
+  ADD CONSTRAINT faturas_tipo_check
+  CHECK (
+    tipo IS NULL
+    OR tipo IN (
+      'servico',
+      'produto',
+      'assinatura',
+      'pacote_nivel',
+      'emprestimo',
+      'taxa_servico_emprestimo',
+      'avulsa',
+      'compra_viagem'
+    )
+  );
+
 UPDATE public.viagens_transacoes
 SET parcelas = GREATEST(COALESCE(parcelas, 1), 1),
     valor_parcela = COALESCE(valor_parcela, valor_pago)
