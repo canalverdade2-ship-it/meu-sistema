@@ -1,0 +1,89 @@
+name: Build Security Audit Package
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  build-audited-package:
+    if: github.head_ref == 'agent/corrigir-auditoria-seguranca'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-auditoria-seguranca
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: npm ci
+      - name: Confirm Gemini client dependency is unused
+        run: |
+          matches=$(grep -RInE 'GEMINI_API_KEY|@google/genai' src supabase tests --exclude-dir=node_modules || true)
+          test -z "$matches" || { echo "$matches"; exit 1; }
+      - name: Apply audited corrections
+        run: |
+          python scripts/apply-security-audit-fixes.py
+          npm pkg delete dependencies.vite
+          npm pkg delete dependencies.@google/genai
+          npm pkg set devDependencies.vite='6.4.3'
+          npm pkg set dependencies.jspdf='4.2.1'
+          npm pkg set dependencies.xlsx='https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz'
+          npm install --package-lock-only
+          npm audit fix --package-lock-only || true
+          rm -rf node_modules
+          npm ci
+      - name: Security and application validation
+        run: |
+          npm audit --audit-level=high
+          npm run lint
+          npm run test:admin
+          npm run test:products-subscriptions
+          npm run test:client-security
+          npm run test:provider
+          npm run test:home
+          npm run test:travel
+          deno check supabase/functions/gsa-auth-session/index.ts supabase/functions/gsa-auth-session/index_test.ts
+          deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
+          npm run build
+      - name: Package validated files
+        run: |
+          tar -czf security-audit-package.tar.gz \
+            package.json \
+            package-lock.json \
+            vite.config.ts \
+            supabase/functions/gsa-auth-session/index.ts \
+            supabase/functions/gsa-auth-session/index_test.ts \
+            tests/e2e/0-stress-real-data.spec.ts \
+            .github/dependabot.yml \
+            .github/workflows/dependency-security.yml
+          sha256sum security-audit-package.tar.gz > security-audit-package.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-package
+          path: |
+            security-audit-package.tar.gz
+            security-audit-package.sha256
+          retention-days: 30
