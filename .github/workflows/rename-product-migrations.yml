@@ -1,0 +1,39 @@
+name: Rename Product Migrations
+
+on:
+  push:
+    branches: [agent/corrigir-versoes-migrations-produtos]
+    paths: ['.rename-product-migrations-trigger']
+
+permissions:
+  contents: write
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Validate trigger
+        run: grep -Fqx 'RENAME_PRODUCT_MIGRATIONS_V1' .rename-product-migrations-trigger
+      - name: Rename migrations and update contracts
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git mv supabase/migrations/20260720233000_harden_products_and_subscriptions.sql supabase/migrations/20260721010000_harden_products_and_subscriptions.sql
+          git mv supabase/migrations/20260720233100_secure_product_subscription_catalog.sql supabase/migrations/20260721010100_secure_product_subscription_catalog.sql
+          sed -i 's/20260720233000_harden_products_and_subscriptions/20260721010000_harden_products_and_subscriptions/g; s/20260720233100_secure_product_subscription_catalog/20260721010100_secure_product_subscription_catalog/g' scripts/check-products-subscriptions-contracts.ts
+          git rm .github/workflows/rename-product-migrations.yml .rename-product-migrations-trigger
+          git commit -am 'Corrigir versões das migrations de Produtos e Assinaturas'
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate
+        run: |
+          npm run lint
+          npm run test:products-subscriptions
+          npm run test:admin
+          npm run build
+      - name: Push corrected branch
+        run: git push origin HEAD:agent/corrigir-versoes-migrations-produtos
