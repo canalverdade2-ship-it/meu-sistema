@@ -1,12 +1,9 @@
 name: Apply collaborator panel fixes
 
 on:
-  push:
-    branches:
-      - agent/corrigir-painel-colaborador
   pull_request:
     branches:
-      - main
+      - agent/corrigir-painel-colaborador
 
 permissions:
   contents: write
