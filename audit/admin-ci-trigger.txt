@@ -1,0 +1,1 @@
+Validação final do painel administrativo após correção da sessão.
