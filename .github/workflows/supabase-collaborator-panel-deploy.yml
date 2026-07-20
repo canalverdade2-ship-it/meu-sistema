@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: deploy-collaborator-panel-production
@@ -177,3 +177,25 @@ jobs:
             collaborator-panel-migration-list.log
           retention-days: 30
           if-no-files-found: ignore
+
+      - name: Register deployment result
+        if: always()
+        shell: bash
+        env:
+          DEPLOY_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          cat > .collaborator-panel-production-status <<EOF
+          status=$DEPLOY_STATUS
+          migration=20260720213000
+          project=$EXPECTED_PROJECT_ID
+          commit=$GITHUB_SHA
+          run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .collaborator-panel-production-status
+          if ! git diff --cached --quiet; then
+            git commit -m "Registrar implantação do Painel do Colaborador: $DEPLOY_STATUS"
+            git push
+          fi
