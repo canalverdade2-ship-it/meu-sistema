@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   inspect:
@@ -54,3 +55,13 @@ jobs:
             session-files.log
             frontend-session-usage.log
           retention-days: 7
+
+      - name: Register inspection run
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Execução da inspeção de compatibilidade GSA" \
+            --body "Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
