@@ -79,6 +79,7 @@ jobs:
         run: |
           {
             echo 'BEGIN;'
+            cat supabase/migrations/20260717220000_gsa_viagens_schema.sql
             cat supabase/migrations/20260720120000_fix_gsa_viagens_core_flow.sql
             cat supabase/migrations/20260720123000_gsa_viagens_storage_and_quotes.sql
             cat supabase/migrations/20260720130000_gsa_viagens_cancelamento_rpc.sql
