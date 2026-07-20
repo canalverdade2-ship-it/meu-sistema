@@ -114,8 +114,10 @@ jobs:
       - name: Publish definitive correction commit
         if: steps.patch.outputs.status == '0' && steps.provider_contracts.outputs.status == '0'
         run: |
+          git checkout -- .github/workflows/quality.yml
+          git checkout -- .github/workflows/provider-portal-validation.yml
+          git checkout -- .github/workflows/apply-provider-audit-fixes.yml
           rm -f scripts/apply-provider-audit-fixes.py
-          rm -f .github/workflows/apply-provider-audit-fixes.yml
           rm -f .provider-audit-fix-trigger
           rm -f provider-patch.log provider-contracts.log
           git config user.name 'github-actions[bot]'
