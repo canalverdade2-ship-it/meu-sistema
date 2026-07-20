@@ -7,15 +7,16 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: integrate-home-final
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   integrate-test-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
 
     services:
       postgres:
@@ -32,39 +33,58 @@ jobs:
 
     env:
       PGPASSWORD: postgres
+      SOURCE_SHA: edcc1878e9d69adf6ab38ed5699d1e34b0e9d200
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
       EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
 
     steps:
-      - name: Checkout main
+      - name: Checkout current main
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
-      - name: Configure Git
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-
-      - name: Integrate Home audit branch
+      - name: Configure Git and validate source
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin agent/finalizar-home-itens-2-a-10
-          git merge --no-ff --no-commit -X theirs origin/agent/finalizar-home-itens-2-a-10 || true
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main integration/home-public-final
+          git cat-file -e "$SOURCE_SHA^{commit}"
+          test "$(git rev-parse origin/integration/home-public-final)" = "$SOURCE_SHA"
 
-          conflicts="$(git diff --name-only --diff-filter=U)"
-          if [ -n "$conflicts" ]; then
-            echo 'Conflitos não resolvidos:' >&2
-            echo "$conflicts" >&2
-            exit 1
+      - name: Integrate validated Home commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          git merge --no-ff --no-commit "$SOURCE_SHA" > home-integration.log 2>&1
+          merge_code=$?
+          set -e
+
+          if [ "$merge_code" -ne 0 ]; then
+            git diff --name-only --diff-filter=U | sort > home-conflicts.log
+            allowed='scripts/check-admin-panel-contracts.ts'
+            unexpected=$(grep -vx "$allowed" home-conflicts.log || true)
+            if [ -n "$unexpected" ]; then
+              echo 'Conflitos inesperados na Home:' >&2
+              echo "$unexpected" >&2
+              exit 1
+            fi
+            git checkout --ours scripts/check-admin-panel-contracts.ts
+            git add scripts/check-admin-panel-contracts.ts
           fi
 
-          rm -f .github/workflows/home-admin-diagnostic.yml
+          rm -f \
+            .github/workflows/sync-home-current-main.yml \
+            .sync-home-current-main-trigger \
+            scripts/resolve-home-current-main.py \
+            .github/workflows/home-admin-diagnostic.yml
           git add -A
+          git commit -m 'Integrar e publicar correções finais da Home'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -109,35 +129,7 @@ jobs:
       - name: Link production
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
 
-      - name: Apply Home migrations idempotently
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase migration list --linked 2>&1 | tee home-migrations-before.log
-
-          apply_migration() {
-            version="$1"
-            file="$2"
-            if awk -F'|' -v target="$version" '
-              {
-                remote=$2
-                gsub(/[^0-9]/, "", remote)
-                if (remote == target) found=1
-              }
-              END { exit found ? 0 : 1 }
-            ' home-migrations-before.log; then
-              echo "Migration $version já aplicada."
-            else
-              supabase db query --linked --file "$file"
-              supabase migration repair --linked --status applied "$version"
-            fi
-          }
-
-          apply_migration 20260720215500 supabase/migrations/20260720215500_fix_public_home_contracts.sql
-          apply_migration 20260720215530 supabase/migrations/20260720215530_minimize_public_referral_lookup.sql
-          apply_migration 20260720215600 supabase/migrations/20260720215600_guard_legacy_budget_permissions.sql
-
-      - name: Verify Home production objects
+      - name: Verify Home migrations and objects
         shell: bash
         run: |
           cat > verify-home-production.sql <<'SQL'
@@ -152,13 +144,16 @@ jobs:
               RAISE EXCEPTION 'Migrations da Home incompletas: % de 3', v_count;
             END IF;
 
-            IF to_regprocedure('public.gsa_public_create_enterprise_budget_v2(jsonb)') IS NULL THEN
-              RAISE EXCEPTION 'Orçamento público protegido ausente';
+            IF to_regprocedure('public.gsa_public_lookup_referral(text)') IS NULL
+               OR to_regprocedure('public.gsa_public_register_client(text,jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_public_register_provider(jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_public_create_enterprise_budget_v2(jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'Objetos públicos obrigatórios da Home ausentes';
             END IF;
 
-            IF to_regprocedure('public.gsa_public_validate_referral(text)') IS NULL
-               AND to_regprocedure('public.gsa_public_lookup_referral(text)') IS NULL THEN
-              RAISE EXCEPTION 'Validação pública minimizada de indicação ausente';
+            IF has_function_privilege('anon', 'public.gsa_public_create_enterprise_budget(jsonb)', 'EXECUTE')
+               OR has_function_privilege('authenticated', 'public.gsa_public_create_enterprise_budget(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Função legada de orçamento ainda possui acesso público';
             END IF;
           END $$;
           SELECT 'HOME_PRODUCTION_VERIFIED' AS result;
@@ -169,15 +164,37 @@ jobs:
       - name: Publish authentication gateway
         run: supabase functions deploy gsa-auth-session --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
 
-      - name: Commit and publish integrated Home
+      - name: Publish integrated Home to main
         shell: bash
         run: |
           set -euo pipefail
           git rm -f .github/workflows/integrate-home-final.yml
-          git add -A
-          git commit -m 'Integrar e publicar correções finais da Home'
+          git commit -m 'Remover integrador temporário da Home'
           git pull --rebase origin main
           git push origin HEAD:main
+
+      - name: Publish failure diagnostic
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          touch home-integration.log home-conflicts.log home-production-verification.log
+          {
+            echo '## Falha na publicação definitiva da Home'
+            echo
+            echo "- Fonte: $SOURCE_SHA"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo '### Integração'
+            echo '```text'
+            cat home-conflicts.log
+            sed -n '1,220p' home-integration.log
+            echo '```'
+            echo '### Produção'
+            echo '```text'
+            cat home-production-verification.log
+            echo '```'
+          } > home-final-failure.md
+          gh issue create --title 'Falha publicação definitiva da Home' --body-file home-final-failure.md
 
       - name: Upload evidence
         if: always()
@@ -185,52 +202,8 @@ jobs:
         with:
           name: home-final-integration-evidence
           path: |
-            home-migrations-before.log
+            home-integration.log
+            home-conflicts.log
             home-production-verification.log
           if-no-files-found: ignore
           retention-days: 30
-
-  report-result:
-    name: Register Home integration result
-    needs: integrate-test-deploy
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout latest main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-
-      - name: Record result
-        shell: bash
-        env:
-          RESULT: ${{ needs.integrate-test-deploy.result }}
-          RUN_ID: ${{ github.run_id }}
-          VALIDATED_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          mkdir -p deployment-status
-          cat > deployment-status/home-final-integration.json <<JSON
-          {
-            "status": "${RESULT}",
-            "workflow_run_id": "${RUN_ID}",
-            "validated_sha": "${VALIDATED_SHA}",
-            "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "tests": "${RESULT}",
-            "migrations": "${RESULT}",
-            "database_objects": "${RESULT}",
-            "edge_function": "${RESULT}",
-            "main_publication": "${RESULT}"
-          }
-          JSON
-
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add deployment-status/home-final-integration.json
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git commit -m "Registrar integração final da Home: ${RESULT}"
-          git pull --rebase origin main
-          git push origin HEAD:main
