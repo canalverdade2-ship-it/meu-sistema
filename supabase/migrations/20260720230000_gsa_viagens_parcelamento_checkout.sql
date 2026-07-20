@@ -5,6 +5,9 @@ ALTER TABLE public.viagens_transacoes
   ADD COLUMN IF NOT EXISTS parcelas INTEGER NOT NULL DEFAULT 1,
   ADD COLUMN IF NOT EXISTS valor_parcela NUMERIC(10, 2);
 
+ALTER TABLE public.faturas
+  ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::JSONB;
+
 UPDATE public.viagens_transacoes
 SET parcelas = GREATEST(COALESCE(parcelas, 1), 1),
     valor_parcela = COALESCE(valor_parcela, valor_pago)
