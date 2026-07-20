@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { Home } from './pages/Home';
-import { AdminPanel } from './pages/AdminPanel';
+import { SecureAdminPanel } from './pages/SecureAdminPanel';
 import { ClientPortal } from './pages/ClientPortal';
 import { PrestadorDashboard } from './pages/Prestador/PrestadorDashboard';
 import { Toaster } from 'react-hot-toast';
@@ -22,6 +22,7 @@ import { resolveLegacyRoute } from './routing/legacyRouteResolver';
 import { routes } from './routing/routeCatalog';
 import { navigate, replace } from './routing/navigationService';
 import { isRouteAllowed } from './routing/routeSecurity';
+import { defaultAdminPath } from './security/collaboratorAccess';
 
 const queryClient = new QueryClient();
 
@@ -123,6 +124,7 @@ export default function App() {
     else localStorage.removeItem('colaboradorId');
     if (adminDetails.nome) localStorage.setItem('colaboradorNome', adminDetails.nome);
     else localStorage.removeItem('colaboradorNome');
+    localStorage.setItem('colaboradorModulos', JSON.stringify(adminDetails.modulos || []));
 
     setSession({ 
        adminAuth: true, 
@@ -165,6 +167,8 @@ export default function App() {
 
     localStorage.removeItem('adminType');
     localStorage.removeItem('colaboradorId');
+    localStorage.removeItem('colaboradorNome');
+    localStorage.removeItem('colaboradorModulos');
     setSession({});
     replace(routes.public.home());
   };
@@ -173,10 +177,13 @@ export default function App() {
   let activeView = route.area;
 
   // Tratar redirecionamento de segurança se tentar acessar área sem permissão
-  if (!isRouteAllowed(route.area, session)) {
-    // Redireciona para o login
-    const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-    replace(`${routes.login.root()}?returnTo=${returnTo}`);
+  if (!isRouteAllowed(route.area, session, route.module, route.submodule)) {
+    if (route.area === 'admin' && session.adminAuth) {
+      replace(defaultAdminPath(session.adminType, session.colaboradorModulos || []));
+    } else {
+      const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+      replace(`${routes.login.root()}?returnTo=${returnTo}`);
+    }
     return null;
   }
 
@@ -263,10 +270,11 @@ export default function App() {
           {/* 5. PAINEL ADMIN */}
           {activeView === 'admin' && session.adminAuth && (
             <AdminNotificationProvider>
-              <AdminPanel 
+              <SecureAdminPanel 
                 onLogout={handleLogout} 
                 adminType={session.adminType || 'admin'} 
-                colaboradorId={session.colaboradorId} 
+                colaboradorId={session.colaboradorId}
+                colaboradorNome={session.colaboradorNome}
                 colaboradorModulos={session.colaboradorModulos || []} 
               />
             </AdminNotificationProvider>

@@ -16,7 +16,7 @@ import {
 
 interface HomeProps {
   onLoginClient: (id: string, isRecovery?: boolean) => void;
-  onLoginAdmin: (adminDetails: { type: 'admin' | 'colaborador'; id?: string; modulos?: string[] }) => void;
+  onLoginAdmin: (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => void;
   onLoginPrestador: (id: string) => void;
   onGuestStore?: () => void;
   initialPublicPage?: PublicPage;
