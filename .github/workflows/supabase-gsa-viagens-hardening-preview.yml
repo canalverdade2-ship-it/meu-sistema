@@ -1,0 +1,81 @@
+name: Preview GSA Viagens Hardening
+
+on:
+  push:
+    branches: [fix/gsa-viagens-hardening-20260720]
+    paths:
+      - 'supabase/migrations/20260720140000_gsa_viagens_hardening.sql'
+      - 'scripts/gsa-viagens-hardening-preview.sql'
+      - '.github/workflows/supabase-gsa-viagens-hardening-preview.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/20260720140000_gsa_viagens_hardening.sql'
+      - 'scripts/gsa-viagens-hardening-preview.sql'
+      - '.github/workflows/supabase-gsa-viagens-hardening-preview.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: preview-gsa-viagens-hardening-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    name: Preview with rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link authorized project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Build rollback validation bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20260720140000_gsa_viagens_hardening.sql
+            cat scripts/gsa-viagens-hardening-preview.sql
+            echo 'ROLLBACK;'
+          } > gsa-viagens-hardening-preview.sql
+
+      - name: Validate against production schema without persisting
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file gsa-viagens-hardening-preview.sql \
+            2>&1 | tee gsa-hardening-preview.log
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-viagens-hardening-preview
+          path: gsa-hardening-preview.log
+          retention-days: 14
