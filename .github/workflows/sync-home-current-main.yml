@@ -4,6 +4,9 @@ on:
   push:
     branches: [agent/corrigir-home-itens-2-a-10]
     paths: ['.sync-home-current-main-trigger']
+  pull_request:
+    branches: [agent/corrigir-home-itens-2-a-10]
+    paths: ['audit/trigger-home-final-sync.txt']
 
 permissions:
   contents: write
@@ -14,6 +17,7 @@ concurrency:
 
 jobs:
   sync:
+    if: github.event_name == 'push' || github.event.pull_request.head.ref == 'ops/trigger-home-final-sync'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -22,8 +26,12 @@ jobs:
           ref: agent/corrigir-home-itens-2-a-10
           fetch-depth: 0
 
-      - name: Validate trigger
-        run: grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V10' .sync-home-current-main-trigger
+      - name: Validate authorization
+        run: |
+          grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V10' .sync-home-current-main-trigger
+          if [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
+            test "${{ github.event.pull_request.head.ref }}" = 'ops/trigger-home-final-sync'
+          fi
 
       - name: Merge current main with reviewed conflict policy
         shell: bash
