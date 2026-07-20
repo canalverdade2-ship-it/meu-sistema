@@ -20,12 +20,10 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { supabase } from '../../lib/supabase';
 import { providerOperations } from '../../lib/providerOperations';
 import { isProviderBlocked, isProviderPending, providerStatusLabel } from '../../lib/providerStatus';
 import { logService } from '../../lib/logService';
 import { maskCEP } from '../../lib/utils';
-import { createNotification } from '../../lib/notifications';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { useAppLocation } from '../../routing/useAppLocation';
 import { navigate } from '../../routing/navigationService';
@@ -107,8 +105,7 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
   const pending = isProviderPending(prestador?.status);
 
   useEffect(() => {
-    const container = document.getElementById('provider-main-scroll');
-    container?.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('provider-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab, activeItemId]);
 
   useEffect(() => {
@@ -125,18 +122,13 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
     let cancelled = false;
     const load = async () => {
       try {
-        const [snapshot, demands, schedules, documents] = await Promise.all([
-          providerOperations.financialSnapshot(),
-          supabase.from('prestador_demandas').select('status').eq('prestador_id', prestadorId),
-          supabase.from('prestador_agendamentos').select('status').eq('prestador_id', prestadorId),
-          supabase.from('prestador_documentos').select('status').eq('prestador_id', prestadorId),
-        ]);
+        const snapshot = await providerOperations.dashboardSnapshot();
         if (cancelled) return;
         setSaldo(Number(snapshot?.saldo || 0));
         setMetrics({
-          demandasConcluidas: (demands.data || []).filter((item: any) => ['concluida', 'finalizada', 'concluida_interna'].includes(item.status)).length,
-          agendamentosConcluidos: (schedules.data || []).filter((item: any) => item.status === 'concluido').length,
-          documentosAprovados: (documents.data || []).filter((item: any) => item.status === 'aprovado').length,
+          demandasConcluidas: Number(snapshot?.demandas_concluidas || 0),
+          agendamentosConcluidos: Number(snapshot?.agendamentos_concluidos || 0),
+          documentosAprovados: Number(snapshot?.documentos_aprovados || 0),
         });
       } catch (loadError) {
         console.error('Erro ao carregar indicadores do prestador:', loadError);
@@ -144,7 +136,7 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
     };
     void load();
     return () => { cancelled = true; };
-  }, [prestadorId, pendencies.moduleDemandas, pendencies.moduleFinanceiro, pendencies.moduleDocumentos, pendencies.moduleAgenda]);
+  }, [prestadorId, pendencies.total]);
 
   const menuItems = useMemo<MenuItem[]>(() => [
     { id: 'dashboard', label: 'Início', icon: LayoutDashboard, count: 0, locked: false, path: routes.provider.dashboard(), accent: 'text-neutral-700' },
@@ -177,18 +169,18 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
       toast.error('A notificação pertence a um módulo temporariamente bloqueado.');
       return;
     }
-    if (itemId) {
-      if (normalized === 'demandas') navigate(routes.provider.demand(itemId));
-      else if (normalized === 'agenda') navigate(routes.provider.agendamento(itemId));
-      else if (normalized === 'documentos') navigate(routes.provider.document(itemId));
-      else if (normalized === 'vouchers') navigate(routes.provider.voucher(itemId));
-      else if (normalized === 'premios') navigate(routes.provider.premio(itemId));
-      else if (normalized === 'promocoes') navigate(routes.provider.promocao(itemId));
-      else if (normalized === 'suporte') navigate(routes.provider.ticket(itemId));
-      else navigate(item.path);
-    } else {
+    if (!itemId) {
       navigate(item.path);
+      return;
     }
+    if (normalized === 'demandas') navigate(routes.provider.demand(itemId));
+    else if (normalized === 'agenda') navigate(routes.provider.agendamento(itemId));
+    else if (normalized === 'documentos') navigate(routes.provider.document(itemId));
+    else if (normalized === 'vouchers') navigate(routes.provider.voucher(itemId));
+    else if (normalized === 'premios') navigate(routes.provider.premio(itemId));
+    else if (normalized === 'promocoes') navigate(routes.provider.promocao(itemId));
+    else if (normalized === 'suporte') navigate(routes.provider.ticket(itemId));
+    else navigate(item.path);
   };
 
   const saveProfile = async (event: React.FormEvent) => {
@@ -218,26 +210,12 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
     if (!requestField || !requestValue.trim() || !requestReason.trim() || requestSubmitting) return;
     setRequestSubmitting(true);
     try {
-      const subject = `Solicitação de alteração: ${requestField.label}`;
-      const { data: existing, error: existingError } = await supabase
-        .from('tickets')
-        .select('id')
-        .eq('prestador_id', prestadorId)
-        .eq('assunto', subject)
-        .neq('status', 'concluido')
-        .limit(1);
-      if (existingError) throw existingError;
-      if (existing?.length) throw new Error('Já existe uma solicitação aberta para este campo.');
-
-      const { data: ticket, error: ticketError } = await supabase.from('tickets').insert({
-        prestador_id: prestadorId,
-        assunto: subject,
-        descricao: `Valor atual: ${requestField.value}\nNovo valor solicitado: ${requestValue.trim()}\nMotivo: ${requestReason.trim()}`,
-        status: 'aberto',
-      }).select('id').single();
-      if (ticketError) throw ticketError;
-
-      await createNotification(null, 'Solicitação cadastral do prestador', `${prestador?.nome_razao || 'Um prestador'} solicitou alteração de ${requestField.label}.`, 'suporte', undefined, ticket?.id);
+      await providerOperations.requestProfileChange({
+        label: requestField.label,
+        currentValue: requestField.value,
+        newValue: requestValue.trim(),
+        reason: requestReason.trim(),
+      });
       toast.success('Solicitação enviada para análise.');
       setRequestField(null);
       setRequestValue('');
@@ -253,25 +231,12 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
     if (!prestador || supportSubmitting) return;
     setSupportSubmitting(true);
     try {
-      const subject = 'Análise de cadastro pendente';
-      const { data: existing, error: existingError } = await supabase
-        .from('tickets')
-        .select('id')
-        .eq('prestador_id', prestadorId)
-        .eq('assunto', subject)
-        .neq('status', 'concluido')
-        .limit(1);
-      if (existingError) throw existingError;
-      if (!existing?.length) {
-        const { error: createError } = await supabase.from('tickets').insert({
-          prestador_id: prestadorId,
-          assunto: subject,
-          descricao: `Solicito informações sobre a análise do cadastro de ${prestador.nome_razao}.`,
-          status: 'aberto',
-        });
-        if (createError) throw createError;
-      }
-      navigate(routes.provider.support());
+      const result = await providerOperations.createTicket(
+        'Análise de cadastro pendente',
+        `Solicito informações sobre a análise do cadastro de ${prestador.nome_razao}.`,
+      );
+      if (result?.ticket_id) navigate(routes.provider.ticket(result.ticket_id));
+      else navigate(routes.provider.support());
     } catch (supportError: any) {
       toast.error(supportError?.message || 'Não foi possível abrir o suporte.');
     } finally {
@@ -328,7 +293,6 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
             );
           })}
         </nav>
-
         <div className="border-t border-neutral-100 p-4"><button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50"><LogOut className="h-4 w-4" />Sair do portal</button></div>
       </aside>
 
@@ -343,14 +307,12 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
 
         <div className="p-5 lg:p-10">
           {activeTab !== 'dashboard' && <button onClick={() => navigate(routes.provider.dashboard())} className="mb-5 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold shadow-sm ring-1 ring-black/5"><ArrowLeft className="h-4 w-4" />Voltar ao início</button>}
-
           {pending && activeTab !== 'suporte' && (
             <div className="mb-6 flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5">
               <AlertTriangle className="mt-0.5 h-6 w-6 shrink-0 text-amber-600" />
               <div className="flex-1"><h2 className="font-black text-amber-900">Cadastro em análise</h2><p className="mt-1 text-sm text-amber-800">Demandas, agenda, financeiro e benefícios serão liberados após a aprovação. Perfil, documentos e suporte continuam disponíveis.</p><button disabled={supportSubmitting} onClick={openPendingSupport} className="mt-3 rounded-xl bg-amber-700 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{supportSubmitting ? 'Abrindo...' : 'Falar com o suporte'}</button></div>
             </div>
           )}
-
           {error && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>}
 
           <motion.section key={`${activeTab}-${activeItemId || ''}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
@@ -405,7 +367,7 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
       </main>
 
       <Modal isOpen={!!requestField} onClose={() => !requestSubmitting && setRequestField(null)} title={`Solicitar alteração: ${requestField?.label || ''}`}>
-        <div className="space-y-4"><div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">Esta alteração será analisada pela administração antes de ser aplicada.</div><ReadField label="Valor atual" value={requestField?.value || '-'} /><InputField label="Novo valor" value={requestValue} onChange={setRequestValue} required /><div><label className="mb-1 block text-sm font-bold text-neutral-700">Motivo</label><textarea value={requestReason} onChange={(event) => setRequestReason(event.target.value)} className="h-24 w-full rounded-xl border border-neutral-200 p-3 outline-none focus:border-indigo-500" /></div><button disabled={requestSubmitting || !requestValue.trim() || !requestReason.trim()} onClick={submitChangeRequest} className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-black text-white disabled:opacity-50">{requestSubmitting ? 'Enviando...' : 'Enviar solicitação'}</button></div>
+        <div className="space-y-4"><div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">Esta alteração será analisada pela administração antes de ser aplicada.</div><ReadField label="Valor atual" value={requestField?.value || '-'} /><InputField label="Novo valor" value={requestValue} onChange={setRequestValue} required /><div><label className="mb-1 block text-sm font-bold text-neutral-700">Motivo</label><textarea maxLength={1500} value={requestReason} onChange={(event) => setRequestReason(event.target.value)} className="h-24 w-full rounded-xl border border-neutral-200 p-3 outline-none focus:border-indigo-500" /></div><button disabled={requestSubmitting || !requestValue.trim() || !requestReason.trim()} onClick={submitChangeRequest} className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-black text-white disabled:opacity-50">{requestSubmitting ? 'Enviando...' : 'Enviar solicitação'}</button></div>
       </Modal>
     </div>
   );
@@ -420,7 +382,7 @@ function ReadField({ label, value }: { label: string; value: string }) {
 }
 
 function InputField({ label, value, onChange, required = false }: { label: string; value: string; onChange: (value: string) => void; required?: boolean }) {
-  return <div><label className="mb-1 block text-sm font-bold text-neutral-700">{label}</label><input required={required} value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" /></div>;
+  return <div><label className="mb-1 block text-sm font-bold text-neutral-700">{label}</label><input required={required} maxLength={180} value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10" /></div>;
 }
 
 function LockedField({ label, value, onRequest }: { label: string; value: string; onRequest: () => void }) {
