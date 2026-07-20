@@ -12,7 +12,7 @@
     "backup": "node backup.cjs",
     "validate:subscriptions": "tsx src/validation/step6_subscriptions.ts",
     "test:travel": "tsx scripts/check-gsa-travel-contracts.ts",
-    "test:admin": "tsx scripts/check-admin-panel-contracts.ts",
+    "test:admin": "tsx scripts/check-admin-panel-contracts.ts && node scripts/run-admin-migrations-runtime.cjs",
     "test:client-security": "tsx scripts/check-client-portal-security-contracts.ts",
     "test:provider": "tsx scripts/check-provider-portal-security-contracts.ts",
     "test:home": "tsx scripts/check-home-public-contracts.ts",
