@@ -102,7 +102,7 @@ export function PrestadorAgenda({ prestadorId, initialItemId }: { prestadorId: s
       const selectedDemand = demands.find((item) => item.id === demandId);
       await Promise.allSettled([
         logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'CRIAR_AGENDAMENTO', detalhes: `Criou o agendamento ${result?.agendamento_id || ''} para a demanda ${demandId}.` }),
-        notificationService.notifyAdmin('Novo agendamento do prestador', `Foi criado um agendamento para a demanda "${selectedDemand?.titulo || demandId}".`, 'servicos', 'agendamento_criado', { itemId: demandId }),
+        notificationService.notifyAdmin('Novo agendamento do prestador', `Foi criado um agendamento para a demanda "${selectedDemand?.titulo || demandId}".`, 'servicos', 'agendamento_criado' as any, { itemId: demandId }),
       ]);
       toast.success('Agendamento criado sem conflito de horário.');
       setModalOpen(false);
@@ -125,7 +125,7 @@ export function PrestadorAgenda({ prestadorId, initialItemId }: { prestadorId: s
       await providerOperations.completeSchedule(schedule.id);
       await Promise.allSettled([
         logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'CONCLUIR_AGENDAMENTO', detalhes: `Concluiu o agendamento ${schedule.id}.` }),
-        notificationService.notifyAdmin('Agendamento concluído', `O agendamento da demanda "${schedule.demanda?.titulo || schedule.demanda_id}" foi concluído.`, 'servicos', 'agendamento_concluido', { itemId: schedule.demanda_id }),
+        notificationService.notifyAdmin('Agendamento concluído', `O agendamento da demanda "${schedule.demanda?.titulo || schedule.demanda_id}" foi concluído.`, 'servicos', 'agendamento_concluido' as any, { itemId: schedule.demanda_id }),
       ]);
       toast.success('Agendamento concluído.');
       await Promise.all([load(), refreshCounts()]);
