@@ -1,0 +1,96 @@
+name: Temporary apply products and subscriptions fixes
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'agent/corrigir-produtos-assinaturas'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-produtos-assinaturas
+          fetch-depth: 0
+
+      - name: Apply reviewed interface package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .patch/apply-interfaces.py.part* > /tmp/apply-interfaces.py
+          python /tmp/apply-interfaces.py
+
+          python <<'PY'
+          import json
+          from pathlib import Path
+
+          package_path = Path('package.json')
+          package = json.loads(package_path.read_text(encoding='utf-8'))
+          package.setdefault('scripts', {})['test:products-subscriptions'] = 'tsx scripts/check-products-subscriptions-contracts.ts'
+          package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          workflow_path = Path('.github/workflows/quality.yml')
+          workflow = workflow_path.read_text(encoding='utf-8')
+          marker = "      - name: Client portal security contracts\n"
+          step = "      - name: Products and subscriptions contracts\n        if: steps.typescript.outputs.exit_code == '0'\n        run: npm run test:products-subscriptions\n\n"
+          if 'Products and subscriptions contracts' not in workflow:
+              if marker not in workflow:
+                  raise RuntimeError('Ponto de inserção do Quality não encontrado.')
+              workflow = workflow.replace(marker, step + marker, 1)
+              workflow_path.write_text(workflow, encoding='utf-8')
+          PY
+
+          rm -rf .patch
+          rm -f .github/workflows/temp-apply-products-subscriptions-fixes.yml
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript
+        run: npm run lint
+
+      - name: Products and subscriptions contracts
+        run: npm run test:products-subscriptions
+
+      - name: Admin panel contracts
+        run: npm run test:admin
+
+      - name: Client portal security contracts
+        run: npm run test:client-security
+
+      - name: GSA Viagens contracts
+        run: npm run test:travel
+
+      - name: Production build
+        run: npm run build
+
+      - name: Publish one clean correction commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração adicional para publicar."
+            exit 0
+          fi
+          git commit -m "Corrigir integridade de Produtos e Assinaturas"
+          git push origin HEAD:agent/corrigir-produtos-assinaturas
