@@ -77,14 +77,36 @@ jobs:
 
       - name: Check authentication Edge Function
         if: steps.typescript.outputs.exit_code == '0'
-        run: deno check supabase/functions/gsa-auth-session/index.ts supabase/functions/gsa-auth-session/index_test.ts
+        id: deno_check
+        shell: bash
+        run: |
+          set +e
+          deno check supabase/functions/gsa-auth-session/index.ts supabase/functions/gsa-auth-session/index_test.ts > deno-check.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload Deno check log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deno-check-log
+          path: deno-check.log
+          retention-days: 7
+
+      - name: Report Deno check result
+        if: always()
+        shell: bash
+        run: |
+          cat deno-check.log
+          test "${{ steps.deno_check.outputs.exit_code }}" = "0"
 
       - name: Test authentication Edge Function
-        if: steps.typescript.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         run: deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
 
       - name: Validate authentication migration
-        if: steps.typescript.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         env:
           PGPASSWORD: postgres
         run: |
@@ -136,5 +158,5 @@ jobs:
           SQL
 
       - name: Build
-        if: steps.typescript.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         run: npm run build
