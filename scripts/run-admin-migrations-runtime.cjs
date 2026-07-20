@@ -10,8 +10,10 @@ const marker = "const migrations = [\n";
 const hardeningEntry = "  'supabase/migrations/20260720234500_admin_identity_permissions_hardening.sql',\n";
 const extensionsEntry = "  'supabase/migrations/20260720235450_enable_admin_extensions.sql',\n";
 const hashEntry = "  'supabase/migrations/20260721003000_hash_collaborator_credentials.sql',\n";
+const unsafeSuspensionScenario = `    await setClaims(client, 'colaborador', newId, newSession);\n    await client.query("UPDATE public.colaboradores SET status='suspenso' WHERE id=$1", [newId]);\n    await expectError(() => client.query('SELECT public.gsa_admin_context()'), 'Colaborador suspenso deve perder o contexto.');\n`;
+const safeSuspensionScenario = `    await setClaims(client, 'admin', IDS.admin, IDS.adminSession);\n    await client.query("UPDATE public.colaboradores SET status='suspenso' WHERE id=$1", [newId]);\n    await setClaims(client, 'colaborador', newId, newSession);\n    await expectError(() => client.query('SELECT public.gsa_admin_context()'), 'Colaborador suspenso deve perder o contexto.');\n`;
 
-for (const required of [marker, hardeningEntry, extensionsEntry, hashEntry]) {
+for (const required of [marker, hardeningEntry, extensionsEntry, hashEntry, unsafeSuspensionScenario]) {
   if (!source.includes(required)) {
     throw new Error(`Não foi possível localizar a âncora da sequência de migrations: ${required.trim()}`);
   }
@@ -36,6 +38,8 @@ generated = generated.replace(
   hashEntry,
   `${hashEntry}  'supabase/migrations/20260721003500_ticket_status_compat.sql',\n  'supabase/migrations/20260721003600_minimize_admin_dashboard_payload.sql',\n  'supabase/migrations/20260721003700_sensitive_admin_audit_triggers.sql',\n  'supabase/migrations/20260721003800_admin_session_token_validation_compat.sql',\n`,
 );
+
+generated = generated.replace(unsafeSuspensionScenario, safeSuspensionScenario);
 
 writeFileSync(generatedPath, generated);
 try {
