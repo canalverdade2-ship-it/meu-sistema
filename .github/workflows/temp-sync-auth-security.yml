@@ -1,0 +1,35 @@
+name: Temporary sync auth security
+
+on:
+  push:
+    branches:
+      - agent/finalizar-seguranca-home-v2
+    paths:
+      - '.github/workflows/temp-sync-auth-security.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/finalizar-seguranca-home-v2
+          fetch-depth: 0
+
+      - name: Merge latest main and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git merge --no-edit origin/main
+          rm -f .github/workflows/temp-sync-auth-security.yml
+          git add -A
+          git commit -m "Remover sincronizador temporário de segurança"
+          git push origin HEAD:agent/finalizar-seguranca-home-v2
