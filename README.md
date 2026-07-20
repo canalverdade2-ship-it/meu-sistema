@@ -21,7 +21,22 @@ npm run test:travel
 npm run build
 ```
 
-O comando `test:travel` valida as rotas principais do GSA Viagens e os contratos críticos das migrações de orçamento, aceite, checkout, documentos e cancelamentos.
+O comando `test:travel` valida as rotas principais do GSA Viagens e os contratos críticos das migrações de orçamento, aceite, checkout, documentos, suporte e cancelamentos.
+
+## Fluxo implementado no GSA Viagens
+
+A jornada atual contempla:
+
+1. exploração de ofertas e detalhes do pacote;
+2. orçamento personalizado, inclusive para visitantes;
+3. vínculo do pacote e do lead ao atendimento;
+4. geração e aceite de proposta;
+5. criação da transação e cadastro de passageiros;
+6. upload privado de documentos;
+7. checkout e acompanhamento operacional;
+8. vouchers com download por link temporário;
+9. cancelamentos e reembolsos;
+10. central de suporte.
 
 ## Implantação do GSA Viagens
 
