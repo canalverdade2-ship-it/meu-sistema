@@ -32,7 +32,7 @@ async function main() {
     'gsa_provider_request_demand_support',
     'pg_advisory_xact_lock',
     "NEW.link_resultado !~* '^https?://'",
-    "v_promotion.data_inicio > current_date",
+    'v_promotion.data_inicio > current_date',
     "public.gsa_admin_has_module('operacoes')",
     "public.gsa_admin_has_module('atendimento')",
     'gsa_provider_audit_events',
@@ -41,6 +41,15 @@ async function main() {
   await includes('supabase/migrations/20260720233100_provider_portal_secure_snapshots.sql', [
     'gsa_provider_pendency_snapshot',
     'moduleDemandasAbertas',
+  ]);
+
+  await includes('supabase/migrations/20260720233200_provider_portal_final_guards.sql', [
+    'public.sistema_sessoes',
+    "to_jsonb(s) ->> 'gsa_session_id'",
+    'ALTER FUNCTION public.gsa_provider_dashboard_snapshot() VOLATILE',
+    'ALTER FUNCTION public.gsa_provider_pendency_snapshot() VOLATILE',
+    'trg_guard_provider_direct_prestadores',
+    'gsa_revoke_provider_sessions_on_access_change',
   ]);
 
   await includes('src/lib/providerOperations.ts', [
@@ -54,7 +63,7 @@ async function main() {
 
   await excludes('src/pages/Prestador/PrestadorDashboard.tsx', [
     ".from('tickets').insert",
-    "createNotification(null",
+    'createNotification(null',
   ]);
   await excludes('src/components/prestador/PrestadorSuporte.tsx', [
     ".from('ticket_mensagens').insert",
@@ -77,7 +86,7 @@ async function main() {
     'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)',
   ]);
 
-  console.log('Painel do Prestador: contratos de autorização, transação, privacidade e desempenho aprovados.');
+  console.log('Painel do Prestador: contratos de autorização, sessão, transação, privacidade e desempenho aprovados.');
 }
 
 main().catch((error) => {
