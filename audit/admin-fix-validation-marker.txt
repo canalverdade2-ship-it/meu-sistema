@@ -1,1 +1,0 @@
-Validação final da sequência de migrations do painel administrativo.
