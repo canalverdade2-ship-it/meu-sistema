@@ -1,4 +1,4 @@
-# inspect the current faturas type constraint before validating
+# validate after preserving faturas types and adding compra_viagem
 name: Final preview GSA travel installments
 
 on:
