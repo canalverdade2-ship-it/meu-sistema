@@ -17,11 +17,27 @@ jobs:
   integrate:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       SOURCE_BRANCH: agent/corrigir-home-itens-2-a-10
       SOURCE_SHA: 5d7d81d756869af934cfbb7ae8fd584b0df17d75
       TARGET_BRANCH: integration/home-public-final
       OPS_BRANCH: ops/integrate-home-public-final
+      PGPASSWORD: postgres
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,7 +47,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fqx 'INTEGRATE_HOME_PUBLIC_FINAL_V5' .integrate-home-public-final-trigger
+          grep -Fqx 'INTEGRATE_HOME_PUBLIC_FINAL_V6' .integrate-home-public-final-trigger
           git fetch origin main "$SOURCE_BRANCH"
           git cat-file -e "$SOURCE_SHA^{commit}"
 
