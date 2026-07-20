@@ -24,9 +24,6 @@ def regex_once(path: str, pattern: str, replacement: str, flags: int = re.S) -> 
         raise RuntimeError(f"{path}: padrão encontrado {count} vez(es): {pattern[:120]!r}")
     write(path, updated)
 
-# ---------------------------------------------------------------------------
-# Tipos
-# ---------------------------------------------------------------------------
 types_path = 'src/types.ts'
 types = read(types_path)
 produto_pos = types.index('export type Produto = {')
@@ -38,9 +35,6 @@ produto_block = produto_block.replace("tipo_cliente: 'pf' | 'pj';", "tipo_client
 types = types[:produto_pos] + produto_block + types[assinatura_pos:]
 write(types_path, types)
 
-# ---------------------------------------------------------------------------
-# ProdutosModule
-# ---------------------------------------------------------------------------
 replace_once(
     'src/components/admin/ProdutosModule.tsx',
     "import { formatCurrency, generateCode, handleError } from '../../lib/utils';",
@@ -61,7 +55,6 @@ replace_once(
     "    if (tipoClienteFilter !== 'todos') {\n      query = query.eq('tipo_cliente', tipoClienteFilter);\n    }",
     "    if (tipoClienteFilter === 'pf' || tipoClienteFilter === 'pj') {\n      query = query.in('tipo_cliente', [tipoClienteFilter, 'ambos']);\n    } else if (tipoClienteFilter === 'ambos') {\n      query = query.eq('tipo_cliente', 'ambos');\n    }",
 )
-
 regex_once(
     'src/components/admin/ProdutosModule.tsx',
     r"  const handleImageUpload = async \(e: React\.ChangeEvent<HTMLInputElement>\) => \{.*?\n  \};\n\n  const fetchProdutos",
@@ -91,7 +84,6 @@ regex_once(
 
   const fetchProdutos'''),
 )
-
 regex_once(
     'src/components/admin/ProdutosModule.tsx',
     r"  const handleCreate = async \(formData: any\) => \{.*?\n  \};\n\n  const handleUpdate = async \(formData: any\) => \{.*?\n  \};\n\n  const handleBulkDelete",
@@ -238,132 +230,4 @@ regex_once(
 )
 replace_once('src/components/admin/ProdutosModule.tsx', '            step="0.01"\n            required\n            value={formData.valor_custo}', '            step="0.01"\n            min="0"\n            required\n            value={formData.valor_custo}')
 replace_once('src/components/admin/ProdutosModule.tsx', '            step="0.1"\n            required\n            value={formData.porcentagem_lucro}', '            step="0.1"\n            min="0"\n            required\n            value={formData.porcentagem_lucro}')
-replace_once(
-    'src/components/admin/ProdutosModule.tsx',
-    "                       const { error } = await supabase.from('produtos').delete().eq('id', selectedProduto.id);\n                       if (error) {\n                         toast.error('Erro ao excluir. O produto pode estar em uso.');\n                       } else {\n                         toast.success('Produto excluído com sucesso.');",
-    "                       try {\n                         await archiveAdminCatalogItems('produto', [selectedProduto.id]);\n                         toast.success('Produto inativado com sucesso.');",
-)
-replace_once(
-    'src/components/admin/ProdutosModule.tsx',
-    "                         fetchProdutos();\n                       }\n                     }}",
-    "                         fetchProdutos();\n                       } catch (error) {\n                         toast.error(handleError(error, 'Erro ao inativar produto'));\n                       }\n                     }}",
-)
 
-# ---------------------------------------------------------------------------
-# AssinaturasModule
-# ---------------------------------------------------------------------------
-replace_once(
-    'src/components/admin/AssinaturasModule.tsx',
-    "import { formatCurrency, generateCode, handleError } from '../../lib/utils';",
-    "import { formatCurrency, generateCode, handleError } from '../../lib/utils';\nimport { archiveAdminCatalogItems, saveAdminSubscriptionCatalog } from '../../lib/adminStoreOperations';\nimport { removePublicStoreImage, removeUnusedPublicStoreImages, uploadPublicStoreImage } from '../../lib/publicStoreImage';",
-)
-regex_once(
-    'src/components/admin/AssinaturasModule.tsx',
-    r"  const handleImageUpload = async \(e: React\.ChangeEvent<HTMLInputElement>\) => \{.*?\n  \};\n\n  const fetchAssinaturas",
-    textwrap.dedent('''\
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !selectedAssinatura) return;
-    const file = e.target.files[0];
-    setUploadingImage(true);
-    try {
-      const publicUrl = await uploadPublicStoreImage(file, `assinaturas/${selectedAssinatura.id}`);
-      await saveAdminSubscriptionCatalog({
-        assinaturaId: selectedAssinatura.id,
-        payload: { imagem_url: publicUrl },
-      });
-      const oldUrl = selectedAssinatura.imagem_url;
-      setSelectedAssinatura({ ...selectedAssinatura, imagem_url: publicUrl });
-      await removePublicStoreImage(oldUrl).catch(() => undefined);
-      toast.success('Imagem atualizada com sucesso!');
-      fetchAssinaturas();
-    } catch (error: any) {
-      toast.error(error?.message || 'Erro ao fazer upload da imagem.');
-    } finally {
-      setUploadingImage(false);
-      e.target.value = '';
-    }
-  };
-
-  const fetchAssinaturas'''),
-)
-regex_once(
-    'src/components/admin/AssinaturasModule.tsx',
-    r"  const handleCreate = async \(formData: any\) => \{.*?\n  \};\n\n  const handleUpdate = async \(formData: any\) => \{.*?\n  \};\n\n  return \(",
-    textwrap.dedent('''\
-  const handleCreate = async (formData: any) => {
-    const { imagens_adicionais, ...otherData } = formData;
-    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-    try {
-      const result = await saveAdminSubscriptionCatalog({
-        payload: {
-          ...otherData,
-          ...galleryCols,
-          descricao: otherData.descricao || '',
-          status: 'ativo',
-        },
-      });
-      const data = result?.assinatura || result?.data || result;
-      toast.success('Assinatura cadastrada com sucesso.');
-      await logService.logAction({
-        acao: 'CRIAR_ASSINATURA',
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-        ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
-        detalhes: `Cadastrou a assinatura: ${formData.nome} (${formatCurrency(formData.valor)})`,
-      });
-      if (formData.visivel_na_loja) {
-        await notificationService.broadcastClients(
-          '✨ Nova Assinatura Disponível',
-          `Conheça nosso novo plano: ${formData.nome}. Confira na área de assinaturas!`,
-          'assinaturas',
-          'broadcast_assinatura',
-          { tab: 'disponiveis' },
-        );
-      }
-      setIsModalOpen(false);
-      await fetchAssinaturas();
-      if (data?.id) {
-        setSelectedAssinatura(data);
-        setIsDetailOpen(true);
-      }
-      return true;
-    } catch (error) {
-      toast.error(handleError(error, 'Erro ao cadastrar assinatura'));
-      return false;
-    }
-  };
-
-  const handleUpdate = async (formData: any) => {
-    if (!selectedAssinatura) return false;
-    const { imagens_adicionais, ...otherData } = formData;
-    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-    const previousImages = mapColumnsToGallery(selectedAssinatura);
-    try {
-      await saveAdminSubscriptionCatalog({
-        assinaturaId: selectedAssinatura.id,
-        payload: {
-          ...otherData,
-          ...galleryCols,
-          descricao: otherData.descricao || '',
-        },
-      });
-      await removeUnusedPublicStoreImages(previousImages, imagens_adicionais || []);
-      toast.success('Assinatura atualizada com sucesso.');
-      await logService.logAction({
-        acao: 'EDITAR_ASSINATURA',
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-        ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
-        detalhes: `Editou a assinatura: ${formData.nome} (#${selectedAssinatura.codigo_assinatura})`,
-      });
-      setIsEditModalOpen(false);
-      await fetchAssinaturas();
-      return true;
-    } catch (error) {
-      toast.error(handleError(error, 'Erro ao atualizar assinatura'));
-      return false;
-    }
-  };
-
-  return ('''),
-)
