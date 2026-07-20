@@ -16,7 +16,8 @@ type AuthAction =
   | 'set_pin_and_login'
   | 'login_admin'
   | 'login_colaborador'
-  | 'recover_client';
+  | 'request_client_recovery'
+  | 'complete_client_recovery';
 
 type RateLimitRule = {
   limit: number;
@@ -47,13 +48,17 @@ const rateLimits: Record<AuthAction, { ip: RateLimitRule; subject: RateLimitRule
     ip: { limit: 20, windowSeconds: 900, blockSeconds: 3600 },
     subject: { limit: 6, windowSeconds: 1800, blockSeconds: 7200 },
   },
-  recover_client: {
+  request_client_recovery: {
     ip: { limit: 10, windowSeconds: 900, blockSeconds: 3600 },
     subject: { limit: 4, windowSeconds: 1800, blockSeconds: 7200 },
   },
+  complete_client_recovery: {
+    ip: { limit: 15, windowSeconds: 900, blockSeconds: 3600 },
+    subject: { limit: 6, windowSeconds: 900, blockSeconds: 3600 },
+  },
 };
 
-const rpcByAction: Record<AuthAction, { name: string; params: (payload: Record<string, string>) => Record<string, string> }> = {
+const rpcByAction: Partial<Record<AuthAction, { name: string; params: (payload: Record<string, string>) => Record<string, string> }>> = {
   login_pin: {
     name: 'gsa_login_pin',
     params: (payload) => ({ p_documento: payload.documento, p_pin: payload.pin, p_tipo: payload.tipo }),
@@ -70,10 +75,7 @@ const rpcByAction: Record<AuthAction, { name: string; params: (payload: Record<s
     name: 'gsa_login_colaborador',
     params: (payload) => ({ p_code: payload.code }),
   },
-  recover_client: {
-    name: 'gsa_recuperar_senha_cliente',
-    params: (payload) => ({ p_documento: payload.documento, p_email: payload.email }),
-  },
+
 };
 
 export function configuredOrigins() {
@@ -135,12 +137,18 @@ export function normalizePayload(
     return { documento, telefone, pin, tipo };
   }
 
-  if (action === 'recover_client') {
+  if (action === 'request_client_recovery') {
     const documento = digits(payload.documento);
     const email = text(payload.email, 254).toLowerCase();
     const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (![11, 14].includes(documento.length) || !validEmail) return null;
     return { documento, email };
+  }
+
+  if (action === 'complete_client_recovery') {
+    const recoveryId = text(payload.recovery_id, 36).toLowerCase();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(recoveryId)) return null;
+    return { recovery_id: recoveryId };
   }
 
   const code = text(payload.code, 128);
@@ -150,7 +158,7 @@ export function normalizePayload(
 
 function subjectFor(action: AuthAction, payload: Record<string, string>) {
   if (action === 'login_admin' || action === 'login_colaborador') return payload.code;
-  return payload.documento;
+  return payload.documento || payload.recovery_id;
 }
 
 function clientIp(request: Request) {
@@ -247,7 +255,15 @@ export async function handleRequest(request: Request) {
       return json({ error: 'invalid_json' }, 400, allowedOrigin);
     }
 
-    if (!body.action || !rpcByAction[body.action]) return json({ error: 'invalid_action' }, 400, allowedOrigin);
+    const supportedActions = new Set<AuthAction>([
+      'login_pin',
+      'set_pin_and_login',
+      'login_admin',
+      'login_colaborador',
+      'request_client_recovery',
+      'complete_client_recovery',
+    ]);
+    if (!body.action || !supportedActions.has(body.action)) return json({ error: 'invalid_action' }, 400, allowedOrigin);
 
     const normalizedPayload = normalizePayload(body.action, body.payload || {});
     if (!normalizedPayload) return json({ error: 'invalid_payload' }, 400, allowedOrigin);
@@ -270,7 +286,115 @@ export async function handleRequest(request: Request) {
       subjectFor(body.action, normalizedPayload),
     );
 
+    if (body.action === 'request_client_recovery') {
+      const recoveryId = crypto.randomUUID();
+      const { data: beginData, error: beginError } = await admin.rpc('gsa_begin_client_recovery', {
+        p_documento: normalizedPayload.documento,
+        p_email: normalizedPayload.email,
+        p_challenge_id: recoveryId,
+      });
+
+      let delivered = false;
+      if (!beginError && beginData?.success === true) {
+        const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+        if (!anonKey) return json({ error: 'server_not_configured' }, 500, allowedOrigin);
+        const publicClient = createClient<any>(supabaseUrl, anonKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+        const { error: otpError } = await publicClient.auth.signInWithOtp({
+          email: normalizedPayload.email,
+          options: { shouldCreateUser: false },
+        });
+        delivered = !otpError;
+        if (otpError) console.error('Falha ao enviar o código de recuperação.', otpError);
+      }
+
+      if (!delivered) {
+        await admin.from('gsa_client_recovery_challenges').delete().eq('id', recoveryId);
+      }
+
+      return json({ success: true, recovery_id: recoveryId, expires_in: 600 }, 200, allowedOrigin);
+    }
+
+    if (body.action === 'complete_client_recovery') {
+      const authorization = request.headers.get('authorization') || '';
+      const accessToken = authorization.toLowerCase().startsWith('bearer ')
+        ? authorization.slice(7).trim()
+        : '';
+      if (!accessToken) return json({ error: 'recovery_verification_required' }, 401, allowedOrigin);
+
+      const { data: userData, error: userError } = await admin.auth.getUser(accessToken);
+      const verifiedUser = userData.user;
+      const verifiedEmail = verifiedUser?.email?.trim().toLowerCase();
+      if (userError || !verifiedUser || !verifiedEmail) {
+        return json({ error: 'recovery_verification_required' }, 401, allowedOrigin);
+      }
+
+      const now = new Date().toISOString();
+      const { data: challenge, error: challengeError } = await admin
+        .from('gsa_client_recovery_challenges')
+        .update({ consumed_at: now })
+        .eq('id', normalizedPayload.recovery_id)
+        .eq('auth_email', verifiedEmail)
+        .is('consumed_at', null)
+        .gt('expires_at', now)
+        .select('id, cliente_id, documento, auth_email')
+        .maybeSingle();
+
+      if (challengeError || !challenge) {
+        return json({ error: 'invalid_or_expired_recovery' }, 400, allowedOrigin);
+      }
+
+      const { data: recoveryData, error: recoveryError } = await admin.rpc('gsa_recuperar_senha_cliente', {
+        p_documento: challenge.documento,
+        p_email: challenge.auth_email,
+      });
+      const rpcSession = recoveryData?.session || recoveryData;
+      if (recoveryError || !recoveryData?.success || !rpcSession?.sessao_id || !rpcSession?.session_token) {
+        console.error('Falha ao concluir recuperação validada.', recoveryError);
+        return json({ error: 'recovery_completion_failed' }, 500, allowedOrigin);
+      }
+
+      const existingMetadata = verifiedUser.app_metadata || {};
+      const { error: metadataError } = await admin.auth.admin.updateUserById(verifiedUser.id, {
+        app_metadata: {
+          ...existingMetadata,
+          gsa_session_id: rpcSession.sessao_id,
+          gsa_actor_type: rpcSession.ator_tipo,
+          gsa_actor_id: rpcSession.ator_id,
+        },
+      });
+      if (metadataError) {
+        console.error('Falha ao vincular a sessão recuperada ao usuário Auth.', metadataError);
+        await admin.rpc('gsa_end_session', {
+          p_sessao_id: rpcSession.sessao_id,
+          p_session_token: rpcSession.session_token,
+        });
+        return json({ error: 'recovery_completion_failed' }, 500, allowedOrigin);
+      }
+
+      await admin.from('sistema_sessoes').update({ status: 'encerrado' })
+        .eq('ator_tipo', 'cliente').eq('ator_id', rpcSession.ator_id)
+        .neq('id', rpcSession.sessao_id).neq('status', 'encerrado');
+
+      return json({
+        success: true,
+        valid: true,
+        id: rpcSession.ator_id,
+        nome: rpcSession.ator_nome,
+        session: {
+          sessao_id: rpcSession.sessao_id,
+          session_token: rpcSession.session_token,
+          ator_tipo: rpcSession.ator_tipo,
+          ator_id: rpcSession.ator_id,
+          ator_nome: rpcSession.ator_nome,
+          metadata: { ...(rpcSession.metadata || {}), precisa_trocar_senha: true },
+        },
+      }, 200, allowedOrigin);
+    }
+
     const operation = rpcByAction[body.action];
+    if (!operation) return json({ error: 'invalid_action' }, 400, allowedOrigin);
     const { data, error } = await admin.rpc(operation.name, operation.params(normalizedPayload));
     if (error) {
       console.error(`Falha em ${operation.name}:`, error);

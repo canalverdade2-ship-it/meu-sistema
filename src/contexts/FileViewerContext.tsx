@@ -16,7 +16,7 @@ function PrivateReferenceDomResolver() {
 
   useEffect(() => {
     const resolveElement = (element: Element) => {
-      const attribute = element instanceof HTMLImageElement ? 'src' : 'href';
+      const attribute = element instanceof HTMLImageElement || element instanceof HTMLIFrameElement ? 'src' : 'href';
       const reference = element.getAttribute(attribute);
       if (!reference || pendingRef.current.has(element) || !isPrivateDocumentReference(reference)) return;
 
@@ -28,14 +28,14 @@ function PrivateReferenceDomResolver() {
         })
         .catch((error) => {
           console.error('Erro ao resolver referência privada na interface:', error);
-          if (element instanceof HTMLImageElement) element.removeAttribute('src');
+          if (element instanceof HTMLImageElement || element instanceof HTMLIFrameElement) element.removeAttribute('src');
         })
         .finally(() => pendingRef.current.delete(element));
     };
 
     const scan = (root: ParentNode) => {
-      if (root instanceof Element && root.matches('img[src], a[href]')) resolveElement(root);
-      root.querySelectorAll?.('img[src], a[href]').forEach(resolveElement);
+      if (root instanceof Element && root.matches('img[src], iframe[src], a[href]')) resolveElement(root);
+      root.querySelectorAll?.('img[src], iframe[src], a[href]').forEach(resolveElement);
     };
 
     scan(document);

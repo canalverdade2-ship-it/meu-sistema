@@ -47,6 +47,9 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
   const [pinConfirm, setPinConfirm] = useState('');
   const [phone, setPhone] = useState('');
   const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryStage, setRecoveryStage] = useState<'request' | 'code'>('request');
+  const [recoveryId, setRecoveryId] = useState('');
+  const [recoveryCode, setRecoveryCode] = useState('');
   const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
   const [pinError, setPinError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,6 +68,9 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
     setPinConfirm('');
     setPhone('');
     setRecoveryEmail('');
+    setRecoveryStage('request');
+    setRecoveryId('');
+    setRecoveryCode('');
     setAttemptsLeft(null);
     setPinError(false);
     setRegisterStage('voucher');
@@ -81,6 +87,9 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
     setPin('');
     setPinConfirm('');
     setPhone('');
+    setRecoveryStage('request');
+    setRecoveryId('');
+    setRecoveryCode('');
     setPinError(false);
     setAttemptsLeft(null);
   };
@@ -152,12 +161,44 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
     }
     setLoading(true);
     try {
-      const data = await sessionService.loginRecuperacaoSenha(cleanDocument(), recoveryEmail.trim().toLowerCase());
-      if (!data?.success) throw new Error('Dados inválidos.');
-      toast.success('Sessão de recuperação iniciada.');
+      const data = await sessionService.requestClientRecovery(cleanDocument(), recoveryEmail.trim().toLowerCase());
+      if (!data?.success || !data?.recovery_id) throw new Error('Não foi possível iniciar a recuperação.');
+      setRecoveryId(data.recovery_id);
+      setRecoveryStage('code');
+      setRecoveryCode('');
+      toast.success('Enviamos um código de confirmação para o e-mail cadastrado.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível iniciar a recuperação.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRecoveryCode = async () => {
+    if (!recoveryId || recoveryCode.length !== 6 || loading) {
+      toast.error('Informe o código de seis dígitos enviado ao seu e-mail.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const email = recoveryEmail.trim().toLowerCase();
+      const { error: otpError } = await supabase.auth.verifyOtp({
+        email,
+        token: recoveryCode,
+        type: 'email',
+      });
+      if (otpError) throw new Error('Código inválido ou expirado.');
+
+      const data = await sessionService.completeClientRecovery(recoveryId);
+      if (!data?.success) throw new Error('Não foi possível concluir a recuperação.');
+
+      toast.success('Identidade confirmada. Crie sua nova senha.');
       onLoginClient(data.id, true);
     } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível iniciar a recuperação com os dados informados.');
+      await supabase.auth.signOut({ scope: 'local' });
+      setRecoveryCode('');
+      toast.error(error?.message || 'Não foi possível confirmar o código.');
     } finally {
       setLoading(false);
     }
@@ -284,11 +325,21 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
 
       {mode === 'recovery' && (
         <div className="space-y-5">
-          <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-900"><ShieldAlert className="mb-2 h-5 w-5" />Confirme os dados cadastrados para acessar a etapa de redefinição.</div>
-          <PersonSelector value={personType} onChange={(value) => { setPersonType(value); setDocumento(''); }} />
-          <DocumentInput personType={personType} value={documento} onChange={setDocumento} />
-          <input type="email" value={recoveryEmail} onChange={(event) => setRecoveryEmail(event.target.value)} placeholder="E-mail cadastrado" className="input-field" />
-          <div className="flex gap-3"><button type="button" onClick={() => changeMode('login')} className="btn-secondary flex-1">Voltar</button><button type="button" onClick={handleRecovery} disabled={loading} className="btn-primary flex-1">{loading ? 'Validando...' : 'Continuar'}</button></div>
+          {recoveryStage === 'request' ? (
+            <>
+              <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-900"><ShieldAlert className="mb-2 h-5 w-5" />A redefinição só será liberada depois da confirmação do código enviado ao e-mail cadastrado.</div>
+              <PersonSelector value={personType} onChange={(value) => { setPersonType(value); setDocumento(''); }} />
+              <DocumentInput personType={personType} value={documento} onChange={setDocumento} />
+              <input type="email" value={recoveryEmail} onChange={(event) => setRecoveryEmail(event.target.value)} placeholder="E-mail cadastrado" className="input-field" />
+              <div className="flex gap-3"><button type="button" onClick={() => changeMode('login')} className="btn-secondary flex-1">Voltar</button><button type="button" onClick={handleRecovery} disabled={loading} className="btn-primary flex-1">{loading ? 'Enviando...' : 'Enviar código'}</button></div>
+            </>
+          ) : (
+            <>
+              <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-900"><ShieldAlert className="mb-2 h-5 w-5" />Digite o código de seis dígitos enviado para <strong>{recoveryEmail}</strong>. Ele expira em poucos minutos e só pode ser usado uma vez.</div>
+              <input type="text" inputMode="numeric" autoComplete="one-time-code" value={recoveryCode} onChange={(event) => setRecoveryCode(event.target.value.replace(/\D/g, '').slice(0, 6))} onKeyDown={(event) => { if (event.key === 'Enter') void handleRecoveryCode(); }} placeholder="000000" className="input-field text-center text-2xl font-mono tracking-[0.45em]" maxLength={6} autoFocus />
+              <div className="flex gap-3"><button type="button" onClick={() => { setRecoveryStage('request'); setRecoveryCode(''); }} className="btn-secondary flex-1">Reenviar</button><button type="button" onClick={handleRecoveryCode} disabled={loading || recoveryCode.length !== 6} className="btn-primary flex-1">{loading ? 'Confirmando...' : 'Confirmar código'}</button></div>
+            </>
+          )}
         </div>
       )}
 

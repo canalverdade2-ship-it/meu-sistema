@@ -89,33 +89,51 @@ async function invokeAuthGateway(action: string, payload: Record<string, unknown
   return data as any;
 }
 
-async function persistAuthenticatedSession(payload: any): Promise<StoredSession> {
+async function persistAuthenticatedSession(payload: any, useExistingAuthSession = false): Promise<StoredSession> {
   const rpcSession = payload?.session || payload;
   const sessaoId = rpcSession?.sessao_id;
   const sessionToken = rpcSession?.session_token;
   const atorTipo = rpcSession?.ator_tipo;
   const atorId = rpcSession?.ator_id;
   const atorNome = rpcSession?.ator_nome;
-  const tokenHash = rpcSession?.auth?.token_hash;
-
-  if (!sessaoId || !sessionToken || !atorTipo || !atorId || !tokenHash) {
+  if (!sessaoId || !sessionToken || !atorTipo || !atorId) {
     throw new Error('A autenticação não retornou uma sessão válida.');
   }
 
-  const { data: authData, error: authError } = await supabase.auth.verifyOtp({
-    token_hash: tokenHash,
-    type: 'magiclink',
-  });
+  let authSession: any = null;
 
-  if (authError || !authData.session || !authData.user) {
-    await supabase.rpc('gsa_end_session', {
-      p_sessao_id: sessaoId,
-      p_session_token: sessionToken,
+  if (useExistingAuthSession) {
+    const { data: refreshedData, error: refreshError } = await supabase.auth.refreshSession();
+    authSession = refreshedData.session;
+    if (refreshError || !authSession?.user) {
+      await supabase.rpc('gsa_end_session', {
+        p_sessao_id: sessaoId,
+        p_session_token: sessionToken,
+      });
+      throw new Error(refreshError?.message || 'Não foi possível confirmar a sessão de recuperação.');
+    }
+  } else {
+    const tokenHash = rpcSession?.auth?.token_hash;
+    if (!tokenHash) {
+      throw new Error('A autenticação não retornou o token de ativação.');
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'magiclink',
     });
-    throw new Error(authError?.message || 'Não foi possível ativar a sessão segura do Supabase.');
+
+    if (authError || !authData.session || !authData.user) {
+      await supabase.rpc('gsa_end_session', {
+        p_sessao_id: sessaoId,
+        p_session_token: sessionToken,
+      });
+      throw new Error(authError?.message || 'Não foi possível ativar a sessão segura do Supabase.');
+    }
+    authSession = authData.session;
   }
 
-  const appMetadata = authData.user.app_metadata || {};
+  const appMetadata = authSession.user.app_metadata || {};
   if (
     appMetadata.gsa_session_id !== sessaoId ||
     appMetadata.gsa_actor_type !== atorTipo ||
@@ -158,8 +176,14 @@ export const sessionService = {
     return authenticate('login_pin', { documento, pin, tipo });
   },
 
-  async loginRecuperacaoSenha(documento: string, email: string) {
-    return authenticate('recover_client', { documento, email });
+  async requestClientRecovery(documento: string, email: string) {
+    return invokeAuthGateway('request_client_recovery', { documento, email });
+  },
+
+  async completeClientRecovery(recoveryId: string) {
+    const data = await invokeAuthGateway('complete_client_recovery', { recovery_id: recoveryId });
+    if (data?.success) await persistAuthenticatedSession(data, true);
+    return data;
   },
 
   async updateClientPin(newPin: string) {
@@ -256,6 +280,7 @@ export const sessionService = {
       return sessionData;
     } catch (error) {
       console.error('Falha ao restaurar a sessão:', error);
+      await supabase.auth.signOut({ scope: 'local' });
       clearStoredSession();
       return null;
     }

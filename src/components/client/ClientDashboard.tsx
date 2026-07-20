@@ -108,7 +108,11 @@ export function ClientDashboard({ menuItems, onNavigate, cliente, vipModuleConfi
   // Também filtra area_vip se o módulo estiver oculto
   const displayItems = menuItems.filter(item => item.id !== 'dashboard' && !(item.id === 'area_vip' && vipOculto));
   const isVip = currentLevel.name !== 'Básico';
-  const isBlocked = ((cliente?.status === 'inativo' && cliente?.cadastro_aprovado === false) || cliente?.bloqueado === true) && !isVip;
+  const isBlocked = (
+    ['bloqueado', 'inativo', 'excluido'].includes(String(cliente?.status || '').toLowerCase())
+    || cliente?.cadastro_aprovado === false
+    || cliente?.bloqueado === true
+  );
 
   const currentLevelIndex = levels.indexOf(currentLevel);
   const nextLevel = levels[currentLevelIndex + 1];

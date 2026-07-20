@@ -2,7 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const PRIVATE_CLIENT_BUCKET = 'documentos_cliente';
 const CLIENT_SESSION_KEY = '_gsa_session';
-const MAX_CLIENT_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_CLIENT_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_CLIENT_FILE_EXTENSIONS = new Set([
   'pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'txt',
 ]);
@@ -72,7 +72,13 @@ function validateClientStoragePath(bucket: string, path: string): string {
   const actor = getStoredActor();
   if (actor?.atorTipo === 'cliente' && actor.atorId) {
     const segments = normalized.split('/');
-    if (!segments.includes(actor.atorId)) {
+    const actorInRoot = segments[0] === actor.atorId;
+    const actorInOwnedContext = [
+      'credito_documentos', 'credito_contratos', 'cliente_documentos',
+      'documentos', 'perfil', 'suporte', 'tickets',
+    ].includes(segments[0]) && segments[1] === actor.atorId;
+
+    if (!actorInRoot && !actorInOwnedContext) {
       throw new Error('O arquivo não pertence ao cliente autenticado.');
     }
   }
@@ -89,7 +95,7 @@ function validateClientUpload(bucket: string, path: string, body: unknown): stri
 
   const blob = body instanceof Blob ? body : null;
   if (!blob || blob.size <= 0 || blob.size > MAX_CLIENT_FILE_SIZE) {
-    throw new Error('O arquivo deve possuir no máximo 20 MB.');
+    throw new Error('O arquivo deve possuir no máximo 10 MB.');
   }
 
   const extension = normalized.split('.').pop()?.toLowerCase() || '';

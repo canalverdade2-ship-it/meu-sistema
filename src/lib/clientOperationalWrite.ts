@@ -24,7 +24,7 @@ export async function clientOperationalWrite<T = any>(
   // o cliente exclusivamente da sessão GSA validada no servidor.
   void clienteId;
 
-  const { data: result, error } = await supabase.rpc('cliente_operational_write', {
+  const { data: result, error } = await supabase.rpc('gsa_client_operational_write', {
     p_sessao_id: sessionData.sessaoId,
     p_session_token: sessionData.sessionToken,
     p_table: table,
