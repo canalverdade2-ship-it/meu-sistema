@@ -1,1 +1,1 @@
-Executar integração controlada da auditoria administrativa e publicar o merge resolvido.
+Executar integração controlada preservando o workflow de qualidade da main.
