@@ -51,6 +51,8 @@ export function useAutoLogout(
     };
 
     resetTimer();
+    const handleRemoteRevocation = () => performLogout();
+    window.addEventListener('gsa-session-revoked', handleRemoteRevocation);
     events.forEach((event) => window.addEventListener(event, handleActivity));
 
     // Mantém apenas a detecção remota. O encerramento completo é executado uma vez
@@ -82,6 +84,7 @@ export function useAutoLogout(
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (throttleTimeout) clearTimeout(throttleTimeout);
       events.forEach((event) => window.removeEventListener(event, handleActivity));
+      window.removeEventListener('gsa-session-revoked', handleRemoteRevocation);
       if (channel) supabase.removeChannel(channel);
     };
   }, [isSessionActive, onLogout]);

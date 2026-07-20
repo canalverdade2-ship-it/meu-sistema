@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import type React from 'react';
 import {
   BarChart3,
   ChevronRight,
   ClipboardList,
   Clock,
+  Gavel,
   Gift,
   HeartPulse,
   Landmark,
@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Package,
   Plane,
+  Receipt,
   Server,
   Settings,
   ShieldAlert,
@@ -25,19 +26,14 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
-import { navigate } from '../routing/navigationService';
 import { useAppLocation } from '../routing/useAppLocation';
-import {
-  adminModulePath,
-  AdminModule,
-  canAccessAdminModule,
-  normalizeAdminModule,
-} from '../routing/adminAccess';
+import { navigate } from '../routing/navigationService';
 import { DashboardLayout } from '../components/ui/DashboardLayout';
 import { UniversalNotificationBell } from '../components/ui/UniversalNotificationBell';
 import { LogoGSA } from '../components/ui/LogoGSA';
 import { useAdminNotifications } from '../hooks/useAdminNotifications';
 import { Dashboard } from '../components/admin/Dashboard';
+import { CollaboratorDashboard } from '../components/admin/CollaboratorDashboard';
 import { CadastroModule } from '../components/admin/CadastroModule';
 import { VendasModule } from '../components/admin/VendasModule';
 import { FinanceiroModule } from '../components/admin/FinanceiroModule';
@@ -50,271 +46,131 @@ import { DemandasColaboradorModule } from '../components/admin/DemandasColaborad
 import { SystemMonitorModule } from '../components/admin/SystemMonitorModule';
 import { FiscalModule } from '../components/admin/FiscalModule';
 import { CobrancaModule } from '../components/admin/CobrancaModule';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import { SystemStatusIndicator } from '../components/admin/SystemStatusIndicator';
 import { PromocaoQuantidadeModule } from '../components/admin/PromocaoQuantidadeModule';
 import { ClassifiedsModule } from '../components/admin/ClassifiedsModule';
 import { TravelAdminModule } from '../components/admin/TravelAdminModule';
 import { ProtectionAdminModule } from '../components/admin/ProtectionAdminModule';
-import { ErrorBoundary } from '../components/ErrorBoundary';
-import { SystemStatusIndicator } from '../components/admin/SystemStatusIndicator';
+import {
+  adminPathFor,
+  hasAdminModuleAccess,
+  normalizeAdminModule,
+  normalizeCollaboratorModules,
+} from '../security/collaboratorAccess';
 
 interface AdminPanelProps {
   onLogout: () => void;
   adminType: 'admin' | 'colaborador';
   colaboradorId?: string;
+  colaboradorNomeInicial?: string;
   colaboradorModulos: string[];
 }
 
-type MenuItem = {
-  id: AdminModule;
-  label: string;
-  icon: React.ElementType;
-  defaultTab?: string;
-};
-
-type MenuGroup = {
-  label: string;
-  items: MenuItem[];
-};
+type MenuItem = { id: string; label: string; icon: typeof LayoutDashboard };
+type MenuGroup = { label: string; items: MenuItem[] };
 
 const MENU_GROUPS: MenuGroup[] = [
-  {
-    label: 'Principal',
-    items: [
-      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { id: 'cadastro', label: 'Cadastros', icon: Users, defaultTab: 'clientes' },
-      { id: 'catalogo', label: 'Catálogo', icon: Package, defaultTab: 'produtos' },
-      { id: 'operacoes', label: 'Operações', icon: ClipboardList, defaultTab: 'orcamentos' },
-      { id: 'loja', label: 'Loja GSA Store', icon: Store },
-      { id: 'classificados', label: 'Classificados GSA', icon: Tags },
-      { id: 'viagens', label: 'Viagens GSA', icon: Plane },
-      { id: 'saude', label: 'GSA Saúde', icon: HeartPulse },
-      { id: 'seguros', label: 'GSA Seguros', icon: ShieldAlert },
-    ],
-  },
-  {
-    label: 'Financeiro',
-    items: [{ id: 'financeiro', label: 'Financeiro', icon: Landmark }],
-  },
-  {
-    label: 'Relacionamento',
-    items: [
-      { id: 'fidelidade', label: 'Fidelidade', icon: Gift },
-      { id: 'atendimento', label: 'Atendimento', icon: MessageSquare },
-    ],
-  },
-  {
-    label: 'Gestão',
-    items: [
-      { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
-      { id: 'configuracoes', label: 'Configurações', icon: Settings },
-    ],
-  },
-  {
-    label: 'Acesso',
-    items: [{ id: 'acessos', label: 'Gerenciar Acessos', icon: ShieldAlert }],
-  },
-  {
-    label: 'Infraestrutura',
-    items: [{ id: 'sistema', label: 'Saúde do Sistema', icon: Server }],
-  },
+  { label: 'Principal', items: [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'cadastro', label: 'Cadastros', icon: Users },
+    { id: 'catalogo', label: 'Catálogo', icon: Package },
+    { id: 'operacoes', label: 'Operações', icon: ClipboardList },
+    { id: 'demandas', label: 'Minhas Demandas', icon: ClipboardList },
+    { id: 'loja', label: 'Loja GSA Store', icon: Store },
+    { id: 'classificados', label: 'Classificados GSA', icon: Tags },
+    { id: 'viagens', label: 'Viagens GSA', icon: Plane },
+    { id: 'saude', label: 'GSA Saúde', icon: HeartPulse },
+    { id: 'seguros', label: 'GSA Seguros', icon: ShieldAlert },
+  ]},
+  { label: 'Financeiro', items: [
+    { id: 'financeiro', label: 'Financeiro', icon: Landmark },
+    { id: 'cobranca', label: 'Cobrança', icon: Gavel },
+    { id: 'fiscal', label: 'Fiscal', icon: Receipt },
+  ]},
+  { label: 'Relacionamento', items: [
+    { id: 'fidelidade', label: 'Fidelidade', icon: Gift },
+    { id: 'atendimento', label: 'Atendimento', icon: MessageSquare },
+  ]},
+  { label: 'Gestão', items: [
+    { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
+    { id: 'configuracoes', label: 'Configurações', icon: Settings },
+  ]},
+  { label: 'Acesso', items: [{ id: 'acessos', label: 'Gerenciar Acessos', icon: ShieldAlert }] },
+  { label: 'Infraestrutura', items: [{ id: 'sistema', label: 'Saúde do Sistema', icon: Server }] },
 ];
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
   useEffect(() => {
-    const interval = window.setInterval(() => setTime(new Date()), 1_000);
-    return () => window.clearInterval(interval);
+    const timer = window.setInterval(() => setTime(new Date()), 1000);
+    return () => window.clearInterval(timer);
   }, []);
-  return (
-    <div className="hidden h-9 items-center justify-center gap-2 rounded-xl bg-white px-3.5 text-sm font-bold tabular-nums text-neutral-700 shadow-sm ring-1 ring-black/5 md:flex">
-      <Clock className="h-4 w-4 text-neutral-400" />
-      {time.toLocaleTimeString('pt-BR', {
-        timeZone: 'America/Sao_Paulo',
-        hour: '2-digit',
-        minute: '2-digit',
-      })}
-    </div>
-  );
+  return <div className="hidden md:flex h-9 px-3.5 items-center justify-center gap-2 rounded-xl bg-white shadow-sm ring-1 ring-black/5 text-sm font-bold text-neutral-700 tabular-nums"><Clock className="h-4 w-4 text-neutral-400" />{time.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}</div>;
 }
 
-export function AdminPanel({
-  onLogout,
-  adminType,
-  colaboradorId,
-  colaboradorModulos,
-}: AdminPanelProps) {
+export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNomeInicial, colaboradorModulos }: AdminPanelProps) {
   const route = useAppLocation();
-  const {
-    pendencies,
-    notifications,
-    unreadNotifications,
-    markAsRead,
-    markAllAsRead,
-    deleteAllNotifications,
-  } = useAdminNotifications();
+  const { pendencies, notifications, unreadNotifications, markAsRead, markAllAsRead, deleteAllNotifications } = useAdminNotifications();
+  const activeModule = route.module || 'dashboard';
+  const activeTab = route.submodule;
+  const activeItemId = route.itemId;
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [colaboradorNome, setColaboradorNome] = useState<string | null>(null);
-  const [internalModules, setInternalModules] = useState<string[]>(colaboradorModulos || []);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+  const [colaboradorNome, setColaboradorNome] = useState<string | null>(colaboradorNomeInicial || null);
+  const [internalModulos, setInternalModulos] = useState(() => normalizeCollaboratorModules(colaboradorModulos));
 
-  const rawModule = route.module || 'dashboard';
-  const accessModule = normalizeAdminModule(rawModule);
-  const activeTab = ['cobranca', 'fiscal'].includes(rawModule) ? rawModule : route.submodule;
-  const activeItemId = route.itemId;
-  const canAccessCurrentRoute = canAccessAdminModule(adminType, internalModules, accessModule);
-
+  useEffect(() => setInternalModulos(normalizeCollaboratorModules(colaboradorModulos)), [colaboradorModulos]);
+  useEffect(() => { if (colaboradorNomeInicial) setColaboradorNome(colaboradorNomeInicial); }, [colaboradorNomeInicial]);
   useEffect(() => {
-    if (adminType !== 'colaborador' || !colaboradorId) {
-      setColaboradorNome(null);
-      setInternalModules(colaboradorModulos || []);
-      return;
-    }
-
-    let cancelled = false;
-    const refreshCollaborator = async () => {
-      const { data, error } = await supabase
-        .from('colaboradores')
-        .select('nome, modulos, status')
-        .eq('id', colaboradorId)
-        .single();
-
-      if (cancelled) return;
-      if (error || !data || ['bloqueado', 'inativo', 'excluido'].includes(String(data.status))) {
-        toast.error('Seu acesso administrativo foi revogado.');
-        await onLogout();
-        return;
-      }
-
-      setColaboradorNome(data.nome || null);
-      setInternalModules(Array.isArray(data.modulos) ? data.modulos : []);
-    };
-
-    void refreshCollaborator();
-    const channel = supabase
-      .channel(`admin-permissions-${colaboradorId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'colaboradores', filter: `id=eq.${colaboradorId}` },
-        () => void refreshCollaborator(),
-      )
-      .subscribe();
-
-    return () => {
-      cancelled = true;
-      void supabase.removeChannel(channel);
-    };
-  }, [adminType, colaboradorId, colaboradorModulos, onLogout]);
-
+    const resize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
   useEffect(() => {
-    if (!canAccessCurrentRoute) {
-      toast.error('Você não possui permissão para acessar este módulo.');
-      navigate(adminModulePath('dashboard'));
-    }
-  }, [canAccessCurrentRoute, accessModule]);
-
+    const container = document.getElementById('main-scroll-container');
+    if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeModule, activeTab, activeItemId]);
   useEffect(() => {
-    const scrollContainer = document.getElementById('main-scroll-container');
-    scrollContainer?.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [rawModule, activeTab, activeItemId]);
+    if (adminType !== 'colaborador' || !colaboradorId || colaboradorNomeInicial) return;
+    supabase.from('colaboradores').select('nome').eq('id', colaboradorId).single().then(({ data }) => {
+      if (data?.nome) setColaboradorNome(data.nome);
+    });
+  }, [adminType, colaboradorId, colaboradorNomeInicial]);
 
-  const visibleGroups = useMemo(
-    () => MENU_GROUPS
-      .map((group) => ({
-        ...group,
-        items: group.items.filter((item) => canAccessAdminModule(adminType, internalModules, item.id)),
-      }))
-      .filter((group) => group.items.length > 0),
-    [adminType, internalModules],
-  );
-
-  const activeLabel = useMemo(() => {
-    const item = MENU_GROUPS.flatMap((group) => group.items).find((entry) => entry.id === accessModule);
-    return item?.label || 'Dashboard';
-  }, [accessModule]);
-
-  const badgeFor = (module: AdminModule) => {
-    switch (module) {
-      case 'cadastro': return pendencies.moduleCadastro;
-      case 'operacoes': return pendencies.moduleVendas + pendencies.moduleDemandas;
-      case 'loja':
-      case 'classificados':
-      case 'viagens': return pendencies.moduleVendas;
-      case 'fidelidade': return pendencies.cadastro_vouchers_pendentes + pendencies.cadastro_premios_pendentes;
-      case 'atendimento': return pendencies.moduleSuporte;
-      case 'financeiro': return pendencies.moduleFinanceiro + pendencies.moduleCobranca + pendencies.moduleFiscal;
-      case 'acessos': return pendencies.moduleAcessos;
-      default: return 0;
-    }
-  };
-
-  const goTo = (module: string, tab?: string, itemId?: string) => {
+  const canAccess = (module: string, tab?: string) => hasAdminModuleAccess(module, adminType, internalModulos, tab);
+  const go = (module: string, tab?: string, itemId?: string) => {
     const normalized = normalizeAdminModule(module);
-    if (!canAccessAdminModule(adminType, internalModules, normalized)) {
+    if (!canAccess(normalized, tab)) {
       toast.error('Você não possui permissão para acessar este módulo.');
       return;
     }
-    navigate(adminModulePath(normalized, tab, itemId));
+    navigate(adminPathFor(module, tab, itemId));
     setIsMobileMenuOpen(false);
   };
 
-  if (!canAccessCurrentRoute) return null;
+  const visibleGroups = useMemo(() => MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => canAccess(item.id)) })).filter((group) => group.items.length > 0), [adminType, internalModulos]);
+  const allItems = MENU_GROUPS.flatMap((group) => group.items);
+  const normalizedActive = normalizeAdminModule(activeModule);
+  const activeLabel = allItems.find((item) => item.id === normalizedActive)?.label || 'Dashboard';
+  const sidebarOpen = isMobileMenuOpen || (!isMobile && isSidebarOpen);
 
-  const renderModule = () => {
-    const commonNavigate = (module: string, tab?: string, itemId?: string) => goTo(module, tab, itemId);
-
-    if (rawModule === 'dashboard') {
-      return (
-        <Dashboard
-          adminType={adminType}
-          colaboradorId={colaboradorId}
-          colaboradorNome={colaboradorNome || undefined}
-          colaboradorModulos={internalModules}
-          onNavigate={commonNavigate}
-        />
-      );
-    }
-    if (rawModule === 'cadastros' || rawModule === 'cadastro') {
-      return <CadastroModule title="Cadastros" allowedTabs={['clientes', 'prestadores']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
-    }
-    if (rawModule === 'catalogo') {
-      return <CadastroModule title="Catálogo" allowedTabs={['servicos', 'produtos', 'assinaturas', 'categorias_loja']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
-    }
-    if (rawModule === 'operacoes' || rawModule === 'vendas') {
-      return <VendasModule title="Operações" allowedTabs={['orcamentos', 'demandas', 'os', 'produtos', 'assinaturas']} initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />;
-    }
-    if (rawModule === 'loja') {
-      return <CadastroModule title="Loja GSA Store" allowedTabs={['gsa_store', 'categorias_loja']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
-    }
-    if (rawModule === 'fidelidade') {
-      return <CadastroModule title="Fidelidade" allowedTabs={['indicacoes', 'vouchers', 'premios', 'promocoes']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
-    }
-    if (rawModule === 'atendimento' || rawModule === 'tickets') {
-      return <TicketsModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
-    }
-    if (rawModule === 'financeiro') {
-      return <FinanceiroModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />;
-    }
-    if (rawModule === 'cobranca') {
-      return <CobrancaModule initialTab={activeTab} initialItemId={activeItemId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />;
-    }
-    if (rawModule === 'fiscal') {
-      return <FiscalModule initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
-    }
-    if (rawModule === 'relatorios') return <RelatoriosModule adminType={adminType} colaboradorModulos={internalModules} />;
-    if (rawModule === 'configuracoes') return <ConfiguracoesModule />;
-    if (rawModule === 'area_vip') return <AreaVIPModule initialItemId={activeItemId} colaboradorNome={colaboradorNome} />;
-    if (rawModule === 'demandas') return <DemandasColaboradorModule colaboradorId={colaboradorId} adminType={adminType} initialItemId={activeItemId} initialTab={activeTab} colaboradorNome={colaboradorNome} />;
-    if (rawModule === 'acessos') return <AcessosModule adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} />;
-    if (rawModule === 'sistema') return <SystemMonitorModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
-    if (rawModule === 'promocoes') return <PromocaoQuantidadeModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} />;
-    if (rawModule === 'classificados') return <ClassifiedsModule initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
-    if (rawModule === 'viagens') return <TravelAdminModule />;
-    if (rawModule === 'saude') return <ProtectionAdminModule domain="saude" initialTab={activeTab} initialItemId={activeItemId} />;
-    if (rawModule === 'seguros') return <ProtectionAdminModule domain="seguros" initialTab={activeTab} initialItemId={activeItemId} />;
-    return <Dashboard adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || undefined} colaboradorModulos={internalModules} onNavigate={commonNavigate} />;
+  const badge = (id: string) => {
+    if (id === 'cadastro') return pendencies.moduleCadastro;
+    if (id === 'operacoes' || id === 'loja') return pendencies.moduleVendas;
+    if (id === 'demandas') return pendencies.moduleDemandas;
+    if (id === 'financeiro') return pendencies.moduleFinanceiro;
+    if (id === 'cobranca') return pendencies.moduleCobranca;
+    if (id === 'fiscal') return pendencies.moduleFiscal;
+    if (id === 'atendimento') return pendencies.moduleSuporte;
+    if (id === 'acessos') return pendencies.moduleAcessos;
+    return 0;
   };
 
-  const sidebarExpanded = isSidebarOpen || isMobileMenuOpen;
+  const commonNavigate = (module: string, tab?: string, itemId?: string) => go(module, tab, itemId);
+  const cadastroTabs = adminType === 'admin' || internalModulos.includes('cadastro') ? ['clientes', 'prestadores'] : ['prestadores'];
 
   return (
     <DashboardLayout
@@ -323,106 +179,37 @@ export function AdminPanel({
       setIsMobileMenuOpen={setIsMobileMenuOpen}
       isSidebarOpen={isSidebarOpen}
       setIsSidebarOpen={setIsSidebarOpen}
-      headerTitle={
-        <nav className="flex items-center gap-1.5 text-sm">
-          <span className="hidden font-semibold text-neutral-300 sm:block">GSA</span>
-          <ChevronRight className="hidden h-3.5 w-3.5 text-neutral-300 sm:block" />
-          <span className="font-bold text-neutral-800">{activeLabel}</span>
-        </nav>
-      }
-      headerContent={
-        <>
-          <div className="mr-2 hidden items-center md:flex"><SystemStatusIndicator /></div>
-          <LiveClock />
-          <UniversalNotificationBell
-            variant="admin"
-            notifications={notifications}
-            unreadCount={unreadNotifications}
-            onMarkAsRead={markAsRead}
-            onMarkAllAsRead={markAllAsRead}
-            onDeleteAll={deleteAllNotifications}
-            onNavigate={goTo}
-          />
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0F0F0F] text-xs font-black tracking-tight text-white shadow-lg ring-1 ring-black/10">
-            {adminType === 'admin' ? 'AD' : 'CO'}
-          </div>
-        </>
-      }
-      sidebarContent={
-        <>
-          <div className="flex h-[72px] shrink-0 items-center justify-between px-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <AnimatePresence mode="wait">
-              {sidebarExpanded ? (
-                <motion.div key="open" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="flex min-w-0 items-center gap-3">
-                  <LogoGSA size="sm" variant="light" />
-                  <div className="min-w-0">
-                    <span className="block truncate text-sm font-black leading-none tracking-tight text-white">Grupo GSA</span>
-                    <span className="mt-0.5 block text-[9px] font-semibold uppercase leading-none tracking-[0.18em] text-white/30">Gestão de Serviços</span>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div key="closed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto"><LogoGSA size="sm" variant="light" /></motion.div>
-              )}
-            </AnimatePresence>
-            <button type="button" onClick={() => isMobileMenuOpen ? setIsMobileMenuOpen(false) : setIsSidebarOpen(!isSidebarOpen)} className="ml-2 rounded-lg p-1.5 text-white/30 transition hover:bg-white/5 hover:text-white/60">
-              {sidebarExpanded ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </button>
-          </div>
-
-          <nav className="custom-scrollbar flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-3 py-4">
-            {visibleGroups.map((group) => (
-              <div key={group.label}>
-                {sidebarExpanded && <p className="mb-1.5 px-3 text-[9px] font-black uppercase tracking-[0.22em] text-white/20">{group.label}</p>}
-                <div className="space-y-0.5">
-                  {group.items.map((item) => {
-                    const badge = badgeFor(item.id);
-                    const active = accessModule === item.id;
-                    return (
-                      <button
-                        type="button"
-                        key={item.id}
-                        onClick={() => goTo(item.id, item.defaultTab)}
-                        title={!sidebarExpanded ? item.label : undefined}
-                        className={`relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition ${active ? 'bg-white text-neutral-900 shadow-lg shadow-black/20' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
-                      >
-                        {active && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-indigo-500" />}
-                        <item.icon className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-indigo-600' : ''}`} />
-                        {sidebarExpanded && <span className="flex-1 truncate text-left text-sm font-semibold">{item.label}</span>}
-                        {badge > 0 && (sidebarExpanded
-                          ? <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white">{badge > 99 ? '99+' : badge}</span>
-                          : <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[#0F0F0F]" />)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </nav>
-
-          <div className="shrink-0 space-y-1 px-3 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            {sidebarExpanded && (
-              <div className="mb-2 flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-xs font-black text-white">{adminType === 'admin' ? 'AD' : 'CO'}</div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold text-white">{adminType === 'admin' ? 'Administrador' : colaboradorNome || 'Colaborador'}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/30">{adminType === 'admin' ? 'Acesso total' : 'Acesso por módulos'}</p>
-                </div>
-                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" title="Online" />
-              </div>
-            )}
-            <button type="button" onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-white/30 transition hover:bg-red-500/10 hover:text-red-400">
-              <LogOut className="h-[18px] w-[18px] shrink-0" />
-              {sidebarExpanded && <span className="text-sm font-semibold">Sair com segurança</span>}
-            </button>
-          </div>
-        </>
-      }
+      headerTitle={<nav className="flex items-center gap-1.5 text-sm"><span className="hidden sm:block font-semibold text-neutral-300">GSA</span><ChevronRight className="hidden sm:block h-3.5 w-3.5 text-neutral-300" /><span className="font-bold text-neutral-800">{activeLabel}</span></nav>}
+      headerContent={<><div className="hidden md:flex items-center mr-2"><SystemStatusIndicator /></div><LiveClock /><UniversalNotificationBell variant="admin" notifications={notifications} unreadCount={unreadNotifications} onMarkAsRead={markAsRead} onMarkAllAsRead={markAllAsRead} onDeleteAll={deleteAllNotifications} onNavigate={commonNavigate} /><div className="h-10 w-10 rounded-xl bg-neutral-950 flex items-center justify-center shadow-lg"><span className="text-xs font-black text-white">{adminType === 'admin' ? 'AD' : 'CO'}</span></div></>}
+      sidebarContent={<>
+        <div className="flex h-[72px] items-center justify-between px-4 shrink-0 border-b border-white/5"><AnimatePresence mode="wait">{sidebarOpen ? <motion.div key="open" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="flex items-center gap-3 min-w-0"><LogoGSA size="sm" variant="light" /><div className="min-w-0"><span className="block truncate text-sm font-black text-white">Grupo GSA</span><span className="block text-[9px] font-semibold uppercase tracking-[0.18em] text-white/30">Gestão de Serviços</span></div></motion.div> : <motion.div key="closed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-auto"><LogoGSA size="sm" variant="light" /></motion.div>}</AnimatePresence>{!isMobile ? <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="rounded-lg p-1.5 text-white/30 hover:bg-white/5 hover:text-white/60">{isSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button> : <button onClick={() => setIsMobileMenuOpen(false)} className="rounded-lg p-1.5 text-white/30"><X className="h-4 w-4" /></button>}</div>
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-5">{visibleGroups.map((group) => <div key={group.label}>{sidebarOpen && <p className="px-3 mb-1.5 text-[9px] font-black uppercase tracking-[0.22em] text-white/20">{group.label}</p>}<div className="space-y-0.5">{group.items.map((item) => { const count = badge(item.id); const isActive = normalizedActive === item.id; const Icon = item.icon; return <button key={item.id} onClick={() => go(item.id)} title={!sidebarOpen ? item.label : undefined} className={`relative group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition ${isActive ? 'bg-white text-neutral-900 shadow-lg' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}>{isActive && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-indigo-500" />}<Icon className={`h-[18px] w-[18px] shrink-0 ${isActive ? 'text-indigo-600' : ''}`} />{sidebarOpen && <span className="flex-1 truncate text-left text-sm font-semibold">{item.label}</span>}{count > 0 && (sidebarOpen ? <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white">{count > 99 ? '99+' : count}</span> : <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />)}</button>; })}</div></div>)}</nav>
+        <div className="shrink-0 px-3 py-4 border-t border-white/5">{sidebarOpen && <div className="mb-2 flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-xs font-black text-white">{adminType === 'admin' ? 'AD' : 'CO'}</div><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-white">{adminType === 'admin' ? 'Administrador' : colaboradorNome || 'Colaborador'}</p><p className="text-[10px] font-semibold uppercase tracking-wider text-white/30">{adminType === 'admin' ? 'Acesso total' : 'Acesso restrito'}</p></div><span className="h-2 w-2 rounded-full bg-emerald-400" /></div>}<button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-white/30 hover:bg-red-500/10 hover:text-red-400"><LogOut className="h-[18px] w-[18px]" />{sidebarOpen && <span className="text-sm font-semibold">Sair com Segurança</span>}</button></div>
+      </>}
     >
-      <div className="p-3 lg:p-5">
-        <div className="min-h-[calc(100vh-140px)] rounded-[2rem] bg-white p-3 shadow-sm ring-1 ring-neutral-100 lg:p-4">
-          <ErrorBoundary>{renderModule()}</ErrorBoundary>
-        </div>
-      </div>
+      <div className="p-3 lg:p-5"><div className="min-h-[calc(100vh-140px)] rounded-[2rem] bg-white p-3 lg:p-4 shadow-sm ring-1 ring-neutral-100">
+        {normalizedActive === 'dashboard' && (adminType === 'colaborador' ? <CollaboratorDashboard colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || undefined} colaboradorModulos={internalModulos} onNavigate={commonNavigate} /> : <Dashboard adminType="admin" colaboradorNome="Administrador" colaboradorModulos={internalModulos} onNavigate={commonNavigate} />)}
+        {normalizedActive === 'cadastro' && <ErrorBoundary><CadastroModule title="Cadastros" allowedTabs={cadastroTabs as any} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
+        {normalizedActive === 'catalogo' && <ErrorBoundary><CadastroModule title="Catálogo" allowedTabs={['servicos', 'produtos', 'assinaturas', 'categorias_loja']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
+        {normalizedActive === 'operacoes' && <ErrorBoundary><VendasModule title="Operações" allowedTabs={['orcamentos', 'demandas', 'os', 'produtos', 'assinaturas']} initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} /></ErrorBoundary>}
+        {normalizedActive === 'demandas' && <DemandasColaboradorModule colaboradorId={colaboradorId} adminType={adminType} initialItemId={activeItemId} initialTab={activeTab} colaboradorNome={colaboradorNome} />}
+        {normalizedActive === 'loja' && <ErrorBoundary><CadastroModule title="Loja GSA Store" allowedTabs={['gsa_store', 'categorias_loja']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
+        {normalizedActive === 'fidelidade' && <ErrorBoundary><CadastroModule title="Fidelidade" allowedTabs={['indicacoes', 'vouchers', 'premios', 'promocoes']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
+        {normalizedActive === 'atendimento' && <TicketsModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
+        {normalizedActive === 'financeiro' && <FinanceiroModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />}
+        {activeModule === 'cobranca' && <ErrorBoundary><CobrancaModule initialTab={activeTab} initialItemId={activeItemId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} /></ErrorBoundary>}
+        {activeModule === 'fiscal' && <FiscalModule initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
+        {normalizedActive === 'relatorios' && <RelatoriosModule adminType={adminType} colaboradorModulos={internalModulos} />}
+        {normalizedActive === 'configuracoes' && <ConfiguracoesModule />}
+        {normalizedActive === 'area_vip' && <AreaVIPModule initialItemId={activeItemId} colaboradorNome={colaboradorNome} />}
+        {normalizedActive === 'acessos' && <AcessosModule adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} />}
+        {normalizedActive === 'sistema' && <SystemMonitorModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
+        {normalizedActive === 'promocoes' && <ErrorBoundary><PromocaoQuantidadeModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} /></ErrorBoundary>}
+        {normalizedActive === 'classificados' && <ErrorBoundary><ClassifiedsModule initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
+        {normalizedActive === 'viagens' && <ErrorBoundary><TravelAdminModule /></ErrorBoundary>}
+        {normalizedActive === 'saude' && <ErrorBoundary><ProtectionAdminModule domain="saude" initialTab={activeTab} initialItemId={activeItemId} /></ErrorBoundary>}
+        {normalizedActive === 'seguros' && <ErrorBoundary><ProtectionAdminModule domain="seguros" initialTab={activeTab} initialItemId={activeItemId} /></ErrorBoundary>}
+      </div></div>
     </DashboardLayout>
   );
 }

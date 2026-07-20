@@ -251,6 +251,19 @@ export const sessionService = {
           sessionData.precisa_trocar_senha = (accessData as any).precisa_trocar_senha;
           writeStoredSession(sessionData);
         }
+      } else if (sessionData.atorTipo === 'colaborador') {
+        const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_collaborator_session_access_state', {
+          p_sessao_id: sessionData.sessaoId,
+          p_session_token: sessionData.sessionToken,
+        });
+        const access = accessData as any;
+        if (accessError || !access?.success || access.status !== 'ativo') {
+          await this.endSession();
+          return null;
+        }
+        sessionData.atorNome = access.nome || sessionData.atorNome;
+        sessionData.modulos = Array.isArray(access.modulos) ? access.modulos : [];
+        writeStoredSession(sessionData);
       }
 
       return sessionData;
@@ -283,10 +296,14 @@ export const sessionService = {
     try {
       const sessionData = readStoredSession();
       if (!sessionData?.sessaoId || !sessionData?.sessionToken) return;
-      await supabase.rpc('gsa_ping_session', {
+      const { data, error } = await supabase.rpc('gsa_ping_session', {
         p_sessao_id: sessionData.sessaoId,
         p_session_token: sessionData.sessionToken,
       });
+      if (error || (data as any)?.is_valid === false || (data as any)?.success === false) {
+        await this.endSession();
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gsa-session-revoked'));
+      }
     } catch (error) {
       console.error('Falha ao atualizar a sessão:', error);
     }
