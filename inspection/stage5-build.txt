@@ -1,0 +1,37 @@
+
+> react-example@0.0.0 build
+> vite build
+
+[36mvite v6.4.1 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 4332 modules transformed.
+rendering chunks...
+[33m[plugin vite:reporter] 
+(!) /home/runner/work/meu-sistema/meu-sistema/src/utils/referralHelpers.ts is dynamically imported by /home/runner/work/meu-sistema/meu-sistema/src/components/admin/OrcamentosModule.tsx but also statically imported by /home/runner/work/meu-sistema/meu-sistema/src/components/admin/ClientesModule.tsx, /home/runner/work/meu-sistema/meu-sistema/src/components/admin/IndicacoesModule.tsx, /home/runner/work/meu-sistema/meu-sistema/src/components/admin/PainelRentabilidade.tsx, /home/runner/work/meu-sistema/meu-sistema/src/components/client/ClientIndiqueGanhe.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) /home/runner/work/meu-sistema/meu-sistema/src/components/client/store/AvailableCouponsModal.tsx is dynamically imported by /home/runner/work/meu-sistema/meu-sistema/src/components/client/ClientGSAStore.tsx but also statically imported by /home/runner/work/meu-sistema/meu-sistema/src/components/client/store/CheckoutModal.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) /home/runner/work/meu-sistema/meu-sistema/src/components/client/store/CheckoutModal.tsx is dynamically imported by /home/runner/work/meu-sistema/meu-sistema/src/components/client/ClientGSAStore.tsx but also statically imported by /home/runner/work/meu-sistema/meu-sistema/src/components/client/marketplace/travel/TravelReservationPage.tsx, dynamic import will not move module into another chunk.
+[39m
+computing gzip size...
+[2mdist/[22m[32mindex.html                                    [39m[1m[2m    0.95 kB[22m[1m[22m[2m │ gzip:     0.51 kB[22m
+[2mdist/[22m[2massets/[22m[35mindex-D4dG9-tQ.css                     [39m[1m[2m  334.34 kB[22m[1m[22m[2m │ gzip:    40.06 kB[22m
+[2mdist/[22m[2massets/[22m[36mSubscriptionDurationModal-BOD2eiq1.js  [39m[1m[2m    2.88 kB[22m[1m[22m[2m │ gzip:     1.11 kB[22m
+[2mdist/[22m[2massets/[22m[36mFilterModal-ex0-AJnc.js                [39m[1m[2m    3.11 kB[22m[1m[22m[2m │ gzip:     1.05 kB[22m
+[2mdist/[22m[2massets/[22m[36mQuantityModal-YsY6LF50.js              [39m[1m[2m    4.45 kB[22m[1m[22m[2m │ gzip:     1.53 kB[22m
+[2mdist/[22m[2massets/[22m[36mStoreItemCard-Bzh8VSyy.js              [39m[1m[2m    6.68 kB[22m[1m[22m[2m │ gzip:     2.29 kB[22m
+[2mdist/[22m[2massets/[22m[36mProductDetailsModal-C6y3UkxV.js        [39m[1m[2m    9.50 kB[22m[1m[22m[2m │ gzip:     2.87 kB[22m
+[2mdist/[22m[2massets/[22m[36mCartDrawer-DufgOUr5.js                 [39m[1m[2m   15.84 kB[22m[1m[22m[2m │ gzip:     4.08 kB[22m
+[2mdist/[22m[2massets/[22m[36mpurify.es-B9ZVCkUG.js                  [39m[1m[2m   22.64 kB[22m[1m[22m[2m │ gzip:     8.75 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex.es-BjreZ9Fn.js                   [39m[1m[2m  159.38 kB[22m[1m[22m[2m │ gzip:    53.43 kB[22m
+[2mdist/[22m[2massets/[22m[36mhtml2canvas.esm-QH1iLAAe.js            [39m[1m[2m  202.38 kB[22m[1m[22m[2m │ gzip:    48.04 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex-3D1EhZ5u.js                      [39m[1m[2m  458.34 kB[22m[1m[22m[2m │ gzip:   118.44 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex-uXz6UvFe.js                      [39m[1m[33m4,872.48 kB[39m[22m[2m │ gzip: 1,216.64 kB[22m
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 16.46s[39m
