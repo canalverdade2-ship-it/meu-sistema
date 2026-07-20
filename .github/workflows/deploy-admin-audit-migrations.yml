@@ -87,103 +87,34 @@ jobs:
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" -p "$SUPABASE_DB_PASSWORD"
 
-      - name: Capture production schema before migration
-        run: supabase db dump --linked -p "$SUPABASE_DB_PASSWORD" --schema public,storage --file admin-production-schema-before.sql
+      - name: Capture production schema
+        run: supabase db dump --linked -p "$SUPABASE_DB_PASSWORD" --schema public,storage --file admin-production-schema.sql
 
-      - name: Read remote migration state
+      - name: Verify all authorized migrations in remote history
         shell: bash
         run: |
           set -euo pipefail
-          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee admin-migration-list-before.log
-          sed 's/│/|/g' admin-migration-list-before.log > admin-migration-list-before.normalized.log
+          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee admin-migration-list.log
+          sed 's/│/|/g' admin-migration-list.log > admin-migration-list.normalized.log
 
-          : > admin-applied-before.txt
-          : > admin-pending-from-history.txt
           awk -F'|' '
             {
               local=$1; remote=$2;
-              gsub(/^[[:space:]]+|[[:space:]]+$/, "", local);
-              gsub(/^[[:space:]]+|[[:space:]]+$/, "", remote);
-              if (length(local) == 14 && local ~ /^[0-9]+$/ && remote == "") print local;
-              if (length(remote) == 14 && remote ~ /^[0-9]+$/) print remote > "/tmp/remote_versions";
+              gsub(/[^0-9]/, "", local);
+              gsub(/[^0-9]/, "", remote);
+              if (length(remote) == 14) print remote;
             }
-          ' admin-migration-list-before.normalized.log > admin-pending-from-history.txt
-          sort -u -o admin-pending-from-history.txt admin-pending-from-history.txt
-          if [ -f /tmp/remote_versions ]; then sort -u /tmp/remote_versions > admin-remote-versions-before.txt; else : > admin-remote-versions-before.txt; fi
-
-          grep -Fxf admin-expected-versions.txt admin-remote-versions-before.txt > admin-applied-before.txt || true
-
-          comm -23 admin-pending-from-history.txt admin-expected-versions.txt > admin-unauthorized-pending.txt
-          if [ -s admin-unauthorized-pending.txt ]; then
-            echo 'Migrations pendentes não autorizadas:'
-            cat admin-unauthorized-pending.txt
-            exit 2
-          fi
-
-      - name: Preview exact pending migration set
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase db push --linked --include-all --dry-run -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee admin-dry-run.log
-
-          find supabase/migrations -maxdepth 1 -type f -printf '%f\n' \
-            | grep -E '^[0-9]{14}_.*\.sql$' \
-            | cut -d_ -f1 \
-            | sort -u > admin-local-versions.txt
-
-          grep -Eo '20[0-9]{12}' admin-dry-run.log \
-            | sort -u \
-            | grep -Fxf admin-local-versions.txt \
-            > admin-pending-dry-run.txt || true
-
-          comm -23 admin-pending-dry-run.txt admin-expected-versions.txt > admin-unauthorized-dry-run.txt
-          if [ -s admin-unauthorized-dry-run.txt ]; then
-            echo 'O dry-run encontrou migrations fora do pacote autorizado:'
-            cat admin-unauthorized-dry-run.txt
-            exit 3
-          fi
+          ' admin-migration-list.normalized.log | sort -u > admin-remote-versions.txt
 
           while read -r version; do
-            if ! grep -Fxq "$version" admin-applied-before.txt && ! grep -Fxq "$version" admin-pending-dry-run.txt; then
-              echo "Migration autorizada não está aplicada nem aparece no dry-run: $version"
-              exit 4
+            if ! grep -Fxq "$version" admin-remote-versions.txt; then
+              echo "Migration administrativa ausente no histórico remoto: $version"
+              exit 2
             fi
           done < admin-expected-versions.txt
 
-          if ! diff -u admin-pending-from-history.txt admin-pending-dry-run.txt; then
-            echo 'A lista do histórico e o dry-run não concordam sobre as migrations pendentes.'
-            exit 5
-          fi
-
-      - name: Apply authorized migrations
-        if: hashFiles('admin-pending-dry-run.txt') != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -s admin-pending-dry-run.txt ]; then
-            supabase db push --linked --include-all -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee admin-deployment.log
-          else
-            echo 'Todas as migrations autorizadas já estavam aplicadas.' | tee admin-deployment.log
-          fi
-
-      - name: Verify migration history after deployment
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee admin-migration-list-after.log
-          sed 's/│/|/g' admin-migration-list-after.log > admin-migration-list-after.normalized.log
-
-          while read -r version; do
-            awk -F'|' -v expected="$version" '
-              {
-                local=$1; remote=$2;
-                gsub(/^[[:space:]]+|[[:space:]]+$/, "", local);
-                gsub(/^[[:space:]]+|[[:space:]]+$/, "", remote);
-                if (local == expected && remote == expected) found=1;
-              }
-              END { exit found ? 0 : 1 }
-            ' admin-migration-list-after.normalized.log
-          done < admin-expected-versions.txt
+          grep -Fxf admin-expected-versions.txt admin-remote-versions.txt > admin-verified-versions.txt
+          test "$(wc -l < admin-verified-versions.txt)" -eq 14
 
       - name: Verify production database contracts
         shell: bash
@@ -285,26 +216,37 @@ jobs:
 
           supabase db query --linked -p "$SUPABASE_DB_PASSWORD" --file admin-production-verify.sql 2>&1 | tee admin-production-verification.log
 
-      - name: Capture production schema after migration
-        if: always()
-        run: supabase db dump --linked -p "$SUPABASE_DB_PASSWORD" --schema public,storage --file admin-production-schema-after.sql
+      - name: Verify schema evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          for pattern in \
+            gsa_admin_access_snapshot \
+            gsa_admin_save_collaborator \
+            gsa_admin_update_settings_secure \
+            gsa_admin_validate_context \
+            gsa_admin_sensitive_change_audit \
+            gsa_admin_private_document_allowed \
+            gsa_private_document_read_allowed \
+            credencial_hash \
+            gsa-private-documents \
+            gsa_collaborator_module_viagens_orcamentos \
+            gsa_collaborator_module_ordens_fiscais \
+            trg_gsa_admin_audit_colaboradores; do
+            grep -q "$pattern" admin-production-schema.sql
+          done
 
-      - name: Upload deployment evidence
+      - name: Upload verification evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: admin-audit-production-evidence
+          name: admin-audit-production-verification
           path: |
             admin-expected-versions.txt
-            admin-production-schema-before.sql
-            admin-migration-list-before.log
-            admin-pending-from-history.txt
-            admin-applied-before.txt
-            admin-dry-run.log
-            admin-pending-dry-run.txt
-            admin-deployment.log
-            admin-migration-list-after.log
+            admin-migration-list.log
+            admin-remote-versions.txt
+            admin-verified-versions.txt
             admin-production-verification.log
-            admin-production-schema-after.sql
+            admin-production-schema.sql
           retention-days: 30
           if-no-files-found: ignore
