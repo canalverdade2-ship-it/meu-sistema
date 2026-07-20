@@ -17,7 +17,8 @@
     "test:provider": "tsx scripts/check-provider-portal-security-contracts.ts",
     "test:e2e": "playwright test",
     "test:e2e:full": "playwright test",
-    "test:stress": "playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3"
+    "test:stress": "playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3",
+    "test:products-subscriptions": "tsx scripts/check-products-subscriptions-contracts.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

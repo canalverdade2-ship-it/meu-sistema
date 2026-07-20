@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, MoreHorizontal, ShoppingBag, CheckCircle, XCircle, ChevronRight, Truck, Package, Clock, CreditCard, Store, User, Building2, Save } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Modal } from '../ui/Modal';
-import { formatCurrency, formatDate, generateCode, handleError, maskPhone } from '../../lib/utils';
+import { formatCurrency, formatDate, generateCode, handleError, maskPhone, generateUUID } from '../../lib/utils';
 import { getProductDisplayCode, getProductDisplayCodeLabel } from '../../lib/productIdentification';
 import { GlobalFilter } from '../ui/GlobalFilter';
 import { toast } from 'react-hot-toast';
@@ -13,6 +13,7 @@ import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { getAdminProductSupplierConfig } from '../../lib/adminRpc';
 import { ProdutoFornecedorConfig } from '../../types';
+import { cancelAdminStoreOrder, transitionAdminStoreOrder } from '../../lib/adminStoreOperations';
 
 export function OrdensCompraModule({ 
   activeSubTab, 
@@ -45,6 +46,8 @@ export function OrdensCompraModule({
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [isCanceling, setIsCanceling] = useState(false);
+  const transitionRequestId = useRef(generateUUID());
+  const cancellationRequestId = useRef(generateUUID());
 
   const hasAutoOpened = useRef<string | null>(null);
 
@@ -113,7 +116,7 @@ export function OrdensCompraModule({
     if (filters.mes) {
       const year = filters.ano || new Date().getFullYear();
       const startDate = `${year}-${filters.mes}-01`;
-      const endDate = new Date(Number(year), Number(filters.mes), 0).toISOString().split('T')[0];
+      const endDate = `${year}-${filters.mes}-${String(new Date(Number(year), Number(filters.mes), 0).getDate()).padStart(2, '0')}`;
       query = query.gte('data_criacao', startDate).lte('data_criacao', endDate);
     }
 
@@ -150,380 +153,61 @@ export function OrdensCompraModule({
     }
   };
 
-  const handleUpdateStatus = async (id: string, status: 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido' | 'cancelado', motivo?: string) => {
-    const { error } = await supabase
-      .from('ordens_compra')
-      .update({ 
-        status, 
-        motivo_cancelamento: status === 'cancelado' && motivo ? `${motivo}${colaboradorNome ? ` [POR: ${colaboradorNome}]` : ''}` : null, 
-        data_conclusao: status === 'concluido' ? new Date().toISOString() : null 
-      })
-      .eq('id', id);
+const handleUpdateStatus = async (id: string, status: 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido' | 'cancelado', motivo?: string) => {
+  if (status === 'cancelado') {
+    setCancelReason(motivo || 'Cancelamento solicitado pelo administrador');
+    setIsCancelModalOpen(true);
+    return;
+  }
+  try {
+    const result = await transitionAdminStoreOrder({
+      requestId: transitionRequestId.current,
+      ordemId: id,
+      status,
+    });
+    transitionRequestId.current = generateUUID();
+    toast.success(result?.already_processed ? 'Esta transição já havia sido processada.' : 'Status atualizado com segurança.');
+    setIsDetailOpen(false);
+    await fetchOrdens();
+  } catch (error) {
+    toast.error(handleError(error, 'atualizar status do pedido'));
+  }
+};
 
-    if (error) {
-      toast.error('Erro ao atualizar status.');
-    } else {
-      toast.success('Status atualizado com sucesso.');
+const handleCancelAndRefundConfirm = async () => {
+  if (!selectedOrdem || !cancelReason.trim()) {
+    toast.error('Informe o motivo do cancelamento.');
+    return;
+  }
 
-      // Propagar atualização de status para a tabela orcamentos (status_entrega e timestamps correspondentes)
-      const ordem = ordens.find(o => o.id === id);
-      if (ordem && ordem.orcamento_id) {
-        // Buscar o orçamento atual para verificar quais etapas anteriores estão sem data/hora salvas
-        const { data: orcData } = await supabase
-          .from('orcamentos')
-          .select('data_pagamento_aprovado, data_separacao, data_envio, data_entrega')
-          .eq('id', ordem.orcamento_id)
-          .single();
-
-        let deliveryStatus = '';
-        const nowStr = new Date().toISOString();
-        const deliveryUpdates: any = {
-          status: status // Sincroniza o status principal do orçamento com a ordem de compra!
-        };
-
-        if (status === 'pago') {
-          deliveryStatus = 'pagamento_aprovado';
-          deliveryUpdates.data_pagamento_aprovado = nowStr;
-        } else if (status === 'em_expedicao') {
-          deliveryStatus = 'separacao';
-          deliveryUpdates.data_separacao = nowStr;
-          if (orcData && !orcData.data_pagamento_aprovado) {
-            deliveryUpdates.data_pagamento_aprovado = nowStr;
-          }
-        } else if (status === 'em_transporte') {
-          deliveryStatus = 'em_transito';
-          deliveryUpdates.data_envio = nowStr;
-          if (orcData) {
-            if (!orcData.data_pagamento_aprovado) {
-              deliveryUpdates.data_pagamento_aprovado = nowStr;
-            }
-            if (!orcData.data_separacao) {
-              deliveryUpdates.data_separacao = nowStr;
-            }
-          }
-        } else if (status === 'concluido') {
-          deliveryStatus = 'entregue';
-          deliveryUpdates.data_entrega = nowStr;
-          if (orcData) {
-            if (!orcData.data_pagamento_aprovado) {
-              deliveryUpdates.data_pagamento_aprovado = nowStr;
-            }
-            if (!orcData.data_separacao) {
-              deliveryUpdates.data_separacao = nowStr;
-            }
-            if (!orcData.data_envio) {
-              deliveryUpdates.data_envio = nowStr;
-            }
-          }
-        }
-
-        if (deliveryStatus) {
-          deliveryUpdates.status_entrega = deliveryStatus;
-        }
-        
-        await supabase
-          .from('orcamentos')
-          .update(deliveryUpdates)
-          .eq('id', ordem.orcamento_id);
-      }
-      
-      const updatedOrdem = ordens.find(o => o.id === id);
-      if (updatedOrdem) {
-        let notificationTitle = '📦 Atualização do Pedido';
-        let notificationMessage = `Seu pedido para ${updatedOrdem.produtos.nome} foi atualizado para o status ${status}.`;
-        
-        if (status === 'pago') {
-          notificationTitle = '✅ Pedido Aprovado';
-          notificationMessage = `O pagamento do seu pedido para ${ordem.produtos.nome} foi aprovado! Logo iniciaremos a expedição.`;
-        } else if (status === 'em_expedicao') {
-          notificationTitle = '📦 Pedido em Expedição';
-          notificationMessage = `Seu pedido para ${ordem.produtos.nome} está sendo preparado para o envio com muito carinho!`;
-        } else if (status === 'em_transporte') {
-          notificationTitle = '🚚 Pedido em Transporte';
-          notificationMessage = `Seu pedido para ${ordem.produtos.nome} foi enviado e está em trânsito para o seu endereço!`;
-        } else if (status === 'concluido') {
-          notificationTitle = '✅ Pedido Entregue';
-          notificationMessage = `Seu pedido para ${ordem.produtos.nome} foi entregue com sucesso! Aproveite! 🎉`;
-        } else if (status === 'cancelado') {
-          notificationTitle = '❌ Pedido Cancelado';
-          notificationMessage = `Seu pedido para ${ordem.produtos.nome} foi cancelado pelo administrador. ⚠️`;
-        }
-
-        await notificationService.notifyClient(
-          ordem.cliente_id,
-          notificationTitle,
-          notificationMessage,
-          'produtos',
-          `ordem_${status}`,
-          { tab: status === 'concluido' ? 'comprados' : status === 'cancelado' ? 'cancelados' : 'comprados', itemId: ordem.id, prioridade: status === 'cancelado' ? 'alta' : 'normal', contexto: { ordem_id: ordem.id, produto: ordem.produtos?.nome } }
-        );
-      }
-
-      setIsDetailOpen(false);
-      
-      // Log Action
-      await logService.logAction({ 
-        acao: 'ACAO_SISTEMA', 
-        detalhes: `Status da ordem de compra ${id} alterado para ${status}`, 
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin', 
-        ator_nome: colaboradorNome || 'Administrador',
-        ator_id: id 
-      });
-
-      fetchOrdens();
+  setIsCanceling(true);
+  try {
+    const result = await cancelAdminStoreOrder({
+      requestId: cancellationRequestId.current,
+      ordemId: selectedOrdem.id,
+      motivo: cancelReason.trim(),
+    });
+    cancellationRequestId.current = generateUUID();
+    toast.success(result?.already_processed
+      ? 'Este cancelamento já havia sido processado.'
+      : result?.refund_created
+        ? 'Compra cancelada, estoque restaurado e reembolso aberto.'
+        : 'Compra cancelada e saldos restaurados com segurança.');
+    setIsCancelModalOpen(false);
+    setIsDetailOpen(false);
+    setCancelReason('');
+    await fetchOrdens();
+    if (result?.refund_created && onNavigate) {
+      onNavigate('cadastro', 'reembolsos');
     }
-  };
+  } catch (error) {
+    toast.error(handleError(error, 'cancelar compra'));
+  } finally {
+    setIsCanceling(false);
+  }
+};
 
-  const handleCancelAndRefundConfirm = async () => {
-    if (!selectedOrdem || !cancelReason.trim()) {
-      toast.error('Informe o motivo do cancelamento.');
-      return;
-    }
-
-    setIsCanceling(true);
-    try {
-      const orcamento = selectedOrdem.orcamentos;
-      const codigoOrcamento = orcamento?.codigo_orcamento;
-
-      // 0. Estornar pontos fidelidade se houver resgate
-      let pointsToRefund = 0;
-      if (codigoOrcamento) {
-        const { data: txData } = await supabase
-          .from('points_transactions')
-          .select('pontos')
-          .eq('cliente_id', selectedOrdem.cliente_id)
-          .eq('tipo', 'resgate')
-          .like('descricao', `%#${codigoOrcamento}%`);
-
-        if (txData && txData.length > 0) {
-          pointsToRefund = txData.reduce((sum, item) => sum + (item.pontos < 0 ? Math.abs(item.pontos) : 0), 0);
-        } else {
-          const { data: movData } = await supabase
-            .from('pontos_movimentacoes')
-            .select('pontos')
-            .eq('cliente_id', selectedOrdem.cliente_id)
-            .eq('tipo', 'uso_fatura')
-            .like('descricao', `%#${codigoOrcamento}%`);
-
-          if (movData && movData.length > 0) {
-            pointsToRefund = movData.reduce((sum, item) => sum + (item.pontos < 0 ? Math.abs(item.pontos) : 0), 0);
-          }
-        }
-      }
-
-      if (pointsToRefund > 0) {
-        const { data: clientePtsData } = await supabase
-          .from('clientes')
-          .select('saldo_pontos')
-          .eq('id', selectedOrdem.cliente_id)
-          .single();
-
-        if (clientePtsData) {
-          const currentSaldo = clientePtsData.saldo_pontos || 0;
-          const newSaldo = currentSaldo + pointsToRefund;
-
-          const { error: updatePtsError } = await supabase
-            .from('clientes')
-            .update({ saldo_pontos: newSaldo })
-            .eq('id', selectedOrdem.cliente_id);
-
-          if (updatePtsError) throw updatePtsError;
-
-          await supabase
-            .from('pontos_movimentacoes')
-            .insert([{
-              cliente_id: selectedOrdem.cliente_id,
-              tipo: 'estorno',
-              pontos: pointsToRefund,
-              saldo_apos: newSaldo,
-              descricao: `Estorno de pontos por cancelamento do pedido #${codigoOrcamento}`
-            }]);
-
-          await supabase
-            .from('points_transactions')
-            .insert([{
-              cliente_id: selectedOrdem.cliente_id,
-              tipo: 'estorno',
-              pontos: pointsToRefund,
-              descricao: `Estorno de pontos por cancelamento do pedido #${codigoOrcamento}`
-            }]);
-
-          await notificationService.notifyClient(
-            selectedOrdem.cliente_id,
-            '⭐ Pontos Reembolsados',
-            `Seu pedido #${codigoOrcamento} foi cancelado e seus ${pointsToRefund} pontos usados foram estornados para sua carteira.`,
-            'produtos',
-            'ajuste_pontos',
-            { tab: 'cancelados', itemId: selectedOrdem.id }
-          );
-        }
-      }
-      
-      // Verificar se foi pago com Crédito GSA Store
-      let isStoreCredit = false;
-      let faturasCreditoToCancel: any[] = [];
-
-      if (codigoOrcamento) {
-        const { data: allCreditFats } = await supabase
-          .from('faturas')
-          .select('id, status, itens_faturados')
-          .eq('cliente_id', selectedOrdem.cliente_id)
-          .eq('is_amortizacao_credito', true);
-          
-        if (allCreditFats) {
-          faturasCreditoToCancel = allCreditFats.filter(f => 
-            f.itens_faturados?.some((item: any) => item.codigo === `CRE-${codigoOrcamento}`)
-          );
-          
-          if (faturasCreditoToCancel.length > 0 || orcamento?.descricao_adicional?.includes('Crédito GSA')) {
-            isStoreCredit = true;
-          }
-        }
-      }
-
-      // 1. Atualizar status da ordem para cancelado
-      const { error: updateError } = await supabase
-        .from('ordens_compra')
-        .update({
-          status: 'cancelado',
-          motivo_cancelamento: `${cancelReason}${colaboradorNome ? ` [POR: ${colaboradorNome}]` : ''}`
-        })
-        .eq('id', selectedOrdem.id);
-
-      if (updateError) throw updateError;
-
-      if (isStoreCredit) {
-        const valorReembolso = Number(orcamento?.total || 0);
-
-        // Buscar dados de limite do cliente
-        const { data: cliente } = await supabase
-          .from('clientes')
-          .select('limite_credito_total, limite_credito_disponivel')
-          .eq('id', selectedOrdem.cliente_id)
-          .single();
-
-        const limiteTotal = Number(cliente?.limite_credito_total || 0);
-        const limiteDisp = Number(cliente?.limite_credito_disponivel || 0);
-        const newLimiteDisponivel = limiteDisp + valorReembolso;
-
-        // 1. Estornar limite disponível do cliente no banco
-        const { error: limitError } = await supabase
-          .from('clientes')
-          .update({ limite_credito_disponivel: newLimiteDisponivel })
-          .eq('id', selectedOrdem.cliente_id);
-        if (limitError) throw limitError;
-
-        // 2. Cancelar faturas de amortização que não foram pagas
-        const faturasToCancelIds = faturasCreditoToCancel.filter(f => f.status !== 'pago').map(f => f.id);
-        if (faturasToCancelIds.length > 0) {
-          const { error: cancelFatError } = await supabase
-            .from('faturas')
-            .update({
-              status: 'cancelado',
-              motivo_cancelamento: `Estornado devido ao cancelamento do pedido #${codigoOrcamento}`,
-              data_cancelamento: new Date().toISOString()
-            })
-            .in('id', faturasToCancelIds);
-          if (cancelFatError) throw cancelFatError;
-        }
-
-        // 3. Registrar movimentação em loja_credito_movimentacoes
-        const { error: movError } = await supabase
-          .from('loja_credito_movimentacoes')
-          .insert({
-            cliente_id: selectedOrdem.cliente_id,
-            tipo: 'estorno_compra',
-            valor: valorReembolso,
-            limite_total_anterior: limiteTotal,
-            limite_total_novo: limiteTotal,
-            limite_disponivel_anterior: limiteDisp,
-            limite_disponivel_novo: newLimiteDisponivel,
-            descricao: `Estorno por Cancelamento de Pedido (Orçamento #${codigoOrcamento})`
-          });
-        if (movError) throw movError;
-
-        // 4. Notificar cliente sobre o estorno de crédito
-        await notificationService.notifyClient(
-          selectedOrdem.cliente_id,
-          '💳 Limite de Crédito Restaurado',
-          `Seu pedido #${codigoOrcamento} foi cancelado e o valor de ${formatCurrency(valorReembolso)} foi estornado para o seu limite de crédito disponível.`,
-          'produtos',
-          'credito_estornado',
-          { tab: 'cancelados', itemId: selectedOrdem.id, prioridade: 'alta' }
-        );
-
-        toast.success('Pedido cancelado e limite de crédito estornado com sucesso!');
-        setIsCancelModalOpen(false);
-        setIsDetailOpen(false);
-        setCancelReason('');
-      } else {
-        const fatura = selectedOrdem.faturas?.[0];
-        const isPaid = fatura?.status === 'pago';
-
-        // 2. Se a fatura estava paga, gerar reembolso automático com prazo de 10 dias
-        if (isPaid) {
-          const valorReembolso = Number(fatura.valor_total || 0);
-
-          const { error: refundError } = await supabase
-            .from('loja_reembolsos')
-            .insert([{
-              ordem_compra_id: selectedOrdem.id,
-              cliente_id: selectedOrdem.cliente_id,
-              valor_reembolso: valorReembolso,
-              motivo_cancelamento: cancelReason,
-              prazo_pagamento: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 dias
-              status: 'pendente'
-            }]);
-
-          if (refundError) throw refundError;
-
-          // Notificar cliente sobre o reembolso
-          await notificationService.notifyClient(
-            selectedOrdem.cliente_id,
-            '⚠️ Reembolso Solicitado',
-            `Seu pedido #${orcamento?.codigo_orcamento || selectedOrdem.codigo_ordem} foi cancelado. Um reembolso no valor de ${formatCurrency(valorReembolso)} foi aberto com prazo de 10 dias para pagamento.`,
-            'produtos',
-            'reembolso_aberto',
-            { tab: 'cancelados', itemId: selectedOrdem.id, prioridade: 'alta' }
-          );
-
-          toast.success('Pedido cancelado e Reembolso aberto com sucesso!');
-          setIsCancelModalOpen(false);
-          setIsDetailOpen(false);
-          setCancelReason('');
-
-          // Redirecionar Admin para Cadastro > GSA Store Hub > Reembolsos
-          if (onNavigate) {
-            onNavigate('cadastro', 'reembolsos');
-          }
-        } else {
-          // Apenas cancelamento normal de fatura pendente
-          await notificationService.notifyClient(
-            selectedOrdem.cliente_id,
-            '❌ Pedido Cancelado',
-            `Seu pedido #${orcamento?.codigo_orcamento || selectedOrdem.codigo_ordem} foi cancelado pelo administrador.`,
-            'produtos',
-            'ordem_cancelada',
-            { tab: 'cancelados', itemId: selectedOrdem.id }
-          );
-
-          toast.success('Pedido cancelado com sucesso!');
-          setIsCancelModalOpen(false);
-          setIsDetailOpen(false);
-          setCancelReason('');
-        }
-      }
-
-      fetchOrdens();
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || 'Erro ao cancelar ordem.');
-    } finally {
-      setIsCanceling(false);
-    }
-  };
-
-  return (
+return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
       <div className="flex border-b border-neutral-200 mb-6">
         <button
