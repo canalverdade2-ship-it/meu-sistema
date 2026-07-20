@@ -1,0 +1,179 @@
+name: Deploy Collaborator Panel Security
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/20260720213000_secure_collaborator_panel.sql'
+      - '.github/workflows/supabase-collaborator-panel-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-collaborator-panel-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Apply and verify collaborator panel migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate production authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_ID"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Check migration history
+        id: history
+        shell: bash
+        run: |
+          set +e
+          supabase migration list --linked > collaborator-migration-before.log 2>&1
+          list_status=$?
+          already_applied=false
+          if [ "$list_status" -eq 0 ] && grep -q '20260720213000' collaborator-migration-before.log; then
+            already_applied=true
+          fi
+          echo "already_applied=$already_applied" >> "$GITHUB_OUTPUT"
+          cat collaborator-migration-before.log
+          exit 0
+
+      - name: Build rollback preview
+        if: steps.history.outputs.already_applied != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed 's/^COMMIT;$/ROLLBACK;/' \
+            supabase/migrations/20260720213000_secure_collaborator_panel.sql \
+            > collaborator-panel-preview.sql
+
+      - name: Validate migration with rollback
+        if: steps.history.outputs.already_applied != 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file collaborator-panel-preview.sql \
+            2>&1 | tee collaborator-panel-preview.log
+
+      - name: Apply migration permanently
+        if: steps.history.outputs.already_applied != 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file supabase/migrations/20260720213000_secure_collaborator_panel.sql \
+            2>&1 | tee collaborator-panel-deployment.log
+
+      - name: Record migration history
+        if: steps.history.outputs.already_applied != 'true'
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration repair 20260720213000 \
+            --status applied \
+            --linked \
+            2>&1 | tee collaborator-panel-migration-repair.log
+
+      - name: Verify production contracts
+        shell: bash
+        run: |
+          cat > collaborator-panel-verify.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regprocedure('public.gsa_admin_context()') IS NULL
+               OR to_regprocedure('public.gsa_admin_has_module(text)') IS NULL
+               OR to_regprocedure('public.gsa_get_collaborator_session_access_state(uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_replace_collaborator_modules(uuid,text,uuid,text[])') IS NULL
+               OR to_regprocedure('public.gsa_close_collaborator_sessions(uuid)') IS NULL THEN
+              RAISE EXCEPTION 'Funções obrigatórias do Painel do Colaborador estão ausentes.';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1
+              FROM information_schema.columns
+              WHERE table_schema = 'public'
+                AND table_name = 'colaboradores'
+                AND column_name = 'credencial_hash'
+            ) THEN
+              RAISE EXCEPTION 'Coluna colaboradores.credencial_hash ausente.';
+            END IF;
+
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_hash_collaborator_credential' AND NOT tgisinternal)
+               OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_revoke_collaborator_status' AND NOT tgisinternal)
+               OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_revoke_collaborator_modules' AND NOT tgisinternal) THEN
+              RAISE EXCEPTION 'Triggers obrigatórios do Painel do Colaborador estão ausentes.';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_policies
+              WHERE schemaname = 'public'
+                AND tablename = 'prestador_demandas'
+                AND policyname = 'collaborator_assigned_demands_only'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_policies
+              WHERE schemaname = 'public'
+                AND tablename = 'admin_notificacoes'
+                AND policyname = 'collaborator_cannot_access_admin_notifications'
+            ) THEN
+              RAISE EXCEPTION 'Políticas RLS obrigatórias do Painel do Colaborador estão ausentes.';
+            END IF;
+          END;
+          $$;
+
+          SELECT
+            to_regprocedure('public.gsa_admin_has_module(text)') AS module_guard,
+            to_regprocedure('public.gsa_admin_replace_collaborator_modules(uuid,text,uuid,text[])') AS atomic_permissions,
+            to_regprocedure('public.gsa_close_collaborator_sessions(uuid)') AS session_revocation;
+          SQL
+
+          set -o pipefail
+          supabase db query --linked \
+            --file collaborator-panel-verify.sql \
+            2>&1 | tee collaborator-panel-verification.log
+
+      - name: Verify migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee collaborator-panel-migration-list.log
+          grep -q '20260720213000' collaborator-panel-migration-list.log
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: collaborator-panel-production-evidence
+          path: |
+            collaborator-migration-before.log
+            collaborator-panel-preview.log
+            collaborator-panel-deployment.log
+            collaborator-panel-migration-repair.log
+            collaborator-panel-verification.log
+            collaborator-panel-migration-list.log
+          retention-days: 30
+          if-no-files-found: ignore
