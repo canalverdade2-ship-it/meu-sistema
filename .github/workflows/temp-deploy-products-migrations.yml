@@ -47,95 +47,45 @@ jobs:
           version: latest
 
       - name: Link production project
-        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" -p "$SUPABASE_DB_PASSWORD"
 
-      - name: Check migration state
+      - name: Read remote migration history
         id: state
         shell: bash
         run: |
-          cat > products-state.sql <<'SQL'
-          SELECT count(*) AS applied_count
-          FROM supabase_migrations.schema_migrations
-          WHERE version IN ('20260721010000', '20260721010100');
-          SQL
-          supabase db query --linked --file products-state.sql | tee products-state.log
-          if grep -Eq '(^|[^0-9])2([^0-9]|$)' products-state.log; then
+          set -euo pipefail
+          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" | tee products-migration-list-before.log
+          first_applied=false
+          second_applied=false
+          if grep -E '20260721010000[[:space:]]*│[[:space:]]*20260721010000' products-migration-list-before.log; then first_applied=true; fi
+          if grep -E '20260721010100[[:space:]]*│[[:space:]]*20260721010100' products-migration-list-before.log; then second_applied=true; fi
+          if [ "$first_applied" = true ] && [ "$second_applied" = true ]; then
             echo 'applied=true' >> "$GITHUB_OUTPUT"
           else
             echo 'applied=false' >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build transactional bundles
+      - name: Preview pending migrations
         if: steps.state.outputs.applied != 'true'
-        run: |
-          {
-            echo 'BEGIN;'
-            for file in \
-              supabase/migrations/20260721010000_harden_products_and_subscriptions.sql \
-              supabase/migrations/20260721010100_secure_product_subscription_catalog.sql; do
-              sed '/^[[:space:]]*BEGIN;[[:space:]]*$/d; /^[[:space:]]*COMMIT;[[:space:]]*$/d' "$file"
-            done
-            echo 'ROLLBACK;'
-          } > products-preview.sql
-          sed '$s/ROLLBACK;/COMMIT;/' products-preview.sql > products-production.sql
-
-      - name: Validate migrations with rollback
-        if: steps.state.outputs.applied != 'true'
-        run: supabase db query --linked --file products-preview.sql
-
-      - name: Apply migrations atomically
-        if: steps.state.outputs.applied != 'true'
-        run: supabase db query --linked --file products-production.sql
-
-      - name: Register migration history
-        if: steps.state.outputs.applied != 'true'
-        run: supabase migration repair 20260721010000 20260721010100 --status applied --linked
-
-      - name: Verify production state
         shell: bash
         run: |
-          cat > products-verify.sql <<'SQL'
-          DO $$
-          BEGIN
-            IF to_regclass('public.gsa_admin_operation_requests') IS NULL THEN
-              RAISE EXCEPTION 'Tabela de idempotência administrativa ausente';
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'gsa_admin_adjust_product_stock') THEN
-              RAISE EXCEPTION 'RPC de ajuste de estoque ausente';
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'gsa_admin_cancel_store_order') THEN
-              RAISE EXCEPTION 'RPC de cancelamento de pedido ausente';
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'gsa_admin_activate_subscription') THEN
-              RAISE EXCEPTION 'RPC de ativação de assinatura ausente';
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'gsa_admin_save_product_catalog') THEN
-              RAISE EXCEPTION 'RPC de catálogo de produtos ausente';
-            END IF;
-            IF NOT EXISTS (
-              SELECT 1 FROM information_schema.columns
-              WHERE table_schema = 'public' AND table_name = 'ordens_compra'
-                AND column_name = 'valor_unitario_contratado'
-            ) THEN
-              RAISE EXCEPTION 'Snapshot de preço de produto ausente';
-            END IF;
-            IF NOT EXISTS (
-              SELECT 1 FROM information_schema.columns
-              WHERE table_schema = 'public' AND table_name = 'ordens_assinatura'
-                AND column_name = 'valor_mensal_contratado'
-            ) THEN
-              RAISE EXCEPTION 'Snapshot de preço de assinatura ausente';
-            END IF;
-          END $$;
+          set -euo pipefail
+          supabase db push --linked --dry-run -p "$SUPABASE_DB_PASSWORD" | tee products-dry-run.log
+          grep -Eo '20[0-9]{12}' products-dry-run.log | sort -u > products-pending-versions.txt
+          printf '20260721010000\n20260721010100\n' > products-expected-versions.txt
+          diff -u products-expected-versions.txt products-pending-versions.txt
 
-          SELECT version
-          FROM supabase_migrations.schema_migrations
-          WHERE version IN ('20260721010000', '20260721010100')
-          ORDER BY version;
-          SQL
-          supabase db query --linked --file products-verify.sql | tee products-verification.log
-          grep -q '20260721010000' products-verification.log
-          grep -q '20260721010100' products-verification.log
+      - name: Apply authorized migrations
+        if: steps.state.outputs.applied != 'true'
+        run: supabase db push --linked -p "$SUPABASE_DB_PASSWORD"
+
+      - name: Verify remote migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" | tee products-migration-list-after.log
+          grep -E '20260721010000[[:space:]]*│[[:space:]]*20260721010000' products-migration-list-after.log
+          grep -E '20260721010100[[:space:]]*│[[:space:]]*20260721010100' products-migration-list-after.log
 
       - name: Remove temporary deployment controls
         run: |
@@ -146,3 +96,16 @@ jobs:
           git add -A
           git commit -m 'Remover controles temporários de Produtos e Assinaturas'
           git push origin HEAD:ops/finalize-products-production
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: products-production-deployment
+          path: |
+            products-migration-list-before.log
+            products-dry-run.log
+            products-pending-versions.txt
+            products-migration-list-after.log
+          retention-days: 7
+          if-no-files-found: ignore
