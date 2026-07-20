@@ -144,7 +144,12 @@ export function TravelProposalsPage({ clientId, onBack }: { clientId: string, on
                     <div className="bg-[#f4f1ea] rounded-xl p-5 space-y-4">
                       <div className="flex justify-between items-center border-b border-black/5 pb-3">
                         <span className="text-neutral-600 text-sm">Valor Total</span>
-                        <span className="text-2xl font-black text-[#0c2340]">{formatCurrency(proposta.valor_total)}</span>
+                        <div className="text-right">
+                          <span className="block text-2xl font-black text-[#0c2340]">{formatCurrency(proposta.valor_total)}</span>
+                          <span className="mt-1 block text-xs font-bold text-neutral-500">
+                            Até {Math.max(Number(proposta.parcelamento_permitido) || 1, 1)}x de {formatCurrency(Number(proposta.valor_total || 0) / Math.max(Number(proposta.parcelamento_permitido) || 1, 1))}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex justify-between items-center text-sm">

@@ -180,6 +180,29 @@ async function main() {
     ['callClientRpc', 'gsa_request_travel_cancellation'],
   );
 
+  await assertFileContains(
+    'supabase/migrations/20260720230000_gsa_viagens_parcelamento_checkout.sql',
+    [
+      'parcelas INTEGER NOT NULL DEFAULT 1',
+      'valor_parcela NUMERIC(10, 2)',
+      "p_payload ->> 'parcelas'",
+      "'parcela_numero'",
+      "'parcelas_total'",
+      'valor_primeira_parcela',
+    ],
+  );
+
+  await assertFileContains(
+    'src/components/client/store/CheckoutModal.tsx',
+    [
+      'travelInstallments',
+      'normalizedTravelInstallments',
+      'Parcelamento da viagem',
+      'parcelas: normalizedTravelInstallments',
+      'Total do contrato',
+    ],
+  );
+
   console.log('GSA Viagens: rotas, segurança e contratos críticos validados com sucesso.');
 }
 

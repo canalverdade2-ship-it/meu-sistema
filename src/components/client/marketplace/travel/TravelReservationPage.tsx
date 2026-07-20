@@ -105,6 +105,7 @@ export function TravelReservationPage({
             id,
             snapshot_completo,
             quantidade_passageiros,
+            parcelamento_permitido,
             viagens_passageiros (
               id,
               nome_completo,
@@ -360,6 +361,11 @@ export function TravelReservationPage({
   if (!trip) return null;
 
   const snapshot = trip.viagens_propostas?.snapshot_completo || {};
+  const maxInstallments = Math.max(
+    Number(trip.viagens_propostas?.parcelamento_permitido) || 1,
+    1,
+  );
+  const installmentValue = Number(trip.valor_pago || 0) / maxInstallments;
   const vouchers = trip.viagens_vouchers || [];
   const isPendingPayment = trip.status === 'pendente';
   const statusLabel = statusLabels[trip.status] || String(trip.status).replace(/_/g, ' ');
@@ -544,6 +550,7 @@ export function TravelReservationPage({
               <h2 className="mb-6 text-xl font-black text-[#0c2340]">Resumo financeiro</h2>
               <div className="mb-6 space-y-4">
                 <div className="flex justify-between text-sm"><span className="text-neutral-500">Valor do pacote</span><span className="font-bold text-[#1a1a1a]">{formatCurrency(trip.valor_pago)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-neutral-500">Condição de pagamento</span><span className="font-bold text-[#1a1a1a]">{maxInstallments}x de {formatCurrency(installmentValue)}</span></div>
                 <div className="flex justify-between text-sm"><span className="text-neutral-500">Passageiros</span><span className="font-bold text-[#1a1a1a]">{passageiros.length}/{expectedPassengerCount}</span></div>
                 <div className="flex justify-between text-sm"><span className="text-neutral-500">Taxas de emissão</span><span className="font-bold text-emerald-600">Inclusas</span></div>
                 <div className="h-px bg-neutral-100" />
@@ -582,9 +589,12 @@ export function TravelReservationPage({
             tipo: 'pacote_viagem',
             quantidade: 1,
             item_detalhes: {
+              nome: snapshot.titulo || 'Pacote de viagem',
               titulo: snapshot.titulo,
               valor: trip.valor_pago,
               preco_venda: trip.valor_pago,
+              valor_total_contrato: trip.valor_pago,
+              parcelamento_permitido: maxInstallments,
               is_digital: true,
             },
           }]}

@@ -15,7 +15,7 @@ import { getProductEffectivePrice, hasActiveProductDiscount, getProductQuantityP
 type CartItem = {
   id: string;
   item_id: string;
-  tipo: 'produto' | 'servico' | 'assinatura';
+  tipo: 'produto' | 'servico' | 'assinatura' | 'pacote_viagem';
   quantidade: number;
   item_detalhes?: Produto | any;
   prazo_meses?: number;
@@ -52,6 +52,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   const [maxParcelas, setMaxParcelas] = useState(12);
   const [formaPagamento, setFormaPagamento] = useState<'outros' | 'credito_loja'>('outros');
   const [numParcelas, setNumParcelas] = useState(1);
+  const [travelInstallments, setTravelInstallments] = useState(1);
   const [solicitacaoAtivaId, setSolicitacaoAtivaId] = useState<string | null>(null);
   const [jurosCreditoAvista, setJurosCreditoAvista] = useState(20);
   const [jurosCreditoParcelado, setJurosCreditoParcelado] = useState(50);
@@ -221,6 +222,8 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       setPontosAplicados(0);
       setFormaPagamento('outros');
       setNumParcelas(1);
+      const travelItem = cartItems.find((item: any) => item.tipo === 'pacote_viagem');
+      setTravelInstallments(Math.max(1, Number(travelItem?.item_detalhes?.parcelamento_permitido || 1)));
       setEndereco({ cep: '', logradouro: '', bairro: '', cidade: '', uf: '', numero: '', complemento: '' });
       setIsEditingEndereco(false);
     }
@@ -272,10 +275,20 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
     }
   };
 
+  const travelItem = cartItems.find((item: any) => item.tipo === 'pacote_viagem');
+  const isTravelCheckout = Boolean(travelItem);
+  const travelMaxInstallments = Math.max(1, Number(travelItem?.item_detalhes?.parcelamento_permitido || 1));
+  const normalizedTravelInstallments = Math.min(Math.max(travelInstallments, 1), travelMaxInstallments);
+  const travelContractTotal = Number(travelItem?.item_detalhes?.valor_total_contrato ?? travelItem?.item_detalhes?.valor ?? 0) * Number(travelItem?.quantidade || 1);
+  const travelInstallmentValue = travelContractTotal / normalizedTravelInstallments;
+
   const temProdutos = cartItems.some((c: CartItem) => c.tipo === 'produto');
   const subtotalInicial = cartItems.reduce((acc: number, cur: CartItem) => {
     if (cur.tipo === 'produto') {
       return acc + getProductQuantityPriceBreakdown(cur.item_detalhes, cur.quantidade).subtotalFinal;
+    }
+    if (cur.tipo === 'pacote_viagem') {
+      return acc + (((cur.item_detalhes?.valor_total_contrato ?? cur.item_detalhes?.valor) || 0) * cur.quantidade / normalizedTravelInstallments);
     }
     return acc + ((cur.item_detalhes?.valor || 0) * cur.quantidade);
   }, 0);
@@ -568,8 +581,6 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
     setIsSubmitting(true);
     
     try {
-      const isTravelCheckout = cartItems.some((c: any) => c.tipo === 'pacote_viagem');
-      
       if (isTravelCheckout) {
         // Fluxo de checkout de viagem
         const pacote = cartItems.find((c: any) => c.tipo === 'pacote_viagem');
@@ -577,10 +588,11 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           p_payload: {
             proposta_id: pacote.item_id,
             forma_pagamento: formaPagamento,
+            parcelas: normalizedTravelInstallments,
           }
         });
         
-        toast.success('🎉 Viagem Confirmada com Sucesso!');
+        toast.success(`Cobrança gerada em ${normalizedTravelInstallments} parcela(s).`);
         checkoutRequestId.current = generateUUID();
         onSuccess(data.transacao_id);
       } else {
@@ -715,8 +727,34 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
             </div>
           )}
 
+          {isTravelCheckout && (
+            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-neutral-900">Parcelamento da viagem</h3>
+                  <p className="mt-1 text-xs font-medium text-neutral-500">Total do contrato: {formatCurrency(travelContractTotal)}</p>
+                </div>
+                <select
+                  value={normalizedTravelInstallments}
+                  onChange={(event) => setTravelInstallments(Number(event.target.value))}
+                  className="rounded-xl border border-indigo-200 bg-white px-4 py-3 text-sm font-black text-indigo-900 outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {Array.from({ length: travelMaxInstallments }, (_, index) => index + 1).map((installments) => (
+                    <option key={installments} value={installments}>
+                      {installments}x de {formatCurrency(travelContractTotal / installments)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mt-4 flex items-center justify-between rounded-xl bg-white px-4 py-3">
+                <span className="text-xs font-bold text-neutral-500">Primeira parcela</span>
+                <span className="text-lg font-black text-indigo-700">{formatCurrency(travelInstallmentValue)}</span>
+              </div>
+            </div>
+          )}
+
           {/* Sessão Cupons */}
-          <div className="space-y-4">
+          <div className={isTravelCheckout ? 'hidden' : 'space-y-4'}>
             <h3 className="text-sm font-black text-neutral-900 uppercase tracking-widest">Cupons da Loja</h3>
             
             {/* Cupom Desconto */}
@@ -810,7 +848,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           </div>
 
           {/* Sessão de Pontos Fidelidade GSA VIP */}
-          <div className="bg-gradient-to-r from-purple-50 via-indigo-50/30 to-purple-50 rounded-2xl p-5 border border-purple-100/80 shadow-sm relative overflow-hidden">
+          <div className={`${isTravelCheckout ? 'hidden' : ''} bg-gradient-to-r from-purple-50 via-indigo-50/30 to-purple-50 rounded-2xl p-5 border border-purple-100/80 shadow-sm relative overflow-hidden`}>
             <div className="absolute -top-10 -right-10 w-24 h-24 bg-purple-200/20 rounded-full blur-xl"></div>
             
             <div className="flex items-center justify-between mb-4 relative z-10">
@@ -915,7 +953,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           </div>
 
           {/* Sessão de Saldo da Carteira Virtual */}
-          <div className="bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-emerald-50 rounded-2xl p-5 border border-emerald-100/80 shadow-sm relative overflow-hidden mt-4">
+          <div className={`${isTravelCheckout ? 'hidden' : ''} bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-emerald-50 rounded-2xl p-5 border border-emerald-100/80 shadow-sm relative overflow-hidden mt-4`}>
             <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-200/20 rounded-full blur-xl"></div>
             
             <div className="flex items-center justify-between mb-4 relative z-10">
@@ -993,7 +1031,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           </div>
 
           {/* Opção de Pagamento (Novo Módulo Meu Crédito) */}
-          <div className="bg-[#fcfcfc] rounded-[2rem] p-6 border-2 border-neutral-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+          <div className={`${isTravelCheckout ? 'hidden' : ''} bg-[#fcfcfc] rounded-[2rem] p-6 border-2 border-neutral-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)]`}>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm">
                 <CreditCard className="w-5 h-5" />
@@ -1113,7 +1151,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               <div key={c.id} className="flex justify-between items-start text-sm">
                 <div className="pr-4">
                   <span className="text-neutral-400 block text-[10px] mb-0.5">
-                    {c.quantidade}x {c.tipo} · <span className="font-mono text-indigo-300">{c.tipo === 'produto' ? getProductDisplayCode(c.item_detalhes as any) : ((c.item_detalhes as any)?.codigo_produto || (c.item_detalhes as any)?.codigo_servico || (c.item_detalhes as any)?.codigo_assinatura || '')}</span>
+                    {c.tipo === 'pacote_viagem' ? `1ª de ${normalizedTravelInstallments} parcela(s)` : `${c.quantidade}x ${c.tipo}`} · <span className="font-mono text-indigo-300">{c.tipo === 'produto' ? getProductDisplayCode(c.item_detalhes as any) : ((c.item_detalhes as any)?.codigo_produto || (c.item_detalhes as any)?.codigo_servico || (c.item_detalhes as any)?.codigo_assinatura || '')}</span>
                   </span>
                   <span className="font-bold truncate max-w-[150px] block leading-tight">{c.item_detalhes?.nome}</span>
                 </div>
@@ -1130,7 +1168,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                   )}
                   {(!hasActiveProductDiscount(c.item_detalhes) || c.tipo !== 'produto') && (
                     <span className="font-bold text-white">
-                      {formatCurrency((c.item_detalhes?.valor || 0) * c.quantidade)}
+                      {formatCurrency(((c.item_detalhes?.valor || 0) * c.quantidade) / (c.tipo === 'pacote_viagem' ? normalizedTravelInstallments : 1))}
                     </span>
                   )}
                 </div>
@@ -1213,7 +1251,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
             )}
             
             <div className="border-t border-white/10 pt-4 mt-2 flex justify-between items-end">
-              {cartItems.some(c => c.tipo === 'assinatura') ? (
+              {cartItems.some(c => c.tipo === 'assinatura') || (isTravelCheckout && normalizedTravelInstallments > 1) ? (
                 <>
                   <div className="flex flex-col">
                     <span className="text-indigo-400 text-xs font-black uppercase tracking-widest">A Pagar Hoje</span>
