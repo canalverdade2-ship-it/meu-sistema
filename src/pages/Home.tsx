@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { GSAEnterpriseHome } from '../components/public/GSAEnterpriseHome';
+import { SystemsPage } from '../components/public/SystemsPage';
 import { LoginHub } from '../components/public/LoginHub';
 import { ClientAccessModal, type ClientAccessMode } from '../components/auth/ClientAccessModal';
 import { RestrictedAccessModal, type RestrictedTab } from '../components/auth/RestrictedAccessModal';
@@ -79,6 +80,8 @@ export function Home({
     setRestrictedModalOpen(true);
   };
 
+  const handlePublicLogin = onLoginPage ?? (() => openClient('login'));
+
   return (
     <>
       {loginOnly ? (
@@ -87,6 +90,11 @@ export function Home({
           onClientLogin={() => openClient('login')}
           onClientRegister={() => openClient('register')}
           onRestrictedAccess={() => openRestricted('prestador')}
+        />
+      ) : publicPage === 'systems' ? (
+        <SystemsPage
+          onBack={() => changePublicPage('home')}
+          onLogin={handlePublicLogin}
         />
       ) : (
         <GSAEnterpriseHome
@@ -98,7 +106,7 @@ export function Home({
           publicProducts={publicProducts}
           publicServices={publicServices}
           onGuestStore={onGuestStore}
-          onClientLogin={onLoginPage ?? (() => openClient('login'))}
+          onClientLogin={handlePublicLogin}
           onAdminLogin={() => openRestricted('gestao')}
         />
       )}
