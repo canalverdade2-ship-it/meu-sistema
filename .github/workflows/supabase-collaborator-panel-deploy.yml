@@ -55,7 +55,7 @@ jobs:
           supabase migration list --linked > collaborator-migration-before.log 2>&1
           list_status=$?
           already_applied=false
-          if [ "$list_status" -eq 0 ] && grep -q '20260720213000' collaborator-migration-before.log; then
+          if [ "$list_status" -eq 0 ] && awk -F'|' '$1 ~ /20260720213000/ && $2 ~ /20260720213000/ { found=1 } END { exit found ? 0 : 1 }' collaborator-migration-before.log; then
             already_applied=true
           fi
           echo "already_applied=$already_applied" >> "$GITHUB_OUTPUT"
