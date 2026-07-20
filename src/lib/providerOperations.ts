@@ -9,6 +9,52 @@ function assertSuccess(data: any, error: any, fallback: string) {
 }
 
 export const providerOperations = {
+  async dashboardSnapshot() {
+    const { data, error } = await supabase.rpc('gsa_provider_dashboard_snapshot');
+    return assertSuccess(data, error, 'Não foi possível carregar o resumo do painel.');
+  },
+
+  async pendencySnapshot() {
+    const { data, error } = await supabase.rpc('gsa_provider_pendency_snapshot');
+    return assertSuccess(data, error, 'Não foi possível carregar as pendências.');
+  },
+
+  async createTicket(subject: string, description: string) {
+    const { data, error } = await supabase.rpc('gsa_provider_create_ticket', {
+      p_subject: subject,
+      p_description: description,
+    });
+    return assertSuccess(data, error, 'Não foi possível abrir o atendimento.');
+  },
+
+  async sendTicketMessage(input: { ticketId: string; message?: string; attachment?: string | null; attachmentType?: string | null }) {
+    const { data, error } = await supabase.rpc('gsa_provider_send_ticket_message', {
+      p_ticket_id: input.ticketId,
+      p_message: input.message || null,
+      p_attachment: input.attachment || null,
+      p_attachment_type: input.attachmentType || null,
+    });
+    return assertSuccess(data, error, 'Não foi possível enviar a mensagem.');
+  },
+
+  async requestProfileChange(input: { label: string; currentValue: string; newValue: string; reason: string }) {
+    const { data, error } = await supabase.rpc('gsa_provider_request_profile_change', {
+      p_label: input.label,
+      p_current_value: input.currentValue,
+      p_new_value: input.newValue,
+      p_reason: input.reason,
+    });
+    return assertSuccess(data, error, 'Não foi possível solicitar a alteração.');
+  },
+
+  async requestDemandSupport(demandId: string, message: string) {
+    const { data, error } = await supabase.rpc('gsa_provider_request_demand_support', {
+      p_demanda_id: demandId,
+      p_message: message,
+    });
+    return assertSuccess(data, error, 'Não foi possível solicitar suporte.');
+  },
+
   async financialSnapshot() {
     const { data, error } = await supabase.rpc('gsa_provider_financial_snapshot');
     return assertSuccess(data, error, 'Não foi possível carregar o saldo.');
@@ -32,23 +78,17 @@ export const providerOperations = {
   },
 
   async redeemVoucher(voucherId: string) {
-    const { data, error } = await supabase.rpc('gsa_provider_redeem_voucher', {
-      p_voucher_id: voucherId,
-    });
+    const { data, error } = await supabase.rpc('gsa_provider_redeem_voucher', { p_voucher_id: voucherId });
     return assertSuccess(data, error, 'Não foi possível resgatar o voucher.');
   },
 
   async redeemPrize(prizeId: string) {
-    const { data, error } = await supabase.rpc('gsa_provider_redeem_prize', {
-      p_premio_id: prizeId,
-    });
+    const { data, error } = await supabase.rpc('gsa_provider_redeem_prize', { p_premio_id: prizeId });
     return assertSuccess(data, error, 'Não foi possível resgatar o prêmio.');
   },
 
   async activatePromotion(promotionId: string) {
-    const { data, error } = await supabase.rpc('gsa_provider_activate_promotion', {
-      p_promocao_id: promotionId,
-    });
+    const { data, error } = await supabase.rpc('gsa_provider_activate_promotion', { p_promocao_id: promotionId });
     return assertSuccess(data, error, 'Não foi possível ativar a promoção.');
   },
 
@@ -62,12 +102,7 @@ export const providerOperations = {
     return assertSuccess(data, error, 'Não foi possível atualizar o perfil.');
   },
 
-  async createSchedule(input: {
-    demandaId: string;
-    dataInicio: string;
-    dataFim: string;
-    observacoes?: string;
-  }) {
+  async createSchedule(input: { demandaId: string; dataInicio: string; dataFim: string; observacoes?: string }) {
     const { data, error } = await supabase.rpc('gsa_provider_create_schedule', {
       p_demanda_id: input.demandaId,
       p_data_inicio: input.dataInicio,
@@ -78,16 +113,12 @@ export const providerOperations = {
   },
 
   async completeSchedule(scheduleId: string) {
-    const { data, error } = await supabase.rpc('gsa_provider_complete_schedule', {
-      p_agendamento_id: scheduleId,
-    });
+    const { data, error } = await supabase.rpc('gsa_provider_complete_schedule', { p_agendamento_id: scheduleId });
     return assertSuccess(data, error, 'Não foi possível concluir o agendamento.');
   },
 
   async deleteSchedule(scheduleId: string) {
-    const { data, error } = await supabase.rpc('gsa_provider_delete_schedule', {
-      p_agendamento_id: scheduleId,
-    });
+    const { data, error } = await supabase.rpc('gsa_provider_delete_schedule', { p_agendamento_id: scheduleId });
     return assertSuccess(data, error, 'Não foi possível excluir o agendamento.');
   },
 
@@ -109,9 +140,7 @@ export const providerOperations = {
   },
 
   async markNotificationRead(notificationId: string) {
-    const { data, error } = await supabase.rpc('gsa_provider_mark_notification_read', {
-      p_notificacao_id: notificationId,
-    });
+    const { data, error } = await supabase.rpc('gsa_provider_mark_notification_read', { p_notificacao_id: notificationId });
     return assertSuccess(data, error, 'Não foi possível marcar a notificação como lida.');
   },
 
