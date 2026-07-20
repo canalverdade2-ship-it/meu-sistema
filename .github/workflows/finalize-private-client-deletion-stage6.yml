@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - agent/seguranca-documentos-servicos-etapa-6
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: write
