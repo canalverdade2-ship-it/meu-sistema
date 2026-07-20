@@ -1,5 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@1';
-import { handleRequest, normalizePayload } from './index.ts';
+import { handleRequest, normalizePayload, subjectRateLimitMode } from './index.ts';
 
 function withAllowedOrigins(value: string, callback: () => Promise<void>) {
   const previousOrigins = Deno.env.get('ALLOWED_ORIGINS');
@@ -95,4 +95,11 @@ Deno.test('normaliza recuperação somente com e-mail válido e desafio UUID', (
   }), { recovery_id: '550e8400-e29b-41d4-a716-446655440000' });
 
   assertEquals(normalizePayload('complete_client_recovery', { recovery_id: 'invalido' }), null);
+});
+
+Deno.test('aplica limite por identidade antes dos fluxos de recuperação', () => {
+  assertEquals(subjectRateLimitMode('request_client_recovery'), 'before');
+  assertEquals(subjectRateLimitMode('complete_client_recovery'), 'before');
+  assertEquals(subjectRateLimitMode('login_pin'), 'invalid-only');
+  assertEquals(subjectRateLimitMode('login_admin'), 'invalid-only');
 });
