@@ -1,0 +1,125 @@
+name: Provider Audit Production Deploy
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: provider-audit-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.pull_request.head.ref == 'agent/corrigir-auditoria-painel-prestador'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout PR merge candidate
+        uses: actions/checkout@v4
+
+      - name: Validate target and files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          for version in 20260720235900 20260720235910 20260720235920 20260720235930; do
+            test -f "supabase/migrations/${version}_"*.sql
+          done
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Check production migration state
+        id: state
+        shell: bash
+        run: |
+          cat > provider-audit-state.sql <<'SQL'
+          SELECT count(*) AS applied_count
+          FROM supabase_migrations.schema_migrations
+          WHERE version IN ('20260720235900', '20260720235910', '20260720235920', '20260720235930');
+          SQL
+          supabase db query --linked --file provider-audit-state.sql | tee provider-audit-state.log
+          if grep -Eq '(^|[^0-9])4([^0-9]|$)' provider-audit-state.log; then
+            echo 'applied=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'applied=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build transactional bundles
+        if: steps.state.outputs.applied != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'BEGIN;'
+            for file in \
+              supabase/migrations/20260720235900_provider_portal_audit_hardening.sql \
+              supabase/migrations/20260720235910_provider_portal_runtime_guards.sql \
+              supabase/migrations/20260720235920_provider_portal_event_contracts.sql \
+              supabase/migrations/20260720235930_provider_portal_cleanup.sql; do
+              sed '/^[[:space:]]*BEGIN;[[:space:]]*$/d; /^[[:space:]]*COMMIT;[[:space:]]*$/d' "$file"
+            done
+            echo 'ROLLBACK;'
+          } > provider-audit-preview.sql
+          sed '$s/ROLLBACK;/COMMIT;/' provider-audit-preview.sql > provider-audit-production.sql
+
+      - name: Validate migrations with rollback
+        if: steps.state.outputs.applied != 'true'
+        run: supabase db query --linked --file provider-audit-preview.sql
+
+      - name: Apply migrations atomically
+        if: steps.state.outputs.applied != 'true'
+        run: supabase db query --linked --file provider-audit-production.sql
+
+      - name: Register migration history
+        if: steps.state.outputs.applied != 'true'
+        run: supabase migration repair 20260720235900 20260720235910 20260720235920 20260720235930 --status applied --linked
+
+      - name: Verify definitive production state
+        shell: bash
+        run: |
+          cat > provider-audit-verify.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regprocedure('public.gsa_assert_current_provider_any_status()') IS NULL THEN RAISE EXCEPTION 'Contexto seguro ausente'; END IF;
+            IF to_regprocedure('public.gsa_assert_current_provider()') IS NULL THEN RAISE EXCEPTION 'Validação ativa ausente'; END IF;
+            IF to_regprocedure('public.gsa_provider_create_ticket(text,text)') IS NULL THEN RAISE EXCEPTION 'RPC de ticket ausente'; END IF;
+            IF to_regprocedure('public.gsa_provider_send_ticket_message(uuid,text,text,text)') IS NULL THEN RAISE EXCEPTION 'RPC de mensagem ausente'; END IF;
+            IF to_regprocedure('public.gsa_provider_dashboard_snapshot()') IS NULL THEN RAISE EXCEPTION 'Snapshot do dashboard ausente'; END IF;
+            IF to_regprocedure('public.gsa_provider_pendency_snapshot()') IS NULL THEN RAISE EXCEPTION 'Snapshot de pendências ausente'; END IF;
+            IF to_regclass('public.gsa_provider_audit_events') IS NULL THEN RAISE EXCEPTION 'Tabela de auditoria ausente'; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_provider_demand_event' AND NOT tgisinternal) THEN RAISE EXCEPTION 'Trigger de demandas ausente'; END IF;
+            IF EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_provider_duplicate_os_note' AND NOT tgisinternal) THEN RAISE EXCEPTION 'Trigger temporário ainda presente'; END IF;
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_policies
+              WHERE schemaname = 'storage' AND tablename = 'objects'
+                AND policyname = 'provider_private_files_select'
+            ) THEN RAISE EXCEPTION 'Política privada ausente'; END IF;
+          END $$;
+
+          SELECT version
+          FROM supabase_migrations.schema_migrations
+          WHERE version IN ('20260720235900', '20260720235910', '20260720235920', '20260720235930')
+          ORDER BY version;
+          SQL
+          supabase db query --linked --file provider-audit-verify.sql | tee provider-audit-verification.log
+          grep -q '20260720235900' provider-audit-verification.log
+          grep -q '20260720235910' provider-audit-verification.log
+          grep -q '20260720235920' provider-audit-verification.log
+          grep -q '20260720235930' provider-audit-verification.log
