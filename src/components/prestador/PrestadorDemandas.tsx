@@ -365,7 +365,7 @@ function FileList({ title, references, onOpen }: { title: string; references: st
 }
 
 function FilePicker({ files, onChange }: { files: File[]; onChange: (files: File[]) => void }) {
-  return <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 p-7 text-center"><Upload className="h-7 w-7 text-neutral-400" /><span className="mt-2 text-sm font-black">Selecionar arquivos</span><span className="mt-1 text-xs text-neutral-400">Até 10 arquivos privados</span><input type="file" multiple className="hidden" onChange={(event) => onChange(Array.from(event.target.files || []).slice(0, 10))} />{files.length > 0 && <span className="mt-3 text-xs font-bold text-indigo-600">{files.length} arquivo(s) selecionado(s)</span>}</label>;
+  return <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 p-7 text-center"><Upload className="h-7 w-7 text-neutral-400" /><span className="mt-2 text-sm font-black">Selecionar arquivos</span><span className="mt-1 text-xs text-neutral-400">Até 10 arquivos privados</span><input type="file" multiple className="hidden" onChange={(event) => onChange(Array.from<File>(event.currentTarget.files ?? []).slice(0, 10))} />{files.length > 0 && <span className="mt-3 text-xs font-bold text-indigo-600">{files.length} arquivo(s) selecionado(s)</span>}</label>;
 }
 
 function Field({ label, value, onChange, inputMode }: { label: string; value: string; onChange: (value: string) => void; inputMode?: 'decimal' | 'text' }) {
