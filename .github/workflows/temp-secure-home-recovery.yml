@@ -1,0 +1,287 @@
+name: Secure Home Account Recovery
+
+on:
+  push:
+    branches: [agent/corrigir-home-itens-2-a-10]
+    paths: ['.secure-home-recovery-trigger']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: secure-home-account-recovery
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-home-itens-2-a-10
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Implement verified recovery flow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          session_path = Path('src/lib/sessionService.ts')
+          session = session_path.read_text()
+
+          helper = r'''
+          async function persistVerifiedRecoverySession(payload: any): Promise<StoredSession> {
+            const rpcSession = payload?.session || payload;
+            const sessaoId = rpcSession?.sessao_id;
+            const sessionToken = rpcSession?.session_token;
+            const atorTipo = rpcSession?.ator_tipo;
+            const atorId = rpcSession?.ator_id;
+            const atorNome = rpcSession?.ator_nome;
+
+            if (!sessaoId || !sessionToken || atorTipo !== 'cliente' || !atorId) {
+              throw new Error('A recuperação não retornou uma sessão válida.');
+            }
+
+            const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+            const authSession = refreshed.session;
+            const appMetadata = authSession?.user?.app_metadata || {};
+
+            if (
+              refreshError ||
+              !authSession ||
+              appMetadata.gsa_session_id !== sessaoId ||
+              appMetadata.gsa_actor_type !== atorTipo ||
+              appMetadata.gsa_actor_id !== atorId
+            ) {
+              await supabase.auth.signOut({ scope: 'local' });
+              await supabase.rpc('gsa_end_session', {
+                p_sessao_id: sessaoId,
+                p_session_token: sessionToken,
+              });
+              throw new Error('Não foi possível validar a sessão de recuperação.');
+            }
+
+            const sessionData: StoredSession = {
+              sessaoId,
+              sessionToken,
+              atorTipo,
+              atorId,
+              atorNome: atorNome || 'Cliente',
+              ...(rpcSession?.metadata || {}),
+              precisa_trocar_senha: true,
+            };
+            writeStoredSession(sessionData);
+            return sessionData;
+          }
+          '''.strip()
+
+          marker = '\nasync function authenticate(action: string, payload: Record<string, unknown>) {'
+          if 'persistVerifiedRecoverySession' not in session:
+              if marker not in session:
+                  raise SystemExit('Ponto de inserção da sessão de recuperação não encontrado.')
+              session = session.replace(marker, f'\n\n{helper}\n\nasync function authenticate(action: string, payload: Record<string, unknown>) {{', 1)
+
+          old_method = '''  async loginRecuperacaoSenha(documento: string, email: string) {
+            return authenticate('recover_client', { documento, email });
+          },'''
+          new_methods = '''  async requestClientRecovery(documento: string, email: string) {
+            return invokeAuthGateway('request_client_recovery', {
+              documento,
+              email: email.trim().toLowerCase(),
+            });
+          },
+
+          async verifyClientRecoveryOtp(email: string, token: string) {
+            const normalizedEmail = email.trim().toLowerCase();
+            const normalizedToken = token.replace(/\\s/g, '');
+            const { data, error } = await supabase.auth.verifyOtp({
+              email: normalizedEmail,
+              token: normalizedToken,
+              type: 'email',
+            });
+            if (error || !data.session || !data.user) {
+              throw new Error('Código inválido ou expirado.');
+            }
+            return data.session;
+          },
+
+          async completeClientRecovery(recoveryId: string) {
+            const data = await invokeAuthGateway('complete_client_recovery', {
+              recovery_id: recoveryId,
+            });
+            if (data?.success) await persistVerifiedRecoverySession(data);
+            return data;
+          },'''
+          if old_method not in session:
+              raise SystemExit('Método antigo de recuperação não encontrado.')
+          session = session.replace(old_method, new_methods, 1)
+          session_path.write_text(session)
+
+          modal_path = Path('src/components/auth/ClientAccessModal.tsx')
+          modal = modal_path.read_text()
+          modal = modal.replace(
+              "import { Copy, Loader2, Lock, ShieldAlert, Users } from 'lucide-react';",
+              "import { Copy, Loader2, Lock, MailCheck, ShieldAlert, Users } from 'lucide-react';",
+              1,
+          )
+          modal = modal.replace(
+              "  const [recoveryEmail, setRecoveryEmail] = useState('');",
+              "  const [recoveryEmail, setRecoveryEmail] = useState('');\n  const [recoveryStage, setRecoveryStage] = useState<'request' | 'verify'>('request');\n  const [recoveryCode, setRecoveryCode] = useState('');\n  const [recoveryId, setRecoveryId] = useState('');",
+              1,
+          )
+          modal = modal.replace(
+              "    setRecoveryEmail('');\n    setAttemptsLeft(null);",
+              "    setRecoveryEmail('');\n    setRecoveryStage('request');\n    setRecoveryCode('');\n    setRecoveryId('');\n    setAttemptsLeft(null);",
+              1,
+          )
+          modal = modal.replace(
+              "    setPhone('');\n    setPinError(false);",
+              "    setPhone('');\n    setRecoveryStage('request');\n    setRecoveryCode('');\n    setRecoveryId('');\n    setPinError(false);",
+              1,
+          )
+
+          old_handler = '''  const handleRecovery = async () => {
+            if (!validDocumentLength() || !validarEmail(recoveryEmail)) {
+              toast.error('Informe documento e e-mail válidos.');
+              return;
+            }
+            setLoading(true);
+            try {
+              const data = await sessionService.loginRecuperacaoSenha(cleanDocument(), recoveryEmail.trim().toLowerCase());
+              if (!data?.success) throw new Error('Dados inválidos.');
+              toast.success('Sessão de recuperação iniciada.');
+              onLoginClient(data.id, true);
+            } catch (error: any) {
+              toast.error(error?.message || 'Não foi possível iniciar a recuperação com os dados informados.');
+            } finally {
+              setLoading(false);
+            }
+          };'''
+          new_handler = '''  const handleRecoveryRequest = async () => {
+            if (!validDocumentLength() || !validarEmail(recoveryEmail) || loading) {
+              toast.error('Informe documento e e-mail válidos.');
+              return;
+            }
+            setLoading(true);
+            try {
+              const data = await sessionService.requestClientRecovery(cleanDocument(), recoveryEmail);
+              setRecoveryId(String(data?.recovery_id || ''));
+              setRecoveryStage('verify');
+              setRecoveryCode('');
+              toast.success('Se os dados coincidirem com o cadastro, enviaremos um código para o e-mail informado.');
+            } catch (error: any) {
+              toast.error(error?.message || 'Não foi possível solicitar a recuperação agora.');
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          const handleRecoveryComplete = async () => {
+            const token = recoveryCode.replace(/\\s/g, '');
+            if (!recoveryId || token.length < 6 || loading) {
+              toast.error('Informe o código recebido por e-mail.');
+              return;
+            }
+            setLoading(true);
+            try {
+              await sessionService.verifyClientRecoveryOtp(recoveryEmail, token);
+              const data = await sessionService.completeClientRecovery(recoveryId);
+              if (!data?.success || !data?.id) throw new Error('Não foi possível concluir a recuperação.');
+              toast.success('E-mail confirmado. Defina uma nova senha para concluir.');
+              onLoginClient(data.id, true);
+            } catch (error: any) {
+              await supabase.auth.signOut({ scope: 'local' });
+              setRecoveryCode('');
+              toast.error(error?.message || 'Código inválido ou expirado. Solicite um novo código.');
+            } finally {
+              setLoading(false);
+            }
+          };'''
+          if old_handler not in modal:
+              raise SystemExit('Handler antigo de recuperação não encontrado.')
+          modal = modal.replace(old_handler, new_handler, 1)
+
+          old_ui = '''      {mode === 'recovery' && (
+            <div className="space-y-5">
+              <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-900"><ShieldAlert className="mb-2 h-5 w-5" />Confirme os dados cadastrados para acessar a etapa de redefinição.</div>
+              <PersonSelector value={personType} onChange={(value) => { setPersonType(value); setDocumento(''); }} />
+              <DocumentInput personType={personType} value={documento} onChange={setDocumento} />
+              <input type="email" value={recoveryEmail} onChange={(event) => setRecoveryEmail(event.target.value)} placeholder="E-mail cadastrado" className="input-field" />
+              <div className="flex gap-3"><button type="button" onClick={() => changeMode('login')} className="btn-secondary flex-1">Voltar</button><button type="button" onClick={handleRecovery} disabled={loading} className="btn-primary flex-1">{loading ? 'Validando...' : 'Continuar'}</button></div>
+            </div>
+          )}'''
+          new_ui = '''      {mode === 'recovery' && (
+            <div className="space-y-5">
+              {recoveryStage === 'request' ? (
+                <>
+                  <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-900"><ShieldAlert className="mb-2 h-5 w-5" />Informe documento e e-mail. A resposta será sempre genérica para proteger os dados da conta.</div>
+                  <PersonSelector value={personType} onChange={(value) => { setPersonType(value); setDocumento(''); }} />
+                  <DocumentInput personType={personType} value={documento} onChange={setDocumento} />
+                  <label className="grid gap-2 text-sm font-medium text-neutral-600">E-mail cadastrado<input type="email" name="recovery-email" autoComplete="email" value={recoveryEmail} onChange={(event) => setRecoveryEmail(event.target.value)} className="input-field" maxLength={254} /></label>
+                  <div className="flex gap-3"><button type="button" onClick={() => changeMode('login')} className="btn-secondary flex-1">Voltar</button><button type="button" onClick={handleRecoveryRequest} disabled={loading} className="btn-primary flex-1">{loading ? 'Enviando...' : 'Enviar código'}</button></div>
+                </>
+              ) : (
+                <>
+                  <div className="rounded-2xl bg-indigo-50 p-4 text-sm text-indigo-900"><MailCheck className="mb-2 h-5 w-5" />Digite o código enviado ao e-mail informado. O código expira em poucos minutos e só pode ser usado uma vez.</div>
+                  <label className="grid gap-2 text-sm font-medium text-neutral-600">Código de verificação<input type="text" name="recovery-code" autoComplete="one-time-code" inputMode="numeric" value={recoveryCode} onChange={(event) => setRecoveryCode(event.target.value.replace(/\\D/g, '').slice(0, 8))} className="input-field text-center font-mono text-lg tracking-[0.35em]" maxLength={8} /></label>
+                  <button type="button" onClick={handleRecoveryRequest} disabled={loading} className="w-full text-sm font-semibold text-[#142030] hover:underline">Enviar um novo código</button>
+                  <div className="flex gap-3"><button type="button" onClick={() => { setRecoveryStage('request'); setRecoveryCode(''); setRecoveryId(''); }} className="btn-secondary flex-1">Voltar</button><button type="button" onClick={handleRecoveryComplete} disabled={loading || recoveryCode.length < 6} className="btn-primary flex-1">{loading ? 'Confirmando...' : 'Confirmar código'}</button></div>
+                </>
+              )}
+            </div>
+          )}'''
+          if old_ui not in modal:
+              raise SystemExit('Interface antiga de recuperação não encontrada.')
+          modal = modal.replace(old_ui, new_ui, 1)
+          modal_path.write_text(modal)
+
+          test_path = Path('scripts/check-home-public-contracts.ts')
+          test = test_path.read_text()
+          test = test.replace(
+              "const home = read('src/pages/Home.tsx');",
+              "const home = read('src/pages/Home.tsx');\nconst sessionService = read('src/lib/sessionService.ts');\nconst authGateway = read('supabase/functions/gsa-auth-session/index.ts');",
+              1,
+          )
+          test = test.replace(
+              "assert.doesNotMatch(migration, /gsa_recuperar_senha_cliente|recover_client/, 'A correção da Home não pode alterar a recuperação em andamento');\n",
+              '',
+              1,
+          )
+          recovery_assertions = '''assert.match(sessionService, /request_client_recovery/, 'Recuperação deve iniciar desafio sem abrir sessão');
+          assert.match(sessionService, /verifyOtp/, 'Código recebido por e-mail deve ser verificado pelo Supabase Auth');
+          assert.match(sessionService, /complete_client_recovery/, 'Sessão de recuperação só pode nascer após desafio concluído');
+          assert.doesNotMatch(sessionService, /['\"]recover_client['\"]/, 'Fluxo antigo de recuperação direta deve ser removido');
+          assert.match(authGateway, /request_client_recovery/, 'Gateway deve oferecer solicitação de recuperação protegida');
+          assert.match(authGateway, /complete_client_recovery/, 'Gateway deve exigir conclusão autenticada do desafio');
+          assert.match(clientModal, /autoComplete="one-time-code"/, 'Home deve solicitar o código de uso único enviado ao e-mail');
+          assert.match(clientModal, /A resposta será sempre genérica/, 'Interface não deve revelar se a conta existe');
+          '''
+          anchor = "assert.match(migration, /v_default_active AND upper\\(v_token\\)/, 'Código público depende da configuração ativa');"
+          if anchor not in test:
+              raise SystemExit('Âncora dos contratos da Home não encontrada.')
+          test = test.replace(anchor, recovery_assertions + anchor, 1)
+          test_path.write_text(test)
+          PY
+
+      - name: Validate TypeScript
+        run: |
+          npm ci
+          npm run lint
+
+      - name: Publish secure recovery patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/temp-secure-home-recovery.yml .secure-home-recovery-trigger
+          git add -A
+          git commit -m 'Implementar recuperação segura da conta na Home'
+          git push origin HEAD:agent/corrigir-home-itens-2-a-10
