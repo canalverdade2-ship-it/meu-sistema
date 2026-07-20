@@ -2,13 +2,13 @@ ClientServicos atualizado para documentos privados.
 client_services_exit_code=0
 Tickets de cliente, administrador e prestador atualizados para armazenamento privado.
 support_tickets_exit_code=0
-/home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:17
-    throw new Error(`${label}: marcadores nao encontrados.`);
-    ^
+/home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:9
+  if (count !== 1) throw new Error(`${label}: esperado 1 trecho, encontrado ${count}.`);
+                   ^
 
-Error: Briefings privados: marcadores nao encontrados.
-    at replaceSection (/home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:17:11)
-    at Object.<anonymous> (/home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:28:1)
+Error: Link do briefing privado: esperado 1 trecho, encontrado 0.
+    at replaceOnce (/home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:9:26)
+    at Object.<anonymous> (/home/runner/work/meu-sistema/meu-sistema/scripts/fix-private-admin-service-orders-stage6.cjs:19:1)
     at Module._compile (node:internal/modules/cjs/loader:1871:14)
     at Object..js (node:internal/modules/cjs/loader:2002:10)
     at Module.load (node:internal/modules/cjs/loader:1594:32)
