@@ -76,7 +76,7 @@ const rpcByAction: Record<AuthAction, { name: string; params: (payload: Record<s
   },
 };
 
-function configuredOrigins() {
+export function configuredOrigins() {
   const rawOrigins = [Deno.env.get('ALLOWED_ORIGINS'), Deno.env.get('ALLOWED_ORIGIN')]
     .filter(Boolean)
     .join(',');
@@ -114,7 +114,7 @@ function text(value: unknown, maxLength: number) {
   return value.trim().slice(0, maxLength);
 }
 
-function normalizePayload(action: AuthAction, payload: Record<string, unknown>) {
+export function normalizePayload(action: AuthAction, payload: Record<string, unknown>) {
   if (action === 'login_pin') {
     const documento = digits(payload.documento);
     const pin = digits(payload.pin);
@@ -186,7 +186,31 @@ async function checkRateLimit(
   return data as RateLimitResult;
 }
 
-Deno.serve(async (request) => {
+async function clearSubjectRateLimit(
+  admin: ReturnType<typeof createClient>,
+  bucketKey: string,
+) {
+  const { error } = await admin
+    .from('gsa_auth_rate_limits')
+    .delete()
+    .eq('bucket_key', bucketKey);
+
+  if (error) console.error('Não foi possível limpar o limitador após autenticação válida.', error);
+}
+
+function tooManyAttempts(
+  retryAfter: number,
+  origin: string | null,
+) {
+  return json(
+    { valid: false, success: false, error: 'too_many_attempts', retry_after: retryAfter },
+    429,
+    origin,
+    { 'Retry-After': String(retryAfter) },
+  );
+}
+
+export async function handleRequest(request: Request) {
   const requestOrigin = request.headers.get('origin');
   const allowedOrigin = requestOrigin && configuredOrigins().has(requestOrigin) ? requestOrigin : null;
 
@@ -222,6 +246,9 @@ Deno.serve(async (request) => {
 
     if (!body.action || !rpcByAction[body.action]) return json({ error: 'invalid_action' }, 400, allowedOrigin);
 
+    const normalizedPayload = normalizePayload(body.action, body.payload || {});
+    if (!normalizedPayload) return json({ error: 'invalid_payload' }, 400, allowedOrigin);
+
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -231,32 +258,14 @@ Deno.serve(async (request) => {
     const ipLimit = await checkRateLimit(admin, ipBucket, rules.ip);
     if (!ipLimit.allowed) {
       const retryAfter = Math.max(1, Number(ipLimit.retry_after || rules.ip.blockSeconds));
-      return json(
-        { valid: false, success: false, error: 'too_many_attempts' },
-        429,
-        allowedOrigin,
-        { 'Retry-After': String(retryAfter) },
-      );
+      return tooManyAttempts(retryAfter, allowedOrigin);
     }
-
-    const normalizedPayload = normalizePayload(body.action, body.payload || {});
-    if (!normalizedPayload) return json({ error: 'invalid_payload' }, 400, allowedOrigin);
 
     const subjectBucket = await hashBucket(
       serviceRoleKey,
       `${body.action}:subject`,
       subjectFor(body.action, normalizedPayload),
     );
-    const subjectLimit = await checkRateLimit(admin, subjectBucket, rules.subject);
-    if (!subjectLimit.allowed) {
-      const retryAfter = Math.max(1, Number(subjectLimit.retry_after || rules.subject.blockSeconds));
-      return json(
-        { valid: false, success: false, error: 'too_many_attempts' },
-        429,
-        allowedOrigin,
-        { 'Retry-After': String(retryAfter) },
-      );
-    }
 
     const operation = rpcByAction[body.action];
     const { data, error } = await admin.rpc(operation.name, operation.params(normalizedPayload));
@@ -267,8 +276,19 @@ Deno.serve(async (request) => {
 
     const successful = Boolean(data?.valid || data?.success);
     if (!successful) {
+      // O bucket por identidade só recebe tentativas inválidas. Assim, conhecer um
+      // CPF/CNPJ não permite impedir que o titular entre com a credencial correta.
+      const subjectLimit = await checkRateLimit(admin, subjectBucket, rules.subject);
+      if (!subjectLimit.allowed) {
+        const retryAfter = Math.max(1, Number(subjectLimit.retry_after || rules.subject.blockSeconds));
+        return tooManyAttempts(retryAfter, allowedOrigin);
+      }
+
       return json({ valid: false, success: false, error: 'invalid_credentials' }, 200, allowedOrigin);
     }
+
+    // Uma credencial válida sempre pode entrar e reinicia o contador de falhas.
+    await clearSubjectRateLimit(admin, subjectBucket);
 
     const rpcSession = data?.session || data;
     const email = rpcSession?.auth?.email;
@@ -309,4 +329,6 @@ Deno.serve(async (request) => {
     console.error('Erro inesperado no gateway de autenticação:', error);
     return json({ error: 'unexpected_error' }, 500, allowedOrigin);
   }
-});
+}
+
+if (import.meta.main) Deno.serve(handleRequest);
