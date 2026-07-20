@@ -5,45 +5,144 @@ import {
   adminModulePath,
   canAccessAdminModule,
   normalizeAdminModule,
+  normalizeGrantedAdminModules,
 } from '../src/routing/adminAccess';
 
 const root = process.cwd();
 
+async function read(path: string) {
+  return readFile(resolve(root, path), 'utf8');
+}
+
 async function assertFileContains(path: string, patterns: string[]) {
-  const content = await readFile(resolve(root, path), 'utf8');
+  const content = await read(path);
   for (const pattern of patterns) {
     assert.ok(content.includes(pattern), `${path}: contrato ausente: ${pattern}`);
   }
 }
 
+async function assertFileExcludes(path: string, patterns: string[]) {
+  const content = await read(path);
+  for (const pattern of patterns) {
+    assert.ok(!content.includes(pattern), `${path}: padrão inseguro ainda presente: ${pattern}`);
+  }
+}
+
 async function main() {
   assert.equal(normalizeAdminModule('tickets'), 'atendimento');
-  assert.equal(normalizeAdminModule('cobranca'), 'financeiro');
+  assert.equal(normalizeAdminModule('cobranca'), 'cobranca');
+  assert.equal(normalizeAdminModule('fiscal'), 'fiscal');
   assert.equal(normalizeAdminModule('clientes'), 'cadastro');
+  assert.equal(normalizeAdminModule('vendas'), 'operacoes');
+
+  assert.deepEqual(normalizeGrantedAdminModules(['clientes', 'vendas', 'tickets', 'viagens']), ['cadastro', 'operacoes', 'atendimento', 'viagens']);
 
   assert.equal(canAccessAdminModule('admin', [], 'financeiro'), true);
   assert.equal(canAccessAdminModule('colaborador', ['cadastro'], 'cadastro'), true);
   assert.equal(canAccessAdminModule('colaborador', ['cadastro'], 'financeiro'), false);
-  assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'viagens'), true);
+  assert.equal(canAccessAdminModule('colaborador', ['vendas'], 'viagens'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['loja'], 'classificados'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['financeiro'], 'cobranca'), false);
+  assert.equal(canAccessAdminModule('colaborador', ['cobranca'], 'cobranca'), true);
+  assert.equal(canAccessAdminModule('colaborador', ['fiscal'], 'fiscal'), true);
   assert.equal(canAccessAdminModule('colaborador', [], 'dashboard'), true);
 
   assert.equal(adminModulePath('dashboard'), '/admin/dashboard');
   assert.equal(adminModulePath('cadastro', 'clientes'), '/admin/cadastros/clientes');
   assert.equal(adminModulePath('viagens'), '/admin/viagens');
+  assert.equal(adminModulePath('cobranca'), '/admin/cobranca');
+  assert.equal(adminModulePath('fiscal'), '/admin/fiscal');
   assert.equal(adminModulePath('financeiro', 'faturas', 'abc'), '/admin/financeiro/faturas/abc');
 
-  await assertFileContains('package.json', [
-    '"validate:subscriptions"',
-    '"test:travel"',
-    '"test:admin"',
+  await assertFileContains('src/pages/AdminPanel.tsx', [
+    'gsa_admin_get_context_secure',
+    'canAccessAdminModule',
+    'accessModuleForRoute',
+    'Você não possui permissão para acessar este módulo.',
+    "table: 'colaborador_modulos'",
+  ]);
+  await assertFileExcludes('src/pages/AdminPanel.tsx', [
+    "select('nome, modulos, status')",
+    "localStorage.getItem('colaboradorModulos')",
   ]);
 
-  await assertFileContains('src/pages/AdminPanel.tsx', [
-    "import type React from 'react';",
-    'canAccessAdminModule',
-    'adminModulePath',
-    "select('nome, modulos, status')",
-    'Você não possui permissão para acessar este módulo.',
+  await assertFileContains('src/lib/sessionService.ts', [
+    'gsa_admin_get_context_secure',
+    'clearLegacyAdminIdentity',
+    "localStorage.removeItem('colaboradorModulos')",
+  ]);
+
+  await assertFileContains('src/components/admin/AcessosModule.tsx', [
+    'gsa_admin_access_snapshot',
+    'gsa_admin_save_collaborator',
+    'gsa_admin_set_collaborator_status',
+    'gsa_admin_rotate_collaborator_credential',
+    'gsa_admin_review_deletion_request',
+  ]);
+  await assertFileExcludes('src/components/admin/AcessosModule.tsx', [
+    "from('colaborador_modulos')",
+    'credencial_acesso',
+  ]);
+
+  await assertFileContains('src/components/admin/ClassifiedsModule.tsx', [
+    'gsa_admin_list_resource',
+    'gsa_admin_classified_action',
+    'PAGE_SIZE',
+  ]);
+  await assertFileExcludes('src/components/admin/ClassifiedsModule.tsx', [
+    "from('classificados_anuncios')",
+    'rpc_moderar_mensagem_classificado',
+  ]);
+
+  await assertFileContains('src/components/admin/ProtectionAdminModule.tsx', [
+    'gsa_admin_list_resource',
+    'gsa_admin_save_protection_entity',
+    'gsa_admin_create_protection_proposal',
+    'gsa_admin_update_resource_status',
+  ]);
+  await assertFileExcludes('src/components/admin/ProtectionAdminModule.tsx', [
+    'supabase.from',
+  ]);
+
+  await assertFileContains('src/components/admin/FiscalModule.tsx', [
+    "scope: 'fiscal'",
+    'gsa_admin_fiscal_update',
+    'SecureAttachmentButton',
+    'removePrivateDocument',
+  ]);
+  await assertFileExcludes('src/components/admin/FiscalModule.tsx', [
+    'getPublicUrl',
+    'document.write',
+    ".delete()",
+  ]);
+
+  await assertFileContains('src/components/admin/SystemMonitorModule.tsx', [
+    'gsa_admin_system_snapshot',
+    'Visão somente leitura',
+  ]);
+  await assertFileExcludes('src/components/admin/SystemMonitorModule.tsx', [
+    'from(tableName)',
+    'storage.from',
+    'check_file_references',
+  ]);
+
+  await assertFileContains('src/components/admin/ConfiguracoesModule.tsx', [
+    'gsa_admin_settings_snapshot',
+    'gsa_admin_update_settings_secure',
+    'gsa_admin_save_company',
+    'gsa_admin_save_payment_method',
+  ]);
+  await assertFileExcludes('src/components/admin/ConfiguracoesModule.tsx', [
+    'admin_access_code',
+    'gsa_admin_upsert_settings',
+    'supabase.from',
+  ]);
+
+  await assertFileContains('src/components/admin/RelatoriosModule.tsx', [
+    'normalizeGrantedAdminModules',
+    "requiredModules: ['cobranca']",
+    "requiredModules: ['fiscal']",
+    "requiredModules: ['emprestimos']",
   ]);
 
   await assertFileContains('src/hooks/useAdminNotifications.tsx', [
@@ -54,8 +153,6 @@ async function main() {
   ]);
 
   await assertFileContains('src/components/admin/Dashboard.tsx', [
-    "import type React from 'react';",
-    'key?: React.Key;',
     'gsa_admin_dashboard_snapshot',
     'Faturamento dos últimos 6 meses',
     'credito_pendente_total',
@@ -63,7 +160,6 @@ async function main() {
   ]);
 
   await assertFileContains('src/components/admin/TravelAdminModule.tsx', [
-    "import type React from 'react';",
     'gsa_admin_travel_list',
     'gsa_admin_travel_create_proposal',
     'gsa_admin_travel_create_package',
@@ -71,17 +167,37 @@ async function main() {
     'PAGE_SIZE',
   ]);
 
-  await assertFileContains('supabase/migrations/20260720183000_harden_admin_panel.sql', [
-    'gsa_admin_context',
-    'gsa_admin_has_module',
-    'gsa_admin_notification_state',
-    'gsa_admin_dashboard_snapshot',
-    'gsa_admin_travel_create_proposal',
+  await assertFileContains('supabase/migrations/20260720234500_admin_identity_permissions_hardening.sql', [
+    "'suspenso'",
+    'gsa_admin_validate_context',
+    'colaborador_modulos',
+    'gsa_admin_notification_visible',
+    '10000',
+  ]);
+  await assertFileContains('supabase/migrations/20260720235500_admin_secure_operations.sql', [
+    'gsa_admin_save_collaborator',
+    'gsa_admin_review_deletion_request',
+    'gsa_admin_create_protection_proposal',
+    'gsa_admin_system_snapshot',
     'FOR UPDATE',
-    'gsa_admin_audit_events',
+  ]);
+  await assertFileContains('supabase/migrations/20260721000500_admin_module_rls_boundaries.sql', [
+    'AS RESTRICTIVE',
+    'gsa_admin_restrict_collaborator_to_module',
+    'gsa_enforce_admin_log_identity',
+  ]);
+  await assertFileContains('supabase/migrations/20260721001500_private_admin_documents.sql', [
+    "'gsa-private-documents'",
+    'gsa_admin_private_document_allowed',
+    "public = false",
+  ]);
+  await assertFileContains('supabase/migrations/20260721002500_secure_admin_settings.sql', [
+    'gsa_admin_allowed_setting_keys',
+    'gsa_admin_settings_snapshot',
+    'gsa_admin_update_settings_secure',
   ]);
 
-  console.log('Painel administrativo: contratos de segurança e operação validados.');
+  console.log('Painel administrativo: contratos completos de segurança e operação validados.');
 }
 
 main().catch((error) => {
