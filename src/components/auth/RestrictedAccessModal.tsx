@@ -17,7 +17,7 @@ interface RestrictedAccessModalProps {
   isOpen: boolean;
   initialTab?: RestrictedTab;
   onClose: () => void;
-  onLoginAdmin: (details: { type: 'admin' | 'colaborador'; id?: string; modulos?: string[] }) => void;
+  onLoginAdmin: (details: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => void;
   onLoginPrestador: (id: string) => void;
 }
 
@@ -94,7 +94,7 @@ export function RestrictedAccessModal({ isOpen, initialTab = 'prestador', onClos
       if (!data?.valid) throw new Error('Código inválido.');
       await logService.logAction({ ator_tipo: 'colaborador', ator_id: data.id, ator_nome: data.nome, acao: 'LOGIN', detalhes: 'Acesso ao painel administrativo' });
       toast.success('Acesso autorizado.');
-      onLoginAdmin({ type: 'colaborador', id: data.id, modulos: data.modulos || [] });
+      onLoginAdmin({ type: 'colaborador', id: data.id, nome: data.nome, modulos: data.modulos || [] });
     } catch {
       toast.error('Credencial inválida ou usuário inativo.');
     } finally {

@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { Shield, Key, Users, Settings, Trash2, CheckCircle, XCircle, UserPlus, Eye, Copy, Activity, User, History, Clock } from 'lucide-react';
 import { Modal } from '../ui/Modal';
-import { formatCurrency, formatDateTime, maskPhone, generateCode, copyToClipboard } from '../../lib/utils';
+import { formatCurrency, formatDateTime, maskPhone, generateCode, generateSecureNumericCode, copyToClipboard } from '../../lib/utils';
 import { useAdminNotifications } from '../../hooks/useAdminNotifications';
 import { logService } from '../../lib/logService';
 import { canDeleteRecord } from '../../lib/deleteRequest';
@@ -218,7 +218,7 @@ export function AcessosModule({ adminType, colaboradorId, colaboradorNome }: Ace
   // --- COLABORADORES handlers ---
   const handleOpenNewColaborador = () => {
     setColaboradorStep(1);
-    const newCode = Array.from({length: 6}, () => Math.floor(Math.random() * 10)).join('');
+    const newCode = generateSecureNumericCode(8);
     setColaboradorForm({ id: '', nome: '', email: '', telefone: '', funcao_id: '', credencial_acesso: newCode });
     setSelectedModulos([]);
     setIsColaboradorModalOpen(true);
@@ -284,22 +284,18 @@ export function AcessosModule({ adminType, colaboradorId, colaboradorNome }: Ace
         });
       }
 
-      // Update allowed modules
-      // 1. Delete all existing
-      await supabase.from('colaborador_modulos').delete().eq('colaborador_id', colabId);
-      // 2. Re-insert
-      if (selectedModulos.length > 0) {
-        const modsInfo = selectedModulos.map(m => ({ colaborador_id: colabId, modulo_id: m }));
-        await supabase.from('colaborador_modulos').insert(modsInfo);
-        
-        await logService.logAction({
-          ator_tipo: adminType as any,
-          ator_id: colaboradorId,
-          ator_nome: colaboradorNome,
-          acao: 'ATUALIZAR_PERMISSOES',
-          detalhes: `Atualizou as permissões de acesso do colaborador ID: ${colabId}`
-        });
-      }
+      // Atualização atômica das permissões, com revogação das sessões antigas.
+      await callAdminRpc('gsa_admin_replace_collaborator_modules', {
+        p_colaborador_id: colabId,
+        p_modulos: selectedModulos,
+      });
+      await logService.logAction({
+        ator_tipo: adminType as any,
+        ator_id: colaboradorId,
+        ator_nome: colaboradorNome,
+        acao: 'ATUALIZAR_PERMISSOES',
+        detalhes: `Atualizou as permissões de acesso do colaborador ID: ${colabId}`
+      });
 
       toast.success('Colaborador salvo com sucesso!');
       setIsColaboradorModalOpen(false);

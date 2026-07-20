@@ -290,15 +290,15 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
     if (document.visibilityState !== 'visible') return;
 
     try {
-      // Busca notificações administrativas (tabela legada para retrocompatibilidade)
-      const { data: adminNotifs, error: adminError } = await supabase
-        .from('admin_notificacoes')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(30);
-
-      // Busca notificações destinadas ao admin (filtro inteligente por destinatario_tipo)
+      const storedAdminType = localStorage.getItem('adminType');
       const colabId = localStorage.getItem('colaboradorId');
+      // A tabela legada é exclusiva da Gestão. Colaboradores usam notificações direcionadas.
+      const adminResult = storedAdminType === 'colaborador'
+        ? { data: [] as any[], error: null }
+        : await supabase.from('admin_notificacoes').select('*').order('created_at', { ascending: false }).limit(30);
+      const { data: adminNotifs, error: adminError } = adminResult;
+
+      // Busca notificações destinadas ao ator atual.
       
       let query = supabase
         .from('notificacoes')
@@ -307,12 +307,22 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
         .limit(40);
 
       if (colabId) {
-        query = query.or(`destinatario_tipo.in.(admin,broadcast_todos),and(destinatario_tipo.eq.colaborador,colaborador_id.eq.${colabId})`);
+        query = query.or(`destinatario_tipo.eq.broadcast_todos,and(destinatario_tipo.eq.colaborador,colaborador_id.eq.${colabId})`);
       } else {
         query = query.in('destinatario_tipo', ['admin', 'broadcast_todos']);
       }
 
       const { data: generalNotifs, error: generalError } = await query;
+      let collaboratorReceipts: any[] = [];
+      if (colabId && generalNotifs?.length) {
+        const { data: receipts, error: receiptError } = await supabase
+          .from('notificacao_leituras_colaborador')
+          .select('notificacao_id, lida, ocultada')
+          .eq('colaborador_id', colabId)
+          .in('notificacao_id', generalNotifs.map((notification: any) => notification.id));
+        if (receiptError && receiptError.code !== '42P01') console.error('Error fetching collaborator notification receipts:', receiptError);
+        collaboratorReceipts = receipts || [];
+      }
 
       if (adminError && adminError.code !== '42P01') console.error('Error fetching admin notifications:', adminError);
       if (generalError && generalError.code !== '42P01') console.error('Error fetching general notifications:', generalError);
@@ -324,22 +334,28 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
           id: `admin_${n.id}`, // Prefixo para garantir unicidade global
           is_admin_table: true
         })),
-        ...(generalNotifs || []).map(n => ({
-          id: `gen_${n.id}`, // Prefixo para garantir unicidade global
-          titulo: n.titulo,
-          mensagem: n.mensagem,
-          modulo: n.modulo,
-          tab: n.tab,
-          item_id: n.item_id,
-          lida: n.lida,
-          created_at: n.data_criacao,
-          tipo: n.tipo || 'geral',
-          link: n.item_id ? `/${n.modulo}/${n.item_id}` : undefined,
-          is_admin_table: false,
-          prioridade: n.prioridade || 'normal',
-          acao_origem: n.acao_origem,
-          destinatario_tipo: n.destinatario_tipo
-        }))
+        ...(generalNotifs || []).filter((n: any) => {
+          const receipt = collaboratorReceipts.find((item: any) => item.notificacao_id === n.id);
+          return !receipt?.ocultada;
+        }).map((n: any) => {
+          const receipt = collaboratorReceipts.find((item: any) => item.notificacao_id === n.id);
+          return {
+            id: `gen_${n.id}`,
+            titulo: n.titulo,
+            mensagem: n.mensagem,
+            modulo: n.modulo,
+            tab: n.tab,
+            item_id: n.item_id,
+            lida: colabId ? Boolean(receipt?.lida) : n.lida,
+            created_at: n.data_criacao,
+            tipo: n.tipo || 'geral',
+            link: n.item_id ? `/${n.modulo}/${n.item_id}` : undefined,
+            is_admin_table: false,
+            prioridade: n.prioridade || 'normal',
+            acao_origem: n.acao_origem,
+            destinatario_tipo: n.destinatario_tipo
+          };
+        })
       ];
 
       // Ordenar por data decrescente
@@ -454,6 +470,7 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
       // Filtrar: só aceitar notificações destinadas ao admin ou ao colaborador específico
       const adminType = localStorage.getItem('adminType');
       const colabId = localStorage.getItem('colaboradorId');
+      if (isAdminTable && adminType === 'colaborador') return;
 
       if (!isAdminTable) {
         if (raw.destinatario_tipo === 'colaborador' && raw.colaborador_id !== colabId) return;
@@ -571,40 +588,56 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
   const markAsRead = async (id: string) => {
     const notif = notifications.find(n => n.id === id);
     if (!notif) return;
-
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
     setUnreadNotifications(prev => Math.max(0, prev - 1));
 
+    const originalId = id.split('_')[1] || id;
+    const colabId = localStorage.getItem('colaboradorId');
+    const adminType = localStorage.getItem('adminType');
+    if (adminType === 'colaborador' && colabId && !(notif as any).is_admin_table) {
+      await supabase.from('notificacao_leituras_colaborador').upsert({ notificacao_id: originalId, colaborador_id: colabId, lida: true, ocultada: false, atualizado_em: new Date().toISOString() });
+      return;
+    }
     const table = (notif as any).is_admin_table ? 'admin_notificacoes' : 'notificacoes';
-    const originalId = id.split('_')[1] || id; // Remove o prefixo para a consulta no Supabase
     await supabase.from(table).update({ lida: true }).eq('id', originalId);
   };
 
   const markAllAsRead = async () => {
     const unread = notifications.filter(n => !n.lida);
     if (unread.length === 0) return;
-    
     setNotifications(prev => prev.map(n => ({ ...n, lida: true })));
     setUnreadNotifications(0);
 
+    const colabId = localStorage.getItem('colaboradorId');
+    const adminType = localStorage.getItem('adminType');
+    if (adminType === 'colaborador' && colabId) {
+      const receipts = unread.filter((n: any) => !n.is_admin_table).map(n => ({ notificacao_id: n.id.split('_')[1] || n.id, colaborador_id: colabId, lida: true, ocultada: false, atualizado_em: new Date().toISOString() }));
+      if (receipts.length) await supabase.from('notificacao_leituras_colaborador').upsert(receipts);
+      return;
+    }
     const adminIds = unread.filter((n: any) => n.is_admin_table).map(n => n.id.split('_')[1] || n.id);
     const generalIds = unread.filter((n: any) => !n.is_admin_table).map(n => n.id.split('_')[1] || n.id);
-
-    if (adminIds.length > 0) await supabase.from('admin_notificacoes').update({ lida: true }).in('id', adminIds);
-    if (generalIds.length > 0) await supabase.from('notificacoes').update({ lida: true }).in('id', generalIds);
+    if (adminIds.length) await supabase.from('admin_notificacoes').update({ lida: true }).in('id', adminIds);
+    if (generalIds.length) await supabase.from('notificacoes').update({ lida: true }).in('id', generalIds);
   };
 
   const deleteAllNotifications = async () => {
     if (notifications.length === 0) return;
-
-    const adminIds = notifications.filter((n: any) => n.is_admin_table).map(n => n.id.split('_')[1] || n.id);
-    const generalIds = notifications.filter((n: any) => !n.is_admin_table).map(n => n.id.split('_')[1] || n.id);
-
+    const current = [...notifications];
     setNotifications([]);
     setUnreadNotifications(0);
 
-    if (adminIds.length > 0) await supabase.from('admin_notificacoes').delete().in('id', adminIds);
-    if (generalIds.length > 0) await supabase.from('notificacoes').delete().in('id', generalIds);
+    const colabId = localStorage.getItem('colaboradorId');
+    const adminType = localStorage.getItem('adminType');
+    if (adminType === 'colaborador' && colabId) {
+      const receipts = current.filter((n: any) => !n.is_admin_table).map(n => ({ notificacao_id: n.id.split('_')[1] || n.id, colaborador_id: colabId, lida: true, ocultada: true, atualizado_em: new Date().toISOString() }));
+      if (receipts.length) await supabase.from('notificacao_leituras_colaborador').upsert(receipts);
+      return;
+    }
+    const adminIds = current.filter((n: any) => n.is_admin_table).map(n => n.id.split('_')[1] || n.id);
+    const generalIds = current.filter((n: any) => !n.is_admin_table).map(n => n.id.split('_')[1] || n.id);
+    if (adminIds.length) await supabase.from('admin_notificacoes').delete().in('id', adminIds);
+    if (generalIds.length) await supabase.from('notificacoes').delete().in('id', generalIds);
   };
 
   const combinedPendencies = React.useMemo(() => {

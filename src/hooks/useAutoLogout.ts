@@ -9,9 +9,7 @@ export function useAutoLogout(onLogout: () => void, isSessionActive: boolean) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const performLogout = () => {
-    sessionService.endSession().then(() => {
-      onLogout();
-    });
+    onLogout();
   };
 
   const resetTimer = () => {
@@ -51,6 +49,8 @@ export function useAutoLogout(onLogout: () => void, isSessionActive: boolean) {
 
     // Initial setup
     resetTimer();
+    const handleRemoteRevocation = () => performLogout();
+    window.addEventListener('gsa-session-revoked', handleRemoteRevocation);
 
     // Add listeners
     events.forEach(event => {
@@ -83,6 +83,7 @@ export function useAutoLogout(onLogout: () => void, isSessionActive: boolean) {
       events.forEach(event => {
         window.removeEventListener(event, handleActivity);
       });
+      window.removeEventListener('gsa-session-revoked', handleRemoteRevocation);
       if (channel) {
         supabase.removeChannel(channel);
       }
