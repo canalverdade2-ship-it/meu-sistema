@@ -28,7 +28,7 @@ jobs:
 
       - name: Validate authorization
         run: |
-          grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V11' .sync-home-current-main-trigger
+          grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V12' .sync-home-current-main-trigger
           if [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
             test "${{ github.event.pull_request.head.ref }}" = 'ops/trigger-home-final-sync'
           fi
@@ -113,6 +113,31 @@ jobs:
                   raise SystemExit('Âncora dos contratos públicos da Home não encontrada.')
               test = test.replace(anchor, secure_contracts + anchor, 1)
           test_path.write_text(test)
+
+          admin_test_path = Path('scripts/check-admin-panel-contracts.ts')
+          admin_test = admin_test_path.read_text()
+          old_admin_contract = """  await assertFileContains('src/App.tsx', [
+            'SecureAdminPanel',
+            'defaultAdminPath',
+            "localStorage.setItem('colaboradorModulos'",
+            'isRouteAllowed(route.area, session, route.module, route.submodule)',
+          ]);
+          """
+          new_admin_contract = """  await assertFileContains('src/App.tsx', [
+            'SecureAdminPanel',
+            'defaultAdminPath',
+            'colaboradorModulos: adminDetails.modulos',
+            'readSafeReturnTo',
+            'isRouteAllowed(route.area, session, route.module, route.submodule)',
+          ]);
+          await assertFileExcludes('src/App.tsx', [
+            "localStorage.setItem('adminType'",
+            "localStorage.setItem('colaboradorModulos'",
+          ]);
+          """
+          if old_admin_contract not in admin_test:
+              raise SystemExit('Contrato administrativo antigo não encontrado para atualização.')
+          admin_test_path.write_text(admin_test.replace(old_admin_contract, new_admin_contract, 1))
 
           quality_path = Path('.github/workflows/quality.yml')
           quality = quality_path.read_text()
