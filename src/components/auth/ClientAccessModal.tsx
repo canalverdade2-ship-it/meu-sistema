@@ -174,7 +174,6 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
       if (error || !data?.valid) throw new Error(data?.error || 'Indicação inválida.');
       const fullReferral = {
         kind: data.kind,
-        id: data.indicacao_id || null,
         isDefaultCode: data.kind === 'default',
       };
       setReferralInfo(fullReferral);

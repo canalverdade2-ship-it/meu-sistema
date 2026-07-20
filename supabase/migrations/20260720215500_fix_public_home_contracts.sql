@@ -207,7 +207,7 @@ DECLARE
   v_tipo text := lower(trim(coalesce(v_payload->>'tipo_cadastro', '')));
   v_nome text := trim(coalesce(v_payload->>'nome_razao', ''));
   v_doc text := regexp_replace(coalesce(v_payload->>'documento', ''), '\D', '', 'g');
-  v_email text := lower(trim(coalesce(v_payload->>'email', ''));
+  v_email text := lower(trim(coalesce(v_payload->>'email', '')));
   v_phone text := regexp_replace(coalesce(v_payload->>'telefone', ''), '\D', '', 'g');
   v_cep text := regexp_replace(coalesce(v_payload->>'cep', ''), '\D', '', 'g');
   v_id uuid;
