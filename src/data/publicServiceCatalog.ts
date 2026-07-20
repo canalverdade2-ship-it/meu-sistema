@@ -23,6 +23,15 @@ export interface ServicePackage {
   services: ServiceItem[];
 }
 
+export function getServicePackageSlug(servicePackage: Pick<ServicePackage, 'title'>): string {
+  return servicePackage.title
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export const publicServices: IconItem[] = [
   { icon: BriefcaseBusiness, title: 'Serviços administrativos', text: 'Organização de demandas, contratos, documentos e rotinas para empresas e clientes.' },
   { icon: CreditCard, title: 'Crédito e financeiro', text: 'Soluções para acompanhar faturas, crédito, pagamentos e solicitações em um só lugar.' },
