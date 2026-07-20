@@ -1,1 +1,1 @@
-Implantação autorizada a partir do commit a701a355b60ca67818356f6a8e9bf0c7223bd187 e do CI 29780040489.
+Verificar em produção as 14 migrations administrativas do commit a701a355b60ca67818356f6a8e9bf0c7223bd187 e do CI 29780040489.
