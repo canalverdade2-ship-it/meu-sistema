@@ -1,20 +1,40 @@
 import { supabase } from './supabase';
 
 const STORAGE_PREFIX = 'storage://';
+const PRIVATE_BUCKETS = new Set(['documentos_prestador', 'entregas_demandas']);
 
 export function toStorageReference(bucket: string, path: string) {
   return `${STORAGE_PREFIX}${bucket}/${path}`;
 }
 
 export function parseStorageReference(reference: string) {
-  if (!reference?.startsWith(STORAGE_PREFIX)) return null;
-  const value = reference.slice(STORAGE_PREFIX.length);
-  const slashIndex = value.indexOf('/');
-  if (slashIndex <= 0) return null;
-  return {
-    bucket: value.slice(0, slashIndex),
-    path: value.slice(slashIndex + 1),
-  };
+  if (!reference) return null;
+
+  if (reference.startsWith(STORAGE_PREFIX)) {
+    const value = reference.slice(STORAGE_PREFIX.length);
+    const slashIndex = value.indexOf('/');
+    if (slashIndex <= 0) return null;
+    return {
+      bucket: value.slice(0, slashIndex),
+      path: value.slice(slashIndex + 1),
+    };
+  }
+
+  // Compatibilidade com URLs públicas antigas salvas antes dos buckets se tornarem privados.
+  try {
+    const parsedUrl = new URL(reference);
+    const markers = ['/storage/v1/object/public/', '/storage/v1/object/sign/'];
+    const marker = markers.find((item) => parsedUrl.pathname.includes(item));
+    if (!marker) return null;
+    const value = decodeURIComponent(parsedUrl.pathname.split(marker)[1] || '');
+    const slashIndex = value.indexOf('/');
+    if (slashIndex <= 0) return null;
+    const bucket = value.slice(0, slashIndex);
+    if (!PRIVATE_BUCKETS.has(bucket)) return null;
+    return { bucket, path: value.slice(slashIndex + 1) };
+  } catch {
+    return null;
+  }
 }
 
 function safeExtension(file: File) {
