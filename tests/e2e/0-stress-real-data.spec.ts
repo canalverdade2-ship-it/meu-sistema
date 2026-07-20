@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { generateTestCPF } from '../utils/cpf-generator';
 
+const REAL_DATA_STRESS_ENABLED = process.env.ALLOW_REAL_DATA_STRESS_TEST === 'true';
+
 test.describe.configure({ mode: 'parallel' });
 
 // ========================================================================
@@ -17,6 +19,7 @@ const AGENTE_CONFIG = [
 ];
 
 test.describe('Testes Massivos Reais de Sistema', () => {
+  test.skip(!REAL_DATA_STRESS_ENABLED, 'Teste com gravação real exige ALLOW_REAL_DATA_STRESS_TEST=true.');
 
   for (const cfg of AGENTE_CONFIG) {
     test(`Agente ${cfg.agente}: Criação de Cliente, Login e Compra na Loja`, async ({ page }) => {

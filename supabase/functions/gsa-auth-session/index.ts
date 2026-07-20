@@ -11,7 +11,7 @@ const baseHeaders: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
 };
 
-type AuthAction =
+export type AuthAction =
   | 'login_pin'
   | 'set_pin_and_login'
   | 'login_admin'
@@ -161,6 +161,12 @@ function subjectFor(action: AuthAction, payload: Record<string, string>) {
   return payload.documento || payload.recovery_id;
 }
 
+export function subjectRateLimitMode(action: AuthAction): 'before' | 'invalid-only' {
+  return action === 'request_client_recovery' || action === 'complete_client_recovery'
+    ? 'before'
+    : 'invalid-only';
+}
+
 function clientIp(request: Request) {
   const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
   return request.headers.get('cf-connecting-ip')
@@ -285,6 +291,14 @@ export async function handleRequest(request: Request) {
       `${body.action}:subject`,
       subjectFor(body.action, normalizedPayload),
     );
+
+    if (subjectRateLimitMode(body.action) === 'before') {
+      const subjectLimit = await checkRateLimit(admin, subjectBucket, rules.subject);
+      if (!subjectLimit.allowed) {
+        const retryAfter = Math.max(1, Number(subjectLimit.retry_after || rules.subject.blockSeconds));
+        return tooManyAttempts(retryAfter, allowedOrigin);
+      }
+    }
 
     if (body.action === 'request_client_recovery') {
       const recoveryId = crypto.randomUUID();
