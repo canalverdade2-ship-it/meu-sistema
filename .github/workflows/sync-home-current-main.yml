@@ -28,7 +28,7 @@ jobs:
 
       - name: Validate authorization
         run: |
-          grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V10' .sync-home-current-main-trigger
+          grep -Fqx 'SYNC_HOME_CURRENT_MAIN_V11' .sync-home-current-main-trigger
           if [ "$GITHUB_EVENT_NAME" = 'pull_request' ]; then
             test "${{ github.event.pull_request.head.ref }}" = 'ops/trigger-home-final-sync'
           fi
@@ -154,15 +154,25 @@ jobs:
       - name: Validate definitive Home package
         shell: bash
         run: |
-          set -euo pipefail
-          npm run lint
-          npm run test:admin
-          npm run test:products-subscriptions
-          npm run test:client-security
-          npm run test:provider
-          npm run test:home
-          npm run test:travel
-          npm run build
+          set -o pipefail
+          : > /tmp/home-validation.log
+          for command in \
+            'npm run lint' \
+            'npm run test:admin' \
+            'npm run test:products-subscriptions' \
+            'npm run test:client-security' \
+            'npm run test:provider' \
+            'npm run test:home' \
+            'npm run test:travel' \
+            'npm run build'; do
+            echo "===== $command =====" | tee -a /tmp/home-validation.log
+            set +e
+            bash -lc "$command" 2>&1 | tee -a /tmp/home-validation.log
+            code=${PIPESTATUS[0]}
+            set -e
+            echo "exit_code=$code" | tee -a /tmp/home-validation.log
+            if [ "$code" -ne 0 ]; then exit "$code"; fi
+          done
 
       - name: Publish definitive Home branch
         run: git push origin HEAD:agent/corrigir-home-itens-2-a-10
@@ -175,5 +185,6 @@ jobs:
           path: |
             /tmp/home-sync.log
             /tmp/home-conflicts.log
+            /tmp/home-validation.log
           retention-days: 7
           if-no-files-found: ignore
