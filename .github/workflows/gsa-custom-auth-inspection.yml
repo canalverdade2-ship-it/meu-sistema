@@ -46,7 +46,7 @@ jobs:
           grep -RInE --include='*.ts' --include='*.tsx' 'p_sessao_id|p_session_token|session_token|sessao_id|sessionService' src | head -n 800 > frontend-session-usage.log || true
 
       - name: Upload inspection
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gsa-custom-auth-inspection
           path: |
