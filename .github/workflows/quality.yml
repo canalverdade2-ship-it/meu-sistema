@@ -75,6 +75,10 @@ jobs:
         if: steps.typescript.outputs.exit_code == '0'
         run: npm run test:admin
 
+      - name: Products and subscriptions contracts
+        if: steps.typescript.outputs.exit_code == '0'
+        run: npm run test:products-subscriptions
+
       - name: Client portal security contracts
         id: client_security
         if: steps.typescript.outputs.exit_code == '0'
