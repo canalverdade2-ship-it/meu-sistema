@@ -72,16 +72,39 @@ jobs:
           test "${{ steps.typescript.outputs.exit_code }}" = "0"
 
       - name: Admin panel contracts
+        id: admin_contracts
         if: steps.typescript.outputs.exit_code == '0'
-        run: npm run test:admin
+        shell: bash
+        run: |
+          set +e
+          npm run test:admin > admin-contracts.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload admin contracts log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-contracts-log
+          path: admin-contracts.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Report admin contracts result
+        if: steps.typescript.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          cat admin-contracts.log
+          test "${{ steps.admin_contracts.outputs.exit_code }}" = "0"
 
       - name: Products and subscriptions contracts
-        if: steps.typescript.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0'
         run: npm run test:products-subscriptions
 
       - name: Client portal security contracts
         id: client_security
-        if: steps.typescript.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0'
         shell: bash
         run: |
           set +e
@@ -100,26 +123,26 @@ jobs:
           if-no-files-found: ignore
 
       - name: Report client security result
-        if: steps.typescript.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0'
         shell: bash
         run: |
           cat client-security.log
           test "${{ steps.client_security.outputs.exit_code }}" = "0"
 
       - name: Provider portal security contracts
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run test:provider
 
       - name: Home public contracts
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run test:home
 
       - name: GSA Viagens contracts
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run test:travel
 
       - name: Check authentication Edge Function
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         id: deno_check
         shell: bash
         run: |
@@ -139,18 +162,18 @@ jobs:
           if-no-files-found: ignore
 
       - name: Report Deno check result
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         shell: bash
         run: |
           cat deno-check.log
           test "${{ steps.deno_check.outputs.exit_code }}" = "0"
 
       - name: Test authentication Edge Function
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         run: deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
 
       - name: Validate authentication migration
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         env:
           PGPASSWORD: postgres
         run: |
@@ -203,7 +226,7 @@ jobs:
 
       - name: Validate Home public migrations
         id: home_migrations
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         env:
           PGPASSWORD: postgres
         shell: bash
@@ -224,12 +247,12 @@ jobs:
           if-no-files-found: ignore
 
       - name: Report Home migration result
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         shell: bash
         run: |
           cat home-migrations.log
           test "${{ steps.home_migrations.outputs.exit_code }}" = "0"
 
       - name: Build
-        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
+        if: steps.typescript.outputs.exit_code == '0' && steps.admin_contracts.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0' && steps.deno_check.outputs.exit_code == '0'
         run: npm run build
