@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+// As versões abaixo são exclusivas para evitar colisões no histórico do Supabase.
 const root = process.cwd();
 
 function read(relativePath: string): string {
