@@ -112,6 +112,10 @@ jobs:
           cat client-security.log
           test "${{ steps.client_security.outputs.exit_code }}" = "0"
 
+      - name: Provider portal security contracts
+        if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
+        run: npm run test:provider
+
       - name: GSA Viagens contracts
         if: steps.typescript.outputs.exit_code == '0' && steps.client_security.outputs.exit_code == '0'
         run: npm run test:travel
@@ -178,18 +182,15 @@ jobs:
             v_third jsonb;
           BEGIN
             DELETE FROM public.gsa_auth_rate_limits;
-
             v_first := public.gsa_auth_rate_limit_check(repeat('a', 64), 2, 60, 120);
             v_second := public.gsa_auth_rate_limit_check(repeat('a', 64), 2, 60, 120);
             v_third := public.gsa_auth_rate_limit_check(repeat('a', 64), 2, 60, 120);
-
             IF NOT (v_first->>'allowed')::boolean
                OR NOT (v_second->>'allowed')::boolean
                OR (v_third->>'allowed')::boolean
                OR (v_third->>'retry_after')::integer <= 0 THEN
               RAISE EXCEPTION 'Comportamento inesperado do rate limiting: %, %, %', v_first, v_second, v_third;
             END IF;
-
             IF has_function_privilege('anon', 'public.gsa_auth_rate_limit_check(text,integer,integer,integer)', 'EXECUTE')
                OR has_function_privilege('authenticated', 'public.gsa_auth_rate_limit_check(text,integer,integer,integer)', 'EXECUTE')
                OR NOT has_function_privilege('service_role', 'public.gsa_auth_rate_limit_check(text,integer,integer,integer)', 'EXECUTE') THEN
