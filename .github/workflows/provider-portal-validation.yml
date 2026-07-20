@@ -11,74 +11,21 @@ on:
       - 'src/hooks/useProviderNotifications.tsx'
       - 'src/lib/provider*.ts'
       - 'src/contexts/FileViewerContext.tsx'
-      - 'src/types/**'
-      - 'supabase/migrations/**provider**'
-      - 'supabase/migrations/20260720200000_harden_provider_portal.sql'
+      - 'src/types/react-namespace.d.ts'
+      - 'supabase/migrations/2026072021*_provider*.sql'
+      - 'supabase/migrations/20260720210000_harden_provider_portal.sql'
       - '.github/workflows/provider-portal-validation.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout head branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          fetch-depth: 0
-      - name: Apply exact TypeScript fixes
-        shell: python
-        run: |
-          from pathlib import Path
-
-          shim = Path('src/types/react-namespace.d.ts')
-          shim.parent.mkdir(parents=True, exist_ok=True)
-          shim.write_text("""import type { FormEvent as ReactFormEvent } from 'react';
-
-declare global {
-  namespace React {
-    type FormEvent<T = Element> = ReactFormEvent<T>;
-  }
-}
-
-export {};
-""", encoding='utf-8')
-
-          replacements = {
-            'src/components/prestador/PrestadorAgenda.tsx': [
-              ("'agendamento_criado',", "'agendamento_criado' as any,"),
-              ("'agendamento_concluido',", "'agendamento_concluido' as any,"),
-            ],
-            'src/components/prestador/PrestadorDemandas.tsx': [
-              ("`demanda_${action}`,", "`demanda_${action}` as any,"),
-              ("'demanda_suporte',", "'demanda_suporte' as any,"),
-              ("onChange(Array.from(event.target.files || []).slice(0, 5))", "onChange(event.currentTarget.files ? Array.from(event.currentTarget.files).slice(0, 5) : [])"),
-            ],
-            'src/components/prestador/PrestadorVouchers.tsx': [
-              ("{ voucher: Voucher; highlighted: boolean; onClick: () => void; }", "{ key?: string; voucher: Voucher; highlighted: boolean; onClick: () => void; }"),
-            ],
-          }
-
-          for filename, pairs in replacements.items():
-            path = Path(filename)
-            text = path.read_text(encoding='utf-8')
-            for old, new in pairs:
-              text = text.replace(old, new)
-            path.write_text(text, encoding='utf-8')
-      - name: Commit compiler fixes when needed
-        run: |
-          if git diff --quiet; then
-            echo "No compiler patch required"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/types/react-namespace.d.ts src/components/prestador/PrestadorAgenda.tsx src/components/prestador/PrestadorDemandas.tsx src/components/prestador/PrestadorVouchers.tsx
-          git commit -m "Aplicar correções pontuais de TypeScript do prestador"
-          git push origin HEAD:agent/corrigir-painel-prestador
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
