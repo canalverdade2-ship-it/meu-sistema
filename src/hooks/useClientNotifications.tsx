@@ -2,9 +2,11 @@ import React, { useState, useEffect, useCallback, useRef, createContext, useCont
 import { supabase } from '../lib/supabase';
 import { playPremiumBeep } from '../lib/utils';
 import { showAnimatedToast } from '../lib/notifications';
+import { sessionService } from '../lib/sessionService';
+import { callClientRpc } from '../lib/clientRpc';
 
 // Constantes de reconexão
-const HEARTBEAT_INTERVAL_MS = 30000; // 30s polling de fallback
+const HEARTBEAT_INTERVAL_MS = 60000; // 30s polling de fallback
 const RECONNECT_DELAY_MS = 3000;     // 3s delay para reconexão
 
 export interface ClientPendencyCounts {
@@ -198,6 +200,19 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
       if (error) throw error;
 
       if (notifs) {
+        const notificationIds = notifs.map((notification) => notification.id);
+        let readIds = new Set<string>();
+        if (notificationIds.length > 0) {
+          try {
+            const readResult = await callClientRpc<{ ids?: string[] }>('gsa_client_get_notification_read_ids', {
+              p_notification_ids: notificationIds,
+            });
+            readIds = new Set(readResult?.ids || []);
+          } catch (readError) {
+            console.error('[useClientNotifications] Erro ao buscar leituras individuais:', readError);
+          }
+        }
+
         const normalized = notifs
           .filter(n => {
             // Regra: Notificação nominal ao cliente SEMPRE aparece
@@ -213,7 +228,7 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
             tipo: n.tipo || 'sistema',
             titulo: n.titulo,
             mensagem: n.mensagem,
-            lida: !!n.lida,
+            lida: !!n.lida || readIds.has(n.id),
             modulo: n.modulo || 'bell',
             tab: n.tab,
             item_id: n.item_id,
@@ -244,40 +259,29 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
       }, 300); // Debounce de 300ms mais amigável
     };
 
-    // Canal unificado para atualizações do cliente (contadores e notificações)
+    // Assinaturas filtradas pelo proprietário. Tabelas sem vínculo direto usam o
+    // polling de fallback, evitando despertar todos os clientes a cada mudança global.
     const channel = supabase.channel(`notif-client-${clientId}`);
-
-    const tables = [
-      'faturas', 'saques', 'orcamentos', 'ordens_servico', 
-      'vouchers', 'tickets', 'ticket_mensagens', 'indicacoes',
-      'cliente_documentos', 'notificacoes', 'emprestimos', 
-      'emprestimo_parcelas', 'promocoes', 'produtos', 'servicos', 
-      'assinaturas', 'cupons_loja', 'loja_credito_solicitacoes', 'loja_credito_documentos'
+    const scopedTables = [
+      'faturas', 'saques', 'orcamentos', 'ordens_servico', 'vouchers',
+      'tickets', 'indicacoes', 'cliente_documentos', 'emprestimos',
+      'emprestimo_parcelas', 'cliente_promocoes', 'loja_credito_solicitacoes',
     ];
 
-    tables.forEach(table => {
-      channel.on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table 
-      }, (payload) => {
-        // Log para debug (pode ser removido depois)
-        console.log(`[Realtime] Mudança em ${table}:`, payload.eventType);
-
-        if (payload.eventType === 'INSERT') {
-          if (table === 'ticket_mensagens') {
-            const m = payload.new as any;
-            if (m.tipo !== 'cliente') {
-              playPremiumBeep();
-              fetchNotifications();
-            }
-          }
-        }
-        
-        // Atualiza contadores em qualquer mudança relevante (INSERT, UPDATE, DELETE)
-        debouncedFetch();
-      });
+    scopedTables.forEach((table) => {
+      channel.on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table,
+        filter: `cliente_id=eq.${clientId}`,
+      }, () => debouncedFetch());
     });
+
+    channel.on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'promocoes',
+    }, () => debouncedFetch());
 
     channel.subscribe((status, err) => {
       console.log(`[Realtime Client] Canal ${clientId} status:`, status);
@@ -337,12 +341,21 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
       table: 'clientes',
       filter: `id=eq.${clientId}`
     }, (payload) => {
-      if (payload.eventType === 'DELETE') {
-        localStorage.clear();
-        window.location.href = '/?msg=revoked';
-      } else if (payload.eventType === 'UPDATE' && (payload.new.status === 'bloqueado' || payload.new.status === 'inativo')) {
-        localStorage.clear();
-        window.location.href = '/?msg=revoked';
+      const next = payload.new as any;
+      const revoked = payload.eventType === 'DELETE'
+        || (
+          payload.eventType === 'UPDATE'
+          && (
+            ['bloqueado', 'inativo', 'excluido'].includes(String(next?.status || '').toLowerCase())
+            || next?.bloqueado === true
+            || next?.cadastro_aprovado === false
+          )
+        );
+
+      if (revoked) {
+        void sessionService.endSession().finally(() => {
+          window.location.replace('/?msg=revoked');
+        });
       }
     });
 
@@ -355,8 +368,10 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
       if (!isSubscribedRef.current) {
         console.log('[Realtime Client] Heartbeat detectou desconexão. Fetch manual...');
       }
-      fetchPendencies();
-      fetchNotifications();
+      if (document.visibilityState === 'visible') {
+        fetchPendencies();
+        fetchNotifications();
+      }
     }, HEARTBEAT_INTERVAL_MS);
 
     return () => {
@@ -376,13 +391,26 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
   const markAsRead = async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
     setUnreadNotifications(prev => Math.max(0, prev - 1));
-    await supabase.from('notificacoes').update({ lida: true }).eq('id', id);
+    try {
+      await callClientRpc('gsa_client_mark_notification_read', { p_notification_id: id });
+    } catch (error) {
+      console.error('Erro ao registrar leitura da notificação:', error);
+      await fetchNotifications();
+    }
   };
 
   const markAllAsRead = async () => {
+    const unreadIds = notifications.filter((notification) => !notification.lida).map((notification) => notification.id);
     setNotifications(prev => prev.map(n => ({ ...n, lida: true })));
     setUnreadNotifications(0);
-    await supabase.from('notificacoes').update({ lida: true }).eq('cliente_id', clientId);
+    try {
+      await Promise.all(unreadIds.map((id) => callClientRpc('gsa_client_mark_notification_read', {
+        p_notification_id: id,
+      })));
+    } catch (error) {
+      console.error('Erro ao registrar leituras das notificações:', error);
+      await fetchNotifications();
+    }
   };
 
   return (

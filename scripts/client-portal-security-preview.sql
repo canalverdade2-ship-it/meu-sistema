@@ -37,6 +37,49 @@ BEGIN
     )
   END;
 
+  IF to_regprocedure('public.gsa_begin_client_recovery(text,text,uuid)') IS NULL
+     OR to_regprocedure('public.gsa_client_operational_write(uuid,text,text,text,jsonb,jsonb)') IS NULL
+     OR to_regprocedure('public.cliente_operational_write(uuid,text,text,jsonb,jsonb)') IS NULL
+     OR to_regprocedure('public.gsa_client_mark_notification_read(uuid,text,uuid)') IS NULL
+     OR to_regprocedure('public.gsa_client_get_notification_read_ids(uuid,text,uuid[])') IS NULL THEN
+    RAISE EXCEPTION 'Funções da auditoria final do cliente estão ausentes.';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'gsa_client_recovery_challenges'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'notificacao_leituras'
+  ) THEN
+    RAISE EXCEPTION 'Tabelas de recuperação ou leitura individual estão ausentes.';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM storage.buckets
+    WHERE id = 'documentos_cliente'
+      AND public = false
+      AND file_size_limit = 10485760
+  ) THEN
+    RAISE EXCEPTION 'Limite e privacidade do bucket documentos_cliente estão incorretos.';
+  END IF;
+
+  IF has_function_privilege(
+    'authenticated',
+    'public.cliente_operational_write(uuid,text,text,jsonb,jsonb)',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'Executor operacional privado ainda está exposto a authenticated.';
+  END IF;
+
+  IF NOT has_function_privilege(
+    'authenticated',
+    'public.gsa_client_operational_write(uuid,text,text,text,jsonb,jsonb)',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'RPC operacional vinculada à sessão não está disponível para authenticated.';
+  END IF;
+
   IF v_missing IS NOT NULL THEN
     RAISE EXCEPTION 'Objetos de segurança ausentes: %', v_missing;
   END IF;
@@ -85,11 +128,9 @@ BEGIN
     WHERE n.nspname = 'public'
       AND p.proname = 'cliente_operational_write'
   LOOP
-    IF has_function_privilege('anon', fn.oid, 'EXECUTE') THEN
-      RAISE EXCEPTION 'cliente_operational_write ainda é executável por anon.';
-    END IF;
-    IF NOT has_function_privilege('authenticated', fn.oid, 'EXECUTE') THEN
-      RAISE EXCEPTION 'cliente_operational_write não está disponível para authenticated.';
+    IF has_function_privilege('anon', fn.oid, 'EXECUTE')
+       OR has_function_privilege('authenticated', fn.oid, 'EXECUTE') THEN
+      RAISE EXCEPTION 'cliente_operational_write ainda possui execução pública em OID %.', fn.oid;
     END IF;
   END LOOP;
 

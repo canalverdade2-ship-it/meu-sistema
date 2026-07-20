@@ -91,7 +91,7 @@ export function ClientFinanceiro({
     if (initialItemId && hasAutoOpened.current !== initialItemId) {
       const detectTabAndSwitch = async () => {
         // Find if it's a fatura
-        const { data: fatura } = await supabase.from('faturas').select('id').eq('id', initialItemId).maybeSingle();
+        const { data: fatura } = await supabase.from('faturas').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
         if (fatura) {
           setActiveTab('faturas');
           setIsSubmoduleOpen(true);
@@ -99,7 +99,7 @@ export function ClientFinanceiro({
         }
 
         // Find if it's a saque
-        const { data: saque } = await supabase.from('saques').select('id').eq('id', initialItemId).maybeSingle();
+        const { data: saque } = await supabase.from('saques').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
         if (saque) {
           setActiveTab('saques');
           setIsSubmoduleOpen(true);
@@ -107,7 +107,7 @@ export function ClientFinanceiro({
         }
 
         // Find if it's an nf
-        const { data: nf } = await supabase.from('ordens_fiscais').select('id').eq('id', initialItemId).maybeSingle();
+        const { data: nf } = await supabase.from('ordens_fiscais').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
         if (nf) {
           setActiveTab('nf');
           setIsSubmoduleOpen(true);
@@ -115,7 +115,7 @@ export function ClientFinanceiro({
         }
 
         // Find if it's a transferencia (extrato)
-        const { data: trans } = await supabase.from('transferencias').select('id').eq('id', initialItemId).maybeSingle();
+        const { data: trans } = await supabase.from('transferencias').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
         if (trans) {
           setActiveTab('extrato');
           setIsSubmoduleOpen(true);
@@ -300,7 +300,6 @@ export function ClientFinanceiro({
       .eq('status', 'pago');
     
     if (!error) {
-      console.log(`[FINANCEIRO] Faturas pagas encontradas para o cliente ${clientId}: ${count}`);
       setHasPaidFatura((count || 0) > 0);
     }
   };
@@ -459,14 +458,6 @@ export function ClientFinanceiro({
     requestAnimationFrame(animate);
   };
 
-  console.log('[DEBUG FINANCEIRO]', {
-    clientId,
-    saldo,
-    hasPaidFatura,
-    saque_liberado_manual: cliente?.saque_liberado_manual,
-    carteira_bloqueada: cliente?.carteira_bloqueada,
-    minSaque
-  });
 
   const activeSubmodule = financeiroTabs.find(tab => tab.id === activeTab);
   const ActiveSubmoduleIcon = activeSubmodule?.icon;

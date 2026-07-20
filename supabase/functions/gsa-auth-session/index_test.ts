@@ -82,3 +82,17 @@ Deno.test('autoriza todas as origens locais usadas no desenvolvimento', async ()
     }
   });
 });
+
+
+Deno.test('normaliza recuperação somente com e-mail válido e desafio UUID', () => {
+  assertEquals(normalizePayload('request_client_recovery', {
+    documento: '123.456.789-00',
+    email: 'Cliente@Example.com',
+  }), { documento: '12345678900', email: 'cliente@example.com' });
+
+  assertEquals(normalizePayload('complete_client_recovery', {
+    recovery_id: '550e8400-e29b-41d4-a716-446655440000',
+  }), { recovery_id: '550e8400-e29b-41d4-a716-446655440000' });
+
+  assertEquals(normalizePayload('complete_client_recovery', { recovery_id: 'invalido' }), null);
+});

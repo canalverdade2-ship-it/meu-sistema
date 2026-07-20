@@ -139,3 +139,79 @@ assertContains('supabase/migrations/20260720205000_optional_client_block_state_c
 ]);
 
 console.log('Contratos críticos de segurança do painel do cliente validados.');
+
+
+assertContains('supabase/functions/gsa-auth-session/index.ts', [
+  'request_client_recovery',
+  'complete_client_recovery',
+  'signInWithOtp',
+  'gsa_client_recovery_challenges',
+  'recovery_verification_required',
+]);
+
+assertContains('supabase/migrations/20260720232000_harden_client_portal_audit_findings.sql', [
+  'gsa_begin_client_recovery',
+  'gsa_client_operational_write',
+  'gsa_client_mark_notification_read',
+  'gsa_guard_duplicate_active_client_ticket',
+  'file_size_limit = 10485760',
+  "split_part(name, '/', 2)",
+]);
+
+assertContains('src/pages/ClientPortal.tsx', [
+  "callClientRpc<{ released?: number }>('gsa_client_process_scheduled_credit_release')",
+  "['bloqueado', 'inativo', 'excluido']",
+  'restrictedModules',
+]);
+
+assertContains('src/hooks/useClientNotifications.tsx', [
+  'sessionService.endSession()',
+  'gsa_client_mark_notification_read',
+  'gsa_client_get_notification_read_ids',
+  'document.visibilityState',
+]);
+
+const clientPortal = read('src/pages/ClientPortal.tsx');
+if (/const verificarLiberacaoCreditoAgendada[\s\S]*?\.from\(['"]clientes['"]\)/.test(clientPortal)) {
+  throw new Error('ClientPortal ainda altera limites financeiros diretamente no navegador.');
+}
+if (clientPortal.includes('&& !isVip')) {
+  throw new Error('Cliente VIP ainda ignora o bloqueio administrativo.');
+}
+
+const recoveryUi = read('src/components/auth/ClientAccessModal.tsx');
+if (recoveryUi.includes('loginRecuperacaoSenha')) {
+  throw new Error('Fluxo inseguro de recuperação direta ainda está ativo.');
+}
+
+const operationalUsage = new Set<string>();
+for (const absolutePath of walk(path.join(root, 'src'))) {
+  const content = fs.readFileSync(absolutePath, 'utf8');
+  const regex = /clientOperationalWrite(?:<[^>]+>)?\(\s*[^,]+,\s*['"]([^'"]+)['"]/g;
+  for (const match of content.matchAll(regex)) operationalUsage.add(match[1]);
+}
+const allowedOperationalTables = new Set([
+  'clientes', 'tickets', 'ticket_mensagens', 'cliente_documentos',
+  'loja_credito_solicitacoes', 'loja_credito_documentos',
+  'emprestimos', 'emprestimo_comentarios', 'emprestimo_documentos',
+  'emprestimo_historico', 'orcamentos', 'ordens_servico', 'os_notas',
+  'os_suporte_mensagens', 'cliente_promocoes', 'vouchers', 'indicacoes',
+  'loja_carrinhos', 'cupons_ativados', 'loja_avaliacoes',
+  'loja_solicitacoes', 'cliente_premios', 'promocoes_quantidade_ativadas',
+  'fatura_contestacoes',
+]);
+const unsupportedOperationalTables = [...operationalUsage].filter((table) => !allowedOperationalTables.has(table));
+if (unsupportedOperationalTables.length > 0) {
+  throw new Error(`clientOperationalWrite usa tabelas ainda não auditadas: ${unsupportedOperationalTables.join(', ')}`);
+}
+
+
+assertContains('supabase/migrations/20260720232000_harden_client_portal_audit_findings.sql', [
+  'Tabela sem política operacional específica',
+  "v_table IN ('os_notas', 'os_suporte_mensagens')",
+  "v_table IN ('emprestimo_documentos', 'emprestimo_historico')",
+  "v_table = 'fatura_contestacoes'",
+  "v_table = 'loja_avaliacoes'",
+  "v_table = 'cliente_premios'",
+  "RETURN public.cliente_operational_write(v_cliente_id, v_table, v_action, v_data, v_filter)",
+]);
