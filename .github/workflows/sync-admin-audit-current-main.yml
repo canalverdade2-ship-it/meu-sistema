@@ -16,42 +16,56 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - name: Validate trigger
-        run: grep -Fqx 'SYNC_ADMIN_AUDIT_CURRENT_MAIN_V1' .sync-admin-audit-current-main-trigger
-      - name: Merge current main
-        id: merge
+        run: grep -Fqx 'SYNC_ADMIN_AUDIT_CURRENT_MAIN_V2' .sync-admin-audit-current-main-trigger
+      - name: Merge current main preserving newer shared security files
         shell: bash
         run: |
-          set +e
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git fetch origin main
+          set +e
           git merge origin/main --no-edit > merge.log 2>&1
-          code=$?
-          if [ "$code" -ne 0 ]; then git diff --name-only --diff-filter=U > conflicts.log; fi
-          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          exit 0
-      - name: Report conflicts
-        if: steps.merge.outputs.exit_code != '0'
-        env: { GH_TOKEN: '${{ github.token }}' }
-        run: |
-          { echo '## Falha na sincronização do Painel Administrativo'; echo; echo "Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; echo '### Conflitos'; echo '```text'; cat conflicts.log; echo '```'; echo '### Log'; echo '```text'; cat merge.log; echo '```'; } > failure.md
-          gh issue create --title 'Conflitos na integração do Painel Administrativo' --body-file failure.md
-          exit 1
+          merge_code=$?
+          set -e
+          if [ "$merge_code" -ne 0 ]; then
+            git diff --name-only --diff-filter=U | sort > conflicts.log
+            printf '%s\n' \
+              scripts/check-admin-panel-contracts.ts \
+              src/App.tsx \
+              src/components/admin/AcessosModule.tsx \
+              src/lib/sessionService.ts \
+              src/pages/AdminPanel.tsx \
+              src/routing/adminAccess.ts | sort > expected.log
+            diff -u expected.log conflicts.log
+            git checkout --theirs \
+              scripts/check-admin-panel-contracts.ts \
+              src/App.tsx \
+              src/components/admin/AcessosModule.tsx \
+              src/lib/sessionService.ts \
+              src/pages/AdminPanel.tsx \
+              src/routing/adminAccess.ts
+            git add \
+              scripts/check-admin-panel-contracts.ts \
+              src/App.tsx \
+              src/components/admin/AcessosModule.tsx \
+              src/lib/sessionService.ts \
+              src/pages/AdminPanel.tsx \
+              src/routing/adminAccess.ts
+            git commit --no-edit
+          fi
       - name: Remove temporary executor
-        if: steps.merge.outputs.exit_code == '0'
         run: |
           git rm .github/workflows/sync-admin-audit-current-main.yml .sync-admin-audit-current-main-trigger
           git commit -m 'Remover sincronização temporária do Painel Administrativo'
       - name: Install dependencies
-        if: steps.merge.outputs.exit_code == '0'
         run: npm ci
       - name: Validate final branch
-        if: steps.merge.outputs.exit_code == '0'
         run: |
           npm run lint
           npm run test:admin
@@ -60,5 +74,4 @@ jobs:
           npm run test:travel
           npm run build
       - name: Push final branch
-        if: steps.merge.outputs.exit_code == '0'
         run: git push origin HEAD:agent/corrigir-auditoria-painel-adm
