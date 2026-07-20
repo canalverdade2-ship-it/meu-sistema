@@ -156,7 +156,18 @@ async function main() {
 
   await assertFileContains(
     'src/components/client/marketplace/travel/TravelReservationPage.tsx',
-    ['viagens-documentos', 'viagens-vouchers', 'createSignedUrl'],
+    [
+      'viagens-documentos',
+      'viagens-vouchers',
+      'createSignedUrl',
+      'quantidade_passageiros',
+      'passengerCountComplete',
+      'canEditPassengers',
+      'canManageDocuments',
+      'handleDeletePassenger',
+      'O trigger do banco remove o metadado',
+      'disabled={!passengerCountComplete}',
+    ],
   );
 
   await assertFileContains(
