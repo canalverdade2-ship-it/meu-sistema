@@ -60,8 +60,15 @@ jobs:
           provider_support_contract=$?
           echo "provider_support_contract=$provider_support_contract" >> "$OUT"
 
-          grep -q "SecureAttachmentButton" src/components/admin/OrdensServicoModule.tsx
-          admin_os_contract=$?
+          grep -q "useFileViewer" src/components/admin/OrdensServicoModule.tsx
+          viewer_contract=$?
+          grep -q "gsa-private://" src/components/admin/OrdensServicoModule.tsx
+          private_link_contract=$?
+          if [ "$viewer_contract" -eq 0 ] && [ "$private_link_contract" -eq 0 ]; then
+            admin_os_contract=0
+          else
+            admin_os_contract=1
+          fi
           echo "admin_os_contract=$admin_os_contract" >> "$OUT"
 
           set -e
