@@ -1,0 +1,53 @@
+name: Inspecionar documentos privados - Etapa 6
+
+on:
+  push:
+    branches:
+      - agent/seguranca-documentos-servicos-etapa-6
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: agent/seguranca-documentos-servicos-etapa-6
+          fetch-depth: 0
+
+      - name: Generate report
+        shell: bash
+        run: |
+          mkdir -p inspection
+          OUT=inspection/private-documents-stage6.txt
+          : > "$OUT"
+          {
+            echo '=== PUBLIC URL USAGES ==='
+            grep -R -n -C 10 --include='*.ts' --include='*.tsx' "getPublicUrl" src supabase 2>/dev/null || true
+            echo
+            echo '=== SIGNED URL USAGES ==='
+            grep -R -n -C 12 --include='*.ts' --include='*.tsx' "createSignedUrl\|createSignedUrls" src supabase 2>/dev/null || true
+            echo
+            echo '=== SERVICE DOCUMENT REFERENCES ==='
+            grep -R -n -C 18 --include='*.ts' --include='*.tsx' --include='*.sql' "documentos_solicitados_os\|anexos_os\|entregas_demandas" src supabase 2>/dev/null || true
+            echo
+            echo '=== SUPPORT ATTACHMENT REFERENCES ==='
+            grep -R -n -C 18 --include='*.ts' --include='*.tsx' --include='*.sql' "anexo_url\|anexo_nome\|documentos_cliente" src supabase 2>/dev/null || true
+            echo
+            echo '=== STORAGE BUCKET MIGRATIONS AND POLICIES ==='
+            grep -R -n -C 40 --include='*.sql' "storage.buckets\|storage.objects\|bucket_id\|entregas_demandas\|documentos_cliente" supabase/migrations 2>/dev/null || true
+          } >> "$OUT"
+          wc -l "$OUT"
+
+      - name: Publish temporary report
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add inspection/private-documents-stage6.txt
+          git commit -m "Gera relatório temporário de documentos privados"
+          git push origin HEAD:agent/seguranca-documentos-servicos-etapa-6
