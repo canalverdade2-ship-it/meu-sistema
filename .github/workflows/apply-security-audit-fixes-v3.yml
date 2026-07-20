@@ -77,9 +77,9 @@ jobs:
         run: npm run build
       - name: Commit validated fixes
         run: |
-          rm -f .security-audit-fix-trigger .github/workflows/apply-security-audit-fixes-v3.yml scripts/apply-security-audit-fixes.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m 'Corrigir achados críticos da auditoria de segurança'
+          git pull --rebase origin agent/corrigir-auditoria-seguranca
           git push origin HEAD:agent/corrigir-auditoria-seguranca
