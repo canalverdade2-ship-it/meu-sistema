@@ -12,6 +12,14 @@ declare global {
     interface Attributes {
       key?: Key | null;
     }
+
+    namespace JSX {
+      interface IntrinsicAttributes extends Attributes {}
+    }
+  }
+
+  namespace JSX {
+    interface IntrinsicAttributes extends React.Attributes {}
   }
 }
 
