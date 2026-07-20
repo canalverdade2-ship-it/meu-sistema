@@ -16,6 +16,7 @@ src/components/client/ClientEmprestimos.tsx
 src/components/client/ClientProfile.tsx
 src/components/client/ClientServicos.tsx
 src/components/prestador/PrestadorDocumentos.tsx
+src/components/ui/SecureAttachmentButton.tsx
 
 === SESSION ACTOR FUNCTIONS ===
 supabase/migrations/20260714020000_secure_admin_withdrawal_transfer_rpcs.sql:1:CREATE OR REPLACE FUNCTION public.gsa_admin_session_actor(
