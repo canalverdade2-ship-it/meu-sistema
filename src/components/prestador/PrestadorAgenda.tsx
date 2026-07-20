@@ -1,519 +1,188 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, Plus, FileText, Trash2, AlertTriangle } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { useEffect, useMemo, useState } from 'react';
+import { Calendar, CheckCircle, Clock, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { Modal } from '../ui/Modal';
+import { supabase } from '../../lib/supabase';
+import { providerOperations } from '../../lib/providerOperations';
 import { notificationService } from '../../lib/notificationService';
 import { logService } from '../../lib/logService';
+import { useProviderNotifications } from '../../hooks/useProviderNotifications';
+import { Modal } from '../ui/Modal';
 
-interface PrestadorAgendaProps {
-  prestadorId: string;
-  initialItemId?: string;
-}
+type Schedule = {
+  id: string;
+  demanda_id: string;
+  data_inicio: string;
+  data_fim: string;
+  observacoes?: string | null;
+  status: string;
+  demanda?: { id: string; titulo: string; status: string } | null;
+};
 
-export function PrestadorAgenda({ prestadorId, initialItemId }: PrestadorAgendaProps) {
+type ActiveDemand = { id: string; titulo: string; status: string };
+
+export function PrestadorAgenda({ prestadorId, initialItemId }: { prestadorId: string; initialItemId?: string }) {
+  const { refreshCounts } = useProviderNotifications();
   const [activeTab, setActiveTab] = useState<'agendados' | 'concluidos'>('agendados');
-  const [agendamentos, setAgendamentos] = useState<any[]>([]);
-  const [demandasAtivas, setDemandasAtivas] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [demands, setDemands] = useState<ActiveDemand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAgendamento, setSelectedAgendamento] = useState<any>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-
-  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (initialItemId && agendamentos.length > 0) {
-      const agendamento = agendamentos.find(a => a.id === initialItemId);
-      if (agendamento) {
-        setActiveTab(agendamento.status === 'concluido' ? 'concluidos' : 'agendados');
-        
-        setTimeout(() => {
-          const element = document.getElementById(`agendamento-${initialItemId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setHighlightedItemId(initialItemId);
-            setTimeout(() => setHighlightedItemId(null), 3000);
-          }
-        }, 400);
-      }
-    }
-  }, [initialItemId, agendamentos.length]);
-  
-  // Form state
-  const [demandaId, setDemandaId] = useState('');
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
-  const [observacoes, setObservacoes] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [demandId, setDemandId] = useState('');
+  const [startAt, setStartAt] = useState('');
+  const [endAt, setEndAt] = useState('');
+  const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Schedule | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchData();
-    fetchDemandasAtivas();
-
-    const channel = supabase
-      .channel(`prestador-agendamentos-${prestadorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, () => {
-        fetchData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => {
-        fetchDemandasAtivas();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [prestadorId]);
-
-  const fetchData = async () => {
+  const load = async () => {
     try {
-      const { data, error } = await supabase
-        .from('prestador_agendamentos')
-        .select('*, demanda:prestador_demandas(id, titulo, status)')
-        .eq('prestador_id', prestadorId)
-        .order('data_inicio', { ascending: true });
-
-      if (error) throw error;
-      setAgendamentos(data || []);
-    } catch (error) {
-      console.error('Erro ao buscar agendamentos:', error);
-      toast.error('Erro ao carregar agendamentos.');
+      const [scheduleResult, demandResult] = await Promise.all([
+        supabase
+          .from('prestador_agendamentos')
+          .select('id,demanda_id,data_inicio,data_fim,observacoes,status,demanda:prestador_demandas(id,titulo,status)')
+          .eq('prestador_id', prestadorId)
+          .order('data_inicio', { ascending: true }),
+        supabase
+          .from('prestador_demandas')
+          .select('id,titulo,status')
+          .eq('prestador_id', prestadorId)
+          .in('status', ['ativa', 'em_ajuste'])
+          .order('created_at', { ascending: false }),
+      ]);
+      if (scheduleResult.error) throw scheduleResult.error;
+      if (demandResult.error) throw demandResult.error;
+      setSchedules((scheduleResult.data || []) as unknown as Schedule[]);
+      setDemands((demandResult.data || []) as ActiveDemand[]);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível carregar a agenda.');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchDemandasAtivas = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('prestador_demandas')
-        .select('id, titulo, status')
-        .eq('prestador_id', prestadorId)
-        .eq('status', 'ativa');
+  useEffect(() => {
+    void load();
+    const channel = supabase.channel(`provider-agenda-${prestadorId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [prestadorId]);
 
-      if (error) throw error;
-      setDemandasAtivas(data || []);
-    } catch (error) {
-      console.error('Erro ao buscar demandas ativas:', error);
-    }
-  };
+  useEffect(() => {
+    if (!initialItemId || !schedules.length) return;
+    const schedule = schedules.find((item) => item.id === initialItemId);
+    if (!schedule) return;
+    setActiveTab(schedule.status === 'concluido' ? 'concluidos' : 'agendados');
+    setHighlightedId(schedule.id);
+    const timer = window.setTimeout(() => setHighlightedId(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [initialItemId, schedules]);
 
-  const handleCreateAgendamento = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!demandaId || !dataInicio || !dataFim) {
-      toast.error('Preencha os campos obrigatórios.');
+  const scheduled = useMemo(() => schedules.filter((item) => item.status === 'agendado'), [schedules]);
+  const completed = useMemo(() => schedules.filter((item) => item.status === 'concluido'), [schedules]);
+  const visible = activeTab === 'agendados' ? scheduled : completed;
+
+  const createSchedule = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (submitting) return;
+    if (!demandId || !startAt || !endAt) {
+      toast.error('Preencha demanda, início e término.');
       return;
     }
-
-    if (new Date(dataFim) <= new Date(dataInicio)) {
-      toast.error('A data de fim deve ser posterior à data de início.');
-      return;
-    }
-
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('prestador_agendamentos')
-        .insert({
-          prestador_id: prestadorId,
-          demanda_id: demandaId,
-          data_inicio: new Date(dataInicio).toISOString(),
-          data_fim: new Date(dataFim).toISOString(),
-          observacoes,
-          status: 'agendado'
-        });
-
-      if (error) throw error;
-
-      await logService.logAction({
-        ator_tipo: 'prestador',
-        ator_id: prestadorId,
-        acao: 'CRIAR_AGENDAMENTO',
-        detalhes: `Criou um agendamento para a demanda #${demandaId.slice(0, 8)}: ${dataInicio} até ${dataFim}`
+      const result = await providerOperations.createSchedule({
+        demandaId: demandId,
+        dataInicio: new Date(startAt).toISOString(),
+        dataFim: new Date(endAt).toISOString(),
+        observacoes: notes,
       });
-
-      toast.success('Agendamento criado com sucesso!');
-      setIsModalOpen(false);
-      resetForm();
-      fetchData();
-
-      // Notify admin
-      const demandaSel = demandasAtivas.find(d => d.id === demandaId);
-      await notificationService.notifyAdmin(
-        '📅 Novo Agendamento do Prestador',
-        `Um prestador criou um novo agendamento para a demanda "${demandaSel?.titulo || demandaId}". Período: ${new Date(dataInicio).toLocaleString('pt-BR')} até ${new Date(dataFim).toLocaleString('pt-BR')}.`,
-        'servicos',
-        'demanda_entregue',
-        { prioridade: 'normal' }
-      );
-    } catch (error) {
-      console.error('Erro ao criar agendamento:', error);
-      toast.error('Erro ao criar agendamento.');
+      const selectedDemand = demands.find((item) => item.id === demandId);
+      await Promise.allSettled([
+        logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'CRIAR_AGENDAMENTO', detalhes: `Criou o agendamento ${result?.agendamento_id || ''} para a demanda ${demandId}.` }),
+        notificationService.notifyAdmin('Novo agendamento do prestador', `Foi criado um agendamento para a demanda "${selectedDemand?.titulo || demandId}".`, 'servicos', 'agendamento_criado', { itemId: demandId }),
+      ]);
+      toast.success('Agendamento criado sem conflito de horário.');
+      setModalOpen(false);
+      setDemandId('');
+      setStartAt('');
+      setEndAt('');
+      setNotes('');
+      await Promise.all([load(), refreshCounts()]);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível criar o agendamento.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleConcluirAgendamento = async (id: string) => {
-    if (!confirm('Deseja marcar este agendamento como concluído?')) return;
+  const completeSchedule = async (schedule: Schedule) => {
+    if (submitting) return;
+    setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('prestador_agendamentos')
-        .update({ status: 'concluido' })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      // Notify admin
-      const ag = agendamentos.find(a => a.id === id);
-      await notificationService.notifyAdmin(
-        '✅ Agendamento Concluído',
-        `Um agendamento foi concluído pelo prestador. Demanda: "${ag?.demanda?.titulo || id}".`,
-        'servicos',
-        'demanda_entregue',
-        { prioridade: 'normal' }
-      );
-
-      toast.success('Agendamento concluído!');
-      
-      await logService.logAction({
-        ator_tipo: 'prestador',
-        ator_id: prestadorId,
-        acao: 'CONCLUIR_AGENDAMENTO',
-        detalhes: `Marcou o agendamento #${id.slice(0, 8)} como concluído`
-      });
-
-      fetchData();
-    } catch (error) {
-      console.error('Erro ao concluir agendamento:', error);
-      toast.error('Erro ao concluir agendamento.');
+      await providerOperations.completeSchedule(schedule.id);
+      await Promise.allSettled([
+        logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'CONCLUIR_AGENDAMENTO', detalhes: `Concluiu o agendamento ${schedule.id}.` }),
+        notificationService.notifyAdmin('Agendamento concluído', `O agendamento da demanda "${schedule.demanda?.titulo || schedule.demanda_id}" foi concluído.`, 'servicos', 'agendamento_concluido', { itemId: schedule.demanda_id }),
+      ]);
+      toast.success('Agendamento concluído.');
+      await Promise.all([load(), refreshCounts()]);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível concluir o agendamento.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleExcluirAgendamento = async (id: string) => {
+  const deleteSchedule = async () => {
+    if (!deleteTarget || submitting) return;
+    setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('prestador_agendamentos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await logService.logAction({
-        ator_tipo: 'prestador',
-        ator_id: prestadorId,
-        acao: 'EXCLUIR_AGENDAMENTO',
-        detalhes: `Excluiu o agendamento #${id.slice(0, 8)}`
-      });
-
-      toast.success('Agendamento excluído!');
-      setConfirmDeleteId(null);
-      fetchData();
-    } catch (error) {
-      console.error('Erro ao excluir agendamento:', error);
-      toast.error('Erro ao excluir agendamento.');
+      await providerOperations.deleteSchedule(deleteTarget.id);
+      await logService.logAction({ ator_tipo: 'prestador', ator_id: prestadorId, acao: 'EXCLUIR_AGENDAMENTO', detalhes: `Excluiu o agendamento ${deleteTarget.id}.` });
+      toast.success('Agendamento excluído.');
+      setDeleteTarget(null);
+      await Promise.all([load(), refreshCounts()]);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível excluir o agendamento.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const resetForm = () => {
-    setDemandaId('');
-    setDataInicio('');
-    setDataFim('');
-    setObservacoes('');
-  };
-
-  const agendados = agendamentos.filter(a => a.status === 'agendado');
-  const concluidos = agendamentos.filter(a => a.status === 'concluido');
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1a1a1a] border-t-transparent"></div>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex justify-center py-16"><div className="h-9 w-9 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" /></div>;
 
   return (
-    <>
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex border-b border-neutral-200">
-          <button
-            onClick={() => setActiveTab('agendados')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'agendados' ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent text-neutral-500 hover:text-neutral-700'
-            }`}
-          >
-            Agendados ({agendados.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('concluidos')}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'concluidos' ? 'border-[#1a1a1a] text-[#1a1a1a]' : 'border-transparent text-neutral-500 hover:text-neutral-700'
-            }`}
-          >
-            Concluídos ({concluidos.length})
-          </button>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-2 rounded-2xl bg-neutral-100 p-1">
+          <button onClick={() => setActiveTab('agendados')} className={`flex-1 rounded-xl px-5 py-3 text-sm font-black ${activeTab === 'agendados' ? 'bg-white shadow-sm' : 'text-neutral-500'}`}>Agendados ({scheduled.length})</button>
+          <button onClick={() => setActiveTab('concluidos')} className={`flex-1 rounded-xl px-5 py-3 text-sm font-black ${activeTab === 'concluidos' ? 'bg-white shadow-sm' : 'text-neutral-500'}`}>Concluídos ({completed.length})</button>
         </div>
-
-        {activeTab === 'agendados' && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-[#1a1a1a] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-black hover:shadow-md active:scale-95"
-          >
-            <Plus className="h-4 w-4" />
-            Novo Agendamento
-          </button>
-        )}
+        {activeTab === 'agendados' && <button onClick={() => setModalOpen(true)} disabled={!demands.length} className="flex items-center justify-center gap-2 rounded-xl bg-neutral-900 px-5 py-3 text-sm font-black text-white disabled:opacity-50"><Plus className="h-4 w-4" />Novo agendamento</button>}
       </div>
 
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 overflow-hidden">
-        {activeTab === 'agendados' && (
-          agendados.length === 0 ? (
-            <div className="p-8 text-center text-neutral-500">
-              Nenhum agendamento encontrado.
-            </div>
-          ) : (
-            <div className="divide-y divide-neutral-100">
-              {agendados.map((agendamento) => (
-                <div 
-                  id={`agendamento-${agendamento.id}`}
-                  key={agendamento.id} 
-                  className={`p-4 transition-all duration-500 ${
-                    highlightedItemId === agendamento.id 
-                      ? 'bg-indigo-50/50 ring-2 ring-indigo-500 scale-[1.01] z-10 shadow-lg rounded-xl' 
-                      : 'hover:bg-neutral-50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-full bg-blue-100 p-2 text-blue-600 mt-1">
-                        <Calendar className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-neutral-900">
-                          {agendamento.demanda ? agendamento.demanda.titulo : 'Demanda não encontrada'}
-                        </h4>
-                        <div className="mt-1 flex items-center gap-4 text-sm text-neutral-500">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {new Date(agendamento.data_inicio).toLocaleString('pt-BR')} - {new Date(agendamento.data_fim).toLocaleString('pt-BR')}
-                          </span>
-                        </div>
-                        {agendamento.observacoes && (
-                          <p className="mt-2 text-sm text-neutral-600 bg-neutral-100 p-2 rounded-lg">
-                            {agendamento.observacoes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleConcluirAgendamento(agendamento.id)}
-                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                        title="Marcar como Concluído"
-                      >
-                        <CheckCircle className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(agendamento.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Excluir Agendamento"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        )}
+      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        {visible.length === 0 ? <Empty tab={activeTab} /> : visible.map((schedule) => <article id={`agendamento-${schedule.id}`} key={schedule.id} className={`border-b border-neutral-100 p-5 last:border-0 ${highlightedId === schedule.id ? 'bg-indigo-50 ring-2 ring-inset ring-indigo-400' : ''}`}><div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="flex gap-4"><span className="h-fit rounded-xl bg-indigo-50 p-3 text-indigo-600"><Calendar className="h-5 w-5" /></span><div><h3 className="font-black">{schedule.demanda?.titulo || 'Demanda não encontrada'}</h3><p className="mt-1 flex flex-wrap items-center gap-1 text-sm text-neutral-500"><Clock className="h-4 w-4" />{new Date(schedule.data_inicio).toLocaleString('pt-BR')} até {new Date(schedule.data_fim).toLocaleString('pt-BR')}</p>{schedule.observacoes && <p className="mt-3 rounded-xl bg-neutral-50 p-3 text-sm text-neutral-600">{schedule.observacoes}</p>}</div></div>{schedule.status === 'agendado' && <div className="flex gap-2"><button disabled={submitting} onClick={() => completeSchedule(schedule)} aria-label="Concluir agendamento" className="rounded-xl bg-emerald-50 p-3 text-emerald-600 disabled:opacity-50"><CheckCircle className="h-5 w-5" /></button><button disabled={submitting} onClick={() => setDeleteTarget(schedule)} aria-label="Excluir agendamento" className="rounded-xl bg-red-50 p-3 text-red-600 disabled:opacity-50"><Trash2 className="h-5 w-5" /></button></div>}</div></article>)}
+      </section>
 
-        {activeTab === 'concluidos' && (
-          concluidos.length === 0 ? (
-            <div className="p-8 text-center text-neutral-500">
-              Nenhum agendamento concluído.
-            </div>
-          ) : (
-            <div className="divide-y divide-neutral-100">
-              {concluidos.map((agendamento) => (
-                <div 
-                  id={`agendamento-${agendamento.id}`}
-                  key={agendamento.id} 
-                  className={`p-4 transition-all duration-500 opacity-75 ${
-                    highlightedItemId === agendamento.id 
-                      ? 'bg-indigo-50/50 ring-2 ring-indigo-500 scale-[1.01] z-10 shadow-lg rounded-xl' 
-                      : 'hover:bg-neutral-50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-full bg-emerald-100 p-2 text-emerald-600 mt-1">
-                        <CheckCircle className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-neutral-900 line-through">
-                          {agendamento.demanda ? agendamento.demanda.titulo : 'Demanda não encontrada'}
-                        </h4>
-                        <div className="mt-1 flex items-center gap-4 text-sm text-neutral-500">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {new Date(agendamento.data_inicio).toLocaleString('pt-BR')} - {new Date(agendamento.data_fim).toLocaleString('pt-BR')}
-                          </span>
-                        </div>
-                        {agendamento.observacoes && (
-                          <p className="mt-2 text-sm text-neutral-600 bg-neutral-100 p-2 rounded-lg">
-                            {agendamento.observacoes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setConfirmDeleteId(agendamento.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Excluir Agendamento"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )
-        )}
-      </div>
+      <Modal isOpen={modalOpen} onClose={() => !submitting && setModalOpen(false)} title="Novo agendamento">
+        <form onSubmit={createSchedule} className="space-y-4"><div><label className="mb-1 block text-sm font-bold">Demanda ativa</label><select required value={demandId} onChange={(event) => setDemandId(event.target.value)} className="w-full rounded-xl border border-neutral-200 p-3"><option value="">Selecione</option>{demands.map((demand) => <option key={demand.id} value={demand.id}>{demand.titulo}</option>)}</select></div><Field label="Início" type="datetime-local" value={startAt} onChange={setStartAt} /><Field label="Término" type="datetime-local" value={endAt} onChange={setEndAt} /><div><label className="mb-1 block text-sm font-bold">Observações</label><textarea value={notes} onChange={(event) => setNotes(event.target.value)} className="h-24 w-full rounded-xl border border-neutral-200 p-3" /></div><button disabled={submitting} className="w-full rounded-xl bg-neutral-900 py-3 font-black text-white disabled:opacity-50">{submitting ? 'Validando...' : 'Criar agendamento'}</button></form>
+      </Modal>
 
-      {/* Modal Novo Agendamento */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          resetForm();
-        }}
-        title="Novo Agendamento"
-        size="wide"
-      >
-        <form onSubmit={handleCreateAgendamento} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Demanda Ativa *
-            </label>
-            <select
-              required
-              value={demandaId}
-              onChange={(e) => setDemandaId(e.target.value)}
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm focus:border-[#1a1a1a] focus:outline-none focus:ring-1 focus:ring-[#1a1a1a]"
-            >
-              <option value="">Selecione uma demanda</option>
-              {demandasAtivas.map((demanda) => (
-                <option key={demanda.id} value={demanda.id}>
-                  {demanda.titulo}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Data/Hora Início *
-              </label>
-              <input
-                type="datetime-local"
-                required
-                value={dataInicio}
-                onChange={(e) => setDataInicio(e.target.value)}
-                className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm focus:border-[#1a1a1a] focus:outline-none focus:ring-1 focus:ring-[#1a1a1a]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Data/Hora Fim *
-              </label>
-              <input
-                type="datetime-local"
-                required
-                value={dataFim}
-                onChange={(e) => setDataFim(e.target.value)}
-                className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm focus:border-[#1a1a1a] focus:outline-none focus:ring-1 focus:ring-[#1a1a1a]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Observações
-            </label>
-            <textarea
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-              rows={3}
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm focus:border-[#1a1a1a] focus:outline-none focus:ring-1 focus:ring-[#1a1a1a]"
-              placeholder="Adicione notas ou detalhes sobre o agendamento..."
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-100">
-            <button
-              type="button"
-              onClick={() => {
-                setIsModalOpen(false);
-                resetForm();
-              }}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-xl bg-[#1a1a1a] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-black hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Salvando...' : 'Salvar Agendamento'}
-            </button>
-          </div>
-        </form>
+      <Modal isOpen={!!deleteTarget} onClose={() => !submitting && setDeleteTarget(null)} title="Excluir agendamento">
+        <div className="space-y-4"><p className="text-sm text-neutral-600">Confirma a exclusão deste agendamento? Apenas itens ainda agendados podem ser removidos.</p><button disabled={submitting} onClick={deleteSchedule} className="w-full rounded-xl bg-red-600 py-3 font-black text-white disabled:opacity-50">{submitting ? 'Excluindo...' : 'Confirmar exclusão'}</button></div>
       </Modal>
     </div>
-
-      {/* Modal de Confirmação de Exclusão */}
-      <Modal
-        isOpen={!!confirmDeleteId}
-        onClose={() => setConfirmDeleteId(null)}
-        title="Excluir Agendamento"
-        size="wide"
-      >
-        <div className="space-y-5">
-          <div className="rounded-2xl bg-amber-50 p-5 border border-amber-100 flex items-start gap-4">
-            <AlertTriangle className="h-6 w-6 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-bold text-amber-900">Confirmar exclusão do agendamento?</p>
-              <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                Esta ação não pode ser desfeita. O agendamento será removido permanentemente.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setConfirmDeleteId(null)}
-              className="flex-1 rounded-xl border border-neutral-200 py-3 text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => confirmDeleteId && handleExcluirAgendamento(confirmDeleteId)}
-              className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-black text-white shadow-lg shadow-red-600/20 hover:bg-red-700 transition-all flex items-center justify-center gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Excluir Agendamento
-            </button>
-          </div>
-        </div>
-      </Modal>
-    </>
   );
+}
+
+function Field({ label, type, value, onChange }: { label: string; type: string; value: string; onChange: (value: string) => void }) {
+  return <div><label className="mb-1 block text-sm font-bold">{label}</label><input required type={type} value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-xl border border-neutral-200 p-3" /></div>;
+}
+
+function Empty({ tab }: { tab: 'agendados' | 'concluidos' }) {
+  return <div className="p-12 text-center text-neutral-400"><Calendar className="mx-auto h-10 w-10" /><p className="mt-3 text-sm font-bold">{tab === 'agendados' ? 'Nenhum agendamento futuro.' : 'Nenhum agendamento concluído.'}</p></div>;
 }
