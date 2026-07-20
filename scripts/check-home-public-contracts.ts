@@ -16,6 +16,7 @@ for (const projectType of PUBLIC_PROJECT_TYPES) {
 }
 
 assert.doesNotMatch(migration, /upper\(v_token\)\s*=\s*'BEMVINDO'/i, 'Código legado não pode liberar cadastro');
+assert.doesNotMatch(migration, /gsa_recuperar_senha_cliente|recover_client/, 'A correção da Home não pode alterar a recuperação em andamento');
 assert.match(migration, /v_default_active AND upper\(v_token\)/, 'Código público depende da configuração ativa');
 assert.match(migration, /Cadastro nao concluido\. Verifique os dados ou procure o suporte\./, 'Duplicidades devem usar mensagem genérica');
 assert.doesNotMatch(migration, /whatsapp_indicado'\s*,\s*v_indicacao\.whatsapp_indicado/, 'Consulta pública não deve retornar telefone indicado');
@@ -26,6 +27,7 @@ assert.match(enterpriseHome, /minLength=\{20\}/, 'Descrição do orçamento deve
 assert.match(enterpriseHome, /maxLength=\{5000\}/, 'Descrição do orçamento deve validar máximo no navegador');
 assert.match(enterpriseHome, /sessionStorage\.setItem\('gsa_pending_service_request'/, 'Solicitação pendente deve ficar limitada à aba');
 assert.match(app, /lazy\(\(\) => import\('\.\/pages\/AdminPanel'\)/, 'Painel administrativo deve ser carregado sob demanda');
+assert.match(app, /default: module\.MarketplaceGSAStore/, 'Marketplace deve mapear a exportação nomeada no carregamento lazy');
 assert.match(app, /readSafeReturnTo/, 'Redirecionamentos após login devem ser validados');
 assert.match(home, /params\.delete\('msg'\)/, 'Home deve remover somente o parâmetro de revogação');
 
