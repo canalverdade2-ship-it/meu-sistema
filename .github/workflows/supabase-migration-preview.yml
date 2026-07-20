@@ -1,0 +1,74 @@
+name: Supabase Migration Preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/supabase-migration-preview.yml'
+      - 'supabase/migrations/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-migration-preview-production
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    name: Preview migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate protected configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo 'SUPABASE_ACCESS_TOKEN não configurado.'; exit 1; }
+          test -n "$SUPABASE_DB_PASSWORD" || { echo 'SUPABASE_DB_PASSWORD não configurado.'; exit 1; }
+          test -n "$SUPABASE_PROJECT_ID" || { echo 'SUPABASE_PROJECT_ID não configurado.'; exit 1; }
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID" || {
+            echo 'O Project Reference configurado não corresponde ao projeto autorizado.'
+            exit 1
+          }
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        shell: bash
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Compare migration history
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee migration-list.log
+
+      - name: Preview database push
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db push --linked --dry-run 2>&1 | tee migration-dry-run.log
+
+      - name: Upload migration preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-migration-preview
+          path: |
+            migration-list.log
+            migration-dry-run.log
+          retention-days: 7
