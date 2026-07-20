@@ -44,6 +44,7 @@ Deno.test('rejeita origem não autorizada antes de acessar o banco', async () =>
     assertEquals(response.status, 403);
     assertEquals(await response.json(), { error: 'origin_not_allowed' });
     assertEquals(response.headers.get('access-control-allow-origin'), null);
+    assertEquals(response.headers.get('access-control-allow-credentials'), null);
   });
 });
 
@@ -56,6 +57,7 @@ Deno.test('autoriza preflight somente para origem configurada', async () => {
 
     assertEquals(response.status, 204);
     assertEquals(response.headers.get('access-control-allow-origin'), 'https://app.gsa.example');
+    assertEquals(response.headers.get('access-control-allow-credentials'), 'true');
     assertEquals(response.headers.get('vary'), 'Origin');
   });
 });
@@ -76,6 +78,7 @@ Deno.test('autoriza todas as origens locais usadas no desenvolvimento', async ()
 
       assertEquals(response.status, 204);
       assertEquals(response.headers.get('access-control-allow-origin'), origin);
+      assertEquals(response.headers.get('access-control-allow-credentials'), 'true');
     }
   });
 });
