@@ -23,6 +23,17 @@ BEGIN
     RAISE EXCEPTION 'Coluna viagens_transacoes.valor_parcela ausente.';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'faturas'
+      AND column_name = 'metadata'
+      AND udt_name = 'jsonb'
+  ) THEN
+    RAISE EXCEPTION 'Coluna faturas.metadata ausente ou incompatível.';
+  END IF;
+
   IF to_regprocedure('public.gsa_client_checkout_travel(uuid,text,jsonb)') IS NULL THEN
     RAISE EXCEPTION 'RPC gsa_client_checkout_travel ausente.';
   END IF;
@@ -53,5 +64,6 @@ $audit$;
 SELECT
   'gsa_viagens_parcelamento' AS module,
   true AS transaction_installments_ready,
+  true AS invoice_metadata_ready,
   true AS installment_invoices_ready,
   true AS checkout_rpc_ready;
