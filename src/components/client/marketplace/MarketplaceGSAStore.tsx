@@ -1,10 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { MarketplaceHome } from './MarketplaceHome';
 import { StoreHub } from '../StoreHub';
-import { TravelPackagesPage } from './TravelPackagesPage';
 import { ClassifiedsHubPage } from './ClassifiedsHubPage';
-
-// Roteamento
 import { useAppLocation } from '../../../routing/useAppLocation';
 import { routes } from '../../../routing/routeCatalog';
 import { navigate } from '../../../routing/navigationService';
@@ -17,6 +14,8 @@ import { TravelQuoteRequestPage } from './travel/TravelQuoteRequestPage';
 import { TravelReservationPage } from './travel/TravelReservationPage';
 import { MyTripsPage } from './travel/MyTripsPage';
 import { TravelProposalsPage } from './travel/TravelProposalsPage';
+import { TravelCancellationsPage } from './travel/TravelCancellationsPage';
+import { TravelSupportPage } from './travel/TravelSupportPage';
 
 import { ClassifiedDetailPage } from './classifieds/ClassifiedDetailPage';
 import { RealEstateMarketplacePage } from './classifieds/RealEstateMarketplacePage';
@@ -26,8 +25,6 @@ import { MyClassifiedsPage } from './classifieds/MyClassifiedsPage';
 import { CreateListingWizard } from './classifieds/CreateListingWizard';
 import { MyNegotiationsPage } from './classifieds/MyNegotiationsPage';
 import { ProtectionMarketplace } from './protection/ProtectionMarketplace';
-
-
 
 interface MarketplaceGSAStoreProps {
   clientId?: string;
@@ -44,22 +41,18 @@ export function MarketplaceGSAStore({
   initialItemId,
   onNavigate,
   onBackToSite,
-  onRequireAuth
+  onRequireAuth,
 }: MarketplaceGSAStoreProps) {
   const route = useAppLocation();
 
-  // Caso esteja utilizando no modo embutido dentro de ClientPortal com onNavigate customizado,
-  // mantemos a URL sincronizada delegando a navegação.
   const handleNavigate = (path: string) => {
     if (onNavigate) {
-      // Mapear rota de volta para parâmetros legados para que o ClientPortal receba
       const segments = path.split('/').filter(Boolean);
-      const isLojapath = segments.includes('loja');
+      const isStorePath = segments.includes('loja');
       const moduleName = 'gsa_store';
-      
+
       let tabName = 'home';
-      if (isLojapath) {
-        // Ex: /marketplace/loja/produtos -> segmentos[1] é loja, segmentos[2] é produtos
+      if (isStorePath) {
         tabName = segments[2] ? `loja-${segments[2]}` : 'loja';
       } else if (segments.includes('pacotes-viagem')) {
         tabName = 'pacotes-viagem';
@@ -72,34 +65,31 @@ export function MarketplaceGSAStore({
       }
 
       onNavigate(moduleName, tabName, segments[3]);
-    } else {
-      navigate(path);
+      return;
     }
+
+    navigate(path);
   };
 
-  const handleSelectModule = (section: 'produtos-assinaturas' | 'pacotes-viagem' | 'classificados' | 'saude' | 'seguros') => {
+  const handleSelectModule = (
+    section: 'produtos-assinaturas' | 'pacotes-viagem' | 'classificados' | 'saude' | 'seguros',
+  ) => {
     if (section === 'produtos-assinaturas') {
       handleNavigate(routes.marketplace.store.root());
     } else if (section === 'pacotes-viagem') {
-      navigate(routes.marketplace.travelPackages.ofertas());
+      handleNavigate(routes.marketplace.travelPackages.root());
     } else if (section === 'classificados') {
       handleNavigate(routes.marketplace.classifieds.root());
     } else if (section === 'saude') {
-      navigate(routes.marketplace.saude.root());
+      handleNavigate(routes.marketplace.saude.root());
     } else if (section === 'seguros') {
-      navigate(routes.marketplace.seguros.root());
+      handleNavigate(routes.marketplace.seguros.root());
     }
   };
 
-  const handleBackToHome = () => {
-    if (route.submodule === 'classificados') {
-      handleNavigate(routes.marketplace.classifieds.root());
-    } else {
-      handleNavigate(routes.marketplace.menu());
-    }
-  };
+  const backToMarketplace = () => handleNavigate(routes.marketplace.menu());
+  const backToTravelHub = () => handleNavigate(routes.marketplace.travelPackages.root());
 
-  // Determinar a seção com base na rota atual reativa do useAppLocation
   const currentSubmodule = route.submodule;
   const currentModule = route.module;
 
@@ -111,122 +101,176 @@ export function MarketplaceGSAStore({
         itemId={route.itemId}
         clientId={clientId}
         onRequireAuth={onRequireAuth}
-        onBackToMarketplace={() => navigate(routes.marketplace.menu())}
+        onBackToMarketplace={backToMarketplace}
       />
     );
   }
 
-  // Renderização condicional com base no estado reativo da rota
   if (currentModule === 'pacotes-viagem') {
     if (currentSubmodule === 'ofertas') {
-      return <TravelOffersLandingPage onBack={handleBackToHome} isPublic={!clientId} />;
+      return <TravelOffersLandingPage onBack={backToTravelHub} isPublic={!clientId} />;
     }
     if (currentSubmodule === 'ofertas-nacionais') {
-      return <TravelCategoryPage category="nacional" onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())} />;
+      return (
+        <TravelCategoryPage
+          category="nacional"
+          onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())}
+        />
+      );
     }
     if (currentSubmodule === 'ofertas-internacionais') {
-      return <TravelCategoryPage category="internacional" onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())} />;
+      return (
+        <TravelCategoryPage
+          category="internacional"
+          onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())}
+        />
+      );
     }
     if (currentSubmodule === 'ofertas-excursoes') {
-      return <TravelCategoryPage category="excursao" onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())} />;
+      return (
+        <TravelCategoryPage
+          category="excursao"
+          onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())}
+        />
+      );
     }
     if (currentSubmodule === 'pacote-detalhe' && route.itemId) {
       return (
-        <TravelPackageDetailPage 
-          slug={route.itemId} 
-          clientId={clientId} 
-          onRequireAuth={onRequireAuth} 
-          onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())} 
+        <TravelPackageDetailPage
+          slug={route.itemId}
+          clientId={clientId}
+          onRequireAuth={onRequireAuth}
+          onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())}
         />
       );
     }
     if (currentSubmodule === 'orcamento') {
       return (
-        <TravelQuoteRequestPage 
-          clientId={clientId} 
-          onRequireAuth={onRequireAuth} 
-          onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())} 
+        <TravelQuoteRequestPage
+          clientId={clientId}
+          onRequireAuth={onRequireAuth}
+          onBack={() => handleNavigate(routes.marketplace.travelPackages.ofertas())}
         />
       );
     }
     if (currentSubmodule === 'minhas-viagens') {
       if (!clientId) {
-         if (onRequireAuth) onRequireAuth();
-         return null;
+        onRequireAuth?.();
+        return null;
       }
       if (route.itemId) {
-        return <TravelReservationPage transacaoId={route.itemId} clientId={clientId} onBack={() => handleNavigate(routes.marketplace.travelPackages.minhasViagens())} />;
+        return (
+          <TravelReservationPage
+            transacaoId={route.itemId}
+            clientId={clientId}
+            onBack={() => handleNavigate(routes.marketplace.travelPackages.minhasViagens())}
+          />
+        );
       }
-      return <MyTripsPage clientId={clientId} onBack={handleBackToHome} />;
+      return <MyTripsPage clientId={clientId} onBack={backToTravelHub} />;
     }
     if (currentSubmodule === 'minhas-propostas') {
       if (!clientId) {
-         if (onRequireAuth) onRequireAuth();
-         return null;
+        onRequireAuth?.();
+        return null;
       }
-      return <TravelProposalsPage clientId={clientId} onBack={handleBackToHome} />;
+      return <TravelProposalsPage clientId={clientId} onBack={backToTravelHub} />;
     }
+    if (currentSubmodule === 'documentos') {
+      if (!clientId) {
+        onRequireAuth?.();
+        return null;
+      }
+      return <MyTripsPage clientId={clientId} onBack={backToTravelHub} />;
+    }
+    if (currentSubmodule === 'cancelamentos') {
+      if (!clientId) {
+        onRequireAuth?.();
+        return null;
+      }
+      return <TravelCancellationsPage clientId={clientId} onBack={backToTravelHub} />;
+    }
+    if (currentSubmodule === 'suporte') {
+      return <TravelSupportPage clientId={clientId} onBack={backToTravelHub} />;
+    }
+
     return (
-      <TravelHubMenu 
-        clientId={clientId} 
-        onBackToMarketplace={handleBackToHome} 
-        onRequireAuth={() => onRequireAuth?.()} 
+      <TravelHubMenu
+        clientId={clientId}
+        onBackToMarketplace={backToMarketplace}
+        onRequireAuth={() => onRequireAuth?.()}
       />
     );
   }
-  
+
   if (currentModule === 'classificados') {
     if (currentSubmodule === 'imoveis') {
       if (route.itemId) {
-        return <ClassifiedDetailPage slug={route.itemId} clientId={clientId} onBack={() => handleNavigate(routes.marketplace.classifieds.imoveis())} />;
+        return (
+          <ClassifiedDetailPage
+            slug={route.itemId}
+            clientId={clientId}
+            onBack={() => handleNavigate(routes.marketplace.classifieds.imoveis())}
+          />
+        );
       }
       return <RealEstateMarketplacePage onBack={() => handleNavigate(routes.marketplace.classifieds.root())} />;
     }
     if (currentSubmodule === 'veiculos') {
       if (route.itemId) {
-        return <ClassifiedDetailPage slug={route.itemId} clientId={clientId} onBack={() => handleNavigate(routes.marketplace.classifieds.veiculos())} />;
+        return (
+          <ClassifiedDetailPage
+            slug={route.itemId}
+            clientId={clientId}
+            onBack={() => handleNavigate(routes.marketplace.classifieds.veiculos())}
+          />
+        );
       }
       return <VehiclesMarketplacePage onBack={() => handleNavigate(routes.marketplace.classifieds.root())} />;
     }
     if (currentSubmodule === 'geral') {
       if (route.itemId) {
-        return <ClassifiedDetailPage slug={route.itemId} clientId={clientId} onBack={() => handleNavigate(routes.marketplace.classifieds.geral())} />;
+        return (
+          <ClassifiedDetailPage
+            slug={route.itemId}
+            clientId={clientId}
+            onBack={() => handleNavigate(routes.marketplace.classifieds.geral())}
+          />
+        );
       }
       return <GeneralClassifiedsPage onBack={() => handleNavigate(routes.marketplace.classifieds.root())} />;
     }
     if (currentSubmodule === 'meus-anuncios') {
       if (!clientId) {
-         if (onRequireAuth) onRequireAuth();
-         return null;
+        onRequireAuth?.();
+        return null;
       }
       return <MyClassifiedsPage clientId={clientId} />;
     }
     if (currentSubmodule === 'anunciar') {
       if (!clientId) {
-         if (onRequireAuth) onRequireAuth();
-         return null;
+        onRequireAuth?.();
+        return null;
       }
       return <CreateListingWizard clientId={clientId} onBack={() => handleNavigate(routes.marketplace.classifieds.root())} />;
     }
     if (currentSubmodule === 'negociacoes') {
       if (!clientId) {
-         if (onRequireAuth) onRequireAuth();
-         return null;
+        onRequireAuth?.();
+        return null;
       }
       return <MyNegotiationsPage clientId={clientId} />;
     }
-    // Fallback para a Home dos Classificados
-    return <ClassifiedsHubPage onBack={handleBackToHome} isPublic={!clientId} />;
+
+    return <ClassifiedsHubPage onBack={backToMarketplace} isPublic={!clientId} />;
   }
 
-  
   if (currentSubmodule?.startsWith('loja')) {
-    // Ex: loja, loja-produtos, loja-assinaturas
     const tabMapped = currentSubmodule.replace('loja-', '');
     return (
       <StoreHub
         clientId={clientId}
-        onNavigate={(mod, tab, itemId) => {
+        onNavigate={(_module, tab, itemId) => {
           if (tab === 'produtos' || tab === 'loja-produtos') {
             handleNavigate(routes.marketplace.store.product(itemId || ''));
           } else if (tab === 'assinaturas' || tab === 'loja-assinaturas') {
@@ -237,12 +281,11 @@ export function MarketplaceGSAStore({
         initialItemId={initialItemId || route.itemId}
         onRequireAuth={onRequireAuth}
         onBackToSite={() => handleNavigate(routes.marketplace.root())}
-        onBackToMarketplace={handleBackToHome}
+        onBackToMarketplace={backToMarketplace}
       />
     );
   }
 
-  // Por padrão, a Home de Módulos (Produtos e Assinaturas, Viagens, Classificados) é renderizada em /marketplace
   return (
     <MarketplaceHome
       onSelectModule={handleSelectModule}

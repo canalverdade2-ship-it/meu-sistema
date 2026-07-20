@@ -1,0 +1,56 @@
+name: GSA Custom Auth Inspection
+
+on:
+  push:
+    branches: [ops/gsa-custom-auth-adapter]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate protected configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Read session helper
+        run: supabase db query --linked --file scripts/gsa-custom-auth-inspection.sql > session-helper.log
+
+      - name: Inspect frontend session usage
+        shell: bash
+        run: |
+          find src -type f \( -iname '*session*' -o -iname '*auth*' \) | sort > session-files.log
+          grep -RInE --include='*.ts' --include='*.tsx' 'p_sessao_id|p_session_token|session_token|sessao_id|sessionService' src | head -n 800 > frontend-session-usage.log || true
+
+      - name: Upload inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-custom-auth-inspection
+          path: |
+            session-helper.log
+            session-files.log
+            frontend-session-usage.log
+          retention-days: 7
