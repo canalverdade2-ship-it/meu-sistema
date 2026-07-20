@@ -1,0 +1,165 @@
+name: Deploy GSA Viagens to Supabase
+
+on:
+  push:
+    branches: [ops/deploy-gsa-viagens-production]
+    paths:
+      - '.gsa-deploy-trigger'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: deploy-gsa-viagens-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy GSA Viagens
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate deployment authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo 'SUPABASE_ACCESS_TOKEN não configurado.'; exit 1; }
+          test -n "$SUPABASE_DB_PASSWORD" || { echo 'SUPABASE_DB_PASSWORD não configurado.'; exit 1; }
+          test -n "$SUPABASE_PROJECT_ID" || { echo 'SUPABASE_PROJECT_ID não configurado.'; exit 1; }
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID" || {
+            echo 'O Project Reference não corresponde ao projeto autorizado.'
+            exit 1
+          }
+          grep -Fxq 'APPLY_GSA_VIAGENS_20260720' .gsa-deploy-trigger || {
+            echo 'Gatilho de implantação inválido.'
+            exit 1
+          }
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link authorized project
+        shell: bash
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Build atomic deployment bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sed '/^-- POLÍTICAS/,$d' \
+            supabase/migrations/20260717220000_gsa_viagens_schema.sql \
+            > gsa-schema-without-legacy-policies.sql
+
+          cat > gsa-installation-guard.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_existing_objects TEXT;
+          BEGIN
+            SELECT string_agg(expected.name, ', ' ORDER BY expected.name)
+              INTO v_existing_objects
+            FROM (
+              VALUES
+                ('viagens_configuracoes'),
+                ('viagens_fornecedores'),
+                ('viagens_pacotes'),
+                ('viagens_pacote_imagens'),
+                ('viagens_orcamentos'),
+                ('viagens_solicitacoes_reserva'),
+                ('viagens_propostas'),
+                ('viagens_passageiros'),
+                ('viagens_passageiro_documentos'),
+                ('viagens_transacoes'),
+                ('viagens_vouchers'),
+                ('viagens_cancelamentos')
+            ) AS expected(name)
+            WHERE to_regclass(format('public.%I', expected.name)) IS NOT NULL;
+
+            IF v_existing_objects IS NOT NULL THEN
+              RAISE EXCEPTION 'Implantação inicial abortada: objetos do GSA Viagens já existem: %', v_existing_objects;
+            END IF;
+          END;
+          $$;
+          SQL
+
+          {
+            echo 'BEGIN;'
+            cat gsa-installation-guard.sql
+            cat gsa-schema-without-legacy-policies.sql
+            cat supabase/migrations/20260720110000_gsa_viagens_custom_session_security.sql
+            cat supabase/migrations/20260720120000_fix_gsa_viagens_core_flow.sql
+            cat supabase/migrations/20260720123000_gsa_viagens_storage_and_quotes.sql
+            cat supabase/migrations/20260720130000_gsa_viagens_cancelamento_rpc.sql
+            echo 'COMMIT;'
+          } > gsa-viagens-production-bundle.sql
+
+      - name: Apply atomic GSA Viagens bundle
+        id: apply
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file gsa-viagens-production-bundle.sql \
+            2>&1 | tee gsa-deployment.log
+
+      - name: Verify deployed objects
+        id: verify
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked \
+            --file scripts/gsa-viagens-post-deploy.sql \
+            2>&1 | tee gsa-post-deploy.log
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-viagens-deployment-evidence
+          path: |
+            gsa-deployment.log
+            gsa-post-deploy.log
+          retention-days: 30
+
+      - name: Publish private deployment report
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          touch gsa-deployment.log gsa-post-deploy.log
+          {
+            echo '# Implantação do GSA Viagens'
+            echo
+            echo "- Projeto: \`$EXPECTED_PROJECT_ID\`"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Resultado: **$JOB_STATUS**"
+            echo
+            echo '## Aplicação atômica'
+            echo '```text'
+            sed -n '1,220p' gsa-deployment.log
+            echo '```'
+            echo
+            echo '## Verificação pós-implantação'
+            echo '```text'
+            sed -n '1,220p' gsa-post-deploy.log
+            echo '```'
+          } > gsa-deployment-report.md
+
+          gh issue create \
+            --title "Implantação GSA Viagens - $JOB_STATUS" \
+            --body-file gsa-deployment-report.md
