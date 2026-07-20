@@ -1,0 +1,54 @@
+name: Home Admin Diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.event.pull_request.head.ref == 'agent/finalizar-home-itens-2-a-10'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run admin contracts with full log
+        id: contracts
+        env:
+          PGPASSWORD: postgres
+        shell: bash
+        run: |
+          set +e
+          npm run test:admin > home-admin-diagnostic.log 2>&1
+          code=$?
+          cat home-admin-diagnostic.log
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Upload diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-admin-diagnostic
+          path: home-admin-diagnostic.log
+          retention-days: 7
+      - name: Report result
+        run: test "${{ steps.contracts.outputs.exit_code }}" = "0"
