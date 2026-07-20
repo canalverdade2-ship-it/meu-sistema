@@ -5,6 +5,8 @@ import {
   ChevronRight,
   ClipboardList,
   Clock,
+  CreditCard,
+  FileText,
   Gift,
   HeartPulse,
   Landmark,
@@ -25,6 +27,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
+import { callAdminRpc } from '../lib/adminRpc';
 import { navigate } from '../routing/navigationService';
 import { useAppLocation } from '../routing/useAppLocation';
 import {
@@ -32,6 +35,7 @@ import {
   AdminModule,
   canAccessAdminModule,
   normalizeAdminModule,
+  normalizeGrantedAdminModules,
 } from '../routing/adminAccess';
 import { DashboardLayout } from '../components/ui/DashboardLayout';
 import { UniversalNotificationBell } from '../components/ui/UniversalNotificationBell';
@@ -58,7 +62,7 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { SystemStatusIndicator } from '../components/admin/SystemStatusIndicator';
 
 interface AdminPanelProps {
-  onLogout: () => void;
+  onLogout: () => void | Promise<void>;
   adminType: 'admin' | 'colaborador';
   colaboradorId?: string;
   colaboradorModulos: string[];
@@ -93,7 +97,13 @@ const MENU_GROUPS: MenuGroup[] = [
   },
   {
     label: 'Financeiro',
-    items: [{ id: 'financeiro', label: 'Financeiro', icon: Landmark }],
+    items: [
+      { id: 'financeiro', label: 'Financeiro Geral', icon: Landmark },
+      { id: 'cobranca', label: 'Cobrança', icon: ShieldAlert },
+      { id: 'fiscal', label: 'Fiscal', icon: FileText },
+      { id: 'emprestimos', label: 'Empréstimos', icon: Landmark },
+      { id: 'credito_loja', label: 'Crédito de Loja', icon: CreditCard },
+    ],
   },
   {
     label: 'Relacionamento',
@@ -119,6 +129,14 @@ const MENU_GROUPS: MenuGroup[] = [
   },
 ];
 
+type AdminContext = {
+  actor_type: 'admin' | 'colaborador';
+  actor_id: string;
+  actor_name?: string;
+  modules?: string[];
+  session_id: string;
+};
+
 function LiveClock() {
   const [time, setTime] = useState(new Date());
   useEffect(() => {
@@ -135,6 +153,14 @@ function LiveClock() {
       })}
     </div>
   );
+}
+
+function accessModuleForRoute(rawModule: string, submodule?: string | null): AdminModule {
+  if (rawModule === 'financeiro') {
+    if (submodule === 'emprestimos') return 'emprestimos';
+    if (['credito', 'credito_loja', 'credito-loja'].includes(String(submodule || ''))) return 'credito_loja';
+  }
+  return normalizeAdminModule(rawModule);
 }
 
 export function AdminPanel({
@@ -155,41 +181,51 @@ export function AdminPanel({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [colaboradorNome, setColaboradorNome] = useState<string | null>(null);
-  const [internalModules, setInternalModules] = useState<string[]>(colaboradorModulos || []);
+  const [internalModules, setInternalModules] = useState<string[]>(
+    normalizeGrantedAdminModules(colaboradorModulos || []),
+  );
 
   const rawModule = route.module || 'dashboard';
-  const accessModule = normalizeAdminModule(rawModule);
-  const activeTab = ['cobranca', 'fiscal'].includes(rawModule) ? rawModule : route.submodule;
+  const activeTab = route.submodule;
   const activeItemId = route.itemId;
+  const accessModule = accessModuleForRoute(rawModule, activeTab);
   const canAccessCurrentRoute = canAccessAdminModule(adminType, internalModules, accessModule);
 
   useEffect(() => {
     if (adminType !== 'colaborador' || !colaboradorId) {
       setColaboradorNome(null);
-      setInternalModules(colaboradorModulos || []);
+      setInternalModules(normalizeGrantedAdminModules(colaboradorModulos || []));
       return;
     }
 
     let cancelled = false;
+    let validating = false;
+
     const refreshCollaborator = async () => {
-      const { data, error } = await supabase
-        .from('colaboradores')
-        .select('nome, modulos, status')
-        .eq('id', colaboradorId)
-        .single();
-
-      if (cancelled) return;
-      if (error || !data || ['bloqueado', 'inativo', 'excluido'].includes(String(data.status))) {
-        toast.error('Seu acesso administrativo foi revogado.');
+      if (validating) return;
+      validating = true;
+      try {
+        const context = await callAdminRpc<AdminContext>('gsa_admin_get_context_secure');
+        if (cancelled) return;
+        if (
+          context.actor_type !== 'colaborador' ||
+          context.actor_id !== colaboradorId
+        ) {
+          throw new Error('A identidade da sessão administrativa foi alterada.');
+        }
+        setColaboradorNome(context.actor_name || null);
+        setInternalModules(normalizeGrantedAdminModules(context.modules || []));
+      } catch (error: any) {
+        if (cancelled) return;
+        toast.error(error?.message || 'Seu acesso administrativo foi revogado.');
         await onLogout();
-        return;
+      } finally {
+        validating = false;
       }
-
-      setColaboradorNome(data.nome || null);
-      setInternalModules(Array.isArray(data.modulos) ? data.modulos : []);
     };
 
     void refreshCollaborator();
+
     const channel = supabase
       .channel(`admin-permissions-${colaboradorId}`)
       .on(
@@ -197,10 +233,26 @@ export function AdminPanel({
         { event: '*', schema: 'public', table: 'colaboradores', filter: `id=eq.${colaboradorId}` },
         () => void refreshCollaborator(),
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'colaborador_modulos', filter: `colaborador_id=eq.${colaboradorId}` },
+        () => void refreshCollaborator(),
+      )
       .subscribe();
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void refreshCollaborator();
+    }, 60_000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') void refreshCollaborator();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
       void supabase.removeChannel(channel);
     };
   }, [adminType, colaboradorId, colaboradorModulos, onLogout]);
@@ -239,9 +291,14 @@ export function AdminPanel({
       case 'loja':
       case 'classificados':
       case 'viagens': return pendencies.moduleVendas;
-      case 'fidelidade': return pendencies.cadastro_vouchers_pendentes + pendencies.cadastro_premios_pendentes;
+      case 'fidelidade':
+      case 'promocoes': return pendencies.cadastro_vouchers_pendentes + pendencies.cadastro_premios_pendentes;
       case 'atendimento': return pendencies.moduleSuporte;
-      case 'financeiro': return pendencies.moduleFinanceiro + pendencies.moduleCobranca + pendencies.moduleFiscal;
+      case 'financeiro': return pendencies.moduleFinanceiro;
+      case 'cobranca': return pendencies.moduleCobranca;
+      case 'fiscal': return pendencies.moduleFiscal;
+      case 'emprestimos': return pendencies.vendas_emprestimos_pendentes;
+      case 'credito_loja': return pendencies.vendas_credito_pendentes;
       case 'acessos': return pendencies.moduleAcessos;
       default: return 0;
     }
@@ -263,15 +320,7 @@ export function AdminPanel({
     const commonNavigate = (module: string, tab?: string, itemId?: string) => goTo(module, tab, itemId);
 
     if (rawModule === 'dashboard') {
-      return (
-        <Dashboard
-          adminType={adminType}
-          colaboradorId={colaboradorId}
-          colaboradorNome={colaboradorNome || undefined}
-          colaboradorModulos={internalModules}
-          onNavigate={commonNavigate}
-        />
-      );
+      return <Dashboard adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || undefined} colaboradorModulos={internalModules} onNavigate={commonNavigate} />;
     }
     if (rawModule === 'cadastros' || rawModule === 'cadastro') {
       return <CadastroModule title="Cadastros" allowedTabs={['clientes', 'prestadores']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
@@ -292,14 +341,11 @@ export function AdminPanel({
       return <TicketsModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
     }
     if (rawModule === 'financeiro') {
-      return <FinanceiroModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />;
+      const financeTab = accessModule === 'emprestimos' ? 'emprestimos' : accessModule === 'credito_loja' ? 'credito' : activeTab;
+      return <FinanceiroModule initialTab={financeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />;
     }
-    if (rawModule === 'cobranca') {
-      return <CobrancaModule initialTab={activeTab} initialItemId={activeItemId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />;
-    }
-    if (rawModule === 'fiscal') {
-      return <FiscalModule initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
-    }
+    if (rawModule === 'cobranca') return <CobrancaModule initialTab={activeTab} initialItemId={activeItemId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />;
+    if (rawModule === 'fiscal') return <FiscalModule initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />;
     if (rawModule === 'relatorios') return <RelatoriosModule adminType={adminType} colaboradorModulos={internalModules} />;
     if (rawModule === 'configuracoes') return <ConfiguracoesModule />;
     if (rawModule === 'area_vip') return <AreaVIPModule initialItemId={activeItemId} colaboradorNome={colaboradorNome} />;
@@ -410,7 +456,7 @@ export function AdminPanel({
                 <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-400" title="Online" />
               </div>
             )}
-            <button type="button" onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-white/30 transition hover:bg-red-500/10 hover:text-red-400">
+            <button type="button" onClick={() => void onLogout()} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-white/30 transition hover:bg-red-500/10 hover:text-red-400">
               <LogOut className="h-[18px] w-[18px] shrink-0" />
               {sidebarExpanded && <span className="text-sm font-semibold">Sair com segurança</span>}
             </button>
