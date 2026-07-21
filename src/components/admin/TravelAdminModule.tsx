@@ -1532,27 +1532,50 @@ function TransacoesTab() {
     try {
       const numericRefund = parseCurrencyString(refundAmount);
       const numericFees = parseCurrencyString(refundFees);
+      const note = refundNote.trim() || 'Reembolso aprovado e concluído pelo financeiro GSA.';
 
-      const { error } = await supabase
+      const existingDetails = refundTx.detalhes && typeof refundTx.detalhes === 'object' && !Array.isArray(refundTx.detalhes) ? refundTx.detalhes : {};
+      const updatedDetails = {
+        ...existingDetails,
+        resposta_admin: note,
+        valor_reembolsado: numericRefund,
+        taxa_cancelamento: numericFees,
+        data_reembolso: new Date().toISOString(),
+      };
+
+      let { error } = await supabase
         .from('viagens_transacoes')
         .update({
           status: 'reembolsada',
+          resposta_admin: note,
           valor_reembolsado: numericRefund,
           taxa_cancelamento: numericFees,
-          resposta_admin: refundNote.trim() || 'Reembolso aprovado e concluído.',
+          detalhes: updatedDetails,
           updated_at: new Date().toISOString(),
         })
         .eq('id', refundTx.id);
 
+      if (error && (error.message?.includes('schema cache') || error.code === 'PGRST204')) {
+        const fallbackRes = await supabase
+          .from('viagens_transacoes')
+          .update({
+            status: 'reembolsada',
+            detalhes: updatedDetails,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', refundTx.id);
+        error = fallbackRes.error;
+      }
+
       if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
 
-      // Atualiza tabela de cancelamentos se houver
+      // Atualiza tabela de cancelamentos se houver registro vinculado
       await supabase
         .from('viagens_cancelamentos')
         .update({
           status: 'concluido',
           valor_reembolsado: numericRefund,
-          resposta_gsa: refundNote.trim() || 'Reembolso aprovado e concluído.',
+          resposta_gsa: note,
           updated_at: new Date().toISOString(),
         })
         .eq('transacao_id', refundTx.id);
@@ -1573,14 +1596,35 @@ function TransacoesTab() {
     if (reason.length < 3) return toast.error('Informe o motivo da negação do reembolso (mínimo de 3 caracteres).');
     setProcessingRefund(true);
     try {
-      const { error } = await supabase
+      const existingDetails = denyTx.detalhes && typeof denyTx.detalhes === 'object' && !Array.isArray(denyTx.detalhes) ? denyTx.detalhes : {};
+      const updatedDetails = {
+        ...existingDetails,
+        resposta_admin: reason,
+        motivo_recusa: reason,
+        data_negado: new Date().toISOString(),
+      };
+
+      let { error } = await supabase
         .from('viagens_transacoes')
         .update({
           status: 'reembolso_negado',
           resposta_admin: reason,
+          detalhes: updatedDetails,
           updated_at: new Date().toISOString(),
         })
         .eq('id', denyTx.id);
+
+      if (error && (error.message?.includes('schema cache') || error.code === 'PGRST204')) {
+        const fallbackRes = await supabase
+          .from('viagens_transacoes')
+          .update({
+            status: 'reembolso_negado',
+            detalhes: updatedDetails,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', denyTx.id);
+        error = fallbackRes.error;
+      }
 
       if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
 
@@ -1738,10 +1782,10 @@ function TransacoesTab() {
               </div>
 
               {/* Resposta do Admin / Histórico de Reembolso */}
-              {detailsTx.resposta_admin && (
+              {(detailsTx.resposta_admin || detailsTx.detalhes?.resposta_admin) && (
                 <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
                   <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-1">Parecer da Administração</h4>
-                  <p className="text-sm font-semibold text-neutral-800 whitespace-pre-wrap">{detailsTx.resposta_admin}</p>
+                  <p className="text-sm font-semibold text-neutral-800 whitespace-pre-wrap">{detailsTx.resposta_admin || detailsTx.detalhes?.resposta_admin}</p>
                 </div>
               )}
             </div>
