@@ -32,6 +32,47 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
+      - name: Prepare SEO integration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          metadata_path = Path('src/hooks/usePublicPageMetadata.ts')
+          metadata = metadata_path.read_text(encoding='utf-8')
+          replacements = [
+            (
+              "            : page === 'partners'\n              ? 'Parceiros | GSA HUB'\n              : DEFAULT_TITLE;",
+              "            : page === 'partners'\n              ? 'Parceiros | GSA HUB'\n              : page === 'ads'\n                ? 'Anunciantes | GSA HUB'\n                : page === 'advertise'\n                  ? 'Anuncie no GSA HUB'\n                  : DEFAULT_TITLE;",
+            ),
+            (
+              "            : page === 'partners'\n              ? 'Conheça empresas e profissionais que fazem parte da rede de parceiros da GSA HUB.'\n              : DEFAULT_DESCRIPTION);",
+              "            : page === 'partners'\n              ? 'Conheça empresas e profissionais que fazem parte da rede de parceiros da GSA HUB.'\n              : page === 'ads'\n                ? 'Conheça campanhas e empresas anunciantes aprovadas no ecossistema GSA HUB.'\n                : page === 'advertise'\n                  ? 'Solicite uma proposta para divulgar sua empresa nas páginas e módulos do GSA HUB.'\n                  : DEFAULT_DESCRIPTION);",
+            ),
+            (
+              "            : page === 'partners'\n              ? window.location.pathname.startsWith('/parceiros/') ? window.location.pathname : '/parceiros'\n              : '/';",
+              "            : page === 'partners'\n              ? window.location.pathname.startsWith('/parceiros/') ? window.location.pathname : '/parceiros'\n              : page === 'ads'\n                ? '/anuncios'\n                : page === 'advertise'\n                  ? '/anuncie'\n                  : '/';",
+            ),
+          ]
+          for old, new in replacements:
+            if metadata.count(old) != 1:
+              raise SystemExit(f'Metadado não encontrado exatamente: {old[:60]}')
+            metadata = metadata.replace(old, new, 1)
+          metadata_path.write_text(metadata, encoding='utf-8')
+
+          script_path = Path('scripts/apply-advertising-foundation.py')
+          script = script_path.read_text(encoding='utf-8')
+          script, removed = re.subn(
+            r"\nreplace_exact\(\n    'src/hooks/usePublicPageMetadata\.ts',.*?\n\)\n",
+            '\n',
+            script,
+            flags=re.S,
+          )
+          if removed != 3:
+            raise SystemExit(f'Esperado remover 3 patches de SEO, removidos {removed}')
+          script_path.write_text(script, encoding='utf-8')
+          PY
+
       - name: Apply verified integration patch
         shell: bash
         run: |
