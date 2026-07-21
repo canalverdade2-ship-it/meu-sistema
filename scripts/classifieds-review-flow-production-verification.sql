@@ -1,3 +1,4 @@
+-- Segunda validação após correção da tipagem JSX.
 DO $verification$
 BEGIN
   IF to_regclass('public.classificados_ajustes') IS NULL THEN
