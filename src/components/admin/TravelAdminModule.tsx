@@ -27,6 +27,10 @@ import {
   Upload,
   Trash2,
   CheckCircle2,
+  Clock,
+  Zap,
+  Coins,
+  Wallet,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
@@ -1426,6 +1430,84 @@ function TransacoesTab() {
     return Math.max(total, paid, refund, snapshotTotal);
   };
 
+  const getPaymentBreakdown = (item: any) => {
+    if (!item) return [];
+
+    const snapshot = item.snapshot_completo || {};
+    const detalhes = item.detalhes || item.detalhes_pagamento || {};
+    const total = getTransactionTotal(item);
+
+    const breakdown: Array<{
+      tipo: 'saldo' | 'pontos' | 'credito' | 'externo';
+      titulo: string;
+      valorDisplay: string;
+      prazo: string;
+      isSystem: boolean;
+    }> = [];
+
+    // 1. Saldo da carteira GSA
+    const saldoVal = Number(snapshot.saldo_utilizado || detalhes.saldo_carteira || (item.forma_pagamento === 'saldo_carteira' ? total : 0));
+    if (saldoVal > 0) {
+      breakdown.push({
+        tipo: 'saldo',
+        titulo: 'Saldo da Carteira GSA',
+        valorDisplay: formatCurrency(saldoVal),
+        prazo: 'Estorno Imediato (Na hora)',
+        isSystem: true,
+      });
+    }
+
+    // 2. Pontos GSA
+    const pontosVal = Number(snapshot.pontos_utilizados || detalhes.pontos || snapshot.desconto_pontos_aplicado || 0);
+    if (pontosVal > 0) {
+      breakdown.push({
+        tipo: 'pontos',
+        titulo: 'Pontos GSA',
+        valorDisplay: `${pontosVal} pts`,
+        prazo: 'Estorno Imediato (Na hora)',
+        isSystem: true,
+      });
+    }
+
+    // 3. Crédito GSA
+    const creditoVal = Number(snapshot.credito_utilizado || detalhes.credito_gsa || (['credito_loja', 'credito_gsa'].includes(item.forma_pagamento) ? total : 0));
+    if (creditoVal > 0) {
+      const parcelas = item.parcelamento_permitido || snapshot.parcelas;
+      const descParcelas = parcelas ? ` (em ${parcelas}x)` : '';
+      breakdown.push({
+        tipo: 'credito',
+        titulo: `Crédito GSA${descParcelas}`,
+        valorDisplay: formatCurrency(creditoVal),
+        prazo: 'Estorno Imediato (Na hora)',
+        isSystem: true,
+      });
+    }
+
+    // 4. Pagamento Externo (Pix, Cartão, Boleto, etc)
+    const systemValTotal = saldoVal + creditoVal;
+    const externalVal = Math.max(0, total - systemValTotal);
+
+    if (externalVal > 0 || breakdown.length === 0) {
+      const rawForma = String(item.forma_pagamento || snapshot.forma_pagamento || 'Pix / Cartão').toLowerCase();
+      let nomeExterno = 'Pagamento Externo (Pix / Cartão / Boleto)';
+      if (rawForma.includes('pix')) nomeExterno = 'Pagamento via Pix';
+      else if (rawForma.includes('cartao') || rawForma.includes('credit')) nomeExterno = 'Pagamento via Cartão de Crédito';
+      else if (rawForma.includes('boleto')) nomeExterno = 'Pagamento via Boleto';
+
+      const displayVal = externalVal > 0 ? externalVal : total;
+
+      breakdown.push({
+        tipo: 'externo',
+        titulo: nomeExterno,
+        valorDisplay: formatCurrency(displayVal),
+        prazo: 'Prazo de até 72 horas',
+        isSystem: false,
+      });
+    }
+
+    return breakdown;
+  };
+
   const openApproveModal = (item: any) => {
     setRefundTx(item);
     const initialVal = item.valor_elegivel_reembolso != null && item.valor_elegivel_reembolso > 0
@@ -1702,27 +1784,79 @@ function TransacoesTab() {
       )}
 
       {/* Modal Aprovar Reembolso */}
-      <Modal isOpen={Boolean(refundTx)} onClose={() => setRefundTx(null)} title="Aprovar Solicitação de Reembolso" size="md">
+      <Modal isOpen={Boolean(refundTx)} onClose={() => setRefundTx(null)} title="Aprovar Solicitação de Reembolso" size="lg">
         {refundTx && (
           <div className="space-y-5">
-            <div className="rounded-2xl bg-emerald-50 p-4 border border-emerald-100 text-emerald-900 text-sm">
-              <strong>Cliente: {refundTx.cliente_nome || refundTx.protocolo}</strong>
-              <p className="text-xs text-emerald-700 mt-1">Defina o valor a ser reembolsado e eventuais taxas/multas de cancelamento.</p>
+            <div className="rounded-2xl bg-emerald-50 p-4 border border-emerald-100 text-emerald-900 text-sm flex items-center justify-between">
+              <div>
+                <strong>Cliente: {refundTx.cliente_nome || refundTx.protocolo}</strong>
+                <p className="text-xs text-emerald-700 mt-0.5">Analise a composição do pagamento e escolha o valor total aprovado.</p>
+              </div>
+              <span className="text-sm font-black text-emerald-800 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs">
+                Total: {formatCurrency(getTransactionTotal(refundTx))}
+              </span>
             </div>
 
+            {/* Composição do Pagamento e Prazos de Estorno */}
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4 space-y-3">
+              <h4 className="text-xs font-black uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
+                <Receipt className="h-4 w-4 text-indigo-600" /> Composição do Valor e Prazos de Estorno
+              </h4>
+
+              <div className="space-y-2">
+                {getPaymentBreakdown(refundTx).map((part, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 border border-neutral-200 shadow-2xs">
+                    <div className="flex items-center gap-2.5">
+                      {part.isSystem ? (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                          <Zap className="h-4 w-4" />
+                        </div>
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                          <Clock className="h-4 w-4" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-bold text-neutral-900">{part.titulo}</p>
+                        <p className="text-[11px] font-semibold text-neutral-500">{part.valorDisplay}</p>
+                      </div>
+                    </div>
+
+                    <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${
+                      part.isSystem
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        : 'bg-amber-100 text-amber-800 border border-amber-200'
+                    }`}>
+                      {part.isSystem ? <Zap className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                      {part.prazo}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Informação sobre os Prazos */}
+              <div className="rounded-xl bg-indigo-50/80 p-3 border border-indigo-100 text-xs text-indigo-900 flex items-start gap-2">
+                <Sparkles className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
+                <p>
+                  <strong>Regra de Processamento:</strong> Valores do sistema (Pontos, Saldo e Crédito GSA) são <strong>estornados na hora</strong>. Pagamentos externos via Pix/Cartão possuem um <strong>prazo de até 72 horas</strong> para compensação bancária/gateway.
+                </p>
+              </div>
+            </div>
+
+            {/* Ajuste do Valor Aprovado */}
             <div className="grid gap-4 sm:grid-cols-2">
               <label className={labelClass}>
-                Valor a Reembolsar (R$) <span className="text-emerald-600">*</span>
+                Valor Total Aprovado (R$) <span className="text-emerald-600">*</span>
                 <input
                   value={refundAmount}
                   onChange={(e) => setRefundAmount(handleCurrencyMask(e.target.value))}
-                  className={`${inputClass} mt-2`}
+                  className={`${inputClass} mt-2 font-black text-indigo-700`}
                   placeholder="0,00"
                 />
               </label>
 
               <label className={labelClass}>
-                Taxas / Retenções (R$)
+                Taxas / Retenções de Cancelamento (R$)
                 <input
                   value={refundFees}
                   onChange={(e) => setRefundFees(handleCurrencyMask(e.target.value))}
@@ -1739,7 +1873,7 @@ function TransacoesTab() {
                 value={refundNote}
                 onChange={(e) => setRefundNote(e.target.value)}
                 className={`${inputClass} mt-2 h-auto`}
-                placeholder="Insira a mensagem ou comprovante de reembolso..."
+                placeholder="Insira a mensagem explicativa para o cliente..."
               />
             </label>
 
@@ -1759,7 +1893,7 @@ function TransacoesTab() {
                 className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50 shadow-md shadow-emerald-200"
               >
                 {processingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                {processingRefund ? 'Processando...' : 'Confirmar Aprovação'}
+                {processingRefund ? 'Processando...' : 'Confirmar e Processar Reembolso'}
               </button>
             </div>
           </div>
