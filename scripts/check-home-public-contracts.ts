@@ -39,7 +39,7 @@ assert.match(budgetModal, /página de origem, o domínio de referência e parâm
 assert.match(budgetGateway, /gsa_auth_rate_limit_check/, 'O gateway deve limitar envios por IP');
 assert.match(budgetGateway, /configuredOrigins\(\)/, 'O gateway deve aplicar a lista de origens');
 assert.match(budgetGateway, /gsa_public_create_enterprise_budget_v2/, 'O gateway deve encaminhar para a rotina protegida');
-assert.doesNotMatch(budgetGatewayTest, /https?:\/\//, 'Testes Deno da Home não devem depender de módulos remotos');
+assert.doesNotMatch(budgetGatewayTest, /from\s+['"]https?:\/\//, 'Testes Deno da Home não devem importar módulos remotos');
 assert.match(budgetGatewayTest, /function assertEquals/, 'Asserções dos testes Deno devem ser locais e determinísticas');
 
 assert.match(firstAccessMigration, /gsa_set_pin_and_login/, 'A rotina de primeiro acesso sem OTP deve ser localizada');
