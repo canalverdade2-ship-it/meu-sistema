@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { AdminPanel } from './AdminPanel';
+import { callAdminRpc } from '../lib/adminRpc';
 import { supabase } from '../lib/supabase';
 import { sessionService } from '../lib/sessionService';
 import { useAppLocation } from '../routing/useAppLocation';
@@ -18,6 +19,14 @@ interface SecureAdminPanelProps {
   colaboradorNome?: string;
   colaboradorModulos: string[];
 }
+
+type SecureAdminContext = {
+  actor_type?: string;
+  actor_id?: string;
+  actor_name?: string;
+  modules?: string[];
+  session_id?: string;
+};
 
 export function SecureAdminPanel(props: SecureAdminPanelProps) {
   const route = useAppLocation();
@@ -46,6 +55,8 @@ export function SecureAdminPanel(props: SecureAdminPanelProps) {
   const revoke = useCallback(async (message: string) => {
     if (revokingRef.current) return;
     revokingRef.current = true;
+    setModules([]);
+    setChecking(true);
     toast.error(message, { duration: 8000 });
     await sessionService.endSession();
     logoutRef.current();
@@ -63,35 +74,30 @@ export function SecureAdminPanel(props: SecureAdminPanelProps) {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('colaboradores')
-        .select('id, nome, status, colaborador_modulos(modulo_id)')
-        .eq('id', props.colaboradorId)
-        .single();
-
-      if (error || !data) throw error || new Error('Colaborador não encontrado.');
-      if (data.status !== 'ativo') {
-        await revoke('Seu acesso foi suspenso ou encerrado pelo administrador.');
+      const context = await callAdminRpc<SecureAdminContext>('gsa_admin_get_context_secure');
+      if (
+        context?.actor_type !== 'colaborador'
+        || context?.actor_id !== props.colaboradorId
+        || !Array.isArray(context?.modules)
+      ) {
+        await revoke('Sua identidade administrativa não pôde ser confirmada. Entre novamente.');
         return;
       }
 
-      const nextModules = normalizeCollaboratorModules(
-        (data.colaborador_modulos || []).map((entry: { modulo_id: string }) => entry.modulo_id),
-      );
-      setName(data.nome || props.colaboradorNome);
+      const nextModules = normalizeCollaboratorModules(context.modules);
+      const nextName = context.actor_name || props.colaboradorNome;
+      setName(nextName);
       setModules(nextModules);
-      persistIdentity(data.nome || props.colaboradorNome, nextModules);
+      persistIdentity(nextName, nextModules);
+      setChecking(false);
     } catch (error) {
       console.error('Falha ao atualizar permissões do colaborador:', error);
-      const current = sessionService.getCurrentSession();
-      if (!current) await revoke('Sua sessão não pôde ser validada. Entre novamente.');
-    } finally {
-      setChecking(false);
+      await revoke('Sua sessão ou suas permissões não puderam ser validadas. Entre novamente.');
     }
   }, [persistIdentity, props.adminType, props.colaboradorId, props.colaboradorModulos, props.colaboradorNome, revoke]);
 
   useEffect(() => {
-    refreshAccess();
+    void refreshAccess();
     if (props.adminType !== 'colaborador' || !props.colaboradorId) return;
 
     const refresh = () => { void refreshAccess(); };

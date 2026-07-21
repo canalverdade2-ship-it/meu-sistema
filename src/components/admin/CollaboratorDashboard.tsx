@@ -5,20 +5,19 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   ClipboardList,
-  FileText,
   Gavel,
   Landmark,
   MessageSquare,
   Receipt,
   Server,
   Settings,
-  ShieldAlert,
   Users,
   Wallet,
 } from 'lucide-react';
+import { callAdminRpc } from '../../lib/adminRpc';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDate, formatDateTime } from '../../lib/utils';
-import { normalizeCollaboratorModules } from '../../security/collaboratorAccess';
+import { normalizeGrantedAdminModules } from '../../routing/adminAccess';
 
 interface Props {
   colaboradorId?: string;
@@ -37,90 +36,49 @@ type Metric = {
   tab?: string;
 };
 
+type CollaboratorDashboardSnapshot = {
+  metrics?: Record<string, number>;
+  amounts?: Record<string, number>;
+  assigned_demands?: any[];
+};
+
 const MODULE_TABLES: Record<string, string[]> = {
-  cadastro: ['clientes', 'prestadores', 'cliente_documentos', 'prestador_documentos'],
+  cadastro: ['clientes', 'cliente_documentos'],
   prestadores: ['prestadores', 'prestador_documentos'],
-  vendas: ['orcamentos', 'ordens_servico', 'ordens_compra', 'ordens_assinatura'],
+  operacoes: ['orcamentos', 'ordens_servico', 'ordens_compra', 'ordens_assinatura'],
   demandas: ['prestador_demandas', 'prestador_demandas_historico'],
-  financeiro: ['faturas', 'saques', 'transferencias', 'prestador_saques', 'emprestimos'],
+  financeiro: ['faturas', 'saques', 'transferencias', 'prestador_saques'],
+  emprestimos: ['emprestimos'],
   cobranca: ['cobrancas'],
   fiscal: ['ordens_fiscais'],
-  tickets: ['tickets', 'ticket_mensagens'],
-  acessos: ['solicitacoes_exclusao'],
+  atendimento: ['tickets', 'ticket_mensagens'],
 };
 
 export function CollaboratorDashboard({ colaboradorId, colaboradorNome, colaboradorModulos, onNavigate }: Props) {
-  const modules = useMemo(() => normalizeCollaboratorModules(colaboradorModulos), [colaboradorModulos]);
+  const modules = useMemo(() => normalizeGrantedAdminModules(colaboradorModulos), [colaboradorModulos]);
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<Record<string, number>>({});
   const [amounts, setAmounts] = useState<Record<string, number>>({});
   const [assignedDemands, setAssignedDemands] = useState<any[]>([]);
 
-  const has = useCallback((permission: string) => modules.includes(permission), [modules]);
+  const has = useCallback((permission: string) => modules.includes(permission as any), [modules]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const nextMetrics: Record<string, number> = {};
-      const nextAmounts: Record<string, number> = {};
-      const jobs: Promise<void>[] = [];
-
-      const count = (key: string, promise: PromiseLike<{ count: number | null; error: any }>) => {
-        jobs.push(Promise.resolve(promise).then(({ count: value, error }) => {
-          if (error) throw error;
-          nextMetrics[key] = value || 0;
-        }));
-      };
-
-      if (has('cadastro')) {
-        count('clientes', supabase.from('clientes').select('*', { count: 'exact', head: true }).eq('status', 'ativo'));
-        count('cadastrosPendentes', supabase.from('clientes').select('*', { count: 'exact', head: true }).in('status', ['pendente', 'inativo', 'bloqueado']));
-      }
-      if (has('prestadores') || has('cadastro')) {
-        count('prestadoresPendentes', supabase.from('prestadores').select('*', { count: 'exact', head: true }).in('status', ['pendente', 'em_analise']));
-      }
-      if (has('vendas')) {
-        count('orcamentos', supabase.from('orcamentos').select('*', { count: 'exact', head: true }).in('status', ['aberto', 'negociação', 'em revisão']));
-        count('ordens', supabase.from('ordens_servico').select('*', { count: 'exact', head: true }).in('status', ['aberto', 'aguardando', 'andamento']));
-      }
-      if (has('demandas') && colaboradorId) {
-        count('demandas', supabase.from('prestador_demandas').select('*', { count: 'exact', head: true }).eq('colaborador_id', colaboradorId).not('status', 'in', '(concluida,concluida_interna,finalizada,cancelada)'));
-        jobs.push((async () => {
-          const { data, error } = await supabase
-            .from('prestador_demandas')
-            .select('id, titulo, status, prioridade, prazo_limite, created_at, ordem_servico:ordens_servico(codigo_os, cliente:clientes(nome))')
-            .eq('colaborador_id', colaboradorId)
-            .order('created_at', { ascending: false })
-            .limit(6);
-          if (error) throw error;
-          setAssignedDemands(data || []);
-        })());
-      } else {
-        setAssignedDemands([]);
-      }
-      if (has('financeiro')) {
-        count('faturas', supabase.from('faturas').select('*', { count: 'exact', head: true }).in('status', ['pendente', 'vencida']));
-        count('saques', supabase.from('saques').select('*', { count: 'exact', head: true }).eq('status', 'pendente'));
-        jobs.push((async () => {
-          const { data, error } = await supabase.from('emprestimos').select('valor_solicitado').in('status', ['analise', 'pendente', 'aguardando_assinatura']);
-          if (error) throw error;
-          nextAmounts.credito = (data || []).reduce((total, item) => total + (Number(item.valor_solicitado) || 0), 0);
-        })());
-      }
-      if (has('cobranca')) count('cobrancas', supabase.from('cobrancas').select('*', { count: 'exact', head: true }).in('status', ['pendente', 'em_cobranca', 'acordo_quebrado']));
-      if (has('tickets')) count('tickets', supabase.from('tickets').select('*', { count: 'exact', head: true }).in('status', ['aberto', 'em_andamento']));
-      if (has('fiscal')) count('fiscal', supabase.from('ordens_fiscais').select('*', { count: 'exact', head: true }).in('status', ['pendente', 'erro']));
-      if (has('acessos')) count('exclusoes', supabase.from('solicitacoes_exclusao').select('*', { count: 'exact', head: true }).eq('status', 'pendente'));
-
-      await Promise.all(jobs);
-      setMetrics(nextMetrics);
-      setAmounts(nextAmounts);
+      const snapshot = await callAdminRpc<CollaboratorDashboardSnapshot>('gsa_collaborator_dashboard_snapshot');
+      setMetrics(snapshot?.metrics || {});
+      setAmounts(snapshot?.amounts || {});
+      setAssignedDemands(Array.isArray(snapshot?.assigned_demands) ? snapshot.assigned_demands : []);
     } catch (error) {
       console.error('Erro ao carregar painel do colaborador:', error);
+      setMetrics({});
+      setAmounts({});
+      setAssignedDemands([]);
     } finally {
       setLoading(false);
     }
-  }, [colaboradorId, has]);
+  }, []);
 
   useEffect(() => { void fetchData(); }, [fetchData]);
 
@@ -144,16 +102,15 @@ export function CollaboratorDashboard({ colaboradorId, colaboradorNome, colabora
   const cards: Metric[] = [
     has('cadastro') && { id: 'clientes', label: 'Clientes ativos', value: String(metrics.clientes || 0), helper: `${metrics.cadastrosPendentes || 0} cadastros para revisar`, icon: Users, module: 'cadastro', tab: 'clientes' },
     (has('prestadores') || has('cadastro')) && { id: 'prestadores', label: 'Prestadores pendentes', value: String(metrics.prestadoresPendentes || 0), helper: 'Aguardando análise', icon: BriefcaseBusiness, module: 'prestadores' },
-    has('vendas') && { id: 'orcamentos', label: 'Orçamentos pendentes', value: String(metrics.orcamentos || 0), helper: `${metrics.ordens || 0} ordens em andamento`, icon: ClipboardList, module: 'operacoes', tab: 'orcamentos' },
+    has('operacoes') && { id: 'orcamentos', label: 'Orçamentos pendentes', value: String(metrics.orcamentos || 0), helper: `${metrics.ordens || 0} ordens em andamento`, icon: ClipboardList, module: 'operacoes', tab: 'orcamentos' },
     has('demandas') && { id: 'demandas', label: 'Minhas demandas', value: String(metrics.demandas || 0), helper: 'Somente itens atribuídos a você', icon: CheckCircle2, module: 'demandas' },
     has('financeiro') && { id: 'faturas', label: 'Faturas pendentes', value: String(metrics.faturas || 0), helper: `${metrics.saques || 0} saques aguardando`, icon: Wallet, module: 'financeiro', tab: 'em_aberto' },
-    has('financeiro') && { id: 'credito', label: 'Crédito em análise', value: formatCurrency(amounts.credito || 0), helper: 'Sem ações rápidas no resumo', icon: Landmark, module: 'financeiro', tab: 'emprestimos' },
+    has('emprestimos') && { id: 'credito', label: 'Empréstimos em análise', value: formatCurrency(amounts.credito || 0), helper: `${metrics.emprestimos || 0} solicitações pendentes`, icon: Landmark, module: 'emprestimos' },
     has('cobranca') && { id: 'cobrancas', label: 'Cobranças prioritárias', value: String(metrics.cobrancas || 0), helper: 'Fila de recuperação', icon: Gavel, module: 'cobranca', tab: 'fila' },
-    has('tickets') && { id: 'tickets', label: 'Tickets abertos', value: String(metrics.tickets || 0), helper: 'Atendimento ao cliente', icon: MessageSquare, module: 'atendimento', tab: 'abertos' },
+    has('atendimento') && { id: 'tickets', label: 'Tickets abertos', value: String(metrics.tickets || 0), helper: 'Atendimento ao cliente', icon: MessageSquare, module: 'atendimento', tab: 'abertos' },
     has('fiscal') && { id: 'fiscal', label: 'Pendências fiscais', value: String(metrics.fiscal || 0), helper: 'Documentos para processar', icon: Receipt, module: 'fiscal' },
     has('relatorios') && { id: 'relatorios', label: 'Relatórios', value: 'Acessar', helper: 'Indicadores autorizados', icon: BarChart3, module: 'relatorios' },
     has('configuracoes') && { id: 'configuracoes', label: 'Configurações', value: 'Acessar', helper: 'Preferências do sistema', icon: Settings, module: 'configuracoes' },
-    has('acessos') && { id: 'acessos', label: 'Exclusões pendentes', value: String(metrics.exclusoes || 0), helper: 'Gestão de acessos', icon: ShieldAlert, module: 'acessos' },
     has('sistema') && { id: 'sistema', label: 'Saúde do sistema', value: 'Monitorar', helper: 'Serviços e integrações', icon: Server, module: 'sistema' },
   ].filter(Boolean) as Metric[];
 
