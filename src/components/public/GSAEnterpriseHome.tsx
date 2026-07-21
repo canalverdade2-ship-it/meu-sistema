@@ -7,20 +7,17 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   Code2,
-  Headphones,
   LogIn,
   Mail,
   MessageCircle,
-  PackageCheck,
   ShoppingBag,
-  Smartphone,
-  Store,
   Users,
   X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { LogoGSA } from '../ui/LogoGSA';
 import { AccessibleDialog } from '../ui/AccessibleDialog';
+import { PartnersPage } from './PartnersPage';
 import { supabase } from '../../lib/supabase';
 import { maskPhone } from '../../lib/utils';
 import { getServicePackageSlug, type Audience, type IconItem, type PublicPage, type ServicePackage } from '../../data/publicServiceCatalog';
@@ -38,7 +35,9 @@ interface GSAEnterpriseHomeProps {
   publicProducts: IconItem[];
   publicServices: IconItem[];
   initialServiceSlug?: string;
+  initialPartnerSlug?: string;
   onServiceDetailChange?: (slug: string | null) => void;
+  onPartnerDetailChange?: (slug: string | null) => void;
   onGuestStore?: () => void;
   onClientLogin: () => void;
   onAdminLogin: () => void;
@@ -53,7 +52,9 @@ export function GSAEnterpriseHome({
   publicProducts,
   publicServices,
   initialServiceSlug,
+  initialPartnerSlug,
   onServiceDetailChange,
+  onPartnerDetailChange,
   onGuestStore,
   onClientLogin,
   onAdminLogin,
@@ -69,7 +70,6 @@ export function GSAEnterpriseHome({
     () => servicePackages.filter((item) => item.audience === publicAudience),
     [publicAudience, servicePackages],
   );
-
 
   useEffect(() => {
     if (publicPage !== 'services' || !initialServiceSlug) {
@@ -221,6 +221,14 @@ export function GSAEnterpriseHome({
         </main>
       )}
 
+      {publicPage === 'partners' && (
+        <PartnersPage
+          selectedSlug={initialPartnerSlug}
+          onSelectPartner={(slug) => onPartnerDetailChange?.(slug)}
+          onBack={() => setPublicPage('home')}
+        />
+      )}
+
       {publicPage === 'systems' && (
         <main className="min-h-screen bg-neutral-950 pt-24 text-white">
           <section className="mx-auto grid min-h-[calc(100svh-6rem)] max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
@@ -246,7 +254,7 @@ export function GSAEnterpriseHome({
       <footer className="border-t border-white/10 bg-neutral-950 py-10 text-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 md:grid-cols-3 lg:px-8">
           <div><LogoGSA size="lg" variant="light" /><p className="mt-4 text-sm leading-6 text-white/55">Serviços, assinaturas, produtos e tecnologia em um único hub.</p></div>
-          <nav aria-label="Links do rodapé"><h2 className="text-xs font-black uppercase tracking-widest text-white/35">Ambientes</h2><div className="mt-4 grid gap-3 text-sm font-bold text-white/75"><button type="button" onClick={() => setPublicPage('services')} className="w-fit hover:text-[#d8bd73]">Serviços e Assinaturas</button><button type="button" onClick={onGuestStore} className="w-fit hover:text-[#d8bd73]">Marketplace</button><button type="button" onClick={() => setPublicPage('systems')} className="w-fit hover:text-[#d8bd73]">Sites e Sistemas</button><button type="button" onClick={onAdminLogin} className="w-fit hover:text-[#d8bd73]">Acesso restrito</button></div></nav>
+          <nav aria-label="Links do rodapé"><h2 className="text-xs font-black uppercase tracking-widest text-white/35">Ambientes</h2><div className="mt-4 grid gap-3 text-sm font-bold text-white/75"><button type="button" onClick={() => setPublicPage('services')} className="w-fit hover:text-[#d8bd73]">Serviços e Assinaturas</button><button type="button" onClick={onGuestStore} className="w-fit hover:text-[#d8bd73]">Marketplace</button><button type="button" onClick={() => setPublicPage('systems')} className="w-fit hover:text-[#d8bd73]">Sites e Sistemas</button><button type="button" onClick={() => setPublicPage('partners')} className="w-fit hover:text-[#d8bd73]">Parceiros</button><button type="button" onClick={onAdminLogin} className="w-fit hover:text-[#d8bd73]">Acesso restrito</button></div></nav>
           <div><h2 className="text-xs font-black uppercase tracking-widest text-white/35">Contato</h2><div className="mt-4 grid gap-3 text-sm font-bold text-white/75"><a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[#d8bd73]"><MessageCircle className="h-5 w-5" />WhatsApp</a><a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 hover:text-[#d8bd73]"><Mail className="h-5 w-5" />{CONTACT_EMAIL}</a></div></div>
         </div>
       </footer>
