@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- audit/production-real-audit.json audit/production-real-audit.md; then
+          if test -z "$(git status --porcelain -- audit/production-real-audit.json audit/production-real-audit.md)"; then
             echo 'Relatório sem mudanças.'
             exit 0
           fi
@@ -47,6 +47,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add audit/production-real-audit.json audit/production-real-audit.md
           git commit -m 'Atualizar auditoria de operação real'
+          git pull --rebase origin main
           git push origin HEAD:main
 
       - name: Enforce explicit production blockers
