@@ -1,12 +1,12 @@
 # Auditoria de operação real
 
-Gerada em: 2026-07-21T15:45:11.821Z
+Gerada em: 2026-07-21T16:20:32.551Z
 
-Arquivos executáveis examinados: **282**
+Arquivos executáveis examinados: **283**
 
 Bloqueadores explícitos: **0**
 
-Ocorrências para revisão humana: **8**
+Ocorrências para revisão humana: **7**
 
 ## Bloqueadores
 
@@ -14,7 +14,6 @@ Nenhum bloqueador explícito encontrado.
 
 ## Revisão humana
 
-- `src/components/admin/ClassifiedsModule.tsx:81` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `reason = window.prompt('Motivo da rejeição do anúncio:')?.trim() || null;`
 - `src/components/admin/CreditoModule.tsx:594` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const inputMotivo = window.prompt('Digite o motivo da rejeicao do documento:');`
 - `src/components/admin/CreditoModule.tsx:642` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const inputMotivo = window.prompt('Digite o motivo da rejeicao da assinatura do contrato:');`
 - `src/components/admin/EmprestimosModule.tsx:445` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = window.prompt('Motivo da reprovacao (o cliente recebera essa mensagem):');`
