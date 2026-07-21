@@ -44,51 +44,53 @@ jobs:
       - name: Link production
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
 
-      - name: Inspect production objects and definitions
+      - name: Inspect production object chain
         shell: bash
         run: |
           cat > production-diagnosis.sql <<'SQL'
-          SELECT 'objects' AS section,
-                 to_regclass('public.seguros_ofertas_publicas')::text AS seguros_ofertas_publicas,
-                 to_regprocedure('public.gsa_admin_get_pendency_counts_secure(uuid,text)')::text AS pendency_rpc,
-                 to_regprocedure('public.gsa_admin_dashboard_snapshot(uuid,text)')::text AS dashboard_rpc;
-
-          SELECT 'dashboard_overloads' AS section,
-                 p.oid::regprocedure::text AS signature,
-                 pg_get_functiondef(p.oid) AS definition
-            FROM pg_proc p
-            JOIN pg_namespace n ON n.oid = p.pronamespace
-           WHERE n.nspname = 'public'
-             AND p.proname = 'gsa_admin_dashboard_snapshot';
-
-          SELECT 'pendency_overloads' AS section,
-                 p.oid::regprocedure::text AS signature,
-                 pg_get_functiondef(p.oid) AS definition
-            FROM pg_proc p
-            JOIN pg_namespace n ON n.oid = p.pronamespace
-           WHERE n.nspname = 'public'
-             AND p.proname = 'gsa_admin_get_pendency_counts_secure';
-
-          SELECT 'snapshot_error_sources' AS section,
-                 p.oid::regprocedure::text AS signature,
-                 pg_get_functiondef(p.oid) AS definition
-            FROM pg_proc p
-            JOIN pg_namespace n ON n.oid = p.pronamespace
-           WHERE n.nspname = 'public'
-             AND pg_get_functiondef(p.oid) ILIKE '%Snapshot administrativo base não encontrado%';
-
-          SELECT 'protection_relations' AS section,
-                 c.oid::regclass::text AS relation,
-                 c.relkind
-            FROM pg_class c
-            JOIN pg_namespace n ON n.oid = c.relnamespace
-           WHERE n.nspname = 'public'
-             AND c.relname ILIKE '%seguro%oferta%';
-
-          SELECT 'migration_history' AS section, version
-            FROM supabase_migrations.schema_migrations
-           WHERE version IN ('20260720183000','20260720234400','20260720234500','20260720235300','20260720235425','20260720235450','20260720235500')
-           ORDER BY version;
+          SELECT jsonb_pretty(jsonb_build_object(
+            'relations', jsonb_build_object(
+              'seguros_ofertas_publicas', to_regclass('public.seguros_ofertas_publicas')::text,
+              'seguros_produtos', to_regclass('public.seguros_produtos')::text,
+              'seguros_parceiros', to_regclass('public.seguros_parceiros')::text,
+              'faturas', to_regclass('public.faturas')::text,
+              'emprestimos', to_regclass('public.emprestimos')::text,
+              'clientes', to_regclass('public.clientes')::text,
+              'cliente_promocoes', to_regclass('public.cliente_promocoes')::text,
+              'orcamentos', to_regclass('public.orcamentos')::text,
+              'tickets', to_regclass('public.tickets')::text
+            ),
+            'functions', jsonb_build_object(
+              'pendency', to_regprocedure('public.gsa_admin_get_pendency_counts_secure(uuid,text)')::text,
+              'dashboard', to_regprocedure('public.gsa_admin_dashboard_snapshot(uuid,text)')::text,
+              'pre_minimization', to_regprocedure('public.gsa_admin_dashboard_snapshot_pre_minimization(uuid,text)')::text,
+              'pre_ticket', to_regprocedure('public.gsa_admin_dashboard_snapshot_pre_ticket_compat(uuid,text)')::text,
+              'pendency_base', to_regprocedure('public.get_admin_pendency_counts()')::text
+            ),
+            'migrations', jsonb_build_object(
+              'seguros_20260718121000', EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20260718121000'),
+              'admin_base_20260720183000', EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20260720183000'),
+              'ticket_20260721003500', EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20260721003500'),
+              'minimize_20260721003600', EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20260721003600')
+            ),
+            'dashboard_definitions', COALESCE((
+              SELECT jsonb_object_agg(p.proname, pg_get_functiondef(p.oid))
+                FROM pg_proc p
+                JOIN pg_namespace n ON n.oid=p.pronamespace
+               WHERE n.nspname='public'
+                 AND p.proname IN (
+                   'gsa_admin_dashboard_snapshot',
+                   'gsa_admin_dashboard_snapshot_pre_minimization',
+                   'gsa_admin_dashboard_snapshot_pre_ticket_compat'
+                 )
+            ), '{}'::jsonb),
+            'columns', jsonb_build_object(
+              'faturas', COALESCE((SELECT jsonb_agg(column_name ORDER BY ordinal_position) FROM information_schema.columns WHERE table_schema='public' AND table_name='faturas'), '[]'::jsonb),
+              'emprestimos', COALESCE((SELECT jsonb_agg(column_name ORDER BY ordinal_position) FROM information_schema.columns WHERE table_schema='public' AND table_name='emprestimos'), '[]'::jsonb),
+              'seguros_produtos', COALESCE((SELECT jsonb_agg(column_name ORDER BY ordinal_position) FROM information_schema.columns WHERE table_schema='public' AND table_name='seguros_produtos'), '[]'::jsonb),
+              'seguros_parceiros', COALESCE((SELECT jsonb_agg(column_name ORDER BY ordinal_position) FROM information_schema.columns WHERE table_schema='public' AND table_name='seguros_parceiros'), '[]'::jsonb)
+            )
+          )) AS diagnosis;
           SQL
           set -o pipefail
           supabase db query --linked --file production-diagnosis.sql 2>&1 | tee production-diagnosis.log
