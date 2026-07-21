@@ -1,0 +1,66 @@
+name: Debug Admin Foundations Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/debug-admin-foundations-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/fix-admin-snapshot-production
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript only
+        run: npx tsc --noEmit
+
+      - name: Restored foundations static contract
+        run: npx tsx scripts/check-restored-admin-foundations.ts
+
+      - name: Existing administrative contracts
+        run: npx tsx scripts/check-admin-panel-contracts.ts
+
+      - name: Administrative PostgreSQL runtime
+        run: node scripts/run-admin-migrations-runtime.cjs
+
+      - name: Products and subscriptions
+        run: npm run test:products-subscriptions
+
+      - name: Client security
+        run: npm run test:client-security
+
+      - name: Provider security
+        run: npm run test:provider
+
+      - name: Home contracts
+        run: npm run test:home
+
+      - name: Travel contracts
+        run: npm run test:travel
+
+      - name: Authentication Edge Function
+        run: |
+          deno check supabase/functions/gsa-auth-session/index.ts supabase/functions/gsa-auth-session/index_test.ts
+          deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
+
+      - name: Production build
+        run: npm run build
