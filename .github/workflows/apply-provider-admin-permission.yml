@@ -53,13 +53,11 @@ jobs:
               "  ['cadastro', 'Cadastros'],\n  ['catalogo', 'Catálogo'],",
               "  ['cadastro', 'Cadastros (clientes e prestadores)'],\n  ['prestadores', 'Prestadores (sem acesso a clientes)'],\n  ['catalogo', 'Catálogo'],",
           )
-
           replace_once(
               'src/pages/AdminPanel.tsx',
               "  const go = (module: string, tab?: string, itemId?: string) => {\n    const normalized = normalizeAdminModule(module);\n    if (!canAccess(normalized, tab)) {\n      toast.error('Você não possui permissão para acessar este módulo.');\n      return;\n    }\n    navigate(adminPathFor(module, tab, itemId));\n    setIsMobileMenuOpen(false);\n  };",
               "  const go = (module: string, tab?: string, itemId?: string) => {\n    const normalized = normalizeAdminModule(module);\n    const providerOnly = normalized === 'cadastro' && !canAccess('cadastro') && canAccess('prestadores');\n    const targetModule = providerOnly ? 'prestadores' : module;\n    const targetNormalized = normalizeAdminModule(targetModule);\n    if (!canAccess(targetNormalized, tab)) {\n      toast.error('Você não possui permissão para acessar este módulo.');\n      return;\n    }\n    navigate(adminPathFor(targetModule, tab, itemId));\n    setIsMobileMenuOpen(false);\n  };",
           )
-
           replace_once(
               'src/pages/AdminPanel.tsx',
               "  const visibleGroups = useMemo(() => MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => canAccess(item.id)) })).filter((group) => group.items.length > 0), [adminType, internalModulos]);",
@@ -77,14 +75,14 @@ jobs:
               provider_contract.write_text(contract.replace(anchor, addition, 1), encoding='utf-8')
           PY
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies quietly
+        run: npm ci --silent
+
+      - name: Validate administrative contracts first
+        run: npm run test:admin
 
       - name: Validate TypeScript
         run: npm run lint
-
-      - name: Validate administrative contracts
-        run: npm run test:admin
 
       - name: Validate provider contracts
         run: npm run test:provider
@@ -100,9 +98,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/components/admin/AcessosModule.tsx src/pages/AdminPanel.tsx scripts/check-provider-portal-security-contracts.ts .github/workflows/apply-provider-admin-permission.yml
-          if git diff --cached --quiet; then
-            echo 'Nenhuma alteração pendente.'
-            exit 0
-          fi
           git commit -m 'Finalizar permissão administrativa de Prestadores'
           git push origin HEAD:agent/finalizar-permissao-prestadores
