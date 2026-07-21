@@ -26,6 +26,7 @@ import {
   Edit,
   Upload,
   Trash2,
+  CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
@@ -305,6 +306,9 @@ function SolicitacoesTab() {
   }, [detailsItem?.id]);
 
   const openProposal = (quote: any) => {
+    if (['propostas_disponiveis', 'proposta_disponivel', 'aguardando_cliente'].includes(quote.status)) {
+      return toast.error('Uma proposta já foi enviada para este orçamento.');
+    }
     if (['cancelado', 'encerrado'].includes(quote.status)) {
       return toast.error('Não é possível gerar proposta para uma solicitação cancelada ou encerrada.');
     }
@@ -409,16 +413,34 @@ function SolicitacoesTab() {
                   <button type="button" onClick={() => setDetailsItem(quote)} className="flex items-center justify-center gap-2 rounded-xl bg-blue-100 px-4 py-2 text-xs font-black text-blue-700 hover:bg-blue-200">
                     <Eye className="h-4 w-4" /> Detalhes
                   </button>
-                  <button 
-                    type="button" 
-                    disabled={['cancelado', 'encerrado'].includes(quote.status)}
-                    onClick={() => openProposal(quote)} 
-                    className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                    title={['cancelado', 'encerrado'].includes(quote.status) ? 'Solicitação cancelada/encerrada' : undefined}
-                  >
-                    {quote.cliente_id ? <Send className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                    {quote.cliente_id ? 'Gerar proposta' : 'Vincular cliente'}
-                  </button>
+                  {['propostas_disponiveis', 'proposta_disponivel', 'aguardando_cliente'].includes(quote.status) ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="flex items-center justify-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 text-xs font-black text-emerald-700 cursor-not-allowed opacity-90"
+                      title="Uma proposta já foi enviada ao cliente para este orçamento"
+                    >
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Proposta enviada
+                    </button>
+                  ) : ['cancelado', 'encerrado'].includes(quote.status) ? (
+                    <button 
+                      type="button" 
+                      disabled
+                      className="flex items-center justify-center gap-2 rounded-xl bg-neutral-100 border border-neutral-200 px-4 py-2 text-xs font-black text-neutral-400 cursor-not-allowed"
+                      title="Solicitação cancelada ou encerrada"
+                    >
+                      Solicitação {quote.status === 'cancelado' ? 'cancelada' : 'encerrada'}
+                    </button>
+                  ) : (
+                    <button 
+                      type="button" 
+                      onClick={() => openProposal(quote)} 
+                      className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 transition"
+                    >
+                      {quote.cliente_id ? <Send className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                      {quote.cliente_id ? 'Gerar proposta' : 'Vincular cliente'}
+                    </button>
+                  )}
                 </div>
               </div>
             </article>
@@ -629,7 +651,15 @@ function SolicitacoesTab() {
                 Fechar
               </button>
 
-              {!['cancelado', 'encerrado'].includes(detailsItem.status) ? (
+              {['propostas_disponiveis', 'proposta_disponivel', 'aguardando_cliente'].includes(detailsItem.status) ? (
+                <span className="flex items-center gap-2 text-xs font-black text-emerald-700 bg-emerald-50 px-4 py-2.5 rounded-xl border border-emerald-200">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Proposta já enviada ao cliente
+                </span>
+              ) : ['cancelado', 'encerrado'].includes(detailsItem.status) ? (
+                <span className="text-xs font-bold text-neutral-400 bg-neutral-100 px-4 py-2.5 rounded-xl border border-neutral-200">
+                  Solicitação {detailsItem.status === 'cancelado' ? 'Cancelada' : 'Encerrada'}
+                </span>
+              ) : (
                 <button
                   type="button"
                   onClick={() => {
@@ -642,10 +672,6 @@ function SolicitacoesTab() {
                   {detailsItem.cliente_id ? <Send className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                   {detailsItem.cliente_id ? 'Gerar proposta agora' : 'Vincular cliente'}
                 </button>
-              ) : (
-                <span className="text-xs font-bold text-neutral-400 bg-neutral-100 px-4 py-2.5 rounded-xl border border-neutral-200">
-                  Solicitação {detailsItem.status === 'cancelado' ? 'Cancelada' : 'Encerrada'}
-                </span>
               )}
             </footer>
           </div>
