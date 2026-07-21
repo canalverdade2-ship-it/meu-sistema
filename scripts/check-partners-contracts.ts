@@ -131,6 +131,10 @@ async function main() {
     'ADD COLUMN IF NOT EXISTS privacy_consent_at',
     "'parceiros-midias'",
     "ARRAY['image/jpeg', 'image/png', 'image/webp']",
+    'gsa_enrich_public_partner_application',
+    'trg_enrich_public_partner_application',
+    'CPF/CNPJ informado:',
+    'Consentimento registrado em:',
   ]);
 
   await contains('supabase/functions/gsa-partner-application/index.ts', [
