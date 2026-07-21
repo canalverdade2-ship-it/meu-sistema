@@ -1784,50 +1784,63 @@ function TransacoesTab() {
       )}
 
       {/* Modal Aprovar Reembolso */}
-      <Modal isOpen={Boolean(refundTx)} onClose={() => setRefundTx(null)} title="Aprovar Solicitação de Reembolso" size="lg">
+      <Modal isOpen={Boolean(refundTx)} onClose={() => setRefundTx(null)} title="Aprovação de Reembolso" size="xl">
         {refundTx && (
-          <div className="space-y-5">
-            <div className="rounded-2xl bg-emerald-50 p-4 border border-emerald-100 text-emerald-900 text-sm flex items-center justify-between">
-              <div>
-                <strong>Cliente: {refundTx.cliente_nome || refundTx.protocolo}</strong>
-                <p className="text-xs text-emerald-700 mt-0.5">Analise a composição do pagamento e escolha o valor total aprovado.</p>
+          <div className="space-y-6">
+            {/* Header Card Executivo */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 p-5 text-white shadow-xl border border-emerald-500/20">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-inner backdrop-blur-md">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/90">Análise Financeira · Viagens</span>
+                    <h3 className="text-lg font-black text-white">{refundTx.cliente_nome || refundTx.protocolo || 'Cliente GSA'}</h3>
+                    <p className="text-xs text-slate-300">Data do registro: {formatDateTime(refundTx.created_at)}</p>
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-md border border-white/10 text-right">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Valor Total Conciliado</p>
+                  <p className="text-xl font-black text-emerald-400">{formatCurrency(getTransactionTotal(refundTx))}</p>
+                </div>
               </div>
-              <span className="text-sm font-black text-emerald-800 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs">
-                Total: {formatCurrency(getTransactionTotal(refundTx))}
-              </span>
             </div>
 
             {/* Composição do Pagamento e Prazos de Estorno */}
-            <div className="rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4 space-y-3">
-              <h4 className="text-xs font-black uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
-                <Receipt className="h-4 w-4 text-indigo-600" /> Composição do Valor e Prazos de Estorno
-              </h4>
+            <div className="rounded-2xl border border-neutral-200 bg-slate-50/60 p-5 space-y-4 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-indigo-600" /> Composição do Valor & Prazos do Reembolso
+                </h4>
+                <span className="text-[11px] font-bold text-slate-500">Regra de Reembolso GSA</span>
+              </div>
 
-              <div className="space-y-2">
+              <div className="grid gap-3 sm:grid-cols-1">
                 {getPaymentBreakdown(refundTx).map((part, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 border border-neutral-200 shadow-2xs">
-                    <div className="flex items-center gap-2.5">
+                  <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-white p-4 border border-neutral-200/80 shadow-xs hover:border-indigo-200 transition-all">
+                    <div className="flex items-center gap-3">
                       {part.isSystem ? (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
-                          <Zap className="h-4 w-4" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-2xs">
+                          <Zap className="h-5 w-5" />
                         </div>
                       ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-                          <Clock className="h-4 w-4" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 border border-amber-200 shadow-2xs">
+                          <Clock className="h-5 w-5" />
                         </div>
                       )}
                       <div>
-                        <p className="text-xs font-bold text-neutral-900">{part.titulo}</p>
-                        <p className="text-[11px] font-semibold text-neutral-500">{part.valorDisplay}</p>
+                        <p className="text-sm font-black text-neutral-900">{part.titulo}</p>
+                        <p className="text-xs font-bold text-neutral-500">{part.valorDisplay}</p>
                       </div>
                     </div>
 
-                    <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${
+                    <span className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black uppercase tracking-wider shadow-2xs ${
                       part.isSystem
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        : 'bg-amber-100 text-amber-800 border border-amber-200'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-amber-100 text-amber-800 border border-amber-300'
                     }`}>
-                      {part.isSystem ? <Zap className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                      {part.isSystem ? <Zap className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
                       {part.prazo}
                     </span>
                   </div>
@@ -1835,53 +1848,72 @@ function TransacoesTab() {
               </div>
 
               {/* Informação sobre os Prazos */}
-              <div className="rounded-xl bg-indigo-50/80 p-3 border border-indigo-100 text-xs text-indigo-900 flex items-start gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
-                <p>
-                  <strong>Regra de Processamento:</strong> Valores do sistema (Pontos, Saldo e Crédito GSA) são <strong>estornados na hora</strong>. Pagamentos externos via Pix/Cartão possuem um <strong>prazo de até 72 horas</strong> para compensação bancária/gateway.
-                </p>
+              <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50/60 p-4 border border-indigo-100/80 text-xs text-indigo-950 flex items-start gap-3 shadow-2xs">
+                <div className="rounded-lg bg-indigo-600/10 p-2 text-indigo-600 shrink-0">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div className="space-y-1">
+                  <strong className="font-black text-indigo-900">Como funciona o estorno?</strong>
+                  <p className="text-indigo-800/90 leading-relaxed">
+                    - ⚡ <strong>Valores do Sistema (Pontos, Saldo e Crédito GSA)</strong>: Devolvidos <u>instantaneamente</u> na conta do cliente.<br />
+                    - ⏳ <strong>Pagamentos Externos (Pix, Cartão, Boleto)</strong>: Processados com prazo bancário de <u>até 72 horas úteis</u>.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Ajuste do Valor Aprovado */}
+            {/* Ajuste do Valor Aprovado e Retenções */}
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className={labelClass}>
-                Valor Total Aprovado (R$) <span className="text-emerald-600">*</span>
-                <input
-                  value={refundAmount}
-                  onChange={(e) => setRefundAmount(handleCurrencyMask(e.target.value))}
-                  className={`${inputClass} mt-2 font-black text-indigo-700`}
-                  placeholder="0,00"
-                />
-              </label>
+              <div className="rounded-2xl border border-indigo-200 bg-indigo-50/30 p-4 space-y-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-indigo-900">
+                  Valor Total Aprovado (R$) <span className="text-emerald-600">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    value={refundAmount}
+                    onChange={(e) => setRefundAmount(handleCurrencyMask(e.target.value))}
+                    className="w-full rounded-xl border border-indigo-300 bg-white px-4 py-3 text-lg font-black text-indigo-700 outline-none transition focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100"
+                    placeholder="0,00"
+                  />
+                </div>
+                <p className="text-[11px] font-bold text-neutral-400">Quantia que será estornada ao cliente.</p>
+              </div>
 
-              <label className={labelClass}>
-                Taxas / Retenções de Cancelamento (R$)
-                <input
-                  value={refundFees}
-                  onChange={(e) => setRefundFees(handleCurrencyMask(e.target.value))}
-                  className={`${inputClass} mt-2`}
-                  placeholder="0,00"
-                />
-              </label>
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-4 space-y-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-amber-900">
+                  Taxas / Retenções de Cancelamento (R$)
+                </label>
+                <div className="relative">
+                  <input
+                    value={refundFees}
+                    onChange={(e) => setRefundFees(handleCurrencyMask(e.target.value))}
+                    className="w-full rounded-xl border border-amber-300 bg-white px-4 py-3 text-lg font-black text-amber-700 outline-none transition focus:border-amber-600 focus:ring-4 focus:ring-amber-100"
+                    placeholder="0,00"
+                  />
+                </div>
+                <p className="text-[11px] font-bold text-neutral-400">Multa ou taxa retida pela agência (se houver).</p>
+              </div>
             </div>
 
-            <label className={labelClass}>
-              Observações / Resposta ao Cliente
+            <div className="space-y-2">
+              <label className={labelClass}>
+                Observações / Resposta ao Cliente
+              </label>
               <textarea
                 rows={3}
                 value={refundNote}
                 onChange={(e) => setRefundNote(e.target.value)}
-                className={`${inputClass} mt-2 h-auto`}
+                className={`${inputClass} h-auto text-sm font-medium`}
                 placeholder="Insira a mensagem explicativa para o cliente..."
               />
-            </label>
+            </div>
 
-            <div className="flex gap-2 justify-end pt-2">
+            {/* Actions Bar */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-100">
               <button
                 type="button"
                 onClick={() => setRefundTx(null)}
-                className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50"
+                className="rounded-xl border border-neutral-200 bg-white px-5 py-3 text-xs font-black text-neutral-600 hover:bg-neutral-50 transition"
               >
                 Voltar
               </button>
@@ -1890,9 +1922,9 @@ function TransacoesTab() {
                 type="button"
                 onClick={() => void handleApproveRefund()}
                 disabled={processingRefund}
-                className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50 shadow-md shadow-emerald-200"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3 text-xs font-black text-white hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 shadow-lg shadow-emerald-600/30 transition-all hover:scale-[1.01]"
               >
-                {processingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {processingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />}
                 {processingRefund ? 'Processando...' : 'Confirmar e Processar Reembolso'}
               </button>
             </div>
@@ -1901,30 +1933,48 @@ function TransacoesTab() {
       </Modal>
 
       {/* Modal Negar Reembolso */}
-      <Modal isOpen={Boolean(denyTx)} onClose={() => setDenyTx(null)} title="Negar Solicitação de Reembolso" size="md">
+      <Modal isOpen={Boolean(denyTx)} onClose={() => setDenyTx(null)} title="Indeferimento de Reembolso" size="lg">
         {denyTx && (
-          <div className="space-y-5">
-            <div className="rounded-2xl bg-red-50 p-4 border border-red-100 text-red-900 text-sm">
-              <strong>Cliente: {denyTx.cliente_nome || denyTx.protocolo}</strong>
-              <p className="text-xs text-red-700 mt-1">Informe a justificativa pela qual a solicitação de reembolso está sendo indeferida.</p>
+          <div className="space-y-6">
+            {/* Header Banner Negar */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-rose-950 p-5 text-white shadow-xl border border-rose-500/20">
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 backdrop-blur-md">
+                  <XCircle className="h-6 w-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400/90">Recusa de Solicitação · Viagens</span>
+                  <h3 className="text-lg font-black text-white">{denyTx.cliente_nome || denyTx.protocolo || 'Cliente GSA'}</h3>
+                  <p className="text-xs text-slate-300">Valor envolvido: {formatCurrency(getTransactionTotal(denyTx))}</p>
+                </div>
+              </div>
             </div>
 
-            <label className={labelClass}>
-              Motivo do Indeferimento <span className="text-red-500">*</span>
+            <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4 text-rose-950 text-xs flex items-start gap-3">
+              <XCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+              <p>
+                Ao indeferir o pedido, a solicitação de reembolso será finalizada como <strong>reembolso negado</strong> e o motivo abaixo será notificado ao cliente.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className={labelClass}>
+                Motivo do Indeferimento <span className="text-rose-500">*</span>
+              </label>
               <textarea
                 rows={4}
                 value={denyReason}
                 onChange={(e) => setDenyReason(e.target.value)}
-                placeholder="Explique o motivo do indeferimento ao cliente..."
-                className={`${inputClass} mt-2 h-auto`}
+                placeholder="Explique detalhadamente o motivo da recusa do reembolso para o cliente..."
+                className={`${inputClass} h-auto text-sm font-medium border-rose-200 focus:border-rose-500 focus:ring-rose-100`}
               />
-            </label>
+            </div>
 
-            <div className="flex gap-2 justify-end pt-2">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-100">
               <button
                 type="button"
                 onClick={() => setDenyTx(null)}
-                className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50"
+                className="rounded-xl border border-neutral-200 bg-white px-5 py-3 text-xs font-black text-neutral-600 hover:bg-neutral-50 transition"
               >
                 Voltar
               </button>
@@ -1933,9 +1983,9 @@ function TransacoesTab() {
                 type="button"
                 onClick={() => void handleDenyRefund()}
                 disabled={processingRefund || !denyReason.trim()}
-                className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-black text-white hover:bg-red-700 disabled:opacity-50 shadow-md shadow-red-200"
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-6 py-3 text-xs font-black text-white hover:from-red-700 hover:to-rose-700 disabled:opacity-50 shadow-lg shadow-red-600/30 transition-all hover:scale-[1.01]"
               >
-                {processingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                {processingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-5 w-5" />}
                 {processingRefund ? 'Processando...' : 'Confirmar Indeferimento'}
               </button>
             </div>
