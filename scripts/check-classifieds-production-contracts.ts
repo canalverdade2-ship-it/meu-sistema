@@ -4,9 +4,11 @@ import path from 'node:path';
 const root = process.cwd();
 const wizardPath = path.join(root, 'src/components/client/marketplace/classifieds/CreateListingWizard.tsx');
 const storagePath = path.join(root, 'src/lib/classifiedStorage.ts');
+const gatewayPath = path.join(root, 'supabase/functions/gsa-classified-media/index.ts');
 const migrationPath = path.join(root, 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql');
+const verificationPath = path.join(root, 'scripts/classifieds-media-production-verification.sql');
 
-for (const filePath of [wizardPath, storagePath, migrationPath]) {
+for (const filePath of [wizardPath, storagePath, gatewayPath, migrationPath, verificationPath]) {
   if (!fs.existsSync(filePath)) {
     throw new Error(`Arquivo obrigatório dos Classificados ausente: ${path.relative(root, filePath)}`);
   }
@@ -14,7 +16,9 @@ for (const filePath of [wizardPath, storagePath, migrationPath]) {
 
 const wizard = fs.readFileSync(wizardPath, 'utf8');
 const storage = fs.readFileSync(storagePath, 'utf8');
+const gateway = fs.readFileSync(gatewayPath, 'utf8');
 const migration = fs.readFileSync(migrationPath, 'utf8');
+const verification = fs.readFileSync(verificationPath, 'utf8');
 
 const forbiddenWizardPatterns = [
   /Simular Upload/i,
@@ -31,7 +35,7 @@ for (const pattern of forbiddenWizardPatterns) {
 }
 
 const requiredWizardContracts = [
-  "type=\"file\"",
+  'type="file"',
   'accept="image/jpeg,image/png,image/webp"',
   'multiple',
   'uploadClassifiedImage',
@@ -49,18 +53,43 @@ for (const contract of requiredWizardContracts) {
   }
 }
 
-const requiredStorageContracts = [
+const requiredClientStorageContracts = [
   "CLASSIFIEDS_MEDIA_BUCKET = 'classificados-midias'",
   "new Set(['image/jpeg', 'image/png', 'image/webp'])",
-  '.upload(path, input.file',
-  '.getPublicUrl(path)',
-  '.remove([normalized])',
-  'crypto.randomUUID()',
+  "supabase.functions.invoke('gsa-classified-media'",
+  "body.append('action', 'upload')",
+  "body.append('client_id', clientId)",
+  "body.append('draft_id', draftId)",
+  "body: { action: 'delete', paths: normalized }",
 ];
 
-for (const contract of requiredStorageContracts) {
+for (const contract of requiredClientStorageContracts) {
   if (!storage.includes(contract)) {
-    throw new Error(`Contrato de Storage ausente: ${contract}`);
+    throw new Error(`Contrato do cliente de mídias ausente: ${contract}`);
+  }
+}
+
+if (/\.storage\.from\s*\(/.test(storage)) {
+  throw new Error('O navegador não pode gravar diretamente no Storage dos Classificados.');
+}
+
+const requiredGatewayContracts = [
+  "const BUCKET = 'classificados-midias'",
+  "Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')",
+  'admin.auth.getUser(accessToken)',
+  "metadata.gsa_actor_type !== 'cliente'",
+  "userClient.rpc('gsa_jwt_session_is_valid')",
+  ".from('clientes')",
+  'validImageSignature(file)',
+  'file.size > MAX_IMAGE_BYTES',
+  'authenticated.admin.storage.from(BUCKET).upload',
+  'authenticated.admin.storage.from(BUCKET).remove',
+  'pathBelongsToClient(path, authenticated.clientId)',
+];
+
+for (const contract of requiredGatewayContracts) {
+  if (!gateway.includes(contract)) {
+    throw new Error(`Contrato do gateway seguro de mídias ausente: ${contract}`);
   }
 }
 
@@ -68,12 +97,7 @@ const requiredMigrationContracts = [
   "'classificados-midias'",
   '8388608',
   "ARRAY['image/jpeg', 'image/png', 'image/webp']",
-  'classificados_midias_leitura_publica',
-  'classificados_midias_inserir_proprio_diretorio',
-  'classificados_midias_atualizar_proprio_diretorio',
-  'classificados_midias_excluir_proprio_diretorio',
-  'public.gsa_jwt_session_is_valid()',
-  'public.gsa_jwt_actor_id()',
+  'public = EXCLUDED.public',
 ];
 
 for (const contract of requiredMigrationContracts) {
@@ -82,4 +106,29 @@ for (const contract of requiredMigrationContracts) {
   }
 }
 
-console.log('Classificados validados para upload real de imagens em produção.');
+const forbiddenDirectWritePolicies = [
+  /CREATE\s+POLICY[\s\S]*?FOR\s+INSERT/i,
+  /CREATE\s+POLICY[\s\S]*?FOR\s+UPDATE/i,
+  /CREATE\s+POLICY[\s\S]*?FOR\s+DELETE/i,
+];
+
+for (const pattern of forbiddenDirectWritePolicies) {
+  if (pattern.test(migration)) {
+    throw new Error('A migration não pode liberar escrita direta do navegador no bucket de Classificados.');
+  }
+}
+
+const requiredVerificationContracts = [
+  "WHERE id = 'classificados-midias'",
+  "cmd IN ('INSERT', 'UPDATE', 'DELETE', 'ALL')",
+  "RAISE EXCEPTION 'Existe política de escrita direta para o bucket classificados-midias.'",
+  "RAISE NOTICE 'CLASSIFIEDS_MEDIA_STORAGE_VERIFIED'",
+];
+
+for (const contract of requiredVerificationContracts) {
+  if (!verification.includes(contract)) {
+    throw new Error(`Contrato de verificação da produção ausente: ${contract}`);
+  }
+}
+
+console.log('Classificados validados para upload real de imagens por gateway seguro em produção.');
