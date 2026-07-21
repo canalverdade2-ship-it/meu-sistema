@@ -1,0 +1,133 @@
+name: Apply Advertising Foundation Push
+
+on:
+  push:
+    branches:
+      - agent/implantar-modulo-anuncios
+    paths:
+      - '.apply-advertising-foundation-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/implantar-modulo-anuncios
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Configure Git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Prepare SEO integration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          metadata_path = Path('src/hooks/usePublicPageMetadata.ts')
+          lines = metadata_path.read_text(encoding='utf-8').splitlines()
+
+          def expand_terminal(anchor_text: str, terminal_text: str, replacement_values: list[str]) -> None:
+            anchor = next((index for index, line in enumerate(lines) if anchor_text in line), None)
+            if anchor is None:
+              raise SystemExit(f'Âncora de SEO não encontrada: {anchor_text}')
+            terminal = next((index for index in range(anchor + 1, min(anchor + 8, len(lines))) if terminal_text in lines[index]), None)
+            if terminal is None:
+              raise SystemExit(f'Terminal de SEO não encontrado: {terminal_text}')
+            indent = lines[terminal][:len(lines[terminal]) - len(lines[terminal].lstrip())]
+            lines[terminal:terminal + 1] = [indent + value for value in replacement_values]
+
+          expand_terminal("? 'Parceiros | GSA HUB'", ': DEFAULT_TITLE;', [
+            ": page === 'ads'", "  ? 'Anunciantes | GSA HUB'", ": page === 'advertise'", "  ? 'Anuncie no GSA HUB'", ': DEFAULT_TITLE;'
+          ])
+          expand_terminal("? 'Conheça empresas e profissionais que fazem parte da rede de parceiros da GSA HUB.'", ': DEFAULT_DESCRIPTION);', [
+            ": page === 'ads'", "  ? 'Conheça campanhas e empresas anunciantes aprovadas no ecossistema GSA HUB.'", ": page === 'advertise'", "  ? 'Solicite uma proposta para divulgar sua empresa nas páginas e módulos do GSA HUB.'", ': DEFAULT_DESCRIPTION);'
+          ])
+          expand_terminal("? window.location.pathname.startsWith('/parceiros/')", ": '/';", [
+            ": page === 'ads'", "  ? '/anuncios'", ": page === 'advertise'", "  ? '/anuncie'", ": '/';"
+          ])
+          metadata_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+          script_path = Path('scripts/apply-advertising-foundation.py')
+          script = script_path.read_text(encoding='utf-8')
+          start_marker = "replace_exact(\n    'src/hooks/usePublicPageMetadata.ts'"
+          end_marker = "package_path = Path('package.json')"
+          start = script.find(start_marker)
+          end = script.find(end_marker)
+          if start < 0 or end < 0 or end <= start:
+            raise SystemExit('Bloco antigo de SEO não encontrado no integrador')
+          script_path.write_text(script[:start] + script[end:], encoding='utf-8')
+          PY
+
+      - name: Apply verified integration patch
+        run: python3 -u scripts/apply-advertising-foundation.py
+
+      - name: Fix Supabase PromiseLike compatibility
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/components/public/AdvertisingPage.tsx')
+          text = path.read_text(encoding='utf-8')
+          old = """    supabase.rpc('gsa_public_list_active_ads', { p_placement_code: 'ADS_PUBLIC_SHOWCASE' })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) console.error('Falha ao carregar anúncios públicos:', error);
+        setAds(Array.isArray(data) ? data as PublicAdvertisement[] : []);
+      })
+      .finally(() => { if (active) setLoadingAds(false); });
+"""
+          new = """    const loadAds = async () => {
+      try {
+        const { data, error } = await supabase.rpc('gsa_public_list_active_ads', { p_placement_code: 'ADS_PUBLIC_SHOWCASE' });
+        if (!active) return;
+        if (error) console.error('Falha ao carregar anúncios públicos:', error);
+        setAds(Array.isArray(data) ? data as PublicAdvertisement[] : []);
+      } finally {
+        if (active) setLoadingAds(false);
+      }
+    };
+    void loadAds();
+"""
+          if text.count(old) != 1:
+            raise SystemExit('Trecho assíncrono da vitrine não encontrado exatamente')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate integrated foundation
+        run: |
+          npx tsc --noEmit
+          npm run test:advertising
+          deno check supabase/functions/gsa-public-advertising/index.ts
+          deno test --allow-env supabase/functions/gsa-public-advertising/index_test.ts
+          npm run build
+
+      - name: Remove temporary files
+        run: |
+          rm -f scripts/apply-advertising-foundation.py
+          rm -f .github/workflows/apply-advertising-foundation.yml
+          rm -f .github/workflows/apply-advertising-foundation-push.yml
+          rm -f .apply-advertising-foundation-trigger
+
+      - name: Commit integrated foundation
+        run: |
+          git add -A
+          git commit -m 'Integrar fundação do módulo GSA Anúncios'
+          git push origin HEAD:agent/implantar-modulo-anuncios
