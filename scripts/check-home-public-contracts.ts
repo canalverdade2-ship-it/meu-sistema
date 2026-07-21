@@ -6,7 +6,7 @@ const read = (path: string) => readFileSync(path, 'utf8');
 const migration = read('supabase/migrations/20260720215500_fix_public_home_contracts.sql');
 const referralMigration = read('supabase/migrations/20260720215530_minimize_public_referral_lookup.sql');
 const finalBudgetMigration = read('supabase/migrations/20260721124500_finalize_public_home_budget.sql');
-const brandBudgetMigration = read('supabase/migrations/20260721183000_expand_public_branding_budget.sql');
+const brandBudgetMigration = read('supabase/migrations/20260721235947_expand_public_branding_budget.sql');
 const firstAccessMigration = read('supabase/migrations/20260721125000_disable_unverified_first_access.sql');
 const recoveryRateMigration = read('supabase/migrations/20260721125500_prevent_recovery_subject_lockout.sql');
 const budgetModal = read('src/components/public/SystemsBudgetModal.tsx');
