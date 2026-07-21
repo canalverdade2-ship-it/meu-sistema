@@ -1534,51 +1534,42 @@ function TransacoesTab() {
       const numericFees = parseCurrencyString(refundFees);
       const note = refundNote.trim() || 'Reembolso aprovado e concluído pelo financeiro GSA.';
 
-      const existingDetails = refundTx.detalhes && typeof refundTx.detalhes === 'object' && !Array.isArray(refundTx.detalhes) ? refundTx.detalhes : {};
-      const updatedDetails = {
-        ...existingDetails,
+      const existingSnapshot = refundTx.snapshot_completo && typeof refundTx.snapshot_completo === 'object' && !Array.isArray(refundTx.snapshot_completo) ? refundTx.snapshot_completo : {};
+      const updatedSnapshot = {
+        ...existingSnapshot,
         resposta_admin: note,
         valor_reembolsado: numericRefund,
         taxa_cancelamento: numericFees,
         data_reembolso: new Date().toISOString(),
       };
 
-      let { error } = await supabase
+      // Atualiza estritamente com colunas válidas no banco de dados
+      const { error } = await supabase
         .from('viagens_transacoes')
         .update({
           status: 'reembolsada',
-          resposta_admin: note,
-          valor_reembolsado: numericRefund,
-          taxa_cancelamento: numericFees,
-          detalhes: updatedDetails,
+          valor_elegivel_reembolso: numericRefund,
+          snapshot_completo: updatedSnapshot,
           updated_at: new Date().toISOString(),
         })
         .eq('id', refundTx.id);
 
-      if (error && (error.message?.includes('schema cache') || error.code === 'PGRST204')) {
-        const fallbackRes = await supabase
-          .from('viagens_transacoes')
-          .update({
-            status: 'reembolsada',
-            detalhes: updatedDetails,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', refundTx.id);
-        error = fallbackRes.error;
-      }
-
       if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
 
-      // Atualiza tabela de cancelamentos se houver registro vinculado
-      await supabase
-        .from('viagens_cancelamentos')
-        .update({
-          status: 'concluido',
-          valor_reembolsado: numericRefund,
-          resposta_gsa: note,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('transacao_id', refundTx.id);
+      // Atualiza tabela de cancelamentos se houver registro vinculado (silencioso em caso de ausência)
+      try {
+        await supabase
+          .from('viagens_cancelamentos')
+          .update({
+            status: 'concluido',
+            valor_reembolsado: numericRefund,
+            resposta_gsa: note,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('transacao_id', refundTx.id);
+      } catch {
+        // Tabela opcional
+      }
 
       toast.success('Reembolso aprovado e processado com sucesso!');
       setRefundTx(null);
@@ -1596,46 +1587,37 @@ function TransacoesTab() {
     if (reason.length < 3) return toast.error('Informe o motivo da negação do reembolso (mínimo de 3 caracteres).');
     setProcessingRefund(true);
     try {
-      const existingDetails = denyTx.detalhes && typeof denyTx.detalhes === 'object' && !Array.isArray(denyTx.detalhes) ? denyTx.detalhes : {};
-      const updatedDetails = {
-        ...existingDetails,
+      const existingSnapshot = denyTx.snapshot_completo && typeof denyTx.snapshot_completo === 'object' && !Array.isArray(denyTx.snapshot_completo) ? denyTx.snapshot_completo : {};
+      const updatedSnapshot = {
+        ...existingSnapshot,
         resposta_admin: reason,
         motivo_recusa: reason,
         data_negado: new Date().toISOString(),
       };
 
-      let { error } = await supabase
+      const { error } = await supabase
         .from('viagens_transacoes')
         .update({
           status: 'reembolso_negado',
-          resposta_admin: reason,
-          detalhes: updatedDetails,
+          snapshot_completo: updatedSnapshot,
           updated_at: new Date().toISOString(),
         })
         .eq('id', denyTx.id);
 
-      if (error && (error.message?.includes('schema cache') || error.code === 'PGRST204')) {
-        const fallbackRes = await supabase
-          .from('viagens_transacoes')
-          .update({
-            status: 'reembolso_negado',
-            detalhes: updatedDetails,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', denyTx.id);
-        error = fallbackRes.error;
-      }
-
       if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
 
-      await supabase
-        .from('viagens_cancelamentos')
-        .update({
-          status: 'reembolso_negado',
-          resposta_gsa: reason,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('transacao_id', denyTx.id);
+      try {
+        await supabase
+          .from('viagens_cancelamentos')
+          .update({
+            status: 'reembolso_negado',
+            resposta_gsa: reason,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('transacao_id', denyTx.id);
+      } catch {
+        // Tabela opcional
+      }
 
       toast.success('Solicitação de reembolso negada e registrada.');
       setDenyTx(null);
