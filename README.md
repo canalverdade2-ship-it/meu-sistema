@@ -21,7 +21,7 @@ npm run test:travel
 npm run build
 ```
 
-O comando `test:travel` valida as rotas principais do GSA Viagens e os contratos críticos das migrações de orçamento, aceite, checkout, documentos, suporte e cancelamentos.
+O comando `test:travel` valida as rotas principais do GSA Viagens e os contratos críticos das migrações de orçamento, aceite, checkout, documentos, suporte, cancelamentos, pagamentos e reembolsos.
 
 ## Fluxo implementado no GSA Viagens
 
@@ -38,21 +38,40 @@ A jornada atual contempla:
 9. cancelamentos e reembolsos;
 10. central de suporte.
 
+## Integridade financeira das viagens
+
+O módulo separa os seguintes valores:
+
+- total contratado;
+- total faturado;
+- valor efetivamente pago e conciliado;
+- saldo em aberto;
+- valor ainda elegível para reembolso.
+
+O campo legado `viagens_transacoes.valor_pago` não deve ser usado como comprovante de pagamento. As decisões de reembolso usam somente as faturas de viagem efetivamente conciliadas como pagas. Durante uma solicitação de cancelamento, cobranças abertas são suspensas sem alterar pagamentos já confirmados.
+
+As parcelas são relacionadas às transações pela tabela `viagens_transacao_parcelas`, além dos metadados históricos das faturas. A decisão administrativa de reembolso exige simultaneamente permissão nos módulos **Viagens** e **Financeiro**.
+
 ## Implantação do GSA Viagens
 
-Antes de publicar as novas telas, aplique as migrações do Supabase na ordem cronológica:
+As migrações devem ser aplicadas no Supabase na ordem cronológica. Entre as migrations centrais do módulo estão:
 
 1. `20260720120000_fix_gsa_viagens_core_flow.sql`
 2. `20260720123000_gsa_viagens_storage_and_quotes.sql`
 3. `20260720130000_gsa_viagens_cancelamento_rpc.sql`
+4. `20260720140000_gsa_viagens_hardening.sql`
+5. `20260720230000_gsa_viagens_parcelamento_checkout.sql`
+6. `20260721150000_gsa_viagens_financial_integrity.sql`
+7. `20260721150100_gsa_viagens_admin_refund_queue.sql`
 
-Essas migrações:
+As migrations financeiras:
 
-- corrigem o aceite de propostas e o checkout;
-- vinculam pacotes aos pedidos de orçamento;
-- criam buckets privados para documentos e vouchers;
-- habilitam orçamento público com dados de contato;
-- adicionam o fluxo seguro de cancelamento e reembolso.
+- preservam o valor total do contrato sem tratá-lo como pagamento;
+- calculam pagamentos pela situação real das faturas;
+- evitam reembolso acima do valor conciliado;
+- suspendem cobranças não pagas durante o cancelamento;
+- adicionam idempotência às solicitações e decisões;
+- criam a fila administrativa protegida para análise financeira.
 
 Os buckets `viagens-documentos` e `viagens-vouchers` são privados. Vouchers administrativos devem ser gravados seguindo o caminho:
 

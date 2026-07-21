@@ -23,6 +23,13 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   reembolsada: { label: 'Reembolsada', color: 'bg-neutral-100 text-neutral-800 border-neutral-200' },
 };
 
+const paymentStatusConfig: Record<string, { label: string; color: string }> = {
+  nao_faturado: { label: 'Cobrança não gerada', color: 'bg-neutral-100 text-neutral-700' },
+  aguardando_pagamento: { label: 'Aguardando pagamento', color: 'bg-amber-100 text-amber-800' },
+  parcialmente_pago: { label: 'Pagamento parcial', color: 'bg-sky-100 text-sky-800' },
+  pago: { label: 'Pago', color: 'bg-emerald-100 text-emerald-800' },
+};
+
 export function MyTripsPage({ clientId, onBack }: { clientId: string; onBack: () => void }) {
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +45,11 @@ export function MyTripsPage({ clientId, onBack }: { clientId: string; onBack: ()
             id,
             status,
             valor_pago,
+            valor_total_contrato,
+            valor_faturado,
+            valor_efetivamente_pago,
+            valor_em_aberto,
+            pagamento_status,
             created_at,
             proposta_id,
             viagens_propostas (
@@ -66,7 +78,7 @@ export function MyTripsPage({ clientId, onBack }: { clientId: string; onBack: ()
       }
     }
 
-    fetchTrips();
+    void fetchTrips();
   }, [clientId]);
 
   const downloadVoucher = async (voucher: any) => {
@@ -110,7 +122,7 @@ export function MyTripsPage({ clientId, onBack }: { clientId: string; onBack: ()
           <h1 className="mb-3 text-3xl font-black text-[#1a1a2e] sm:text-4xl" style={{ fontFamily: '"Cinzel", serif' }}>
             Minhas Viagens
           </h1>
-          <p className="text-neutral-600">Acompanhe pagamentos, emissões, passageiros e vouchers.</p>
+          <p className="text-neutral-600">Acompanhe contrato, pagamentos conciliados, emissões, passageiros e vouchers.</p>
         </div>
 
         {loading ? (
@@ -138,13 +150,20 @@ export function MyTripsPage({ clientId, onBack }: { clientId: string; onBack: ()
                 label: String(trip.status).replace(/_/g, ' '),
                 color: 'bg-neutral-100 text-neutral-800 border-neutral-200',
               };
+              const financial = paymentStatusConfig[trip.pagamento_status] || paymentStatusConfig.nao_faturado;
               const vouchers = trip.viagens_vouchers || [];
               const firstVoucher = vouchers[0];
+              const totalContract = Number(trip.valor_total_contrato ?? trip.valor_pago ?? 0);
+              const actuallyPaid = Number(trip.valor_efetivamente_pago || 0);
+              const openAmount = Number(trip.valor_em_aberto ?? Math.max(totalContract - actuallyPaid, 0));
 
               return (
                 <article key={trip.id} className="flex flex-col rounded-[2rem] border border-black/5 bg-white p-6 shadow-sm transition-all hover:shadow-xl sm:p-8">
                   <div className="mb-6 flex items-start justify-between gap-3">
-                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${config.color}`}>{config.label}</span>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${config.color}`}>{config.label}</span>
+                      <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${financial.color}`}>{financial.label}</span>
+                    </div>
                     <span className="text-xs font-medium text-neutral-400">Ref: {protocolo}</span>
                   </div>
 
@@ -155,7 +174,9 @@ export function MyTripsPage({ clientId, onBack }: { clientId: string; onBack: ()
                       <span>{snapshot.destino || 'Destino a definir'}</span>
                     </div>
                     <div className="space-y-3 rounded-xl bg-neutral-50 p-4">
-                      <div className="flex items-center justify-between text-sm"><span className="text-neutral-500">Valor total</span><span className="font-bold text-[#1a1a1a]">{formatCurrency(trip.valor_pago)}</span></div>
+                      <div className="flex items-center justify-between text-sm"><span className="text-neutral-500">Total contratado</span><span className="font-bold text-[#1a1a1a]">{formatCurrency(totalContract)}</span></div>
+                      <div className="flex items-center justify-between text-sm"><span className="text-neutral-500">Efetivamente pago</span><span className="font-bold text-emerald-700">{formatCurrency(actuallyPaid)}</span></div>
+                      <div className="flex items-center justify-between text-sm"><span className="text-neutral-500">Em aberto</span><span className="font-bold text-amber-700">{formatCurrency(openAmount)}</span></div>
                       <div className="flex items-center justify-between text-sm"><span className="text-neutral-500">Criada em</span><span className="font-medium text-neutral-700">{new Date(trip.created_at).toLocaleDateString('pt-BR')}</span></div>
                       <div className="flex items-center justify-between text-sm"><span className="text-neutral-500">Vouchers</span><span className="font-bold text-[#1a1a1a]">{vouchers.length}</span></div>
                     </div>
@@ -167,7 +188,7 @@ export function MyTripsPage({ clientId, onBack }: { clientId: string; onBack: ()
                     </button>
                     {firstVoucher && (
                       <button
-                        onClick={() => downloadVoucher(firstVoucher)}
+                        onClick={() => void downloadVoucher(firstVoucher)}
                         disabled={downloadingVoucherId === firstVoucher.id}
                         aria-label={`Baixar ${firstVoucher.descricao || firstVoucher.file_name}`}
                         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1a1a2e] text-white hover:bg-[#0c2340] disabled:opacity-60"
