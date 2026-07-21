@@ -1342,6 +1342,82 @@ function TransacoesTab() {
   const [denyReason, setDenyReason] = useState('');
   const [processingRefund, setProcessingRefund] = useState(false);
 
+  const formatPaymentMethod = (item: any): string => {
+    if (!item) return 'Pix / Cartão / Saldo GSA';
+
+    const rawForma = String(
+      item.forma_pagamento || 
+      item.snapshot_completo?.forma_pagamento || 
+      item.snapshot_completo?.metodo_pagamento || 
+      item.snapshot_completo?.forma_pagamento_escolhida || 
+      item.metodo_pagamento || 
+      ''
+    ).toLowerCase().trim();
+
+    const paymentLabels: Record<string, string> = {
+      pix: 'Pix',
+      cartao_credito: 'Cartão de Crédito',
+      cartao: 'Cartão de Crédito',
+      credit_card: 'Cartão de Crédito',
+      cartao_debito: 'Cartão de Débito',
+      debit_card: 'Cartão de Débito',
+      boleto: 'Boleto Bancário',
+      credito_loja: 'Crédito GSA / Saldo da Carteira',
+      credito_gsa: 'Crédito GSA',
+      saldo_carteira: 'Saldo da Carteira GSA',
+      credito: 'Crédito GSA',
+      pontos: 'Pontos GSA',
+      pontos_gsa: 'Pontos GSA',
+      faturamento: 'Faturamento PJ',
+      faturado: 'Faturamento PJ',
+      transferencia: 'Transferência Bancária (TED/PIX)',
+      deposito: 'Depósito Bancário',
+    };
+
+    const methods: string[] = [];
+    const snapshot = item.snapshot_completo || {};
+    const detalhes = item.detalhes || item.detalhes_pagamento || {};
+
+    if (snapshot.usou_pontos || snapshot.pontos_utilizados || snapshot.desconto_pontos_aplicado || detalhes.pontos) {
+      const pts = snapshot.pontos_utilizados || detalhes.pontos;
+      methods.push(pts ? `Pontos GSA (${pts} pts)` : 'Pontos GSA');
+    }
+
+    if (snapshot.usou_saldo || snapshot.saldo_utilizado || detalhes.saldo_carteira || rawForma === 'saldo_carteira') {
+      const val = snapshot.saldo_utilizado || detalhes.saldo_carteira;
+      methods.push(val ? `Saldo da Carteira (${formatCurrency(Number(val))})` : 'Saldo da Carteira GSA');
+    }
+
+    if (snapshot.usou_credito || snapshot.credito_utilizado || rawForma === 'credito_loja' || rawForma === 'credito_gsa') {
+      const val = snapshot.credito_utilizado;
+      methods.push(val ? `Crédito GSA (${formatCurrency(Number(val))})` : 'Crédito GSA');
+    }
+
+    if (rawForma && rawForma !== 'outros' && paymentLabels[rawForma]) {
+      if (!methods.includes(paymentLabels[rawForma])) {
+        methods.push(paymentLabels[rawForma]);
+      }
+    } else if (rawForma && rawForma !== 'outros') {
+      const formattedRaw = rawForma.replace(/_/g, ' ').toUpperCase();
+      if (!methods.includes(formattedRaw)) {
+        methods.push(formattedRaw);
+      }
+    }
+
+    if (methods.length > 0) {
+      return methods.join(' + ');
+    }
+
+    if (item.parcelamento_permitido || snapshot.parcelas) {
+      const par = item.parcelamento_permitido || snapshot.parcelas;
+      return `Cartão de Crédito (${par}x)`;
+    }
+
+    return rawForma && rawForma !== 'outros'
+      ? rawForma.replace(/_/g, ' ').toUpperCase()
+      : 'Pix / Cartão / Saldo GSA';
+  };
+
   const getTransactionTotal = (item: any) => {
     const total = Number(item?.valor_total || 0);
     const paid = Number(item?.valor_pago || 0);
@@ -1472,7 +1548,7 @@ function TransacoesTab() {
                   </div>
                   <h4 className="font-black text-neutral-900 text-lg truncate">{item.cliente_nome || item.snapshot_completo?.nome || item.protocolo || 'Transação de Viagem'}</h4>
                   <p className="text-sm font-medium text-neutral-500">
-                    Forma de pagamento: <strong className="text-neutral-800 uppercase">{item.forma_pagamento || 'outros'}</strong>
+                    Forma de pagamento: <strong className="text-neutral-800">{formatPaymentMethod(item)}</strong>
                     {item.reserva_id && <span className="ml-2 text-xs text-neutral-400">· Reserva: {String(item.reserva_id).slice(0, 8)}</span>}
                   </p>
                 </div>
@@ -1569,7 +1645,7 @@ function TransacoesTab() {
 
                 <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
                   <p className="text-[10px] font-bold uppercase text-neutral-400">Forma de Pagamento</p>
-                  <p className="text-sm font-bold text-neutral-900 uppercase mt-0.5">{detailsTx.forma_pagamento || 'Outros'}</p>
+                  <p className="text-sm font-bold text-neutral-900 mt-0.5">{formatPaymentMethod(detailsTx)}</p>
                 </div>
               </div>
 
