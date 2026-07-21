@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, BriefcaseBusiness, Code2, ShoppingBag } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Code2, Palette, ShoppingBag } from 'lucide-react';
 import type { PublicPage } from '../../../data/publicServiceCatalog';
+import { navigate } from '../../../routing/navigationService';
 
 interface PublicHomeLandingProps {
   reduceMotion: boolean;
@@ -13,6 +14,7 @@ export function PublicHomeLanding({ reduceMotion, setPublicPage, onGuestStore }:
     { icon: BriefcaseBusiness, title: 'Serviços e Assinaturas', text: 'Serviços, pacotes e planos recorrentes.', action: () => setPublicPage('services') },
     { icon: ShoppingBag, title: 'Marketplace GSA', text: 'Produtos selecionados e compras.', action: onGuestStore || (() => undefined) },
     { icon: Code2, title: 'Sites e Sistemas', text: 'Sites, sistemas e automações.', action: () => setPublicPage('systems') },
+    { icon: Palette, title: 'Empresa do Zero ao Digital', text: 'Nome, marca, site, redes sociais e conteúdo.', action: () => navigate('/empresa-do-zero-ao-digital') },
   ];
 
   return (
@@ -33,10 +35,10 @@ export function PublicHomeLanding({ reduceMotion, setPublicPage, onGuestStore }:
           <motion.div initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-4xl">
             <h1 className="text-5xl font-serif font-medium tracking-[0.12em] sm:text-7xl lg:text-8xl"><span className="bg-gradient-to-r from-[#d8bd73] via-white to-[#d8bd73] bg-clip-text text-transparent">GSA HUB</span></h1>
             <p className="mt-4 text-base font-medium uppercase tracking-[0.2em] text-[#d8bd73]/85 sm:text-2xl">Soluções Digitais</p>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-white/70 sm:text-lg">Serviços administrativos, marketplace e tecnologia reunidos em uma experiência segura e conectada.</p>
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-white/70 sm:text-lg">Serviços administrativos, marketplace, tecnologia e construção de marcas reunidos em uma experiência segura e conectada.</p>
           </motion.div>
 
-          <div className="mt-12 grid w-full max-w-5xl gap-4 sm:grid-cols-3">
+          <div className="mt-12 grid w-full max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {cards.map(({ icon: Icon, title, text, action }) => (
               <button key={title} type="button" onClick={action} className="group flex items-center gap-4 rounded-xl border border-white/15 bg-white/[0.09] p-5 text-left backdrop-blur-xl transition hover:border-[#d8bd73]/70 hover:bg-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[#d8bd73]"><Icon className="h-6 w-6" /></span>
