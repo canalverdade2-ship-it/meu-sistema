@@ -66,7 +66,19 @@ jobs:
           deno-version: v2.x
 
       - name: Check Classifieds media Edge Function
-        run: deno check supabase/functions/gsa-classified-media/index.ts
+        shell: bash
+        run: |
+          set -o pipefail
+          for attempt in 1 2 3; do
+            echo "Deno check attempt ${attempt}/3" | tee -a classifieds-deno-check.log
+            if deno check supabase/functions/gsa-classified-media/index.ts 2>&1 | tee -a classifieds-deno-check.log; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep 10
+            fi
+          done
+          exit 1
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -161,6 +173,7 @@ jobs:
         with:
           name: classifieds-production-audit-${{ github.run_id }}
           path: |
+            classifieds-deno-check.log
             classifieds-migrations-before.log
             classifieds-migration-apply.log
             classifieds-commission-migration-apply.log
