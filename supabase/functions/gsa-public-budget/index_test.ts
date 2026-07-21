@@ -8,8 +8,8 @@ function assertEquals(actual: unknown, expected: unknown, message = 'Valores dif
   }
 }
 
-Deno.test('normaliza todos os tipos públicos, incluindo integração', () => {
-  const payload = normalizePayload({
+Deno.test('normaliza tipos de tecnologia e da jornada de marca', () => {
+  const technology = normalizePayload({
     nome: 'Empresa de Teste',
     email: 'CONTATO@EXAMPLE.COM',
     telefone: '(11) 99999-9999',
@@ -20,9 +20,22 @@ Deno.test('normaliza todos os tipos públicos, incluindo integração', () => {
     metadata: { utm_source: 'campanha' },
   });
 
-  assertEquals(payload?.email, 'contato@example.com');
-  assertEquals(payload?.telefone, '11999999999');
-  assertEquals(payload?.tipo, 'integracao');
+  const branding = normalizePayload({
+    nome: 'Nova Empresa',
+    email: 'marca@example.com',
+    telefone: '(11) 98888-7777',
+    tipo: 'jornada_completa',
+    solicitacao: 'Precisamos criar nome, logo, site, redes sociais e conteúdo de lançamento.',
+    website: '',
+    started_at: new Date(Date.now() - 5_000).toISOString(),
+    metadata: { source: 'public_brand_journey' },
+  });
+
+  assertEquals(technology?.email, 'contato@example.com');
+  assertEquals(technology?.telefone, '11999999999');
+  assertEquals(technology?.tipo, 'integracao');
+  assertEquals(branding?.tipo, 'jornada_completa');
+  assertEquals(branding?.metadata.source, 'public_brand_journey');
 });
 
 Deno.test('rejeita payload inválido antes de acessar o banco', () => {
