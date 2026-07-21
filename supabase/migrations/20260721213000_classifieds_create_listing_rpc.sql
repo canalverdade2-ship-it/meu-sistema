@@ -147,8 +147,10 @@ BEGIN
     RAISE EXCEPTION 'A comissão foi atualizada. Revise os termos antes de publicar.' USING ERRCODE = '22023';
   END IF;
 
-  v_slug := regexp_replace(lower(unaccent(v_titulo)), '[^a-z0-9]+', '-', 'g');
-  v_slug := trim(both '-' from v_slug) || '-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 10);
+  v_slug := regexp_replace(lower(v_titulo), '[^a-z0-9]+', '-', 'g');
+  v_slug := trim(both '-' from v_slug);
+  IF v_slug = '' THEN v_slug := 'anuncio'; END IF;
+  v_slug := v_slug || '-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 10);
 
   INSERT INTO public.classificados_anuncios (
     cliente_id, categoria, titulo, descricao, preco,
@@ -175,13 +177,7 @@ BEGIN
     END IF;
 
     INSERT INTO public.classificados_midias (anuncio_id, url, tipo, ordem, created_at)
-    VALUES (
-      v_anuncio_id,
-      v_media ->> 'url',
-      'image',
-      (v_media ->> 'ordem')::integer,
-      now()
-    );
+    VALUES (v_anuncio_id, v_media ->> 'url', 'image', (v_media ->> 'ordem')::integer, now());
   END LOOP;
 
   RETURN jsonb_build_object(
