@@ -129,6 +129,8 @@ async function main() {
     'ADD COLUMN IF NOT EXISTS application_protocol',
     'ADD COLUMN IF NOT EXISTS submitted_at',
     'ADD COLUMN IF NOT EXISTS privacy_consent_at',
+    'REVOKE SELECT ON TABLE public.parceiros FROM anon, authenticated',
+    'GRANT SELECT (',
     "'parceiros-midias'",
     "ARRAY['image/jpeg', 'image/png', 'image/webp']",
     'gsa_enrich_public_partner_application',
