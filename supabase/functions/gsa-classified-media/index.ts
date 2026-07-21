@@ -164,7 +164,8 @@ export async function handleRequest(request: Request) {
 
     const authenticated = await authenticateClient(request, supabaseUrl, serviceRoleKey);
     if ('error' in authenticated) {
-      return json({ success: false, error: authenticated.error, message: authenticationMessage(authenticated.error) }, 401, allowedOrigin);
+      const authenticationError = authenticated.error ?? 'invalid_authentication';
+      return json({ success: false, error: authenticationError, message: authenticationMessage(authenticationError) }, 401, allowedOrigin);
     }
 
     const contentType = request.headers.get('content-type') || '';
