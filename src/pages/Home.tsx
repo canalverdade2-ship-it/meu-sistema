@@ -23,8 +23,10 @@ interface HomeProps {
   onGuestStore?: () => void;
   initialPublicPage?: PublicPage;
   initialServiceSlug?: string;
+  initialPartnerSlug?: string;
   onPublicPageChange?: (page: PublicPage) => void;
   onServiceDetailChange?: (slug: string | null) => void;
+  onPartnerDetailChange?: (slug: string | null) => void;
   onLoginPage?: () => void;
   loginOnly?: boolean;
   onBackHome?: () => void;
@@ -37,8 +39,10 @@ export function Home({
   onGuestStore,
   initialPublicPage = 'home',
   initialServiceSlug,
+  initialPartnerSlug,
   onPublicPageChange,
   onServiceDetailChange,
+  onPartnerDetailChange,
   onLoginPage,
   loginOnly = false,
   onBackHome,
@@ -87,6 +91,7 @@ export function Home({
   const changePublicPage = (page: PublicPage) => {
     setPublicPage(page);
     if (page !== 'services') onServiceDetailChange?.(null);
+    if (page !== 'partners') onPartnerDetailChange?.(null);
     onPublicPageChange?.(page);
   };
 
@@ -126,7 +131,9 @@ export function Home({
           publicProducts={publicProducts}
           publicServices={publicServices}
           initialServiceSlug={initialServiceSlug}
+          initialPartnerSlug={initialPartnerSlug}
           onServiceDetailChange={onServiceDetailChange}
+          onPartnerDetailChange={onPartnerDetailChange}
           onGuestStore={onGuestStore}
           onClientLogin={handlePublicLogin}
           onAdminLogin={() => openRestricted('gestao')}
