@@ -117,6 +117,30 @@ replace_exact(
     "             : page === 'partners'\n               ? window.location.pathname.startsWith('/parceiros/') ? window.location.pathname : '/parceiros'\n               : page === 'ads'\n                 ? '/anuncios'\n                 : page === 'advertise'\n                   ? '/anuncie'\n                   : '/';",
 )
 
+replace_exact(
+    'src/components/public/AdvertisingPage.tsx',
+    """    supabase.rpc('gsa_public_list_active_ads', { p_placement_code: 'ADS_PUBLIC_SHOWCASE' })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) console.error('Falha ao carregar anúncios públicos:', error);
+        setAds(Array.isArray(data) ? data as PublicAdvertisement[] : []);
+      })
+      .finally(() => { if (active) setLoadingAds(false); });
+""",
+    """    const loadAds = async () => {
+      try {
+        const { data, error } = await supabase.rpc('gsa_public_list_active_ads', { p_placement_code: 'ADS_PUBLIC_SHOWCASE' });
+        if (!active) return;
+        if (error) console.error('Falha ao carregar anúncios públicos:', error);
+        setAds(Array.isArray(data) ? data as PublicAdvertisement[] : []);
+      } finally {
+        if (active) setLoadingAds(false);
+      }
+    };
+    void loadAds();
+""",
+)
+
 package_path = Path('package.json')
 package_data = json.loads(package_path.read_text(encoding='utf-8'))
 package_data['scripts']['test:advertising'] = 'tsx scripts/check-advertising-foundation.ts'
