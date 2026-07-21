@@ -1342,6 +1342,7 @@ function PropostasTab() {
 }
 
 function TransacoesTab() {
+  const list = usePagedTravelList('transacoes');
   const [detailsTx, setDetailsTx] = useState<any>(null);
   const [refundTx, setRefundTx] = useState<any>(null);
   const [processRefundTx, setProcessRefundTx] = useState<any>(null);
