@@ -1,0 +1,58 @@
+name: Apply Advertising Foundation
+
+on:
+  push:
+    branches:
+      - agent/implantar-modulo-anuncios
+    paths:
+      - '.apply-advertising-foundation-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/implantar-modulo-anuncios
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Configure Git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Apply verified integration patch
+        run: python3 scripts/apply-advertising-foundation.py
+
+      - name: Remove temporary integrator
+        run: rm -f scripts/apply-advertising-foundation.py .github/workflows/apply-advertising-foundation.yml .apply-advertising-foundation-trigger
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate integrated frontend
+        run: |
+          npx tsc --noEmit
+          npm run test:advertising
+          deno check supabase/functions/gsa-public-advertising/index.ts
+          deno test --allow-env supabase/functions/gsa-public-advertising/index_test.ts
+          npm run build
+
+      - name: Commit integrated foundation
+        run: |
+          git add -A
+          git commit -m 'Integrar fundação do módulo GSA Anúncios'
+          git push origin HEAD:agent/implantar-modulo-anuncios
