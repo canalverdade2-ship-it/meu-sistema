@@ -1,6 +1,9 @@
 name: Apply Provider Admin Permission
 
 on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/apply-provider-admin-permission.yml']
   push:
     branches: [agent/finalizar-permissao-prestadores]
     paths: ['.github/workflows/apply-provider-admin-permission.yml']
@@ -8,12 +11,18 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: provider-admin-permission-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   apply-validate-publish:
+    if: github.event_name == 'push' || github.head_ref == 'agent/finalizar-permissao-prestadores'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source branch
+        uses: actions/checkout@v4
         with:
           ref: agent/finalizar-permissao-prestadores
           fetch-depth: 0
@@ -33,6 +42,8 @@ jobs:
           def replace_once(path: str, old: str, new: str) -> None:
               target = Path(path)
               text = target.read_text(encoding='utf-8')
+              if new in text:
+                  return
               if old not in text:
                   raise SystemExit(f'Anchor not found in {path}: {old!r}')
               target.write_text(text.replace(old, new, 1), encoding='utf-8')
@@ -57,11 +68,13 @@ jobs:
 
           provider_contract = Path('scripts/check-provider-portal-security-contracts.ts')
           contract = provider_contract.read_text(encoding='utf-8')
-          anchor = "  await includes('src/routing/routeSecurity.ts', [\n    \"if (area === 'provider') return Boolean(session.prestadorId);\",\n  ]);\n"
-          addition = anchor + "\n  await includes('src/components/admin/AcessosModule.tsx', [\n    \"['prestadores', 'Prestadores (sem acesso a clientes)']\",\n  ]);\n\n  await includes('src/pages/AdminPanel.tsx', [\n    \"const providerOnly = normalized === 'cadastro' && !canAccess('cadastro') && canAccess('prestadores');\",\n    \"item.id === 'cadastro' ? canAccess('cadastro') || canAccess('prestadores') : canAccess(item.id)\",\n  ]);\n"
-          if anchor not in contract:
-              raise SystemExit('Provider contract anchor not found')
-          provider_contract.write_text(contract.replace(anchor, addition, 1), encoding='utf-8')
+          expected = "['prestadores', 'Prestadores (sem acesso a clientes)']"
+          if expected not in contract:
+              anchor = "  await includes('src/routing/routeSecurity.ts', [\n    \"if (area === 'provider') return Boolean(session.prestadorId);\",\n  ]);\n"
+              addition = anchor + "\n  await includes('src/components/admin/AcessosModule.tsx', [\n    \"['prestadores', 'Prestadores (sem acesso a clientes)']\",\n  ]);\n\n  await includes('src/pages/AdminPanel.tsx', [\n    \"const providerOnly = normalized === 'cadastro' && !canAccess('cadastro') && canAccess('prestadores');\",\n    \"item.id === 'cadastro' ? canAccess('cadastro') || canAccess('prestadores') : canAccess(item.id)\",\n  ]);\n"
+              if anchor not in contract:
+                  raise SystemExit('Provider contract anchor not found')
+              provider_contract.write_text(contract.replace(anchor, addition, 1), encoding='utf-8')
           PY
 
       - name: Install dependencies
@@ -87,7 +100,9 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/components/admin/AcessosModule.tsx src/pages/AdminPanel.tsx scripts/check-provider-portal-security-contracts.ts .github/workflows/apply-provider-admin-permission.yml
+          if git diff --cached --quiet; then
+            echo 'Nenhuma alteração pendente.'
+            exit 0
+          fi
           git commit -m 'Finalizar permissão administrativa de Prestadores'
           git push origin HEAD:agent/finalizar-permissao-prestadores
-
-# retrigger: 2026-07-21
