@@ -1487,34 +1487,14 @@ function TransacoesTab() {
                   <button
                     type="button"
                     onClick={() => setDetailsTx(item)}
-                    className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 py-2 text-xs font-black text-blue-700 border border-blue-200 hover:bg-blue-100 transition"
+                    className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition border ${
+                      isPendingRefund
+                        ? 'bg-amber-500 text-white border-amber-600 hover:bg-amber-600 shadow-md shadow-amber-200'
+                        : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                    }`}
                   >
-                    <Eye className="h-4 w-4" /> Detalhes
+                    <Eye className="h-4 w-4" /> {isPendingRefund ? 'Analisar Reembolso' : 'Detalhes'}
                   </button>
-
-                  {/* Botões de Ação para Reembolso */}
-                  {isPendingRefund && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => openApproveModal(item)}
-                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-200 transition"
-                      >
-                        <CheckCircle2 className="h-4 w-4" /> Aprovar Reembolso
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDenyTx(item);
-                          setDenyReason('');
-                        }}
-                        className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3.5 py-2 text-xs font-black text-red-700 border border-red-200 hover:bg-red-100 transition"
-                      >
-                        <XCircle className="h-4 w-4" /> Negar
-                      </button>
-                    </>
-                  )}
                 </div>
               </article>
             );
