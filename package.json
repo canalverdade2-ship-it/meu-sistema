@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit",
+    "lint": "tsc --noEmit && node scripts/audit-production-real.mjs --enforce",
     "backup": "node backup.cjs",
     "validate:subscriptions": "tsx src/validation/step6_subscriptions.ts",
     "test:travel": "tsx scripts/check-gsa-travel-contracts.ts",
