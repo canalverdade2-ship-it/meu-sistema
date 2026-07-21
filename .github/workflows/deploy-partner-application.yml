@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: deploy-partner-application-production
@@ -176,3 +176,46 @@ jobs:
             partner-function-list.log
           if-no-files-found: ignore
           retention-days: 30
+
+  report-result:
+    name: Register deployment result
+    needs: deploy
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Record partner deployment status
+        shell: bash
+        env:
+          RESULT: ${{ needs.deploy.result }}
+          RUN_ID: ${{ github.run_id }}
+          VALIDATED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          cat > deployment-status/partner-application-production.json <<JSON
+          {
+            "status": "${RESULT}",
+            "workflow_run_id": "${RUN_ID}",
+            "validated_sha": "${VALIDATED_SHA}",
+            "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "project_ref": "ocgajvagxagutfvgxwsy",
+            "migration": "20260721213000_partner_public_applications.sql",
+            "edge_function": "gsa-partner-application"
+          }
+          JSON
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '4189826+github-actions[bot]@users.noreply.github.com'
+          git add deployment-status/partner-application-production.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Registrar implantação do formulário de parceiros: ${RESULT}"
+          git pull --rebase origin main
+          git push origin HEAD:main
