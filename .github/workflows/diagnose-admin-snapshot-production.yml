@@ -27,6 +27,7 @@ jobs:
         run: |
           set -o pipefail
           grep -R -n -E 'Snapshot administrativo base não encontrado|gsa_admin_get_pendency_counts_secure|seguros_ofertas_publicas|gsa_admin_dashboard_snapshot' src supabase scripts 2>&1 | tee repository-diagnosis.log || true
+          find supabase/migrations -maxdepth 1 -type f -printf '%f\n' | sort | grep -Ei 'seguro|protection' | tee insurance-migrations-local.log || true
 
       - name: Validate production authorization
         shell: bash
@@ -94,6 +95,22 @@ jobs:
           SQL
           set -o pipefail
           supabase db query --linked --file production-diagnosis.sql 2>&1 | tee production-diagnosis.log
+          supabase migration list --linked 2>&1 | tee remote-migration-list.log
+
+      - name: Compare insurance migration history
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          remote = Path('remote-migration-list.log').read_text(encoding='utf-8', errors='ignore')
+          rows=[]
+          for name in Path('insurance-migrations-local.log').read_text().splitlines():
+              version=name.split('_',1)[0]
+              rows.append(f"{version}\t{'REMOTE' if re.search(r'\b'+re.escape(version)+r'\b', remote) else 'MISSING'}\t{name}")
+          Path('insurance-migration-comparison.log').write_text('\n'.join(rows)+'\n')
+          print(Path('insurance-migration-comparison.log').read_text())
+          PY
 
       - name: Upload diagnosis
         if: always()
@@ -104,4 +121,7 @@ jobs:
             repository-diagnosis.log
             production-diagnosis.sql
             production-diagnosis.log
+            insurance-migrations-local.log
+            remote-migration-list.log
+            insurance-migration-comparison.log
           retention-days: 7
