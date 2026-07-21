@@ -81,7 +81,6 @@ const AVAILABLE_MODULES = [
   ['relatorios', 'Relatórios'],
   ['configuracoes', 'Configurações'],
   ['demandas', 'Demandas internas'],
-  ['acessos', 'Gerenciar acessos'],
   ['sistema', 'Saúde do sistema'],
 ] as const;
 

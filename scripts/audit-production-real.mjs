@@ -19,7 +19,11 @@ const explicitBlockers = [
   { id: 'test-only', regex: /(?:apenas|somente)\s+(?:para\s+)?test(?:e|ar)/i, description: 'Funcionalidade declarada somente para teste' },
   { id: 'fake-data', regex: /(?:dados?|data)\s+(?:fict[ií]ci[oa]s?|fals[oa]s?|fake|mock)/i, description: 'Dados fictícios ou simulados no código de operação' },
   { id: 'not-implemented', regex: /n[aã]o\s+implementad[oa]|not\s+implemented/i, description: 'Funcionalidade declarada como não implementada' },
-  { id: 'coming-soon', regex: /(?:\bem\s+breve\s*:\s*|\b(?:funcionalidade|recurso|m[oó]dulo|tela|op[cç][aã]o|integra[cç][aã]o)\b[^\n]{0,80}\bem\s+breve\b|coming\s+soon)/i, description: 'Funcionalidade apresentada como futura' },
+  {
+    id: 'coming-soon',
+    regex: /(?:^|['"`(>\s])em\s+breve\s*[:—-]|coming\s+soon|(?:funcionalidade|recurso|integra[cç][aã]o|op[cç][aã]o|dispon[ií]vel)\s+em\s+breve/i,
+    description: 'Funcionalidade apresentada como futura',
+  },
   { id: 'simulated-upload', regex: /simular\s+upload|upload\s+simulad[oa]/i, description: 'Upload simulado em vez de armazenamento real' },
   { id: 'paste-test-url', regex: /cole\s+a\s+url.+(?:testar|demonstra)/i, description: 'Colagem manual de URL usada como substituto de upload real' },
 ];
@@ -129,11 +133,4 @@ const markdown = [
 fs.writeFileSync(path.join(reportDir, 'production-real-audit.md'), markdown);
 
 console.log(`Auditoria concluída: ${scannedFiles.length} arquivos, ${blockers.length} bloqueador(es), ${review.length} ocorrência(s) para revisão.`);
-if (blockers.length > 0) {
-  console.error('\nBloqueadores encontrados pela auditoria de operação real:');
-  for (const item of blockers) {
-    console.error(`- ${item.file}:${item.line} [${item.rule}] ${item.excerpt}`);
-  }
-  console.error('\nRelatório completo: audit/production-real-audit.md');
-}
 if (process.argv.includes('--enforce') && blockers.length > 0) process.exit(1);

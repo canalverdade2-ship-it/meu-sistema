@@ -3,18 +3,20 @@ import path from 'node:path';
 
 const root = process.cwd();
 const wizardPath = path.join(root, 'src/components/client/marketplace/classifieds/CreateListingWizard.tsx');
+const detailPath = path.join(root, 'src/components/client/marketplace/classifieds/ClassifiedDetailPage.tsx');
 const storagePath = path.join(root, 'src/lib/classifiedStorage.ts');
 const gatewayPath = path.join(root, 'supabase/functions/gsa-classified-media/index.ts');
 const migrationPath = path.join(root, 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql');
 const verificationPath = path.join(root, 'scripts/classifieds-media-production-verification.sql');
 
-for (const filePath of [wizardPath, storagePath, gatewayPath, migrationPath, verificationPath]) {
+for (const filePath of [wizardPath, detailPath, storagePath, gatewayPath, migrationPath, verificationPath]) {
   if (!fs.existsSync(filePath)) {
     throw new Error(`Arquivo obrigatório dos Classificados ausente: ${path.relative(root, filePath)}`);
   }
 }
 
 const wizard = fs.readFileSync(wizardPath, 'utf8');
+const detail = fs.readFileSync(detailPath, 'utf8');
 const storage = fs.readFileSync(storagePath, 'utf8');
 const gateway = fs.readFileSync(gatewayPath, 'utf8');
 const migration = fs.readFileSync(migrationPath, 'utf8');
@@ -50,6 +52,35 @@ const requiredWizardContracts = [
 for (const contract of requiredWizardContracts) {
   if (!wizard.includes(contract)) {
     throw new Error(`Contrato de upload real ausente no wizard: ${contract}`);
+  }
+}
+
+const requiredProposalContracts = [
+  'clientOperationalWrite<{ id: string }>',
+  "'tickets', 'insert'",
+  'Proposta Classificados:',
+  "notificationService.notifyAdmin(",
+  "'propostas'",
+  'navigate(routes.client.ticket(ticket.id))',
+  'valor_proposto: amount',
+  'A negociação deve permanecer dentro dos canais da GSA',
+];
+
+for (const contract of requiredProposalContracts) {
+  if (!detail.includes(contract)) {
+    throw new Error(`Contrato de proposta moderada ausente nos Classificados: ${contract}`);
+  }
+}
+
+const forbiddenProposalPatterns = [
+  /Em breve:\s*Enviar proposta/i,
+  /TODO:\s*Abrir modal de Proposta/i,
+  /alert\s*\(\s*['"]Em breve/i,
+];
+
+for (const pattern of forbiddenProposalPatterns) {
+  if (pattern.test(detail)) {
+    throw new Error(`Fluxo não operacional voltou à proposta dos Classificados: ${pattern}`);
   }
 }
 
@@ -131,4 +162,4 @@ for (const contract of requiredVerificationContracts) {
   }
 }
 
-console.log('Classificados validados para upload real de imagens por gateway seguro em produção.');
+console.log('Classificados validados para upload e proposta moderada reais em produção.');

@@ -36,9 +36,11 @@ async function main() {
   assert.equal(normalizeAdminModule('emprestimos'), 'emprestimos');
   assert.equal(normalizeAdminModule('credito_loja'), 'credito_loja');
   assert.deepEqual(normalizeGrantedAdminModules(['clientes', 'vendas', 'tickets', 'viagens']), ['cadastro', 'operacoes', 'atendimento', 'viagens']);
+  assert.deepEqual(normalizeGrantedAdminModules(['acessos']), []);
 
   assert.equal(canAccessAdminModule('admin', [], 'financeiro'), true);
   assert.equal(canAccessAdminModule('colaborador', [], 'dashboard'), true);
+  assert.equal(canAccessAdminModule('colaborador', ['acessos'], 'acessos'), false);
   assert.equal(canAccessAdminModule('colaborador', [], 'demandas'), false);
   assert.equal(canAccessAdminModule('colaborador', ['demandas'], 'demandas'), true);
   assert.equal(canAccessAdminModule('colaborador', ['demandas'], 'operacoes'), false);
@@ -98,6 +100,7 @@ async function main() {
     '"test:provider"',
     '"test:products-subscriptions"',
     'scripts/run-admin-migrations-runtime.cjs',
+    'scripts/check-collaborator-boundaries-runtime.cjs',
   ]);
 
   await assertFileContains('src/App.tsx', [
@@ -114,8 +117,9 @@ async function main() {
 
   await assertFileContains('src/pages/SecureAdminPanel.tsx', [
     'hasAdminModuleAccess',
-    "select('id, nome, status, colaborador_modulos(modulo_id)')",
-    "data.status !== 'ativo'",
+    "callAdminRpc<SecureAdminContext>('gsa_admin_get_context_secure')",
+    "await revoke('Sua sessão ou suas permissões não puderam ser validadas. Entre novamente.')",
+    'setModules([])',
     "table: 'colaborador_modulos'",
     "sessionStorage.setItem('colaboradorModulos'",
     "localStorage.removeItem(key)",
@@ -125,6 +129,8 @@ async function main() {
     "localStorage.setItem('colaboradorId'",
     "localStorage.setItem('colaboradorNome'",
     "localStorage.setItem('colaboradorModulos'",
+    ".from('colaboradores')",
+    'if (!current)',
   ]);
 
   await assertFileContains('src/pages/AdminPanel.tsx', [
@@ -154,6 +160,7 @@ async function main() {
   await assertFileExcludes('src/components/admin/AcessosModule.tsx', [
     "from('colaborador_modulos')",
     'credencial_acesso',
+    "['acessos', 'Gerenciar acessos']",
   ]);
 
   await assertFileContains('src/components/admin/ClassifiedsModule.tsx', [
@@ -207,10 +214,20 @@ async function main() {
   ]);
 
   await assertFileContains('src/components/admin/CollaboratorDashboard.tsx', [
-    'normalizeCollaboratorModules',
+    'normalizeGrantedAdminModules',
+    "gsa_collaborator_dashboard_snapshot",
     "has('financeiro')",
     "has('demandas')",
-    "eq('colaborador_id', colaboradorId)",
+    "has('operacoes')",
+    "has('atendimento')",
+    "has('emprestimos')",
+  ]);
+  await assertFileExcludes('src/components/admin/CollaboratorDashboard.tsx', [
+    ".from('clientes')",
+    ".from('emprestimos')",
+    "has('vendas')",
+    "has('tickets')",
+    "has('acessos')",
   ]);
 
   await assertFileContains('src/components/admin/Dashboard.tsx', [
@@ -311,6 +328,14 @@ async function main() {
     'session_token_hash',
     "digest(p_session_token, 'sha256')",
     'gsa_admin_validate_context',
+  ]);
+
+  await assertFileContains('supabase/migrations/20260721130000_harden_collaborator_authorization.sql', [
+    'gsa_block_collaborator_access_module',
+    'gsa_collaborator_dashboard_snapshot',
+    'gsa_collaborator_list_demands',
+    'gsa_collaborator_demand_history',
+    'gsa_collaborator_demand_history_scope',
   ]);
 
   console.log('Painel administrativo e painel do colaborador: contratos de segurança e operação validados.');

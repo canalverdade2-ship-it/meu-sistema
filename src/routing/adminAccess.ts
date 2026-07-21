@@ -55,8 +55,7 @@ const VALID_MODULES = new Set<AdminModule>([
 
 /**
  * Normaliza apenas nomes legados pertencentes ao mesmo domínio funcional.
- * Vendas, Loja, Classificados, Viagens, Saúde e Seguros exigem concessões
- * próprias e nunca herdam acesso uns dos outros.
+ * Permissões independentes nunca herdam acesso umas das outras.
  */
 export function normalizeAdminModule(module?: string | null): AdminModule {
   const value = String(module || 'dashboard').trim().toLowerCase();
@@ -73,7 +72,7 @@ export function normalizeAdminModule(module?: string | null): AdminModule {
 
 function normalizeGrantedModule(module: string): AdminModule | null {
   const value = String(module || '').trim().toLowerCase();
-  if (!value) return null;
+  if (!value || value === 'acessos') return null;
 
   if (value === 'clientes' || value === 'cadastros') return 'cadastro';
   if (value === 'prestadores') return 'prestadores';
@@ -104,6 +103,7 @@ export function canAccessAdminModule(
 
   const normalized = normalizeAdminModule(module);
   if (normalized === 'dashboard') return true;
+  if (normalized === 'acessos') return false;
 
   const granted = new Set(normalizeGrantedAdminModules(modules));
 

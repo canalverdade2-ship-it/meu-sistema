@@ -1,0 +1,77 @@
+{
+  "generated_at": "2026-07-21T14:01:17.535Z",
+  "scope": [
+    "src",
+    "supabase/functions"
+  ],
+  "scanned_files": 271,
+  "blocker_count": 0,
+  "review_count": 8,
+  "blockers": [],
+  "review": [
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/ClassifiedsModule.tsx",
+      "line": 81,
+      "excerpt": "reason = window.prompt('Motivo da rejeição do anúncio:')?.trim() || null;"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/CreditoModule.tsx",
+      "line": 594,
+      "excerpt": "const inputMotivo = window.prompt('Digite o motivo da rejeicao do documento:');"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/CreditoModule.tsx",
+      "line": 642,
+      "excerpt": "const inputMotivo = window.prompt('Digite o motivo da rejeicao da assinatura do contrato:');"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 445,
+      "excerpt": "const motivo = window.prompt('Motivo da reprovacao (o cliente recebera essa mensagem):');"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
+      "line": 166,
+      "excerpt": "const motivo = prompt('Informe o motivo da recusa:');"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
+      "line": 358,
+      "excerpt": "const motivo = prompt('Motivo para recusar a contraproposta do prestador:');"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
+      "line": 402,
+      "excerpt": "const motivo = prompt('Por que deseja cancelar esta demanda?');"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/lib/deleteRequest.ts",
+      "line": 46,
+      "excerpt": "const motivo = window.prompt('Exclusão restrita: qual o motivo para solicitar a exclusão deste registro? Sua solicitação será enviada para aprovação administrativa.');"
+    }
+  ]
+}
