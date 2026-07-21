@@ -1,8 +1,8 @@
 {
   "status": "success",
-  "workflow_run_id": "29841782264",
-  "validated_sha": "668328a79ebd4c8e434987f77a5826913ab6b1c0",
-  "validated_at_utc": "2026-07-21T15:01:06Z",
+  "workflow_run_id": "29842119130",
+  "validated_sha": "22177e1a2f5ffa0c6a13885a0fbf43250e8e5bcf",
+  "validated_at_utc": "2026-07-21T15:05:03Z",
   "scope": "collaborator-panel-authorization-session-rls-rpcs-audit",
   "migration": "20260721130000",
   "validation": "success",
