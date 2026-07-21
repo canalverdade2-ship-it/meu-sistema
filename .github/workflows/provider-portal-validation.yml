@@ -2,9 +2,28 @@ name: Provider Portal Validation
 
 on:
   push:
-    branches:
-      - 'agent/**'
-      - 'fix/**'
+    branches: [main, 'agent/**', 'fix/**']
+    paths:
+      - 'src/components/prestador/**'
+      - 'src/pages/Prestador/**'
+      - 'src/hooks/useProviderNotifications.tsx'
+      - 'src/lib/provider*.ts'
+      - 'src/lib/sessionService.ts'
+      - 'src/lib/supabase.ts'
+      - 'src/App.tsx'
+      - 'src/routing/**'
+      - 'src/contexts/FileViewerContext.tsx'
+      - 'src/types/react-namespace.d.ts'
+      - 'scripts/check-provider-portal-security-contracts.ts'
+      - 'scripts/provider-production-verification.sql'
+      - 'supabase/functions/gsa-auth-session/**'
+      - 'supabase/migrations/2026072021*_provider*.sql'
+      - 'supabase/migrations/20260720210000_harden_provider_portal.sql'
+      - 'supabase/migrations/20260720232*_provider_portal*.sql'
+      - 'supabase/migrations/20260720233*_provider_portal*.sql'
+      - 'supabase/migrations/20260721170000_provider_portal_production_finalization.sql'
+      - '.github/workflows/provider-portal-validation.yml'
+      - '.github/workflows/provider-production-validation.yml'
   pull_request:
     branches: [main]
     paths:
@@ -12,14 +31,22 @@ on:
       - 'src/pages/Prestador/**'
       - 'src/hooks/useProviderNotifications.tsx'
       - 'src/lib/provider*.ts'
+      - 'src/lib/sessionService.ts'
+      - 'src/lib/supabase.ts'
+      - 'src/App.tsx'
+      - 'src/routing/**'
       - 'src/contexts/FileViewerContext.tsx'
       - 'src/types/react-namespace.d.ts'
       - 'scripts/check-provider-portal-security-contracts.ts'
+      - 'scripts/provider-production-verification.sql'
+      - 'supabase/functions/gsa-auth-session/**'
       - 'supabase/migrations/2026072021*_provider*.sql'
       - 'supabase/migrations/20260720210000_harden_provider_portal.sql'
       - 'supabase/migrations/20260720232*_provider_portal*.sql'
       - 'supabase/migrations/20260720233*_provider_portal*.sql'
+      - 'supabase/migrations/20260721170000_provider_portal_production_finalization.sql'
       - '.github/workflows/provider-portal-validation.yml'
+      - '.github/workflows/provider-production-validation.yml'
 
 permissions:
   contents: read
