@@ -66,12 +66,29 @@ async function main() {
   await contains('src/components/public/PartnersPage.tsx', [
     'listPublicPartners',
     'Conhecer parceiro',
-    'Quero ser parceiro',
+    'PartnerApplicationModal',
+    'Seja nosso parceiro',
+    'enviada diretamente ao painel administrativo para análise',
     'Informações de contato',
+  ]);
+
+  await contains('src/components/public/PartnerApplicationModal.tsx', [
+    'Dados da empresa ou profissional',
+    'Responsável pela solicitação',
+    'Atuação, serviços e benefícios',
+    'Logotipo e foto de apresentação',
+    'Enviar para análise',
+    'status <strong>Em análise</strong>',
+    'privacy_consent',
+    'company_website',
+    'submitPartnerApplication',
   ]);
 
   await contains('src/features/partners/service.ts', [
     ".eq('status', 'ativo')",
+    "supabase.functions.invoke<PartnerApplicationResult",
+    "'gsa-partner-application'",
+    "body.append('payload'",
     "callAdminRpc<{ partners?: Partner[] }>('gsa_admin_partners_snapshot')",
     "callAdminRpc<{ partner: Partner }>('gsa_admin_save_partner'",
     "callAdminRpc('gsa_admin_set_partner_status'",
@@ -85,6 +102,8 @@ async function main() {
     'Novo parceiro',
     'Parceiro em destaque',
     'Em análise',
+    'Responsável pelo contato',
+    'Observações internas',
     'Ativos',
     'Inativos',
     'Encerrados',
@@ -104,7 +123,28 @@ async function main() {
     'REVOKE ALL ON public.parceiros FROM anon, authenticated',
   ]);
 
-  console.log('Contratos da página de parceiros validados com sucesso.');
+  await contains('supabase/migrations/20260721213000_partner_public_applications.sql', [
+    'ADD COLUMN IF NOT EXISTS tax_document',
+    "ADD COLUMN IF NOT EXISTS application_source text NOT NULL DEFAULT 'admin'",
+    'ADD COLUMN IF NOT EXISTS application_protocol',
+    'ADD COLUMN IF NOT EXISTS submitted_at',
+    'ADD COLUMN IF NOT EXISTS privacy_consent_at',
+    "'parceiros-midias'",
+    "ARRAY['image/jpeg', 'image/png', 'image/webp']",
+  ]);
+
+  await contains('supabase/functions/gsa-partner-application/index.ts', [
+    "const BUCKET = 'parceiros-midias'",
+    "admin.rpc('gsa_auth_rate_limit_check'",
+    'validImageSignature',
+    "application_source: 'public_form'",
+    "status: 'em_analise'",
+    'privacy_consent_at: now',
+    "internal_notes: 'Solicitação recebida pelo formulário público",
+    'Deno.serve(handleRequest)',
+  ]);
+
+  console.log('Contratos da página e das solicitações públicas de parceiros validados com sucesso.');
 }
 
 main().catch((error) => {
