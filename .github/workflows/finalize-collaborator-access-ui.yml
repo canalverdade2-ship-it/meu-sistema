@@ -1,0 +1,42 @@
+name: Finalize Collaborator Access UI
+
+on:
+  push:
+    branches: [agent/endurecer-painel-colaborador-20260721]
+    paths:
+      - '.github/workflows/finalize-collaborator-access-ui.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finalize-collaborator-access-ui
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/endurecer-painel-colaborador-20260721
+          fetch-depth: 0
+      - name: Remove collaborator access assignment option
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/components/admin/AcessosModule.tsx')
+          text = path.read_text(encoding='utf-8')
+          target = "  ['acessos', 'Gerenciar acessos'],\n"
+          if target not in text:
+              raise SystemExit('A opção de Gestão de Acessos não foi encontrada.')
+          path.write_text(text.replace(target, '', 1), encoding='utf-8')
+          PY
+          rm -f .github/workflows/finalize-collaborator-access-ui.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/admin/AcessosModule.tsx .github/workflows/finalize-collaborator-access-ui.yml
+          git commit -m 'Remover Gestão de Acessos das permissões do colaborador'
+          git push origin HEAD:agent/endurecer-painel-colaborador-20260721
