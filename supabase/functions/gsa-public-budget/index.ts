@@ -39,7 +39,7 @@ export function configuredOrigins() {
 }
 
 function responseHeaders(origin: string | null) {
-  const headers = { ...baseHeaders };
+  const headers: Record<string, string> = { ...baseHeaders };
   if (origin) {
     headers['Access-Control-Allow-Origin'] = origin;
     headers['Access-Control-Allow-Credentials'] = 'true';
@@ -62,7 +62,7 @@ function digits(value: unknown) {
   return typeof value === 'string' ? value.replace(/\D/g, '') : '';
 }
 
-function metadata(value: unknown) {
+function metadata(value: unknown): Record<string, string> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
   const source = value as Record<string, unknown>;
   return {
@@ -151,7 +151,7 @@ export async function handleRequest(request: Request) {
     const payload = normalizePayload(body.payload);
     if (!payload) return json({ error: 'invalid_payload' }, 400, allowedOrigin);
 
-    const admin = createClient<any>(supabaseUrl, serviceRoleKey, {
+    const admin: any = createClient<any>(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
