@@ -1531,30 +1531,61 @@ function TransacoesTab() {
     return item.resposta_admin || item.snapshot_completo?.resposta_admin || item.detalhes?.resposta_admin || localStorage.getItem(`gsa_refund_note_${item.id}`) || null;
   };
 
+  const getNetRefundAmount = (item: any): number => {
+    if (!item) return 0;
+    const storedNet = item.id ? localStorage.getItem(`gsa_refund_net_${item.id}`) : null;
+    if (storedNet != null && !isNaN(Number(storedNet))) {
+      return Number(storedNet);
+    }
+    const storedFees = item.id ? localStorage.getItem(`gsa_refund_fees_${item.id}`) : null;
+    const fees = storedFees != null ? Number(storedFees) : Number(item.taxa_cancelamento || 0);
+
+    const baseVal = Number(item.valor_elegivel_reembolso != null ? item.valor_elegivel_reembolso : (item.valor_pago || item.valor_total || 0));
+
+    if (fees > 0 && baseVal >= fees && baseVal === Number(item.valor_total || item.valor_pago)) {
+      return baseVal - fees;
+    }
+    return baseVal;
+  };
+
+  const getRefundFeesAmount = (item: any): number => {
+    if (!item) return 0;
+    const storedFees = item.id ? localStorage.getItem(`gsa_refund_fees_${item.id}`) : null;
+    if (storedFees != null && !isNaN(Number(storedFees))) {
+      return Number(storedFees);
+    }
+    return Number(item.taxa_cancelamento || 0);
+  };
+
   const handleApproveRefund = async () => {
     if (!refundTx) return;
     setProcessingRefund(true);
     try {
-      const numericRefund = parseCurrencyString(refundAmount);
+      const numericRefund = parseCurrencyString(refundAmount); // ex: 5000
+      const numericFees = parseCurrencyString(refundFees);     // ex: 980
+      const netRefund = Math.max(0, numericRefund - numericFees); // ex: 4020
       const note = refundNote.trim() || 'Reembolso aprovado e concluído pelo financeiro GSA.';
 
       if (refundTx.id) {
         localStorage.setItem(`gsa_refund_note_${refundTx.id}`, note);
+        localStorage.setItem(`gsa_refund_fees_${refundTx.id}`, String(numericFees));
+        localStorage.setItem(`gsa_refund_net_${refundTx.id}`, String(netRefund));
+        localStorage.setItem(`gsa_refund_gross_${refundTx.id}`, String(numericRefund));
       }
 
-      // Atualização estrita utilizando exclusivamente as colunas garantidas da tabela viagens_transacoes
+      // Atualiza o valor elegível no Supabase com o VALOR LÍQUIDO EFETIVO (R$ 4.020,00)
       const { error } = await supabase
         .from('viagens_transacoes')
         .update({
           status: 'reembolsada',
-          valor_elegivel_reembolso: numericRefund,
+          valor_elegivel_reembolso: netRefund,
           updated_at: new Date().toISOString(),
         })
         .eq('id', refundTx.id);
 
       if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
 
-      toast.success('Reembolso aprovado e processado com sucesso!');
+      toast.success(`Reembolso de R$ ${formatCurrencyInputValue(netRefund)} aprovado com sucesso!`);
       setRefundTx(null);
       await list.load();
     } catch (error: any) {
@@ -1698,7 +1729,7 @@ function TransacoesTab() {
                     </div>
                     <div className="rounded-2xl bg-emerald-500/10 px-4 py-2.5 backdrop-blur-md border border-emerald-500/20 text-right">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Valor Líquido Estornado</p>
-                      <p className="text-xl font-black text-emerald-400">{formatCurrency(detailsTx.valor_elegivel_reembolso || detailsTx.valor_pago || getTransactionTotal(detailsTx))}</p>
+                      <p className="text-xl font-black text-emerald-400">{formatCurrency(getNetRefundAmount(detailsTx))}</p>
                     </div>
                   </div>
                 </div>
@@ -1742,21 +1773,26 @@ function TransacoesTab() {
                   <Receipt className="h-4 w-4 text-indigo-600" /> Resumo Financeiro & Reembolso
                 </h4>
 
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-xl bg-indigo-50 p-3.5 border border-indigo-100">
-                    <p className="text-[10px] font-bold uppercase text-indigo-500">Valor Total do Pedido</p>
-                    <p className="text-lg font-black text-indigo-700 mt-0.5">{formatCurrency(getTransactionTotal(detailsTx))}</p>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <div className="rounded-xl bg-indigo-50 p-3 border border-indigo-100">
+                    <p className="text-[10px] font-bold uppercase text-indigo-500">Valor Total Pedido</p>
+                    <p className="text-base font-black text-indigo-700 mt-0.5">{formatCurrency(getTransactionTotal(detailsTx))}</p>
                   </div>
 
-                  <div className="rounded-xl bg-emerald-50 p-3.5 border border-emerald-100">
+                  <div className="rounded-xl bg-emerald-50 p-3 border border-emerald-100">
                     <p className="text-[10px] font-bold uppercase text-emerald-600">Valor Efetivamente Pago</p>
-                    <p className="text-lg font-black text-emerald-700 mt-0.5">{formatCurrency(detailsTx.valor_pago || detailsTx.valor_total)}</p>
+                    <p className="text-base font-black text-emerald-700 mt-0.5">{formatCurrency(detailsTx.valor_pago || detailsTx.valor_total)}</p>
                   </div>
 
-                  <div className="rounded-xl bg-purple-50 p-3.5 border border-purple-100">
-                    <p className="text-[10px] font-bold uppercase text-purple-600">Valor Líquido Aprovado</p>
-                    <p className="text-lg font-black text-purple-700 mt-0.5">
-                      {formatCurrency(detailsTx.valor_elegivel_reembolso || detailsTx.valor_pago || getTransactionTotal(detailsTx))}
+                  <div className="rounded-xl bg-amber-50 p-3 border border-amber-100">
+                    <p className="text-[10px] font-bold uppercase text-amber-600">Taxa Retida / Multa</p>
+                    <p className="text-base font-black text-amber-700 mt-0.5">{formatCurrency(getRefundFeesAmount(detailsTx))}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-purple-50 p-3 border border-purple-100">
+                    <p className="text-[10px] font-bold uppercase text-purple-600">Valor Líquido Estornado</p>
+                    <p className="text-base font-black text-purple-700 mt-0.5">
+                      {formatCurrency(getNetRefundAmount(detailsTx))}
                     </p>
                   </div>
                 </div>
