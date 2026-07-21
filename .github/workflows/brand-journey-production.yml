@@ -12,7 +12,7 @@ on:
       - 'src/routing/routeMatcher.ts'
       - 'scripts/check-home-public-contracts.ts'
       - 'supabase/functions/gsa-public-budget/**'
-      - 'supabase/migrations/20260721183000_expand_public_branding_budget.sql'
+      - 'supabase/migrations/20260721235947_expand_public_branding_budget.sql'
   workflow_dispatch:
 
 permissions:
@@ -105,7 +105,7 @@ jobs:
 
           {
             echo 'BEGIN;'
-            cat supabase/migrations/20260721183000_expand_public_branding_budget.sql
+            cat supabase/migrations/20260721235947_expand_public_branding_budget.sql
             cat brand-journey-verification.sql
             echo 'ROLLBACK;'
           } > brand-journey-preflight.sql
@@ -126,14 +126,14 @@ jobs:
             {
               remote=$2
               gsub(/[^0-9]/, "", remote)
-              if (remote == "20260721183000") found=1
+              if (remote == "20260721235947") found=1
             }
             END { exit found ? 0 : 1 }
           ' brand-journey-migrations-before.log; then
             echo 'Migration da jornada de marca já registrada.' | tee brand-journey-migration-apply.log
           else
-            supabase db query --linked --file supabase/migrations/20260721183000_expand_public_branding_budget.sql 2>&1 | tee brand-journey-migration-apply.log
-            supabase migration repair --linked --status applied 20260721183000 2>&1 | tee -a brand-journey-migration-apply.log
+            supabase db query --linked --file supabase/migrations/20260721235947_expand_public_branding_budget.sql 2>&1 | tee brand-journey-migration-apply.log
+            supabase migration repair --linked --status applied 20260721235947 2>&1 | tee -a brand-journey-migration-apply.log
           fi
 
       - name: Deploy public budget gateway
