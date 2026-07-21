@@ -203,6 +203,8 @@ export default function App() {
                     else navigate(routes.marketplace.store.subscriptions());
                   } else if (targetTab === 'pacotes-viagem') navigate(routes.marketplace.travelPackages.root());
                   else if (targetTab === 'classificados') navigate(routes.marketplace.classifieds.root());
+                  else if (targetTab === 'saude') navigate(routes.marketplace.saude.root());
+                  else if (targetTab === 'seguros') navigate(routes.marketplace.seguros.root());
                 }}
                 onBackToSite={() => navigate(routes.public.home())}
                 onRequireAuth={() => {
