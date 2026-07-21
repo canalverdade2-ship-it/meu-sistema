@@ -1,0 +1,56 @@
+name: Sync Final Home Main
+
+on:
+  push:
+    branches: [agent/fechar-auditoria-final-home]
+    paths:
+      - '.github/workflows/sync-final-home-main.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/fechar-auditoria-final-home
+          fetch-depth: 0
+
+      - name: Merge current main with explicit resolutions
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+          set +e
+          git merge --no-commit --no-ff origin/main
+          merge_code=$?
+          set -e
+
+          # A main é a fonte oficial dos contratos de Classificados e do manifesto.
+          git checkout --theirs -- package.json scripts/check-classifieds-production-contracts.ts 2>/dev/null || true
+          git add package.json scripts/check-classifieds-production-contracts.ts
+
+          # Esta PR substitui e remove definitivamente a implementação duplicada.
+          git rm -f src/components/public/GSAEnterpriseHome.tsx 2>/dev/null || true
+
+          unresolved="$(git diff --name-only --diff-filter=U)"
+          if [ -n "$unresolved" ]; then
+            echo "Conflitos inesperados:"
+            echo "$unresolved"
+            exit 1
+          fi
+
+          rm .github/workflows/sync-final-home-main.yml
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'Nenhuma sincronização necessária.'
+            exit 0
+          fi
+          git commit -m 'Sincronizar fechamento da Home com a main atual'
+          git push origin HEAD:agent/fechar-auditoria-final-home
