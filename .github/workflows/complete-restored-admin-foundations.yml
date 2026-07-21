@@ -1,0 +1,151 @@
+name: Complete Restored Admin Foundations
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/complete-restored-admin-foundations.yml'
+      - 'supabase/migrations/20260721194800_restore_admin_search_clients.sql'
+      - 'supabase/migrations/20260721194700_harden_restored_gsa_seguros.sql'
+      - 'scripts/verify-restored-admin-foundations.sql'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: complete-restored-admin-foundations
+  cancel-in-progress: false
+
+jobs:
+  complete-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - name: Checkout final correction branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/fix-admin-snapshot-production-final
+          fetch-depth: 0
+
+      - name: Validate production authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Confirm completed recovery prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee migrations-before-completion.log
+          for version in 20260718121000 20260721194500 20260721194600; do
+            awk -F'|' -v expected="$version" '{r=$2; gsub(/[^0-9]/,"",r); if(r==expected) found=1} END{exit found?0:1}' migrations-before-completion.log \
+              || { echo "Prerequisite migration missing: $version"; exit 1; }
+          done
+
+      - name: Restore secure administrative client search
+        shell: bash
+        run: |
+          set -euo pipefail
+          if awk -F'|' '{r=$2; gsub(/[^0-9]/,"",r); if(r=="20260721194800") found=1} END{exit found?0:1}' migrations-before-completion.log; then
+            echo '20260721194800 already applied.' | tee admin-search-recovery.log
+          else
+            supabase db query --linked --file supabase/migrations/20260721194800_restore_admin_search_clients.sql 2>&1 | tee admin-search-recovery.log
+            supabase migration repair --linked --status applied 20260721194800 2>&1 | tee -a admin-search-recovery.log
+          fi
+
+      - name: Verify complete historical administrative coverage
+        shell: bash
+        run: |
+          cat > admin-foundation-coverage.sql <<'SQL'
+          DO $coverage$
+          DECLARE
+            v_name text;
+          BEGIN
+            FOREACH v_name IN ARRAY ARRAY[
+              'gsa_admin_assert_module','gsa_admin_context','gsa_admin_dashboard_snapshot',
+              'gsa_admin_get_pendency_counts_secure','gsa_admin_has_module','gsa_admin_list_notifications',
+              'gsa_admin_mark_all_notifications','gsa_admin_search_clients','gsa_admin_set_notification_state',
+              'gsa_admin_travel_create_package','gsa_admin_travel_create_proposal','gsa_admin_travel_link_lead',
+              'gsa_admin_travel_list','gsa_admin_travel_update_status','gsa_admin_write_audit'
+            ] LOOP
+              IF NOT EXISTS (
+                SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                WHERE n.nspname='public' AND p.proname=v_name
+              ) THEN
+                RAISE EXCEPTION 'Função da base administrativa ausente: %', v_name;
+              END IF;
+            END LOOP;
+
+            FOREACH v_name IN ARRAY ARRAY['gsa_admin_audit_events','gsa_admin_notification_state'] LOOP
+              IF to_regclass(format('public.%I', v_name)) IS NULL THEN
+                RAISE EXCEPTION 'Relação da base administrativa ausente: %', v_name;
+              END IF;
+            END LOOP;
+          END;
+          $coverage$;
+          SELECT 'ADMIN_BASE_COVERAGE_VERIFIED' AS result;
+          SQL
+          set -o pipefail
+          supabase db query --linked --file admin-foundation-coverage.sql 2>&1 | tee admin-foundation-coverage.log
+          grep -q 'ADMIN_BASE_COVERAGE_VERIFIED' admin-foundation-coverage.log
+
+          supabase migration list --linked 2>&1 | tee migrations-before-admin-history-repair.log
+          if ! awk -F'|' '{r=$2; gsub(/[^0-9]/,"",r); if(r=="20260720183000") found=1} END{exit found?0:1}' migrations-before-admin-history-repair.log; then
+            supabase migration repair --linked --status applied 20260720183000 2>&1 | tee admin-history-repair.log
+          else
+            echo '20260720183000 already registered.' | tee admin-history-repair.log
+          fi
+
+      - name: Reapply restored insurance security boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee migrations-before-hardening.log
+          if awk -F'|' '{r=$2; gsub(/[^0-9]/,"",r); if(r=="20260721194700") found=1} END{exit found?0:1}' migrations-before-hardening.log; then
+            echo '20260721194700 already applied.' | tee insurance-hardening.log
+          else
+            supabase db query --linked --file supabase/migrations/20260721194700_harden_restored_gsa_seguros.sql 2>&1 | tee insurance-hardening.log
+            supabase migration repair --linked --status applied 20260721194700 2>&1 | tee -a insurance-hardening.log
+          fi
+
+      - name: Verify final production recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db query --linked --file scripts/verify-restored-admin-foundations.sql 2>&1 | tee final-recovery-verification.log
+          grep -q 'RESTORED_ADMIN_FOUNDATIONS_VERIFIED' final-recovery-verification.log
+          supabase migration list --linked 2>&1 | tee migrations-after-completion.log
+
+      - name: Upload completion evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: completed-admin-foundations-${{ github.run_id }}
+          path: |
+            migrations-before-completion.log
+            admin-search-recovery.log
+            admin-foundation-coverage.sql
+            admin-foundation-coverage.log
+            migrations-before-admin-history-repair.log
+            admin-history-repair.log
+            migrations-before-hardening.log
+            insurance-hardening.log
+            final-recovery-verification.log
+            migrations-after-completion.log
+          if-no-files-found: ignore
+          retention-days: 30
