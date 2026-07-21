@@ -123,7 +123,7 @@ async function main() {
     'REVOKE ALL ON public.parceiros FROM anon, authenticated',
   ]);
 
-  await contains('supabase/migrations/20260721213000_partner_public_applications.sql', [
+  await contains('supabase/migrations/20260722001000_partner_public_applications.sql', [
     'ADD COLUMN IF NOT EXISTS tax_document',
     "ADD COLUMN IF NOT EXISTS application_source text NOT NULL DEFAULT 'admin'",
     'ADD COLUMN IF NOT EXISTS application_protocol',
