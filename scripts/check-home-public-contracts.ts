@@ -10,6 +10,7 @@ const firstAccessMigration = read('supabase/migrations/20260721125000_disable_un
 const recoveryRateMigration = read('supabase/migrations/20260721125500_prevent_recovery_subject_lockout.sql');
 const budgetModal = read('src/components/public/SystemsBudgetModal.tsx');
 const budgetGateway = read('supabase/functions/gsa-public-budget/index.ts');
+const budgetGatewayTest = read('supabase/functions/gsa-public-budget/index_test.ts');
 const clientModal = read('src/components/auth/ClientAccessModal.tsx');
 const restrictedModal = read('src/components/auth/RestrictedAccessModal.tsx');
 const finalHome = read('src/components/public/GSAEnterpriseHomeFinal.tsx');
@@ -38,6 +39,8 @@ assert.match(budgetModal, /página de origem, o domínio de referência e parâm
 assert.match(budgetGateway, /gsa_auth_rate_limit_check/, 'O gateway deve limitar envios por IP');
 assert.match(budgetGateway, /configuredOrigins\(\)/, 'O gateway deve aplicar a lista de origens');
 assert.match(budgetGateway, /gsa_public_create_enterprise_budget_v2/, 'O gateway deve encaminhar para a rotina protegida');
+assert.doesNotMatch(budgetGatewayTest, /https?:\/\//, 'Testes Deno da Home não devem depender de módulos remotos');
+assert.match(budgetGatewayTest, /function assertEquals/, 'Asserções dos testes Deno devem ser locais e determinísticas');
 
 assert.match(firstAccessMigration, /gsa_set_pin_and_login/, 'A rotina de primeiro acesso sem OTP deve ser localizada');
 assert.match(firstAccessMigration, /PUBLIC, anon, authenticated, service_role/, 'O gateway e os papéis públicos não podem executar primeiro acesso sem OTP');
