@@ -24,6 +24,10 @@ SET name = EXCLUDED.name,
     file_size_limit = EXCLUDED.file_size_limit,
     allowed_mime_types = EXCLUDED.allowed_mime_types;
 
+-- storage.objects pertence ao papel interno do Supabase Storage.
+-- A troca de papel fica limitada a esta transação e apenas ao DDL das políticas.
+SET LOCAL ROLE supabase_storage_admin;
+
 DROP POLICY IF EXISTS classificados_midias_leitura_publica ON storage.objects;
 DROP POLICY IF EXISTS classificados_midias_inserir_proprio_diretorio ON storage.objects;
 DROP POLICY IF EXISTS classificados_midias_atualizar_proprio_diretorio ON storage.objects;
@@ -82,5 +86,7 @@ IS 'Permite a exibição pública das imagens dos anúncios classificados.';
 
 COMMENT ON POLICY classificados_midias_inserir_proprio_diretorio ON storage.objects
 IS 'Permite upload somente no diretório do cliente autenticado pela sessão GSA.';
+
+RESET ROLE;
 
 COMMIT;
