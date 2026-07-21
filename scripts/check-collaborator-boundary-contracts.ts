@@ -8,6 +8,7 @@ import {
 
 const root = process.cwd();
 
+// Regressões permanentes das fronteiras de autorização do colaborador.
 async function content(path: string) {
   return readFile(resolve(root, path), 'utf8');
 }
