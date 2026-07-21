@@ -2,6 +2,7 @@ name: Advertising Platform
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
     paths:
       - 'src/components/public/AdvertisingPage.tsx'
       - 'src/components/admin/AdvertisingAdminModule.tsx'
@@ -25,6 +26,7 @@ on:
       - 'supabase/migrations/20260721223000_complete_advertising_platform.sql'
       - 'scripts/check-advertising-foundation.ts'
       - 'scripts/check-advertising-completion.ts'
+      - 'scripts/apply-advertising-completion.py'
       - 'package.json'
       - '.github/workflows/advertising-foundation.yml'
   push:
@@ -40,10 +42,41 @@ on:
       - 'supabase/migrations/20260721223000_complete_advertising_platform.sql'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  integrate:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'agent/implantar-modulo-anuncios'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/implantar-modulo-anuncios
+          fetch-depth: 0
+      - name: Configure Git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - name: Synchronize and integrate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f scripts/apply-advertising-completion.py ]; then
+            echo 'Completion patch already integrated.'
+            exit 0
+          fi
+          git fetch origin main
+          git merge --no-edit origin/main
+          python3 scripts/apply-advertising-completion.py
+          rm -f scripts/apply-advertising-completion.py .github/workflows/apply-advertising-completion.yml .apply-advertising-completion-trigger
+          git add -A
+          git commit -m 'Completar plataforma GSA Anúncios'
+          git push origin HEAD:agent/implantar-modulo-anuncios
+
   validate:
+    needs: integrate
+    if: always() && (needs.integrate.result == 'success' || needs.integrate.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -64,6 +97,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
