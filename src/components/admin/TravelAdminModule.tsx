@@ -1693,154 +1693,161 @@ function TransacoesTab() {
       {/* Modal Detalhes da Transação */}
       {detailsTx && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsTx(null)}>
-          <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
-            <header className="flex items-center justify-between border-b border-neutral-100 bg-slate-900 p-6 text-white">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 backdrop-blur-md">
+          <div className="flex w-full max-w-4xl max-h-[92vh] flex-col overflow-hidden rounded-[2.5rem] bg-white shadow-2xl border border-neutral-200" onClick={(e) => e.stopPropagation()}>
+            {/* Header Executivo */}
+            <header className="flex items-center justify-between border-b border-indigo-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 p-6 text-white">
+              <div className="flex items-center gap-4">
+                <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 backdrop-blur-md shadow-lg">
                   <Receipt className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5 mb-1">
                     <StatusBadge status={detailsTx.status} />
-                    <span className="text-xs font-mono font-bold tracking-wider text-indigo-300 uppercase">{detailsTx.protocolo || 'TRANSAÇÃO'}</span>
+                    <span className="rounded-xl bg-indigo-500/20 px-3 py-0.5 text-xs font-mono font-bold tracking-wider text-indigo-300 uppercase border border-indigo-500/30">
+                      {detailsTx.protocolo || 'TRANSAÇÃO'}
+                    </span>
                   </div>
-                  <h2 className="text-xl font-black text-white mt-0.5">Detalhes da Transação</h2>
+                  <h2 className="text-xl font-black text-white tracking-tight">Detalhamento da Transação & Reembolso</h2>
                 </div>
               </div>
-              <button onClick={() => setDetailsTx(null)} className="rounded-full bg-white/10 p-2 text-neutral-300 hover:bg-white/20 hover:text-white transition-colors">
+              <button 
+                onClick={() => setDetailsTx(null)} 
+                className="rounded-2xl bg-white/10 p-2.5 text-neutral-300 hover:bg-white/20 hover:text-white transition-all active:scale-95"
+                aria-label="Fechar modal"
+              >
                 <XCircle className="h-6 w-6" />
               </button>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-neutral-50/50">
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-50/50 custom-scrollbar">
               {/* Banner de Destaque para Status Reembolsada / Negado */}
               {detailsTx.status === 'reembolsada' && (
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 p-5 text-white shadow-xl border border-emerald-500/30">
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 p-6 text-white shadow-xl border border-emerald-500/30">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md shadow-inner">
-                        <CheckCircle2 className="h-6 w-6" />
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md shadow-inner">
+                        <CheckCircle2 className="h-7 w-7" />
                       </div>
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Status Financeiro</span>
-                        <h3 className="text-lg font-black text-white">Reembolso Aprovado e Concluído</h3>
-                        <p className="text-xs text-slate-300">Concluído em: {formatDateTime(detailsTx.updated_at || detailsTx.created_at)}</p>
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400">Status Financeiro Final</span>
+                        <h3 className="text-xl font-black text-white">Reembolso Aprovado & Processado</h3>
+                        <p className="text-xs text-slate-300 mt-0.5">Concluído em: {formatDateTime(detailsTx.updated_at || detailsTx.created_at)}</p>
                       </div>
                     </div>
-                    <div className="rounded-2xl bg-emerald-500/10 px-4 py-2.5 backdrop-blur-md border border-emerald-500/20 text-right">
+                    <div className="rounded-2xl bg-emerald-500/10 px-5 py-3 backdrop-blur-md border border-emerald-500/20 text-right shadow-2xs">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Valor Líquido Estornado</p>
-                      <p className="text-xl font-black text-emerald-400">{formatCurrency(getNetRefundAmount(detailsTx))}</p>
+                      <p className="text-2xl font-black text-emerald-400 drop-shadow-md">{formatCurrency(getNetRefundAmount(detailsTx))}</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {detailsTx.status === 'reembolso_negado' && (
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-rose-950 via-slate-900 to-slate-950 p-5 text-white shadow-xl border border-rose-500/30">
-                  <div className="flex items-center gap-3.5">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 backdrop-blur-md">
-                      <XCircle className="h-6 w-6" />
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-950 via-slate-900 to-slate-950 p-6 text-white shadow-xl border border-rose-500/30">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 backdrop-blur-md shadow-inner">
+                      <XCircle className="h-7 w-7" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400">Solicitação Indeferida</span>
-                      <h3 className="text-lg font-black text-white">Reembolso Não Aprovado</h3>
-                      <p className="text-xs text-slate-300">Atualizado em: {formatDateTime(detailsTx.updated_at || detailsTx.created_at)}</p>
+                      <span className="text-[10px] font-black uppercase tracking-[0.25em] text-rose-400">Solicitação Indeferida</span>
+                      <h3 className="text-xl font-black text-white">Reembolso Não Aprovado</h3>
+                      <p className="text-xs text-slate-300 mt-0.5">Indeferido em: {formatDateTime(detailsTx.updated_at || detailsTx.created_at)}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Cliente */}
-              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
-                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-3 flex items-center gap-1.5">
-                  <User className="h-4 w-4 text-indigo-600" /> Dados do Cliente
+              {/* Dados do Cliente */}
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <User className="h-4 w-4 text-indigo-600" /> Dados do Titular da Conta
                 </h4>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
-                    <p className="text-[10px] font-bold uppercase text-neutral-400">Nome do Titular</p>
-                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{detailsTx.cliente_nome || detailsTx.snapshot_completo?.nome || 'Cliente Cadastrado'}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-slate-50/80 p-4 border border-slate-200/60">
+                    <p className="text-[10px] font-bold uppercase text-slate-400">Nome do Titular</p>
+                    <p className="text-base font-bold text-slate-900 mt-0.5">{detailsTx.cliente_nome || detailsTx.snapshot_completo?.nome || 'Cliente Cadastrado'}</p>
                   </div>
-                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
-                    <p className="text-[10px] font-bold uppercase text-neutral-400">Data do Registro</p>
-                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{formatDateTime(detailsTx.created_at)}</p>
+                  <div className="rounded-2xl bg-slate-50/80 p-4 border border-slate-200/60">
+                    <p className="text-[10px] font-bold uppercase text-slate-400">Data e Hora do Registro</p>
+                    <p className="text-base font-bold text-slate-900 mt-0.5">{formatDateTime(detailsTx.created_at)}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Detalhamento Financeiro do Reembolso */}
-              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs space-y-4">
-                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                  <Receipt className="h-4 w-4 text-indigo-600" /> Resumo Financeiro & Reembolso
+              {/* Quadro de Resumo Financeiro Completo */}
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-indigo-600" /> Conciliação Financeira Detalhada
                 </h4>
 
-                <div className="grid gap-3 sm:grid-cols-4">
-                  <div className="rounded-xl bg-indigo-50 p-3 border border-indigo-100">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-2xl bg-indigo-50/70 p-4 border border-indigo-100">
                     <p className="text-[10px] font-bold uppercase text-indigo-500">Valor Total Pedido</p>
-                    <p className="text-base font-black text-indigo-700 mt-0.5">{formatCurrency(getTransactionTotal(detailsTx))}</p>
+                    <p className="text-lg font-black text-indigo-700 mt-1">{formatCurrency(getTransactionTotal(detailsTx))}</p>
                   </div>
 
-                  <div className="rounded-xl bg-emerald-50 p-3 border border-emerald-100">
+                  <div className="rounded-2xl bg-emerald-50/70 p-4 border border-emerald-100">
                     <p className="text-[10px] font-bold uppercase text-emerald-600">Valor Efetivamente Pago</p>
-                    <p className="text-base font-black text-emerald-700 mt-0.5">{formatCurrency(detailsTx.valor_pago || detailsTx.valor_total)}</p>
+                    <p className="text-lg font-black text-emerald-700 mt-1">{formatCurrency(detailsTx.valor_pago || detailsTx.valor_total)}</p>
                   </div>
 
-                  <div className="rounded-xl bg-amber-50 p-3 border border-amber-100">
+                  <div className="rounded-2xl bg-amber-50/70 p-4 border border-amber-100">
                     <p className="text-[10px] font-bold uppercase text-amber-600">Taxa Retida / Multa</p>
-                    <p className="text-base font-black text-amber-700 mt-0.5">{formatCurrency(getRefundFeesAmount(detailsTx))}</p>
+                    <p className="text-lg font-black text-amber-700 mt-1">{formatCurrency(getRefundFeesAmount(detailsTx))}</p>
                   </div>
 
-                  <div className="rounded-xl bg-purple-50 p-3 border border-purple-100">
+                  <div className="rounded-2xl bg-purple-50/80 p-4 border border-purple-200 shadow-2xs">
                     <p className="text-[10px] font-bold uppercase text-purple-600">Valor Líquido Estornado</p>
-                    <p className="text-base font-black text-purple-700 mt-0.5">
+                    <p className="text-xl font-black text-purple-700 mt-1">
                       {formatCurrency(getNetRefundAmount(detailsTx))}
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-3 border border-slate-200/80 flex items-center justify-between">
+                <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200/80 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-bold uppercase text-slate-400">Método Original de Pagamento</p>
+                    <p className="text-[10px] font-bold uppercase text-slate-400">Método de Pagamento Utilizado</p>
                     <p className="text-sm font-bold text-slate-900 mt-0.5">{formatPaymentMethod(detailsTx)}</p>
                   </div>
                   {detailsTx.status === 'reembolsada' && (
-                    <span className="rounded-lg bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800 border border-emerald-200">
-                      Reembolsado
+                    <span className="rounded-xl bg-emerald-100 px-3.5 py-1.5 text-xs font-black text-emerald-800 border border-emerald-300 shadow-2xs">
+                      ⚡ Reembolsado
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Composição das Formas de Estorno e Prazos */}
-              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                  <Coins className="h-4 w-4 text-indigo-600" /> Cronograma & Composição por Canal
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <Coins className="h-4 w-4 text-indigo-600" /> Cronograma de Processamento por Canal
                 </h4>
 
-                <div className="space-y-2">
+                <div className="grid gap-3 sm:grid-cols-1">
                   {getPaymentBreakdown(detailsTx).map((part, idx) => (
-                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-neutral-50 p-3.5 border border-neutral-200/80">
-                      <div className="flex items-center gap-3">
+                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-slate-50/80 p-4 border border-slate-200/80 hover:border-indigo-200 transition-all">
+                      <div className="flex items-center gap-3.5">
                         {part.isSystem ? (
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">
-                            <Zap className="h-4.5 w-4.5" />
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-2xs">
+                            <Zap className="h-5 w-5" />
                           </div>
                         ) : (
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 border border-amber-200">
-                            <Clock className="h-4.5 w-4.5" />
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 border border-amber-200 shadow-2xs">
+                            <Clock className="h-5 w-5" />
                           </div>
                         )}
                         <div>
-                          <p className="text-xs font-bold text-neutral-900">{part.titulo}</p>
-                          <p className="text-[11px] font-semibold text-neutral-500">{part.valorDisplay}</p>
+                          <p className="text-sm font-black text-slate-900">{part.titulo}</p>
+                          <p className="text-xs font-bold text-slate-500">{part.valorDisplay}</p>
                         </div>
                       </div>
 
-                      <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${
+                      <span className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black uppercase tracking-wider shadow-2xs ${
                         part.isSystem
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                          : 'bg-amber-100 text-amber-800 border border-amber-200'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : 'bg-amber-100 text-amber-800 border border-amber-300'
                       }`}>
-                        {part.isSystem ? <Zap className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                        {part.isSystem ? <Zap className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
                         {part.prazo}
                       </span>
                     </div>
@@ -1850,21 +1857,22 @@ function TransacoesTab() {
 
               {/* Parecer da Administração */}
               {getAdminNote(detailsTx) && (
-                <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/50 to-white p-5 shadow-xs space-y-1.5">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-indigo-600" /> Parecer e Observações da Administração
+                <div className="rounded-3xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/60 via-slate-50 to-white p-6 shadow-xs space-y-2">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-indigo-600" /> Parecer Oficial da Administração
                   </h4>
-                  <p className="text-sm font-semibold text-neutral-800 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-sm font-semibold text-slate-800 whitespace-pre-wrap leading-relaxed">
                     {getAdminNote(detailsTx)}
                   </p>
                 </div>
               )}
             </div>
 
-            <footer className="border-t border-neutral-100 bg-white p-5 flex items-center justify-between">
+            {/* Footer com Botões */}
+            <footer className="border-t border-slate-100 bg-white p-6 flex items-center justify-between">
               <div>
                 {['reembolso_em_analise', 'reembolso_solicitado', 'solicitado'].includes(detailsTx.status) && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -1872,9 +1880,9 @@ function TransacoesTab() {
                         setDetailsTx(null);
                         openApproveModal(item);
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all hover:scale-105"
+                      className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-3 text-xs font-black text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02]"
                     >
-                      <CheckCircle2 className="h-4 w-4" /> Aprovar Reembolso
+                      <CheckCircle2 className="h-4.5 w-4.5" /> Aprovar Reembolso
                     </button>
                     <button
                       type="button"
@@ -1884,9 +1892,9 @@ function TransacoesTab() {
                         setDenyTx(item);
                         setDenyReason('');
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-red-50 px-4 py-2.5 text-xs font-black text-red-700 border border-red-200 hover:bg-red-100 transition-all"
+                      className="flex items-center gap-2 rounded-2xl bg-rose-50 px-5 py-3 text-xs font-black text-rose-700 border border-rose-200 hover:bg-rose-100 transition-all"
                     >
-                      <XCircle className="h-4 w-4" /> Negar Reembolso
+                      <XCircle className="h-4.5 w-4.5" /> Negar Reembolso
                     </button>
                   </div>
                 )}
@@ -1895,7 +1903,7 @@ function TransacoesTab() {
               <button 
                 type="button" 
                 onClick={() => setDetailsTx(null)} 
-                className="rounded-xl border border-neutral-200 bg-white px-6 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50 transition"
+                className="rounded-2xl border border-slate-200 bg-white px-7 py-3 text-xs font-black text-slate-700 hover:bg-slate-50 transition shadow-2xs"
               >
                 Fechar
               </button>
