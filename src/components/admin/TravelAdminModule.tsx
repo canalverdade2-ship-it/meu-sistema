@@ -14,6 +14,8 @@ import {
   Search,
   Send,
   Users,
+  Eye,
+  XCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
@@ -202,6 +204,7 @@ function Toolbar({
 function SolicitacoesTab() {
   const list = usePagedTravelList('solicitacoes');
   const [selected, setSelected] = useState<any>(null);
+  const [detailsItem, setDetailsItem] = useState<any>(null);
   const [linkingLead, setLinkingLead] = useState<any>(null);
   const [savingProposal, setSavingProposal] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
@@ -305,6 +308,9 @@ function SolicitacoesTab() {
                   <select value={quote.status} onChange={(event) => void updateStatus(quote.id, event.target.value)} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold">
                     <option value="recebido">Recebido</option><option value="em_analise">Em análise</option><option value="buscando_opcoes">Buscando opções</option><option value="propostas_disponiveis">Proposta disponível</option><option value="aguardando_cliente">Aguardando cliente</option><option value="encerrado">Encerrado</option><option value="cancelado">Cancelado</option>
                   </select>
+                  <button type="button" onClick={() => setDetailsItem(quote)} className="flex items-center justify-center gap-2 rounded-xl bg-blue-100 px-4 py-2 text-xs font-black text-blue-700 hover:bg-blue-200">
+                    <Eye className="h-4 w-4" /> Detalhes
+                  </button>
                   <button type="button" onClick={() => openProposal(quote)} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700">{quote.cliente_id ? <Send className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}{quote.cliente_id ? 'Gerar proposta' : 'Vincular cliente'}</button>
                 </div>
               </div>
@@ -331,6 +337,51 @@ function SolicitacoesTab() {
           <button type="button" onClick={() => void createProposal()} disabled={savingProposal} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-black text-white hover:bg-indigo-700 disabled:opacity-60">{savingProposal ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}{savingProposal ? 'Criando proposta...' : 'Enviar proposta ao cliente'}</button>
         </div>}
       </Modal>
+
+      {detailsItem && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setDetailsItem(null)}>
+          <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <header className="flex items-center justify-between border-b border-neutral-100 p-6">
+              <h2 className="text-xl font-black text-neutral-900">Detalhes da Solicitação</h2>
+              <button onClick={() => setDetailsItem(null)} className="rounded-full bg-neutral-100 p-2 text-neutral-500 hover:bg-neutral-200 transition-colors"><XCircle className="h-5 w-5" /></button>
+            </header>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div><p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Protocolo</p><p className="font-medium text-neutral-900">{detailsItem.protocolo || '-'}</p></div>
+                <div><p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Status</p><p className="font-medium text-neutral-900">{detailsItem.status}</p></div>
+                <div><p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Origem</p><p className="font-medium text-neutral-900">{detailsItem.origem || '-'}</p></div>
+                <div><p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Destino</p><p className="font-medium text-neutral-900">{detailsItem.destino || '-'}</p></div>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Contato</p>
+                <div className="rounded-xl bg-neutral-50 p-4 border border-neutral-100 space-y-2 text-sm text-neutral-700">
+                  <p><strong>Nome:</strong> {detailsItem.nome || 'Cliente autenticado'}</p>
+                  <p><strong>E-mail:</strong> {detailsItem.email || '-'}</p>
+                  <p><strong>Telefone:</strong> {detailsItem.telefone || '-'}</p>
+                </div>
+              </div>
+
+              {detailsItem.detalhes && Object.keys(detailsItem.detalhes).length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Detalhes Específicos</p>
+                  <div className="grid grid-cols-2 gap-4 rounded-xl bg-neutral-50 p-4 border border-neutral-100 text-sm">
+                    {Object.entries(detailsItem.detalhes).map(([key, value]) => (
+                      <div key={key}>
+                        <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{key.replace(/_/g, ' ')}</p>
+                        <p className="font-medium text-neutral-900">{String(value)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <footer className="border-t border-neutral-100 bg-neutral-50 p-5 flex justify-end">
+              <button onClick={() => setDetailsItem(null)} className="rounded-xl bg-neutral-200 px-5 py-2 font-black text-neutral-700 hover:bg-neutral-300">Fechar</button>
+            </footer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
