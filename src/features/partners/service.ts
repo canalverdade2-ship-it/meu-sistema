@@ -1,6 +1,11 @@
 import { callAdminRpc } from '../../lib/adminRpc';
 import { supabase } from '../../lib/supabase';
-import type { Partner, PartnerFormData } from './types';
+import type {
+  Partner,
+  PartnerApplicationData,
+  PartnerApplicationResult,
+  PartnerFormData,
+} from './types';
 
 const PUBLIC_FIELDS = [
   'id', 'slug', 'name', 'category', 'short_description', 'description', 'logo_url', 'cover_url',
@@ -22,6 +27,7 @@ function normalizePartner(partner: any): Partner {
     products: normalizeList(partner?.products),
     featured: Boolean(partner?.featured),
     display_order: Number(partner?.display_order || 0),
+    application_source: partner?.application_source || 'admin',
   } as Partner;
 }
 
@@ -46,6 +52,30 @@ export async function getPublicPartner(slug: string): Promise<Partner | null> {
     .maybeSingle();
   if (error) throw error;
   return data ? normalizePartner(data) : null;
+}
+
+export async function submitPartnerApplication(
+  payload: PartnerApplicationData,
+  logoFile?: File | null,
+  coverFile?: File | null,
+): Promise<PartnerApplicationResult> {
+  const body = new FormData();
+  body.append('payload', JSON.stringify(payload));
+  if (logoFile) body.append('logo', logoFile, logoFile.name);
+  if (coverFile) body.append('cover', coverFile, coverFile.name);
+
+  const { data, error } = await supabase.functions.invoke<PartnerApplicationResult & { error?: string }>(
+    'gsa-partner-application',
+    { body },
+  );
+
+  if (error) {
+    throw new Error(error.message || 'Não foi possível enviar a solicitação de parceria.');
+  }
+  if (!data?.success || !data.protocol) {
+    throw new Error(data?.message || 'Não foi possível concluir o envio da solicitação.');
+  }
+  return data;
 }
 
 export async function listAdminPartners(): Promise<Partner[]> {
