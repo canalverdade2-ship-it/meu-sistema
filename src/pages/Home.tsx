@@ -16,6 +16,7 @@ import {
 import { usePublicPageMetadata } from '../hooks/usePublicPageMetadata';
 
 const SystemsPageFinal = lazy(() => import('../components/public/SystemsPageFinal').then((module) => ({ default: module.SystemsPageFinal })));
+const AdvertisingPage = lazy(() => import('../components/public/AdvertisingPage').then((module) => ({ default: module.AdvertisingPage })));
 
 interface HomeProps {
   onLoginClient: (id: string, isRecovery?: boolean) => void;
@@ -124,6 +125,10 @@ export function Home({
       ) : publicPage === 'systems' ? (
         <Suspense fallback={<PublicPageLoading />}>
           <SystemsPageFinal onBack={() => changePublicPage('home')} onLogin={handlePublicLogin} />
+        </Suspense>
+      ) : publicPage === 'ads' || publicPage === 'advertise' ? (
+        <Suspense fallback={<PublicPageLoading />}>
+          <AdvertisingPage mode={publicPage === 'advertise' ? 'advertise' : 'showcase'} onBack={() => changePublicPage('home')} onLogin={handlePublicLogin} />
         </Suspense>
       ) : (
         <GSAEnterpriseHomeFinal

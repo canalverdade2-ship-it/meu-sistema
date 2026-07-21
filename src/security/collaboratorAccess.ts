@@ -39,6 +39,7 @@ export function defaultAdminPath(adminType: AdminType | undefined, modules: stri
     'cadastro',
     'prestadores',
     'parceiros',
+    'anuncios',
     'operacoes',
     'financeiro',
     'cobranca',

@@ -40,7 +40,11 @@ export function usePublicPageMetadata(page: PublicPage, selectedPackage: Service
             ? 'Criação de Sites e Sistemas | GSA HUB'
             : page === 'partners'
               ? 'Parceiros | GSA HUB'
-              : DEFAULT_TITLE;
+              : page === 'ads'
+                ? 'Anunciantes | GSA HUB'
+                : page === 'advertise'
+                  ? 'Anuncie no GSA HUB'
+                  : DEFAULT_TITLE;
 
     const description = loginOnly
       ? 'Acesse a área do cliente, prestador ou equipe do GSA HUB.'
@@ -51,7 +55,11 @@ export function usePublicPageMetadata(page: PublicPage, selectedPackage: Service
             ? 'Criação de sites, lojas virtuais, aplicativos, sistemas web, integrações e automações sob medida.'
             : page === 'partners'
               ? 'Conheça empresas e profissionais que fazem parte da rede de parceiros da GSA HUB.'
-              : DEFAULT_DESCRIPTION);
+              : page === 'ads'
+                ? 'Conheça campanhas e empresas anunciantes aprovadas no ecossistema GSA HUB.'
+                : page === 'advertise'
+                  ? 'Solicite uma proposta para divulgar sua empresa nas páginas e módulos do GSA HUB.'
+                  : DEFAULT_DESCRIPTION);
 
     const canonicalPath = loginOnly
       ? '/login'
@@ -63,7 +71,11 @@ export function usePublicPageMetadata(page: PublicPage, selectedPackage: Service
             ? '/criacao-de-site-e-sistemas'
             : page === 'partners'
               ? window.location.pathname.startsWith('/parceiros/') ? window.location.pathname : '/parceiros'
-              : '/';
+              : page === 'ads'
+                ? '/anuncios'
+                : page === 'advertise'
+                  ? '/anuncie'
+                  : '/';
     const canonical = new URL(canonicalPath, window.location.origin).toString();
     const image = new URL('/logo.svg', window.location.origin).toString();
 

@@ -5,6 +5,7 @@ export type AdminModule =
   | 'cadastro'
   | 'prestadores'
   | 'parceiros'
+  | 'anuncios'
   | 'catalogo'
   | 'operacoes'
   | 'demandas'
@@ -32,6 +33,7 @@ const VALID_MODULES = new Set<AdminModule>([
   'cadastro',
   'prestadores',
   'parceiros',
+  'anuncios',
   'catalogo',
   'operacoes',
   'demandas',
@@ -139,6 +141,7 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     case 'cadastro': return parts('admin', 'cadastros', tab || 'clientes', itemId);
     case 'prestadores': return parts('admin', 'cadastros', 'prestadores', itemId);
     case 'parceiros': return parts('admin', 'parceiros', tab, itemId);
+    case 'anuncios': return parts('admin', 'anuncios', tab, itemId);
     case 'catalogo': return parts('admin', 'catalogo', tab || 'produtos', itemId);
     case 'operacoes': return parts('admin', 'operacoes', tab || 'orcamentos', itemId);
     case 'demandas': return parts('admin', 'demandas', tab, itemId);

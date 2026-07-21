@@ -47,13 +47,17 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
 
   useEffect(() => {
     let active = true;
-    supabase.rpc('gsa_public_list_active_ads', { p_placement_code: 'ADS_PUBLIC_SHOWCASE' })
-      .then(({ data, error }) => {
+    const loadAds = async () => {
+      try {
+        const { data, error } = await supabase.rpc('gsa_public_list_active_ads', { p_placement_code: 'ADS_PUBLIC_SHOWCASE' });
         if (!active) return;
         if (error) console.error('Falha ao carregar anúncios públicos:', error);
         setAds(Array.isArray(data) ? data as PublicAdvertisement[] : []);
-      })
-      .finally(() => { if (active) setLoadingAds(false); });
+      } finally {
+        if (active) setLoadingAds(false);
+      }
+    };
+    void loadAds();
     return () => { active = false; };
   }, []);
 
