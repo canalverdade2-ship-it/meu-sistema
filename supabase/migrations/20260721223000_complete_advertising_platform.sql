@@ -314,7 +314,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.gsa_advertiser_portal_snapshot()
 RETURNS jsonb
 LANGUAGE plpgsql
-STABLE
+VOLATILE
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$

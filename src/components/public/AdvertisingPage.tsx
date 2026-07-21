@@ -112,7 +112,7 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
           <button onClick={onBack} className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-bold text-white/70 transition hover:bg-white/10 hover:text-white"><ArrowLeft className="h-4 w-4" /> Voltar</button>
           <div className="flex items-center gap-3">
-            {onLogin && <button onClick={onLogin} className="hidden rounded-full px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/10 sm:block">Acessar portal</button>}
+            <a href="/anunciante" className="hidden rounded-full px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/10 sm:block">Portal do anunciante</a>
             <a href="#formulario-anunciante" className="rounded-full bg-amber-400 px-5 py-2.5 text-sm font-black text-neutral-950 transition hover:bg-amber-300">Quero anunciar</a>
           </div>
         </div>

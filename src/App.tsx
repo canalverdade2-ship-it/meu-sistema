@@ -12,6 +12,7 @@ import { ProviderNotificationProvider } from './hooks/useProviderNotifications';
 import { ProviderRouteGuard } from './pages/Prestador/ProviderRouteGuard';
 import { FullscreenPrompt } from './components/ui/FullscreenPrompt';
 import { WhatsAppButton } from './components/ui/WhatsAppButton';
+import { AdvertisingSlot } from './components/ads/AdvertisingSlot';
 import { FileViewerProvider } from './contexts/FileViewerContext';
 import { useAppLocation } from './routing/useAppLocation';
 import { resolveLegacyRoute } from './routing/legacyRouteResolver';
@@ -26,6 +27,7 @@ const queryClient = new QueryClient();
 const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((module) => ({ default: module.SecureAdminPanel })));
 const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
 const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
+const AdvertiserPortal = lazy(() => import('./pages/AdvertiserPortal').then((module) => ({ default: module.AdvertiserPortal })));
 const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore').then((module) => ({ default: module.MarketplaceGSAStore })));
 
 function RouteLoading() {
@@ -294,6 +296,8 @@ export default function App() {
               </ClientNotificationProvider>
             )}
 
+            {activeView === 'advertiser' && <AdvertiserPortal />}
+
             {activeView === 'provider' && session.prestadorId && (
               <ProviderNotificationProvider prestadorId={session.prestadorId}>
                 <ProviderRouteGuard>
@@ -303,6 +307,7 @@ export default function App() {
             )}
           </Suspense>
 
+          {['public', 'marketplace', 'client'].includes(activeView) && <AdvertisingSlot placementCode="SITE_STICKY_BOTTOM" variant="sticky" />}
           {isSessionActive && <FullscreenPrompt />}
           {isSessionActive && <WhatsAppButton />}
           <Toaster position="top-right" />
