@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'src/components/public/SystemsPage.tsx'
+      - 'src/components/public/SystemsPageFinal.tsx'
       - 'src/components/public/SystemsBudgetModal.tsx'
       - 'src/pages/Home.tsx'
       - 'src/routing/useAppLocation.ts'
@@ -15,7 +15,7 @@ on:
   push:
     branches: ['agent/**']
     paths:
-      - 'src/components/public/SystemsPage.tsx'
+      - 'src/components/public/SystemsPageFinal.tsx'
       - 'src/components/public/SystemsBudgetModal.tsx'
       - 'src/pages/Home.tsx'
       - 'src/routing/useAppLocation.ts'
@@ -55,11 +55,10 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Check public budget Edge Function
-        run: deno check supabase/functions/gsa-public-budget/index.ts supabase/functions/gsa-public-budget/index_test.ts
-
-      - name: Test public budget Edge Function
-        run: deno test --allow-env supabase/functions/gsa-public-budget/index_test.ts
+      - name: Validate public budget Edge Function
+        run: |
+          deno check supabase/functions/gsa-public-budget/index.ts supabase/functions/gsa-public-budget/index_test.ts
+          deno test --allow-env supabase/functions/gsa-public-budget/index_test.ts
 
       - name: Install PostgreSQL client
         run: |
