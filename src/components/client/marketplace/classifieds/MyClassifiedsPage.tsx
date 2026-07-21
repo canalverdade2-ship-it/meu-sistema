@@ -3,6 +3,7 @@ import { AlertTriangle, Tags, PlusCircle, Clock, ChevronRight, Eye, Wrench } fro
 import { supabase } from '../../../../lib/supabase';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
+import { EditClassifiedListingPage } from './EditClassifiedListingPage';
 
 const fieldLabels: Record<string, string> = {
   titulo: 'Título', categoria: 'Categoria', descricao: 'Descrição', preco: 'Preço', cep: 'CEP',
@@ -12,6 +13,7 @@ const fieldLabels: Record<string, string> = {
 export function MyClassifiedsPage({ clientId }: { clientId: string }) {
   const [ads, setAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => { void fetchMyAds(); }, [clientId]);
 
@@ -29,9 +31,8 @@ export function MyClassifiedsPage({ clientId }: { clientId: string }) {
         .order('created_at', { ascending: false });
       if (error) throw error;
       setAds(data || []);
-    } catch (err) {
-      console.error('Erro ao carregar anúncios do cliente:', err);
-    } finally { setLoading(false); }
+    } catch (err) { console.error('Erro ao carregar anúncios do cliente:', err); }
+    finally { setLoading(false); }
   };
 
   const getStatusBadge = (status: string) => {
@@ -47,6 +48,8 @@ export function MyClassifiedsPage({ clientId }: { clientId: string }) {
     const c = configs[status] || { color: 'bg-neutral-100 text-neutral-600', label: status };
     return <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${c.color}`}>{c.label}</span>;
   };
+
+  if (editingId) return <EditClassifiedListingPage clientId={clientId} anuncioId={editingId} />;
 
   return (
     <div className="space-y-6">
@@ -77,7 +80,7 @@ export function MyClassifiedsPage({ clientId }: { clientId: string }) {
                           if (ad.categoria === 'imoveis') navigate(routes.marketplace.classifieds.imovel(ad.slug));
                           else if (ad.categoria === 'veiculos') navigate(routes.marketplace.classifieds.veiculo(ad.slug));
                           else navigate(routes.marketplace.classifieds.geralItem(ad.slug));
-                        } else navigate(routes.marketplace.classifieds.editarAnuncio(ad.id));
+                        } else setEditingId(ad.id);
                       }} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-bold flex justify-center items-center gap-2 ${ad.status === 'ajustes_solicitados' ? 'bg-orange-600 text-white' : 'border border-black/10 text-neutral-700'}`}>
                         {ad.status === 'publicado' ? <Eye className="h-4 w-4" /> : ad.status === 'ajustes_solicitados' ? <Wrench className="h-4 w-4" /> : <PlusCircle className="h-4 w-4" />}
                         <span>{ad.status === 'publicado' ? 'Ver anúncio' : ad.status === 'ajustes_solicitados' ? 'Corrigir agora' : 'Gerenciar'}</span>
