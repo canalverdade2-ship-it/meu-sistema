@@ -89,3 +89,5 @@ jobs:
           git add src/components/admin/AcessosModule.tsx src/pages/AdminPanel.tsx scripts/check-provider-portal-security-contracts.ts .github/workflows/apply-provider-admin-permission.yml
           git commit -m 'Finalizar permissão administrativa de Prestadores'
           git push origin HEAD:agent/finalizar-permissao-prestadores
+
+# retrigger: 2026-07-21
