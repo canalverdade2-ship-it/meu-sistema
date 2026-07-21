@@ -1,0 +1,84 @@
+name: Update Collaborator Admin Contract
+
+on:
+  push:
+    branches: [agent/endurecer-painel-colaborador-20260721]
+    paths:
+      - '.github/workflows/update-collaborator-admin-contract.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/endurecer-painel-colaborador-20260721
+          fetch-depth: 0
+      - name: Update permanent administrative contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/check-admin-panel-contracts.ts')
+          text = path.read_text(encoding='utf-8')
+          old = """  await assertFileContains('src/pages/SecureAdminPanel.tsx', [
+            'hasAdminModuleAccess',
+            \"select('id, nome, status, colaborador_modulos(modulo_id)')\",
+            \"data.status !== 'ativo'\",
+            \"table: 'colaborador_modulos'\",
+            \"sessionStorage.setItem('colaboradorModulos'\",
+            \"localStorage.removeItem(key)\",
+          ]);
+          await assertFileExcludes('src/pages/SecureAdminPanel.tsx', [
+            \"localStorage.setItem('adminType'\",
+            \"localStorage.setItem('colaboradorId'\",
+            \"localStorage.setItem('colaboradorNome'\",
+            \"localStorage.setItem('colaboradorModulos'\",
+          ]);
+          """
+          new = """  await assertFileContains('src/pages/SecureAdminPanel.tsx', [
+            'hasAdminModuleAccess',
+            \"callAdminRpc<SecureAdminContext>('gsa_admin_get_context_secure')\",
+            \"await revoke('Sua sessão ou suas permissões não puderam ser validadas. Entre novamente.')\",
+            'setModules([])',
+            \"table: 'colaborador_modulos'\",
+            \"sessionStorage.setItem('colaboradorModulos'\",
+            \"localStorage.removeItem(key)\",
+          ]);
+          await assertFileExcludes('src/pages/SecureAdminPanel.tsx', [
+            \"localStorage.setItem('adminType'\",
+            \"localStorage.setItem('colaboradorId'\",
+            \"localStorage.setItem('colaboradorNome'\",
+            \"localStorage.setItem('colaboradorModulos'\",
+            \".from('colaboradores')\",
+            'if (!current)',
+          ]);
+          """
+          if old not in text:
+              raise SystemExit('Contrato antigo do SecureAdminPanel não localizado.')
+          text = text.replace(old, new, 1)
+          old_access = """  await assertFileExcludes('src/components/admin/AcessosModule.tsx', [
+            \"from('colaborador_modulos')\",
+            'credencial_acesso',
+          ]);
+          """
+          new_access = """  await assertFileExcludes('src/components/admin/AcessosModule.tsx', [
+            \"from('colaborador_modulos')\",
+            'credencial_acesso',
+            \"['acessos', 'Gerenciar acessos']\",
+          ]);
+          """
+          if old_access not in text:
+              raise SystemExit('Contrato antigo do módulo de acessos não localizado.')
+          path.write_text(text.replace(old_access, new_access, 1), encoding='utf-8')
+          PY
+          rm -f .github/workflows/update-collaborator-admin-contract.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/check-admin-panel-contracts.ts .github/workflows/update-collaborator-admin-contract.yml
+          git commit -m 'Atualizar contrato seguro do Painel do Colaborador'
+          git push origin HEAD:agent/endurecer-painel-colaborador-20260721
