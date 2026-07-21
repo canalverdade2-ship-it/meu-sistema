@@ -15,7 +15,7 @@ interface PublicFooterProps {
 export function PublicFooter({ setPublicPage, onGuestStore, onAdminLogin, onPrivacy }: PublicFooterProps) {
   return (
     <footer className="border-t border-white/10 bg-neutral-950 py-10 text-white">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 md:grid-cols-3 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
         <div>
           <LogoGSA size="lg" variant="light" />
           <p className="mt-4 text-sm leading-6 text-white/55">Serviços, assinaturas, produtos e tecnologia em um único hub.</p>
@@ -29,6 +29,12 @@ export function PublicFooter({ setPublicPage, onGuestStore, onAdminLogin, onPriv
             <button type="button" onClick={() => setPublicPage('partners')} className="w-fit hover:text-[#d8bd73]">Parceiros</button>
             <button type="button" onClick={onAdminLogin} className="w-fit hover:text-[#d8bd73]">Acesso restrito</button>
             <button type="button" onClick={onPrivacy} className="w-fit hover:text-[#d8bd73]">Privacidade</button>
+          </div>
+        </nav>
+        <nav aria-label="Publicidade">
+          <h2 className="text-xs font-black uppercase tracking-widest text-white/35">Publicidade</h2>
+          <div className="mt-4 grid gap-3 text-sm font-bold text-white/75">
+            <button type="button" onClick={() => setPublicPage('advertise')} className="w-fit hover:text-[#d8bd73]">Anuncie Conosco</button>
           </div>
         </nav>
         <div>
