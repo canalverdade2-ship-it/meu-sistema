@@ -1,9 +1,9 @@
 {
   "status": "failure",
-  "workflow_run_id": "29861391370",
-  "validated_sha": "f684fa6aaeb093500fd686356ae7790ce142f74f",
-  "validated_at_utc": "2026-07-21T19:25:12Z",
+  "workflow_run_id": "29861617352",
+  "validated_sha": "32dea921f09430e9adb24df8b9ecd72a1e20bbce",
+  "validated_at_utc": "2026-07-21T19:28:29Z",
   "project_ref": "ocgajvagxagutfvgxwsy",
-  "migration": "20260721213000_partner_public_applications.sql",
+  "migration": "20260722001000_partner_public_applications.sql",
   "edge_function": "gsa-partner-application"
 }
