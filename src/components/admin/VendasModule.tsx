@@ -93,6 +93,18 @@ export function VendasModule({
       return { main: isAllowedTab('emprestimos') ? 'emprestimos' as MainTab : firstAllowedTab, sub: isAllowedTab('emprestimos') ? initialTab : SUB_TABS[firstAllowedTab][0].id };
     }
 
+    const legacyMainTabs: Record<string, MainTab> = {
+      'ordens-servico': 'os',
+      'ordens-compra': 'produtos',
+      'ordens-assinatura': 'assinaturas',
+      'credito-loja': 'credito',
+      credito_loja: 'credito',
+    };
+    if (legacyMainTabs[initialTab] && isAllowedTab(legacyMainTabs[initialTab])) {
+      const main = legacyMainTabs[initialTab];
+      return { main, sub: SUB_TABS[main][0].id };
+    }
+
     if (Object.keys(SUB_TABS).includes(initialTab)) {
       const main = initialTab as MainTab;
       if (isAllowedTab(main)) return { main, sub: SUB_TABS[main][0].id };

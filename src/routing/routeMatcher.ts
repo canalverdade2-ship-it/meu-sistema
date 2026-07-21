@@ -161,7 +161,13 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     area = 'admin';
     module = segments[1] || 'dashboard'; // ex: 'cadastros', 'catalogo', 'operacoes', 'financeiro', etc.
     
-    if ((module === 'saude' || module === 'seguros') && segments[2]) {
+    if (module === 'financeiro' && segments[2] === 'emprestimos') {
+      module = 'emprestimos';
+      if (segments[3]) itemId = segments[3];
+    } else if (module === 'financeiro' && ['credito', 'credito-loja', 'credito_loja'].includes(segments[2] || '')) {
+      module = 'credito_loja';
+      if (segments[3]) itemId = segments[3];
+    } else if ((module === 'saude' || module === 'seguros') && segments[2]) {
       submodule = segments[2];
       if (segments[3]) itemId = segments[3];
     } else if (segments[2]) {

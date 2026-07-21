@@ -7,6 +7,9 @@ import {
   normalizeAdminModule,
   normalizeGrantedAdminModules,
 } from '../src/routing/adminAccess';
+import { defaultAdminPath } from '../src/security/collaboratorAccess';
+import { matchRoute } from '../src/routing/routeMatcher';
+import { routes } from '../src/routing/routeCatalog';
 
 const root = process.cwd();
 
@@ -69,6 +72,23 @@ async function main() {
   assert.equal(adminModulePath('emprestimos'), '/admin/financeiro/emprestimos');
   assert.equal(adminModulePath('credito_loja'), '/admin/financeiro/credito');
   assert.equal(adminModulePath('financeiro', 'faturas', 'abc'), '/admin/financeiro/faturas/abc');
+  assert.equal(defaultAdminPath('colaborador', ['prestadores']), '/admin/cadastros/prestadores');
+  assert.equal(defaultAdminPath('colaborador', ['emprestimos']), '/admin/financeiro/emprestimos');
+  assert.equal(defaultAdminPath('colaborador', ['credito_loja']), '/admin/financeiro/credito');
+  assert.equal(defaultAdminPath('colaborador', ['promocoes']), '/admin/promocoes');
+
+  const loanRoute = matchRoute('/admin/financeiro/emprestimos/loan-1', '', '');
+  assert.equal(loanRoute.module, 'emprestimos');
+  assert.equal(loanRoute.itemId, 'loan-1');
+  const creditRoute = matchRoute('/admin/financeiro/credito/credit-1', '', '');
+  assert.equal(creditRoute.module, 'credito_loja');
+  assert.equal(creditRoute.itemId, 'credit-1');
+  assert.equal(routes.admin.categories(), '/admin/catalogo/categorias_loja');
+  assert.equal(routes.admin.ordensServico(), '/admin/operacoes/os');
+  assert.equal(routes.admin.ordensCompra(), '/admin/operacoes/produtos');
+  assert.equal(routes.admin.ordensAssinatura(), '/admin/operacoes/assinaturas');
+  assert.equal(routes.admin.emprestimos(), '/admin/financeiro/emprestimos');
+  assert.equal(routes.admin.creditoLoja(), '/admin/financeiro/credito');
 
   await assertFileContains('package.json', [
     '"validate:subscriptions"',
@@ -113,6 +133,13 @@ async function main() {
     "id: 'demandas'",
     "id: 'cobranca'",
     "id: 'fiscal'",
+    "id: 'emprestimos'",
+    "id: 'credito_loja'",
+    "id: 'promocoes'",
+    "id: 'area_vip'",
+    "allowedTabs={['emprestimos']}",
+    "allowedTabs={['credito']}",
+    "canAccess('cadastro') || canAccess('prestadores')",
     'Você não possui permissão para acessar este módulo.',
   ]);
 
@@ -122,6 +149,7 @@ async function main() {
     'gsa_admin_set_collaborator_status',
     'gsa_admin_rotate_collaborator_credential',
     'gsa_admin_review_deletion_request',
+    "['prestadores', 'Prestadores (sem acesso a clientes)']",
   ]);
   await assertFileExcludes('src/components/admin/AcessosModule.tsx', [
     "from('colaborador_modulos')",
@@ -192,6 +220,29 @@ async function main() {
     'Faturamento dos últimos 6 meses',
     'credito_pendente_total',
     '60_000',
+  ]);
+
+  await assertFileContains('src/components/admin/CadastroModule.tsx', [
+    "initialTab === 'categorias'",
+  ]);
+
+  await assertFileContains('src/components/admin/VendasModule.tsx', [
+    "'ordens-servico': 'os'",
+    "'ordens-compra': 'produtos'",
+    "'ordens-assinatura': 'assinaturas'",
+    "'credito-loja': 'credito'",
+  ]);
+
+  await assertFileContains('src/components/client/marketplace/MarketplaceGSAStore.tsx', [
+    'navigate(path);',
+  ]);
+  await assertFileExcludes('src/components/client/marketplace/MarketplaceGSAStore.tsx', [
+    'onNavigate(moduleName',
+    'tabName = segments[2]',
+  ]);
+
+  await assertFileContains('src/pages/ClientPortal.tsx', [
+    'if (replaceFlag) replace(path);',
   ]);
 
   await assertFileContains('src/components/admin/TravelAdminModule.tsx', [
