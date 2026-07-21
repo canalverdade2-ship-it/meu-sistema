@@ -31,21 +31,25 @@ Deno.test('rejeita payload inválido antes de acessar o banco', () => {
   }), null);
 });
 
-Deno.test('bloqueia origem não autorizada', async () => {
-  Deno.env.set('ALLOWED_ORIGINS', DEVELOPMENT_ORIGINS);
-  const response = await handleRequest(new Request('https://example.test', {
-    method: 'OPTIONS',
-    headers: { origin: 'https://attacker.example' },
-  }));
-  assertEquals(response.status, 403);
-});
+Deno.test('valida CORS permitido e bloqueado de forma sequencial', async () => {
+  const previousOrigins = Deno.env.get('ALLOWED_ORIGINS');
+  try {
+    Deno.env.set('ALLOWED_ORIGINS', DEVELOPMENT_ORIGINS);
 
-Deno.test('aceita preflight da origem de desenvolvimento configurada', async () => {
-  Deno.env.set('ALLOWED_ORIGINS', DEVELOPMENT_ORIGINS);
-  const response = await handleRequest(new Request('https://example.test', {
-    method: 'OPTIONS',
-    headers: { origin: 'http://10.0.2.189:3000' },
-  }));
-  assertEquals(response.status, 204);
-  assertEquals(response.headers.get('access-control-allow-origin'), 'http://10.0.2.189:3000');
+    const blocked = await handleRequest(new Request('https://example.test', {
+      method: 'OPTIONS',
+      headers: { origin: 'https://attacker.example' },
+    }));
+    assertEquals(blocked.status, 403);
+
+    const allowed = await handleRequest(new Request('https://example.test', {
+      method: 'OPTIONS',
+      headers: { origin: 'http://10.0.2.189:3000' },
+    }));
+    assertEquals(allowed.status, 204);
+    assertEquals(allowed.headers.get('access-control-allow-origin'), 'http://10.0.2.189:3000');
+  } finally {
+    if (previousOrigins === undefined) Deno.env.delete('ALLOWED_ORIGINS');
+    else Deno.env.set('ALLOWED_ORIGINS', previousOrigins);
+  }
 });
