@@ -1692,8 +1692,8 @@ function TransacoesTab() {
 
       {/* Modal Detalhes da Transação */}
       {detailsTx && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsTx(null)}>
-          <div className="flex w-full max-w-4xl max-h-[92vh] flex-col overflow-hidden rounded-[2.5rem] bg-white shadow-2xl border border-neutral-200" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-2 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsTx(null)}>
+          <div className="flex w-full max-w-[95vw] md:max-w-4xl lg:max-w-5xl max-h-[92vh] flex-col overflow-hidden rounded-2xl sm:rounded-[2.5rem] bg-white shadow-2xl border border-neutral-200" onClick={(e) => e.stopPropagation()}>
             {/* Header Executivo */}
             <header className="flex items-center justify-between border-b border-indigo-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 p-6 text-white">
               <div className="flex items-center gap-4">

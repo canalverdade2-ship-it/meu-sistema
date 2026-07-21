@@ -14,19 +14,19 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
   const generatedId = useId().replace(/:/g, '');
   const titleId = `modal-title-${generatedId}`;
   const sizes = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl md:max-w-2xl',
-    '2xl': 'max-w-2xl md:max-w-3xl',
-    '3xl': 'max-w-3xl md:max-w-4xl',
-    '4xl': 'max-w-4xl md:max-w-5xl',
-    '5xl': 'max-w-5xl md:max-w-6xl',
-    '6xl': 'max-w-6xl md:max-w-7xl',
-    '7xl': 'max-w-7xl md:max-w-[90vw]',
-    full: 'max-w-[98vw]',
-    wide: 'max-w-[95vw] md:max-w-[90vw]',
-    auto: 'w-full md:w-auto md:min-w-[600px] max-w-[95vw]',
+    sm: 'w-full max-w-[95vw] sm:max-w-sm',
+    md: 'w-full max-w-[95vw] sm:max-w-md',
+    lg: 'w-full max-w-[95vw] sm:max-w-lg md:max-w-xl',
+    xl: 'w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-3xl',
+    '2xl': 'w-full max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl',
+    '3xl': 'w-full max-w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl',
+    '4xl': 'w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl',
+    '5xl': 'w-full max-w-[95vw] sm:max-w-5xl md:max-w-6xl lg:max-w-7xl',
+    '6xl': 'w-full max-w-[95vw] sm:max-w-6xl md:max-w-7xl',
+    '7xl': 'w-full max-w-[95vw] md:max-w-[90vw]',
+    full: 'w-full max-w-[98vw]',
+    wide: 'w-full max-w-[95vw] md:max-w-[90vw]',
+    auto: 'w-full md:w-auto md:min-w-[500px] max-w-[95vw]',
   };
 
   useEffect(() => {
