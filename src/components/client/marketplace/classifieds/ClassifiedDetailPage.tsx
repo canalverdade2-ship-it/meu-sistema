@@ -182,16 +182,19 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
                           const returnTo = encodeURIComponent(routes.marketplace.classifieds.geralItem(slug));
                           navigate(`${routes.login.root()}?returnTo=${returnTo}`);
                         } else {
-                          // TODO: Abrir modal de Proposta
-                          alert('Em breve: Enviar proposta moderada via GSA.');
+                          const supportUrl = new URL(routes.client.support(), window.location.origin);
+                          supportUrl.searchParams.set('origem', 'classificado');
+                          supportUrl.searchParams.set('anuncio', String(ad.id));
+                          supportUrl.searchParams.set('titulo', String(ad.titulo || '').slice(0, 120));
+                          navigate(`${supportUrl.pathname}${supportUrl.search}`);
                         }
                       }}
                       className="w-full py-4 bg-black text-white font-black uppercase tracking-wider rounded-full hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
                     >
-                      <MessageCircle className="h-5 w-5" /> Enviar Proposta
+                      <MessageCircle className="h-5 w-5" /> Solicitar mediação
                     </button>
                     <p className="text-xs text-center text-neutral-400 font-medium px-4">
-                      Sua mensagem será analisada pela GSA antes de ser enviada ao vendedor para garantir a sua segurança.
+                      Você será direcionado ao suporte GSA para registrar a proposta com mediação e proteção dos seus dados.
                     </p>
                   </div>
                 )}
