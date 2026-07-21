@@ -1,11 +1,11 @@
 {
-  "status": "failure",
-  "workflow_run_id": "29852863374",
-  "validated_sha": "b3b6c6a151783d8583098c31699f26615dd05f99",
-  "validated_at_utc": "2026-07-21T17:26:20Z",
+  "status": "success",
+  "workflow_run_id": "29853237100",
+  "validated_sha": "ccd3b5e93c9d4b03c237a017853c15fa748f86e6",
+  "validated_at_utc": "2026-07-21T17:32:19Z",
   "scope": "admin-collaborator-client-provider-home-travel-products-subscriptions-supabase",
-  "migrations": "failure",
-  "database_objects": "failure",
-  "edge_function": "failure",
-  "frontend_build": "failure"
+  "migrations": "success",
+  "database_objects": "success",
+  "edge_function": "success",
+  "frontend_build": "success"
 }
