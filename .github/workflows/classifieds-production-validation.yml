@@ -8,6 +8,7 @@ on:
       - 'src/lib/classifiedStorage.ts'
       - 'scripts/check-classifieds-production-contracts.ts'
       - 'scripts/classifieds-media-production-verification.sql'
+      - 'supabase/functions/gsa-classified-media/**'
       - 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql'
       - '.github/workflows/classifieds-production-validation.yml'
       - 'package.json'
@@ -18,6 +19,7 @@ on:
       - 'src/lib/classifiedStorage.ts'
       - 'scripts/check-classifieds-production-contracts.ts'
       - 'scripts/classifieds-media-production-verification.sql'
+      - 'supabase/functions/gsa-classified-media/**'
       - 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql'
       - '.github/workflows/classifieds-production-validation.yml'
       - 'package.json'
@@ -53,6 +55,14 @@ jobs:
           test -n "$SUPABASE_DB_PASSWORD"
           test -n "$SUPABASE_PROJECT_ID"
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Check Classifieds media Edge Function
+        run: deno check supabase/functions/gsa-classified-media/index.ts
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -102,6 +112,19 @@ jobs:
             END { exit found ? 0 : 1 }
           ' classifieds-migrations-after.log
 
+      - name: Deploy authenticated Classifieds media gateway
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase functions deploy gsa-classified-media --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee classifieds-function-deploy.log
+
+      - name: Verify Classifieds media gateway deployment
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee classifieds-functions-after.log
+          grep -q 'gsa-classified-media' classifieds-functions-after.log
+
       - name: Upload production audit evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -112,5 +135,7 @@ jobs:
             classifieds-migration-apply.log
             classifieds-production-verification.log
             classifieds-migrations-after.log
+            classifieds-function-deploy.log
+            classifieds-functions-after.log
           retention-days: 30
           if-no-files-found: ignore
