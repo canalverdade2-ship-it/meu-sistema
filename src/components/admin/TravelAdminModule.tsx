@@ -16,13 +16,59 @@ import {
   Users,
   Eye,
   XCircle,
+  ArrowRight,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Compass,
+  Sparkles,
+  Edit,
+  Upload,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, formatDate, formatDateTime } from '../../lib/utils';
 import { Modal } from '../ui/Modal';
+import { supabase } from '../../lib/supabase';
 
 type AdminTab = 'solicitacoes' | 'pacotes' | 'propostas' | 'transacoes';
+
+const accommodationLabels: Record<string, string> = {
+  economico: 'Econômico',
+  '4_estrelas': 'Conforto (4 Estrelas)',
+  '5_estrelas': 'Luxo (5 Estrelas)',
+  resort_all_inclusive: 'Resort All Inclusive',
+  indiferente: 'Melhor Oportunidade / Indiferente',
+};
+
+const flexibilityLabels: Record<string, string> = {
+  exata: 'Datas Exatas',
+  '3_dias': '± 3 Dias de flexibilidade',
+  '7_dias': '± 7 Dias de flexibilidade',
+  mes: 'Qualquer dia no mês',
+};
+
+function formatCurrencyInputValue(val: any): string {
+  if (val === null || val === undefined || val === '') return '';
+  const num = typeof val === 'number' ? val : Number(String(val).replace(/\./g, '').replace(',', '.'));
+  if (isNaN(num)) return '';
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+}
+
+function handleCurrencyMask(val: string): string {
+  const clean = val.replace(/\D/g, '');
+  if (!clean) return '';
+  const cents = Number(clean) / 100;
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents);
+}
 
 interface PagedResult {
   items: any[];
@@ -118,7 +164,7 @@ export function TravelAdminModule() {
       <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6">
         {activeTab === 'solicitacoes' && <SolicitacoesTab />}
         {activeTab === 'pacotes' && <PacotesTab />}
-        {activeTab === 'propostas' && <ReadOnlyList kind="propostas" title="Propostas enviadas" />}
+        {activeTab === 'propostas' && <PropostasTab />}
         {activeTab === 'transacoes' && <ReadOnlyList kind="transacoes" title="Reservas e transações" />}
       </section>
     </div>
@@ -205,6 +251,7 @@ function SolicitacoesTab() {
   const list = usePagedTravelList('solicitacoes');
   const [selected, setSelected] = useState<any>(null);
   const [detailsItem, setDetailsItem] = useState<any>(null);
+  const [clientDetails, setClientDetails] = useState<any>(null);
   const [linkingLead, setLinkingLead] = useState<any>(null);
   const [savingProposal, setSavingProposal] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
@@ -212,7 +259,55 @@ function SolicitacoesTab() {
   const [searchingClients, setSearchingClients] = useState(false);
   const [proposalForm, setProposalForm] = useState({ titulo: '', valor_total: '', parcelamento_permitido: '1', validade_horas: '48', prazo_pagamento_dias: '2', condicoes: '' });
 
+  useEffect(() => {
+    if (!detailsItem) {
+      setClientDetails(null);
+      return;
+    }
+
+    if (detailsItem.cliente_id) {
+      supabase
+        .from('clientes')
+        .select('id, nome, email, telefone, codigo_cliente')
+        .eq('id', detailsItem.cliente_id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setClientDetails(data);
+        });
+    } else {
+      const searchEmail = detailsItem.email?.trim();
+      const searchPhone = detailsItem.telefone?.trim();
+
+      if (searchEmail || searchPhone) {
+        let query = supabase.from('clientes').select('id, nome, email, telefone, codigo_cliente');
+        if (searchEmail && searchPhone) {
+          query = query.or(`email.eq.${searchEmail},telefone.eq.${searchPhone}`);
+        } else if (searchEmail) {
+          query = query.eq('email', searchEmail);
+        } else if (searchPhone) {
+          query = query.eq('telefone', searchPhone);
+        }
+
+        query.limit(1).maybeSingle().then(({ data }) => {
+          if (data) {
+            setClientDetails(data);
+            callAdminRpc('gsa_admin_travel_link_lead', { p_quote_id: detailsItem.id, p_client_id: data.id })
+              .then(() => {
+                setDetailsItem((prev: any) => prev ? { ...prev, cliente_id: data.id } : null);
+                toast.success(`Cliente ${data.nome} vinculado automaticamente ao orçamento!`);
+                void list.load();
+              })
+              .catch(() => {});
+          }
+        });
+      }
+    }
+  }, [detailsItem?.id]);
+
   const openProposal = (quote: any) => {
+    if (['cancelado', 'encerrado'].includes(quote.status)) {
+      return toast.error('Não é possível gerar proposta para uma solicitação cancelada ou encerrada.');
+    }
     if (!quote.cliente_id) {
       setLinkingLead(quote);
       setClientSearch(quote.email || quote.telefone || quote.nome || '');
@@ -220,9 +315,12 @@ function SolicitacoesTab() {
       return;
     }
     setSelected(quote);
+    const initialTotal = quote.viagens_pacotes?.preco_venda != null
+      ? formatCurrencyInputValue(quote.viagens_pacotes.preco_venda)
+      : '';
     setProposalForm({
       titulo: quote.viagens_pacotes?.titulo || `Viagem para ${quote.destino}`,
-      valor_total: quote.viagens_pacotes?.preco_venda ? String(quote.viagens_pacotes.preco_venda).replace('.', ',') : '',
+      valor_total: initialTotal,
       parcelamento_permitido: '1',
       validade_horas: '48',
       prazo_pagamento_dias: '2',
@@ -311,7 +409,16 @@ function SolicitacoesTab() {
                   <button type="button" onClick={() => setDetailsItem(quote)} className="flex items-center justify-center gap-2 rounded-xl bg-blue-100 px-4 py-2 text-xs font-black text-blue-700 hover:bg-blue-200">
                     <Eye className="h-4 w-4" /> Detalhes
                   </button>
-                  <button type="button" onClick={() => openProposal(quote)} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700">{quote.cliente_id ? <Send className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}{quote.cliente_id ? 'Gerar proposta' : 'Vincular cliente'}</button>
+                  <button 
+                    type="button" 
+                    disabled={['cancelado', 'encerrado'].includes(quote.status)}
+                    onClick={() => openProposal(quote)} 
+                    className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                    title={['cancelado', 'encerrado'].includes(quote.status) ? 'Solicitação cancelada/encerrada' : undefined}
+                  >
+                    {quote.cliente_id ? <Send className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                    {quote.cliente_id ? 'Gerar proposta' : 'Vincular cliente'}
+                  </button>
                 </div>
               </div>
             </article>
@@ -332,52 +439,214 @@ function SolicitacoesTab() {
         {selected && <div className="space-y-5">
           <div className="rounded-2xl bg-neutral-50 p-4 text-sm text-neutral-600"><strong>{selected.protocolo}</strong> · {selected.origem} → {selected.destino} · {selected.adultos || 1} adulto(s)</div>
           <label className={labelClass}>Título da proposta<input value={proposalForm.titulo} onChange={(event) => setProposalForm((value) => ({ ...value, titulo: event.target.value }))} className={`${inputClass} mt-2`} /></label>
-          <div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Valor total<input value={proposalForm.valor_total} onChange={(event) => setProposalForm((value) => ({ ...value, valor_total: event.target.value }))} placeholder="0,00" className={`${inputClass} mt-2`} /></label><label className={labelClass}>Parcelamento máximo<input type="number" min="1" max="24" value={proposalForm.parcelamento_permitido} onChange={(event) => setProposalForm((value) => ({ ...value, parcelamento_permitido: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Validade do aceite (horas)<input type="number" min="1" value={proposalForm.validade_horas} onChange={(event) => setProposalForm((value) => ({ ...value, validade_horas: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Prazo para pagamento (dias)<input type="number" min="1" value={proposalForm.prazo_pagamento_dias} onChange={(event) => setProposalForm((value) => ({ ...value, prazo_pagamento_dias: event.target.value }))} className={`${inputClass} mt-2`} /></label></div>
+          <div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Valor total<input value={proposalForm.valor_total} onChange={(event) => setProposalForm((value) => ({ ...value, valor_total: handleCurrencyMask(event.target.value) }))} placeholder="0,00" className={`${inputClass} mt-2`} /></label><label className={labelClass}>Parcelamento máximo<input type="number" min="1" max="24" value={proposalForm.parcelamento_permitido} onChange={(event) => setProposalForm((value) => ({ ...value, parcelamento_permitido: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Validade do aceite (horas)<input type="number" min="1" value={proposalForm.validade_horas} onChange={(event) => setProposalForm((value) => ({ ...value, validade_horas: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Prazo para pagamento (dias)<input type="number" min="1" value={proposalForm.prazo_pagamento_dias} onChange={(event) => setProposalForm((value) => ({ ...value, prazo_pagamento_dias: event.target.value }))} className={`${inputClass} mt-2`} /></label></div>
           <label className={labelClass}>Condições<textarea rows={4} value={proposalForm.condicoes} onChange={(event) => setProposalForm((value) => ({ ...value, condicoes: event.target.value }))} className={`${inputClass} mt-2 h-auto`} /></label>
           <button type="button" onClick={() => void createProposal()} disabled={savingProposal} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-black text-white hover:bg-indigo-700 disabled:opacity-60">{savingProposal ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}{savingProposal ? 'Criando proposta...' : 'Enviar proposta ao cliente'}</button>
         </div>}
       </Modal>
 
       {detailsItem && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setDetailsItem(null)}>
-          <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <header className="flex items-center justify-between border-b border-neutral-100 p-6">
-              <h2 className="text-xl font-black text-neutral-900">Detalhes da Solicitação</h2>
-              <button onClick={() => setDetailsItem(null)} className="rounded-full bg-neutral-100 p-2 text-neutral-500 hover:bg-neutral-200 transition-colors"><XCircle className="h-5 w-5" /></button>
-            </header>
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div><p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Protocolo</p><p className="font-medium text-neutral-900">{detailsItem.protocolo || '-'}</p></div>
-                <div><p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Status</p><p className="font-medium text-neutral-900">{detailsItem.status}</p></div>
-                <div><p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Origem</p><p className="font-medium text-neutral-900">{detailsItem.origem || '-'}</p></div>
-                <div><p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Destino</p><p className="font-medium text-neutral-900">{detailsItem.destino || '-'}</p></div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsItem(null)}>
+          <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <header className="relative flex items-center justify-between border-b border-neutral-100 bg-slate-900 p-6 text-white">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 backdrop-blur-md">
+                  <Plane className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold tracking-wider text-indigo-300 uppercase">{detailsItem.protocolo || 'SOLICITAÇÃO'}</span>
+                    <StatusBadge status={detailsItem.status} />
+                  </div>
+                  <h2 className="text-xl font-black text-white mt-0.5">Solicitação de Viagem</h2>
+                </div>
               </div>
+              <button 
+                onClick={() => setDetailsItem(null)} 
+                className="rounded-full bg-white/10 p-2 text-neutral-300 hover:bg-white/20 hover:text-white transition-colors"
+              >
+                <XCircle className="h-6 w-6" />
+              </button>
+            </header>
 
-              <div>
-                <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Contato</p>
-                <div className="rounded-xl bg-neutral-50 p-4 border border-neutral-100 space-y-2 text-sm text-neutral-700">
-                  <p><strong>Nome:</strong> {detailsItem.nome || 'Cliente autenticado'}</p>
-                  <p><strong>E-mail:</strong> {detailsItem.email || '-'}</p>
-                  <p><strong>Telefone:</strong> {detailsItem.telefone || '-'}</p>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-neutral-50/50">
+              {/* Route & Package Highlight Card */}
+              <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-purple-50/40 to-white p-5 shadow-xs">
+                <div className="text-xs font-black uppercase tracking-wider text-indigo-600 mb-3 flex items-center gap-1.5">
+                  <Compass className="h-4 w-4" /> Rota & Destino
+                </div>
+                
+                {detailsItem.viagens_pacotes?.titulo && (
+                  <p className="text-xs font-bold text-neutral-500 mb-2">Pacote: <span className="text-neutral-900 font-extrabold">{detailsItem.viagens_pacotes.titulo}</span></p>
+                )}
+
+                <div className="flex items-center justify-between gap-4 py-2">
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Origem</p>
+                    <p className="text-lg font-black text-neutral-900">{detailsItem.origem || 'Não especificada'}</p>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md shadow-indigo-200 shrink-0">
+                    <ArrowRight className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 text-right">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Destino</p>
+                    <p className="text-lg font-black text-neutral-900">{detailsItem.destino || 'Não especificado'}</p>
+                  </div>
+                </div>
+
+                {/* Quick Info Chips */}
+                <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-indigo-100/60">
+                  <div className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-neutral-700 border border-neutral-200/80 shadow-2xs">
+                    <Users className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>{detailsItem.adultos || 1} Adulto(s)</span>
+                  </div>
+                  {detailsItem.criancas > 0 && (
+                    <div className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-neutral-700 border border-neutral-200/80 shadow-2xs">
+                      <span>{detailsItem.criancas} Criança(s)</span>
+                    </div>
+                  )}
+                  {detailsItem.bebes > 0 && (
+                    <div className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-neutral-700 border border-neutral-200/80 shadow-2xs">
+                      <span>{detailsItem.bebes} Bebê(s)</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-neutral-500 border border-neutral-200/80 shadow-2xs ml-auto">
+                    <Calendar className="h-3.5 w-3.5 text-neutral-400" />
+                    <span>{formatDate(detailsItem.created_at)}</span>
+                  </div>
                 </div>
               </div>
 
+              {/* Customer Contact Box */}
+              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                    <User className="h-4 w-4 text-indigo-600" /> Informações de Contato
+                  </h4>
+                  {(detailsItem.cliente_id || clientDetails?.id) ? (
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-700 border border-emerald-200">
+                      Cliente Cadastrado {clientDetails?.codigo_cliente ? `(${clientDetails.codigo_cliente})` : ''}
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-[10px] font-black uppercase text-cyan-700 border border-cyan-200">
+                      Lead Público
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex items-start gap-3 rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <User className="h-5 w-5 text-neutral-400 mt-0.5" />
+                    <div>
+                      <p className="text-[10px] font-bold uppercase text-neutral-400">Nome Completo</p>
+                      <p className="text-sm font-bold text-neutral-900">{clientDetails?.nome || detailsItem.nome || (detailsItem.cliente_id ? 'Cliente Cadastrado' : 'Cliente não identificado')}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <Mail className="h-5 w-5 text-neutral-400 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase text-neutral-400">E-mail</p>
+                      <p className="text-sm font-bold text-neutral-900 truncate">{clientDetails?.email || detailsItem.email || 'Não informado'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 rounded-xl bg-neutral-50 p-3 border border-neutral-100 sm:col-span-2">
+                    <Phone className="h-5 w-5 text-neutral-400 mt-0.5" />
+                    <div>
+                      <p className="text-[10px] font-bold uppercase text-neutral-400">Telefone / WhatsApp</p>
+                      <p className="text-sm font-bold text-neutral-900">{clientDetails?.telefone || detailsItem.telefone || 'Não informado'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Travel Dates & Preferences */}
+              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
+                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-4 flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4 text-indigo-600" /> Período & Preferências da Viagem
+                </h4>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Data de Ida</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{detailsItem.data_ida ? formatDate(detailsItem.data_ida) : 'A definir'}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Data de Volta</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{detailsItem.data_volta ? formatDate(detailsItem.data_volta) : 'A definir'}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Flexibilidade</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{flexibilityLabels[detailsItem.flexibilidade] || detailsItem.flexibilidade || 'Exata'}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100 sm:col-span-3">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Hospedagem Preferida</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{accommodationLabels[detailsItem.preferencia_hospedagem] || detailsItem.preferencia_hospedagem || 'Não especificada'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Observations / Special Notes */}
+              {detailsItem.observacoes && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-xs">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 mb-2 flex items-center gap-1.5">
+                    <FileText className="h-4 w-4 text-amber-600" /> Observações & Solicitações do Cliente
+                  </h4>
+                  <p className="text-sm font-medium text-neutral-800 whitespace-pre-wrap leading-relaxed">{detailsItem.observacoes}</p>
+                </div>
+              )}
+
+              {/* Extra Dynamic Details */}
               {detailsItem.detalhes && Object.keys(detailsItem.detalhes).length > 0 && (
-                <div>
-                  <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Detalhes Específicos</p>
-                  <div className="grid grid-cols-2 gap-4 rounded-xl bg-neutral-50 p-4 border border-neutral-100 text-sm">
+                <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-3 flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-amber-500" /> Detalhes Específicos Adicionais
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
                     {Object.entries(detailsItem.detalhes).map(([key, value]) => (
-                      <div key={key}>
-                        <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{key.replace(/_/g, ' ')}</p>
-                        <p className="font-medium text-neutral-900">{String(value)}</p>
+                      <div key={key} className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                        <p className="text-[10px] font-bold uppercase text-neutral-400">{key.replace(/_/g, ' ')}</p>
+                        <p className="text-sm font-bold text-neutral-900 mt-0.5">{String(value)}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-            <footer className="border-t border-neutral-100 bg-neutral-50 p-5 flex justify-end">
-              <button onClick={() => setDetailsItem(null)} className="rounded-xl bg-neutral-200 px-5 py-2 font-black text-neutral-700 hover:bg-neutral-300">Fechar</button>
+
+            {/* Modal Actions */}
+            <footer className="border-t border-neutral-100 bg-white p-5 flex items-center justify-between gap-3">
+              <button 
+                type="button"
+                onClick={() => setDetailsItem(null)} 
+                className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50 transition"
+              >
+                Fechar
+              </button>
+
+              {!['cancelado', 'encerrado'].includes(detailsItem.status) ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const quote = detailsItem;
+                    setDetailsItem(null);
+                    openProposal(quote);
+                  }}
+                  className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black text-white hover:bg-indigo-700 shadow-md shadow-indigo-200 transition"
+                >
+                  {detailsItem.cliente_id ? <Send className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                  {detailsItem.cliente_id ? 'Gerar proposta agora' : 'Vincular cliente'}
+                </button>
+              ) : (
+                <span className="text-xs font-bold text-neutral-400 bg-neutral-100 px-4 py-2.5 rounded-xl border border-neutral-200">
+                  Solicitação {detailsItem.status === 'cancelado' ? 'Cancelada' : 'Encerrada'}
+                </span>
+              )}
             </footer>
           </div>
         </div>
@@ -389,21 +658,182 @@ function SolicitacoesTab() {
 function PacotesTab() {
   const list = usePagedTravelList('pacotes');
   const [showForm, setShowForm] = useState(false);
+  const [editingPkg, setEditingPkg] = useState<any>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1', imagem_url: '' });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagens, setImagens] = useState<string[]>([]);
+  const [form, setForm] = useState({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1' });
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files: File[] = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    if (imagens.length >= 5) {
+      return toast.error('Você já atingiu o limite máximo de 5 imagens.');
+    }
+
+    const availableSlots = 5 - imagens.length;
+    const filesToUpload = files.slice(0, availableSlots);
+
+    if (files.length > availableSlots) {
+      toast.error(`Apenas ${availableSlots} foto(s) foram selecionadas (limite máximo de 5 fotos).`);
+    }
+
+    setUploadingImage(true);
+    const newUrls: string[] = [];
+
+    try {
+      for (const file of filesToUpload) {
+        if (!file.type.startsWith('image/')) continue;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `pacotes/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+
+        let publicUrl = '';
+        const { error: uploadError } = await supabase.storage
+          .from('gsa-store-images')
+          .upload(fileName, file, { upsert: true });
+
+        if (uploadError) {
+          const { error: fallbackError } = await supabase.storage
+            .from('classificados-midias')
+            .upload(fileName, file, { upsert: true });
+
+          if (fallbackError) throw uploadError;
+
+          const res = supabase.storage.from('classificados-midias').getPublicUrl(fileName);
+          publicUrl = res.data.publicUrl;
+        } else {
+          const res = supabase.storage.from('gsa-store-images').getPublicUrl(fileName);
+          publicUrl = res.data.publicUrl;
+        }
+
+        if (publicUrl) newUrls.push(publicUrl);
+      }
+
+      if (newUrls.length > 0) {
+        setImagens((prev) => [...prev, ...newUrls].slice(0, 5));
+        toast.success(`${newUrls.length} imagem(ns) enviada(s) com sucesso!`);
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.message || 'Erro ao enviar imagens.');
+    } finally {
+      setUploadingImage(false);
+      event.target.value = '';
+    }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    setImagens((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const setAsCover = (indexToCover: number) => {
+    setImagens((prev) => {
+      const copy = [...prev];
+      const [item] = copy.splice(indexToCover, 1);
+      return [item, ...copy];
+    });
+  };
+
+  const openNew = () => {
+    setEditingPkg(null);
+    setImagens([]);
+    setForm({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1' });
+    setShowForm(true);
+  };
+
+  const openEdit = (pkg: any) => {
+    setEditingPkg(pkg);
+    const imagesList = Array.isArray(pkg.viagens_pacote_imagens)
+      ? pkg.viagens_pacote_imagens.map((i: any) => i.url).filter(Boolean)
+      : [];
+    setImagens(imagesList.slice(0, 5));
+
+    setForm({
+      titulo: pkg.titulo || '',
+      categoria: pkg.categoria || 'nacional',
+      origem: pkg.origem || '',
+      destino: pkg.destino || '',
+      data_ida: pkg.data_ida ? pkg.data_ida.split('T')[0] : '',
+      data_volta: pkg.data_volta ? pkg.data_volta.split('T')[0] : '',
+      dias: pkg.dias != null ? String(pkg.dias) : '',
+      noites: pkg.noites != null ? String(pkg.noites) : '',
+      preco_venda: pkg.preco_venda != null ? String(pkg.preco_venda).replace('.', ',') : '',
+      parcelamento_maximo: pkg.parcelamento_maximo != null ? String(pkg.parcelamento_maximo) : '1',
+    });
+    setShowForm(true);
+  };
 
   const save = async () => {
     const price = Number(form.preco_venda.replace(/\./g, '').replace(',', '.'));
     if (!form.titulo.trim() || !form.destino.trim() || !Number.isFinite(price) || price <= 0) return toast.error('Informe título, destino e preço válidos.');
     setSaving(true);
     try {
-      await callAdminRpc('gsa_admin_travel_create_package', { p_payload: { ...form, preco_venda: price } });
-      toast.success('Pacote criado como rascunho.');
+      if (editingPkg) {
+        const { error } = await supabase
+          .from('viagens_pacotes')
+          .update({
+            titulo: form.titulo.trim(),
+            categoria: form.categoria,
+            origem: form.origem.trim() || null,
+            destino: form.destino.trim(),
+            data_ida: form.data_ida || null,
+            data_volta: form.data_volta || null,
+            dias: form.dias ? Number(form.dias) : null,
+            noites: form.noites ? Number(form.noites) : null,
+            preco_venda: price,
+            parcelamento_maximo: Number(form.parcelamento_maximo || 1),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editingPkg.id);
+
+        if (error) throw new Error(error.message || 'Erro ao atualizar pacote');
+
+        await supabase
+          .from('viagens_pacote_imagens')
+          .delete()
+          .eq('pacote_id', editingPkg.id);
+
+        if (imagens.length > 0) {
+          const toInsert = imagens.map((url, idx) => ({
+            pacote_id: editingPkg.id,
+            url,
+            is_capa: idx === 0,
+            ordem: idx,
+          }));
+
+          await supabase.from('viagens_pacote_imagens').insert(toInsert);
+        }
+        toast.success('Pacote atualizado com sucesso.');
+      } else {
+        const payload = {
+          ...form,
+          preco_venda: price,
+          imagem_url: imagens[0] || '',
+        };
+        const res = await callAdminRpc<any>('gsa_admin_travel_create_package', { p_payload: payload });
+        const newPkgId = res?.id;
+
+        if (newPkgId && imagens.length > 1) {
+          const remainingImages = imagens.slice(1).map((url, idx) => ({
+            pacote_id: newPkgId,
+            url,
+            is_capa: false,
+            ordem: idx + 1,
+          }));
+
+          await supabase.from('viagens_pacote_imagens').insert(remainingImages);
+        }
+        toast.success('Pacote criado como rascunho.');
+      }
+
       setShowForm(false);
-      setForm({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1', imagem_url: '' });
+      setEditingPkg(null);
+      setImagens([]);
+      setForm({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1' });
       await list.load();
     } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível criar o pacote.');
+      toast.error(error?.message || 'Não foi possível salvar o pacote.');
     } finally {
       setSaving(false);
     }
@@ -420,21 +850,239 @@ function PacotesTab() {
   };
 
   return <div>
-    <Toolbar title="Catálogo de pacotes" subtitle="Cadastre ofertas e controle a publicação." {...list} refresh={() => void list.load()} action={<button type="button" onClick={() => setShowForm(true)} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700"><Plus className="h-4 w-4" /> Novo pacote</button>} />
+    <Toolbar title="Catálogo de pacotes" subtitle="Cadastre ofertas e controle a publicação." {...list} refresh={() => void list.load()} action={<button type="button" onClick={openNew} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700"><Plus className="h-4 w-4" /> Novo pacote</button>} />
     {list.loading ? <Loading /> : list.result.items.length === 0 ? <Empty text="Nenhum pacote cadastrado." /> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{list.result.items.map((pkg) => {
       const images = Array.isArray(pkg.viagens_pacote_imagens) ? pkg.viagens_pacote_imagens : [];
       const cover = images.find((image: any) => image.is_capa)?.url || images[0]?.url;
-      return <article key={pkg.id} className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">{cover ? <img src={cover} alt={pkg.titulo} className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center bg-neutral-100"><Plane className="h-10 w-10 text-neutral-300" /></div>}<div className="p-5"><div className="mb-2 flex items-center justify-between gap-2"><StatusBadge status={pkg.status} /><span className="text-xs font-bold uppercase text-neutral-400">{pkg.categoria}</span></div><h4 className="line-clamp-2 font-black text-neutral-900">{pkg.titulo}</h4><p className="mt-1 text-sm text-neutral-500">{pkg.destino} · {pkg.dias || '—'} dias</p><p className="mt-4 text-lg font-black text-indigo-700">{formatCurrency(pkg.preco_venda)}</p><select value={pkg.status} onChange={(event) => void updateStatus(pkg.id, event.target.value)} className="mt-4 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold"><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option><option value="disponibilidade_sob_consulta">Sob consulta</option><option value="pausado">Pausado</option><option value="esgotado">Esgotado</option></select></div></article>;
+      return <article key={pkg.id} className="overflow-hidden rounded-2xl border border-neutral-200 bg-white flex flex-col justify-between hover:border-indigo-300 transition shadow-2xs"><div>{cover ? <img src={cover} alt={pkg.titulo} className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center bg-neutral-100"><Plane className="h-10 w-10 text-neutral-300" /></div>}<div className="p-5"><div className="mb-2 flex items-center justify-between gap-2"><StatusBadge status={pkg.status} /><span className="text-xs font-bold uppercase text-neutral-400">{pkg.categoria}</span></div><h4 className="line-clamp-2 font-black text-neutral-900">{pkg.titulo}</h4><p className="mt-1 text-sm text-neutral-500">{pkg.destino} · {pkg.dias || '—'} dias</p><p className="mt-4 text-lg font-black text-indigo-700">{formatCurrency(pkg.preco_venda)}</p></div></div><div className="p-5 pt-0 space-y-2"><button type="button" onClick={() => openEdit(pkg)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-50 py-2.5 text-xs font-black text-indigo-700 hover:bg-indigo-100 transition border border-indigo-100"><Edit className="h-4 w-4" /> Editar / Ver Detalhes</button><select value={pkg.status} onChange={(event) => void updateStatus(pkg.id, event.target.value)} className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold text-neutral-700"><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option><option value="disponibilidade_sob_consulta">Sob consulta</option><option value="pausado">Pausado</option><option value="esgotado">Esgotado</option></select></div></article>;
     })}</div>}
     <Pagination page={list.page} total={list.result.total} onPage={list.setPage} />
-    <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Novo pacote de viagem" size="xl"><div className="space-y-5"><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Título<input value={form.titulo} onChange={(event) => setForm((value) => ({ ...value, titulo: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Categoria<select value={form.categoria} onChange={(event) => setForm((value) => ({ ...value, categoria: event.target.value }))} className={`${inputClass} mt-2`}><option value="nacional">Nacional</option><option value="internacional">Internacional</option><option value="excursao">Excursão</option></select></label><label className={labelClass}>Origem<input value={form.origem} onChange={(event) => setForm((value) => ({ ...value, origem: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Destino<input value={form.destino} onChange={(event) => setForm((value) => ({ ...value, destino: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de ida<input type="date" value={form.data_ida} onChange={(event) => setForm((value) => ({ ...value, data_ida: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de volta<input type="date" value={form.data_volta} onChange={(event) => setForm((value) => ({ ...value, data_volta: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Dias<input type="number" min="1" value={form.dias} onChange={(event) => setForm((value) => ({ ...value, dias: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Noites<input type="number" min="0" value={form.noites} onChange={(event) => setForm((value) => ({ ...value, noites: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Preço de venda<input value={form.preco_venda} onChange={(event) => setForm((value) => ({ ...value, preco_venda: event.target.value }))} placeholder="0,00" className={`${inputClass} mt-2`} /></label><label className={labelClass}>Parcelamento máximo<input type="number" min="1" max="24" value={form.parcelamento_maximo} onChange={(event) => setForm((value) => ({ ...value, parcelamento_maximo: event.target.value }))} className={`${inputClass} mt-2`} /></label></div><label className={labelClass}>URL da imagem de capa<input value={form.imagem_url} onChange={(event) => setForm((value) => ({ ...value, imagem_url: event.target.value }))} className={`${inputClass} mt-2`} /></label><button type="button" onClick={() => void save()} disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-black text-white hover:bg-indigo-700 disabled:opacity-60">{saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <PackagePlus className="h-5 w-5" />}{saving ? 'Salvando...' : 'Criar pacote como rascunho'}</button></div></Modal>
+    <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editingPkg ? "Editar Pacote de Viagem" : "Novo Pacote de Viagem"} size="xl"><div className="space-y-5"><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Título<input value={form.titulo} onChange={(event) => setForm((value) => ({ ...value, titulo: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Categoria<select value={form.categoria} onChange={(event) => setForm((value) => ({ ...value, categoria: event.target.value }))} className={`${inputClass} mt-2`}><option value="nacional">Nacional</option><option value="internacional">Internacional</option><option value="excursao">Excursão</option></select></label><label className={labelClass}>Origem<input value={form.origem} onChange={(event) => setForm((value) => ({ ...value, origem: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Destino<input value={form.destino} onChange={(event) => setForm((value) => ({ ...value, destino: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de ida<input type="date" value={form.data_ida} onChange={(event) => setForm((value) => ({ ...value, data_ida: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de volta<input type="date" value={form.data_volta} onChange={(event) => setForm((value) => ({ ...value, data_volta: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Dias<input type="number" min="1" value={form.dias} onChange={(event) => setForm((value) => ({ ...value, dias: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Noites<input type="number" min="0" value={form.noites} onChange={(event) => setForm((value) => ({ ...value, noites: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Preço de venda<input value={form.preco_venda} onChange={(event) => setForm((value) => ({ ...value, preco_venda: event.target.value }))} placeholder="0,00" className={`${inputClass} mt-2`} /></label><label className={labelClass}>Parcelamento máximo<input type="number" min="1" max="24" value={form.parcelamento_maximo} onChange={(event) => setForm((value) => ({ ...value, parcelamento_maximo: event.target.value }))} className={`${inputClass} mt-2`} /></label></div>
+    
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className={labelClass}>Imagens do Pacote (Até 5 Fotos)</label>
+        <span className="text-xs font-bold text-neutral-400">{imagens.length} / 5 fotos</span>
+      </div>
+
+      <div className="space-y-4">
+        {imagens.length < 5 && (
+          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 p-4 text-sm font-bold text-indigo-700 hover:border-indigo-400 hover:bg-indigo-50 transition">
+            {uploadingImage ? <Loader2 className="h-5 w-5 animate-spin text-indigo-600" /> : <Upload className="h-5 w-5 text-indigo-600" />}
+            <span>{uploadingImage ? 'Enviando imagens...' : 'Clique para selecionar fotos (Até 5 arquivos de uma vez)'}</span>
+            <input type="file" accept="image/*" multiple onChange={(e) => void handleImageUpload(e)} disabled={uploadingImage} className="hidden" />
+          </label>
+        )}
+
+        {imagens.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {imagens.map((url, idx) => (
+              <div key={idx} className="relative aspect-square overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-2xs group">
+                <img src={url} alt={`Foto ${idx + 1}`} className="h-full w-full object-cover" />
+                
+                {idx === 0 ? (
+                  <div className="absolute left-2 top-2 rounded-md bg-indigo-600 px-2 py-1 text-[10px] font-black uppercase text-white shadow-md">
+                    CAPA
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAsCover(idx)}
+                    className="absolute left-2 top-2 rounded-md bg-black/60 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md opacity-0 group-hover:opacity-100 transition hover:bg-indigo-600"
+                  >
+                    Definir Capa
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => removeImage(idx)}
+                  className="absolute right-2 top-2 rounded-md bg-red-600 p-1.5 text-white shadow-md hover:bg-red-700 transition"
+                  title="Remover foto"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div>
+          <span className="text-[10px] font-bold uppercase text-neutral-400">Ou adicione URL direta da imagem (Pressione Enter):</span>
+          <input
+            placeholder="https://..."
+            className={`${inputClass} mt-1`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const input = e.currentTarget;
+                const val = input.value.trim();
+                if (val && imagens.length < 5) {
+                  setImagens((prev) => [...prev, val].slice(0, 5));
+                  input.value = '';
+                } else if (imagens.length >= 5) {
+                  toast.error('Limite máximo de 5 imagens atingido.');
+                }
+              }
+            }}
+          />
+        </div>
+      </div>
+    </div>
+
+    <button type="button" onClick={() => void save()} disabled={saving || uploadingImage} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-black text-white hover:bg-indigo-700 disabled:opacity-60">{saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <PackagePlus className="h-5 w-5" />}{saving ? 'Salvando...' : editingPkg ? 'Salvar Alterações' : 'Criar pacote como rascunho'}</button></div></Modal>
   </div>;
 }
 
-function ReadOnlyList({ kind, title }: { kind: 'propostas' | 'transacoes'; title: string }) {
+function PropostasTab() {
+  const list = usePagedTravelList('propostas');
+  const [selectedProposal, setSelectedProposal] = useState<any>(null);
+  const [extensionHours, setExtensionHours] = useState('48');
+  const [savingExtension, setSavingExtension] = useState(false);
+
+  const handleReactivate = async () => {
+    const hours = Number(extensionHours);
+    if (!Number.isFinite(hours) || hours <= 0) return toast.error('Informe uma quantidade válida de horas.');
+    setSavingExtension(true);
+    try {
+      const newDeadline = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+      const { error } = await supabase
+        .from('viagens_propostas')
+        .update({
+          prazo_aceitacao: newDeadline,
+          status: 'enviada',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedProposal.id);
+
+      if (error) throw new Error(error.message || 'Erro ao reativar proposta.');
+
+      toast.success(`Proposta reativada com sucesso por mais ${hours} horas!`);
+      setSelectedProposal(null);
+      await list.load();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível reativar a proposta.');
+    } finally {
+      setSavingExtension(false);
+    }
+  };
+
+  return (
+    <div>
+      <Toolbar 
+        title="Propostas enviadas" 
+        subtitle="Acompanhe validade, aceite e valores enviados. Reative propostas expiradas a qualquer momento." 
+        {...list} 
+        refresh={() => void list.load()} 
+      />
+
+      {list.loading ? (
+        <Loading />
+      ) : list.result.items.length === 0 ? (
+        <Empty text="Nenhuma proposta encontrada." />
+      ) : (
+        <div className="space-y-3">
+          {list.result.items.map((item) => {
+            const isExpired = item.status === 'expirada' || (new Date(item.prazo_aceitacao).getTime() < Date.now() && !['aceita', 'cancelada'].includes(item.status));
+
+            return (
+              <article key={item.id} className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200 p-5 sm:flex-row sm:items-center hover:border-indigo-200 transition bg-white shadow-2xs">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status={isExpired && item.status !== 'aceita' ? 'expirada' : item.status} />
+                    <span className="text-xs font-bold text-neutral-400">Criado em {formatDate(item.created_at)}</span>
+                  </div>
+                  <h4 className="font-black text-neutral-900 text-lg">{item.cliente_nome || item.snapshot_completo?.titulo || item.protocolo || 'Proposta de Viagem'}</h4>
+                  <p className="text-sm font-medium text-neutral-500">
+                    Validade do aceite: <strong className={isExpired ? 'text-red-600 font-bold' : 'text-neutral-800'}>{formatDateTime(item.prazo_aceitacao)}</strong>
+                    {isExpired && <span className="ml-2 rounded-md bg-red-100 px-2 py-0.5 text-[10px] font-black uppercase text-red-700">Expirada</span>}
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-end gap-3 sm:flex-row sm:items-center">
+                  {item.valor_total != null && (
+                    <p className="text-xl font-black text-indigo-700">{formatCurrency(item.valor_total)}</p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedProposal(item);
+                      setExtensionHours('48');
+                    }}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black transition border ${
+                      isExpired
+                        ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 shadow-2xs'
+                        : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <RefreshCcw className="h-4 w-4 text-amber-600" />
+                    {isExpired ? 'Reativar Proposta' : 'Prorrogar Validade'}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      <Pagination page={list.page} total={list.result.total} onPage={list.setPage} />
+
+      <Modal isOpen={Boolean(selectedProposal)} onClose={() => setSelectedProposal(null)} title="Reativar / Prorrogar Proposta" size="md">
+        {selectedProposal && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-indigo-50 p-4 border border-indigo-100">
+              <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">Proposta Selecionada</p>
+              <p className="text-base font-black text-neutral-900 mt-1">{selectedProposal.cliente_nome || selectedProposal.snapshot_completo?.titulo || selectedProposal.protocolo}</p>
+              <p className="text-xs font-medium text-neutral-600 mt-1">Validade atual: {formatDateTime(selectedProposal.prazo_aceitacao)}</p>
+            </div>
+
+            <label className={labelClass}>
+              Novo período de validade (em horas)
+              <input
+                type="number"
+                min="1"
+                max="720"
+                value={extensionHours}
+                onChange={(e) => setExtensionHours(e.target.value)}
+                className={`${inputClass} mt-2`}
+                placeholder="48"
+              />
+              <span className="mt-1 block text-[11px] font-medium text-neutral-400">
+                A proposta receberá um novo prazo contado a partir de agora (+{extensionHours || 0} horas).
+              </span>
+            </label>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedProposal(null)}
+                className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void handleReactivate()}
+                disabled={savingExtension}
+                className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black text-white hover:bg-indigo-700 disabled:opacity-60 shadow-md shadow-indigo-200"
+              >
+                {savingExtension ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+                {savingExtension ? 'Reativando...' : 'Confirmar e Reativar'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+function ReadOnlyList({ kind, title }: { kind: 'transacoes'; title: string }) {
   const list = usePagedTravelList(kind);
-  const subtitle = kind === 'propostas' ? 'Acompanhe validade, aceite e valores enviados.' : 'Acompanhe pagamentos, emissão e confirmação das viagens.';
-  return <div><Toolbar title={title} subtitle={subtitle} {...list} refresh={() => void list.load()} />{list.loading ? <Loading /> : list.result.items.length === 0 ? <Empty text="Nenhum registro encontrado." /> : <div className="space-y-3">{list.result.items.map((item) => <article key={item.id} className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200 p-4 sm:flex-row sm:items-center"><div><div className="mb-2 flex flex-wrap gap-2"><StatusBadge status={item.status} /><span className="text-xs font-bold text-neutral-400">{formatDate(item.created_at)}</span></div><h4 className="font-black text-neutral-900">{item.cliente_nome || item.snapshot_completo?.titulo || item.protocolo || 'Registro de viagem'}</h4><p className="mt-1 text-sm text-neutral-500">{kind === 'propostas' ? `Validade: ${formatDate(item.prazo_aceitacao)}` : `Forma de pagamento: ${item.forma_pagamento || '—'}`}</p></div>{item.valor_total != null && <p className="text-lg font-black text-indigo-700">{formatCurrency(item.valor_total)}</p>}</article>)}</div>}<Pagination page={list.page} total={list.result.total} onPage={list.setPage} /></div>;
+  const subtitle = 'Acompanhe pagamentos, emissão e confirmação das viagens.';
+  return <div><Toolbar title={title} subtitle={subtitle} {...list} refresh={() => void list.load()} />{list.loading ? <Loading /> : list.result.items.length === 0 ? <Empty text="Nenhum registro encontrado." /> : <div className="space-y-3">{list.result.items.map((item) => <article key={item.id} className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200 p-4 sm:flex-row sm:items-center"><div><div className="mb-2 flex flex-wrap gap-2"><StatusBadge status={item.status} /><span className="text-xs font-bold text-neutral-400">{formatDate(item.created_at)}</span></div><h4 className="font-black text-neutral-900">{item.cliente_nome || item.snapshot_completo?.titulo || item.protocolo || 'Registro de viagem'}</h4><p className="mt-1 text-sm text-neutral-500">{`Forma de pagamento: ${item.forma_pagamento || '—'}`}</p></div>{item.valor_total != null && <p className="text-lg font-black text-indigo-700">{formatCurrency(item.valor_total)}</p>}</article>)}</div>}<Pagination page={list.page} total={list.result.total} onPage={list.setPage} /></div>;
 }
 
 function Loading() {
