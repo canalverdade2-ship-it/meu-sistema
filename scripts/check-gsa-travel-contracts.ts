@@ -219,8 +219,20 @@ async function main() {
   await assertFileDoesNotContain(
     'supabase/migrations/20260721150000_gsa_viagens_financial_integrity.sql',
     [
-      'valor_solicitado,\n    status\n  ) VALUES (\n    p_transacao_id,\n    v_cliente_id,\n    trim(p_motivo),\n    v_transacao.valor_pago',
-      'GRANT EXECUTE ON FUNCTION public.gsa_admin_resolve_travel_cancellation',
+      'v_transacao.valor_pago,\n    \'solicitado\'',
+      'valor_solicitado = v_transacao.valor_pago',
+    ],
+  );
+
+  await assertFileContains(
+    'supabase/migrations/20260721150100_gsa_viagens_admin_refund_queue.sql',
+    [
+      'RETURN OLD',
+      'RETURN NEW',
+      'gsa_admin_travel_cancellation_list',
+      'A fila de reembolsos exige permissao do modulo Financeiro',
+      'valor_efetivamente_pago',
+      'valor_elegivel_reembolso',
     ],
   );
 
