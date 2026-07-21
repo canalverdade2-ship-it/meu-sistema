@@ -4,6 +4,7 @@ import {
   ChevronRight,
   ClipboardList,
   Clock,
+  CreditCard,
   Gavel,
   Gift,
   HeartPulse,
@@ -87,9 +88,13 @@ const MENU_GROUPS: MenuGroup[] = [
     { id: 'financeiro', label: 'Financeiro', icon: Landmark },
     { id: 'cobranca', label: 'Cobrança', icon: Gavel },
     { id: 'fiscal', label: 'Fiscal', icon: Receipt },
+    { id: 'emprestimos', label: 'Empréstimos', icon: Landmark },
+    { id: 'credito_loja', label: 'Crédito da Loja', icon: CreditCard },
   ]},
   { label: 'Relacionamento', items: [
     { id: 'fidelidade', label: 'Fidelidade', icon: Gift },
+    { id: 'promocoes', label: 'Promoções por Quantidade', icon: Tags },
+    { id: 'area_vip', label: 'Área VIP', icon: Gift },
     { id: 'atendimento', label: 'Atendimento', icon: MessageSquare },
   ]},
   { label: 'Gestão', items: [
@@ -143,15 +148,18 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
   const canAccess = (module: string, tab?: string) => hasAdminModuleAccess(module, adminType, internalModulos, tab);
   const go = (module: string, tab?: string, itemId?: string) => {
     const normalized = normalizeAdminModule(module);
-    if (!canAccess(normalized, tab)) {
+    const providerOnly = normalized === 'cadastro' && !canAccess('cadastro') && canAccess('prestadores');
+    const targetModule = providerOnly ? 'prestadores' : module;
+    const targetNormalized = normalizeAdminModule(targetModule);
+    if (!canAccess(targetNormalized, tab)) {
       toast.error('Você não possui permissão para acessar este módulo.');
       return;
     }
-    navigate(adminPathFor(module, tab, itemId));
+    navigate(adminPathFor(targetModule, tab, itemId));
     setIsMobileMenuOpen(false);
   };
 
-  const visibleGroups = useMemo(() => MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => canAccess(item.id)) })).filter((group) => group.items.length > 0), [adminType, internalModulos]);
+  const visibleGroups = useMemo(() => MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => item.id === 'cadastro' ? canAccess('cadastro') || canAccess('prestadores') : canAccess(item.id)) })).filter((group) => group.items.length > 0), [adminType, internalModulos]);
   const allItems = MENU_GROUPS.flatMap((group) => group.items);
   const normalizedActive = normalizeAdminModule(activeModule);
   const activeLabel = allItems.find((item) => item.id === normalizedActive)?.label || 'Dashboard';
@@ -197,6 +205,8 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
         {normalizedActive === 'fidelidade' && <ErrorBoundary><CadastroModule title="Fidelidade" allowedTabs={['indicacoes', 'vouchers', 'premios', 'promocoes']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
         {normalizedActive === 'atendimento' && <TicketsModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {normalizedActive === 'financeiro' && <FinanceiroModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />}
+        {normalizedActive === 'emprestimos' && <ErrorBoundary><VendasModule title="Empréstimos" allowedTabs={['emprestimos']} initialTab={activeTab || 'emprestimos'} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} /></ErrorBoundary>}
+        {normalizedActive === 'credito_loja' && <ErrorBoundary><VendasModule title="Crédito da Loja" allowedTabs={['credito']} initialTab={activeTab || 'credito'} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} /></ErrorBoundary>}
         {activeModule === 'cobranca' && <ErrorBoundary><CobrancaModule initialTab={activeTab} initialItemId={activeItemId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} /></ErrorBoundary>}
         {activeModule === 'fiscal' && <FiscalModule initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {normalizedActive === 'relatorios' && <RelatoriosModule adminType={adminType} colaboradorModulos={internalModulos} />}

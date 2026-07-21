@@ -108,6 +108,10 @@ export function CadastroModule({
       return { main: isAllowedTab('prestadores') ? 'prestadores' as MainTab : firstAllowedTab, sub: isAllowedTab('prestadores') ? initialTab : SUB_TABS[firstAllowedTab][0].id };
     }
 
+    if (initialTab === 'categorias') {
+      return { main: isAllowedTab('categorias_loja') ? 'categorias_loja' as MainTab : firstAllowedTab, sub: isAllowedTab('categorias_loja') ? 'todas' : SUB_TABS[firstAllowedTab][0].id };
+    }
+
     // Se for uma aba principal
     if (Object.keys(SUB_TABS).includes(initialTab)) {
       const main = initialTab as MainTab;

@@ -39,35 +39,12 @@ export function MarketplaceGSAStore({
   clientId,
   initialTab = 'home',
   initialItemId,
-  onNavigate,
   onBackToSite,
   onRequireAuth,
 }: MarketplaceGSAStoreProps) {
   const route = useAppLocation();
 
   const handleNavigate = (path: string) => {
-    if (onNavigate) {
-      const segments = path.split('/').filter(Boolean);
-      const isStorePath = segments.includes('loja');
-      const moduleName = 'gsa_store';
-
-      let tabName = 'home';
-      if (isStorePath) {
-        tabName = segments[2] ? `loja-${segments[2]}` : 'loja';
-      } else if (segments.includes('pacotes-viagem')) {
-        tabName = 'pacotes-viagem';
-      } else if (segments.includes('classificados')) {
-        tabName = 'classificados';
-      } else if (segments.includes('saude')) {
-        tabName = 'saude';
-      } else if (segments.includes('seguros')) {
-        tabName = 'seguros';
-      }
-
-      onNavigate(moduleName, tabName, segments[3]);
-      return;
-    }
-
     navigate(path);
   };
 

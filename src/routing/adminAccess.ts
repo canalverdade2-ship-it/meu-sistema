@@ -64,6 +64,7 @@ export function normalizeAdminModule(module?: string | null): AdminModule {
   if (value === 'tickets' || value === 'suporte') return 'atendimento';
   if (value === 'cadastros' || value === 'clientes') return 'cadastro';
   if (value === 'prestadores') return 'prestadores';
+  if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (['vendas', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'os'].includes(value)) return 'operacoes';
   if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';
 
@@ -76,6 +77,7 @@ function normalizeGrantedModule(module: string): AdminModule | null {
 
   if (value === 'clientes' || value === 'cadastros') return 'cadastro';
   if (value === 'prestadores') return 'prestadores';
+  if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (value === 'vendas') return 'operacoes';
   if (value === 'tickets' || value === 'suporte') return 'atendimento';
   if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';

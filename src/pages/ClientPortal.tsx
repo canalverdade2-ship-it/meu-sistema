@@ -372,7 +372,8 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
       path = routes.marketplace.classifieds.meusAnuncios();
     }
 
-    navigate(path);
+    if (replaceFlag) replace(path);
+    else navigate(path);
     setModuleKey(prev => prev + 1);
 
     // Auto collapse sidebar if not pinned on desktop
