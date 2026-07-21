@@ -1,0 +1,38 @@
+name: Apply Final Home First Access Patch
+
+on:
+  push:
+    branches: [agent/fechar-auditoria-final-home]
+    paths:
+      - 'scripts/apply-final-home-first-access-patch.mjs'
+      - '.github/workflows/apply-final-home-first-access-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/fechar-auditoria-final-home
+          fetch-depth: 0
+
+      - name: Apply verified UI patch
+        run: node scripts/apply-final-home-first-access-patch.mjs
+
+      - name: Remove temporary executor
+        run: |
+          rm scripts/apply-final-home-first-access-patch.mjs
+          rm .github/workflows/apply-final-home-first-access-patch.yml
+
+      - name: Commit final UI protection
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/auth/ClientAccessModal.tsx src/components/auth/RestrictedAccessModal.tsx scripts/apply-final-home-first-access-patch.mjs .github/workflows/apply-final-home-first-access-patch.yml
+          git commit -m 'Remover primeiro acesso público sem prova de posse'
+          git push origin HEAD:agent/fechar-auditoria-final-home
