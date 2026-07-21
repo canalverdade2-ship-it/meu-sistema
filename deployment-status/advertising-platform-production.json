@@ -1,0 +1,9 @@
+{
+  "status": "failure",
+  "workflow_run_id": "29870341158",
+  "validated_sha": "232461104c944d64b3a43ae007fc8b44c1d93b02",
+  "validated_at_utc": "2026-07-21T21:33:10Z",
+  "project_ref": "ocgajvagxagutfvgxwsy",
+  "migrations": ["20260721210000", "20260721223000", "20260721223500"],
+  "edge_functions": ["gsa-public-advertising", "gsa-advertiser-admin", "gsa-ad-delivery", "gsa-advertising-webhook", "gsa-advertising-scheduler"]
+}
