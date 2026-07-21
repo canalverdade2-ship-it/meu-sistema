@@ -11,6 +11,7 @@ const recoveryRateMigration = read('supabase/migrations/20260721125500_prevent_r
 const budgetModal = read('src/components/public/SystemsBudgetModal.tsx');
 const budgetGateway = read('supabase/functions/gsa-public-budget/index.ts');
 const clientModal = read('src/components/auth/ClientAccessModal.tsx');
+const restrictedModal = read('src/components/auth/RestrictedAccessModal.tsx');
 const finalHome = read('src/components/public/GSAEnterpriseHomeFinal.tsx');
 const privacy = read('src/components/public/PrivacyPolicyDialog.tsx');
 const metadata = read('src/hooks/usePublicPageMetadata.ts');
@@ -40,6 +41,10 @@ assert.match(budgetGateway, /gsa_public_create_enterprise_budget_v2/, 'O gateway
 
 assert.match(firstAccessMigration, /gsa_set_pin_and_login/, 'A rotina de primeiro acesso sem OTP deve ser localizada');
 assert.match(firstAccessMigration, /PUBLIC, anon, authenticated, service_role/, 'O gateway e os papéis públicos não podem executar primeiro acesso sem OTP');
+assert.doesNotMatch(clientModal, /sessionService\.setPinAndLogin/, 'Cliente não pode criar PIN somente com documento e telefone');
+assert.doesNotMatch(restrictedModal, /sessionService\.setPinAndLogin/, 'Prestador não pode criar PIN somente com documento e telefone');
+assert.match(clientModal, /primeiro acesso exige o código enviado ao e-mail cadastrado/, 'Cliente deve ser orientado ao OTP no primeiro acesso');
+assert.match(restrictedModal, /liberado pelo suporte após a confirmação de identidade/, 'Prestador deve receber orientação segura no primeiro acesso');
 assert.match(recoveryRateMigration, /p_limit = 4 AND p_window_seconds = 1800 AND p_block_seconds = 7200/, 'O bucket vulnerável da recuperação deve ser neutralizado');
 assert.match(recoveryRateMigration, /DELETE FROM public\.gsa_auth_rate_limits WHERE bucket_key = p_bucket_key/, 'Bloqueios antigos por documento devem ser removidos');
 
