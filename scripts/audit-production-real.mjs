@@ -129,4 +129,11 @@ const markdown = [
 fs.writeFileSync(path.join(reportDir, 'production-real-audit.md'), markdown);
 
 console.log(`Auditoria concluída: ${scannedFiles.length} arquivos, ${blockers.length} bloqueador(es), ${review.length} ocorrência(s) para revisão.`);
+if (blockers.length > 0) {
+  console.error('\nBloqueadores encontrados pela auditoria de operação real:');
+  for (const item of blockers) {
+    console.error(`- ${item.file}:${item.line} [${item.rule}] ${item.excerpt}`);
+  }
+  console.error('\nRelatório completo: audit/production-real-audit.md');
+}
 if (process.argv.includes('--enforce') && blockers.length > 0) process.exit(1);
