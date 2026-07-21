@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { GSAEnterpriseHome } from '../components/public/GSAEnterpriseHome';
-import { SystemsPage } from '../components/public/SystemsPage';
+import { GSAEnterpriseHomeFinal } from '../components/public/GSAEnterpriseHomeFinal';
 import { LoginHub } from '../components/public/LoginHub';
 import { ClientAccessModal, type ClientAccessMode } from '../components/auth/ClientAccessModal';
 import { RestrictedAccessModal, type RestrictedTab } from '../components/auth/RestrictedAccessModal';
@@ -16,6 +15,8 @@ import {
 } from '../data/publicServiceCatalog';
 import { usePublicPageMetadata } from '../hooks/usePublicPageMetadata';
 
+const SystemsPageFinal = lazy(() => import('../components/public/SystemsPageFinal').then((module) => ({ default: module.SystemsPageFinal })));
+
 interface HomeProps {
   onLoginClient: (id: string, isRecovery?: boolean) => void;
   onLoginAdmin: (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => void;
@@ -28,6 +29,10 @@ interface HomeProps {
   onLoginPage?: () => void;
   loginOnly?: boolean;
   onBackHome?: () => void;
+}
+
+function PublicPageLoading() {
+  return <div className="flex min-h-screen items-center justify-center bg-neutral-950 text-sm font-bold text-white/70" role="status">Carregando página...</div>;
 }
 
 export function Home({
@@ -112,12 +117,11 @@ export function Home({
           onRestrictedAccess={() => openRestricted('prestador')}
         />
       ) : publicPage === 'systems' ? (
-        <SystemsPage
-          onBack={() => changePublicPage('home')}
-          onLogin={handlePublicLogin}
-        />
+        <Suspense fallback={<PublicPageLoading />}>
+          <SystemsPageFinal onBack={() => changePublicPage('home')} onLogin={handlePublicLogin} />
+        </Suspense>
       ) : (
-        <GSAEnterpriseHome
+        <GSAEnterpriseHomeFinal
           publicPage={publicPage}
           setPublicPage={changePublicPage}
           publicAudience={publicAudience}
@@ -133,20 +137,8 @@ export function Home({
         />
       )}
 
-      <ClientAccessModal
-        isOpen={clientModalOpen}
-        initialMode={clientMode}
-        onClose={() => setClientModalOpen(false)}
-        onLoginClient={onLoginClient}
-      />
-
-      <RestrictedAccessModal
-        isOpen={restrictedModalOpen}
-        initialTab={restrictedTab}
-        onClose={() => setRestrictedModalOpen(false)}
-        onLoginAdmin={onLoginAdmin}
-        onLoginPrestador={onLoginPrestador}
-      />
+      <ClientAccessModal isOpen={clientModalOpen} initialMode={clientMode} onClose={() => setClientModalOpen(false)} onLoginClient={onLoginClient} />
+      <RestrictedAccessModal isOpen={restrictedModalOpen} initialTab={restrictedTab} onClose={() => setRestrictedModalOpen(false)} onLoginAdmin={onLoginAdmin} onLoginPrestador={onLoginPrestador} />
     </>
   );
 }

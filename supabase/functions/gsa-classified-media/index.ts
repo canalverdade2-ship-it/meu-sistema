@@ -12,7 +12,7 @@ const EXTENSIONS_BY_TYPE: Record<string, Set<string>> = {
 };
 
 const baseHeaders: Record<string, string> = {
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-gsa-session-id, x-gsa-session-token',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Cache-Control': 'no-store',
   'Content-Type': 'application/json',
@@ -79,31 +79,49 @@ async function validImageSignature(file: File) {
   return false;
 }
 
-async function authenticateClient(request: Request, supabaseUrl: string, anonKey: string, serviceRoleKey: string) {
+async function authenticateClient(request: Request, supabaseUrl: string, serviceRoleKey: string) {
   const accessToken = bearerToken(request);
-  if (!accessToken) return { error: 'authentication_required' as const };
+  const declaredSessionId = String(request.headers.get('x-gsa-session-id') || '').trim().toLowerCase();
+  const declaredSessionToken = String(request.headers.get('x-gsa-session-token') || '').trim();
+
+  if (!accessToken || !UUID_PATTERN.test(declaredSessionId) || !declaredSessionToken) {
+    return { error: 'authentication_required' as const };
+  }
 
   const admin = createClient<any>(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+
   const { data: userData, error: userError } = await admin.auth.getUser(accessToken);
   const user = userData.user;
   if (userError || !user) return { error: 'invalid_authentication' as const };
 
   const metadata = user.app_metadata || {};
   const clientId = String(metadata.gsa_actor_id || '').trim().toLowerCase();
-  const sessionId = String(metadata.gsa_session_id || '').trim().toLowerCase();
-  if (metadata.gsa_actor_type !== 'cliente' || !UUID_PATTERN.test(clientId) || !UUID_PATTERN.test(sessionId)) {
+  const metadataSessionId = String(metadata.gsa_session_id || '').trim().toLowerCase();
+  if (
+    metadata.gsa_actor_type !== 'cliente'
+    || !UUID_PATTERN.test(clientId)
+    || metadataSessionId !== declaredSessionId
+  ) {
     return { error: 'client_session_required' as const };
   }
 
-  const userClient = createClient<any>(supabaseUrl, anonKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+  const { data: validationData, error: validationError } = await admin.rpc('gsa_validate_session', {
+    p_sessao_id: declaredSessionId,
+    p_session_token: declaredSessionToken,
   });
-  const { data: sessionValid, error: sessionError } = await userClient.rpc('gsa_jwt_session_is_valid');
-  const valid = Array.isArray(sessionValid) ? sessionValid[0] : sessionValid;
-  if (sessionError || valid !== true) return { error: 'expired_session' as const };
+  const validation = Array.isArray(validationData) ? validationData[0] : validationData;
+  if (validationError || !validation?.is_valid) {
+    console.error('Falha ao validar sessão GSA no upload:', validationError || validation);
+    return { error: 'expired_session' as const };
+  }
+
+  const validatedActorId = String(validation?.ator_id || validation?.actor_id || clientId).trim().toLowerCase();
+  const validatedActorType = String(validation?.ator_tipo || validation?.actor_type || 'cliente').trim().toLowerCase();
+  if (validatedActorId !== clientId || validatedActorType !== 'cliente') {
+    return { error: 'session_identity_mismatch' as const };
+  }
 
   const { data: client, error: clientError } = await admin
     .from('clientes')
@@ -120,7 +138,13 @@ async function authenticateClient(request: Request, supabaseUrl: string, anonKey
     return { error: 'client_access_restricted' as const };
   }
 
-  return { admin, clientId, sessionId };
+  return { admin, clientId, sessionId: declaredSessionId };
+}
+
+function authenticationMessage(error: string) {
+  if (error === 'expired_session') return 'Sua sessão expirou. Faça login novamente para enviar imagens.';
+  if (error === 'client_access_restricted') return 'Seu cadastro não está liberado para esta operação.';
+  return 'Não foi possível confirmar sua sessão. Faça login novamente.';
 }
 
 export async function handleRequest(request: Request) {
@@ -133,15 +157,14 @@ export async function handleRequest(request: Request) {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+    if (!supabaseUrl || !serviceRoleKey) {
       return json({ success: false, error: 'server_not_configured' }, 500, allowedOrigin);
     }
 
-    const authenticated = await authenticateClient(request, supabaseUrl, anonKey, serviceRoleKey);
+    const authenticated = await authenticateClient(request, supabaseUrl, serviceRoleKey);
     if ('error' in authenticated) {
-      return json({ success: false, error: authenticated.error, message: 'Sua sessão não permite esta operação.' }, 401, allowedOrigin);
+      return json({ success: false, error: authenticated.error, message: authenticationMessage(authenticated.error) }, 401, allowedOrigin);
     }
 
     const contentType = request.headers.get('content-type') || '';
