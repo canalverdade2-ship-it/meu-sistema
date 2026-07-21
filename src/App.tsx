@@ -8,6 +8,7 @@ import { useAutoLogout } from './hooks/useAutoLogout';
 import { sessionService } from './lib/sessionService';
 import { ClientNotificationProvider } from './hooks/useClientNotifications';
 import { ProviderNotificationProvider } from './hooks/useProviderNotifications';
+import { ProviderRouteGuard } from './pages/Prestador/ProviderRouteGuard';
 import { FullscreenPrompt } from './components/ui/FullscreenPrompt';
 import { WhatsAppButton } from './components/ui/WhatsAppButton';
 import { FileViewerProvider } from './contexts/FileViewerContext';
@@ -203,6 +204,8 @@ export default function App() {
                     else navigate(routes.marketplace.store.subscriptions());
                   } else if (targetTab === 'pacotes-viagem') navigate(routes.marketplace.travelPackages.root());
                   else if (targetTab === 'classificados') navigate(routes.marketplace.classifieds.root());
+                  else if (targetTab === 'saude') navigate(routes.marketplace.saude.root());
+                  else if (targetTab === 'seguros') navigate(routes.marketplace.seguros.root());
                 }}
                 onBackToSite={() => navigate(routes.public.home())}
                 onRequireAuth={() => {
@@ -216,10 +219,27 @@ export default function App() {
               <ClientNotificationProvider clientId={session.clientId}>
                 <ClientPortal
                   clientId={session.clientId}
-                  onLogout={handleLogout}
                   initialModule="gsa_store"
                   initialStoreTab={route.submodule?.replace('loja-', '') || 'home'}
                   initialStoreItemId={route.itemId}
+                  onNavigate={(mod, tab, itemId) => {
+                    const targetTab = tab || 'home';
+                    if (targetTab === 'home') navigate(routes.marketplace.root());
+                    else if (targetTab === 'menu') navigate(routes.marketplace.menu());
+                    else if (targetTab === 'produtos-assinaturas' || targetTab === 'loja') navigate(routes.marketplace.store.root());
+                    else if (targetTab === 'produtos' || targetTab === 'loja-produtos') {
+                      if (itemId) navigate(routes.marketplace.store.product(itemId));
+                      else navigate(routes.marketplace.store.products());
+                    } else if (targetTab === 'assinaturas' || targetTab === 'loja-assinaturas') {
+                      if (itemId) navigate(routes.marketplace.store.subscription(itemId));
+                      else navigate(routes.marketplace.store.subscriptions());
+                    } else if (targetTab === 'pacotes-viagem') navigate(routes.marketplace.travelPackages.root());
+                    else if (targetTab === 'classificados') navigate(routes.marketplace.classifieds.root());
+                    else if (targetTab === 'saude') navigate(routes.marketplace.saude.root());
+                    else if (targetTab === 'seguros') navigate(routes.marketplace.seguros.root());
+                  }}
+                  onBackToSite={() => navigate(routes.public.home())}
+                  onRequireAuth={() => undefined}
                 />
               </ClientNotificationProvider>
             )}
@@ -244,7 +264,9 @@ export default function App() {
 
             {activeView === 'provider' && session.prestadorId && (
               <ProviderNotificationProvider prestadorId={session.prestadorId}>
-                <PrestadorDashboard prestadorId={session.prestadorId} onLogout={handleLogout} />
+                <ProviderRouteGuard>
+                  <PrestadorDashboard prestadorId={session.prestadorId} onLogout={handleLogout} />
+                </ProviderRouteGuard>
               </ProviderNotificationProvider>
             )}
           </Suspense>
