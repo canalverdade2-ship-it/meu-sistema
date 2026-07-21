@@ -122,7 +122,7 @@ const requiredVerificationContracts = [
   "WHERE id = 'classificados-midias'",
   "cmd IN ('INSERT', 'UPDATE', 'DELETE', 'ALL')",
   "RAISE EXCEPTION 'Existe política de escrita direta para o bucket classificados-midias.'",
-  "RAISE NOTICE 'CLASSIFIEDS_MEDIA_STORAGE_VERIFIED'",
+  "SELECT 'CLASSIFIEDS_MEDIA_STORAGE_VERIFIED' AS verification_status",
 ];
 
 for (const contract of requiredVerificationContracts) {
