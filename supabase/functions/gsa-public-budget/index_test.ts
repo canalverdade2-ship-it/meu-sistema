@@ -1,6 +1,8 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import { handleRequest, normalizePayload } from './index.ts';
 
+const DEVELOPMENT_ORIGINS = 'http://localhost:3000,http://10.0.2.189:3000';
+
 Deno.test('normaliza todos os tipos públicos, incluindo integração', () => {
   const payload = normalizePayload({
     nome: 'Empresa de Teste',
@@ -30,7 +32,7 @@ Deno.test('rejeita payload inválido antes de acessar o banco', () => {
 });
 
 Deno.test('bloqueia origem não autorizada', async () => {
-  Deno.env.set('ALLOWED_ORIGINS', 'http://localhost:3000');
+  Deno.env.set('ALLOWED_ORIGINS', DEVELOPMENT_ORIGINS);
   const response = await handleRequest(new Request('https://example.test', {
     method: 'OPTIONS',
     headers: { origin: 'https://attacker.example' },
@@ -39,7 +41,7 @@ Deno.test('bloqueia origem não autorizada', async () => {
 });
 
 Deno.test('aceita preflight da origem de desenvolvimento configurada', async () => {
-  Deno.env.set('ALLOWED_ORIGINS', 'http://localhost:3000,http://10.0.2.189:3000');
+  Deno.env.set('ALLOWED_ORIGINS', DEVELOPMENT_ORIGINS);
   const response = await handleRequest(new Request('https://example.test', {
     method: 'OPTIONS',
     headers: { origin: 'http://10.0.2.189:3000' },
