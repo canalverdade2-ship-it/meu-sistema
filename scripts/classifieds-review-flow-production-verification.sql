@@ -1,3 +1,4 @@
+-- Verificação final do fluxo completo de revisão e ajustes dos Classificados.
 DO $verification$
 BEGIN
   IF to_regclass('public.classificados_ajustes') IS NULL THEN
