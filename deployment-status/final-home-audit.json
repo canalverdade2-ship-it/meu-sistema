@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "workflow_run_id": "29838168032",
+  "source_sha": "b2f6b75cc9af28f64ba7972b6bad667e829d6ec0",
+  "validated_at_utc": "2026-07-21T14:16:18Z",
+  "migrations": "success",
+  "database_permissions": "success",
+  "edge_function": "success",
+  "cors": "success",
+  "allowed_origins": "http://10.0.2.189:3000,http://localhost:3000,http://127.0.0.1:3000"
+}

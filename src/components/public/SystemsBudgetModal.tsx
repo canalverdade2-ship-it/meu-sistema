@@ -23,6 +23,12 @@ interface BudgetForm {
   website: string;
 }
 
+interface BudgetResponse {
+  success?: boolean;
+  protocol?: string;
+  error?: string;
+}
+
 const EMPTY_FORM: BudgetForm = {
   nome: '',
   email: '',
@@ -112,14 +118,15 @@ export function SystemsBudgetModal({ isOpen, onClose }: SystemsBudgetModalProps)
         metadata: getCampaignMetadata(),
       };
 
-      const { data, error } = await supabase.rpc('gsa_public_create_enterprise_budget_v2', {
-        p_payload: payload,
+      const { data, error } = await supabase.functions.invoke<BudgetResponse>('gsa-public-budget', {
+        body: { payload },
       });
       if (error) throw error;
+      if (!data?.success || typeof data.protocol !== 'string' || !data.protocol.trim()) {
+        throw new Error(data?.error || 'Resposta inválida do serviço de orçamento.');
+      }
 
-      const response = Array.isArray(data) ? data[0] : data;
-      const responseProtocol = typeof response?.protocol === 'string' ? response.protocol : null;
-      setProtocol(responseProtocol || 'Solicitação registrada');
+      setProtocol(data.protocol.trim());
       setForm(EMPTY_FORM);
       toast.success('Solicitação enviada com sucesso.');
     } catch (error) {
@@ -144,10 +151,10 @@ export function SystemsBudgetModal({ isOpen, onClose }: SystemsBudgetModalProps)
           <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-[#8a6e2f]">Solicitação recebida</p>
           <h2 className="mt-3 text-3xl font-black text-neutral-950">Seu projeto já está em análise</h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-neutral-600">
-            Nossa equipe retornará pelo contato informado. Guarde o protocolo abaixo para facilitar o atendimento.
+            Nossa equipe retornará pelo contato informado. O código abaixo é o mesmo registrado no orçamento e pode ser usado no atendimento.
           </p>
           <div className="mx-auto mt-6 max-w-md rounded-xl border border-neutral-200 bg-neutral-50 px-5 py-4">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">Protocolo</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">Protocolo do orçamento</span>
             <strong className="mt-1 block text-lg text-neutral-950">{protocol}</strong>
           </div>
           <div className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -215,7 +222,9 @@ export function SystemsBudgetModal({ isOpen, onClose }: SystemsBudgetModalProps)
             <textarea id="budget-request" required rows={6} minLength={20} maxLength={2000} value={form.solicitacao} onChange={(event) => update('solicitacao', event.target.value)} placeholder="Explique o objetivo do projeto, o público e as principais funções necessárias." className="input-field resize-none" />
           </div>
 
-          <p className="text-xs leading-5 text-neutral-500">Os dados serão utilizados somente para analisar sua solicitação e entrar em contato.</p>
+          <p className="text-xs leading-5 text-neutral-500">
+            Usaremos os dados para analisar a solicitação e entrar em contato. Também registramos a página de origem, o domínio de referência e parâmetros de campanha para medir a origem do atendimento; esses metadados não são usados para autenticação.
+          </p>
           <button type="submit" disabled={submitting} className="btn-primary w-full">{submitting ? 'Enviando...' : 'Enviar solicitação'}</button>
         </form>
       )}

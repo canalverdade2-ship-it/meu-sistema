@@ -15,43 +15,60 @@ function ensureMeta(selector: string, attribute: 'name' | 'property', key: strin
 }
 
 function setMeta(attribute: 'name' | 'property', key: string, content: string) {
-  const selector = `meta[${attribute}="${key}"]`;
-  ensureMeta(selector, attribute, key).setAttribute('content', content);
+  ensureMeta(`meta[${attribute}="${key}"]`, attribute, key).setAttribute('content', content);
 }
 
-export function usePublicPageMetadata(
-  page: PublicPage,
-  selectedPackage: ServicePackage | null,
-  loginOnly = false,
-) {
+function setCanonical(url: string) {
+  let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    document.head.appendChild(canonical);
+  }
+  canonical.href = url;
+}
+
+export function usePublicPageMetadata(page: PublicPage, selectedPackage: ServicePackage | null, loginOnly = false) {
   useEffect(() => {
     const title = loginOnly
       ? 'Acesso ao Portal | GSA HUB'
       : selectedPackage
-      ? `${selectedPackage.title} | GSA HUB`
-      : page === 'services'
-        ? 'Serviços e Assinaturas | GSA HUB'
-        : page === 'systems'
-          ? 'Criação de Sites e Sistemas | GSA HUB'
-          : DEFAULT_TITLE;
+        ? `${selectedPackage.title} | GSA HUB`
+        : page === 'services'
+          ? 'Serviços e Assinaturas | GSA HUB'
+          : page === 'systems'
+            ? 'Criação de Sites e Sistemas | GSA HUB'
+            : DEFAULT_TITLE;
 
     const description = loginOnly
       ? 'Acesse a área do cliente, prestador ou equipe do GSA HUB.'
       : selectedPackage?.description
-      || (page === 'services'
-        ? 'Pacotes administrativos, financeiros, veiculares, previdenciários e empresariais do GSA HUB.'
-        : page === 'systems'
-          ? 'Criação de sites, lojas virtuais, aplicativos, sistemas web e automações sob medida.'
-          : DEFAULT_DESCRIPTION);
+        || (page === 'services'
+          ? 'Pacotes administrativos, financeiros, veiculares, previdenciários e empresariais do GSA HUB.'
+          : page === 'systems'
+            ? 'Criação de sites, lojas virtuais, aplicativos, sistemas web, integrações e automações sob medida.'
+            : DEFAULT_DESCRIPTION);
 
+    const canonicalPath = loginOnly
+      ? '/login'
+      : selectedPackage
+        ? window.location.pathname
+        : page === 'services'
+          ? '/servicos-e-assinaturas'
+          : page === 'systems'
+            ? '/criacao-de-site-e-sistemas'
+            : '/';
+    const canonical = new URL(canonicalPath, window.location.origin).toString();
     const image = new URL('/logo.svg', window.location.origin).toString();
+
     document.title = title;
+    setCanonical(canonical);
     setMeta('name', 'description', description);
     setMeta('property', 'og:title', title);
     setMeta('property', 'og:description', description);
     setMeta('property', 'og:type', selectedPackage ? 'product' : 'website');
     setMeta('property', 'og:image', image);
-    setMeta('property', 'og:url', window.location.href);
+    setMeta('property', 'og:url', canonical);
     setMeta('name', 'twitter:card', 'summary_large_image');
     setMeta('name', 'twitter:title', title);
     setMeta('name', 'twitter:description', description);
@@ -65,19 +82,30 @@ export function usePublicPageMetadata(
       script.type = 'application/ld+json';
       document.head.appendChild(script);
     }
+
     script.text = JSON.stringify(selectedPackage && !loginOnly ? {
       '@context': 'https://schema.org',
       '@type': 'Service',
       name: selectedPackage.title,
       description: selectedPackage.description,
       provider: { '@type': 'Organization', name: 'GSA HUB' },
-      url: window.location.href,
+      url: canonical,
+    } : page === 'systems' && !loginOnly ? {
+      '@context': 'https://schema.org',
+      '@type': 'ProfessionalService',
+      name: 'GSA Soluções Digitais',
+      description,
+      url: canonical,
+      email: 'gsa.doc.adm@gmail.com',
+      telephone: '+55 11 92085-7756',
+      areaServed: 'BR',
+      serviceType: ['Criação de sites', 'Desenvolvimento de sistemas', 'Aplicativos', 'Lojas virtuais', 'Automações e integrações'],
     } : {
       '@context': 'https://schema.org',
       '@type': 'Organization',
       name: 'GSA HUB',
       description,
-      url: window.location.origin,
+      url: canonical,
     });
   }, [loginOnly, page, selectedPackage]);
 }
