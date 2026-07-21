@@ -13,7 +13,7 @@ permissions:
 jobs:
   apply:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,6 +33,11 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Synchronize current main
+        run: |
+          git fetch origin main
+          git merge --no-edit origin/main
 
       - name: Apply verified completion patch
         run: python3 scripts/apply-advertising-completion.py
