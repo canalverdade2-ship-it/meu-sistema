@@ -33,10 +33,13 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
       - name: Apply verified integration patch
-        run: python3 scripts/apply-advertising-foundation.py
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 -u scripts/apply-advertising-foundation.py 2>&1 | tee advertising-integration.log
 
       - name: Remove temporary integrator
-        run: rm -f scripts/apply-advertising-foundation.py .github/workflows/apply-advertising-foundation.yml .apply-advertising-foundation-trigger
+        run: rm -f scripts/apply-advertising-foundation.py .github/workflows/apply-advertising-foundation.yml .apply-advertising-foundation-trigger advertising-integration.log
 
       - name: Install dependencies
         run: npm ci
@@ -54,3 +57,12 @@ jobs:
           git add -A
           git commit -m 'Integrar fundação do módulo GSA Anúncios'
           git push origin HEAD:agent/implantar-modulo-anuncios
+
+      - name: Upload integration diagnostic
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: advertising-integration-log
+          path: advertising-integration.log
+          if-no-files-found: warn
+          retention-days: 7
