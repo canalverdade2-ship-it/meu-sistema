@@ -260,7 +260,33 @@ function EntityEditor({ domain, tab, item, accent, onClose, onSaved }: { domain:
 
   const field = (name: string, label: string, type = 'text') => <label className="block text-sm font-bold">{label}<input type={type} value={form[name] ?? ''} onChange={(event) => setForm({ ...form, [name]: type === 'number' ? Number(event.target.value) : event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>;
 
-  return <Overlay onClose={onClose}><div className="flex items-center justify-between"><h2 className="text-2xl font-black">{item ? 'Editar' : 'Novo'} {tab === 'parceiros' ? 'parceiro' : 'produto'}</h2><button type="button" onClick={onClose}><X className="h-5 w-5" /></button></div><div className="mt-6 grid gap-4 sm:grid-cols-2">{field('nome', 'Nome *')}{tab === 'parceiros' ? <>{field('documento', 'CNPJ/registro')}{field('site', 'Site')}{field('contato', 'Contato')}{field('comissao_valor', 'Comissão acordada', 'number')}<label className="block text-sm font-bold sm:col-span-2">Observações<textarea value={form.observacoes || ''} onChange={(event) => setForm({ ...form, observacoes: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></> : <><label className="block text-sm font-bold">Parceiro<select value={form.parceiro_id || ''} onChange={(event) => setForm({ ...form, parceiro_id: event.target.value || null })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3"><option value="">Selecione</option>{partners.map((partner) => <option key={partner.id} value={partner.id}>{partner.nome}</option>)}</select></label>{field('categoria', 'Categoria')}{field('imagem_url', 'URL da imagem')}{field('preco_referencia', domain === 'saude' ? 'Mensalidade de referência' : 'Prêmio de referência', 'number')}<label className="block text-sm font-bold sm:col-span-2">Resumo<textarea value={form.resumo || ''} onChange={(event) => setForm({ ...form, resumo: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label><label className="flex items-center gap-3 text-sm font-bold sm:col-span-2"><input type="checkbox" checked={Boolean(form.destaque)} onChange={(event) => setForm({ ...form, destaque: event.target.checked })} /> Destacar no catálogo</label></>}</div><div className="mt-8 flex justify-end gap-3"><button type="button" onClick={onClose} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving} onClick={() => void save()} className="rounded-xl px-6 py-3 font-black text-white disabled:opacity-50" style={{ background: accent }}>{saving ? 'Salvando...' : 'Salvar'}</button></div></Overlay>;
+  const categoriesList = domain === 'saude' 
+    ? [
+        'Plano Individual / Familiar',
+        'Plano Coletivo por Adesão',
+        'Plano PME / Empresarial',
+        'Plano Odontológico',
+        'Telemedicina',
+        'Seguro Viagem Saúde',
+        'Seguro de Vida & Invalidez',
+        'Outros'
+      ]
+    : [
+        'Auto & Veículos',
+        'Vida & Acidentes Pessoais',
+        'Residencial & Patrimônio',
+        'Empresarial & Condomínio',
+        'Saúde & Odonto',
+        'Viagem Internacional',
+        'Celular & Portáteis',
+        'Fiança Locatícia',
+        'Crédito & Garantia',
+        'Responsabilidade Civil',
+        'Agronegócio',
+        'Outros'
+      ];
+
+  return <Overlay onClose={onClose}><div className="flex items-center justify-between"><h2 className="text-2xl font-black">{item ? 'Editar' : 'Novo'} {tab === 'parceiros' ? 'parceiro' : 'produto'}</h2><button type="button" onClick={onClose}><X className="h-5 w-5" /></button></div><div className="mt-6 grid gap-4 sm:grid-cols-2">{field('nome', 'Nome *')}{tab === 'parceiros' ? <>{field('documento', 'CNPJ/registro')}{field('site', 'Site')}{field('contato', 'Contato')}{field('comissao_valor', 'Comissão acordada', 'number')}<label className="block text-sm font-bold sm:col-span-2">Observações<textarea value={form.observacoes || ''} onChange={(event) => setForm({ ...form, observacoes: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></> : <><label className="block text-sm font-bold">Parceiro<select value={form.parceiro_id || ''} onChange={(event) => setForm({ ...form, parceiro_id: event.target.value || null })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3"><option value="">Selecione</option>{partners.map((partner) => <option key={partner.id} value={partner.id}>{partner.nome}</option>)}</select></label><label className="block text-sm font-bold">Categoria *<select value={form.categoria || ''} onChange={(event) => setForm({ ...form, categoria: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"><option value="">Selecione uma Categoria</option>{categoriesList.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select></label>{field('imagem_url', 'URL da imagem')}{field('preco_referencia', domain === 'saude' ? 'Mensalidade de referência' : 'Prêmio de referência', 'number')}<label className="block text-sm font-bold sm:col-span-2">Resumo<textarea value={form.resumo || ''} onChange={(event) => setForm({ ...form, resumo: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label><label className="flex items-center gap-3 text-sm font-bold sm:col-span-2"><input type="checkbox" checked={Boolean(form.destaque)} onChange={(event) => setForm({ ...form, destaque: event.target.checked })} /> Destacar no catálogo</label></>}</div><div className="mt-8 flex justify-end gap-3"><button type="button" onClick={onClose} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving} onClick={() => void save()} className="rounded-xl px-6 py-3 font-black text-white disabled:opacity-50" style={{ background: accent }}>{saving ? 'Salvando...' : 'Salvar'}</button></div></Overlay>;
 }
 
 function ProposalEditor({ domain, accent, onClose, onSaved }: { domain: Domain; accent: string; onClose: () => void; onSaved: () => Promise<void> }) {
