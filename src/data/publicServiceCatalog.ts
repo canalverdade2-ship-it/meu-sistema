@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import { BriefcaseBusiness, CreditCard, Headphones, PackageCheck, ShoppingBag, Sparkles } from 'lucide-react';
 
 export type Audience = 'PF' | 'PJ';
-export type PublicPage = 'home' | 'services' | 'systems' | 'partners';
+export type PublicPage = 'home' | 'services' | 'systems' | 'partners' | 'ads' | 'advertise';
 
 export interface IconItem {
   icon: ComponentType<{ className?: string }>;

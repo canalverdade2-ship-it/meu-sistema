@@ -171,7 +171,11 @@ export default function App() {
       ? 'systems'
       : route.module === 'partners'
         ? 'partners'
-        : 'home';
+        : route.module === 'ads'
+          ? 'ads'
+          : route.module === 'advertise'
+            ? 'advertise'
+            : 'home';
 
   return (
     <FileViewerProvider>
@@ -196,7 +200,11 @@ export default function App() {
                       ? routes.public.services()
                       : page === 'partners'
                         ? routes.public.partners()
-                        : routes.public.systems(),
+                        : page === 'ads'
+                          ? routes.public.ads()
+                          : page === 'advertise'
+                            ? routes.public.advertise()
+                            : routes.public.systems(),
                 )}
                 onLoginPage={() => navigate(routes.login.root())}
               />
@@ -216,7 +224,11 @@ export default function App() {
                       ? routes.public.services()
                       : page === 'partners'
                         ? routes.public.partners()
-                        : routes.public.systems(),
+                        : page === 'ads'
+                          ? routes.public.ads()
+                          : page === 'advertise'
+                            ? routes.public.advertise()
+                            : routes.public.systems(),
                 )}
                 loginOnly
                 onBackHome={() => navigate(routes.public.home())}

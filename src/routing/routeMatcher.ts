@@ -58,6 +58,12 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     if (segments[1]) itemId = segments[1];
     return { pathname, search, hash, area, module, itemId, query };
   }
+  if (normalizedPath === '/anuncios') {
+    return { pathname, search, hash, area: 'public', module: 'ads', query };
+  }
+  if (normalizedPath === '/anuncie') {
+    return { pathname, search, hash, area: 'public', module: 'advertise', query };
+  }
 
   // 3. MARKETPLACE
   if (segments[0] === 'marketplace') {

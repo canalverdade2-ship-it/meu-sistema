@@ -1,0 +1,115 @@
+name: Advertising Foundation
+
+on:
+  pull_request:
+    paths:
+      - 'src/components/public/AdvertisingPage.tsx'
+      - 'src/components/admin/AdvertisingAdminModule.tsx'
+      - 'src/types/advertising.ts'
+      - 'src/pages/Home.tsx'
+      - 'src/pages/AdminPanel.tsx'
+      - 'src/routing/**'
+      - 'src/security/collaboratorAccess.ts'
+      - 'src/data/publicServiceCatalog.ts'
+      - 'src/hooks/usePublicPageMetadata.ts'
+      - 'supabase/functions/gsa-public-advertising/**'
+      - 'supabase/migrations/20260721210000_create_advertising_foundation.sql'
+      - 'scripts/check-advertising-foundation.ts'
+      - 'package.json'
+      - '.github/workflows/advertising-foundation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/components/public/AdvertisingPage.tsx'
+      - 'src/components/admin/AdvertisingAdminModule.tsx'
+      - 'supabase/functions/gsa-public-advertising/**'
+      - 'supabase/migrations/20260721210000_create_advertising_foundation.sql'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: advertising_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d advertising_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGPASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Advertising contracts
+        run: npm run test:advertising
+
+      - name: Check public advertising gateway
+        run: deno check supabase/functions/gsa-public-advertising/index.ts
+
+      - name: Test public advertising gateway
+        run: deno test --allow-env supabase/functions/gsa-public-advertising/index_test.ts
+
+      - name: Apply advertising migration in PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -h 127.0.0.1 -U postgres -d advertising_test <<'SQL'
+          DO $$ BEGIN CREATE ROLE anon NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+          DO $$ BEGIN CREATE ROLE authenticated NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+          DO $$ BEGIN CREATE ROLE service_role NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+          CREATE OR REPLACE FUNCTION public.gsa_admin_has_module(text) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT true $$;
+          CREATE OR REPLACE FUNCTION public.gsa_current_actor_type() RETURNS text LANGUAGE sql STABLE AS $$ SELECT 'admin'::text $$;
+          CREATE OR REPLACE FUNCTION public.gsa_current_actor_id() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT '00000000-0000-0000-0000-000000000001'::uuid $$;
+          SQL
+          psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 -f supabase/migrations/20260721210000_create_advertising_foundation.sql
+          psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regclass('public.gsa_advertisers') IS NULL
+               OR to_regclass('public.gsa_ad_requests') IS NULL
+               OR to_regclass('public.gsa_ad_campaigns') IS NULL
+               OR to_regclass('public.gsa_ad_creatives') IS NULL THEN
+              RAISE EXCEPTION 'Tabelas obrigatórias do módulo de anúncios ausentes';
+            END IF;
+            IF to_regprocedure('public.gsa_public_submit_advertising_request(jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_admin_list_ad_requests(text)') IS NULL THEN
+              RAISE EXCEPTION 'RPCs obrigatórias do módulo de anúncios ausentes';
+            END IF;
+            IF (SELECT count(*) FROM public.gsa_ad_placements) < 7 THEN
+              RAISE EXCEPTION 'Inventário inicial de posições incompleto';
+            END IF;
+            IF has_function_privilege('anon', 'public.gsa_public_submit_advertising_request(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Anon não pode executar a RPC interna de solicitação';
+            END IF;
+          END $$;
+          SELECT 'ADVERTISING_FOUNDATION_OK' AS result;
+          SQL
+
+      - name: Production build
+        run: npm run build

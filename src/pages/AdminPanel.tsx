@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Megaphone,
   MessageSquare,
   Package,
   Plane,
@@ -55,6 +56,7 @@ import { ClassifiedsModule } from '../components/admin/ClassifiedsModule';
 import { TravelAdminModule } from '../components/admin/TravelAdminModule';
 import { ProtectionAdminModule } from '../components/admin/ProtectionAdminModule';
 import { PartnersAdminModule } from '../components/admin/PartnersAdminModule';
+import { AdvertisingAdminModule } from '../components/admin/AdvertisingAdminModule';
 import {
   adminPathFor,
   hasAdminModuleAccess,
@@ -82,6 +84,7 @@ const MENU_GROUPS: MenuGroup[] = [
     { id: 'demandas', label: 'Minhas Demandas', icon: ClipboardList },
     { id: 'loja', label: 'Loja GSA Store', icon: Store },
     { id: 'classificados', label: 'Classificados GSA', icon: Tags },
+    { id: 'anuncios', label: 'GSA Anúncios', icon: Megaphone },
     { id: 'viagens', label: 'Viagens GSA', icon: Plane },
     { id: 'saude', label: 'GSA Saúde', icon: HeartPulse },
     { id: 'seguros', label: 'GSA Seguros', icon: ShieldAlert },
@@ -220,6 +223,7 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
         {normalizedActive === 'sistema' && <SystemMonitorModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {normalizedActive === 'promocoes' && <ErrorBoundary><PromocaoQuantidadeModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} /></ErrorBoundary>}
         {normalizedActive === 'classificados' && <ErrorBoundary><ClassifiedsModule initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
+        {normalizedActive === 'anuncios' && <ErrorBoundary><AdvertisingAdminModule /></ErrorBoundary>}
         {normalizedActive === 'viagens' && <ErrorBoundary><TravelAdminModule /></ErrorBoundary>}
         {normalizedActive === 'saude' && <ErrorBoundary><ProtectionAdminModule domain="saude" initialTab={activeTab} initialItemId={activeItemId} /></ErrorBoundary>}
         {normalizedActive === 'seguros' && <ErrorBoundary><ProtectionAdminModule domain="seguros" initialTab={activeTab} initialItemId={activeItemId} /></ErrorBoundary>}

@@ -6,6 +6,8 @@ export const routes = {
     systems: () => '/criacao-de-site-e-sistemas',
     partners: () => '/parceiros',
     partner: (slug: string) => `/parceiros/${slug}`,
+    ads: () => '/anuncios',
+    advertise: () => '/anuncie',
     serviceDetail: (id: string) => `/servicos-e-assinaturas/${id}`,
   },
   // Login
@@ -171,6 +173,8 @@ export const routes = {
   admin: {
     dashboard: () => '/admin/dashboard',
     partners: () => '/admin/parceiros',
+    ads: () => '/admin/anuncios',
+    adRequest: (id: string) => `/admin/anuncios/solicitacoes/${id}`,
     clients: () => '/admin/cadastros/clientes',
     client: (id: string) => `/admin/cadastros/clientes/${id}`,
     providers: () => '/admin/cadastros/prestadores',
