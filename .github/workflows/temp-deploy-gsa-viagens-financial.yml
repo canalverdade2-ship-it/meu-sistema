@@ -1,0 +1,137 @@
+name: Deploy GSA Viagens Financial Corrections
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-deploy-gsa-viagens-financial.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-gsa-viagens-financial
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Validate production authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_ID"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" -p "$SUPABASE_DB_PASSWORD"
+
+      - name: Capture state before deployment
+        run: |
+          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee viagens-financial-migrations-before.log
+          supabase db dump --linked -p "$SUPABASE_DB_PASSWORD" --schema public --file viagens-financial-schema-before.sql
+
+      - name: Apply financial migrations idempotently
+        shell: bash
+        run: |
+          set -euo pipefail
+          for version in 20260721150000 20260721150100; do
+            if supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" 2>&1 | awk -F'|' -v expected="$version" '
+              {
+                remote=$2;
+                gsub(/[^0-9]/, "", remote);
+                if (remote == expected) found=1;
+              }
+              END { exit found ? 0 : 1 }
+            '; then
+              echo "Migration $version já aplicada." | tee -a viagens-financial-deployment.log
+            else
+              file="$(find supabase/migrations -maxdepth 1 -type f -name "${version}_*.sql" -print -quit)"
+              test -n "$file"
+              supabase db query --linked --file "$file" 2>&1 | tee -a viagens-financial-deployment.log
+              supabase migration repair --linked --status applied "$version" 2>&1 | tee -a viagens-financial-deployment.log
+            fi
+          done
+
+      - name: Verify production contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > viagens-financial-verify.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version = '20260721150000'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version = '20260721150100'
+            ) THEN
+              RAISE EXCEPTION 'Histórico das migrations financeiras do GSA Viagens incompleto.';
+            END IF;
+
+            IF to_regclass('public.viagens_transacao_parcelas') IS NULL THEN
+              RAISE EXCEPTION 'Tabela viagens_transacao_parcelas ausente.';
+            END IF;
+
+            IF to_regprocedure('public.gsa_refresh_travel_financial_summary(uuid)') IS NULL
+               OR to_regprocedure('public.gsa_sync_travel_invoice_financials()') IS NULL
+               OR to_regprocedure('public.gsa_admin_travel_cancellation_list(uuid,text,integer,integer,text,text)') IS NULL THEN
+              RAISE EXCEPTION 'Funções financeiras obrigatórias do GSA Viagens ausentes.';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_schema='public' AND table_name='viagens_transacoes'
+                AND column_name='valor_efetivamente_pago'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_schema='public' AND table_name='viagens_transacoes'
+                AND column_name='valor_elegivel_reembolso'
+            ) THEN
+              RAISE EXCEPTION 'Colunas financeiras obrigatórias ausentes.';
+            END IF;
+          END;
+          $$;
+
+          SELECT
+            (SELECT count(*) FROM public.viagens_transacao_parcelas) AS parcelas,
+            (SELECT count(*) FROM public.viagens_cancelamentos WHERE status IN ('solicitado','em_analise','reembolso_aprovado')) AS cancelamentos_ativos;
+          SQL
+
+          supabase db query --linked --file viagens-financial-verify.sql 2>&1 | tee viagens-financial-verification.log
+          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" 2>&1 | tee viagens-financial-migrations-after.log
+          supabase db dump --linked -p "$SUPABASE_DB_PASSWORD" --schema public --file viagens-financial-schema-after.sql
+
+      - name: Upload production evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-viagens-financial-production-evidence
+          path: |
+            viagens-financial-migrations-before.log
+            viagens-financial-schema-before.sql
+            viagens-financial-deployment.log
+            viagens-financial-verification.log
+            viagens-financial-migrations-after.log
+            viagens-financial-schema-after.sql
+          retention-days: 30
+          if-no-files-found: ignore
