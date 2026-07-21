@@ -40,13 +40,25 @@ await includes('supabase/migrations/20260721194800_restore_admin_search_clients.
   "GRANT EXECUTE ON FUNCTION public.gsa_admin_search_clients(uuid, text, text, integer) TO authenticated, service_role",
 ]);
 
+await includes('supabase/migrations/20260721194900_restore_admin_travel_rpcs.sql', [
+  'gsa_admin_travel_list',
+  'gsa_admin_travel_link_lead',
+  'gsa_admin_travel_update_status',
+  'gsa_admin_travel_create_proposal',
+  'gsa_admin_travel_create_package',
+  "IF to_regprocedure('public.gsa_admin_travel_create_package(uuid,text,jsonb)') IS NULL",
+  "GRANT EXECUTE ON FUNCTION public.gsa_admin_travel_create_package(uuid, text, jsonb) TO authenticated, service_role",
+]);
+
 await includes('scripts/verify-restored-admin-foundations.sql', [
   'RESTORED_ADMIN_FOUNDATIONS_VERIFIED',
   '20260718121000',
   '20260720183000',
   '20260721194800',
+  '20260721194900',
   'gsa_admin_get_pendency_counts_secure(uuid,text)',
   'gsa_admin_search_clients(uuid,text,text,integer)',
+  'gsa_admin_travel_create_package(uuid,text,jsonb)',
 ]);
 
 console.log('Contratos das fundações administrativas restauradas validados.');
