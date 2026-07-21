@@ -28,6 +28,20 @@ function normalizeStoragePath(path: string) {
   return normalized;
 }
 
+async function functionErrorMessage(error: any, fallback: string) {
+  const response = error?.context instanceof Response ? error.context as Response : null;
+  if (response) {
+    try {
+      const payload = await response.clone().json();
+      if (typeof payload?.message === 'string') return payload.message;
+      if (typeof payload?.error === 'string') return payload.error;
+    } catch {
+      // Mantém a mensagem segura abaixo.
+    }
+  }
+  return error?.message || fallback;
+}
+
 export function validateClassifiedImage(file: File) {
   const extension = safeExtension(file);
 
@@ -56,43 +70,40 @@ export async function uploadClassifiedImage(input: {
     throw new Error('Identidade inválida para o upload da imagem.');
   }
 
-  const extension = safeExtension(input.file);
-  const path = normalizeStoragePath(`${clientId}/${draftId}/${Date.now()}_${crypto.randomUUID()}.${extension}`);
-  if (!path) throw new Error('Não foi possível gerar o caminho seguro da imagem.');
+  const body = new FormData();
+  body.append('action', 'upload');
+  body.append('client_id', clientId);
+  body.append('draft_id', draftId);
+  body.append('file', input.file, input.file.name);
 
-  const { error } = await supabase.storage.from(CLASSIFIEDS_MEDIA_BUCKET).upload(path, input.file, {
-    upsert: false,
-    contentType: input.file.type,
-    cacheControl: '31536000',
-  });
-  if (error) throw error;
-
-  const { data } = supabase.storage.from(CLASSIFIEDS_MEDIA_BUCKET).getPublicUrl(path);
-  if (!data?.publicUrl) {
-    await supabase.storage.from(CLASSIFIEDS_MEDIA_BUCKET).remove([path]);
-    throw new Error('Não foi possível obter a URL pública da imagem.');
+  const { data, error } = await supabase.functions.invoke('gsa-classified-media', { body });
+  if (error) throw new Error(await functionErrorMessage(error, 'Não foi possível enviar a imagem.'));
+  if (!data?.success || !data?.media?.url || !data?.media?.path) {
+    throw new Error(data?.message || data?.error || 'O servidor não confirmou o upload da imagem.');
   }
 
   return {
-    url: data.publicUrl,
-    path,
+    url: data.media.url,
+    path: data.media.path,
     tipo: 'image',
     ordem: input.order,
-    nome: input.file.name,
-    tamanho: input.file.size,
+    nome: data.media.name || input.file.name,
+    tamanho: Number(data.media.size || input.file.size),
   };
 }
 
 export async function removeClassifiedImage(path: string) {
-  const normalized = normalizeStoragePath(path);
-  if (!normalized) throw new Error('Caminho de imagem inválido.');
-  const { error } = await supabase.storage.from(CLASSIFIEDS_MEDIA_BUCKET).remove([normalized]);
-  if (error) throw error;
+  return removeClassifiedImages([path]);
 }
 
 export async function removeClassifiedImages(paths: string[]) {
   const normalized = paths.map(normalizeStoragePath).filter((path): path is string => Boolean(path));
   if (normalized.length === 0) return;
-  const { error } = await supabase.storage.from(CLASSIFIEDS_MEDIA_BUCKET).remove(normalized);
-  if (error) throw error;
+  if (normalized.length > CLASSIFIEDS_MAX_IMAGES) throw new Error('Quantidade de imagens inválida para exclusão.');
+
+  const { data, error } = await supabase.functions.invoke('gsa-classified-media', {
+    body: { action: 'delete', paths: normalized },
+  });
+  if (error) throw new Error(await functionErrorMessage(error, 'Não foi possível remover a imagem.'));
+  if (!data?.success) throw new Error(data?.message || data?.error || 'O servidor não confirmou a exclusão da imagem.');
 }
