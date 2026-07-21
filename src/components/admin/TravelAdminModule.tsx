@@ -1342,13 +1342,14 @@ function PropostasTab() {
 }
 
 function TransacoesTab() {
-  const list = usePagedTravelList('transacoes');
   const [detailsTx, setDetailsTx] = useState<any>(null);
   const [refundTx, setRefundTx] = useState<any>(null);
+  const [processRefundTx, setProcessRefundTx] = useState<any>(null);
   const [denyTx, setDenyTx] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState('');
   const [refundFees, setRefundFees] = useState('0,00');
   const [refundNote, setRefundNote] = useState('');
+  const [refundProof, setRefundProof] = useState('');
   const [denyReason, setDenyReason] = useState('');
   const [processingRefund, setProcessingRefund] = useState(false);
 
@@ -1557,6 +1558,7 @@ function TransacoesTab() {
     return Number(item.taxa_cancelamento || 0);
   };
 
+  // ETAPA 1: Aprovação de Reembolso -> Altera para status 'reembolso_aprovado'
   const handleApproveRefund = async () => {
     if (!refundTx) return;
     setProcessingRefund(true);
@@ -1564,32 +1566,75 @@ function TransacoesTab() {
       const numericRefund = parseCurrencyString(refundAmount); // ex: 5000
       const numericFees = parseCurrencyString(refundFees);     // ex: 980
       const netRefund = Math.max(0, numericRefund - numericFees); // ex: 4020
-      const note = refundNote.trim() || 'Reembolso aprovado e concluído pelo financeiro GSA.';
+      const note = refundNote.trim() || 'Reembolso aprovado pelo financeiro. Aguardando processamento do pagamento.';
 
       if (refundTx.id) {
         localStorage.setItem(`gsa_refund_note_${refundTx.id}`, note);
         localStorage.setItem(`gsa_refund_fees_${refundTx.id}`, String(numericFees));
         localStorage.setItem(`gsa_refund_net_${refundTx.id}`, String(netRefund));
         localStorage.setItem(`gsa_refund_gross_${refundTx.id}`, String(numericRefund));
+        localStorage.setItem(`gsa_refund_stage_${refundTx.id}`, 'approved');
       }
 
-      // Atualiza o valor elegível no Supabase com o VALOR LÍQUIDO EFETIVO (R$ 4.020,00)
-      const { error } = await supabase
+      let { error } = await supabase
         .from('viagens_transacoes')
         .update({
-          status: 'reembolsada',
+          status: 'reembolso_aprovado',
           valor_elegivel_reembolso: netRefund,
           updated_at: new Date().toISOString(),
         })
         .eq('id', refundTx.id);
 
-      if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
+      if (error) {
+        await supabase
+          .from('viagens_transacoes')
+          .update({
+            valor_elegivel_reembolso: netRefund,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', refundTx.id);
+      }
 
-      toast.success(`Reembolso de R$ ${formatCurrencyInputValue(netRefund)} aprovado com sucesso!`);
+      toast.success(`Etapa 1 Concluída! Reembolso de R$ ${formatCurrencyInputValue(netRefund)} Aprovado. Prossiga para a Etapa 2 (Processar Pagamento).`);
       setRefundTx(null);
       await list.load();
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível aprovar o reembolso.');
+    } finally {
+      setProcessingRefund(false);
+    }
+  };
+
+  // ETAPA 2: Processamento e Efetivação do Pagamento -> Altera para status 'reembolsada'
+  const handleProcessRefundPayment = async () => {
+    if (!processRefundTx) return;
+    setProcessingRefund(true);
+    try {
+      const netVal = getNetRefundAmount(processRefundTx);
+      const proofText = refundProof.trim() || 'Pagamento de reembolso efetuado e comprovado.';
+
+      if (processRefundTx.id) {
+        localStorage.setItem(`gsa_refund_proof_${processRefundTx.id}`, proofText);
+        localStorage.setItem(`gsa_refund_stage_${processRefundTx.id}`, 'completed');
+      }
+
+      const { error } = await supabase
+        .from('viagens_transacoes')
+        .update({
+          status: 'reembolsada',
+          valor_elegivel_reembolso: netVal,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', processRefundTx.id);
+
+      if (error) throw new Error(error.message || 'Erro ao efetivar reembolso.');
+
+      toast.success(`Etapa 2 Concluída! Pagamento de R$ ${formatCurrencyInputValue(netVal)} confirmado e efetivado com sucesso.`);
+      setProcessRefundTx(null);
+      setRefundProof('');
+      await list.load();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível confirmar o pagamento do reembolso.');
     } finally {
       setProcessingRefund(false);
     }
@@ -1642,17 +1687,26 @@ function TransacoesTab() {
       ) : (
         <div className="space-y-3">
           {list.result.items.map((item) => {
-            const isPendingRefund = ['reembolso_em_analise', 'reembolso_solicitado', 'solicitado'].includes(item.status);
+            const isStageCompleted = item.id && localStorage.getItem(`gsa_refund_stage_${item.id}`) === 'completed';
+            const isApprovedStage1 = (item.status === 'reembolso_aprovado' || (item.id && localStorage.getItem(`gsa_refund_stage_${item.id}`) === 'approved')) && item.status !== 'reembolsada' && !isStageCompleted;
+            const isPendingApproval = ['reembolso_em_analise', 'reembolso_solicitado', 'solicitado'].includes(item.status) && !isApprovedStage1 && item.status !== 'reembolsada';
 
             return (
-              <article key={item.id} className={`flex flex-col justify-between gap-4 rounded-2xl border p-5 lg:flex-row lg:items-center transition bg-white shadow-2xs ${isPendingRefund ? 'border-amber-300 bg-amber-50/20' : 'border-neutral-200'}`}>
+              <article key={item.id} className={`flex flex-col justify-between gap-4 rounded-2xl border p-5 lg:flex-row lg:items-center transition bg-white shadow-2xs ${
+                isPendingApproval ? 'border-amber-300 bg-amber-50/20' : isApprovedStage1 ? 'border-indigo-300 bg-indigo-50/20' : 'border-neutral-200'
+              }`}>
                 <div className="space-y-1 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={item.status} />
                     <span className="text-xs font-bold text-neutral-400">Criado em {formatDate(item.created_at)}</span>
-                    {isPendingRefund && (
+                    {isPendingApproval && (
                       <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800 animate-pulse">
-                        Ação Necessária: Análise de Reembolso
+                        Etapa 1 Pendente: Análise & Aprovação
+                      </span>
+                    )}
+                    {isApprovedStage1 && (
+                      <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-[10px] font-black uppercase text-indigo-800 animate-pulse">
+                        Etapa 1 Concluída: Aguardando Processamento (Etapa 2)
                       </span>
                     )}
                   </div>
@@ -1669,17 +1723,34 @@ function TransacoesTab() {
                     <p className="text-xl font-black text-indigo-700">{formatCurrency(getTransactionTotal(item))}</p>
                   </div>
 
+                  {/* Ações das Etapas */}
+                  {isPendingApproval && (
+                    <button
+                      type="button"
+                      onClick={() => openApproveModal(item)}
+                      className="flex items-center gap-1.5 rounded-xl bg-amber-500 text-white border border-amber-600 px-4 py-2.5 text-xs font-black hover:bg-amber-600 shadow-md shadow-amber-200 transition"
+                    >
+                      <CheckCircle2 className="h-4 w-4" /> 1. Aprovar Reembolso
+                    </button>
+                  )}
+
+                  {isApprovedStage1 && (
+                    <button
+                      type="button"
+                      onClick={() => setProcessRefundTx(item)}
+                      className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2.5 text-xs font-black hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-emerald-200 transition"
+                    >
+                      <Zap className="h-4 w-4" /> 2. Processar Pagamento
+                    </button>
+                  )}
+
                   {/* Botão Detalhes */}
                   <button
                     type="button"
                     onClick={() => setDetailsTx(item)}
-                    className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black transition border ${
-                      isPendingRefund
-                        ? 'bg-amber-500 text-white border-amber-600 hover:bg-amber-600 shadow-md shadow-amber-200'
-                        : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
-                    }`}
+                    className="flex items-center gap-1.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2.5 text-xs font-black hover:bg-blue-100 transition"
                   >
-                    <Eye className="h-4 w-4" /> {isPendingRefund ? 'Analisar Reembolso' : 'Detalhes'}
+                    <Eye className="h-4 w-4" /> Detalhes
                   </button>
                 </div>
               </article>
@@ -2085,7 +2156,119 @@ function TransacoesTab() {
                 className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3 text-xs font-black text-white hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 shadow-lg shadow-emerald-600/30 transition-all hover:scale-[1.01]"
               >
                 {processingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />}
-                {processingRefund ? 'Processando...' : 'Confirmar e Processar Reembolso'}
+                {processingRefund ? 'Processando...' : '1. Aprovar Reembolso (Etapa 1)'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal Etapa 2: Processar Pagamento do Reembolso */}
+      <Modal isOpen={Boolean(processRefundTx)} onClose={() => setProcessRefundTx(null)} title="Etapa 2 de 2: Processar Pagamento do Reembolso" size="xl">
+        {processRefundTx && (
+          <div className="space-y-6">
+            {/* Header Executivo Etapa 2 */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 p-5 text-white shadow-xl border border-indigo-500/20">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 backdrop-blur-md">
+                    <Zap className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Etapa 2 de 2 · Efetivação do Reembolso</span>
+                    <h3 className="text-lg font-black text-white">{processRefundTx.cliente_nome || processRefundTx.protocolo || 'Cliente GSA'}</h3>
+                    <p className="text-xs text-slate-300">Confirme a baixa e informe o comprovante de transferência/estorno.</p>
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-indigo-500/10 px-4 py-2.5 backdrop-blur-md border border-indigo-500/20 text-right">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">Valor Líquido a Pagar</p>
+                  <p className="text-xl font-black text-indigo-300">{formatCurrency(getNetRefundAmount(processRefundTx))}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Resumo da Aprovação da Etapa 1 */}
+            <div className="rounded-2xl border border-neutral-200 bg-slate-50/60 p-5 space-y-4 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Resumo da Aprovação (Etapa 1)
+                </h4>
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  Etapa 1 Aprovada
+                </span>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl bg-white p-3 border border-neutral-200">
+                  <p className="text-[10px] font-bold uppercase text-neutral-400">Valor Bruto Pedido</p>
+                  <p className="text-sm font-bold text-neutral-900 mt-0.5">{formatCurrency(getTransactionTotal(processRefundTx))}</p>
+                </div>
+                <div className="rounded-xl bg-white p-3 border border-neutral-200">
+                  <p className="text-[10px] font-bold uppercase text-neutral-400">Taxas Retidas</p>
+                  <p className="text-sm font-bold text-amber-700 mt-0.5">{formatCurrency(getRefundFeesAmount(processRefundTx))}</p>
+                </div>
+                <div className="rounded-xl bg-emerald-50 p-3 border border-emerald-200">
+                  <p className="text-[10px] font-bold uppercase text-emerald-700">Valor Líquido Aprovado</p>
+                  <p className="text-base font-black text-emerald-800 mt-0.5">{formatCurrency(getNetRefundAmount(processRefundTx))}</p>
+                </div>
+              </div>
+
+              {/* Cronograma por Canal */}
+              <div className="space-y-2">
+                {getPaymentBreakdown(processRefundTx).map((part, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 border border-neutral-200">
+                    <div className="flex items-center gap-2.5">
+                      {part.isSystem ? <Zap className="h-4 w-4 text-emerald-600" /> : <Clock className="h-4 w-4 text-amber-600" />}
+                      <span className="text-xs font-bold text-neutral-900">{part.titulo} ({part.valorDisplay})</span>
+                    </div>
+                    <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-md ${part.isSystem ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                      {part.prazo}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Parecer cadastrado na Etapa 1 */}
+              {getAdminNote(processRefundTx) && (
+                <div className="rounded-xl bg-white p-3.5 border border-neutral-200 text-xs text-neutral-800">
+                  <strong className="block text-[10px] font-bold uppercase text-neutral-400 mb-1">Parecer da Aprovação (Etapa 1):</strong>
+                  {getAdminNote(processRefundTx)}
+                </div>
+              )}
+            </div>
+
+            {/* Input do Comprovante / ID de Transação */}
+            <div className="space-y-2">
+              <label className={labelClass}>
+                Comprovante de Pagamento / Código de Transação Bancária (Pix/TED)
+              </label>
+              <textarea
+                rows={3}
+                value={refundProof}
+                onChange={(e) => setRefundProof(e.target.value)}
+                className={`${inputClass} h-auto text-sm font-medium`}
+                placeholder="Insira o número do comprovante Pix, código TED ou observação da baixa financeira..."
+              />
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-100">
+              <button
+                type="button"
+                onClick={() => setProcessRefundTx(null)}
+                className="rounded-xl border border-neutral-200 bg-white px-5 py-3 text-xs font-black text-neutral-600 hover:bg-neutral-50 transition"
+              >
+                Voltar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void handleProcessRefundPayment()}
+                disabled={processingRefund}
+                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3 text-xs font-black text-white hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 shadow-lg shadow-emerald-600/30 transition-all hover:scale-[1.01]"
+              >
+                {processingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />}
+                {processingRefund ? 'Processando...' : '2. Efetivar Reembolso (Concluir)'}
               </button>
             </div>
           </div>
