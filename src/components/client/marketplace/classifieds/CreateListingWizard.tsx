@@ -38,6 +38,7 @@ interface WizardProps {
 export function CreateListingWizard({ clientId, onBack }: WizardProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadingCep, setLoadingCep] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [removingPath, setRemovingPath] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export function CreateListingWizard({ clientId, onBack }: WizardProps) {
     titulo: '',
     descricao: '',
     preco: '',
+    cep: '',
     estado: 'SP',
     cidade: '',
     bairro: '',
@@ -92,6 +94,33 @@ export function CreateListingWizard({ clientId, onBack }: WizardProps) {
       commissionMap[item.categoria] = Number(item.percentual);
     });
     setCommissions(commissionMap);
+  };
+
+  const fetchCep = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+    
+    setLoadingCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+      
+      if (!data.erro) {
+        setFormData(current => ({
+          ...current,
+          estado: data.uf,
+          cidade: data.localidade,
+          bairro: data.bairro || current.bairro,
+        }));
+      } else {
+        toast.error('CEP não encontrado.');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      toast.error('Erro ao buscar o CEP.');
+    } finally {
+      setLoadingCep(false);
+    }
   };
 
   const handleNext = () => setStep((current) => current + 1);
@@ -314,7 +343,16 @@ export function CreateListingWizard({ clientId, onBack }: WizardProps) {
                 <input
                   type="text"
                   value={formData.preco}
-                  onChange={(event) => setFormData({ ...formData, preco: event.target.value })}
+                  onChange={(event) => {
+                    let v = event.target.value.replace(/\D/g, '');
+                    if (!v) {
+                      setFormData({ ...formData, preco: '' });
+                      return;
+                    }
+                    const numValue = Number(v) / 100;
+                    const formatted = numValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    setFormData({ ...formData, preco: formatted });
+                  }}
                   placeholder="0,00"
                   className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none transition-all text-xl font-bold"
                 />
@@ -340,6 +378,25 @@ export function CreateListingWizard({ clientId, onBack }: WizardProps) {
             <p className="text-neutral-500 mb-8">Onde está o item e características específicas.</p>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="col-span-2 relative">
+                <label className="block text-sm font-bold text-neutral-900 mb-2">CEP (Opcional)</label>
+                <div className="relative flex items-center">
+                  <input 
+                    type="text" 
+                    value={formData.cep} 
+                    onChange={(event) => {
+                      let v = event.target.value.replace(/\D/g, '');
+                      v = v.replace(/^(\d{5})(\d)/, '$1-$2');
+                      setFormData({ ...formData, cep: v });
+                    }} 
+                    onBlur={(e) => fetchCep(e.target.value)}
+                    placeholder="00000-000"
+                    maxLength={9} 
+                    className="w-full bg-white border border-black/10 rounded-xl px-4 py-3" 
+                  />
+                  {loadingCep && <Loader2 className="absolute right-4 h-5 w-5 animate-spin text-neutral-400" />}
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-bold text-neutral-900 mb-2">Estado</label>
                 <input type="text" value={formData.estado} onChange={(event) => setFormData({ ...formData, estado: event.target.value })} maxLength={2} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3" />

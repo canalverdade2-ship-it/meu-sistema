@@ -20,7 +20,8 @@
     "test:e2e": "playwright test",
     "test:e2e:full": "playwright test",
     "test:stress": "playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3",
-    "test:products-subscriptions": "tsx scripts/check-products-subscriptions-contracts.ts"
+    "test:products-subscriptions": "tsx scripts/check-products-subscriptions-contracts.ts",
+    "push": "git add . && git commit -m \"Atualização automática\" && git push"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

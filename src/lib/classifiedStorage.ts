@@ -76,7 +76,13 @@ export async function uploadClassifiedImage(input: {
   body.append('draft_id', draftId);
   body.append('file', input.file, input.file.name);
 
-  const { data, error } = await supabase.functions.invoke('gsa-classified-media', { body });
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+
+  const { data, error } = await supabase.functions.invoke('gsa-classified-media', { 
+    body,
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
   if (error) throw new Error(await functionErrorMessage(error, 'Não foi possível enviar a imagem.'));
   if (!data?.success || !data?.media?.url || !data?.media?.path) {
     throw new Error(data?.message || data?.error || 'O servidor não confirmou o upload da imagem.');
