@@ -19,6 +19,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { getPublicPartner, listPublicPartners } from '../../features/partners/service';
 import { PARTNER_MODE_LABELS, type Partner } from '../../features/partners/types';
+import { PartnerApplicationModal } from './PartnerApplicationModal';
 
 interface PartnersPageProps {
   selectedSlug?: string;
@@ -80,6 +81,7 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Todas');
+  const [applicationOpen, setApplicationOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -212,58 +214,61 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f1ea] pt-24">
-      <section className="relative overflow-hidden bg-neutral-950 py-20 text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(216,189,115,0.18),transparent_34%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <button type="button" onClick={onBack} className="absolute left-4 top-[-2rem] inline-flex items-center gap-2 text-sm font-bold text-white/65 hover:text-white sm:left-6 lg:left-8"><ArrowLeft className="h-4 w-4" /> Página inicial</button>
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d8bd73]">Rede de parceiros GSA</p>
-          <h1 className="mt-4 text-4xl font-serif font-medium tracking-wide sm:text-6xl">Nossos Parceiros</h1>
-          <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-white/65 sm:text-lg">Conheça empresas, profissionais e organizações que atuam em parceria com a GSA HUB, oferecendo produtos, serviços e soluções para diferentes necessidades.</p>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_260px]">
-          <label className="relative">
-            <span className="sr-only">Pesquisar parceiros</span>
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar por nome, cidade, serviço ou especialidade" className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-12 pr-4 text-sm outline-none transition focus:border-[#8a6e2f] focus:ring-4 focus:ring-[#8a6e2f]/10" />
-          </label>
-          <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold outline-none focus:border-[#8a6e2f] focus:ring-4 focus:ring-[#8a6e2f]/10">
-            {categories.map((item) => <option key={item}>{item}</option>)}
-          </select>
-        </div>
-
-        {loading ? <PartnersLoading compact /> : filtered.length === 0 ? (
-          <div className="py-20 text-center"><Building2 className="mx-auto h-12 w-12 text-neutral-300" /><h2 className="mt-4 text-xl font-black">Nenhum parceiro encontrado</h2><p className="mt-2 text-neutral-500">Altere os filtros ou tente uma nova pesquisa.</p></div>
-        ) : (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((partner) => (
-              <article key={partner.id} className="group overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-                <PartnerImage partner={partner} />
-                <div className="p-6">
-                  <div className="flex items-center justify-between gap-3"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6e2f]">{partner.category}</p><span className="text-xs font-semibold text-neutral-400">{[partner.city, partner.state].filter(Boolean).join(' · ')}</span></div>
-                  <h2 className="mt-3 text-2xl font-black">{partner.name}</h2>
-                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-neutral-600">{partner.short_description}</p>
-                  <div className="mt-5 flex items-center justify-between border-t border-neutral-100 pt-4">
-                    <span className="text-xs font-bold text-neutral-500">{PARTNER_MODE_LABELS[partner.service_mode]}</span>
-                    <button type="button" onClick={() => onSelectPartner(partner.slug)} className="inline-flex items-center gap-2 text-sm font-black text-[#142030]">Conhecer parceiro <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
-                  </div>
-                </div>
-              </article>
-            ))}
+    <>
+      <main className="min-h-screen bg-[#f4f1ea] pt-24">
+        <section className="relative overflow-hidden bg-neutral-950 py-20 text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(216,189,115,0.18),transparent_34%)]" />
+          <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+            <button type="button" onClick={onBack} className="absolute left-4 top-[-2rem] inline-flex items-center gap-2 text-sm font-bold text-white/65 hover:text-white sm:left-6 lg:left-8"><ArrowLeft className="h-4 w-4" /> Página inicial</button>
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#d8bd73]">Rede de parceiros GSA</p>
+            <h1 className="mt-4 text-4xl font-serif font-medium tracking-wide sm:text-6xl">Nossos Parceiros</h1>
+            <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-white/65 sm:text-lg">Conheça empresas, profissionais e organizações que atuam em parceria com a GSA HUB, oferecendo produtos, serviços e soluções para diferentes necessidades.</p>
           </div>
-        )}
+        </section>
 
-        <div className="mt-14 rounded-[2rem] bg-neutral-950 p-8 text-center text-white sm:p-12">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d8bd73]">Novas conexões</p>
-          <h2 className="mt-4 text-3xl font-black">Faça parte da nossa rede de parceiros</h2>
-          <p className="mx-auto mt-4 max-w-2xl leading-7 text-white/60">Sua empresa deseja ampliar oportunidades e fazer parte do ecossistema GSA? Fale com nossa equipe e conheça as possibilidades de parceria.</p>
-          <a href={`https://wa.me/5511920857756?text=${encodeURIComponent('Olá! Gostaria de saber como fazer parte da rede de parceiros da GSA HUB.')}`} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#d8bd73] px-6 py-3 font-black text-neutral-950"><MessageCircle className="h-5 w-5" /> Quero ser parceiro</a>
-        </div>
-      </section>
-    </main>
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_260px]">
+            <label className="relative">
+              <span className="sr-only">Pesquisar parceiros</span>
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar por nome, cidade, serviço ou especialidade" className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-12 pr-4 text-sm outline-none transition focus:border-[#8a6e2f] focus:ring-4 focus:ring-[#8a6e2f]/10" />
+            </label>
+            <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold outline-none focus:border-[#8a6e2f] focus:ring-4 focus:ring-[#8a6e2f]/10">
+              {categories.map((item) => <option key={item}>{item}</option>)}
+            </select>
+          </div>
+
+          {loading ? <PartnersLoading compact /> : filtered.length === 0 ? (
+            <div className="py-20 text-center"><Building2 className="mx-auto h-12 w-12 text-neutral-300" /><h2 className="mt-4 text-xl font-black">Nenhum parceiro encontrado</h2><p className="mt-2 text-neutral-500">Altere os filtros ou tente uma nova pesquisa.</p></div>
+          ) : (
+            <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((partner) => (
+                <article key={partner.id} className="group overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+                  <PartnerImage partner={partner} />
+                  <div className="p-6">
+                    <div className="flex items-center justify-between gap-3"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6e2f]">{partner.category}</p><span className="text-xs font-semibold text-neutral-400">{[partner.city, partner.state].filter(Boolean).join(' · ')}</span></div>
+                    <h2 className="mt-3 text-2xl font-black">{partner.name}</h2>
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-neutral-600">{partner.short_description}</p>
+                    <div className="mt-5 flex items-center justify-between border-t border-neutral-100 pt-4">
+                      <span className="text-xs font-bold text-neutral-500">{PARTNER_MODE_LABELS[partner.service_mode]}</span>
+                      <button type="button" onClick={() => onSelectPartner(partner.slug)} className="inline-flex items-center gap-2 text-sm font-black text-[#142030]">Conhecer parceiro <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-14 rounded-[2rem] bg-neutral-950 p-8 text-center text-white sm:p-12">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d8bd73]">Novas conexões</p>
+            <h2 className="mt-4 text-3xl font-black">Faça parte da nossa rede de parceiros</h2>
+            <p className="mx-auto mt-4 max-w-2xl leading-7 text-white/60">Preencha o formulário com os dados da empresa, contatos, endereço, serviços e imagens. A solicitação será enviada diretamente ao painel administrativo para análise.</p>
+            <button type="button" onClick={() => setApplicationOpen(true)} className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#d8bd73] px-6 py-3 font-black text-neutral-950"><ShieldCheck className="h-5 w-5" /> Seja nosso parceiro</button>
+          </div>
+        </section>
+      </main>
+      <PartnerApplicationModal open={applicationOpen} onClose={() => setApplicationOpen(false)} />
+    </>
   );
 }
 
