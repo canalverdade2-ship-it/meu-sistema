@@ -7,6 +7,7 @@ import {
   CreditCard,
   Gavel,
   Gift,
+  Handshake,
   HeartPulse,
   Landmark,
   LayoutDashboard,
@@ -53,6 +54,7 @@ import { PromocaoQuantidadeModule } from '../components/admin/PromocaoQuantidade
 import { ClassifiedsModule } from '../components/admin/ClassifiedsModule';
 import { TravelAdminModule } from '../components/admin/TravelAdminModule';
 import { ProtectionAdminModule } from '../components/admin/ProtectionAdminModule';
+import { PartnersAdminModule } from '../components/admin/PartnersAdminModule';
 import {
   adminPathFor,
   hasAdminModuleAccess,
@@ -92,6 +94,7 @@ const MENU_GROUPS: MenuGroup[] = [
     { id: 'credito_loja', label: 'Crédito da Loja', icon: CreditCard },
   ]},
   { label: 'Relacionamento', items: [
+    { id: 'parceiros', label: 'Parceiros', icon: Handshake },
     { id: 'fidelidade', label: 'Fidelidade', icon: Gift },
     { id: 'promocoes', label: 'Promoções por Quantidade', icon: Tags },
     { id: 'area_vip', label: 'Área VIP', icon: Gift },
@@ -198,6 +201,7 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
       <div className="p-3 lg:p-5"><div className="min-h-[calc(100vh-140px)] rounded-[2rem] bg-white p-3 lg:p-4 shadow-sm ring-1 ring-neutral-100">
         {normalizedActive === 'dashboard' && (adminType === 'colaborador' ? <CollaboratorDashboard colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || undefined} colaboradorModulos={internalModulos} onNavigate={commonNavigate} /> : <Dashboard adminType="admin" colaboradorNome="Administrador" colaboradorModulos={internalModulos} onNavigate={commonNavigate} />)}
         {normalizedActive === 'cadastro' && <ErrorBoundary><CadastroModule title="Cadastros" allowedTabs={cadastroTabs as any} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
+        {normalizedActive === 'parceiros' && <ErrorBoundary><PartnersAdminModule /></ErrorBoundary>}
         {normalizedActive === 'catalogo' && <ErrorBoundary><CadastroModule title="Catálogo" allowedTabs={['servicos', 'produtos', 'assinaturas', 'categorias_loja']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
         {normalizedActive === 'operacoes' && <ErrorBoundary><VendasModule title="Operações" allowedTabs={['orcamentos', 'demandas', 'os', 'produtos', 'assinaturas']} initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} /></ErrorBoundary>}
         {normalizedActive === 'demandas' && <DemandasColaboradorModule colaboradorId={colaboradorId} adminType={adminType} initialItemId={activeItemId} initialTab={activeTab} colaboradorNome={colaboradorNome} />}
