@@ -1,0 +1,64 @@
+name: Diagnose Admin Deep Audit
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/diagnose-admin-deep-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'agent/auditoria-profunda-paineis'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: python3 scripts/apply-admin-deep-audit.py
+      - run: npm ci
+      - name: Run and capture admin audit
+        id: admin_audit
+        shell: bash
+        run: |
+          set +e
+          npm run test:admin > admin-deep-audit.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: admin-deep-audit-log
+          path: admin-deep-audit.log
+          retention-days: 7
+      - name: Report result
+        run: |
+          cat admin-deep-audit.log
+          test "${{ steps.admin_audit.outputs.exit_code }}" = "0"
