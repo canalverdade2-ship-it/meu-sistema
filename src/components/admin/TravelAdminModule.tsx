@@ -75,6 +75,12 @@ function handleCurrencyMask(val: string): string {
   }).format(cents);
 }
 
+function parseCurrencyString(val: string): number {
+  if (!val) return 0;
+  const num = Number(val.replace(/\./g, '').replace(',', '.'));
+  return isNaN(num) ? 0 : num;
+}
+
 interface PagedResult {
   items: any[];
   total: number;
@@ -1894,6 +1900,37 @@ function TransacoesTab() {
                 <p className="text-[11px] font-bold text-neutral-400">Multa ou taxa retida pela agência (se houver).</p>
               </div>
             </div>
+
+            {/* Card Destaque Valor Líquido */}
+            {(() => {
+              const valApproved = parseCurrencyString(refundAmount);
+              const valFees = parseCurrencyString(refundFees);
+              const valNet = Math.max(0, valApproved - valFees);
+
+              return (
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 p-5 text-white shadow-lg border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md shadow-inner">
+                      <Coins className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/90">Resultado Financeiro</span>
+                      <h4 className="text-base font-black text-white">Valor Líquido a Estornar ao Cliente</h4>
+                      <p className="text-xs text-slate-300">
+                        Aprovado ({formatCurrency(valApproved)}) − Taxas/Retenções ({formatCurrency(valFees)})
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-emerald-500/10 px-5 py-3 border border-emerald-500/20 text-right shadow-2xs">
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-300 block">Total Líquido</span>
+                    <span className="text-2xl font-black text-emerald-400 drop-shadow-md">
+                      {formatCurrency(valNet)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="space-y-2">
               <label className={labelClass}>
