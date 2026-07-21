@@ -1,11 +1,15 @@
-name: Advertising Foundation
+name: Advertising Platform
 
 on:
   pull_request:
     paths:
       - 'src/components/public/AdvertisingPage.tsx'
       - 'src/components/admin/AdvertisingAdminModule.tsx'
+      - 'src/components/ads/**'
+      - 'src/pages/AdvertiserPortal.tsx'
+      - 'src/lib/advertiserAccess.ts'
       - 'src/types/advertising.ts'
+      - 'src/App.tsx'
       - 'src/pages/Home.tsx'
       - 'src/pages/AdminPanel.tsx'
       - 'src/routing/**'
@@ -13,17 +17,27 @@ on:
       - 'src/data/publicServiceCatalog.ts'
       - 'src/hooks/usePublicPageMetadata.ts'
       - 'supabase/functions/gsa-public-advertising/**'
+      - 'supabase/functions/gsa-advertiser-admin/**'
+      - 'supabase/functions/gsa-ad-delivery/**'
+      - 'supabase/functions/gsa-advertising-webhook/**'
+      - 'supabase/functions/gsa-advertising-scheduler/**'
       - 'supabase/migrations/20260721210000_create_advertising_foundation.sql'
+      - 'supabase/migrations/20260721223000_complete_advertising_platform.sql'
       - 'scripts/check-advertising-foundation.ts'
+      - 'scripts/check-advertising-completion.ts'
       - 'package.json'
       - '.github/workflows/advertising-foundation.yml'
   push:
     branches: [main]
     paths:
-      - 'src/components/public/AdvertisingPage.tsx'
+      - 'src/components/ads/**'
+      - 'src/pages/AdvertiserPortal.tsx'
       - 'src/components/admin/AdvertisingAdminModule.tsx'
-      - 'supabase/functions/gsa-public-advertising/**'
-      - 'supabase/migrations/20260721210000_create_advertising_foundation.sql'
+      - 'supabase/functions/gsa-advertiser-admin/**'
+      - 'supabase/functions/gsa-ad-delivery/**'
+      - 'supabase/functions/gsa-advertising-webhook/**'
+      - 'supabase/functions/gsa-advertising-scheduler/**'
+      - 'supabase/migrations/20260721223000_complete_advertising_platform.sql'
 
 permissions:
   contents: read
@@ -31,7 +45,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16
@@ -67,15 +81,27 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Advertising contracts
-        run: npm run test:advertising
+        run: |
+          npm run test:advertising
+          npm run test:advertising-complete
 
-      - name: Check public advertising gateway
-        run: deno check supabase/functions/gsa-public-advertising/index.ts
+      - name: Check advertising Edge Functions
+        run: |
+          deno check supabase/functions/gsa-public-advertising/index.ts
+          deno check supabase/functions/gsa-advertiser-admin/index.ts
+          deno check supabase/functions/gsa-ad-delivery/index.ts
+          deno check supabase/functions/gsa-advertising-webhook/index.ts
+          deno check supabase/functions/gsa-advertising-scheduler/index.ts
 
-      - name: Test public advertising gateway
-        run: deno test --allow-env supabase/functions/gsa-public-advertising/index_test.ts
+      - name: Test advertising Edge Functions
+        run: |
+          deno test --allow-env supabase/functions/gsa-public-advertising/index_test.ts
+          deno test --allow-env supabase/functions/gsa-advertiser-admin/index_test.ts
+          deno test --allow-env supabase/functions/gsa-ad-delivery/index_test.ts
+          deno test --allow-env supabase/functions/gsa-advertising-webhook/index_test.ts
+          deno test --allow-env supabase/functions/gsa-advertising-scheduler/index_test.ts
 
-      - name: Apply advertising migration in PostgreSQL
+      - name: Apply and exercise advertising migrations in PostgreSQL
         shell: bash
         run: |
           set -euo pipefail
@@ -83,32 +109,105 @@ jobs:
           DO $$ BEGIN CREATE ROLE anon NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
           DO $$ BEGIN CREATE ROLE authenticated NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
           DO $$ BEGIN CREATE ROLE service_role NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+          CREATE SCHEMA IF NOT EXISTS auth;
+          CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT '00000000-0000-0000-0000-000000000099'::uuid $$;
+          CREATE SCHEMA IF NOT EXISTS storage;
+          CREATE TABLE IF NOT EXISTS storage.buckets (
+            id text PRIMARY KEY,
+            name text NOT NULL,
+            public boolean NOT NULL DEFAULT false,
+            file_size_limit bigint,
+            allowed_mime_types text[]
+          );
+          CREATE TABLE IF NOT EXISTS storage.objects (
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+            bucket_id text NOT NULL,
+            name text NOT NULL,
+            owner uuid
+          );
+          ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
           CREATE OR REPLACE FUNCTION public.gsa_admin_has_module(text) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT true $$;
           CREATE OR REPLACE FUNCTION public.gsa_current_actor_type() RETURNS text LANGUAGE sql STABLE AS $$ SELECT 'admin'::text $$;
           CREATE OR REPLACE FUNCTION public.gsa_current_actor_id() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT '00000000-0000-0000-0000-000000000001'::uuid $$;
           SQL
           psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 -f supabase/migrations/20260721210000_create_advertising_foundation.sql
+          psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 -f supabase/migrations/20260721223000_complete_advertising_platform.sql
           psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 <<'SQL'
+          DO $test$
+          DECLARE
+            v_request_id uuid;
+            v_proposal jsonb;
+            v_proposal_id uuid;
+            v_advertiser_id uuid;
+            v_accept jsonb;
+            v_campaign_id uuid;
+            v_payment_id uuid;
+            v_creative jsonb;
+            v_serve jsonb;
+          BEGIN
+            INSERT INTO public.gsa_ad_requests (
+              protocol, company_name, document, company_size, segment, contact_name,
+              contact_email, contact_phone, objective, desired_formats, desired_pages,
+              devices, desired_start_date, desired_end_date, intended_budget
+            ) VALUES (
+              'ADS-TEST-COMPLETE', 'Empresa Teste', '12345678901', 'micro', 'Tecnologia', 'Responsável',
+              'ads@example.com', '11999999999', 'Divulgação', ARRAY['sticky_banner'], ARRAY['SITE_STICKY_BOTTOM'],
+              ARRAY['desktop','mobile'], current_date, current_date + 2, 900
+            ) RETURNING id INTO v_request_id;
+
+            v_proposal := public.gsa_admin_create_ad_proposal(v_request_id, jsonb_build_object(
+              'amount', 750,
+              'starts_on', current_date,
+              'ends_on', current_date + 2,
+              'valid_until', now() + interval '2 days',
+              'formats', jsonb_build_array('sticky_banner'),
+              'placement_codes', jsonb_build_array('SITE_STICKY_BOTTOM'),
+              'frequency_model', 'once_per_day',
+              'terms', 'Teste integrado'
+            ));
+            v_proposal_id := (v_proposal->>'proposal_id')::uuid;
+            v_advertiser_id := (v_proposal->>'advertiser_id')::uuid;
+            PERFORM public.gsa_admin_link_advertiser_auth(v_advertiser_id, auth.uid());
+            IF (public.gsa_advertiser_portal_snapshot()->'advertiser'->>'id')::uuid <> v_advertiser_id THEN
+              RAISE EXCEPTION 'Snapshot do anunciante não retornou a conta vinculada';
+            END IF;
+
+            v_accept := public.gsa_advertiser_accept_proposal(v_proposal_id);
+            v_campaign_id := (v_accept->>'campaign_id')::uuid;
+            v_payment_id := (v_accept->>'payment_id')::uuid;
+            v_creative := public.gsa_advertiser_save_creative(
+              NULL, v_campaign_id, 'text', NULL, 'https://example.com', 'Oferta Teste', 'Conteúdo', 'Oferta', NULL, NULL, NULL
+            );
+            PERFORM public.gsa_advertiser_submit_creative((v_creative->>'creative_id')::uuid);
+            PERFORM public.gsa_admin_review_ad_creative((v_creative->>'creative_id')::uuid, true, NULL);
+            PERFORM public.gsa_admin_mark_ad_payment(v_payment_id, 'paid', 'TEST-PAYMENT-1', 'manual');
+            v_serve := public.gsa_ads_serve('SITE_STICKY_BOTTOM', 'viewer-hash', 'session-hash', '/', 'desktop');
+            IF v_serve->'ad' IS NULL OR v_serve->>'event_token' IS NULL THEN
+              RAISE EXCEPTION 'Motor de entrega não selecionou a campanha ativa';
+            END IF;
+            PERFORM public.gsa_ads_record_event((v_serve->>'event_token')::uuid, 'viewable');
+            IF NOT EXISTS (SELECT 1 FROM public.gsa_ad_daily_metrics WHERE campaign_id = v_campaign_id AND served = 1 AND viewable_impressions = 1) THEN
+              RAISE EXCEPTION 'Métricas de entrega não foram registradas';
+            END IF;
+          END;
+          $test$;
+
           DO $$
           BEGIN
-            IF to_regclass('public.gsa_advertisers') IS NULL
-               OR to_regclass('public.gsa_ad_requests') IS NULL
-               OR to_regclass('public.gsa_ad_campaigns') IS NULL
-               OR to_regclass('public.gsa_ad_creatives') IS NULL THEN
-              RAISE EXCEPTION 'Tabelas obrigatórias do módulo de anúncios ausentes';
+            IF to_regclass('public.gsa_ad_payments') IS NULL
+               OR to_regclass('public.gsa_ad_delivery_events') IS NULL
+               OR to_regprocedure('public.gsa_advertiser_portal_snapshot()') IS NULL
+               OR to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)') IS NULL THEN
+              RAISE EXCEPTION 'Objetos obrigatórios da plataforma completa ausentes';
             END IF;
-            IF to_regprocedure('public.gsa_public_submit_advertising_request(jsonb)') IS NULL
-               OR to_regprocedure('public.gsa_admin_list_ad_requests(text)') IS NULL THEN
-              RAISE EXCEPTION 'RPCs obrigatórias do módulo de anúncios ausentes';
+            IF has_function_privilege('anon', 'public.gsa_ads_serve(text,text,text,text,text)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Anon não pode executar diretamente o motor de entrega';
             END IF;
-            IF (SELECT count(*) FROM public.gsa_ad_placements) < 7 THEN
-              RAISE EXCEPTION 'Inventário inicial de posições incompleto';
-            END IF;
-            IF has_function_privilege('anon', 'public.gsa_public_submit_advertising_request(jsonb)', 'EXECUTE') THEN
-              RAISE EXCEPTION 'Anon não pode executar a RPC interna de solicitação';
+            IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'gsa-ad-creatives') THEN
+              RAISE EXCEPTION 'Bucket de criativos ausente';
             END IF;
           END $$;
-          SELECT 'ADVERTISING_FOUNDATION_OK' AS result;
+          SELECT 'ADVERTISING_PLATFORM_END_TO_END_OK' AS result;
           SQL
 
       - name: Production build
