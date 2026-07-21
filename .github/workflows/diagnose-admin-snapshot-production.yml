@@ -1,0 +1,105 @@
+name: Diagnose Admin Snapshot Production
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/diagnose-admin-snapshot-production.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inspect repository definitions
+        shell: bash
+        run: |
+          set -o pipefail
+          grep -R -n -E 'Snapshot administrativo base não encontrado|gsa_admin_get_pendency_counts_secure|seguros_ofertas_publicas|gsa_admin_dashboard_snapshot' src supabase scripts 2>&1 | tee repository-diagnosis.log || true
+
+      - name: Validate production authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Inspect production objects and definitions
+        shell: bash
+        run: |
+          cat > production-diagnosis.sql <<'SQL'
+          SELECT 'objects' AS section,
+                 to_regclass('public.seguros_ofertas_publicas')::text AS seguros_ofertas_publicas,
+                 to_regprocedure('public.gsa_admin_get_pendency_counts_secure(uuid,text)')::text AS pendency_rpc,
+                 to_regprocedure('public.gsa_admin_dashboard_snapshot(uuid,text)')::text AS dashboard_rpc;
+
+          SELECT 'dashboard_overloads' AS section,
+                 p.oid::regprocedure::text AS signature,
+                 pg_get_functiondef(p.oid) AS definition
+            FROM pg_proc p
+            JOIN pg_namespace n ON n.oid = p.pronamespace
+           WHERE n.nspname = 'public'
+             AND p.proname = 'gsa_admin_dashboard_snapshot';
+
+          SELECT 'pendency_overloads' AS section,
+                 p.oid::regprocedure::text AS signature,
+                 pg_get_functiondef(p.oid) AS definition
+            FROM pg_proc p
+            JOIN pg_namespace n ON n.oid = p.pronamespace
+           WHERE n.nspname = 'public'
+             AND p.proname = 'gsa_admin_get_pendency_counts_secure';
+
+          SELECT 'snapshot_error_sources' AS section,
+                 p.oid::regprocedure::text AS signature,
+                 pg_get_functiondef(p.oid) AS definition
+            FROM pg_proc p
+            JOIN pg_namespace n ON n.oid = p.pronamespace
+           WHERE n.nspname = 'public'
+             AND pg_get_functiondef(p.oid) ILIKE '%Snapshot administrativo base não encontrado%';
+
+          SELECT 'protection_relations' AS section,
+                 c.oid::regclass::text AS relation,
+                 c.relkind
+            FROM pg_class c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+           WHERE n.nspname = 'public'
+             AND c.relname ILIKE '%seguro%oferta%';
+
+          SELECT 'migration_history' AS section, version
+            FROM supabase_migrations.schema_migrations
+           WHERE version IN ('20260720183000','20260720234400','20260720234500','20260720235300','20260720235425','20260720235450','20260720235500')
+           ORDER BY version;
+          SQL
+          set -o pipefail
+          supabase db query --linked --file production-diagnosis.sql 2>&1 | tee production-diagnosis.log
+
+      - name: Upload diagnosis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-snapshot-production-diagnosis-${{ github.run_id }}
+          path: |
+            repository-diagnosis.log
+            production-diagnosis.sql
+            production-diagnosis.log
+          retention-days: 7
