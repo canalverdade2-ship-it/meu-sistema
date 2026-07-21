@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { isProviderBlocked } from '../../lib/providerStatus';
