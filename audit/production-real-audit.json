@@ -1,22 +1,14 @@
 {
-  "generated_at": "2026-07-21T16:05:52.609Z",
+  "generated_at": "2026-07-21T16:07:32.864Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
   "scanned_files": 282,
   "blocker_count": 0,
-  "review_count": 8,
+  "review_count": 7,
   "blockers": [],
   "review": [
-    {
-      "severity": "review",
-      "rule": "runtime-prompt",
-      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
-      "file": "src/components/admin/ClassifiedsModule.tsx",
-      "line": 81,
-      "excerpt": "reason = window.prompt('Motivo da rejeição do anúncio:')?.trim() || null;"
-    },
     {
       "severity": "review",
       "rule": "runtime-prompt",
