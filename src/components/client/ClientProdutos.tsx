@@ -281,7 +281,7 @@ export function ClientProdutos({
                       </div>
                       <div className="min-w-0">
                         <h4 className="text-base font-black text-neutral-900 tracking-tight leading-tight truncate group-hover:text-indigo-600 transition-colors">
-                          {p.produtos?.nome}
+                          {p.nome_produto_contratado ?? p.produtos?.nome}
                         </h4>
                         <p className="text-[11px] font-bold text-neutral-400 mt-1">
                           Data: {formatDate(p.data_criacao)}
@@ -399,7 +399,7 @@ export function ClientProdutos({
                         {orcamento?.codigo_orcamento || `#OC${selectedProduto.codigo_ordem}`}
                       </h3>
                       <h4 className="text-sm font-bold text-neutral-600 mt-1 leading-normal">
-                        {selectedProduto.produtos?.nome}
+                        {selectedProduto.nome_produto_contratado ?? selectedProduto.produtos?.nome}
                       </h4>
                     </div>
                   </div>
@@ -429,11 +429,11 @@ export function ClientProdutos({
                   </div>
                   <div>
                     <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1"><DollarSign className="h-3 w-3" /> Valor Unitário</span>
-                    <p className="text-sm font-bold text-neutral-900 mt-1">{formatCurrency(selectedProduto.produtos?.valor || 0)}</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-1">{formatCurrency(selectedProduto.valor_unitario_contratado ?? selectedProduto.produtos?.valor ?? 0)}</p>
                   </div>
                   <div>
                     <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1"><Receipt className="h-3 w-3" /> Valor Total</span>
-                    <p className="text-sm font-black text-indigo-600 mt-1">{formatCurrency((selectedProduto.produtos?.valor || 0) * (selectedProduto.quantidade || 1))}</p>
+                    <p className="text-sm font-black text-indigo-600 mt-1">{formatCurrency((selectedProduto.valor_unitario_contratado ?? selectedProduto.produtos?.valor ?? 0) * (selectedProduto.quantidade || 1))}</p>
                   </div>
                 </div>
               </div>
@@ -562,7 +562,7 @@ export function ClientProdutos({
                     <div className="space-y-2.5">
                       <div className="flex justify-between text-xs font-bold text-neutral-500">
                         <span>Subtotal de Itens</span>
-                        <span>{formatCurrency((selectedProduto.produtos?.valor || 0) * (selectedProduto.quantidade || 1))}</span>
+                        <span>{formatCurrency((selectedProduto.valor_unitario_contratado ?? selectedProduto.produtos?.valor ?? 0) * (selectedProduto.quantidade || 1))}</span>
                       </div>
                       
                       {orcamento?.desconto > 0 && (

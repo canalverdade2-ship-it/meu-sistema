@@ -233,17 +233,14 @@ const fetchProdutos = async () => {
       query = query.eq('tipo_cliente', 'ambos');
     }
 
-    if (search) {
-      // Remover espaços e traços apenas para a pesquisa por código, 
-      // mas mantemos o termo original para busca por nome.
-      const searchClean = search.replace(/[\\s\\.\\-]/g, '');
-      const searchConditions = [`nome.ilike.%${search}%`];
-      
+    const safeSearch = search.replace(/[,()]/g, ' ').trim();
+    if (safeSearch) {
+      const searchClean = safeSearch.replace(/[\s\.\-]/g, '');
+      const searchConditions = [`nome.ilike.%${safeSearch}%`];
       if (searchClean.length > 0) {
         searchConditions.push(`codigo_produto.ilike.%${searchClean}%`);
         searchConditions.push(`codigo_barras.ilike.%${searchClean}%`);
       }
-      
       query = query.or(searchConditions.join(','));
     }
 
@@ -335,7 +332,7 @@ const handleBulkDelete = async () => {
       return;
     }
 
-    if (!window.confirm(`Tem certeza que deseja excluir ${selectedIds.size} produto(s)? Esta ação não pode ser desfeita.`)) {
+    if (!window.confirm(`Deseja inativar ${selectedIds.size} produto(s)? Eles deixarão de aparecer na loja e poderão ser reativados posteriormente.`)) {
       return;
     }
 
@@ -510,10 +507,12 @@ const handleBulkDelete = async () => {
                 <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${
                   produto.tipo_cliente === 'pf'
                     ? 'bg-sky-100 text-sky-700'
-                    : 'bg-amber-100 text-amber-700'
+                    : produto.tipo_cliente === 'pj'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-purple-100 text-purple-700'
                 }`}>
-                  {produto.tipo_cliente === 'pf' ? <User className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
-                  {produto.tipo_cliente === 'pf' ? 'PF' : 'PJ'}
+                  {produto.tipo_cliente === 'pf' ? <User className="h-3 w-3" /> : produto.tipo_cliente === 'pj' ? <Building2 className="h-3 w-3" /> : <MoreHorizontal className="h-3 w-3" />}
+                  {produto.tipo_cliente === 'pf' ? 'PF' : produto.tipo_cliente === 'pj' ? 'PJ' : 'Ambos'}
                 </span>
                 <span className="font-mono text-xs font-bold text-neutral-400" title={getProductDisplayCodeLabel(produto)}>{getProductDisplayCode(produto)}</span>
               </div>

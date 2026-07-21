@@ -368,12 +368,12 @@ toast.success(result?.already_processed
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-black text-neutral-900 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">{ordem.assinaturas.nome}</h3>
+                    <h3 className="text-xl font-black text-neutral-900 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">{ordem.nome_assinatura_contratada ?? ordem.assinaturas?.nome}</h3>
                     <span className="text-[10px] font-mono text-neutral-400 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-100">{ordem.codigo_ordem}</span>
                   </div>
                   <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1">Cliente: {ordem.clientes.nome}</p>
                   <div className="flex items-center flex-wrap gap-3 mt-3">
-                    <p className="text-xl font-black text-[#1a1a1a] tracking-tighter">{formatCurrency(ordem.assinaturas.valor)}</p>
+                    <p className="text-xl font-black text-[#1a1a1a] tracking-tighter">{formatCurrency(ordem.valor_mensal_contratado ?? ordem.assinaturas?.valor ?? 0)}</p>
                     <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-sm ${
                       ordem.status === 'concluido' ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200' : 
                       ordem.status === 'em_cancelamento' ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200' :
@@ -543,7 +543,7 @@ export function AssinaturaDetails({
           <div className="text-left">
             <h5 className="text-sm font-black text-amber-900 uppercase">Cancelamento Agendado</h5>
             <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-              A assinatura está programada para ser cancelada permanentemente em {formatDate(ordem.data_cancelamento)}. O valor proporcional estimado de devolução/estorno é de {formatCurrency(ordem.valor_proporcional_cancelamento || 0)}.
+              A assinatura está programada para ser encerrada em {formatDate(ordem.data_cancelamento)}. Faturas pagas serão preservadas, cobranças com vencimento até essa data permanecerão válidas e somente cobranças futuras não pagas serão canceladas.
             </p>
           </div>
         </div>
@@ -560,7 +560,7 @@ export function AssinaturaDetails({
               {ordem.codigo_ordem || `#OA-${ordem.id.slice(0, 4).toUpperCase()}`}
             </span>
             <h3 className="text-xl font-black text-neutral-900 tracking-tight leading-tight mt-1">
-              {ordem.assinaturas?.nome}
+              {ordem.nome_assinatura_contratada ?? ordem.assinaturas?.nome}
             </h3>
             <span className="text-xs font-bold text-neutral-500">{ordem.clientes?.nome}</span>
           </div>
@@ -604,7 +604,7 @@ export function AssinaturaDetails({
               <div>
                 <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block">Valor do Plano</span>
                 <span className="text-lg font-black text-neutral-950 mt-1 block">
-                  {formatCurrency(ordem.assinaturas?.valor || 0)}
+                  {formatCurrency(ordem.valor_mensal_contratado ?? ordem.assinaturas?.valor ?? 0)}
                   <span className="text-xs text-neutral-400 font-bold"> /mês</span>
                 </span>
               </div>

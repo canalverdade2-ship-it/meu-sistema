@@ -299,7 +299,7 @@ export function ClientAssinaturas({
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="text-base font-black text-neutral-900 tracking-tight leading-tight truncate group-hover:text-indigo-600 transition-colors">
-                          {a.assinaturas?.nome}
+                          {a.nome_assinatura_contratada ?? a.assinaturas?.nome}
                         </h4>
                         <p className="text-[11px] font-bold text-neutral-400 mt-1">
                           Início: {formatDate(a.data_inicio || a.data_criacao)}
@@ -310,7 +310,7 @@ export function ClientAssinaturas({
                           </span>
                           <span className="h-1 w-1 rounded-full bg-neutral-300" />
                           <span className="text-sm font-black text-indigo-600">
-                            {formatCurrency(a.assinaturas?.valor || 0)}/mês
+                            {formatCurrency(a.valor_mensal_contratado ?? a.assinaturas?.valor ?? 0)}/mês
                           </span>
                         </div>
                       </div>
@@ -407,7 +407,7 @@ export function ClientAssinaturas({
                       {orcamento?.codigo_orcamento || `#OC${selectedAssinatura.codigo_ordem}`}
                     </span>
                     <h3 className="text-xl font-black text-neutral-900 tracking-tight leading-tight mt-1">
-                      {selectedAssinatura.assinaturas?.nome}
+                      {selectedAssinatura.nome_assinatura_contratada ?? selectedAssinatura.assinaturas?.nome}
                     </h3>
                   </div>
                 </div>

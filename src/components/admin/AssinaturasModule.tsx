@@ -128,8 +128,9 @@ const fetchAssinaturas = async () => {
       query = query.eq('tipo_cliente', 'ambos');
     }
 
-    if (search) {
-      query = query.or(`nome.ilike.%${search}%,codigo_assinatura.ilike.%${search}%`);
+    const safeSearch = search.replace(/[,()]/g, ' ').trim();
+    if (safeSearch) {
+      query = query.or(`nome.ilike.%${safeSearch}%,codigo_assinatura.ilike.%${safeSearch}%`);
     }
 
     const { data } = await query.order('codigo_assinatura', { ascending: false });
