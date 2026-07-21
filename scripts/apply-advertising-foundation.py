@@ -117,6 +117,11 @@ replace_exact(
     "             : page === 'partners'\n               ? window.location.pathname.startsWith('/parceiros/') ? window.location.pathname : '/parceiros'\n               : page === 'ads'\n                 ? '/anuncios'\n                 : page === 'advertise'\n                   ? '/anuncie'\n                   : '/';",
 )
 
+package_path = Path('package.json')
+package_data = json.loads(package_path.read_text(encoding='utf-8'))
+package_data['scripts']['test:advertising'] = 'tsx scripts/check-advertising-foundation.ts'
+package_path.write_text(json.dumps(package_data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
 replace_exact(
     'src/components/public/AdvertisingPage.tsx',
     """    supabase.rpc('gsa_public_list_active_ads', { p_placement_code: 'ADS_PUBLIC_SHOWCASE' })
@@ -140,10 +145,5 @@ replace_exact(
     void loadAds();
 """,
 )
-
-package_path = Path('package.json')
-package_data = json.loads(package_path.read_text(encoding='utf-8'))
-package_data['scripts']['test:advertising'] = 'tsx scripts/check-advertising-foundation.ts'
-package_path.write_text(json.dumps(package_data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 print('Integração do módulo de anúncios aplicada com sucesso.')
