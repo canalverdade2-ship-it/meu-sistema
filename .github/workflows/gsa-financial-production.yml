@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: gsa-viagens-financial-production
@@ -154,18 +155,21 @@ jobs:
           } > gsa-financial-apply.sql
 
       - name: Validate against production with rollback
+        id: preflight
         shell: bash
         run: |
           set -o pipefail
           supabase db query --linked --file gsa-financial-preflight.sql 2>&1 | tee gsa-financial-preflight.log
 
       - name: Apply migrations atomically
+        id: apply
         shell: bash
         run: |
           set -o pipefail
           supabase db query --linked --file gsa-financial-apply.sql 2>&1 | tee gsa-financial-apply.log
 
       - name: Register migration history
+        id: history
         shell: bash
         run: |
           set -euo pipefail
@@ -175,6 +179,7 @@ jobs:
           grep -q '20260721150100' gsa-financial-history.log
 
       - name: Verify persisted production state
+        id: verify
         shell: bash
         run: |
           set -o pipefail
@@ -192,3 +197,40 @@ jobs:
             gsa-financial-verification.log
           retention-days: 30
           if-no-files-found: ignore
+
+      - name: Publish private deployment result
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+          PREFLIGHT_STATUS: ${{ steps.preflight.outcome }}
+          APPLY_STATUS: ${{ steps.apply.outcome }}
+          HISTORY_STATUS: ${{ steps.history.outcome }}
+          VERIFY_STATUS: ${{ steps.verify.outcome }}
+        run: |
+          touch gsa-financial-preflight.log gsa-financial-apply.log gsa-financial-history.log gsa-financial-verification.log
+          {
+            echo '# Implantação financeira do GSA Viagens'
+            echo
+            echo "- Projeto: \`$EXPECTED_PROJECT_ID\`"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Resultado geral: **$JOB_STATUS**"
+            echo "- Prévia com rollback: **$PREFLIGHT_STATUS**"
+            echo "- Aplicação atômica: **$APPLY_STATUS**"
+            echo "- Histórico de migrations: **$HISTORY_STATUS**"
+            echo "- Auditoria persistida: **$VERIFY_STATUS**"
+            echo
+            echo '## Últimas mensagens'
+            echo '```text'
+            tail -n 40 gsa-financial-preflight.log
+            tail -n 40 gsa-financial-apply.log
+            tail -n 40 gsa-financial-history.log
+            tail -n 40 gsa-financial-verification.log
+            echo '```'
+          } > gsa-financial-deployment-report.md
+
+          gh issue create \
+            --title "GSA Viagens financeiro produção: $JOB_STATUS" \
+            --body-file gsa-financial-deployment-report.md
