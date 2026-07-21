@@ -121,7 +121,7 @@ async function main() {
       'quantidade_passageiros',
       'gsa_travel_expected_passengers',
       'Cadastre exatamente % passageiro(s)',
-      'transacao.status = \'pendente\'',
+      "transacao.status = 'pendente'",
       'trg_gsa_cleanup_deleted_travel_document_metadata',
       'AFTER DELETE ON storage.objects',
     ],
@@ -176,11 +176,6 @@ async function main() {
   );
 
   await assertFileContains(
-    'src/components/client/marketplace/travel/TravelCancellationsPage.tsx',
-    ['callClientRpc', 'gsa_request_travel_cancellation'],
-  );
-
-  await assertFileContains(
     'supabase/migrations/20260720230000_gsa_viagens_parcelamento_checkout.sql',
     [
       'parcelas INTEGER NOT NULL DEFAULT 1',
@@ -203,7 +198,58 @@ async function main() {
     ],
   );
 
-  console.log('GSA Viagens: rotas, segurança e contratos críticos validados com sucesso.');
+  await assertFileContains(
+    'supabase/migrations/20260721150000_gsa_viagens_financial_integrity.sql',
+    [
+      'valor_total_contrato',
+      'valor_efetivamente_pago',
+      'valor_elegivel_reembolso',
+      'pagamento_status',
+      'viagens_transacao_parcelas',
+      'gsa_travel_operation_requests',
+      'gsa_refresh_travel_financial_summary',
+      'gsa_sync_travel_invoice_financials',
+      'gsa_admin_resolve_travel_cancellation',
+      'A decisao de reembolso exige permissao do modulo Financeiro',
+      'gsa_travel_previous_status',
+      'p_request_id uuid',
+    ],
+  );
+
+  await assertFileDoesNotContain(
+    'supabase/migrations/20260721150000_gsa_viagens_financial_integrity.sql',
+    [
+      'valor_solicitado,\n    status\n  ) VALUES (\n    p_transacao_id,\n    v_cliente_id,\n    trim(p_motivo),\n    v_transacao.valor_pago',
+      'GRANT EXECUTE ON FUNCTION public.gsa_admin_resolve_travel_cancellation',
+    ],
+  );
+
+  await assertFileContains(
+    'src/components/client/marketplace/travel/TravelCancellationsPage.tsx',
+    [
+      'ACTIVE_CANCELLATION_STATUSES',
+      'p_request_id: requestId',
+      'valor_total_contrato',
+      'valor_efetivamente_pago',
+      'valor_elegivel_reembolso',
+      'faturas_suspensas',
+      'Valor máximo atualmente elegível',
+    ],
+  );
+
+  await assertFileContains(
+    'src/components/client/marketplace/travel/MyTripsPage.tsx',
+    [
+      'valor_total_contrato',
+      'valor_efetivamente_pago',
+      'valor_em_aberto',
+      'paymentStatusConfig',
+      'Total contratado',
+      'Efetivamente pago',
+    ],
+  );
+
+  console.log('GSA Viagens: rotas, segurança, financeiro e contratos críticos validados com sucesso.');
 }
 
 main().catch((error) => {
