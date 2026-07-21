@@ -1,3 +1,4 @@
+import { sessionService } from './sessionService';
 import { supabase } from './supabase';
 
 export const CLASSIFIEDS_MEDIA_BUCKET = 'classificados-midias';
@@ -42,6 +43,30 @@ async function functionErrorMessage(error: any, fallback: string) {
   return error?.message || fallback;
 }
 
+async function authenticatedFunctionHeaders() {
+  const gsaSession = sessionService.getCurrentSession();
+  if (
+    !gsaSession?.sessaoId
+    || !gsaSession?.sessionToken
+    || gsaSession.atorTipo !== 'cliente'
+    || !UUID_PATTERN.test(gsaSession.atorId)
+  ) {
+    throw new Error('Sua sessão expirou. Faça login novamente para enviar imagens.');
+  }
+
+  const { data, error } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (error || !accessToken) {
+    throw new Error('Sua sessão segura expirou. Faça login novamente para enviar imagens.');
+  }
+
+  return {
+    Authorization: `Bearer ${accessToken}`,
+    'x-gsa-session-id': gsaSession.sessaoId,
+    'x-gsa-session-token': gsaSession.sessionToken,
+  };
+}
+
 export function validateClassifiedImage(file: File) {
   const extension = safeExtension(file);
 
@@ -70,13 +95,14 @@ export async function uploadClassifiedImage(input: {
     throw new Error('Identidade inválida para o upload da imagem.');
   }
 
+  const headers = await authenticatedFunctionHeaders();
   const body = new FormData();
   body.append('action', 'upload');
   body.append('client_id', clientId);
   body.append('draft_id', draftId);
   body.append('file', input.file, input.file.name);
 
-  const { data, error } = await supabase.functions.invoke('gsa-classified-media', { body });
+  const { data, error } = await supabase.functions.invoke('gsa-classified-media', { body, headers });
   if (error) throw new Error(await functionErrorMessage(error, 'Não foi possível enviar a imagem.'));
   if (!data?.success || !data?.media?.url || !data?.media?.path) {
     throw new Error(data?.message || data?.error || 'O servidor não confirmou o upload da imagem.');
@@ -101,8 +127,10 @@ export async function removeClassifiedImages(paths: string[]) {
   if (normalized.length === 0) return;
   if (normalized.length > CLASSIFIEDS_MAX_IMAGES) throw new Error('Quantidade de imagens inválida para exclusão.');
 
+  const headers = await authenticatedFunctionHeaders();
   const { data, error } = await supabase.functions.invoke('gsa-classified-media', {
     body: { action: 'delete', paths: normalized },
+    headers,
   });
   if (error) throw new Error(await functionErrorMessage(error, 'Não foi possível remover a imagem.'));
   if (!data?.success) throw new Error(data?.message || data?.error || 'O servidor não confirmou a exclusão da imagem.');
