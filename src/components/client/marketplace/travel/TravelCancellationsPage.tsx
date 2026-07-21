@@ -12,17 +12,19 @@ const CLOSED_TRIP_STATUSES = ['cancelada', 'reembolsada', 'concluida'];
 const statusLabels: Record<string, string> = {
   solicitado: 'Solicitado',
   em_analise: 'Em análise',
-  reembolso_aprovado: 'Reembolso aprovado',
+  reembolso_aprovado: 'Reembolso aprovado (Aguardando Pagamento)',
   reembolso_negado: 'Reembolso negado',
-  concluido: 'Concluído',
+  concluido: 'Reembolsado & Concluído',
+  reembolsada: 'Reembolsado & Concluído',
 };
 
 const statusColors: Record<string, string> = {
-  solicitado: 'bg-amber-100 text-amber-800',
-  em_analise: 'bg-blue-100 text-blue-800',
-  reembolso_aprovado: 'bg-emerald-100 text-emerald-800',
-  reembolso_negado: 'bg-red-100 text-red-800',
-  concluido: 'bg-neutral-100 text-neutral-800',
+  solicitado: 'bg-amber-100 text-amber-800 border border-amber-300',
+  em_analise: 'bg-amber-100 text-amber-800 border border-amber-300',
+  reembolso_aprovado: 'bg-indigo-100 text-indigo-800 border border-indigo-300',
+  reembolso_negado: 'bg-rose-100 text-rose-800 border border-rose-300',
+  concluido: 'bg-emerald-100 text-emerald-800 border border-emerald-300',
+  reembolsada: 'bg-emerald-100 text-emerald-800 border border-emerald-300',
 };
 
 function sortCancellations(items: any[] = []) {
@@ -187,7 +189,7 @@ export function TravelCancellationsPage({
 
         <div className="mb-8 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-          <p>O valor reembolsável é calculado somente sobre pagamentos conciliados. Parcelas ainda não pagas são suspensas durante a análise.</p>
+          <p>O valor reembolsável é calculatedo somente sobre pagamentos conciliados. Parcelas ainda não pagas são suspensas durante a análise.</p>
         </div>
 
         {loading ? (
@@ -205,8 +207,24 @@ export function TravelCancellationsPage({
               const cancellation = activeCancellation || cancellations[0];
               const canRequest = !activeCancellation && !CLOSED_TRIP_STATUSES.includes(trip.status);
               const total = contractTotal(trip);
-              const paid = Number(trip.valor_efetivamente_pago || 0);
+              const paid = Number(trip.valor_efetivamente_pago || trip.valor_pago || 0);
               const open = Number(trip.valor_em_aberto ?? Math.max(total - paid, 0));
+
+              const isTripRefunded = ['reembolsada', 'concluida'].includes(trip.status);
+              const isTripApproved = trip.status === 'reembolso_aprovado';
+              const isTripDenied = trip.status === 'reembolso_negado';
+
+              const storedNet = trip.id ? localStorage.getItem(`gsa_refund_net_${trip.id}`) : null;
+              const storedFees = trip.id ? localStorage.getItem(`gsa_refund_fees_${trip.id}`) : null;
+              const storedNote = trip.id ? localStorage.getItem(`gsa_refund_note_${trip.id}`) : null;
+
+              const effStatus = isTripRefunded ? 'concluido' : (isTripApproved ? 'reembolso_aprovado' : (isTripDenied ? 'reembolso_negado' : (cancellation?.status || trip.status)));
+
+              const effNetRefund = cancellation?.valor_reembolsado ?? (trip.valor_elegivel_reembolso != null ? Number(trip.valor_elegivel_reembolso) : (storedNet ? Number(storedNet) : paid));
+
+              const effFees = cancellation?.taxas_aplicaveis ?? (storedFees ? Number(storedFees) : ((isTripRefunded || isTripApproved) ? Math.max(0, (trip.valor_total_contrato || paid) - effNetRefund) : null));
+
+              const effNote = cancellation?.resposta_gsa || storedNote;
 
               return (
                 <article key={trip.id} className="rounded-3xl border border-black/5 bg-white p-6 shadow-sm sm:p-7">
@@ -215,9 +233,9 @@ export function TravelCancellationsPage({
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-black uppercase text-neutral-600">{String(trip.status).replace(/_/g, ' ')}</span>
                         <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-black uppercase text-sky-700">{String(trip.pagamento_status || 'não faturado').replace(/_/g, ' ')}</span>
-                        {cancellation && (
-                          <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${statusColors[cancellation.status] || 'bg-neutral-100 text-neutral-700'}`}>
-                            {statusLabels[cancellation.status] || cancellation.status}
+                        {(cancellation || isTripRefunded || isTripApproved || isTripDenied) && (
+                          <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${statusColors[effStatus] || 'bg-neutral-100 text-neutral-700'}`}>
+                            {statusLabels[effStatus] || effStatus}
                           </span>
                         )}
                       </div>
@@ -229,20 +247,20 @@ export function TravelCancellationsPage({
                         <div><span className="block text-xs text-neutral-400">Em aberto</span><strong>{formatCurrency(open)}</strong></div>
                       </div>
 
-                      {cancellation && (
+                      {(cancellation || isTripRefunded || isTripApproved || isTripDenied) && (
                         <div className="mt-5 rounded-2xl bg-neutral-50 p-4 text-sm">
                           <p className="font-bold text-neutral-800">Motivo informado</p>
-                          <p className="mt-1 text-neutral-600">{cancellation.motivo}</p>
+                          <p className="mt-1 text-neutral-600">{cancellation?.motivo || 'Solicitação de cancelamento de viagem.'}</p>
                           <div className="mt-4 grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-4">
-                            <div><span className="block text-xs text-neutral-400">Pago no pedido</span><strong>{formatCurrency(cancellation.valor_pago_no_pedido ?? paid)}</strong></div>
-                            <div><span className="block text-xs text-neutral-400">Elegível</span><strong>{formatCurrency(cancellation.valor_solicitado ?? 0)}</strong></div>
-                            <div><span className="block text-xs text-neutral-400">Taxas</span><strong>{cancellation.taxas_aplicaveis == null ? 'Em análise' : formatCurrency(cancellation.taxas_aplicaveis)}</strong></div>
-                            <div><span className="block text-xs text-neutral-400">Reembolso</span><strong>{cancellation.valor_reembolsado == null ? 'Em análise' : formatCurrency(cancellation.valor_reembolsado)}</strong></div>
+                            <div><span className="block text-xs text-neutral-400">Pago no pedido</span><strong>{formatCurrency(cancellation?.valor_pago_no_pedido ?? paid)}</strong></div>
+                            <div><span className="block text-xs text-neutral-400">Elegível</span><strong>{formatCurrency(cancellation?.valor_solicitado ?? total)}</strong></div>
+                            <div><span className="block text-xs text-neutral-400">Taxas</span><strong>{effFees == null ? 'Em análise' : formatCurrency(effFees)}</strong></div>
+                            <div><span className="block text-xs text-neutral-400">Reembolso</span><strong>{(isTripRefunded || isTripApproved || cancellation?.status === 'concluido' || cancellation?.status === 'reembolso_aprovado') ? formatCurrency(effNetRefund) : 'Em análise'}</strong></div>
                           </div>
-                          {Number(cancellation.faturas_suspensas || 0) > 0 && (
+                          {Number(cancellation?.faturas_suspensas || 0) > 0 && (
                             <p className="mt-3 text-xs font-bold text-amber-700">{cancellation.faturas_suspensas} cobrança(s) futura(s) suspensa(s).</p>
                           )}
-                          {cancellation.resposta_gsa && <p className="mt-4 rounded-xl bg-white p-3 text-neutral-700"><strong>Resposta GSA:</strong> {cancellation.resposta_gsa}</p>}
+                          {effNote && <p className="mt-4 rounded-xl bg-white p-3 text-neutral-700"><strong>Resposta GSA:</strong> {effNote}</p>}
                         </div>
                       )}
                     </div>

@@ -1596,6 +1596,18 @@ function TransacoesTab() {
           .eq('id', refundTx.id);
       }
 
+      // Sincroniza a tabela viagens_cancelamentos para o cliente visualizar imediatamente
+      await supabase
+        .from('viagens_cancelamentos')
+        .update({
+          status: 'reembolso_aprovado',
+          valor_reembolsado: netRefund,
+          taxas_aplicaveis: numericFees,
+          resposta_gsa: note,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('transacao_id', refundTx.id);
+
       toast.success(`Etapa 1 Concluída! Reembolso de R$ ${formatCurrencyInputValue(netRefund)} Aprovado. Prossiga para a Etapa 2 (Processar Pagamento).`);
       setRefundTx(null);
       await list.load();
@@ -1612,6 +1624,7 @@ function TransacoesTab() {
     setProcessingRefund(true);
     try {
       const netVal = getNetRefundAmount(processRefundTx);
+      const feesVal = getRefundFeesAmount(processRefundTx);
       const proofText = refundProof.trim() || 'Pagamento de reembolso efetuado e comprovado.';
 
       if (processRefundTx.id) {
@@ -1629,6 +1642,19 @@ function TransacoesTab() {
         .eq('id', processRefundTx.id);
 
       if (error) throw new Error(error.message || 'Erro ao efetivar reembolso.');
+
+      // Sincroniza viagens_cancelamentos para 'concluido'
+      await supabase
+        .from('viagens_cancelamentos')
+        .update({
+          status: 'concluido',
+          valor_reembolsado: netVal,
+          taxas_aplicaveis: feesVal,
+          resposta_gsa: proofText,
+          concluido_em: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('transacao_id', processRefundTx.id);
 
       toast.success(`Etapa 2 Concluída! Pagamento de R$ ${formatCurrencyInputValue(netVal)} confirmado e efetivado com sucesso.`);
       setProcessRefundTx(null);
@@ -1660,6 +1686,17 @@ function TransacoesTab() {
         .eq('id', denyTx.id);
 
       if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
+
+      // Sincroniza viagens_cancelamentos para 'reembolso_negado'
+      await supabase
+        .from('viagens_cancelamentos')
+        .update({
+          status: 'reembolso_negado',
+          resposta_gsa: reason,
+          decidido_em: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('transacao_id', denyTx.id);
 
       toast.success('Solicitação de reembolso negada e registrada.');
       setDenyTx(null);
