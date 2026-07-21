@@ -1,3 +1,4 @@
+import { callAdminRpc } from '../../lib/adminRpc';
 import { supabase } from '../../lib/supabase';
 import type { Partner, PartnerFormData } from './types';
 
@@ -16,11 +17,11 @@ function normalizeList(value: string[] | null | undefined): string[] {
 function normalizePartner(partner: any): Partner {
   return {
     ...partner,
-    service_regions: normalizeList(partner.service_regions),
-    services: normalizeList(partner.services),
-    products: normalizeList(partner.products),
-    featured: Boolean(partner.featured),
-    display_order: Number(partner.display_order || 0),
+    service_regions: normalizeList(partner?.service_regions),
+    services: normalizeList(partner?.services),
+    products: normalizeList(partner?.products),
+    featured: Boolean(partner?.featured),
+    display_order: Number(partner?.display_order || 0),
   } as Partner;
 }
 
@@ -48,13 +49,8 @@ export async function getPublicPartner(slug: string): Promise<Partner | null> {
 }
 
 export async function listAdminPartners(): Promise<Partner[]> {
-  const { data, error } = await supabase
-    .from('parceiros')
-    .select('*')
-    .order('display_order', { ascending: true })
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return (data || []).map(normalizePartner);
+  const snapshot = await callAdminRpc<{ partners?: Partner[] }>('gsa_admin_partners_snapshot');
+  return (snapshot?.partners || []).map(normalizePartner);
 }
 
 export async function savePartner(payload: PartnerFormData, id?: string): Promise<Partner> {
@@ -71,16 +67,16 @@ export async function savePartner(payload: PartnerFormData, id?: string): Promis
     products: normalizeList(payload.products),
   };
 
-  const query = id
-    ? supabase.from('parceiros').update(normalized).eq('id', id)
-    : supabase.from('parceiros').insert(normalized);
-
-  const { data, error } = await query.select('*').single();
-  if (error) throw error;
-  return normalizePartner(data);
+  const result = await callAdminRpc<{ partner: Partner }>('gsa_admin_save_partner', {
+    p_partner_id: id || null,
+    p_payload: normalized,
+  });
+  return normalizePartner(result.partner);
 }
 
 export async function setPartnerStatus(id: string, status: Partner['status']): Promise<void> {
-  const { error } = await supabase.from('parceiros').update({ status }).eq('id', id);
-  if (error) throw error;
+  await callAdminRpc('gsa_admin_set_partner_status', {
+    p_partner_id: id,
+    p_status: status,
+  });
 }
