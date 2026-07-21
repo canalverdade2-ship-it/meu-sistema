@@ -109,7 +109,7 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
 
   const categories = useMemo(() => [
     'Todas',
-    ...Array.from(new Set(partners.map((partner) => partner.category).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    ...Array.from(new Set<string>(partners.map((partner) => partner.category).filter((item): item is string => Boolean(item)))).sort((a, b) => a.localeCompare(b, 'pt-BR')),
   ], [partners]);
 
   const filtered = useMemo(() => {
@@ -163,7 +163,7 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
                   <section className="mt-9">
                     <h2 className="text-xl font-black">Serviços e especialidades</h2>
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      {selectedPartner.services.map((service) => <div key={service} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm font-semibold text-neutral-750">{service}</div>)}
+                      {selectedPartner.services.map((service) => <div key={service} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm font-semibold text-neutral-700">{service}</div>)}
                     </div>
                   </section>
                 )}
@@ -178,7 +178,7 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
                 {selectedPartner.benefits && (
                   <section className="mt-9 rounded-2xl border border-[#d8bd73]/45 bg-[#d8bd73]/10 p-6">
                     <p className="text-xs font-black uppercase tracking-[0.2em] text-[#76591e]">Benefício para clientes GSA</p>
-                    <p className="mt-3 leading-7 text-neutral-750">{selectedPartner.benefits}</p>
+                    <p className="mt-3 leading-7 text-neutral-700">{selectedPartner.benefits}</p>
                   </section>
                 )}
               </div>
