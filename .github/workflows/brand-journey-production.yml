@@ -1,0 +1,205 @@
+name: Brand Journey Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/brand-journey-production.yml'
+      - 'src/components/public/BrandJourneyPage.tsx'
+      - 'src/components/public/SystemsBudgetModal.tsx'
+      - 'src/components/public/SystemsPageFinal.tsx'
+      - 'src/components/public/final/PublicHomeLanding.tsx'
+      - 'src/routing/routeMatcher.ts'
+      - 'scripts/check-home-public-contracts.ts'
+      - 'supabase/functions/gsa-public-budget/**'
+      - 'supabase/migrations/20260721235947_expand_public_branding_budget.sql'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: brand-journey-production
+  cancel-in-progress: false
+
+jobs:
+  validate-deploy-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate TypeScript and public contracts
+        run: |
+          npm run lint
+          npm run test:home
+
+      - name: Validate public budget gateway
+        run: |
+          deno check supabase/functions/gsa-public-budget/index.ts supabase/functions/gsa-public-budget/index_test.ts
+          deno test --allow-env supabase/functions/gsa-public-budget/index_test.ts
+
+      - name: Build production frontend
+        run: npm run build
+
+      - name: Validate deployment authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link authorized production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Build database verification
+        shell: bash
+        run: |
+          cat > brand-journey-verification.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regprocedure('public.gsa_public_create_brand_budget_v1(jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'Rotina protegida da jornada de marca ausente';
+            END IF;
+
+            IF has_function_privilege('anon', 'public.gsa_public_create_brand_budget_v1(jsonb)', 'EXECUTE')
+               OR has_function_privilege('authenticated', 'public.gsa_public_create_brand_budget_v1(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Rotina de marca exposta a papéis públicos';
+            END IF;
+
+            IF NOT has_function_privilege('service_role', 'public.gsa_public_create_brand_budget_v1(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Gateway sem permissão para registrar orçamento de marca';
+            END IF;
+          END $$;
+          SELECT 'BRAND_JOURNEY_DATABASE_VERIFIED' AS result;
+          SQL
+
+          {
+            echo 'BEGIN;'
+            cat supabase/migrations/20260721235947_expand_public_branding_budget.sql
+            cat brand-journey-verification.sql
+            echo 'ROLLBACK;'
+          } > brand-journey-preflight.sql
+
+      - name: Validate migration against production with rollback
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file brand-journey-preflight.sql 2>&1 | tee brand-journey-preflight.log
+          grep -q 'BRAND_JOURNEY_DATABASE_VERIFIED' brand-journey-preflight.log
+
+      - name: Apply brand journey migration idempotently
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee brand-journey-migrations-before.log
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260721235947") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' brand-journey-migrations-before.log; then
+            echo 'Migration da jornada de marca já registrada.' | tee brand-journey-migration-apply.log
+          else
+            supabase db query --linked --file supabase/migrations/20260721235947_expand_public_branding_budget.sql 2>&1 | tee brand-journey-migration-apply.log
+            supabase migration repair --linked --status applied 20260721235947 2>&1 | tee -a brand-journey-migration-apply.log
+          fi
+
+      - name: Deploy public budget gateway
+        run: supabase functions deploy gsa-public-budget --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Verify persisted database and Edge Function
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file brand-journey-verification.sql 2>&1 | tee brand-journey-verification.log
+          grep -q 'BRAND_JOURNEY_DATABASE_VERIFIED' brand-journey-verification.log
+          supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee brand-journey-functions.log
+          grep -q 'gsa-public-budget' brand-journey-functions.log
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brand-journey-production-evidence
+          path: |
+            brand-journey-preflight.log
+            brand-journey-migrations-before.log
+            brand-journey-migration-apply.log
+            brand-journey-verification.log
+            brand-journey-functions.log
+          retention-days: 30
+          if-no-files-found: ignore
+
+  register-result:
+    needs: validate-deploy-verify
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Record production result
+        shell: bash
+        env:
+          RESULT: ${{ needs.validate-deploy-verify.result }}
+          RUN_ID: ${{ github.run_id }}
+          VALIDATED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          cat > deployment-status/brand-journey-production.json <<JSON
+          {
+            "status": "${RESULT}",
+            "workflow_run_id": "${RUN_ID}",
+            "validated_sha": "${VALIDATED_SHA}",
+            "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "page": "/empresa-do-zero-ao-digital",
+            "migration": "${RESULT}",
+            "database_function": "${RESULT}",
+            "edge_function": "${RESULT}",
+            "frontend_build": "${RESULT}"
+          }
+          JSON
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add deployment-status/brand-journey-production.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Registrar implantação Empresa do Zero ao Digital: ${RESULT}"
+          git pull --rebase origin main
+          git push origin HEAD:main

@@ -6,9 +6,14 @@ const read = (path: string) => readFileSync(path, 'utf8');
 const migration = read('supabase/migrations/20260720215500_fix_public_home_contracts.sql');
 const referralMigration = read('supabase/migrations/20260720215530_minimize_public_referral_lookup.sql');
 const finalBudgetMigration = read('supabase/migrations/20260721124500_finalize_public_home_budget.sql');
+const brandBudgetMigration = read('supabase/migrations/20260721235947_expand_public_branding_budget.sql');
 const firstAccessMigration = read('supabase/migrations/20260721125000_disable_unverified_first_access.sql');
 const recoveryRateMigration = read('supabase/migrations/20260721125500_prevent_recovery_subject_lockout.sql');
 const budgetModal = read('src/components/public/SystemsBudgetModal.tsx');
+const brandPage = read('src/components/public/BrandJourneyPage.tsx');
+const systemsPage = read('src/components/public/SystemsPageFinal.tsx');
+const homeLanding = read('src/components/public/final/PublicHomeLanding.tsx');
+const routeMatcher = read('src/routing/routeMatcher.ts');
 const budgetGateway = read('supabase/functions/gsa-public-budget/index.ts');
 const budgetGatewayTest = read('supabase/functions/gsa-public-budget/index_test.ts');
 const clientModal = read('src/components/auth/ClientAccessModal.tsx');
@@ -31,16 +36,33 @@ assert.match(finalBudgetMigration, /v_persisted_protocol := nullif\(v_internal->
 assert.match(finalBudgetMigration, /REVOKE ALL ON FUNCTION public\.gsa_public_create_enterprise_budget_v2\(jsonb\) FROM PUBLIC, anon, authenticated/, 'A rotina v2 não pode ser chamada diretamente pelo navegador');
 assert.match(finalBudgetMigration, /GRANT EXECUTE ON FUNCTION public\.gsa_public_create_enterprise_budget_v2\(jsonb\) TO service_role/, 'Somente o gateway deve executar a rotina v2');
 
+assert.match(brandBudgetMigration, /gsa_public_create_brand_budget_v1/, 'A jornada de marca deve ter uma rotina protegida própria');
+assert.match(brandBudgetMigration, /WHEN 'jornada_completa' THEN 'Empresa do zero ao digital'/, 'O pacote completo deve ser classificado corretamente');
+assert.match(brandBudgetMigration, /gsa_public_create_enterprise_budget_v2\(v_forward\)/, 'A nova rotina deve reutilizar as proteções do orçamento v2');
+assert.match(brandBudgetMigration, /REVOKE ALL ON FUNCTION public\.gsa_public_create_brand_budget_v1\(jsonb\) FROM PUBLIC, anon, authenticated/, 'A rotina de marca não pode ser pública');
+assert.match(brandBudgetMigration, /GRANT EXECUTE ON FUNCTION public\.gsa_public_create_brand_budget_v1\(jsonb\) TO service_role/, 'Somente o gateway deve executar a rotina de marca');
+
 assert.match(budgetModal, /functions\.invoke<BudgetResponse>\('gsa-public-budget'/, 'O formulário ativo deve usar o gateway Edge');
 assert.doesNotMatch(budgetModal, /\.rpc\('gsa_public_create_enterprise_budget_v2'/, 'O navegador não pode chamar a rotina v2 diretamente');
-assert.match(budgetModal, /value="integracao"/, 'A opção integração deve continuar disponível');
+assert.match(budgetModal, /jornada_completa/, 'O formulário deve aceitar a jornada completa');
+assert.match(budgetModal, /social_media/, 'O formulário deve aceitar social media');
 assert.match(budgetModal, /Protocolo do orçamento/, 'O código exibido deve ser identificado como protocolo persistido');
 assert.match(budgetModal, /página de origem, o domínio de referência e parâmetros de campanha/, 'A coleta de metadados deve ser informada ao usuário');
 assert.match(budgetGateway, /gsa_auth_rate_limit_check/, 'O gateway deve limitar envios por IP');
 assert.match(budgetGateway, /configuredOrigins\(\)/, 'O gateway deve aplicar a lista de origens');
-assert.match(budgetGateway, /gsa_public_create_enterprise_budget_v2/, 'O gateway deve encaminhar para a rotina protegida');
+assert.match(budgetGateway, /gsa_public_create_brand_budget_v1/, 'O gateway deve encaminhar tipos de marca para a rotina protegida');
+assert.match(budgetGateway, /gsa_public_create_enterprise_budget_v2/, 'O gateway deve preservar a rotina de tecnologia');
 assert.doesNotMatch(budgetGatewayTest, /from\s+['"]https?:\/\//, 'Testes Deno da Home não devem importar módulos remotos');
+assert.match(budgetGatewayTest, /jornada_completa/, 'Os testes Deno devem validar a nova jornada');
 assert.match(budgetGatewayTest, /function assertEquals/, 'Asserções dos testes Deno devem ser locais e determinísticas');
+
+assert.match(brandPage, /Da primeira ideia a uma marca pronta/, 'A página deve apresentar a proposta comercial principal');
+assert.match(brandPage, /Criação de nome/, 'A página deve oferecer desenvolvimento de nome');
+assert.match(brandPage, /Social media e conteúdo/, 'A página deve oferecer social media');
+assert.match(brandPage, /Nenhuma empresa séria pode garantir vendas/, 'A comunicação não pode prometer vendas garantidas');
+assert.match(homeLanding, /Empresa do Zero ao Digital/, 'O novo serviço deve aparecer no hall principal');
+assert.match(routeMatcher, /empresa-do-zero-ao-digital/, 'A nova URL deve ser reconhecida pelo roteamento');
+assert.match(systemsPage, /Conhecer a jornada completa/, 'Sites e Sistemas deve direcionar para a nova jornada');
 
 assert.match(firstAccessMigration, /gsa_set_pin_and_login/, 'A rotina de primeiro acesso sem OTP deve ser localizada');
 assert.match(firstAccessMigration, /PUBLIC, anon, authenticated, service_role/, 'O gateway e os papéis públicos não podem executar primeiro acesso sem OTP');

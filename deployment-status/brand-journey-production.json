@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "workflow_run_id": "29861075610",
+  "validated_sha": "5335d953e128885bb31f5fa6017a6edf65d34a32",
+  "validated_at_utc": "2026-07-21T19:21:43Z",
+  "page": "/empresa-do-zero-ao-digital",
+  "migration": "success",
+  "database_function": "success",
+  "edge_function": "success",
+  "frontend_build": "success"
+}

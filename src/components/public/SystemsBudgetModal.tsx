@@ -7,7 +7,22 @@ import { supabase } from '../../lib/supabase';
 import { maskPhone } from '../../lib/utils';
 
 const WHATSAPP_NUMBER = '5511920857756';
-const PROJECT_TYPES = new Set(['site', 'loja', 'sistema', 'aplicativo', 'automacao', 'integracao']);
+const PROJECT_OPTIONS = [
+  ['nome_marca', 'Criação de nome e posicionamento'],
+  ['logo', 'Criação de logo e logomarca'],
+  ['identidade_visual', 'Identidade visual e branding'],
+  ['redes_sociais', 'Estruturação de redes sociais'],
+  ['social_media', 'Social media, posts e publicações'],
+  ['marketing_digital', 'Estratégia digital e campanhas'],
+  ['jornada_completa', 'Empresa do zero ao digital'],
+  ['site', 'Site institucional ou landing page'],
+  ['loja', 'Loja virtual'],
+  ['sistema', 'Sistema web'],
+  ['aplicativo', 'Aplicativo'],
+  ['automacao', 'Automação'],
+  ['integracao', 'Integração entre sistemas'],
+] as const;
+const PROJECT_TYPES = new Set<string>(PROJECT_OPTIONS.map(([value]) => value));
 
 interface SystemsBudgetModalProps {
   isOpen: boolean;
@@ -40,8 +55,9 @@ const EMPTY_FORM: BudgetForm = {
 
 function getCampaignMetadata() {
   const params = new URLSearchParams(window.location.search);
+  const isBrandJourney = window.location.pathname.replace(/\/+$/, '') === '/empresa-do-zero-ao-digital';
   return {
-    source: 'public_sites_systems',
+    source: isBrandJourney ? 'public_brand_journey' : 'public_sites_systems',
     page: window.location.pathname,
     referrer: document.referrer.slice(0, 500),
     utm_source: (params.get('utm_source') || '').slice(0, 120),
@@ -93,7 +109,7 @@ export function SystemsBudgetModal({ isOpen, onClose }: SystemsBudgetModalProps)
   const openWhatsApp = () => {
     const message = protocol
       ? `Olá! Enviei uma solicitação de projeto pelo site. Protocolo: ${protocol}.`
-      : 'Olá! Gostaria de falar sobre a criação de um site, aplicativo, sistema ou automação.';
+      : 'Olá! Gostaria de falar sobre marca, presença digital, site, sistema ou redes sociais.';
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
@@ -171,8 +187,8 @@ export function SystemsBudgetModal({ isOpen, onClose }: SystemsBudgetModalProps)
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a6e2f]">Solicitar orçamento</p>
-              <h2 className="mt-2 text-2xl font-black text-neutral-950">Sites, aplicativos, sistemas e automações</h2>
-              <p className="mt-2 text-sm leading-6 text-neutral-600">Conte-nos o que você precisa. Empresas, MEIs e pessoas físicas podem solicitar uma análise inicial.</p>
+              <h2 className="mt-2 text-2xl font-black text-neutral-950">Marca, presença digital, sites e sistemas</h2>
+              <p className="mt-2 text-sm leading-6 text-neutral-600">Conte-nos o que você precisa. É possível contratar uma etapa específica ou solicitar a jornada completa.</p>
             </div>
             <button type="button" onClick={closeSafely} aria-label="Fechar orçamento" className="rounded-lg bg-neutral-100 p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]">
               <X className="h-5 w-5" />
@@ -204,12 +220,7 @@ export function SystemsBudgetModal({ isOpen, onClose }: SystemsBudgetModalProps)
               <label htmlFor="budget-type" className="mb-2 block text-sm font-bold text-neutral-700">Tipo de projeto</label>
               <select id="budget-type" required value={form.tipo} onChange={(event) => update('tipo', event.target.value)} className="input-field">
                 <option value="">Selecione</option>
-                <option value="site">Site institucional ou landing page</option>
-                <option value="loja">Loja virtual</option>
-                <option value="sistema">Sistema web</option>
-                <option value="aplicativo">Aplicativo</option>
-                <option value="automacao">Automação</option>
-                <option value="integracao">Integração entre sistemas</option>
+                {PROJECT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
             </div>
           </div>
@@ -219,7 +230,7 @@ export function SystemsBudgetModal({ isOpen, onClose }: SystemsBudgetModalProps)
               <label htmlFor="budget-request" className="block text-sm font-bold text-neutral-700">Descreva sua necessidade</label>
               <span className="text-xs text-neutral-400">{form.solicitacao.length}/2000</span>
             </div>
-            <textarea id="budget-request" required rows={6} minLength={20} maxLength={2000} value={form.solicitacao} onChange={(event) => update('solicitacao', event.target.value)} placeholder="Explique o objetivo do projeto, o público e as principais funções necessárias." className="input-field resize-none" />
+            <textarea id="budget-request" required rows={6} minLength={20} maxLength={2000} value={form.solicitacao} onChange={(event) => update('solicitacao', event.target.value)} placeholder="Explique sua ideia, o público, o que já existe e quais resultados você busca alcançar." className="input-field resize-none" />
           </div>
 
           <p className="text-xs leading-5 text-neutral-500">
