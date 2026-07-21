@@ -34,6 +34,8 @@ assert.match(enterpriseHome, /sessionStorage\.setItem\('gsa_pending_service_requ
 assert.match(app, /lazy\(\(\) => import\('\.\/pages\/SecureAdminPanel'\)/, 'Painel administrativo seguro deve ser carregado sob demanda');
 assert.match(app, /default: module\.MarketplaceGSAStore/, 'Marketplace deve mapear a exportação nomeada no carregamento lazy');
 assert.match(app, /readSafeReturnTo/, 'Redirecionamentos após login devem ser validados');
+assert.match(app, /targetTab === 'saude'\) navigate\(routes\.marketplace\.saude\.root\(\)\)/, 'Marketplace público deve abrir o módulo GSA Saúde');
+assert.match(app, /targetTab === 'seguros'\) navigate\(routes\.marketplace\.seguros\.root\(\)\)/, 'Marketplace público deve abrir o módulo GSA Seguros');
 assert.match(home, /params\.delete\('msg'\)/, 'Home deve remover somente o parâmetro de revogação');
 
 assert.equal(sanitizeInternalReturnTo('%2Fcliente%2Fdashboard', ['/cliente']), '/cliente/dashboard');
