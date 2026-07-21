@@ -79,6 +79,18 @@ async function validImageSignature(file: File) {
   return false;
 }
 
+function clientAccessIsAllowed(client: Record<string, unknown>) {
+  const status = String(client.status ?? '').trim().toLowerCase();
+  const activeStatuses = new Set(['ativo', 'ativa', 'active', 'aprovado', 'aprovada']);
+  const blocked = client.bloqueado === true || client.blocked === true;
+  const explicitlyRejected = client.cadastro_aprovado === false
+    || client.aprovado === false
+    || client.cadastro_status === 'rejeitado'
+    || client.cadastro_status === 'reprovado';
+
+  return activeStatuses.has(status) && !blocked && !explicitlyRejected;
+}
+
 async function authenticateClient(request: Request, supabaseUrl: string, serviceRoleKey: string) {
   const accessToken = bearerToken(request);
   const declaredSessionId = String(request.headers.get('x-gsa-session-id') || '').trim().toLowerCase();
@@ -125,16 +137,23 @@ async function authenticateClient(request: Request, supabaseUrl: string, service
 
   const { data: client, error: clientError } = await admin
     .from('clientes')
-    .select('id, status, cadastro_aprovado, bloqueado')
+    .select('*')
     .eq('id', clientId)
     .maybeSingle();
-  if (
-    clientError
-    || !client
-    || String(client.status || '').toLowerCase() !== 'ativo'
-    || client.cadastro_aprovado === false
-    || client.bloqueado === true
-  ) {
+
+  if (clientError) {
+    console.error('Falha ao consultar cadastro do cliente no upload:', clientError);
+    return { error: 'client_lookup_failed' as const };
+  }
+
+  if (!client || !clientAccessIsAllowed(client as Record<string, unknown>)) {
+    console.error('Cadastro não liberado para upload de Classificados:', {
+      clientId,
+      status: client?.status,
+      bloqueado: client?.bloqueado,
+      cadastro_aprovado: client?.cadastro_aprovado,
+      cadastro_status: client?.cadastro_status,
+    });
     return { error: 'client_access_restricted' as const };
   }
 
@@ -143,6 +162,7 @@ async function authenticateClient(request: Request, supabaseUrl: string, service
 
 function authenticationMessage(error: string) {
   if (error === 'expired_session') return 'Sua sessão expirou. Faça login novamente para enviar imagens.';
+  if (error === 'client_lookup_failed') return 'Não foi possível consultar seu cadastro. Tente novamente.';
   if (error === 'client_access_restricted') return 'Seu cadastro não está liberado para esta operação.';
   return 'Não foi possível confirmar sua sessão. Faça login novamente.';
 }
@@ -165,7 +185,8 @@ export async function handleRequest(request: Request) {
     const authenticated = await authenticateClient(request, supabaseUrl, serviceRoleKey);
     if ('error' in authenticated) {
       const authenticationError = authenticated.error ?? 'invalid_authentication';
-      return json({ success: false, error: authenticationError, message: authenticationMessage(authenticationError) }, 401, allowedOrigin);
+      const status = authenticationError === 'client_access_restricted' ? 403 : 401;
+      return json({ success: false, error: authenticationError, message: authenticationMessage(authenticationError) }, status, allowedOrigin);
     }
 
     const contentType = request.headers.get('content-type') || '';
