@@ -63,6 +63,43 @@ SET public = EXCLUDED.public,
     file_size_limit = EXCLUDED.file_size_limit,
     allowed_mime_types = EXCLUDED.allowed_mime_types;
 
+CREATE OR REPLACE FUNCTION public.gsa_enrich_public_partner_application()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  IF NEW.application_source = 'public_form' THEN
+    NEW.internal_notes := concat_ws(
+      E'\n',
+      nullif(NEW.internal_notes, ''),
+      format('Solicitação pública: %s', coalesce(NEW.application_protocol, 'sem protocolo')),
+      format('CPF/CNPJ informado: %s', coalesce(NEW.tax_document, 'não informado')),
+      format(
+        'Recebida em: %s',
+        coalesce(
+          to_char(NEW.submitted_at AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI'),
+          'não informado'
+        )
+      ),
+      format(
+        'Consentimento registrado em: %s',
+        coalesce(
+          to_char(NEW.privacy_consent_at AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI'),
+          'não informado'
+        )
+      )
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_enrich_public_partner_application ON public.parceiros;
+CREATE TRIGGER trg_enrich_public_partner_application
+BEFORE INSERT ON public.parceiros
+FOR EACH ROW EXECUTE FUNCTION public.gsa_enrich_public_partner_application();
+
 COMMENT ON COLUMN public.parceiros.tax_document IS
   'CPF ou CNPJ informado na solicitação, disponível apenas no painel administrativo.';
 COMMENT ON COLUMN public.parceiros.application_source IS
@@ -73,5 +110,7 @@ COMMENT ON COLUMN public.parceiros.submitted_at IS
   'Data e hora em que a solicitação pública foi recebida.';
 COMMENT ON COLUMN public.parceiros.privacy_consent_at IS
   'Data e hora do consentimento para tratamento dos dados da solicitação.';
+COMMENT ON FUNCTION public.gsa_enrich_public_partner_application() IS
+  'Inclui protocolo, documento e datas da solicitação pública nas observações internas do painel administrativo.';
 
 COMMIT;
