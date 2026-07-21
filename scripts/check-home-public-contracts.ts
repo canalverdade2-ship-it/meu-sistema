@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { sanitizeInternalReturnTo } from '../src/routing/safeReturnTo';
 
 const read = (path: string) => readFileSync(path, 'utf8');
@@ -48,6 +48,8 @@ assert.match(restrictedModal, /liberado pelo suporte após a confirmação de id
 assert.match(recoveryRateMigration, /p_limit = 4 AND p_window_seconds = 1800 AND p_block_seconds = 7200/, 'O bucket vulnerável da recuperação deve ser neutralizado');
 assert.match(recoveryRateMigration, /DELETE FROM public\.gsa_auth_rate_limits WHERE bucket_key = p_bucket_key/, 'Bloqueios antigos por documento devem ser removidos');
 
+assert.equal(existsSync('src/components/public/GSAEnterpriseHome.tsx'), false, 'A Home duplicada antiga deve permanecer removida');
+assert.equal(existsSync('src/components/public/SystemsPage.tsx'), false, 'A página duplicada de Sistemas deve permanecer removida');
 assert.match(home, /GSAEnterpriseHomeFinal/, 'A Home deve usar somente a implementação pública final');
 assert.doesNotMatch(home, /from '\.\.\/components\/public\/GSAEnterpriseHome'/, 'A implementação pública duplicada não pode entrar no bundle ativo');
 assert.match(home, /lazy\(\(\) => import\('\.\.\/components\/public\/SystemsPageFinal'/, 'Sites e Sistemas deve ser carregado sob demanda');
