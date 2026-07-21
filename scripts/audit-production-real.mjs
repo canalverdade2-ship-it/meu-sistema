@@ -19,7 +19,7 @@ const explicitBlockers = [
   { id: 'test-only', regex: /(?:apenas|somente)\s+(?:para\s+)?test(?:e|ar)/i, description: 'Funcionalidade declarada somente para teste' },
   { id: 'fake-data', regex: /(?:dados?|data)\s+(?:fict[ií]ci[oa]s?|fals[oa]s?|fake|mock)/i, description: 'Dados fictícios ou simulados no código de operação' },
   { id: 'not-implemented', regex: /n[aã]o\s+implementad[oa]|not\s+implemented/i, description: 'Funcionalidade declarada como não implementada' },
-  { id: 'coming-soon', regex: /\bem\s+breve\b|coming\s+soon/i, description: 'Funcionalidade apresentada como futura' },
+  { id: 'coming-soon', regex: /(?:\bem\s+breve\s*:\s*|\b(?:funcionalidade|recurso|m[oó]dulo|tela|op[cç][aã]o|integra[cç][aã]o)\b[^\n]{0,80}\bem\s+breve\b|coming\s+soon)/i, description: 'Funcionalidade apresentada como futura' },
   { id: 'simulated-upload', regex: /simular\s+upload|upload\s+simulad[oa]/i, description: 'Upload simulado em vez de armazenamento real' },
   { id: 'paste-test-url', regex: /cole\s+a\s+url.+(?:testar|demonstra)/i, description: 'Colagem manual de URL usada como substituto de upload real' },
 ];
