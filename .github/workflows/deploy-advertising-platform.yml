@@ -69,11 +69,13 @@ jobs:
       - name: Read migration history
         run: supabase migration list --linked 2>&1 | tee advertising-migrations-before.log
 
-      - name: Apply advertising migrations
+      - name: Apply advertising SQL and reconcile history
         shell: bash
         run: |
           set -euo pipefail
+          set -o pipefail
           : > advertising-migrations-apply.log
+
           for spec in \
             '20260721210000:supabase/migrations/20260721210000_create_advertising_foundation.sql' \
             '20260721223000:supabase/migrations/20260721223000_complete_advertising_platform.sql' \
@@ -81,6 +83,10 @@ jobs:
           do
             version="${spec%%:*}"
             file="${spec#*:}"
+
+            echo "Executando SQL idempotente da migration ${version}: ${file}" | tee -a advertising-migrations-apply.log
+            supabase db query --linked --file "$file" 2>&1 | tee -a advertising-migrations-apply.log
+
             if awk -F'|' -v wanted="$version" '
               {
                 remote=$2
@@ -89,11 +95,23 @@ jobs:
               }
               END { exit found ? 0 : 1 }
             ' advertising-migrations-before.log; then
-              echo "Migration $version já registrada." | tee -a advertising-migrations-apply.log
+              echo "Migration ${version} já estava registrada; SQL real foi reaplicado com segurança." | tee -a advertising-migrations-apply.log
             else
-              supabase db query --linked --file "$file" 2>&1 | tee -a advertising-migrations-apply.log
               supabase migration repair --linked --status applied "$version" 2>&1 | tee -a advertising-migrations-apply.log
             fi
+          done
+
+          supabase migration list --linked 2>&1 | tee advertising-migrations-after.log
+          for version in 20260721210000 20260721223000 20260721223500
+          do
+            awk -F'|' -v wanted="$version" '
+              {
+                remote=$2
+                gsub(/[^0-9]/, "", remote)
+                if (remote == wanted) found=1
+              }
+              END { exit found ? 0 : 1 }
+            ' advertising-migrations-after.log
           done
 
       - name: Preserve or provision advertising secrets
@@ -233,6 +251,7 @@ jobs:
           path: |
             advertising-migrations-before.log
             advertising-migrations-apply.log
+            advertising-migrations-after.log
             advertising-secrets-before.log
             advertising-secrets-status.log
             advertising-functions-deploy.log
