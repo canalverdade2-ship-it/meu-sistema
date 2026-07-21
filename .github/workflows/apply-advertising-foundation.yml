@@ -1,17 +1,15 @@
 name: Apply Advertising Foundation
 
 on:
-  push:
-    branches:
-      - agent/implantar-modulo-anuncios
-    paths:
-      - '.apply-advertising-foundation-trigger'
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   apply:
+    if: github.event.pull_request.head.ref == 'agent/implantar-modulo-anuncios'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
