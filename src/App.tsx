@@ -6,8 +6,10 @@ import { AdminNotificationProvider } from './hooks/useAdminNotifications';
 import { logService } from './lib/logService';
 import { useAutoLogout } from './hooks/useAutoLogout';
 import { sessionService } from './lib/sessionService';
+import { validateProviderSessionAccess } from './lib/providerSessionAccess';
 import { ClientNotificationProvider } from './hooks/useClientNotifications';
 import { ProviderNotificationProvider } from './hooks/useProviderNotifications';
+import { ProviderRouteGuard } from './pages/Prestador/ProviderRouteGuard';
 import { FullscreenPrompt } from './components/ui/FullscreenPrompt';
 import { WhatsAppButton } from './components/ui/WhatsAppButton';
 import { FileViewerProvider } from './contexts/FileViewerContext';
@@ -68,7 +70,17 @@ export default function App() {
               colaboradorModulos: restored.modulos || [],
             });
           } else if (restored.atorTipo === 'prestador') {
-            setSession({ prestadorId: restored.atorId });
+            const access = await validateProviderSessionAccess(restored.atorId);
+            if (!access) {
+              await sessionService.endSession();
+              setSession({});
+              if (route.area === 'provider') {
+                const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+                replace(`${routes.login.root()}?returnTo=${returnTo}&msg=revoked`);
+              }
+              return;
+            }
+            setSession({ prestadorId: access.provider_id });
           }
         } else if (['client', 'admin', 'provider'].includes(route.area)) {
           const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
@@ -246,7 +258,9 @@ export default function App() {
 
             {activeView === 'provider' && session.prestadorId && (
               <ProviderNotificationProvider prestadorId={session.prestadorId}>
-                <PrestadorDashboard prestadorId={session.prestadorId} onLogout={handleLogout} />
+                <ProviderRouteGuard>
+                  <PrestadorDashboard prestadorId={session.prestadorId} onLogout={handleLogout} />
+                </ProviderRouteGuard>
               </ProviderNotificationProvider>
             )}
           </Suspense>

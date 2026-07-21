@@ -901,7 +901,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     ...(!vipModuleConfig.oculto ? [{ id: 'area_vip' as Module, label: 'Área VIP', icon: Crown, count: 0, locked: isBlocked || !vipModuleConfig.ativo }] : []),
     { id: 'suporte', label: 'Suporte', icon: MessageSquare, count: pendencies.moduleSuporte, locked: false },
   ];
-  menuItems = menuItems.filter(item => !['credito_loja', 'emprestimos', 'transferencias', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'vouchers', 'pontos', 'promocoes', 'premios', 'indique-ganhe', 'area_vip'].includes(String(item.id)));
+  menuItems = menuItems.filter(item => !['classificados', 'credito_loja', 'emprestimos', 'transferencias', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'vouchers', 'pontos', 'promocoes', 'premios', 'indique-ganhe', 'area_vip'].includes(String(item.id)));
 
   const handleOpenTicket = async (assunto: string, descricao: string) => {
     try {
