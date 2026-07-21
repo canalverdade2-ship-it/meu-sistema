@@ -1,0 +1,96 @@
+name: Final Home Audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/components/public/**'
+      - 'src/pages/Home.tsx'
+      - 'src/hooks/usePublicPageMetadata.ts'
+      - 'src/routing/useAppLocation.ts'
+      - 'src/lib/sessionService.ts'
+      - 'supabase/functions/gsa-public-budget/**'
+      - 'supabase/migrations/20260721124500_finalize_public_home_budget.sql'
+      - 'supabase/migrations/20260721125000_disable_unverified_first_access.sql'
+      - 'supabase/migrations/20260721125500_prevent_recovery_subject_lockout.sql'
+      - 'scripts/test-final-home-*.sql'
+      - 'scripts/check-home-public-contracts.ts'
+      - '.github/workflows/final-home-audit.yml'
+  push:
+    branches: ['agent/fechar-auditoria-final-home']
+
+concurrency:
+  group: final-home-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript
+        run: npm run lint
+
+      - name: Home contracts
+        run: npm run test:home
+
+      - name: Check and test public budget gateway
+        run: |
+          deno check supabase/functions/gsa-public-budget/index.ts supabase/functions/gsa-public-budget/index_test.ts
+          deno test --allow-env supabase/functions/gsa-public-budget/index_test.ts
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Test real public budget contract
+        env:
+          PGPASSWORD: postgres
+        run: psql -h 127.0.0.1 -U postgres -v ON_ERROR_STOP=1 -f scripts/test-final-home-audit.sql
+
+      - name: Reset PostgreSQL database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'
+          psql -h 127.0.0.1 -U postgres -c 'GRANT ALL ON SCHEMA public TO postgres; GRANT USAGE ON SCHEMA public TO PUBLIC;'
+
+      - name: Test final authentication protections
+        env:
+          PGPASSWORD: postgres
+        run: psql -h 127.0.0.1 -U postgres -v ON_ERROR_STOP=1 -f scripts/test-final-home-auth-security.sql
+
+      - name: Production build
+        run: npm run build
