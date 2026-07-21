@@ -960,8 +960,12 @@ function PacotesTab() {
 function PropostasTab() {
   const list = usePagedTravelList('propostas');
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
+  const [detailsProposal, setDetailsProposal] = useState<any>(null);
+  const [cancelProposal, setCancelProposal] = useState<any>(null);
+  const [cancelReason, setCancelReason] = useState('');
   const [extensionHours, setExtensionHours] = useState('48');
   const [savingExtension, setSavingExtension] = useState(false);
+  const [savingCancel, setSavingCancel] = useState(false);
 
   const handleReactivate = async () => {
     const hours = Number(extensionHours);
@@ -990,11 +994,38 @@ function PropostasTab() {
     }
   };
 
+  const handleCancelProposal = async () => {
+    const reason = cancelReason.trim();
+    if (reason.length < 3) return toast.error('Informe o motivo do cancelamento (mínimo de 3 caracteres).');
+    setSavingCancel(true);
+    try {
+      const { error } = await supabase
+        .from('viagens_propostas')
+        .update({
+          status: 'cancelada',
+          motivo_cancelamento: reason,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', cancelProposal.id);
+
+      if (error) throw new Error(error.message || 'Erro ao cancelar proposta.');
+
+      toast.success('Proposta cancelada com sucesso.');
+      setCancelProposal(null);
+      setCancelReason('');
+      await list.load();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível cancelar a proposta.');
+    } finally {
+      setSavingCancel(false);
+    }
+  };
+
   return (
     <div>
       <Toolbar 
         title="Propostas enviadas" 
-        subtitle="Acompanhe validade, aceite e valores enviados. Reative propostas expiradas a qualquer momento." 
+        subtitle="Acompanhe validade, aceite e valores enviados. Reative ou cancele propostas a qualquer momento." 
         {...list} 
         refresh={() => void list.load()} 
       />
@@ -1007,41 +1038,68 @@ function PropostasTab() {
         <div className="space-y-3">
           {list.result.items.map((item) => {
             const isExpired = item.status === 'expirada' || (new Date(item.prazo_aceitacao).getTime() < Date.now() && !['aceita', 'cancelada'].includes(item.status));
+            const isCancelled = item.status === 'cancelada';
 
             return (
-              <article key={item.id} className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200 p-5 sm:flex-row sm:items-center hover:border-indigo-200 transition bg-white shadow-2xs">
-                <div className="space-y-1">
+              <article key={item.id} className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200 p-5 lg:flex-row lg:items-center hover:border-indigo-200 transition bg-white shadow-2xs">
+                <div className="space-y-1 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <StatusBadge status={isExpired && item.status !== 'aceita' ? 'expirada' : item.status} />
+                    <StatusBadge status={isExpired && !['aceita', 'cancelada'].includes(item.status) ? 'expirada' : item.status} />
                     <span className="text-xs font-bold text-neutral-400">Criado em {formatDate(item.created_at)}</span>
                   </div>
-                  <h4 className="font-black text-neutral-900 text-lg">{item.cliente_nome || item.snapshot_completo?.titulo || item.protocolo || 'Proposta de Viagem'}</h4>
+                  <h4 className="font-black text-neutral-900 text-lg truncate">{item.cliente_nome || item.snapshot_completo?.titulo || item.protocolo || 'Proposta de Viagem'}</h4>
                   <p className="text-sm font-medium text-neutral-500">
-                    Validade do aceite: <strong className={isExpired ? 'text-red-600 font-bold' : 'text-neutral-800'}>{formatDateTime(item.prazo_aceitacao)}</strong>
-                    {isExpired && <span className="ml-2 rounded-md bg-red-100 px-2 py-0.5 text-[10px] font-black uppercase text-red-700">Expirada</span>}
+                    Validade do aceite: <strong className={isExpired && !isCancelled ? 'text-red-600 font-bold' : 'text-neutral-800'}>{formatDateTime(item.prazo_aceitacao)}</strong>
+                    {isExpired && !isCancelled && <span className="ml-2 rounded-md bg-red-100 px-2 py-0.5 text-[10px] font-black uppercase text-red-700">Expirada</span>}
                   </p>
                 </div>
 
-                <div className="flex flex-col items-end gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-wrap items-center justify-end gap-2.5">
                   {item.valor_total != null && (
-                    <p className="text-xl font-black text-indigo-700">{formatCurrency(item.valor_total)}</p>
+                    <p className="text-xl font-black text-indigo-700 mr-2">{formatCurrency(item.valor_total)}</p>
                   )}
 
+                  {/* Botão Detalhes */}
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedProposal(item);
-                      setExtensionHours('48');
-                    }}
-                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black transition border ${
-                      isExpired
-                        ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 shadow-2xs'
-                        : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
-                    }`}
+                    onClick={() => setDetailsProposal(item)}
+                    className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 py-2 text-xs font-black text-blue-700 border border-blue-200 hover:bg-blue-100 transition"
                   >
-                    <RefreshCcw className="h-4 w-4 text-amber-600" />
-                    {isExpired ? 'Reativar Proposta' : 'Prorrogar Validade'}
+                    <Eye className="h-4 w-4" /> Detalhes
                   </button>
+
+                  {/* Botão Prorrogar / Reativar */}
+                  {!isCancelled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedProposal(item);
+                        setExtensionHours('48');
+                      }}
+                      className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-black transition border ${
+                        isExpired
+                          ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 shadow-2xs'
+                          : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <RefreshCcw className="h-4 w-4 text-amber-600" />
+                      {isExpired ? 'Reativar' : 'Prorrogar'}
+                    </button>
+                  )}
+
+                  {/* Botão Cancelar */}
+                  {!['cancelada', 'aceita'].includes(item.status) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCancelProposal(item);
+                        setCancelReason('');
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3.5 py-2 text-xs font-black text-red-700 border border-red-200 hover:bg-red-100 transition"
+                    >
+                      <XCircle className="h-4 w-4" /> Cancelar
+                    </button>
+                  )}
                 </div>
               </article>
             );
@@ -1051,6 +1109,172 @@ function PropostasTab() {
 
       <Pagination page={list.page} total={list.result.total} onPage={list.setPage} />
 
+      {/* Modal Detalhes da Proposta */}
+      {detailsProposal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsProposal(null)}>
+          <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
+            <header className="flex items-center justify-between border-b border-neutral-100 bg-slate-900 p-6 text-white">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 backdrop-blur-md">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={detailsProposal.status} />
+                    <span className="text-xs font-mono font-bold tracking-wider text-indigo-300 uppercase">{detailsProposal.protocolo || 'PROPOSTA'}</span>
+                  </div>
+                  <h2 className="text-xl font-black text-white mt-0.5">Detalhes da Proposta</h2>
+                </div>
+              </div>
+              <button onClick={() => setDetailsProposal(null)} className="rounded-full bg-white/10 p-2 text-neutral-300 hover:bg-white/20 hover:text-white transition-colors">
+                <XCircle className="h-6 w-6" />
+              </button>
+            </header>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-neutral-50/50">
+              {/* Cliente */}
+              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
+                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-3 flex items-center gap-1.5">
+                  <User className="h-4 w-4 text-indigo-600" /> Cliente Destinatário
+                </h4>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Nome</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{detailsProposal.cliente_nome || detailsProposal.snapshot_completo?.nome || 'Cliente Cadastrado'}</p>
+                  </div>
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Data de Envio</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{formatDateTime(detailsProposal.created_at)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rota & Pacote */}
+              <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-purple-50/40 to-white p-5 shadow-xs">
+                <h4 className="text-xs font-black uppercase tracking-wider text-indigo-600 mb-3 flex items-center gap-1.5">
+                  <Compass className="h-4 w-4" /> Pacote & Viagem
+                </h4>
+                <p className="text-base font-black text-neutral-900 mb-3">{detailsProposal.snapshot_completo?.titulo || detailsProposal.titulo || 'Proposta de Viagem'}</p>
+                
+                {(detailsProposal.snapshot_completo?.origem || detailsProposal.snapshot_completo?.destino) && (
+                  <div className="flex items-center justify-between gap-4 py-2 border-t border-indigo-100/60 pt-3">
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold uppercase text-neutral-400">Origem</p>
+                      <p className="text-base font-black text-neutral-900">{detailsProposal.snapshot_completo?.origem || '-'}</p>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-indigo-600 shrink-0" />
+                    <div className="flex-1 text-right">
+                      <p className="text-[10px] font-bold uppercase text-neutral-400">Destino</p>
+                      <p className="text-base font-black text-neutral-900">{detailsProposal.snapshot_completo?.destino || '-'}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Condições Comerciais */}
+              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                  <Receipt className="h-4 w-4 text-indigo-600" /> Valores & Prazos
+                </h4>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-indigo-50 p-3 border border-indigo-100">
+                    <p className="text-[10px] font-bold uppercase text-indigo-500">Valor Total da Proposta</p>
+                    <p className="text-xl font-black text-indigo-700 mt-0.5">{formatCurrency(detailsProposal.valor_total)}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Parcelamento Máximo</p>
+                    <p className="text-base font-black text-neutral-900 mt-0.5">Até {detailsProposal.parcelamento_permitido || 1}x sem juros</p>
+                  </div>
+
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Validade do Aceite</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{formatDateTime(detailsProposal.prazo_aceitacao)}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Prazo para Pagamento</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{formatDateTime(detailsProposal.prazo_pagamento)}</p>
+                  </div>
+                </div>
+
+                {detailsProposal.condicoes && (
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Condições de Pagamento / Aceite</p>
+                    <p className="text-xs font-medium text-neutral-700 mt-1 whitespace-pre-wrap">{detailsProposal.condicoes}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Motivo do Cancelamento (se houver) */}
+              {detailsProposal.status === 'cancelada' && detailsProposal.motivo_cancelamento && (
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-5 shadow-xs">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-red-700 mb-1 flex items-center gap-1.5">
+                    <XCircle className="h-4 w-4 text-red-600" /> Motivo do Cancelamento
+                  </h4>
+                  <p className="text-sm font-semibold text-red-900 whitespace-pre-wrap">{detailsProposal.motivo_cancelamento}</p>
+                </div>
+              )}
+            </div>
+
+            <footer className="border-t border-neutral-100 bg-white p-5 flex items-center justify-end">
+              <button 
+                type="button" 
+                onClick={() => setDetailsProposal(null)} 
+                className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50"
+              >
+                Fechar
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Cancelar Proposta */}
+      <Modal isOpen={Boolean(cancelProposal)} onClose={() => setCancelProposal(null)} title="Cancelar Proposta de Viagem" size="md">
+        {cancelProposal && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-red-50 p-4 border border-red-100 text-red-900 text-sm">
+              <strong>Proposta: {cancelProposal.cliente_nome || cancelProposal.protocolo}</strong>
+              <p className="text-xs text-red-700 mt-1">Ao cancelar esta proposta, o cliente não poderá mais visualizá-la nem aceitá-la.</p>
+            </div>
+
+            <label className={labelClass}>
+              Motivo do Cancelamento <span className="text-red-500">*</span>
+              <textarea
+                rows={4}
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Informe o motivo pelo qual a proposta está sendo cancelada..."
+                className={`${inputClass} mt-2 h-auto`}
+              />
+            </label>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setCancelProposal(null)}
+                className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50"
+              >
+                Voltar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void handleCancelProposal()}
+                disabled={savingCancel || !cancelReason.trim()}
+                className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-black text-white hover:bg-red-700 disabled:opacity-50 shadow-md shadow-red-200"
+              >
+                {savingCancel ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                {savingCancel ? 'Cancelando...' : 'Confirmar Cancelamento'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal Reativar Proposta */}
       <Modal isOpen={Boolean(selectedProposal)} onClose={() => setSelectedProposal(null)} title="Reativar / Prorrogar Proposta" size="md">
         {selectedProposal && (
           <div className="space-y-5">
