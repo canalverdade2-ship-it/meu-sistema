@@ -102,6 +102,38 @@ jobs:
           set -o pipefail
           python3 -u scripts/apply-advertising-foundation.py 2>&1 | tee advertising-integration.log
 
+      - name: Fix Supabase PromiseLike compatibility
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/components/public/AdvertisingPage.tsx')
+          text = path.read_text(encoding='utf-8')
+          old = """    supabase.rpc('gsa_public_list_active_ads', { p_placement_code: 'ADS_PUBLIC_SHOWCASE' })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) console.error('Falha ao carregar anúncios públicos:', error);
+        setAds(Array.isArray(data) ? data as PublicAdvertisement[] : []);
+      })
+      .finally(() => { if (active) setLoadingAds(false); });
+"""
+          new = """    const loadAds = async () => {
+      try {
+        const { data, error } = await supabase.rpc('gsa_public_list_active_ads', { p_placement_code: 'ADS_PUBLIC_SHOWCASE' });
+        if (!active) return;
+        if (error) console.error('Falha ao carregar anúncios públicos:', error);
+        setAds(Array.isArray(data) ? data as PublicAdvertisement[] : []);
+      } finally {
+        if (active) setLoadingAds(false);
+      }
+    };
+    void loadAds();
+"""
+          if text.count(old) != 1:
+            raise SystemExit('Trecho assíncrono da vitrine não encontrado exatamente')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
       - name: Install dependencies
         run: npm ci
 
