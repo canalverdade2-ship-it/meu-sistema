@@ -23,7 +23,8 @@
     "test:stress": "playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3",
     "test:products-subscriptions": "tsx scripts/check-products-subscriptions-contracts.ts",
     "push": "git add . && git commit -m \"Atualização automática\" && git push",
-    "test:advertising": "tsx scripts/check-advertising-foundation.ts"
+    "test:advertising": "tsx scripts/check-advertising-foundation.ts",
+    "test:advertising-complete": "tsx scripts/check-advertising-completion.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

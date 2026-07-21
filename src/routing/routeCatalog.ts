@@ -16,6 +16,7 @@ export const routes = {
     client: () => '/login/cliente',
     admin: () => '/login/admin',
     provider: () => '/login/prestador',
+    advertiser: () => '/anunciante',
     recoverPassword: () => '/login/cliente/recuperar-senha',
   },
   // Marketplace GSA
@@ -168,6 +169,15 @@ export const routes = {
       indicacao: (id: string) => `/cliente/fidelidade/indique-ganhe/${id}`,
       vip: () => '/cliente/fidelidade/area-vip',
     }
+  },
+  // Portal do Anunciante
+  advertiser: {
+    root: () => '/anunciante',
+    proposals: () => '/anunciante/propostas',
+    campaigns: () => '/anunciante/campanhas',
+    creatives: () => '/anunciante/criativos',
+    finance: () => '/anunciante/financeiro',
+    reports: () => '/anunciante/relatorios',
   },
   // Administrativo
   admin: {

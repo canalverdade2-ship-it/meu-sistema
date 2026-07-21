@@ -168,7 +168,15 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     return { pathname, search, hash, area, module, submodule, itemId, query };
   }
 
-  // 5. PAINEL ADMINISTRATIVO
+  // 5. PORTAL DO ANUNCIANTE
+  if (segments[0] === 'anunciante') {
+    area = 'advertiser';
+    module = segments[1] || 'dashboard';
+    if (segments[2]) itemId = segments[2];
+    return { pathname, search, hash, area, module, itemId, query };
+  }
+
+  // 6. PAINEL ADMINISTRATIVO
   if (segments[0] === 'admin') {
     area = 'admin';
     module = segments[1] || 'dashboard'; // ex: 'cadastros', 'catalogo', 'operacoes', 'financeiro', etc.
@@ -189,7 +197,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     return { pathname, search, hash, area, module, submodule, itemId, query };
   }
 
-  // 6. PORTAL DO PRESTADOR
+  // 7. PORTAL DO PRESTADOR
   if (segments[0] === 'prestador') {
     area = 'provider';
     module = segments[1] || 'dashboard'; // ex: 'agenda', 'demandas', 'documentos', etc.

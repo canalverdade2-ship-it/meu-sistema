@@ -41,7 +41,7 @@ assert.match(publicPage, /Proposta antes do pagamento/, 'Fluxo comercial deve es
 assert.match(publicPage, /fechamento imediato/, 'Lightbox não pode bloquear o fechamento');
 assert.doesNotMatch(publicPage, /\.rpc\('gsa_public_submit_advertising_request'/, 'Navegador não pode chamar a RPC interna diretamente');
 
-assert.match(adminModule, /gsa_admin_list_ad_requests/, 'Administrativo deve usar fila real');
+assert.match(adminModule, /gsa_admin_(?:list_ad_requests|advertising_overview)/, 'Administrativo deve usar dados reais da operação');
 assert.match(adminModule, /gsa_admin_update_ad_request_status/, 'Administrativo deve atualizar o fluxo por RPC segura');
 assert.match(adminAccess, /\| 'anuncios'/, 'Anúncios deve ser uma permissão administrativa independente');
 assert.match(adminPanel, /AdvertisingAdminModule/, 'Painel administrativo deve renderizar o módulo');
