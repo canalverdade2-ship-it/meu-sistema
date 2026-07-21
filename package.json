@@ -12,7 +12,7 @@
     "backup": "node backup.cjs",
     "validate:subscriptions": "tsx src/validation/step6_subscriptions.ts",
     "test:travel": "tsx scripts/check-gsa-travel-contracts.ts",
-    "test:admin": "tsx scripts/check-admin-panel-contracts.ts && tsx scripts/check-collaborator-boundary-contracts.ts && node scripts/run-admin-migrations-runtime.cjs && node scripts/check-collaborator-boundaries-runtime.cjs",
+    "test:admin": "tsx scripts/check-admin-panel-contracts.ts && tsx scripts/check-restored-admin-foundations.ts && tsx scripts/check-collaborator-boundary-contracts.ts && node scripts/run-admin-migrations-runtime.cjs && node scripts/check-collaborator-boundaries-runtime.cjs",
     "test:classificados": "tsx scripts/check-classifieds-production-contracts.ts",
     "test:client-security": "tsx scripts/check-client-portal-security-contracts.ts && tsx scripts/check-client-session-restore-contract.ts && npm run test:classificados",
     "test:provider": "tsx scripts/check-provider-portal-security-contracts.ts",
@@ -21,7 +21,8 @@
     "test:e2e": "playwright test",
     "test:e2e:full": "playwright test",
     "test:stress": "playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3",
-    "test:products-subscriptions": "tsx scripts/check-products-subscriptions-contracts.ts"
+    "test:products-subscriptions": "tsx scripts/check-products-subscriptions-contracts.ts",
+    "push": "git add . && git commit -m \"Atualização automática\" && git push"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
