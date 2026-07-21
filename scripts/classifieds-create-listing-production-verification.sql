@@ -1,4 +1,4 @@
--- Verificação final acionada após publicação da RPC.
+-- Verificação final reexecutada após criação das tabelas-base.
 DO $verification$
 BEGIN
   IF to_regprocedure('public.rpc_criar_anuncio_classificado(text,text,text,uuid,numeric,text,jsonb,text,jsonb,numeric,text)') IS NULL THEN
