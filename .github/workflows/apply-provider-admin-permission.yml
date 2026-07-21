@@ -1,0 +1,91 @@
+name: Apply Provider Admin Permission
+
+on:
+  push:
+    branches: [agent/finalizar-permissao-prestadores]
+    paths: ['.github/workflows/apply-provider-admin-permission.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  apply-validate-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/finalizar-permissao-prestadores
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply focused provider permission corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              text = target.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'Anchor not found in {path}: {old!r}')
+              target.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'src/components/admin/AcessosModule.tsx',
+              "  ['cadastro', 'Cadastros'],\n  ['catalogo', 'Catálogo'],",
+              "  ['cadastro', 'Cadastros (clientes e prestadores)'],\n  ['prestadores', 'Prestadores (sem acesso a clientes)'],\n  ['catalogo', 'Catálogo'],",
+          )
+
+          replace_once(
+              'src/pages/AdminPanel.tsx',
+              "  const go = (module: string, tab?: string, itemId?: string) => {\n    const normalized = normalizeAdminModule(module);\n    if (!canAccess(normalized, tab)) {\n      toast.error('Você não possui permissão para acessar este módulo.');\n      return;\n    }\n    navigate(adminPathFor(module, tab, itemId));\n    setIsMobileMenuOpen(false);\n  };",
+              "  const go = (module: string, tab?: string, itemId?: string) => {\n    const normalized = normalizeAdminModule(module);\n    const providerOnly = normalized === 'cadastro' && !canAccess('cadastro') && canAccess('prestadores');\n    const targetModule = providerOnly ? 'prestadores' : module;\n    const targetNormalized = normalizeAdminModule(targetModule);\n    if (!canAccess(targetNormalized, tab)) {\n      toast.error('Você não possui permissão para acessar este módulo.');\n      return;\n    }\n    navigate(adminPathFor(targetModule, tab, itemId));\n    setIsMobileMenuOpen(false);\n  };",
+          )
+
+          replace_once(
+              'src/pages/AdminPanel.tsx',
+              "  const visibleGroups = useMemo(() => MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => canAccess(item.id)) })).filter((group) => group.items.length > 0), [adminType, internalModulos]);",
+              "  const visibleGroups = useMemo(() => MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => item.id === 'cadastro' ? canAccess('cadastro') || canAccess('prestadores') : canAccess(item.id)) })).filter((group) => group.items.length > 0), [adminType, internalModulos]);",
+          )
+
+          provider_contract = Path('scripts/check-provider-portal-security-contracts.ts')
+          contract = provider_contract.read_text(encoding='utf-8')
+          anchor = "  await includes('src/routing/routeSecurity.ts', [\n    \"if (area === 'provider') return Boolean(session.prestadorId);\",\n  ]);\n"
+          addition = anchor + "\n  await includes('src/components/admin/AcessosModule.tsx', [\n    \"['prestadores', 'Prestadores (sem acesso a clientes)']\",\n  ]);\n\n  await includes('src/pages/AdminPanel.tsx', [\n    \"const providerOnly = normalized === 'cadastro' && !canAccess('cadastro') && canAccess('prestadores');\",\n    \"item.id === 'cadastro' ? canAccess('cadastro') || canAccess('prestadores') : canAccess(item.id)\",\n  ]);\n"
+          if anchor not in contract:
+              raise SystemExit('Provider contract anchor not found')
+          provider_contract.write_text(contract.replace(anchor, addition, 1), encoding='utf-8')
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate TypeScript
+        run: npm run lint
+
+      - name: Validate administrative contracts
+        run: npm run test:admin
+
+      - name: Validate provider contracts
+        run: npm run test:provider
+
+      - name: Validate production build
+        run: npm run build
+
+      - name: Remove executor and publish final branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/apply-provider-admin-permission.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/admin/AcessosModule.tsx src/pages/AdminPanel.tsx scripts/check-provider-portal-security-contracts.ts .github/workflows/apply-provider-admin-permission.yml
+          git commit -m 'Finalizar permissão administrativa de Prestadores'
+          git push origin HEAD:agent/finalizar-permissao-prestadores
