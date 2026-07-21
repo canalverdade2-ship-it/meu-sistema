@@ -232,11 +232,20 @@ function ProtectionList({ domain, tab, accent, initialItemId }: { domain: Domain
 function EntityEditor({ domain, tab, item, accent, onClose, onSaved }: { domain: Domain; tab: 'parceiros' | 'produtos'; item: any; accent: string; onClose: () => void; onSaved: () => Promise<void> }) {
   const [saving, setSaving] = useState(false);
   const [partners, setPartners] = useState<any[]>([]);
+  const [dbCategories, setDbCategories] = useState<{ value: string; label: string }[]>([]);
   const [form, setForm] = useState<any>(item || (tab === 'parceiros' ? { nome: '', status: 'ativo', comissao_tipo: 'porcentagem', comissao_valor: 0 } : { nome: '', slug: '', categoria: domain === 'saude' ? 'individual-familiar' : 'auto', status: 'rascunho', destaque: false }));
 
   useEffect(() => {
     if (tab !== 'produtos') return;
     void callAdminRpc<PagedResult>('gsa_admin_list_resource', { p_resource: `${domain}_parceiros`, p_page: 1, p_page_size: 250, p_search: null, p_status: 'ativo' }).then((data) => setPartners(data.items || [])).catch(() => setPartners([]));
+    
+    // Puxa as categorias já salvas nos produtos do banco de dados
+    void callAdminRpc<PagedResult>('gsa_admin_list_resource', { p_resource: `${domain}_produtos`, p_page: 1, p_page_size: 250, p_search: null, p_status: null })
+      .then((res) => {
+        const unique = Array.from(new Set((res.items || []).map((p) => p.categoria).filter((c): c is string => Boolean(c) && typeof c === 'string')));
+        setDbCategories(unique.map((c) => ({ value: c, label: c })));
+      })
+      .catch(() => setDbCategories([]));
   }, [domain, tab]);
 
   const save = async () => {
@@ -260,33 +269,33 @@ function EntityEditor({ domain, tab, item, accent, onClose, onSaved }: { domain:
 
   const field = (name: string, label: string, type = 'text') => <label className="block text-sm font-bold">{label}<input type={type} value={form[name] ?? ''} onChange={(event) => setForm({ ...form, [name]: type === 'number' ? Number(event.target.value) : event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>;
 
-  const categoriesList = domain === 'saude' 
+  const baseCategories = domain === 'saude'
     ? [
-        'Plano Individual / Familiar',
-        'Plano Coletivo por Adesão',
-        'Plano PME / Empresarial',
-        'Plano Odontológico',
-        'Telemedicina',
-        'Seguro Viagem Saúde',
-        'Seguro de Vida & Invalidez',
-        'Outros'
+        { value: 'individual-familiar', label: 'Individual e Familiar' },
+        { value: 'empresarial', label: 'Empresarial' },
+        { value: 'odontologico', label: 'Odontológico' },
+        { value: 'outros', label: 'Outros Planos' },
       ]
     : [
-        'Auto & Veículos',
-        'Vida & Acidentes Pessoais',
-        'Residencial & Patrimônio',
-        'Empresarial & Condomínio',
-        'Saúde & Odonto',
-        'Viagem Internacional',
-        'Celular & Portáteis',
-        'Fiança Locatícia',
-        'Crédito & Garantia',
-        'Responsabilidade Civil',
-        'Agronegócio',
-        'Outros'
+        { value: 'auto', label: 'Seguro Auto' },
+        { value: 'residencial', label: 'Residencial' },
+        { value: 'vida', label: 'Vida' },
+        { value: 'empresarial', label: 'Empresarial' },
+        { value: 'viagem', label: 'Viagem' },
+        { value: 'outros', label: 'Outros Seguros' },
       ];
 
-  return <Overlay onClose={onClose}><div className="flex items-center justify-between"><h2 className="text-2xl font-black">{item ? 'Editar' : 'Novo'} {tab === 'parceiros' ? 'parceiro' : 'produto'}</h2><button type="button" onClick={onClose}><X className="h-5 w-5" /></button></div><div className="mt-6 grid gap-4 sm:grid-cols-2">{field('nome', 'Nome *')}{tab === 'parceiros' ? <>{field('documento', 'CNPJ/registro')}{field('site', 'Site')}{field('contato', 'Contato')}{field('comissao_valor', 'Comissão acordada', 'number')}<label className="block text-sm font-bold sm:col-span-2">Observações<textarea value={form.observacoes || ''} onChange={(event) => setForm({ ...form, observacoes: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></> : <><label className="block text-sm font-bold">Parceiro<select value={form.parceiro_id || ''} onChange={(event) => setForm({ ...form, parceiro_id: event.target.value || null })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3"><option value="">Selecione</option>{partners.map((partner) => <option key={partner.id} value={partner.id}>{partner.nome}</option>)}</select></label><label className="block text-sm font-bold">Categoria *<select value={form.categoria || ''} onChange={(event) => setForm({ ...form, categoria: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"><option value="">Selecione uma Categoria</option>{categoriesList.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select></label>{field('imagem_url', 'URL da imagem')}{field('preco_referencia', domain === 'saude' ? 'Mensalidade de referência' : 'Prêmio de referência', 'number')}<label className="block text-sm font-bold sm:col-span-2">Resumo<textarea value={form.resumo || ''} onChange={(event) => setForm({ ...form, resumo: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label><label className="flex items-center gap-3 text-sm font-bold sm:col-span-2"><input type="checkbox" checked={Boolean(form.destaque)} onChange={(event) => setForm({ ...form, destaque: event.target.checked })} /> Destacar no catálogo</label></>}</div><div className="mt-8 flex justify-end gap-3"><button type="button" onClick={onClose} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving} onClick={() => void save()} className="rounded-xl px-6 py-3 font-black text-white disabled:opacity-50" style={{ background: accent }}>{saving ? 'Salvando...' : 'Salvar'}</button></div></Overlay>;
+  const combinedCategoriesMap = new Map<string, string>();
+  baseCategories.forEach((cat) => combinedCategoriesMap.set(cat.value, cat.label));
+  dbCategories.forEach((cat) => {
+    if (!combinedCategoriesMap.has(cat.value)) {
+      combinedCategoriesMap.set(cat.value, cat.label);
+    }
+  });
+
+  const categoriesList = Array.from(combinedCategoriesMap.entries()).map(([value, label]) => ({ value, label }));
+
+  return <Overlay onClose={onClose}><div className="flex items-center justify-between"><h2 className="text-2xl font-black">{item ? 'Editar' : 'Novo'} {tab === 'parceiros' ? 'parceiro' : 'produto'}</h2><button type="button" onClick={onClose}><X className="h-5 w-5" /></button></div><div className="mt-6 grid gap-4 sm:grid-cols-2">{field('nome', 'Nome *')}{tab === 'parceiros' ? <>{field('documento', 'CNPJ/registro')}{field('site', 'Site')}{field('contato', 'Contato')}{field('comissao_valor', 'Comissão acordada', 'number')}<label className="block text-sm font-bold sm:col-span-2">Observações<textarea value={form.observacoes || ''} onChange={(event) => setForm({ ...form, observacoes: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></> : <><label className="block text-sm font-bold">Parceiro<select value={form.parceiro_id || ''} onChange={(event) => setForm({ ...form, parceiro_id: event.target.value || null })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3"><option value="">Selecione</option>{partners.map((partner) => <option key={partner.id} value={partner.id}>{partner.nome}</option>)}</select></label><label className="block text-sm font-bold">Categoria *<select value={form.categoria || ''} onChange={(event) => setForm({ ...form, categoria: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"><option value="">Selecione a Categoria</option>{categoriesList.map((cat) => <option key={cat.value} value={cat.value}>{cat.label} ({cat.value})</option>)}</select></label>{field('imagem_url', 'URL da imagem')}{field('preco_referencia', domain === 'saude' ? 'Mensalidade de referência' : 'Prêmio de referência', 'number')}<label className="block text-sm font-bold sm:col-span-2">Resumo<textarea value={form.resumo || ''} onChange={(event) => setForm({ ...form, resumo: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label><label className="flex items-center gap-3 text-sm font-bold sm:col-span-2"><input type="checkbox" checked={Boolean(form.destaque)} onChange={(event) => setForm({ ...form, destaque: event.target.checked })} /> Destacar no catálogo</label></>}</div><div className="mt-8 flex justify-end gap-3"><button type="button" onClick={onClose} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving} onClick={() => void save()} className="rounded-xl px-6 py-3 font-black text-white disabled:opacity-50" style={{ background: accent }}>{saving ? 'Salvando...' : 'Salvar'}</button></div></Overlay>;
 }
 
 function ProposalEditor({ domain, accent, onClose, onSaved }: { domain: Domain; accent: string; onClose: () => void; onSaved: () => Promise<void> }) {
