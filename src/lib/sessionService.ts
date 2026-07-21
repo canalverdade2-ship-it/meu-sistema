@@ -16,6 +16,8 @@ export type AuthGatewayError = Error & {
 };
 
 const SESSION_STORAGE_KEY = '_gsa_session';
+let restoreSessionPromise: Promise<StoredSession | null> | null = null;
+let endSessionPromise: Promise<void> | null = null;
 
 function getSessionStorage() {
   return typeof window === 'undefined' ? null : window.sessionStorage;
@@ -166,6 +168,104 @@ async function authenticate(action: string, payload: Record<string, unknown>) {
   return data;
 }
 
+async function endStoredSession(): Promise<void> {
+  if (endSessionPromise) return endSessionPromise;
+
+  endSessionPromise = (async () => {
+    try {
+      const sessionData = readStoredSession();
+      if (sessionData?.sessaoId && sessionData?.sessionToken) {
+        const { error } = await supabase.rpc('gsa_end_session', {
+          p_sessao_id: sessionData.sessaoId,
+          p_session_token: sessionData.sessionToken,
+        });
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error('Falha ao encerrar a sessão:', error);
+    } finally {
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (error) {
+        console.warn('Não foi possível confirmar o logout local no Supabase:', error);
+      }
+      clearStoredSession();
+    }
+  })().finally(() => {
+    endSessionPromise = null;
+  });
+
+  return endSessionPromise;
+}
+
+async function restoreStoredSession(): Promise<StoredSession | null> {
+  try {
+    const sessionData = readStoredSession();
+    if (!sessionData?.sessaoId || !sessionData?.atorId || !sessionData?.sessionToken) {
+      clearStoredSession();
+      return null;
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.getSession();
+    const authSession = authData.session;
+    const appMetadata = authSession?.user?.app_metadata || {};
+    if (
+      authError ||
+      !authSession ||
+      appMetadata.gsa_session_id !== sessionData.sessaoId ||
+      appMetadata.gsa_actor_type !== sessionData.atorTipo ||
+      appMetadata.gsa_actor_id !== sessionData.atorId
+    ) {
+      await endStoredSession();
+      return null;
+    }
+
+    // O proxy RPC do projeto resolve a chamada imediatamente e devolve o
+    // resultado final. Portanto, não se pode encadear .single() neste ponto.
+    const { data, error } = await supabase.rpc('gsa_validate_session', {
+      p_sessao_id: sessionData.sessaoId,
+      p_session_token: sessionData.sessionToken,
+    });
+    const validation = Array.isArray(data) ? data[0] : data;
+
+    if (error || !(validation as any)?.is_valid) {
+      await endStoredSession();
+      return null;
+    }
+
+    if (sessionData.atorTipo === 'cliente') {
+      const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_client_session_access_state', {
+        p_sessao_id: sessionData.sessaoId,
+        p_session_token: sessionData.sessionToken,
+      });
+      if (!accessError && (accessData as any)?.success) {
+        sessionData.precisa_trocar_senha = (accessData as any).precisa_trocar_senha;
+        writeStoredSession(sessionData);
+      }
+    } else if (sessionData.atorTipo === 'colaborador') {
+      const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_collaborator_session_access_state', {
+        p_sessao_id: sessionData.sessaoId,
+        p_session_token: sessionData.sessionToken,
+      });
+      const access = accessData as any;
+      if (accessError || !access?.success || access.status !== 'ativo') {
+        await endStoredSession();
+        return null;
+      }
+      sessionData.atorNome = access.nome || sessionData.atorNome;
+      sessionData.modulos = Array.isArray(access.modulos) ? access.modulos : [];
+      writeStoredSession(sessionData);
+    }
+
+    return sessionData;
+  } catch (error) {
+    // Uma falha inesperada de implementação ou rede não deve apagar uma
+    // sessão recém-criada nem disparar logout concorrente no Strict Mode.
+    console.error('Falha ao restaurar a sessão:', error);
+    return null;
+  }
+}
+
 export const sessionService = {
   getCurrentSession() {
     return readStoredSession();
@@ -232,88 +332,16 @@ export const sessionService = {
   },
 
   async restoreSession() {
-    try {
-      const sessionData = readStoredSession();
-      if (!sessionData?.sessaoId || !sessionData?.atorId || !sessionData?.sessionToken) {
-        clearStoredSession();
-        return null;
-      }
-
-      const { data: authData, error: authError } = await supabase.auth.getSession();
-      const authSession = authData.session;
-      const appMetadata = authSession?.user?.app_metadata || {};
-      if (
-        authError ||
-        !authSession ||
-        appMetadata.gsa_session_id !== sessionData.sessaoId ||
-        appMetadata.gsa_actor_type !== sessionData.atorTipo ||
-        appMetadata.gsa_actor_id !== sessionData.atorId
-      ) {
-        await this.endSession();
-        return null;
-      }
-
-      const { data, error } = await supabase
-        .rpc('gsa_validate_session', {
-          p_sessao_id: sessionData.sessaoId,
-          p_session_token: sessionData.sessionToken,
-        })
-        .single();
-
-      if (error || !(data as any)?.is_valid) {
-        await this.endSession();
-        return null;
-      }
-
-      if (sessionData.atorTipo === 'cliente') {
-        const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_client_session_access_state', {
-          p_sessao_id: sessionData.sessaoId,
-          p_session_token: sessionData.sessionToken,
-        });
-        if (!accessError && (accessData as any)?.success) {
-          sessionData.precisa_trocar_senha = (accessData as any).precisa_trocar_senha;
-          writeStoredSession(sessionData);
-        }
-      } else if (sessionData.atorTipo === 'colaborador') {
-        const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_collaborator_session_access_state', {
-          p_sessao_id: sessionData.sessaoId,
-          p_session_token: sessionData.sessionToken,
-        });
-        const access = accessData as any;
-        if (accessError || !access?.success || access.status !== 'ativo') {
-          await this.endSession();
-          return null;
-        }
-        sessionData.atorNome = access.nome || sessionData.atorNome;
-        sessionData.modulos = Array.isArray(access.modulos) ? access.modulos : [];
-        writeStoredSession(sessionData);
-      }
-
-      return sessionData;
-    } catch (error) {
-      console.error('Falha ao restaurar a sessão:', error);
-      await supabase.auth.signOut({ scope: 'local' });
-      clearStoredSession();
-      return null;
+    if (!restoreSessionPromise) {
+      restoreSessionPromise = restoreStoredSession().finally(() => {
+        restoreSessionPromise = null;
+      });
     }
+    return restoreSessionPromise;
   },
 
   async endSession() {
-    try {
-      const sessionData = readStoredSession();
-      if (sessionData?.sessaoId && sessionData?.sessionToken) {
-        const { error } = await supabase.rpc('gsa_end_session', {
-          p_sessao_id: sessionData.sessaoId,
-          p_session_token: sessionData.sessionToken,
-        });
-        if (error) throw error;
-      }
-    } catch (error) {
-      console.error('Falha ao encerrar a sessão:', error);
-    } finally {
-      await supabase.auth.signOut({ scope: 'local' });
-      clearStoredSession();
-    }
+    return endStoredSession();
   },
 
   async pingSession() {
@@ -325,7 +353,7 @@ export const sessionService = {
         p_session_token: sessionData.sessionToken,
       });
       if (error || (data as any)?.is_valid === false || (data as any)?.success === false) {
-        await this.endSession();
+        await endStoredSession();
         if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gsa-session-revoked'));
       }
     } catch (error) {
