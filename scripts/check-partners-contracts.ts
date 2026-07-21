@@ -46,13 +46,21 @@ async function main() {
   assert.equal(canAccessAdminModule('colaborador', [], 'parceiros'), false);
   assert.equal(canAccessAdminModule('colaborador', ['parceiros'], 'parceiros'), true);
 
-  await contains('src/components/public/GSAEnterpriseHome.tsx', [
+  await contains('src/components/public/GSAEnterpriseHomeFinal.tsx', [
+    '<PartnersPage',
+    "props.publicPage === 'partners'",
+    'initialPartnerSlug',
+    'onPartnerDetailChange',
+  ]);
+
+  await contains('src/components/public/final/PublicFooter.tsx', [
     "setPublicPage('partners')",
     '>Parceiros</button>',
-    '<PartnersPage',
   ]);
-  await excludes('src/components/public/GSAEnterpriseHome.tsx', [
+
+  await excludes('src/components/public/final/PublicHomeLanding.tsx', [
     "title: 'Parceiros'",
+    "setPublicPage('partners')",
   ]);
 
   await contains('src/components/public/PartnersPage.tsx', [
@@ -92,7 +100,7 @@ async function main() {
     'gsa_admin_save_partner',
     'gsa_admin_set_partner_status',
     "gsa_admin_assert_module('parceiros')",
-    "gsa_admin_write_audit(",
+    'gsa_admin_write_audit(',
     'REVOKE ALL ON public.parceiros FROM anon, authenticated',
   ]);
 
