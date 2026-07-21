@@ -13,6 +13,7 @@ on:
       - 'supabase/functions/gsa-classified-media/**'
       - 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql'
       - 'supabase/migrations/20260721203000_classifieds_commission_config.sql'
+      - 'supabase/migrations/20260721212500_classifieds_base_tables.sql'
       - 'supabase/migrations/20260721213000_classifieds_create_listing_rpc.sql'
       - '.github/workflows/classifieds-production-validation.yml'
       - 'package.json'
@@ -28,6 +29,7 @@ on:
       - 'supabase/functions/gsa-classified-media/**'
       - 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql'
       - 'supabase/migrations/20260721203000_classifieds_commission_config.sql'
+      - 'supabase/migrations/20260721212500_classifieds_base_tables.sql'
       - 'supabase/migrations/20260721213000_classifieds_create_listing_rpc.sql'
       - '.github/workflows/classifieds-production-validation.yml'
       - 'package.json'
@@ -54,7 +56,6 @@ jobs:
     steps:
       - name: Checkout audited revision
         uses: actions/checkout@v4
-
       - name: Validate production authorization
         shell: bash
         run: |
@@ -63,118 +64,65 @@ jobs:
           test -n "$SUPABASE_DB_PASSWORD"
           test -n "$SUPABASE_PROJECT_ID"
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-
       - name: Check Classifieds media Edge Function
-        shell: bash
-        run: |
-          set -o pipefail
-          for attempt in 1 2 3; do
-            echo "Deno check attempt ${attempt}/3" | tee -a classifieds-deno-check.log
-            if deno check supabase/functions/gsa-classified-media/index.ts 2>&1 | tee -a classifieds-deno-check.log; then
-              exit 0
-            fi
-            if [ "$attempt" -lt 3 ]; then sleep 10; fi
-          done
-          exit 1
-
+        run: deno check supabase/functions/gsa-classified-media/index.ts
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
           version: latest
-
       - name: Link expected production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
-
       - name: Inspect migration history before deployment
-        shell: bash
-        run: |
-          set -o pipefail
-          supabase migration list --linked 2>&1 | tee classifieds-migrations-before.log
-
+        run: supabase migration list --linked 2>&1 | tee classifieds-migrations-before.log
       - name: Apply Classifieds media migration idempotently
         shell: bash
         run: |
           set -euo pipefail
-          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721183000") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then
-            echo 'Migration 20260721183000 já aplicada.' | tee classifieds-migration-apply.log
-          else
-            supabase db query --linked --file supabase/migrations/20260721183000_classifieds_media_storage_production.sql 2>&1 | tee classifieds-migration-apply.log
-            supabase migration repair --linked --status applied 20260721183000 2>&1 | tee -a classifieds-migration-apply.log
-          fi
-
+          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721183000") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then echo 'Migration 20260721183000 já aplicada.' | tee classifieds-migration-apply.log; else supabase db query --linked --file supabase/migrations/20260721183000_classifieds_media_storage_production.sql 2>&1 | tee classifieds-migration-apply.log; supabase migration repair --linked --status applied 20260721183000 2>&1 | tee -a classifieds-migration-apply.log; fi
       - name: Apply Classifieds commission migration idempotently
         shell: bash
         run: |
           set -euo pipefail
-          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721203000") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then
-            echo 'Migration 20260721203000 já aplicada.' | tee classifieds-commission-migration-apply.log
-          else
-            supabase db query --linked --file supabase/migrations/20260721203000_classifieds_commission_config.sql 2>&1 | tee classifieds-commission-migration-apply.log
-            supabase migration repair --linked --status applied 20260721203000 2>&1 | tee -a classifieds-commission-migration-apply.log
-          fi
-
+          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721203000") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then echo 'Migration 20260721203000 já aplicada.' | tee classifieds-commission-migration-apply.log; else supabase db query --linked --file supabase/migrations/20260721203000_classifieds_commission_config.sql 2>&1 | tee classifieds-commission-migration-apply.log; supabase migration repair --linked --status applied 20260721203000 2>&1 | tee -a classifieds-commission-migration-apply.log; fi
+      - name: Apply Classifieds base tables idempotently
+        shell: bash
+        run: |
+          set -euo pipefail
+          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721212500") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then echo 'Migration 20260721212500 já aplicada.' | tee classifieds-base-tables-migration-apply.log; else supabase db query --linked --file supabase/migrations/20260721212500_classifieds_base_tables.sql 2>&1 | tee classifieds-base-tables-migration-apply.log; supabase migration repair --linked --status applied 20260721212500 2>&1 | tee -a classifieds-base-tables-migration-apply.log; fi
       - name: Apply Classifieds create listing RPC idempotently
         shell: bash
         run: |
           set -euo pipefail
-          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721213000") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then
-            echo 'Migration 20260721213000 já aplicada.' | tee classifieds-create-listing-migration-apply.log
-          else
-            supabase db query --linked --file supabase/migrations/20260721213000_classifieds_create_listing_rpc.sql 2>&1 | tee classifieds-create-listing-migration-apply.log
-            supabase migration repair --linked --status applied 20260721213000 2>&1 | tee -a classifieds-create-listing-migration-apply.log
-          fi
-
+          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721213000") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then echo 'Migration 20260721213000 já aplicada.' | tee classifieds-create-listing-migration-apply.log; else supabase db query --linked --file supabase/migrations/20260721213000_classifieds_create_listing_rpc.sql 2>&1 | tee classifieds-create-listing-migration-apply.log; supabase migration repair --linked --status applied 20260721213000 2>&1 | tee -a classifieds-create-listing-migration-apply.log; fi
       - name: Verify Classifieds production storage
-        shell: bash
-        run: |
-          set -o pipefail
-          supabase db query --linked --file scripts/classifieds-media-production-verification.sql 2>&1 | tee classifieds-production-verification.log
-          grep -q 'CLASSIFIEDS_MEDIA_STORAGE_VERIFIED' classifieds-production-verification.log
-
+        run: supabase db query --linked --file scripts/classifieds-media-production-verification.sql 2>&1 | tee classifieds-production-verification.log && grep -q 'CLASSIFIEDS_MEDIA_STORAGE_VERIFIED' classifieds-production-verification.log
       - name: Verify Classifieds commission configuration
-        shell: bash
-        run: |
-          set -o pipefail
-          supabase db query --linked --file scripts/classifieds-commission-production-verification.sql 2>&1 | tee classifieds-commission-verification.log
-          grep -q 'CLASSIFIEDS_COMMISSION_CONFIG_VERIFIED' classifieds-commission-verification.log
-
+        run: supabase db query --linked --file scripts/classifieds-commission-production-verification.sql 2>&1 | tee classifieds-commission-verification.log && grep -q 'CLASSIFIEDS_COMMISSION_CONFIG_VERIFIED' classifieds-commission-verification.log
       - name: Verify Classifieds create listing RPC
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           supabase db query --linked --file scripts/classifieds-create-listing-production-verification.sql 2>&1 | tee classifieds-create-listing-verification.log
           grep -q 'CLASSIFIEDS_CREATE_LISTING_RPC_VERIFIED' classifieds-create-listing-verification.log
           supabase migration list --linked 2>&1 | tee classifieds-migrations-after.log
-          awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721183000") media=1; if (remote == "20260721203000") commission=1; if (remote == "20260721213000") listing=1 } END { exit media && commission && listing ? 0 : 1 }' classifieds-migrations-after.log
-
       - name: Deploy authenticated Classifieds media gateway
-        shell: bash
-        run: |
-          set -o pipefail
-          supabase functions deploy gsa-classified-media --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee classifieds-function-deploy.log
-
+        run: supabase functions deploy gsa-classified-media --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee classifieds-function-deploy.log
       - name: Verify Classifieds media gateway deployment
-        shell: bash
-        run: |
-          set -o pipefail
-          supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee classifieds-functions-after.log
-          grep -q 'gsa-classified-media' classifieds-functions-after.log
-
+        run: supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee classifieds-functions-after.log && grep -q 'gsa-classified-media' classifieds-functions-after.log
       - name: Upload production audit evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: classifieds-production-audit-${{ github.run_id }}
           path: |
-            classifieds-deno-check.log
             classifieds-migrations-before.log
             classifieds-migration-apply.log
             classifieds-commission-migration-apply.log
+            classifieds-base-tables-migration-apply.log
             classifieds-create-listing-migration-apply.log
             classifieds-production-verification.log
             classifieds-commission-verification.log
