@@ -1,0 +1,251 @@
+name: Deploy Partner Application V3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-partner-application-v3.yml'
+      - 'supabase/migrations/20260721110000_create_public_partners.sql'
+      - 'supabase/migrations/20260722001000_partner_public_applications.sql'
+      - 'supabase/functions/gsa-partner-application/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-partner-application-v3-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Apply partner database and deploy function
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Validate Edge Function source
+        run: deno check supabase/functions/gsa-partner-application/index.ts
+
+      - name: Validate production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Read migration history
+        run: supabase migration list --linked 2>&1 | tee partner-v3-migrations-before.log
+
+      - name: Apply base partners migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260721110000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' partner-v3-migrations-before.log; then
+            echo 'Migration base 20260721110000 já registrada.' | tee partner-v3-base-apply.log
+          else
+            supabase db query --linked --file supabase/migrations/20260721110000_create_public_partners.sql 2>&1 | tee partner-v3-base-apply.log
+            supabase migration repair --linked --status applied 20260721110000 2>&1 | tee -a partner-v3-base-apply.log
+          fi
+
+      - name: Apply public application migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260722001000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' partner-v3-migrations-before.log; then
+            echo 'Migration pública 20260722001000 já registrada.' | tee partner-v3-public-apply.log
+          else
+            supabase db query --linked --file supabase/migrations/20260722001000_partner_public_applications.sql 2>&1 | tee partner-v3-public-apply.log
+            supabase migration repair --linked --status applied 20260722001000 2>&1 | tee -a partner-v3-public-apply.log
+          fi
+
+      - name: Verify complete partner database
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > partner-v3-verification.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_columns integer;
+          BEGIN
+            IF to_regclass('public.parceiros') IS NULL THEN
+              RAISE EXCEPTION 'Tabela parceiros ausente';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version = '20260721110000'
+            ) OR NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version = '20260722001000'
+            ) THEN
+              RAISE EXCEPTION 'Histórico das migrations de parceiros incompleto';
+            END IF;
+
+            SELECT count(*) INTO v_columns
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'parceiros'
+              AND column_name IN (
+                'tax_document', 'application_source', 'application_protocol',
+                'submitted_at', 'privacy_consent_at'
+              );
+
+            IF v_columns <> 5 THEN
+              RAISE EXCEPTION 'Colunas da solicitação incompletas: % de 5', v_columns;
+            END IF;
+
+            IF to_regprocedure('public.gsa_admin_partners_snapshot(uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_save_partner(uuid,text,uuid,jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_admin_set_partner_status(uuid,text,uuid,text)') IS NULL THEN
+              RAISE EXCEPTION 'RPCs administrativas de parceiros ausentes';
+            END IF;
+
+            IF has_table_privilege('anon', 'public.parceiros', 'SELECT')
+               OR has_table_privilege('authenticated', 'public.parceiros', 'SELECT') THEN
+              RAISE EXCEPTION 'Tabela parceiros possui leitura pública integral';
+            END IF;
+
+            IF NOT has_column_privilege('anon', 'public.parceiros', 'name', 'SELECT')
+               OR NOT has_column_privilege('authenticated', 'public.parceiros', 'name', 'SELECT') THEN
+              RAISE EXCEPTION 'Colunas públicas de parceiros indisponíveis';
+            END IF;
+
+            IF has_column_privilege('anon', 'public.parceiros', 'tax_document', 'SELECT')
+               OR has_column_privilege('authenticated', 'public.parceiros', 'tax_document', 'SELECT')
+               OR has_column_privilege('anon', 'public.parceiros', 'internal_notes', 'SELECT')
+               OR has_column_privilege('authenticated', 'public.parceiros', 'internal_notes', 'SELECT') THEN
+              RAISE EXCEPTION 'Dados internos de parceiros estão expostos';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM storage.buckets
+              WHERE id = 'parceiros-midias'
+                AND public = true
+                AND file_size_limit = 5242880
+            ) THEN
+              RAISE EXCEPTION 'Bucket parceiros-midias inválido';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1
+              FROM pg_trigger t
+              JOIN pg_class c ON c.oid = t.tgrelid
+              JOIN pg_namespace n ON n.oid = c.relnamespace
+              WHERE n.nspname = 'public'
+                AND c.relname = 'parceiros'
+                AND t.tgname = 'trg_enrich_public_partner_application'
+                AND NOT t.tgisinternal
+            ) THEN
+              RAISE EXCEPTION 'Trigger da solicitação pública ausente';
+            END IF;
+          END $$;
+
+          SELECT 'PARTNER_V3_DATABASE_VERIFIED' AS result;
+          SQL
+
+          set -o pipefail
+          supabase db query --linked --file partner-v3-verification.sql 2>&1 | tee partner-v3-production-verification.log
+          grep -q 'PARTNER_V3_DATABASE_VERIFIED' partner-v3-production-verification.log
+
+      - name: Deploy gsa-partner-application
+        run: supabase functions deploy gsa-partner-application --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Verify deployed Edge Function
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee partner-v3-function-list.log
+          grep -q 'gsa-partner-application' partner-v3-function-list.log
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: partner-application-v3-production-evidence
+          path: |
+            partner-v3-migrations-before.log
+            partner-v3-base-apply.log
+            partner-v3-public-apply.log
+            partner-v3-production-verification.log
+            partner-v3-function-list.log
+          if-no-files-found: ignore
+          retention-days: 30
+
+  report:
+    name: Register final status
+    needs: deploy
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Record deployment result
+        shell: bash
+        env:
+          RESULT: ${{ needs.deploy.result }}
+          RUN_ID: ${{ github.run_id }}
+          VALIDATED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          cat > deployment-status/partner-application-production.json <<JSON
+          {
+            "status": "${RESULT}",
+            "workflow_run_id": "${RUN_ID}",
+            "validated_sha": "${VALIDATED_SHA}",
+            "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "project_ref": "ocgajvagxagutfvgxwsy",
+            "base_migration": "20260721110000_create_public_partners.sql",
+            "migration": "20260722001000_partner_public_applications.sql",
+            "edge_function": "gsa-partner-application"
+          }
+          JSON
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '4189826+github-actions[bot]@users.noreply.github.com'
+          git add deployment-status/partner-application-production.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Registrar implantação completa de parceiros: ${RESULT}"
+          git pull --rebase origin main
+          git push origin HEAD:main
