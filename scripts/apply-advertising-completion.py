@@ -65,6 +65,23 @@ replace_exact(
     "            <a href=\"/anunciante\" className=\"hidden rounded-full px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/10 sm:block\">Portal do anunciante</a>",
 )
 
+replace_exact(
+    'src/pages/AdvertiserPortal.tsx',
+    "import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';",
+    "import { FormEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';",
+)
+replace_exact(
+    'src/pages/AdvertiserPortal.tsx',
+    'function Panel({ title, children }: { title: string; children: React.ReactNode }) {',
+    'function Panel({ title, children }: { title: string; children: ReactNode }) {',
+)
+
+replace_exact(
+    'supabase/migrations/20260721223000_complete_advertising_platform.sql',
+    "CREATE OR REPLACE FUNCTION public.gsa_advertiser_portal_snapshot()\nRETURNS jsonb\nLANGUAGE plpgsql\nSTABLE\nSECURITY DEFINER",
+    "CREATE OR REPLACE FUNCTION public.gsa_advertiser_portal_snapshot()\nRETURNS jsonb\nLANGUAGE plpgsql\nVOLATILE\nSECURITY DEFINER",
+)
+
 package_path = Path('package.json')
 package_data = json.loads(package_path.read_text(encoding='utf-8'))
 package_data['scripts']['test:advertising-complete'] = 'tsx scripts/check-advertising-completion.ts'
