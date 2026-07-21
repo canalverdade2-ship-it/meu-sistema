@@ -1,3 +1,4 @@
+-- Validação técnica acionada após a implantação da configuração de comissões.
 DO $verification$
 DECLARE
   v_count integer;
