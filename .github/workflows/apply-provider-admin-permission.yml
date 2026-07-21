@@ -20,6 +20,25 @@ jobs:
     if: github.event_name == 'push' || github.head_ref == 'agent/finalizar-permissao-prestadores'
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
     steps:
       - name: Checkout source branch
         uses: actions/checkout@v4
@@ -79,28 +98,7 @@ jobs:
         run: npm ci --silent
 
       - name: Validate administrative contracts
-        id: admin_contract
-        shell: bash
-        run: |
-          set +e
-          npm run test:admin > provider-admin-contract.log 2>&1
-          code=$?
-          cat provider-admin-contract.log
-          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      - name: Publish administrative diagnostic
-        if: steps.admin_contract.outputs.exit_code != '0'
-        shell: bash
-        run: |
-          set -euo pipefail
-          cp provider-admin-contract.log .provider-admin-permission-diagnostic
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .provider-admin-permission-diagnostic
-          git commit -m 'Registrar diagnóstico da permissão de Prestadores' || true
-          git push origin HEAD:agent/finalizar-permissao-prestadores
-          exit 1
+        run: npm run test:admin
 
       - name: Validate TypeScript
         run: npm run lint
