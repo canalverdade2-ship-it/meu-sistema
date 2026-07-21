@@ -414,31 +414,300 @@ function QuoteForm({ domain, clientId, offeringSlug }: { domain: ProtectionDomai
   const [error, setError] = useState('');
   const draftKey = `gsa-${domain}-cotacao-draft`;
   const [form, setForm] = useState<Record<string, string>>(() => {
-    try { const saved = JSON.parse(sessionStorage.getItem(draftKey) || '{}'); return { ...saved, request_id: saved.request_id || crypto.randomUUID() }; } catch { return { request_id: crypto.randomUUID() }; }
-  });
-  const set = (key: string, value: string) => { const next = { ...form, [key]: value }; setForm(next); sessionStorage.setItem(draftKey, JSON.stringify(next)); };
-  const submit = async () => {
-    if (!clientId) { sessionStorage.setItem(draftKey, JSON.stringify(form)); navigate(`${routes.login.root()}?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`); return; }
-    setSending(true); setError('');
     try {
-      const result = await callClientRpc<any>(`gsa_client_${domain}_criar_cotacao`, { p_payload: { ...form, oferta_id: params.get('oferta'), oferta_slug: offeringSlug || null, origem: 'marketplace' }, p_idempotency_key: form.request_id });
-      if (!result?.success) throw new Error(result?.error || 'Não foi possível registrar a cotação.');
-      sessionStorage.removeItem(draftKey); setSuccess({ protocolo: result.protocolo, id: result.id });
-    } catch (e: any) { setError(e.message || 'Não foi possível registrar a cotação.'); }
-    finally { setSending(false); }
+      const saved = JSON.parse(sessionStorage.getItem(draftKey) || '{}');
+      return { ...saved, request_id: saved.request_id || crypto.randomUUID() };
+    } catch {
+      return { request_id: crypto.randomUUID() };
+    }
+  });
+
+  const set = (key: string, value: string) => {
+    setError('');
+    const next = { ...form, [key]: value };
+    setForm(next);
+    sessionStorage.setItem(draftKey, JSON.stringify(next));
   };
-  if (success) return <main className="mx-auto max-w-2xl px-5 py-16"><div className="rounded-[2rem] bg-white p-10 text-center shadow-xl"><CheckCircle2 className="mx-auto h-14 w-14" style={{ color: c.accent }} /><h1 className="mt-5 text-3xl font-black">Solicitação recebida</h1><p className="mt-3 text-neutral-500">Protocolo <strong>{success.protocolo}</strong>. A equipe GSA analisará seus dados e publicará as propostas nesta área.</p><button onClick={() => navigate(domainPath(domain, 'cotacoes'))} className="mt-7 rounded-full px-7 py-3 font-black text-white" style={{ background: c.dark }}>Acompanhar cotação</button></div></main>;
-  return <main className="mx-auto max-w-3xl px-5 py-10 sm:py-14"><p className="text-xs font-black uppercase tracking-[.2em]" style={{ color: c.accent }}>Etapa {step} de 3</p><h1 className="mt-2 text-3xl font-black sm:text-5xl">Solicitar cotação</h1><div className="mt-4 h-2 overflow-hidden rounded-full bg-neutral-200"><div className="h-full transition-all" style={{ width: `${step * 33.33}%`, background: c.accent }} /></div><div className="mt-8 rounded-[2rem] bg-white p-6 shadow-sm sm:p-9">
-    {step === 1 && <div className="space-y-5"><h2 className="text-xl font-black">O que você procura?</h2><Field label={domain === 'saude' ? 'Tipo de plano' : 'Modalidade do seguro'} value={form.categoria || ''} onChange={v => set('categoria', v)} options={c.categories.map(x => ({ value: x.key, label: x.label }))} /><Field label={domain === 'saude' ? 'Cidade/UF de atendimento' : 'Cidade/UF do risco'} value={form.localidade || ''} onChange={v => set('localidade', v)} /><Field label="Quando deseja iniciar?" value={form.inicio_desejado || ''} onChange={v => set('inicio_desejado', v)} type="date" /></div>}
-    {step === 2 && <div className="space-y-5"><h2 className="text-xl font-black">Dados para calcular</h2>{domain === 'saude' ? <><Field label="Quantidade de titulares" value={form.titulares || '1'} onChange={v => set('titulares', v)} type="number" /><Field label="Quantidade de dependentes" value={form.dependentes || '0'} onChange={v => set('dependentes', v)} type="number" /><Field label="Idades dos beneficiários" value={form.idades || ''} onChange={v => set('idades', v)} placeholder="Ex.: 35, 32, 8" /></> : <><Field label="Bem ou pessoa a proteger" value={form.objeto_segurado || ''} onChange={v => set('objeto_segurado', v)} /><Field label="Valor aproximado do bem/capital" value={form.valor_risco || ''} onChange={v => set('valor_risco', v)} placeholder="R$" /><Field label="Uso principal" value={form.uso || ''} onChange={v => set('uso', v)} /></>}</div>}
-    {step === 3 && <div className="space-y-5"><h2 className="text-xl font-black">Preferências e autorização</h2><Field label="Observações" value={form.observacoes || ''} onChange={v => set('observacoes', v)} multiline /><label className="flex gap-3 rounded-2xl bg-neutral-50 p-4 text-sm leading-6"><input type="checkbox" checked={form.consentimento === 'sim'} onChange={e => set('consentimento', e.target.checked ? 'sim' : '')} className="mt-1" /><span>Autorizo a GSA a tratar estes dados para buscar e apresentar propostas de parceiros. Entendo que a contratação e a cobrança do {domain === 'saude' ? 'plano' : 'prêmio'} ocorrerão diretamente com a {domain === 'saude' ? 'operadora' : 'seguradora'}.</span></label>{error && <p className="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-700">{error}</p>}</div>}
-    <div className="mt-8 flex justify-between gap-3"><button disabled={step === 1 || sending} onClick={() => setStep(step - 1)} className="rounded-full border border-black/10 px-6 py-3 font-bold disabled:opacity-30">Voltar</button>{step < 3 ? <button disabled={!form.categoria} onClick={() => setStep(step + 1)} className="rounded-full px-7 py-3 font-black text-white disabled:opacity-40" style={{ background: c.dark }}>Continuar</button> : <button disabled={sending || form.consentimento !== 'sim'} onClick={submit} className="flex items-center gap-2 rounded-full px-7 py-3 font-black text-white disabled:opacity-40" style={{ background: c.dark }}>{sending && <Loader2 className="h-4 w-4 animate-spin" />} Enviar solicitação</button>}</div>
-  </div></main>;
+
+  const isStep1Valid = Boolean(form.categoria && form.localidade?.trim() && form.inicio_desejado);
+  const isStep2Valid = domain === 'saude'
+    ? Boolean(form.idades?.trim())
+    : Boolean(form.objeto_segurado?.trim() && form.valor_risco?.trim());
+
+  const handleNextStep = () => {
+    setError('');
+    if (step === 1) {
+      if (!form.categoria) return setError('Selecione a modalidade ou tipo de plano.');
+      if (!form.localidade?.trim()) return setError(domain === 'saude' ? 'Informe a Cidade/UF de atendimento.' : 'Informe a Cidade/UF do risco.');
+      if (!form.inicio_desejado) return setError('Informe a data desejada para iniciar.');
+    }
+    if (step === 2) {
+      if (domain === 'saude') {
+        if (!form.idades?.trim()) return setError('Informe a idade dos beneficiários.');
+      } else {
+        if (!form.objeto_segurado?.trim()) return setError('Informe o bem ou pessoa a proteger.');
+        if (!form.valor_risco?.trim()) return setError('Informe o valor aproximado do bem ou capital.');
+      }
+    }
+    setStep(step + 1);
+  };
+
+  const submit = async () => {
+    if (!clientId) {
+      sessionStorage.setItem(draftKey, JSON.stringify(form));
+      navigate(`${routes.login.root()}?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      return;
+    }
+    setSending(true);
+    setError('');
+    try {
+      const result = await callClientRpc<any>(`gsa_client_${domain}_criar_cotacao`, {
+        p_payload: { ...form, oferta_id: params.get('oferta'), oferta_slug: offeringSlug || null, origem: 'marketplace' },
+        p_idempotency_key: form.request_id,
+      });
+      if (!result?.success) throw new Error(result?.error || 'Não foi possível registrar a cotação.');
+      sessionStorage.removeItem(draftKey);
+      setSuccess({ protocolo: result.protocolo, id: result.id });
+    } catch (e: any) {
+      setError(e.message || 'Não foi possível registrar a cotação.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <main className="mx-auto max-w-2xl px-5 py-16">
+        <div className="rounded-[2rem] bg-white p-10 text-center shadow-xl">
+          <CheckCircle2 className="mx-auto h-14 w-14" style={{ color: c.accent }} />
+          <h1 className="mt-5 text-3xl font-black">Solicitação recebida</h1>
+          <p className="mt-3 text-neutral-500">
+            Protocolo <strong>{success.protocolo}</strong>. A equipe GSA analisará seus dados e publicará as propostas nesta área.
+          </p>
+          <button
+            onClick={() => navigate(domainPath(domain, 'cotacoes'))}
+            className="mt-7 rounded-full px-7 py-3 font-black text-white"
+            style={{ background: c.dark }}
+          >
+            Acompanhar cotação
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
+      <p className="text-xs font-black uppercase tracking-[.2em]" style={{ color: c.accent }}>
+        Etapa {step} de 3
+      </p>
+      <h1 className="mt-2 text-3xl font-black sm:text-5xl">Solicitar cotação</h1>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-neutral-200">
+        <div className="h-full transition-all" style={{ width: `${step * 33.33}%`, background: c.accent }} />
+      </div>
+
+      <div className="mt-8 rounded-[2rem] bg-white p-6 shadow-sm sm:p-9">
+        {step === 1 && (
+          <div className="space-y-5">
+            <h2 className="text-xl font-black">O que você procura?</h2>
+            <Field
+              label={domain === 'saude' ? 'Tipo de plano' : 'Modalidade do seguro'}
+              value={form.categoria || ''}
+              onChange={(v) => set('categoria', v)}
+              options={c.categories.map((x) => ({ value: x.key, label: x.label }))}
+              required
+            />
+            <Field
+              label={domain === 'saude' ? 'Cidade/UF de atendimento' : 'Cidade/UF do risco'}
+              value={form.localidade || ''}
+              onChange={(v) => set('localidade', v)}
+              placeholder="Ex.: São Paulo / SP"
+              required
+            />
+            <Field
+              label="Quando deseja iniciar?"
+              value={form.inicio_desejado || ''}
+              onChange={(v) => set('inicio_desejado', v)}
+              type="date"
+              required
+            />
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-5">
+            <h2 className="text-xl font-black">Dados para calcular</h2>
+            {domain === 'saude' ? (
+              <>
+                <Field
+                  label="Quantidade de titulares"
+                  value={form.titulares || '1'}
+                  onChange={(v) => set('titulares', v)}
+                  type="number"
+                  required
+                />
+                <Field
+                  label="Quantidade de dependentes"
+                  value={form.dependentes || '0'}
+                  onChange={(v) => set('dependentes', v)}
+                  type="number"
+                />
+                <Field
+                  label="Idades dos beneficiários"
+                  value={form.idades || ''}
+                  onChange={(v) => set('idades', v)}
+                  placeholder="Ex.: 35, 32, 8"
+                  required
+                />
+              </>
+            ) : (
+              <>
+                <Field
+                  label="Bem ou pessoa a proteger"
+                  value={form.objeto_segurado || ''}
+                  onChange={(v) => set('objeto_segurado', v)}
+                  placeholder="Ex.: Honda Civic 2022 ou Nome da empresa"
+                  required
+                />
+                <Field
+                  label="Valor aproximado do bem/capital"
+                  value={form.valor_risco || ''}
+                  onChange={(v) => set('valor_risco', v)}
+                  placeholder="Ex.: R$ 120.000,00"
+                  required
+                />
+                <Field
+                  label="Uso principal"
+                  value={form.uso || ''}
+                  onChange={(v) => set('uso', v)}
+                  placeholder="Ex.: Pessoal / Lazer"
+                />
+              </>
+            )}
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-5">
+            <h2 className="text-xl font-black">Preferências e autorização</h2>
+            <Field
+              label="Observações"
+              value={form.observacoes || ''}
+              onChange={(v) => set('observacoes', v)}
+              multiline
+              placeholder="Escreva aqui detalhes adicionais ou preferências..."
+            />
+            <label className="flex gap-3 rounded-2xl bg-neutral-50 p-4 text-sm leading-6">
+              <input
+                type="checkbox"
+                checked={form.consentimento === 'sim'}
+                onChange={(e) => set('consentimento', e.target.checked ? 'sim' : '')}
+                className="mt-1"
+              />
+              <span>
+                Autorizo a GSA a tratar estes dados para buscar e apresentar propostas de parceiros. Entendo que a contratação e a cobrança do {domain === 'saude' ? 'plano' : 'prêmio'} ocorrerão diretamente com a {domain === 'saude' ? 'operadora' : 'seguradora'}. <strong className="text-red-500">*</strong>
+              </span>
+            </label>
+          </div>
+        )}
+
+        {error && (
+          <p className="mt-5 flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
+            ⚠️ {error}
+          </p>
+        )}
+
+        <div className="mt-8 flex justify-between gap-3">
+          <button
+            disabled={step === 1 || sending}
+            onClick={() => {
+              setError('');
+              setStep(step - 1);
+            }}
+            className="rounded-full border border-black/10 px-6 py-3 font-bold disabled:opacity-30"
+          >
+            Voltar
+          </button>
+          {step < 3 ? (
+            <button
+              disabled={(step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)}
+              onClick={handleNextStep}
+              className="rounded-full px-7 py-3 font-black text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ background: c.dark }}
+            >
+              Continuar
+            </button>
+          ) : (
+            <button
+              disabled={sending || form.consentimento !== 'sim'}
+              onClick={submit}
+              className="flex items-center gap-2 rounded-full px-7 py-3 font-black text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ background: c.dark }}
+            >
+              {sending && <Loader2 className="h-4 w-4 animate-spin" />} Enviar solicitação
+            </button>
+          )}
+        </div>
+      </div>
+    </main>
+  );
 }
 
-function Field({ label, value, onChange, type = 'text', placeholder, options, multiline }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string; options?: { value: string; label: string }[]; multiline?: boolean }) {
-  const cls = 'mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-black/30 focus:ring-4 focus:ring-black/5';
-  return <label className="block text-sm font-bold text-neutral-700">{label}{options ? <select value={value} onChange={e => onChange(e.target.value)} className={cls}><option value="">Selecione</option>{options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select> : multiline ? <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={5} className={cls} /> : <input type={type} min={type === 'number' ? 0 : undefined} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className={cls} />}</label>;
+function Field({
+  label,
+  value,
+  onChange,
+  type = 'text',
+  placeholder,
+  options,
+  multiline,
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+  multiline?: boolean;
+  required?: boolean;
+}) {
+  const cls =
+    'mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-black/30 focus:ring-4 focus:ring-black/5';
+
+  return (
+    <label className="block text-sm font-bold text-neutral-700">
+      {label}
+      {required && <span className="ml-1 font-bold text-red-500">*</span>}
+      {options ? (
+        <select value={value} onChange={(e) => onChange(e.target.value)} className={cls}>
+          <option value="">Selecione</option>
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      ) : multiline ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          rows={5}
+          className={cls}
+        />
+      ) : (
+        <input
+          type={type}
+          min={type === 'number' ? 0 : undefined}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={cls}
+        />
+      )}
+    </label>
+  );
 }
 
 const resourceLabels: Record<string, string> = { cotacoes: 'Minhas cotações', propostas: 'Minhas propostas', contratos: 'Contratações', assessorias: 'Assessoria GSA', dependentes: 'Dependentes', documentos: 'Documentos', assistencias: 'Assistências', sinistros: 'Sinistros', suporte: 'Atendimentos' };
