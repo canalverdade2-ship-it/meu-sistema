@@ -47,7 +47,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     if (segments[1]) itemId = segments[1];
     return { pathname, search, hash, area, module, itemId, query };
   }
-  if (normalizedPath === '/criacao-de-site-e-sistemas') {
+  if (normalizedPath === '/criacao-de-site-e-sistemas' || normalizedPath === '/empresa-do-zero-ao-digital') {
     area = 'public';
     module = 'systems';
     return { pathname, search, hash, area, module, query };
@@ -63,10 +63,10 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   if (segments[0] === 'marketplace') {
     area = 'marketplace';
     module = 'root';
-    
+
     if (segments[1]) {
       submodule = segments[1]; // ex: 'loja', 'pacotes-viagem', 'classificados', 'menu'
-      
+
       if (submodule === 'loja') {
         // Ex: /marketplace/loja/produtos ou /marketplace/loja/produtos/:id
         const view = segments[2];
@@ -88,7 +88,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
       } else if (submodule === 'menu' && segments[2] === 'pacotes-viagem') {
         module = 'pacotes-viagem';
         submodule = segments[3] || 'home'; // ex: 'ofertas', 'orcamento', 'minhas-viagens', 'documentos'
-        
+
         if (submodule === 'ofertas' && segments[4]) {
           if (['nacionais', 'internacionais', 'excursoes'].includes(segments[4])) {
             submodule = `ofertas-${segments[4]}`;
@@ -166,7 +166,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   if (segments[0] === 'admin') {
     area = 'admin';
     module = segments[1] || 'dashboard'; // ex: 'cadastros', 'catalogo', 'operacoes', 'financeiro', etc.
-    
+
     if (module === 'financeiro' && segments[2] === 'emprestimos') {
       module = 'emprestimos';
       if (segments[3]) itemId = segments[3];

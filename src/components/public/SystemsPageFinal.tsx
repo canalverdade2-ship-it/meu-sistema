@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Code2, LogIn, MessageCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Code2, LogIn, MessageCircle, Palette, Sparkles } from 'lucide-react';
 import { LogoGSA } from '../ui/LogoGSA';
+import { navigate } from '../../routing/navigationService';
+import { BrandJourneyPage } from './BrandJourneyPage';
 import { SystemsBudgetModal } from './SystemsBudgetModal';
 import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
 
@@ -30,6 +32,17 @@ const steps = [
 export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const isBrandJourney = window.location.pathname.replace(/\/+$/, '') === '/empresa-do-zero-ao-digital';
+
+  if (isBrandJourney) {
+    return (
+      <BrandJourneyPage
+        onBack={() => navigate('/')}
+        onSystems={() => navigate('/criacao-de-site-e-sistemas')}
+        onLogin={onLogin}
+      />
+    );
+  }
 
   const openWhatsApp = () => {
     const message = 'Olá! Gostaria de falar sobre a criação de um site, aplicativo, sistema ou automação.';
@@ -88,12 +101,26 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
             </div>
           </div>
         </section>
+
+        <section className="overflow-hidden bg-[#e4c777] py-16 text-neutral-950">
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:px-8">
+            <div>
+              <div className="flex items-center gap-3 text-[#6f5723]"><Palette className="h-7 w-7" /><Sparkles className="h-5 w-5" /></div>
+              <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-neutral-700">Antes da tecnologia</p>
+              <h2 className="mt-3 max-w-4xl text-3xl font-black sm:text-5xl">Sua empresa ainda precisa de nome, logo, identidade e redes sociais?</h2>
+              <p className="mt-5 max-w-3xl text-base leading-7 text-neutral-800">Conheça a jornada Empresa do Zero ao Digital: uma solução integrada para construir marca, site, conteúdo, canais de atendimento e presença nas redes sociais.</p>
+            </div>
+            <button type="button" onClick={() => navigate('/empresa-do-zero-ao-digital')} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-neutral-950 px-7 py-4 font-black text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+              Conhecer a jornada completa <ArrowRight className="h-5 w-5" />
+            </button>
+          </div>
+        </section>
       </main>
 
       <footer className="bg-neutral-950 py-10 text-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div><LogoGSA size="md" variant="light" /><p className="mt-3 text-sm text-white/55">Soluções digitais sob medida.</p></div>
-          <div className="flex flex-wrap gap-5 text-sm font-bold text-white/75"><button type="button" onClick={onBack} className="hover:text-[#d8bd73]">Início</button><button type="button" onClick={() => setPrivacyOpen(true)} className="hover:text-[#d8bd73]">Privacidade</button><button type="button" onClick={openWhatsApp} className="hover:text-[#d8bd73]">Contato</button></div>
+          <div className="flex flex-wrap gap-5 text-sm font-bold text-white/75"><button type="button" onClick={onBack} className="hover:text-[#d8bd73]">Início</button><button type="button" onClick={() => navigate('/empresa-do-zero-ao-digital')} className="hover:text-[#d8bd73]">Marca e presença digital</button><button type="button" onClick={() => setPrivacyOpen(true)} className="hover:text-[#d8bd73]">Privacidade</button><button type="button" onClick={openWhatsApp} className="hover:text-[#d8bd73]">Contato</button></div>
         </div>
       </footer>
 
