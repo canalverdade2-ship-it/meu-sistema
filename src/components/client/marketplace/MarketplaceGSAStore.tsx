@@ -24,6 +24,9 @@ import { GeneralClassifiedsPage } from './classifieds/GeneralClassifiedsPage';
 import { MyClassifiedsPage } from './classifieds/MyClassifiedsPage';
 import { CreateListingWizard } from './classifieds/CreateListingWizard';
 import { MyNegotiationsPage } from './classifieds/MyNegotiationsPage';
+import { ClassifiedsClientDashboard } from './classifieds/ClassifiedsClientDashboard';
+import { MyClassifiedSalesPage } from './classifieds/MyClassifiedSalesPage';
+import { MyClassifiedCommissionsPage } from './classifieds/MyClassifiedCommissionsPage';
 import { ProtectionMarketplace } from './protection/ProtectionMarketplace';
 
 interface MarketplaceGSAStoreProps {
@@ -181,6 +184,13 @@ export function MarketplaceGSAStore({
   }
 
   if (currentModule === 'classificados') {
+    if (!currentSubmodule || currentSubmodule === 'home') {
+      if (clientId) {
+        return <ClassifiedsClientDashboard clientId={clientId} onBack={backToMarketplace} />;
+      }
+      return <ClassifiedsHubPage onBack={backToMarketplace} isPublic />;
+    }
+
     if (currentSubmodule === 'imoveis') {
       if (route.itemId) {
         return (
@@ -238,8 +248,25 @@ export function MarketplaceGSAStore({
       }
       return <MyNegotiationsPage clientId={clientId} />;
     }
+    if (currentSubmodule === 'minhas-vendas') {
+      if (!clientId) {
+        onRequireAuth?.();
+        return null;
+      }
+      return <MyClassifiedSalesPage clientId={clientId} />;
+    }
+    if (currentSubmodule === 'comissoes') {
+      if (!clientId) {
+        onRequireAuth?.();
+        return null;
+      }
+      return <MyClassifiedCommissionsPage clientId={clientId} />;
+    }
 
-    return <ClassifiedsHubPage onBack={backToMarketplace} isPublic={!clientId} />;
+    if (clientId) {
+      return <ClassifiedsClientDashboard clientId={clientId} onBack={backToMarketplace} />;
+    }
+    return <ClassifiedsHubPage onBack={backToMarketplace} isPublic />;
   }
 
   if (currentSubmodule?.startsWith('loja')) {
