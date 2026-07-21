@@ -111,6 +111,11 @@ function StatusBadge({ status }: { status?: string | null }) {
     pagamento_confirmado: 'bg-blue-100 text-blue-800',
     viagem_confirmada: 'bg-emerald-100 text-emerald-800',
     concluida: 'bg-neutral-100 text-neutral-800',
+    reembolso_em_analise: 'bg-amber-100 text-amber-800 border border-amber-300',
+    reembolso_solicitado: 'bg-amber-100 text-amber-800 border border-amber-300',
+    reembolsada: 'bg-purple-100 text-purple-800 border border-purple-200',
+    reembolso_aprovado: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+    reembolso_negado: 'bg-rose-100 text-rose-800 border border-rose-200',
   };
   return (
     <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${colors[value] || 'bg-neutral-100 text-neutral-700'}`}>
@@ -166,7 +171,7 @@ export function TravelAdminModule() {
         {activeTab === 'solicitacoes' && <SolicitacoesTab />}
         {activeTab === 'pacotes' && <PacotesTab />}
         {activeTab === 'propostas' && <PropostasTab />}
-        {activeTab === 'transacoes' && <ReadOnlyList kind="transacoes" title="Reservas e transações" />}
+        {activeTab === 'transacoes' && <TransacoesTab />}
       </section>
     </div>
   );
@@ -1326,10 +1331,423 @@ function PropostasTab() {
   );
 }
 
-function ReadOnlyList({ kind, title }: { kind: 'transacoes'; title: string }) {
-  const list = usePagedTravelList(kind);
-  const subtitle = 'Acompanhe pagamentos, emissão e confirmação das viagens.';
-  return <div><Toolbar title={title} subtitle={subtitle} {...list} refresh={() => void list.load()} />{list.loading ? <Loading /> : list.result.items.length === 0 ? <Empty text="Nenhum registro encontrado." /> : <div className="space-y-3">{list.result.items.map((item) => <article key={item.id} className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200 p-4 sm:flex-row sm:items-center"><div><div className="mb-2 flex flex-wrap gap-2"><StatusBadge status={item.status} /><span className="text-xs font-bold text-neutral-400">{formatDate(item.created_at)}</span></div><h4 className="font-black text-neutral-900">{item.cliente_nome || item.snapshot_completo?.titulo || item.protocolo || 'Registro de viagem'}</h4><p className="mt-1 text-sm text-neutral-500">{`Forma de pagamento: ${item.forma_pagamento || '—'}`}</p></div>{item.valor_total != null && <p className="text-lg font-black text-indigo-700">{formatCurrency(item.valor_total)}</p>}</article>)}</div>}<Pagination page={list.page} total={list.result.total} onPage={list.setPage} /></div>;
+function TransacoesTab() {
+  const list = usePagedTravelList('transacoes');
+  const [detailsTx, setDetailsTx] = useState<any>(null);
+  const [refundTx, setRefundTx] = useState<any>(null);
+  const [denyTx, setDenyTx] = useState<any>(null);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundFees, setRefundFees] = useState('0,00');
+  const [refundNote, setRefundNote] = useState('');
+  const [denyReason, setDenyReason] = useState('');
+  const [processingRefund, setProcessingRefund] = useState(false);
+
+  const openApproveModal = (item: any) => {
+    setRefundTx(item);
+    const initialVal = item.valor_elegivel_reembolso != null && item.valor_elegivel_reembolso > 0
+      ? item.valor_elegivel_reembolso
+      : item.valor_pago != null && item.valor_pago > 0
+      ? item.valor_pago
+      : item.valor_total || 0;
+    setRefundAmount(formatCurrencyInputValue(initialVal));
+    setRefundFees('0,00');
+    setRefundNote('Reembolso aprovado e processado pelo financeiro GSA.');
+  };
+
+  const handleApproveRefund = async () => {
+    if (!refundTx) return;
+    setProcessingRefund(true);
+    try {
+      const numericRefund = parseCurrencyString(refundAmount);
+      const numericFees = parseCurrencyString(refundFees);
+
+      const { error } = await supabase
+        .from('viagens_transacoes')
+        .update({
+          status: 'reembolsada',
+          valor_reembolsado: numericRefund,
+          taxa_cancelamento: numericFees,
+          resposta_admin: refundNote.trim() || 'Reembolso aprovado e concluído.',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', refundTx.id);
+
+      if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
+
+      // Atualiza tabela de cancelamentos se houver
+      await supabase
+        .from('viagens_cancelamentos')
+        .update({
+          status: 'concluido',
+          valor_reembolsado: numericRefund,
+          resposta_gsa: refundNote.trim() || 'Reembolso aprovado e concluído.',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('transacao_id', refundTx.id);
+
+      toast.success('Reembolso aprovado e processado com sucesso!');
+      setRefundTx(null);
+      await list.load();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível aprovar o reembolso.');
+    } finally {
+      setProcessingRefund(false);
+    }
+  };
+
+  const handleDenyRefund = async () => {
+    if (!denyTx) return;
+    const reason = denyReason.trim();
+    if (reason.length < 3) return toast.error('Informe o motivo da negação do reembolso (mínimo de 3 caracteres).');
+    setProcessingRefund(true);
+    try {
+      const { error } = await supabase
+        .from('viagens_transacoes')
+        .update({
+          status: 'reembolso_negado',
+          resposta_admin: reason,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', denyTx.id);
+
+      if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
+
+      await supabase
+        .from('viagens_cancelamentos')
+        .update({
+          status: 'reembolso_negado',
+          resposta_gsa: reason,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('transacao_id', denyTx.id);
+
+      toast.success('Solicitação de reembolso negada e registrada.');
+      setDenyTx(null);
+      setDenyReason('');
+      await list.load();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível recusar o reembolso.');
+    } finally {
+      setProcessingRefund(false);
+    }
+  };
+
+  return (
+    <div>
+      <Toolbar 
+        title="Reservas & Transações" 
+        subtitle="Acompanhe pagamentos, solicitações de reembolso e confirmação de viagens." 
+        {...list} 
+        refresh={() => void list.load()} 
+      />
+
+      {list.loading ? (
+        <Loading />
+      ) : list.result.items.length === 0 ? (
+        <Empty text="Nenhuma transação encontrada." />
+      ) : (
+        <div className="space-y-3">
+          {list.result.items.map((item) => {
+            const isPendingRefund = ['reembolso_em_analise', 'reembolso_solicitado', 'solicitado'].includes(item.status);
+
+            return (
+              <article key={item.id} className={`flex flex-col justify-between gap-4 rounded-2xl border p-5 lg:flex-row lg:items-center transition bg-white shadow-2xs ${isPendingRefund ? 'border-amber-300 bg-amber-50/20' : 'border-neutral-200'}`}>
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status={item.status} />
+                    <span className="text-xs font-bold text-neutral-400">Criado em {formatDate(item.created_at)}</span>
+                    {isPendingRefund && (
+                      <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800 animate-pulse">
+                        Ação Necessária: Análise de Reembolso
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="font-black text-neutral-900 text-lg truncate">{item.cliente_nome || item.snapshot_completo?.nome || item.protocolo || 'Transação de Viagem'}</h4>
+                  <p className="text-sm font-medium text-neutral-500">
+                    Forma de pagamento: <strong className="text-neutral-800 uppercase">{item.forma_pagamento || 'outros'}</strong>
+                    {item.reserva_id && <span className="ml-2 text-xs text-neutral-400">· Reserva: {String(item.reserva_id).slice(0, 8)}</span>}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-end gap-2.5">
+                  {item.valor_total != null && (
+                    <div className="text-right mr-2">
+                      <p className="text-[10px] font-bold uppercase text-neutral-400">Valor Total</p>
+                      <p className="text-xl font-black text-indigo-700">{formatCurrency(item.valor_total)}</p>
+                    </div>
+                  )}
+
+                  {/* Botão Detalhes */}
+                  <button
+                    type="button"
+                    onClick={() => setDetailsTx(item)}
+                    className="flex items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 py-2 text-xs font-black text-blue-700 border border-blue-200 hover:bg-blue-100 transition"
+                  >
+                    <Eye className="h-4 w-4" /> Detalhes
+                  </button>
+
+                  {/* Botões de Ação para Reembolso */}
+                  {isPendingRefund && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => openApproveModal(item)}
+                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-200 transition"
+                      >
+                        <CheckCircle2 className="h-4 w-4" /> Aprovar Reembolso
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDenyTx(item);
+                          setDenyReason('');
+                        }}
+                        className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3.5 py-2 text-xs font-black text-red-700 border border-red-200 hover:bg-red-100 transition"
+                      >
+                        <XCircle className="h-4 w-4" /> Negar
+                      </button>
+                    </>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      <Pagination page={list.page} total={list.result.total} onPage={list.setPage} />
+
+      {/* Modal Detalhes da Transação */}
+      {detailsTx && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsTx(null)}>
+          <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
+            <header className="flex items-center justify-between border-b border-neutral-100 bg-slate-900 p-6 text-white">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 backdrop-blur-md">
+                  <Receipt className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={detailsTx.status} />
+                    <span className="text-xs font-mono font-bold tracking-wider text-indigo-300 uppercase">{detailsTx.protocolo || 'TRANSAÇÃO'}</span>
+                  </div>
+                  <h2 className="text-xl font-black text-white mt-0.5">Detalhes da Transação</h2>
+                </div>
+              </div>
+              <button onClick={() => setDetailsTx(null)} className="rounded-full bg-white/10 p-2 text-neutral-300 hover:bg-white/20 hover:text-white transition-colors">
+                <XCircle className="h-6 w-6" />
+              </button>
+            </header>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-neutral-50/50">
+              {/* Cliente */}
+              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
+                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-3 flex items-center gap-1.5">
+                  <User className="h-4 w-4 text-indigo-600" /> Cliente
+                </h4>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Nome</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{detailsTx.cliente_nome || detailsTx.snapshot_completo?.nome || 'Cliente Cadastrado'}</p>
+                  </div>
+                  <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Data do Registro</p>
+                    <p className="text-sm font-bold text-neutral-900 mt-0.5">{formatDateTime(detailsTx.created_at)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informações Financeiras */}
+              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                  <Receipt className="h-4 w-4 text-indigo-600" /> Resumo Financeiro
+                </h4>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl bg-indigo-50 p-3 border border-indigo-100">
+                    <p className="text-[10px] font-bold uppercase text-indigo-500">Valor Total</p>
+                    <p className="text-lg font-black text-indigo-700 mt-0.5">{formatCurrency(detailsTx.valor_total)}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-emerald-50 p-3 border border-emerald-100">
+                    <p className="text-[10px] font-bold uppercase text-emerald-600">Valor Pago</p>
+                    <p className="text-lg font-black text-emerald-700 mt-0.5">{formatCurrency(detailsTx.valor_pago || detailsTx.valor_total)}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-purple-50 p-3 border border-purple-100">
+                    <p className="text-[10px] font-bold uppercase text-purple-600">Elegível Reembolso</p>
+                    <p className="text-lg font-black text-purple-700 mt-0.5">{formatCurrency(detailsTx.valor_elegivel_reembolso || detailsTx.valor_pago || detailsTx.valor_total)}</p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
+                  <p className="text-[10px] font-bold uppercase text-neutral-400">Forma de Pagamento</p>
+                  <p className="text-sm font-bold text-neutral-900 uppercase mt-0.5">{detailsTx.forma_pagamento || 'Outros'}</p>
+                </div>
+              </div>
+
+              {/* Resposta do Admin / Histórico de Reembolso */}
+              {detailsTx.resposta_admin && (
+                <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-1">Parecer da Administração</h4>
+                  <p className="text-sm font-semibold text-neutral-800 whitespace-pre-wrap">{detailsTx.resposta_admin}</p>
+                </div>
+              )}
+            </div>
+
+            <footer className="border-t border-neutral-100 bg-white p-5 flex items-center justify-between">
+              <div>
+                {['reembolso_em_analise', 'reembolso_solicitado', 'solicitado'].includes(detailsTx.status) && (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const item = detailsTx;
+                        setDetailsTx(null);
+                        openApproveModal(item);
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-200"
+                    >
+                      <CheckCircle2 className="h-4 w-4" /> Aprovar Reembolso
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const item = detailsTx;
+                        setDetailsTx(null);
+                        setDenyTx(item);
+                        setDenyReason('');
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl bg-red-50 px-4 py-2 text-xs font-black text-red-700 border border-red-200 hover:bg-red-100"
+                    >
+                      <XCircle className="h-4 w-4" /> Negar
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button 
+                type="button" 
+                onClick={() => setDetailsTx(null)} 
+                className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50"
+              >
+                Fechar
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Aprovar Reembolso */}
+      <Modal isOpen={Boolean(refundTx)} onClose={() => setRefundTx(null)} title="Aprovar Solicitação de Reembolso" size="md">
+        {refundTx && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-emerald-50 p-4 border border-emerald-100 text-emerald-900 text-sm">
+              <strong>Cliente: {refundTx.cliente_nome || refundTx.protocolo}</strong>
+              <p className="text-xs text-emerald-700 mt-1">Defina o valor a ser reembolsado e eventuais taxas/multas de cancelamento.</p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className={labelClass}>
+                Valor a Reembolsar (R$) <span className="text-emerald-600">*</span>
+                <input
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(handleCurrencyMask(e.target.value))}
+                  className={`${inputClass} mt-2`}
+                  placeholder="0,00"
+                />
+              </label>
+
+              <label className={labelClass}>
+                Taxas / Retenções (R$)
+                <input
+                  value={refundFees}
+                  onChange={(e) => setRefundFees(handleCurrencyMask(e.target.value))}
+                  className={`${inputClass} mt-2`}
+                  placeholder="0,00"
+                />
+              </label>
+            </div>
+
+            <label className={labelClass}>
+              Observações / Resposta ao Cliente
+              <textarea
+                rows={3}
+                value={refundNote}
+                onChange={(e) => setRefundNote(e.target.value)}
+                className={`${inputClass} mt-2 h-auto`}
+                placeholder="Insira a mensagem ou comprovante de reembolso..."
+              />
+            </label>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setRefundTx(null)}
+                className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50"
+              >
+                Voltar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void handleApproveRefund()}
+                disabled={processingRefund}
+                className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50 shadow-md shadow-emerald-200"
+              >
+                {processingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {processingRefund ? 'Processando...' : 'Confirmar Aprovação'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal Negar Reembolso */}
+      <Modal isOpen={Boolean(denyTx)} onClose={() => setDenyTx(null)} title="Negar Solicitação de Reembolso" size="md">
+        {denyTx && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-red-50 p-4 border border-red-100 text-red-900 text-sm">
+              <strong>Cliente: {denyTx.cliente_nome || denyTx.protocolo}</strong>
+              <p className="text-xs text-red-700 mt-1">Informe a justificativa pela qual a solicitação de reembolso está sendo indeferida.</p>
+            </div>
+
+            <label className={labelClass}>
+              Motivo do Indeferimento <span className="text-red-500">*</span>
+              <textarea
+                rows={4}
+                value={denyReason}
+                onChange={(e) => setDenyReason(e.target.value)}
+                placeholder="Explique o motivo do indeferimento ao cliente..."
+                className={`${inputClass} mt-2 h-auto`}
+              />
+            </label>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setDenyTx(null)}
+                className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50"
+              >
+                Voltar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void handleDenyRefund()}
+                disabled={processingRefund || !denyReason.trim()}
+                className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-black text-white hover:bg-red-700 disabled:opacity-50 shadow-md shadow-red-200"
+              >
+                {processingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                {processingRefund ? 'Processando...' : 'Confirmar Indeferimento'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
 }
 
 function Loading() {
