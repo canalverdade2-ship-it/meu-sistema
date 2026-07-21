@@ -4,6 +4,7 @@ export type AdminModule =
   | 'dashboard'
   | 'cadastro'
   | 'prestadores'
+  | 'parceiros'
   | 'catalogo'
   | 'operacoes'
   | 'demandas'
@@ -30,6 +31,7 @@ const VALID_MODULES = new Set<AdminModule>([
   'dashboard',
   'cadastro',
   'prestadores',
+  'parceiros',
   'catalogo',
   'operacoes',
   'demandas',
@@ -63,6 +65,7 @@ export function normalizeAdminModule(module?: string | null): AdminModule {
   if (value === 'tickets' || value === 'suporte') return 'atendimento';
   if (value === 'cadastros' || value === 'clientes') return 'cadastro';
   if (value === 'prestadores') return 'prestadores';
+  if (value === 'parceiros') return 'parceiros';
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (['vendas', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'os'].includes(value)) return 'operacoes';
   if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';
@@ -76,6 +79,7 @@ function normalizeGrantedModule(module: string): AdminModule | null {
 
   if (value === 'clientes' || value === 'cadastros') return 'cadastro';
   if (value === 'prestadores') return 'prestadores';
+  if (value === 'parceiros') return 'parceiros';
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (value === 'vendas') return 'operacoes';
   if (value === 'tickets' || value === 'suporte') return 'atendimento';
@@ -134,6 +138,7 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     case 'dashboard': return '/admin/dashboard';
     case 'cadastro': return parts('admin', 'cadastros', tab || 'clientes', itemId);
     case 'prestadores': return parts('admin', 'cadastros', 'prestadores', itemId);
+    case 'parceiros': return parts('admin', 'parceiros', tab, itemId);
     case 'catalogo': return parts('admin', 'catalogo', tab || 'produtos', itemId);
     case 'operacoes': return parts('admin', 'operacoes', tab || 'orcamentos', itemId);
     case 'demandas': return parts('admin', 'demandas', tab, itemId);
