@@ -57,16 +57,21 @@ async function main() {
 
   await contains('src/components/public/PartnersPage.tsx', [
     'listPublicPartners',
-    "status', 'ativo'",
     'Conhecer parceiro',
     'Quero ser parceiro',
-  ]).catch(async () => {
-    const service = await read('src/features/partners/service.ts');
-    assert.ok(service.includes(".eq('status', 'ativo')"));
-    const page = await read('src/components/public/PartnersPage.tsx');
-    assert.ok(page.includes('Conhecer parceiro'));
-    assert.ok(page.includes('Quero ser parceiro'));
-  });
+    'Informações de contato',
+  ]);
+
+  await contains('src/features/partners/service.ts', [
+    ".eq('status', 'ativo')",
+    "callAdminRpc<{ partners?: Partner[] }>('gsa_admin_partners_snapshot')",
+    "callAdminRpc<{ partner: Partner }>('gsa_admin_save_partner'",
+    "callAdminRpc('gsa_admin_set_partner_status'",
+  ]);
+  await excludes('src/features/partners/service.ts', [
+    ".from('parceiros').insert",
+    ".from('parceiros').update",
+  ]);
 
   await contains('src/components/admin/PartnersAdminModule.tsx', [
     'Novo parceiro',
@@ -79,12 +84,16 @@ async function main() {
   ]);
 
   await contains('supabase/migrations/20260721110000_create_public_partners.sql', [
-    'create table if not exists public.parceiros',
-    "status = 'ativo'",
-    'alter table public.parceiros enable row level security',
+    'CREATE TABLE IF NOT EXISTS public.parceiros',
+    "USING (status = 'ativo')",
+    'ALTER TABLE public.parceiros ENABLE ROW LEVEL SECURITY',
     'parceiros_public_read_active',
-    'parceiros_admin_insert',
-    'parceiros_admin_update',
+    'gsa_admin_partners_snapshot',
+    'gsa_admin_save_partner',
+    'gsa_admin_set_partner_status',
+    "gsa_admin_assert_module('parceiros')",
+    "gsa_admin_write_audit(",
+    'REVOKE ALL ON public.parceiros FROM anon, authenticated',
   ]);
 
   console.log('Contratos da página de parceiros validados com sucesso.');
