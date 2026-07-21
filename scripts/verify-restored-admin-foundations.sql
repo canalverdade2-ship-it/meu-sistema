@@ -11,15 +11,20 @@ BEGIN
      '20260720183000',
      '20260721194500',
      '20260721194600',
-     '20260721194700'
+     '20260721194700',
+     '20260721194800'
    );
 
-  IF v_required <> 5 THEN
-    RAISE EXCEPTION 'Histórico da recuperação incompleto: % de 5 migrations', v_required;
+  IF v_required <> 6 THEN
+    RAISE EXCEPTION 'Histórico da recuperação incompleto: % de 6 migrations', v_required;
   END IF;
 
   IF to_regprocedure('public.gsa_admin_get_pendency_counts_secure(uuid,text)') IS NULL THEN
     RAISE EXCEPTION 'RPC segura de pendências administrativas ausente';
+  END IF;
+
+  IF to_regprocedure('public.gsa_admin_search_clients(uuid,text,text,integer)') IS NULL THEN
+    RAISE EXCEPTION 'Busca segura de clientes do administrativo ausente';
   END IF;
 
   IF to_regprocedure('public.gsa_admin_dashboard_snapshot_pre_ticket_compat(uuid,text)') IS NULL
@@ -42,8 +47,10 @@ BEGIN
   END IF;
 
   IF has_function_privilege('anon', 'public.gsa_admin_get_pendency_counts_secure(uuid,text)', 'EXECUTE')
-     OR NOT has_function_privilege('authenticated', 'public.gsa_admin_get_pendency_counts_secure(uuid,text)', 'EXECUTE') THEN
-    RAISE EXCEPTION 'Privilégios da RPC administrativa de pendências estão incorretos';
+     OR NOT has_function_privilege('authenticated', 'public.gsa_admin_get_pendency_counts_secure(uuid,text)', 'EXECUTE')
+     OR has_function_privilege('anon', 'public.gsa_admin_search_clients(uuid,text,text,integer)', 'EXECUTE')
+     OR NOT has_function_privilege('authenticated', 'public.gsa_admin_search_clients(uuid,text,text,integer)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'Privilégios das RPCs administrativas restauradas estão incorretos';
   END IF;
 
   SELECT count(*)
