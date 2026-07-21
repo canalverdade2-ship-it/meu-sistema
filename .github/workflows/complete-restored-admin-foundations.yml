@@ -5,8 +5,9 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/complete-restored-admin-foundations.yml'
-      - 'supabase/migrations/20260721194800_restore_admin_search_clients.sql'
       - 'supabase/migrations/20260721194700_harden_restored_gsa_seguros.sql'
+      - 'supabase/migrations/20260721194800_restore_admin_search_clients.sql'
+      - 'supabase/migrations/20260721194900_restore_admin_travel_rpcs.sql'
       - 'scripts/verify-restored-admin-foundations.sql'
 
 permissions:
@@ -52,20 +53,20 @@ jobs:
         run: |
           set -euo pipefail
           supabase migration list --linked 2>&1 | tee migrations-before-completion.log
-          for version in 20260718121000 20260721194500 20260721194600; do
+          for version in 20260718121000 20260721194500 20260721194600 20260721194800; do
             awk -F'|' -v expected="$version" '{r=$2; gsub(/[^0-9]/,"",r); if(r==expected) found=1} END{exit found?0:1}' migrations-before-completion.log \
               || { echo "Prerequisite migration missing: $version"; exit 1; }
           done
 
-      - name: Restore secure administrative client search
+      - name: Restore missing administrative travel RPCs
         shell: bash
         run: |
           set -euo pipefail
-          if awk -F'|' '{r=$2; gsub(/[^0-9]/,"",r); if(r=="20260721194800") found=1} END{exit found?0:1}' migrations-before-completion.log; then
-            echo '20260721194800 already applied.' | tee admin-search-recovery.log
+          if awk -F'|' '{r=$2; gsub(/[^0-9]/,"",r); if(r=="20260721194900") found=1} END{exit found?0:1}' migrations-before-completion.log; then
+            echo '20260721194900 already applied.' | tee admin-travel-recovery.log
           else
-            supabase db query --linked --file supabase/migrations/20260721194800_restore_admin_search_clients.sql 2>&1 | tee admin-search-recovery.log
-            supabase migration repair --linked --status applied 20260721194800 2>&1 | tee -a admin-search-recovery.log
+            supabase db query --linked --file supabase/migrations/20260721194900_restore_admin_travel_rpcs.sql 2>&1 | tee admin-travel-recovery.log
+            supabase migration repair --linked --status applied 20260721194900 2>&1 | tee -a admin-travel-recovery.log
           fi
 
       - name: Verify complete historical administrative coverage
@@ -138,7 +139,7 @@ jobs:
           name: completed-admin-foundations-${{ github.run_id }}
           path: |
             migrations-before-completion.log
-            admin-search-recovery.log
+            admin-travel-recovery.log
             admin-foundation-coverage.sql
             admin-foundation-coverage.log
             migrations-before-admin-history-repair.log
