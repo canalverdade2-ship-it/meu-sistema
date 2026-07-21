@@ -1,0 +1,136 @@
+name: Provider Production Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/components/prestador/**'
+      - 'src/pages/Prestador/**'
+      - 'src/hooks/useProviderNotifications.tsx'
+      - 'src/lib/provider*.ts'
+      - 'src/lib/sessionService.ts'
+      - 'src/lib/supabase.ts'
+      - 'src/App.tsx'
+      - 'src/routing/**'
+      - 'scripts/check-provider-portal-security-contracts.ts'
+      - 'scripts/provider-production-verification.sql'
+      - 'supabase/functions/gsa-auth-session/**'
+      - 'supabase/migrations/2026072021*_provider*.sql'
+      - 'supabase/migrations/20260720232*_provider_portal*.sql'
+      - 'supabase/migrations/20260720233*_provider_portal*.sql'
+      - 'supabase/migrations/20260721170000_provider_portal_production_finalization.sql'
+      - '.github/workflows/provider-portal-validation.yml'
+      - '.github/workflows/provider-production-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/components/prestador/**'
+      - 'src/pages/Prestador/**'
+      - 'src/hooks/useProviderNotifications.tsx'
+      - 'src/lib/provider*.ts'
+      - 'src/lib/sessionService.ts'
+      - 'src/lib/supabase.ts'
+      - 'src/App.tsx'
+      - 'src/routing/**'
+      - 'scripts/check-provider-portal-security-contracts.ts'
+      - 'scripts/provider-production-verification.sql'
+      - 'supabase/functions/gsa-auth-session/**'
+      - 'supabase/migrations/2026072021*_provider*.sql'
+      - 'supabase/migrations/20260720232*_provider_portal*.sql'
+      - 'supabase/migrations/20260720233*_provider_portal*.sql'
+      - 'supabase/migrations/20260721170000_provider_portal_production_finalization.sql'
+      - '.github/workflows/provider-portal-validation.yml'
+      - '.github/workflows/provider-production-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: provider-production-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-production:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout audited revision
+        uses: actions/checkout@v4
+
+      - name: Validate production authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_ID"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link expected production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Inspect migration history before audit
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee provider-migrations-before.log
+
+      - name: Apply final provider migration idempotently
+        shell: bash
+        run: |
+          set -euo pipefail
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260721170000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' provider-migrations-before.log; then
+            echo 'Migration 20260721170000 já aplicada.' | tee provider-migration-apply.log
+          else
+            supabase db query --linked --file supabase/migrations/20260721170000_provider_portal_production_finalization.sql 2>&1 | tee provider-migration-apply.log
+            supabase migration repair --linked --status applied 20260721170000 2>&1 | tee -a provider-migration-apply.log
+          fi
+
+      - name: Verify provider production contracts
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file scripts/provider-production-verification.sql 2>&1 | tee provider-production-verification.log
+          grep -q 'PROVIDER_PRODUCTION_VERIFIED' provider-production-verification.log
+          supabase migration list --linked 2>&1 | tee provider-migrations-after.log
+          awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260721170000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' provider-migrations-after.log
+
+      - name: Upload production audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-production-audit-${{ github.run_id }}
+          path: |
+            provider-migrations-before.log
+            provider-migration-apply.log
+            provider-production-verification.log
+            provider-migrations-after.log
+          retention-days: 30
+          if-no-files-found: ignore
