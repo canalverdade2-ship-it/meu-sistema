@@ -114,50 +114,19 @@ export function ClassifiedsModule({ initialTab = 'anuncios', initialItemId }: Cl
   }, [activeTab, appliedSearch, page]);
   useEffect(() => { void load(); }, [load]);
 
-  const openDetail = async (id: string) => {
-    setDetailLoading(true); setSelectedFields([]); setNote('');
-    try {
-      const data = await callAdminRpc<any>('gsa_admin_get_classified_detail', { p_anuncio_id: id });
-      setDetail({ anuncio: data?.anuncio || {}, anunciante: data?.anunciante || {}, midias: Array.isArray(data?.midias) ? data.midias : [], ajustes: Array.isArray(data?.ajustes) ? data.ajustes : [] });
-    } catch (error: any) { toast.error(error?.message || 'Não foi possível carregar todos os dados do anúncio.'); }
-    finally { setDetailLoading(false); }
-  };
-  const closeDetail = () => { if (!processingId) { setDetail(null); setSelectedFields([]); setNote(''); } };
-  const toggle = (field: string) => setSelectedFields((current) => current.includes(field) ? current.filter((item) => item !== field) : [...current, field]);
-
   const moderate = async (entity: 'anuncio' | 'mensagem', item: any, action: 'aprovar' | 'rejeitar') => {
-    const reason = action === 'rejeitar' ? note.trim() : null;
-    if (action === 'rejeitar' && !reason) { toast.error('Informe o motivo da rejeição.'); return; }
     setProcessingId(item.id);
     try {
-      await callAdminRpc('gsa_admin_classified_action', { p_entity: entity, p_id: item.id, p_related_id: entity === 'mensagem' ? item.proposta_id : null, p_action: action, p_reason: reason });
+      await callAdminRpc('gsa_admin_classified_action', { p_entity: entity, p_id: item.id, p_related_id: entity === 'mensagem' ? item.proposta_id : null, p_action: action });
       toast.success(action === 'aprovar' ? 'Registro aprovado e auditado.' : 'Registro rejeitado e auditado.');
-      if (entity === 'anuncio') { setDetail(null); setSelectedFields([]); setNote(''); }
       await load();
     } catch (error: any) { toast.error(error?.message || 'Não foi possível concluir a moderação.'); }
-    finally { setProcessingId(null); }
-  };
-
-  const requestAdjustments = async () => {
-    if (!detail?.anuncio?.id) return;
-    if (!selectedFields.length) { toast.error('Marque pelo menos um campo que precisa ser corrigido.'); return; }
-    if (note.trim().length < 5) { toast.error('Explique ao anunciante o que deve ser corrigido.'); return; }
-    setProcessingId(detail.anuncio.id);
-    try {
-      await callAdminRpc('gsa_admin_request_classified_adjustments', { p_anuncio_id: detail.anuncio.id, p_campos: selectedFields, p_observacao: note.trim() });
-      toast.success('Ajustes enviados ao anunciante.');
-      setDetail(null); setSelectedFields([]); setNote(''); await load();
-    } catch (error: any) { toast.error(error?.message || 'Não foi possível solicitar os ajustes.'); }
     finally { setProcessingId(null); }
   };
 
   const totalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
   const tabs = Object.entries(configByTab) as Array<[Tab, (typeof configByTab)[Tab]]>;
   const highlighted = useMemo(() => initialItemId ? result.items.find((item) => item.id === initialItemId) : null, [initialItemId, result.items]);
-  const ad = detail?.anuncio || {};
-  const details: Record<string, unknown> = ad.detalhes && typeof ad.detalhes === 'object' && !Array.isArray(ad.detalhes) ? ad.detalhes : {};
-  const dynamicDetails = Object.entries(details).filter(([key]) => key !== 'cep');
-  const pendingAdjustment = detail?.ajustes?.find((item) => item.status === 'pendente');
 
   return (
     <div className="space-y-6 pb-10">
@@ -175,8 +144,8 @@ export function ClassifiedsModule({ initialTab = 'anuncios', initialItemId }: Cl
               </div>
               {activeTab !== 'financeiro' && <div className="flex shrink-0 gap-2">
                 {activeTab === 'anuncios' && <button type="button" onClick={() => setDetailsItem(item)} className="flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2.5 text-xs font-black text-indigo-700 hover:bg-indigo-100"><Search className="h-4 w-4" /> Detalhes</button>}
-                <button type="button" disabled={processingId === item.id} onClick={() => void act(activeTab === 'anuncios' ? 'anuncio' : 'mensagem', item, 'rejeitar')} className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2.5 text-xs font-black text-red-700 disabled:opacity-50 hover:bg-red-100"><XCircle className="h-4 w-4" /> Rejeitar</button>
-                <button type="button" disabled={processingId === item.id} onClick={() => void act(activeTab === 'anuncios' ? 'anuncio' : 'mensagem', item, 'aprovar')} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white disabled:opacity-50 hover:bg-emerald-700"><CheckCircle2 className="h-4 w-4" /> Aprovar</button>
+                <button type="button" disabled={processingId === item.id} onClick={() => void moderate(activeTab === 'anuncios' ? 'anuncio' : 'mensagem', item, 'rejeitar')} className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2.5 text-xs font-black text-red-700 disabled:opacity-50 hover:bg-red-100"><XCircle className="h-4 w-4" /> Rejeitar</button>
+                <button type="button" disabled={processingId === item.id} onClick={() => void moderate(activeTab === 'anuncios' ? 'anuncio' : 'mensagem', item, 'aprovar')} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white disabled:opacity-50 hover:bg-emerald-700"><CheckCircle2 className="h-4 w-4" /> Aprovar</button>
               </div>}
             </div>
           </article>

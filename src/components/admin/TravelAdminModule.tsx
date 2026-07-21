@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
-import { formatCurrency, formatDate, formatDateTime } from '../../lib/utils';
+import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { Modal } from '../ui/Modal';
 import { supabase } from '../../lib/supabase';
 
