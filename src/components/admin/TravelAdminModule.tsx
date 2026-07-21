@@ -1342,13 +1342,21 @@ function TransacoesTab() {
   const [denyReason, setDenyReason] = useState('');
   const [processingRefund, setProcessingRefund] = useState(false);
 
+  const getTransactionTotal = (item: any) => {
+    const total = Number(item?.valor_total || 0);
+    const paid = Number(item?.valor_pago || 0);
+    const refund = Number(item?.valor_elegivel_reembolso || 0);
+    const snapshotTotal = Number(item?.snapshot_completo?.valor_total || 0);
+    return Math.max(total, paid, refund, snapshotTotal);
+  };
+
   const openApproveModal = (item: any) => {
     setRefundTx(item);
     const initialVal = item.valor_elegivel_reembolso != null && item.valor_elegivel_reembolso > 0
       ? item.valor_elegivel_reembolso
       : item.valor_pago != null && item.valor_pago > 0
       ? item.valor_pago
-      : item.valor_total || 0;
+      : getTransactionTotal(item);
     setRefundAmount(formatCurrencyInputValue(initialVal));
     setRefundFees('0,00');
     setRefundNote('Reembolso aprovado e processado pelo financeiro GSA.');
@@ -1470,12 +1478,10 @@ function TransacoesTab() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-end gap-2.5">
-                  {item.valor_total != null && (
-                    <div className="text-right mr-2">
-                      <p className="text-[10px] font-bold uppercase text-neutral-400">Valor Total</p>
-                      <p className="text-xl font-black text-indigo-700">{formatCurrency(item.valor_total)}</p>
-                    </div>
-                  )}
+                  <div className="text-right mr-2">
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Valor Total</p>
+                    <p className="text-xl font-black text-indigo-700">{formatCurrency(getTransactionTotal(item))}</p>
+                  </div>
 
                   {/* Botão Detalhes */}
                   <button
@@ -1567,7 +1573,7 @@ function TransacoesTab() {
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-xl bg-indigo-50 p-3 border border-indigo-100">
                     <p className="text-[10px] font-bold uppercase text-indigo-500">Valor Total</p>
-                    <p className="text-lg font-black text-indigo-700 mt-0.5">{formatCurrency(detailsTx.valor_total)}</p>
+                    <p className="text-lg font-black text-indigo-700 mt-0.5">{formatCurrency(getTransactionTotal(detailsTx))}</p>
                   </div>
 
                   <div className="rounded-xl bg-emerald-50 p-3 border border-emerald-100">
