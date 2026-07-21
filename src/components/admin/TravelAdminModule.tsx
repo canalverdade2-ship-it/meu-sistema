@@ -1682,14 +1682,51 @@ function TransacoesTab() {
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-neutral-50/50">
+              {/* Banner de Destaque para Status Reembolsada / Negado */}
+              {detailsTx.status === 'reembolsada' && (
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 p-5 text-white shadow-xl border border-emerald-500/30">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md shadow-inner">
+                        <CheckCircle2 className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Status Financeiro</span>
+                        <h3 className="text-lg font-black text-white">Reembolso Aprovado e Concluído</h3>
+                        <p className="text-xs text-slate-300">Concluído em: {formatDateTime(detailsTx.updated_at || detailsTx.created_at)}</p>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-emerald-500/10 px-4 py-2.5 backdrop-blur-md border border-emerald-500/20 text-right">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Valor Líquido Estornado</p>
+                      <p className="text-xl font-black text-emerald-400">{formatCurrency(detailsTx.valor_elegivel_reembolso || detailsTx.valor_pago || getTransactionTotal(detailsTx))}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {detailsTx.status === 'reembolso_negado' && (
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-rose-950 via-slate-900 to-slate-950 p-5 text-white shadow-xl border border-rose-500/30">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 backdrop-blur-md">
+                      <XCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400">Solicitação Indeferida</span>
+                      <h3 className="text-lg font-black text-white">Reembolso Não Aprovado</h3>
+                      <p className="text-xs text-slate-300">Atualizado em: {formatDateTime(detailsTx.updated_at || detailsTx.created_at)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Cliente */}
               <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
                 <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-3 flex items-center gap-1.5">
-                  <User className="h-4 w-4 text-indigo-600" /> Cliente
+                  <User className="h-4 w-4 text-indigo-600" /> Dados do Cliente
                 </h4>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
-                    <p className="text-[10px] font-bold uppercase text-neutral-400">Nome</p>
+                    <p className="text-[10px] font-bold uppercase text-neutral-400">Nome do Titular</p>
                     <p className="text-sm font-bold text-neutral-900 mt-0.5">{detailsTx.cliente_nome || detailsTx.snapshot_completo?.nome || 'Cliente Cadastrado'}</p>
                   </div>
                   <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
@@ -1699,40 +1736,91 @@ function TransacoesTab() {
                 </div>
               </div>
 
-              {/* Informações Financeiras */}
+              {/* Detalhamento Financeiro do Reembolso */}
               <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs space-y-4">
                 <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                  <Receipt className="h-4 w-4 text-indigo-600" /> Resumo Financeiro
+                  <Receipt className="h-4 w-4 text-indigo-600" /> Resumo Financeiro & Reembolso
                 </h4>
 
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-xl bg-indigo-50 p-3 border border-indigo-100">
-                    <p className="text-[10px] font-bold uppercase text-indigo-500">Valor Total</p>
+                  <div className="rounded-xl bg-indigo-50 p-3.5 border border-indigo-100">
+                    <p className="text-[10px] font-bold uppercase text-indigo-500">Valor Total do Pedido</p>
                     <p className="text-lg font-black text-indigo-700 mt-0.5">{formatCurrency(getTransactionTotal(detailsTx))}</p>
                   </div>
 
-                  <div className="rounded-xl bg-emerald-50 p-3 border border-emerald-100">
-                    <p className="text-[10px] font-bold uppercase text-emerald-600">Valor Pago</p>
+                  <div className="rounded-xl bg-emerald-50 p-3.5 border border-emerald-100">
+                    <p className="text-[10px] font-bold uppercase text-emerald-600">Valor Efetivamente Pago</p>
                     <p className="text-lg font-black text-emerald-700 mt-0.5">{formatCurrency(detailsTx.valor_pago || detailsTx.valor_total)}</p>
                   </div>
 
-                  <div className="rounded-xl bg-purple-50 p-3 border border-purple-100">
-                    <p className="text-[10px] font-bold uppercase text-purple-600">Elegível Reembolso</p>
-                    <p className="text-lg font-black text-purple-700 mt-0.5">{formatCurrency(detailsTx.valor_elegivel_reembolso || detailsTx.valor_pago || detailsTx.valor_total)}</p>
+                  <div className="rounded-xl bg-purple-50 p-3.5 border border-purple-100">
+                    <p className="text-[10px] font-bold uppercase text-purple-600">Valor Líquido Aprovado</p>
+                    <p className="text-lg font-black text-purple-700 mt-0.5">
+                      {formatCurrency(detailsTx.valor_elegivel_reembolso || detailsTx.valor_pago || getTransactionTotal(detailsTx))}
+                    </p>
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-100">
-                  <p className="text-[10px] font-bold uppercase text-neutral-400">Forma de Pagamento</p>
-                  <p className="text-sm font-bold text-neutral-900 mt-0.5">{formatPaymentMethod(detailsTx)}</p>
+                <div className="rounded-xl bg-slate-50 p-3 border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase text-slate-400">Método Original de Pagamento</p>
+                    <p className="text-sm font-bold text-slate-900 mt-0.5">{formatPaymentMethod(detailsTx)}</p>
+                  </div>
+                  {detailsTx.status === 'reembolsada' && (
+                    <span className="rounded-lg bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800 border border-emerald-200">
+                      Reembolsado
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Resposta do Admin / Histórico de Reembolso */}
-              {(detailsTx.resposta_admin || detailsTx.detalhes?.resposta_admin) && (
-                <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-1">Parecer da Administração</h4>
-                  <p className="text-sm font-semibold text-neutral-800 whitespace-pre-wrap">{detailsTx.resposta_admin || detailsTx.detalhes?.resposta_admin}</p>
+              {/* Composição das Formas de Estorno e Prazos */}
+              <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                  <Coins className="h-4 w-4 text-indigo-600" /> Cronograma & Composição por Canal
+                </h4>
+
+                <div className="space-y-2">
+                  {getPaymentBreakdown(detailsTx).map((part, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-neutral-50 p-3.5 border border-neutral-200/80">
+                      <div className="flex items-center gap-3">
+                        {part.isSystem ? (
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">
+                            <Zap className="h-4.5 w-4.5" />
+                          </div>
+                        ) : (
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 border border-amber-200">
+                            <Clock className="h-4.5 w-4.5" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-xs font-bold text-neutral-900">{part.titulo}</p>
+                          <p className="text-[11px] font-semibold text-neutral-500">{part.valorDisplay}</p>
+                        </div>
+                      </div>
+
+                      <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${
+                        part.isSystem
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                          : 'bg-amber-100 text-amber-800 border border-amber-200'
+                      }`}>
+                        {part.isSystem ? <Zap className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                        {part.prazo}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Parecer da Administração */}
+              {getAdminNote(detailsTx) && (
+                <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/50 to-white p-5 shadow-xs space-y-1.5">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-indigo-600" /> Parecer e Observações da Administração
+                  </h4>
+                  <p className="text-sm font-semibold text-neutral-800 whitespace-pre-wrap leading-relaxed">
+                    {getAdminNote(detailsTx)}
+                  </p>
                 </div>
               )}
             </div>
@@ -1748,7 +1836,7 @@ function TransacoesTab() {
                         setDetailsTx(null);
                         openApproveModal(item);
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-200"
+                      className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all hover:scale-105"
                     >
                       <CheckCircle2 className="h-4 w-4" /> Aprovar Reembolso
                     </button>
@@ -1760,9 +1848,9 @@ function TransacoesTab() {
                         setDenyTx(item);
                         setDenyReason('');
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-red-50 px-4 py-2 text-xs font-black text-red-700 border border-red-200 hover:bg-red-100"
+                      className="flex items-center gap-1.5 rounded-xl bg-red-50 px-4 py-2.5 text-xs font-black text-red-700 border border-red-200 hover:bg-red-100 transition-all"
                     >
-                      <XCircle className="h-4 w-4" /> Negar
+                      <XCircle className="h-4 w-4" /> Negar Reembolso
                     </button>
                   </div>
                 )}
@@ -1771,7 +1859,7 @@ function TransacoesTab() {
               <button 
                 type="button" 
                 onClick={() => setDetailsTx(null)} 
-                className="rounded-xl border border-neutral-200 bg-white px-5 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50"
+                className="rounded-xl border border-neutral-200 bg-white px-6 py-2.5 text-xs font-black text-neutral-600 hover:bg-neutral-50 transition"
               >
                 Fechar
               </button>
