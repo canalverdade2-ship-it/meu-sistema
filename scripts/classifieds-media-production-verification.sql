@@ -39,7 +39,7 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Existe política de escrita direta para o bucket classificados-midias.';
   END IF;
-
-  RAISE NOTICE 'CLASSIFIEDS_MEDIA_STORAGE_VERIFIED';
 END;
 $verification$;
+
+SELECT 'CLASSIFIEDS_MEDIA_STORAGE_VERIFIED' AS verification_status;
