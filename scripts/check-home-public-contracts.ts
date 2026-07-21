@@ -6,9 +6,14 @@ const read = (path: string) => readFileSync(path, 'utf8');
 const migration = read('supabase/migrations/20260720215500_fix_public_home_contracts.sql');
 const referralMigration = read('supabase/migrations/20260720215530_minimize_public_referral_lookup.sql');
 const finalBudgetMigration = read('supabase/migrations/20260721124500_finalize_public_home_budget.sql');
+const firstAccessMigration = read('supabase/migrations/20260721125000_disable_unverified_first_access.sql');
+const recoveryRateMigration = read('supabase/migrations/20260721125500_prevent_recovery_subject_lockout.sql');
 const budgetModal = read('src/components/public/SystemsBudgetModal.tsx');
 const budgetGateway = read('supabase/functions/gsa-public-budget/index.ts');
 const clientModal = read('src/components/auth/ClientAccessModal.tsx');
+const finalHome = read('src/components/public/GSAEnterpriseHomeFinal.tsx');
+const privacy = read('src/components/public/PrivacyPolicyDialog.tsx');
+const metadata = read('src/hooks/usePublicPageMetadata.ts');
 const app = read('src/App.tsx');
 const home = read('src/pages/Home.tsx');
 const appLocation = read('src/routing/useAppLocation.ts');
@@ -29,10 +34,22 @@ assert.doesNotMatch(budgetModal, /\.rpc\('gsa_public_create_enterprise_budget_v2
 assert.match(budgetModal, /value="integracao"/, 'A opção integração deve continuar disponível');
 assert.match(budgetModal, /Protocolo do orçamento/, 'O código exibido deve ser identificado como protocolo persistido');
 assert.match(budgetModal, /página de origem, o domínio de referência e parâmetros de campanha/, 'A coleta de metadados deve ser informada ao usuário');
-
 assert.match(budgetGateway, /gsa_auth_rate_limit_check/, 'O gateway deve limitar envios por IP');
 assert.match(budgetGateway, /configuredOrigins\(\)/, 'O gateway deve aplicar a lista de origens');
 assert.match(budgetGateway, /gsa_public_create_enterprise_budget_v2/, 'O gateway deve encaminhar para a rotina protegida');
+
+assert.match(firstAccessMigration, /gsa_set_pin_and_login/, 'A rotina de primeiro acesso sem OTP deve ser localizada');
+assert.match(firstAccessMigration, /PUBLIC, anon, authenticated, service_role/, 'O gateway e os papéis públicos não podem executar primeiro acesso sem OTP');
+assert.match(recoveryRateMigration, /p_limit = 4 AND p_window_seconds = 1800 AND p_block_seconds = 7200/, 'O bucket vulnerável da recuperação deve ser neutralizado');
+assert.match(recoveryRateMigration, /DELETE FROM public\.gsa_auth_rate_limits WHERE bucket_key = p_bucket_key/, 'Bloqueios antigos por documento devem ser removidos');
+
+assert.match(home, /GSAEnterpriseHomeFinal/, 'A Home deve usar somente a implementação pública final');
+assert.doesNotMatch(home, /from '\.\.\/components\/public\/GSAEnterpriseHome'/, 'A implementação pública duplicada não pode entrar no bundle ativo');
+assert.match(home, /lazy\(\(\) => import\('\.\.\/components\/public\/SystemsPageFinal'/, 'Sites e Sistemas deve ser carregado sob demanda');
+assert.match(finalHome, /PrivacyPolicyDialog/, 'A Home final deve oferecer o aviso de privacidade');
+assert.match(privacy, /Não vendemos os dados enviados pelo site/, 'O aviso deve explicar compartilhamento e finalidade');
+assert.match(metadata, /setCanonical/, 'O SEO público deve ser controlado por um único hook');
+assert.match(metadata, /'@type': 'ProfessionalService'/, 'Sites e Sistemas deve publicar dados estruturados adequados');
 
 assert.match(app, /lazy\(\(\) => import\('\.\/pages\/SecureAdminPanel'\)/, 'Painel administrativo seguro deve ser carregado sob demanda');
 assert.match(app, /default: module\.MarketplaceGSAStore/, 'Marketplace deve mapear a exportação nomeada no carregamento lazy');
