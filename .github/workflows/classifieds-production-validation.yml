@@ -9,9 +9,11 @@ on:
       - 'scripts/check-classifieds-production-contracts.ts'
       - 'scripts/classifieds-media-production-verification.sql'
       - 'scripts/classifieds-commission-production-verification.sql'
+      - 'scripts/classifieds-create-listing-production-verification.sql'
       - 'supabase/functions/gsa-classified-media/**'
       - 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql'
       - 'supabase/migrations/20260721203000_classifieds_commission_config.sql'
+      - 'supabase/migrations/20260721213000_classifieds_create_listing_rpc.sql'
       - '.github/workflows/classifieds-production-validation.yml'
       - 'package.json'
   push:
@@ -22,9 +24,11 @@ on:
       - 'scripts/check-classifieds-production-contracts.ts'
       - 'scripts/classifieds-media-production-verification.sql'
       - 'scripts/classifieds-commission-production-verification.sql'
+      - 'scripts/classifieds-create-listing-production-verification.sql'
       - 'supabase/functions/gsa-classified-media/**'
       - 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql'
       - 'supabase/migrations/20260721203000_classifieds_commission_config.sql'
+      - 'supabase/migrations/20260721213000_classifieds_create_listing_rpc.sql'
       - '.github/workflows/classifieds-production-validation.yml'
       - 'package.json'
   workflow_dispatch:
@@ -74,9 +78,7 @@ jobs:
             if deno check supabase/functions/gsa-classified-media/index.ts 2>&1 | tee -a classifieds-deno-check.log; then
               exit 0
             fi
-            if [ "$attempt" -lt 3 ]; then
-              sleep 10
-            fi
+            if [ "$attempt" -lt 3 ]; then sleep 10; fi
           done
           exit 1
 
@@ -98,14 +100,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if awk -F'|' '
-            {
-              remote=$2
-              gsub(/[^0-9]/, "", remote)
-              if (remote == "20260721183000") found=1
-            }
-            END { exit found ? 0 : 1 }
-          ' classifieds-migrations-before.log; then
+          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721183000") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then
             echo 'Migration 20260721183000 já aplicada.' | tee classifieds-migration-apply.log
           else
             supabase db query --linked --file supabase/migrations/20260721183000_classifieds_media_storage_production.sql 2>&1 | tee classifieds-migration-apply.log
@@ -116,18 +111,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if awk -F'|' '
-            {
-              remote=$2
-              gsub(/[^0-9]/, "", remote)
-              if (remote == "20260721203000") found=1
-            }
-            END { exit found ? 0 : 1 }
-          ' classifieds-migrations-before.log; then
+          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721203000") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then
             echo 'Migration 20260721203000 já aplicada.' | tee classifieds-commission-migration-apply.log
           else
             supabase db query --linked --file supabase/migrations/20260721203000_classifieds_commission_config.sql 2>&1 | tee classifieds-commission-migration-apply.log
             supabase migration repair --linked --status applied 20260721203000 2>&1 | tee -a classifieds-commission-migration-apply.log
+          fi
+
+      - name: Apply Classifieds create listing RPC idempotently
+        shell: bash
+        run: |
+          set -euo pipefail
+          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721213000") found=1 } END { exit found ? 0 : 1 }' classifieds-migrations-before.log; then
+            echo 'Migration 20260721213000 já aplicada.' | tee classifieds-create-listing-migration-apply.log
+          else
+            supabase db query --linked --file supabase/migrations/20260721213000_classifieds_create_listing_rpc.sql 2>&1 | tee classifieds-create-listing-migration-apply.log
+            supabase migration repair --linked --status applied 20260721213000 2>&1 | tee -a classifieds-create-listing-migration-apply.log
           fi
 
       - name: Verify Classifieds production storage
@@ -143,16 +142,15 @@ jobs:
           set -o pipefail
           supabase db query --linked --file scripts/classifieds-commission-production-verification.sql 2>&1 | tee classifieds-commission-verification.log
           grep -q 'CLASSIFIEDS_COMMISSION_CONFIG_VERIFIED' classifieds-commission-verification.log
+
+      - name: Verify Classifieds create listing RPC
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file scripts/classifieds-create-listing-production-verification.sql 2>&1 | tee classifieds-create-listing-verification.log
+          grep -q 'CLASSIFIEDS_CREATE_LISTING_RPC_VERIFIED' classifieds-create-listing-verification.log
           supabase migration list --linked 2>&1 | tee classifieds-migrations-after.log
-          awk -F'|' '
-            {
-              remote=$2
-              gsub(/[^0-9]/, "", remote)
-              if (remote == "20260721183000") media=1
-              if (remote == "20260721203000") commission=1
-            }
-            END { exit media && commission ? 0 : 1 }
-          ' classifieds-migrations-after.log
+          awk -F'|' '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == "20260721183000") media=1; if (remote == "20260721203000") commission=1; if (remote == "20260721213000") listing=1 } END { exit media && commission && listing ? 0 : 1 }' classifieds-migrations-after.log
 
       - name: Deploy authenticated Classifieds media gateway
         shell: bash
@@ -177,8 +175,10 @@ jobs:
             classifieds-migrations-before.log
             classifieds-migration-apply.log
             classifieds-commission-migration-apply.log
+            classifieds-create-listing-migration-apply.log
             classifieds-production-verification.log
             classifieds-commission-verification.log
+            classifieds-create-listing-verification.log
             classifieds-migrations-after.log
             classifieds-function-deploy.log
             classifieds-functions-after.log
