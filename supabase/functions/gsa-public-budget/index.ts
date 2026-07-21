@@ -25,6 +25,26 @@ type BudgetPayload = {
   metadata: Record<string, string>;
 };
 
+const BRAND_PROJECT_TYPES = new Set([
+  'nome_marca',
+  'logo',
+  'identidade_visual',
+  'redes_sociais',
+  'social_media',
+  'marketing_digital',
+  'jornada_completa',
+]);
+
+const VALID_PROJECT_TYPES = new Set([
+  'site',
+  'loja',
+  'sistema',
+  'aplicativo',
+  'automacao',
+  'integracao',
+  ...BRAND_PROJECT_TYPES,
+]);
+
 export function configuredOrigins() {
   const rawOrigins = [Deno.env.get('ALLOWED_ORIGINS'), Deno.env.get('ALLOWED_ORIGIN')]
     .filter(Boolean)
@@ -86,10 +106,9 @@ export function normalizePayload(value: unknown): BudgetPayload | null {
   const solicitacao = text(payload.solicitacao, 2_000);
   const website = text(payload.website, 200);
   const startedAt = text(payload.started_at, 64);
-  const validTypes = new Set(['site', 'loja', 'sistema', 'aplicativo', 'automacao', 'integracao']);
 
   if (nome.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
-  if (![10, 11].includes(telefone.length) || !validTypes.has(tipo)) return null;
+  if (![10, 11].includes(telefone.length) || !VALID_PROJECT_TYPES.has(tipo)) return null;
   if (solicitacao.length < 20 || !startedAt) return null;
 
   return {
@@ -178,7 +197,10 @@ export async function handleRequest(request: Request) {
       );
     }
 
-    const { data, error } = await admin.rpc('gsa_public_create_enterprise_budget_v2', {
+    const rpcName = BRAND_PROJECT_TYPES.has(payload.tipo)
+      ? 'gsa_public_create_brand_budget_v1'
+      : 'gsa_public_create_enterprise_budget_v2';
+    const { data, error } = await admin.rpc(rpcName, {
       p_payload: payload,
     });
     if (error) {
