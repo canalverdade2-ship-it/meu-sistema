@@ -16,7 +16,7 @@
     "test:classificados": "tsx scripts/check-classifieds-production-contracts.ts",
     "test:client-security": "tsx scripts/check-client-portal-security-contracts.ts && tsx scripts/check-client-session-restore-contract.ts && npm run test:classificados",
     "test:provider": "tsx scripts/check-provider-portal-security-contracts.ts",
-    "test:home": "tsx scripts/check-home-public-contracts.ts",
+    "test:home": "tsx scripts/check-home-public-contracts.ts && npm run test:partners",
     "test:partners": "tsx scripts/check-partners-contracts.ts",
     "test:e2e": "playwright test",
     "test:e2e:full": "playwright test",
