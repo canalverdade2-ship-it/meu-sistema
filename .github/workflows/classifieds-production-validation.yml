@@ -1,0 +1,116 @@
+name: Classifieds Production Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/components/client/marketplace/classifieds/**'
+      - 'src/lib/classifiedStorage.ts'
+      - 'scripts/check-classifieds-production-contracts.ts'
+      - 'scripts/classifieds-media-production-verification.sql'
+      - 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql'
+      - '.github/workflows/classifieds-production-validation.yml'
+      - 'package.json'
+  push:
+    branches: [main]
+    paths:
+      - 'src/components/client/marketplace/classifieds/**'
+      - 'src/lib/classifiedStorage.ts'
+      - 'scripts/check-classifieds-production-contracts.ts'
+      - 'scripts/classifieds-media-production-verification.sql'
+      - 'supabase/migrations/20260721183000_classifieds_media_storage_production.sql'
+      - '.github/workflows/classifieds-production-validation.yml'
+      - 'package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: classifieds-production-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-production:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout audited revision
+        uses: actions/checkout@v4
+
+      - name: Validate production authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_ID"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link expected production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Inspect migration history before deployment
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee classifieds-migrations-before.log
+
+      - name: Apply Classifieds media migration idempotently
+        shell: bash
+        run: |
+          set -euo pipefail
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260721183000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' classifieds-migrations-before.log; then
+            echo 'Migration 20260721183000 já aplicada.' | tee classifieds-migration-apply.log
+          else
+            supabase db query --linked --file supabase/migrations/20260721183000_classifieds_media_storage_production.sql 2>&1 | tee classifieds-migration-apply.log
+            supabase migration repair --linked --status applied 20260721183000 2>&1 | tee -a classifieds-migration-apply.log
+          fi
+
+      - name: Verify Classifieds production storage
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file scripts/classifieds-media-production-verification.sql 2>&1 | tee classifieds-production-verification.log
+          grep -q 'CLASSIFIEDS_MEDIA_STORAGE_VERIFIED' classifieds-production-verification.log
+          supabase migration list --linked 2>&1 | tee classifieds-migrations-after.log
+          awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260721183000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' classifieds-migrations-after.log
+
+      - name: Upload production audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: classifieds-production-audit-${{ github.run_id }}
+          path: |
+            classifieds-migrations-before.log
+            classifieds-migration-apply.log
+            classifieds-production-verification.log
+            classifieds-migrations-after.log
+          retention-days: 30
+          if-no-files-found: ignore
