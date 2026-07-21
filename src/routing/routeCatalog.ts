@@ -4,6 +4,8 @@ export const routes = {
     home: () => '/',
     services: () => '/servicos-e-assinaturas',
     systems: () => '/criacao-de-site-e-sistemas',
+    partners: () => '/parceiros',
+    partner: (slug: string) => `/parceiros/${slug}`,
     serviceDetail: (id: string) => `/servicos-e-assinaturas/${id}`,
   },
   // Login
@@ -168,6 +170,7 @@ export const routes = {
   // Administrativo
   admin: {
     dashboard: () => '/admin/dashboard',
+    partners: () => '/admin/parceiros',
     clients: () => '/admin/cadastros/clientes',
     client: (id: string) => `/admin/cadastros/clientes/${id}`,
     providers: () => '/admin/cadastros/prestadores',

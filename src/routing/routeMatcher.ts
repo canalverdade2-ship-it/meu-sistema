@@ -52,6 +52,12 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     module = 'systems';
     return { pathname, search, hash, area, module, query };
   }
+  if (normalizedPath === '/parceiros' || normalizedPath.startsWith('/parceiros/')) {
+    area = 'public';
+    module = 'partners';
+    if (segments[1]) itemId = segments[1];
+    return { pathname, search, hash, area, module, itemId, query };
+  }
 
   // 3. MARKETPLACE
   if (segments[0] === 'marketplace') {

@@ -3,6 +3,7 @@ import { useReducedMotion } from 'framer-motion';
 import { LogIn } from 'lucide-react';
 import { LogoGSA } from '../ui/LogoGSA';
 import { AccessibleDialog } from '../ui/AccessibleDialog';
+import { PartnersPage } from './PartnersPage';
 import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
 import { PublicFooter } from './final/PublicFooter';
 import { PublicHomeLanding } from './final/PublicHomeLanding';
@@ -28,7 +29,9 @@ interface GSAEnterpriseHomeFinalProps {
   publicProducts: IconItem[];
   publicServices: IconItem[];
   initialServiceSlug?: string;
+  initialPartnerSlug?: string;
   onServiceDetailChange?: (slug: string | null) => void;
+  onPartnerDetailChange?: (slug: string | null) => void;
   onGuestStore?: () => void;
   onClientLogin: () => void;
   onAdminLogin: () => void;
@@ -108,6 +111,7 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
 
       {props.publicPage === 'home' && <PublicHomeLanding reduceMotion={Boolean(reduceMotion)} setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} />}
       {props.publicPage === 'services' && <PublicServicesPage audience={props.publicAudience} setAudience={props.setPublicAudience} packages={filteredPackages} publicProducts={props.publicProducts} publicServices={props.publicServices} onBack={() => props.setPublicPage('home')} onSelect={(item) => { setSelectedPackage(item); props.onServiceDetailChange?.(getServicePackageSlug(item)); }} />}
+      {props.publicPage === 'partners' && <PartnersPage selectedSlug={props.initialPartnerSlug} onSelectPartner={(slug) => props.onPartnerDetailChange?.(slug)} onBack={() => props.setPublicPage('home')} />}
 
       <PublicFooter setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} onAdminLogin={props.onAdminLogin} onPrivacy={() => setPrivacyOpen(true)} />
       <ServiceDetailsDialog selectedPackage={selectedPackage} onClose={() => { setSelectedPackage(null); props.onServiceDetailChange?.(null); }} onInterest={(item) => { setSelectedPackage(null); props.onServiceDetailChange?.(null); setRequestPackage(item); }} />

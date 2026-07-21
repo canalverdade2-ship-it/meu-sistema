@@ -165,6 +165,14 @@ export default function App() {
     return null;
   }
 
+  const publicPage = route.module === 'services'
+    ? 'services'
+    : route.module === 'systems'
+      ? 'systems'
+      : route.module === 'partners'
+        ? 'partners'
+        : 'home';
+
   return (
     <FileViewerProvider>
       <QueryClientProvider client={queryClient}>
@@ -176,10 +184,20 @@ export default function App() {
                 onLoginAdmin={handleLoginAdmin}
                 onLoginPrestador={handleLoginPrestador}
                 onGuestStore={() => navigate(routes.marketplace.root())}
-                initialPublicPage={route.module === 'services' ? 'services' : route.module === 'systems' ? 'systems' : 'home'}
+                initialPublicPage={publicPage}
                 initialServiceSlug={route.module === 'services' ? route.itemId : undefined}
+                initialPartnerSlug={route.module === 'partners' ? route.itemId : undefined}
                 onServiceDetailChange={(slug) => navigate(slug ? routes.public.serviceDetail(slug) : routes.public.services())}
-                onPublicPageChange={(page) => navigate(page === 'home' ? routes.public.home() : page === 'services' ? routes.public.services() : routes.public.systems())}
+                onPartnerDetailChange={(slug) => navigate(slug ? routes.public.partner(slug) : routes.public.partners())}
+                onPublicPageChange={(page) => navigate(
+                  page === 'home'
+                    ? routes.public.home()
+                    : page === 'services'
+                      ? routes.public.services()
+                      : page === 'partners'
+                        ? routes.public.partners()
+                        : routes.public.systems(),
+                )}
                 onLoginPage={() => navigate(routes.login.root())}
               />
             )}
@@ -191,7 +209,15 @@ export default function App() {
                 onLoginPrestador={handleLoginPrestador}
                 onGuestStore={() => navigate(routes.marketplace.root())}
                 initialPublicPage="home"
-                onPublicPageChange={(page) => navigate(page === 'home' ? routes.public.home() : page === 'services' ? routes.public.services() : routes.public.systems())}
+                onPublicPageChange={(page) => navigate(
+                  page === 'home'
+                    ? routes.public.home()
+                    : page === 'services'
+                      ? routes.public.services()
+                      : page === 'partners'
+                        ? routes.public.partners()
+                        : routes.public.systems(),
+                )}
                 loginOnly
                 onBackHome={() => navigate(routes.public.home())}
               />
