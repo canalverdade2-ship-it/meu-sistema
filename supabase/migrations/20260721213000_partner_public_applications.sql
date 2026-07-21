@@ -45,6 +45,47 @@ CREATE INDEX IF NOT EXISTS parceiros_public_applications_idx
   ON public.parceiros (status, submitted_at DESC)
   WHERE application_source = 'public_form';
 
+-- A política RLS continua limitando a consulta aos registros ativos. Além disso,
+-- a permissão por coluna impede que CPF/CNPJ, protocolo, responsável, consentimento
+-- e observações internas sejam consultados diretamente pela API pública.
+REVOKE SELECT ON TABLE public.parceiros FROM anon, authenticated;
+GRANT SELECT (
+  id,
+  slug,
+  name,
+  category,
+  short_description,
+  description,
+  logo_url,
+  cover_url,
+  phone,
+  whatsapp,
+  email,
+  website,
+  instagram,
+  facebook,
+  linkedin,
+  street,
+  number,
+  complement,
+  neighborhood,
+  city,
+  state,
+  zip_code,
+  maps_url,
+  business_hours,
+  service_mode,
+  service_regions,
+  services,
+  products,
+  benefits,
+  featured,
+  display_order,
+  status,
+  created_at,
+  updated_at
+) ON public.parceiros TO anon, authenticated;
+
 INSERT INTO storage.buckets (
   id,
   name,
