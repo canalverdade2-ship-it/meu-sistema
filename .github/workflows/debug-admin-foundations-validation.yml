@@ -12,7 +12,21 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGPASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,44 +37,20 @@ jobs:
           node-version: 22
           cache: npm
 
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
       - name: Install dependencies
         run: npm ci
 
-      - name: TypeScript only
-        run: npx tsc --noEmit
-
-      - name: Restored foundations static contract
-        run: npx tsx scripts/check-restored-admin-foundations.ts
-
-      - name: Existing administrative contracts
-        run: npx tsx scripts/check-admin-panel-contracts.ts
-
-      - name: Administrative PostgreSQL runtime
-        run: node scripts/run-admin-migrations-runtime.cjs
-
-      - name: Products and subscriptions
-        run: npm run test:products-subscriptions
-
-      - name: Client security
-        run: npm run test:client-security
-
-      - name: Provider security
-        run: npm run test:provider
-
-      - name: Home contracts
-        run: npm run test:home
-
-      - name: Travel contracts
-        run: npm run test:travel
-
-      - name: Authentication Edge Function
+      - name: Administrative PostgreSQL runtime with complete log
+        id: runtime
+        shell: bash
         run: |
-          deno check supabase/functions/gsa-auth-session/index.ts supabase/functions/gsa-auth-session/index_test.ts
-          deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
+          set -o pipefail
+          node scripts/run-admin-migrations-runtime.cjs 2>&1 | tee admin-runtime.log
 
-      - name: Production build
-        run: npm run build
+      - name: Upload administrative runtime log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-runtime-${{ github.run_id }}
+          path: admin-runtime.log
+          retention-days: 7
