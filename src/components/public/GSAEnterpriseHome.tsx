@@ -191,7 +191,7 @@ export function GSAEnterpriseHome({
         <main className="min-h-screen bg-[#f4f1ea] pt-28">
           <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
             <button type="button" onClick={() => setPublicPage('home')} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-bold"><ArrowLeft className="h-4 w-4" />Voltar</button>
-            <div className="mt-10 grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
+            <div className="mt-8 grid gap-5 sm:mt-10 sm:gap-8 lg:grid-cols-[0.7fr_1.3fr]">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-[#8a6e2f]">Catálogo GSA</p>
                 <h1 className="mt-3 text-4xl font-black">Serviços e assinaturas para cada fase</h1>
@@ -200,7 +200,7 @@ export function GSAEnterpriseHome({
                   <button type="button" onClick={() => setPublicAudience('PF')} aria-pressed={publicAudience === 'PF'} className={`flex-1 rounded-lg px-4 py-3 text-sm font-bold ${publicAudience === 'PF' ? 'bg-white text-neutral-950' : 'text-white/70'}`}><Users className="mr-2 inline h-4 w-4" />Pessoa física</button>
                   <button type="button" onClick={() => setPublicAudience('PJ')} aria-pressed={publicAudience === 'PJ'} className={`flex-1 rounded-lg px-4 py-3 text-sm font-bold ${publicAudience === 'PJ' ? 'bg-white text-neutral-950' : 'text-white/70'}`}><BriefcaseBusiness className="mr-2 inline h-4 w-4" />Empresas</button>
                 </div>
-                <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                <div className="hidden md:mt-8 md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-1">
                   {[...publicServices, ...publicProducts].slice(0, 4).map(({ icon: Icon, title, text }) => <div key={title} className="rounded-xl border border-neutral-200 bg-white p-4"><Icon className="h-5 w-5 text-[#8a6e2f]" /><strong className="mt-3 block">{title}</strong><p className="mt-1 text-xs leading-5 text-neutral-600">{text}</p></div>)}
                 </div>
               </div>
