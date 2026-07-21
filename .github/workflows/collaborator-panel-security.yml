@@ -1,0 +1,211 @@
+name: Collaborator Panel Security
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/collaborator-panel-security.yml'
+      - 'package.json'
+      - 'scripts/check-collaborator-boundary-contracts.ts'
+      - 'scripts/check-collaborator-boundaries-runtime.cjs'
+      - 'src/routing/adminAccess.ts'
+      - 'src/pages/SecureAdminPanel.tsx'
+      - 'src/components/admin/CollaboratorDashboard.tsx'
+      - 'src/components/admin/DemandasColaboradorModule.tsx'
+      - 'supabase/migrations/20260721130000_harden_collaborator_authorization.sql'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'scripts/check-collaborator-boundary-contracts.ts'
+      - 'scripts/check-collaborator-boundaries-runtime.cjs'
+      - 'src/routing/adminAccess.ts'
+      - 'src/pages/SecureAdminPanel.tsx'
+      - 'src/components/admin/CollaboratorDashboard.tsx'
+      - 'src/components/admin/DemandasColaboradorModule.tsx'
+      - 'supabase/migrations/20260721130000_harden_collaborator_authorization.sql'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collaborator-panel-security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: TypeScript
+        run: npm run lint
+      - name: Administrative and collaborator tests
+        run: npm run test:admin
+      - name: Production build
+        run: npm run build
+
+  deploy-production:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate deployment secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+      - name: Apply collaborator hardening migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee collaborator-migrations-before.log
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260721130000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' collaborator-migrations-before.log; then
+            echo 'Migration do Painel do Colaborador já registrada.' | tee collaborator-migration-apply.log
+          else
+            supabase db query --linked --file supabase/migrations/20260721130000_harden_collaborator_authorization.sql 2>&1 | tee collaborator-migration-apply.log
+            supabase migration repair --linked --status applied 20260721130000 2>&1 | tee -a collaborator-migration-apply.log
+          fi
+      - name: Verify production authorization boundaries
+        shell: bash
+        run: |
+          cat > collaborator-production-verification.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_definition text;
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version = '20260721130000'
+            ) THEN
+              RAISE EXCEPTION 'Migration 20260721130000 não registrada';
+            END IF;
+
+            IF to_regprocedure('public.gsa_collaborator_dashboard_snapshot(uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_collaborator_list_demands(uuid,text,integer)') IS NULL
+               OR to_regprocedure('public.gsa_collaborator_demand_history(uuid,text,uuid,integer)') IS NULL
+               OR to_regprocedure('public.gsa_collaborator_can_access_demand(uuid)') IS NULL THEN
+              RAISE EXCEPTION 'RPCs restritas do colaborador ausentes';
+            END IF;
+
+            SELECT pg_get_functiondef(to_regprocedure('public.gsa_admin_has_module(text)'))
+              INTO v_definition;
+            IF position('Gestão de acessos' in v_definition) = 0
+               OR position('WHEN ''demandas'' THEN ARRAY[''demandas'']' in v_definition) = 0
+               OR position('WHEN ''operacoes'' THEN ARRAY[''operacoes'', ''vendas'']' in v_definition) = 0 THEN
+              RAISE EXCEPTION 'Permissões exatas não estão ativas';
+            END IF;
+
+            IF EXISTS (
+              SELECT 1 FROM public.colaborador_modulos
+              WHERE lower(trim(modulo_id)) = 'acessos'
+            ) THEN
+              RAISE EXCEPTION 'Ainda existem colaboradores com Gestão de Acessos';
+            END IF;
+
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_trigger t
+              JOIN pg_proc p ON p.oid = t.tgfoid
+              JOIN pg_namespace n ON n.oid = p.pronamespace
+              WHERE n.nspname = 'public'
+                AND p.proname = 'gsa_block_collaborator_access_module'
+                AND NOT t.tgisinternal
+            ) THEN
+              RAISE EXCEPTION 'Bloqueio de atribuição da Gestão de Acessos ausente';
+            END IF;
+
+            IF to_regclass('public.prestador_demandas_historico') IS NOT NULL
+               AND NOT EXISTS (
+                 SELECT 1 FROM pg_policies
+                 WHERE schemaname = 'public'
+                   AND tablename = 'prestador_demandas_historico'
+                   AND policyname = 'gsa_collaborator_demand_history_scope'
+               ) THEN
+              RAISE EXCEPTION 'RLS do histórico das demandas ausente';
+            END IF;
+          END $$;
+          SELECT 'COLLABORATOR_PANEL_SECURITY_VERIFIED' AS result;
+          SQL
+          set -o pipefail
+          supabase db query --linked --file collaborator-production-verification.sql 2>&1 | tee collaborator-production-verification.log
+          grep -q 'COLLABORATOR_PANEL_SECURITY_VERIFIED' collaborator-production-verification.log
+      - name: Record production closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          cat > deployment-status/collaborator-panel-security.json <<JSON
+          {
+            "status": "success",
+            "workflow_run_id": "${GITHUB_RUN_ID}",
+            "validated_sha": "${GITHUB_SHA}",
+            "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "scope": "collaborator-panel-authorization-session-rls-rpcs-audit",
+            "migration": "20260721130000",
+            "database": "success",
+            "frontend": "success",
+            "tests": "success"
+          }
+          JSON
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add deployment-status/collaborator-panel-security.json
+          git commit -m 'Registrar segurança do Painel do Colaborador: success' || true
+          git push origin HEAD:main
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: collaborator-panel-security-evidence
+          path: |
+            collaborator-migrations-before.log
+            collaborator-migration-apply.log
+            collaborator-production-verification.log
+          if-no-files-found: ignore
+          retention-days: 30
