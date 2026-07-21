@@ -143,15 +143,18 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
   const canAccess = (module: string, tab?: string) => hasAdminModuleAccess(module, adminType, internalModulos, tab);
   const go = (module: string, tab?: string, itemId?: string) => {
     const normalized = normalizeAdminModule(module);
-    if (!canAccess(normalized, tab)) {
+    const providerOnly = normalized === 'cadastro' && !canAccess('cadastro') && canAccess('prestadores');
+    const targetModule = providerOnly ? 'prestadores' : module;
+    const targetNormalized = normalizeAdminModule(targetModule);
+    if (!canAccess(targetNormalized, tab)) {
       toast.error('Você não possui permissão para acessar este módulo.');
       return;
     }
-    navigate(adminPathFor(module, tab, itemId));
+    navigate(adminPathFor(targetModule, tab, itemId));
     setIsMobileMenuOpen(false);
   };
 
-  const visibleGroups = useMemo(() => MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => canAccess(item.id)) })).filter((group) => group.items.length > 0), [adminType, internalModulos]);
+  const visibleGroups = useMemo(() => MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => item.id === 'cadastro' ? canAccess('cadastro') || canAccess('prestadores') : canAccess(item.id)) })).filter((group) => group.items.length > 0), [adminType, internalModulos]);
   const allItems = MENU_GROUPS.flatMap((group) => group.items);
   const normalizedActive = normalizeAdminModule(activeModule);
   const activeLabel = allItems.find((item) => item.id === normalizedActive)?.label || 'Dashboard';

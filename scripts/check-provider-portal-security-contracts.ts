@@ -166,6 +166,15 @@ async function main() {
     "if (area === 'provider') return Boolean(session.prestadorId);",
   ]);
 
+  await includes('src/components/admin/AcessosModule.tsx', [
+    "['prestadores', 'Prestadores (sem acesso a clientes)']",
+  ]);
+
+  await includes('src/pages/AdminPanel.tsx', [
+    "const providerOnly = normalized === 'cadastro' && !canAccess('cadastro') && canAccess('prestadores');",
+    "item.id === 'cadastro' ? canAccess('cadastro') || canAccess('prestadores') : canAccess(item.id)",
+  ]);
+
   await includes('.github/workflows/provider-portal-validation.yml', [
     "branches: [main]",
     "- 'src/lib/sessionService.ts'",
