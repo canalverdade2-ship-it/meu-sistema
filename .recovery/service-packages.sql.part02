@@ -1,4 +1,4 @@
-ssion_token);
+
   v_count := public.gsa_seed_default_service_catalog(p_packages);
   RETURN jsonb_build_object('success',true,'importedPackages',v_count);
 END;
