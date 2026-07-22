@@ -1,449 +1,441 @@
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Briefcase, Search, Filter, RefreshCw, Eye, Download,
-  CheckCircle2, Clock, AlertCircle, Building2, User, Phone,
-  Mail, FileText, ExternalLink, ShieldCheck, DollarSign, X
+  AlertCircle,
+  Briefcase,
+  CalendarClock,
+  CheckCircle2,
+  Clock,
+  Download,
+  ExternalLink,
+  FileText,
+  History,
+  Mail,
+  MapPin,
+  Phone,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  User,
+  UserCheck,
+  X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { callAdminRpc } from '../../lib/adminRpc';
 import { supabase } from '../../lib/supabase';
-import { formatCurrency, formatDate } from '../../lib/utils';
-import { maskCPF, maskPhone } from '../../lib/utils';
+import { formatCurrency, formatDate, maskCPF, maskPhone } from '../../lib/utils';
+
+const CAREER_BUCKET = 'gsa-careers-resumes';
+
+type CareerStatus = 'received' | 'under_review' | 'interview_scheduled' | 'approved' | 'talent_pool' | 'rejected';
+
+interface CareerHistoryItem {
+  id: number;
+  from_status?: CareerStatus | null;
+  to_status: CareerStatus;
+  actor_type: string;
+  actor_id?: string | null;
+  actor_name?: string | null;
+  note?: string | null;
+  interview_at?: string | null;
+  interview_location?: string | null;
+  created_at: string;
+}
+
+interface CareerApplication {
+  id: string;
+  protocol: string;
+  candidate_name: string;
+  document: string;
+  email: string;
+  phone: string;
+  desired_area: string;
+  employment_type: 'clt' | 'estagio';
+  salary_expectation?: number | null;
+  linkedin_url?: string | null;
+  notes?: string | null;
+  status: CareerStatus;
+  internal_notes?: string | null;
+  public_message?: string | null;
+  interview_at?: string | null;
+  interview_location?: string | null;
+  created_at: string;
+  updated_at: string;
+  status_changed_at?: string | null;
+  closed_at?: string | null;
+  has_resume: boolean;
+  resume_in_storage: boolean;
+  history?: CareerHistoryItem[];
+}
+
+const STATUS_META: Record<CareerStatus, { label: string; className: string; icon: typeof Clock }> = {
+  received: { label: 'Recebida', className: 'bg-neutral-100 text-neutral-800', icon: Clock },
+  under_review: { label: 'Em análise', className: 'bg-blue-100 text-blue-800', icon: Search },
+  interview_scheduled: { label: 'Entrevista', className: 'bg-purple-100 text-purple-800', icon: CalendarClock },
+  approved: { label: 'Aprovado', className: 'bg-emerald-100 text-emerald-800', icon: CheckCircle2 },
+  talent_pool: { label: 'Banco de talentos', className: 'bg-teal-100 text-teal-800', icon: UserCheck },
+  rejected: { label: 'Encerrado', className: 'bg-red-100 text-red-800', icon: AlertCircle },
+};
+
+const STATUS_ACTIONS: Array<{ key: CareerStatus; label: string }> = [
+  { key: 'under_review', label: 'Colocar em análise' },
+  { key: 'interview_scheduled', label: 'Agendar entrevista' },
+  { key: 'approved', label: 'Aprovar' },
+  { key: 'talent_pool', label: 'Banco de talentos' },
+  { key: 'rejected', label: 'Encerrar processo' },
+];
+
+function toDateTimeLocal(value?: string | null): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
 
 export function CareersAdminModule() {
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<CareerApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [selectedApp, setSelectedApp] = useState<any | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | CareerStatus>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'clt' | 'estagio'>('all');
+  const [selectedApp, setSelectedApp] = useState<CareerApplication | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [openingResume, setOpeningResume] = useState(false);
   const [internalNotes, setInternalNotes] = useState('');
+  const [interviewAt, setInterviewAt] = useState('');
+  const [interviewLocation, setInterviewLocation] = useState('');
 
-  const fetchApplications = async () => {
-    setLoading(true);
-    let list: any[] = [];
-
-    // 1. Tenta buscar no banco de dados Supabase
+  const fetchApplications = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('gsa_careers_applications')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!error && Array.isArray(data)) {
-        list = data;
-      }
-    } catch (err) {
-      console.warn('Banco remoto gsa_careers_applications não disponível, lendo candidaturas locais:', err);
+      const data = await callAdminRpc<CareerApplication[]>('gsa_admin_list_career_applications');
+      setApplications(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Falha ao carregar candidaturas:', error);
+      if (!silent) toast.error('Não foi possível carregar as candidaturas do banco.');
+    } finally {
+      if (!silent) setLoading(false);
     }
-
-    // 2. Sempre une com as candidaturas salvas no localStorage do navegador
-    try {
-      const local = JSON.parse(localStorage.getItem('gsa_career_apps') || '[]');
-      const existingProtocols = new Set(list.map((item) => item.protocol));
-      const newLocal = local.filter((item: any) => item && item.protocol && !existingProtocols.has(item.protocol));
-      list = [...list, ...newLocal];
-    } catch (e) {
-      console.error('Erro ao ler candidaturas do localStorage:', e);
-    }
-
-    setApplications(list);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchApplications();
   }, []);
 
-  const handleUpdateStatus = async (newStatus: string) => {
+  useEffect(() => {
+    void fetchApplications();
+    const interval = window.setInterval(() => void fetchApplications(true), 20_000);
+    return () => window.clearInterval(interval);
+  }, [fetchApplications]);
+
+  const openApplication = async (application: CareerApplication) => {
+    setDetailLoading(true);
+    setSelectedApp(application);
+    setInternalNotes(application.internal_notes || '');
+    setInterviewAt(toDateTimeLocal(application.interview_at));
+    setInterviewLocation(application.interview_location || '');
+
+    try {
+      const detail = await callAdminRpc<{
+        success?: boolean;
+        application?: CareerApplication;
+        history?: CareerHistoryItem[];
+      }>('gsa_admin_get_career_application', {
+        p_application_id: application.id,
+      });
+
+      if (!detail?.success || !detail.application) throw new Error('Detalhes não confirmados pelo banco.');
+      const complete = { ...detail.application, history: detail.history || [] };
+      setSelectedApp(complete);
+      setInternalNotes(complete.internal_notes || '');
+      setInterviewAt(toDateTimeLocal(complete.interview_at));
+      setInterviewLocation(complete.interview_location || '');
+    } catch (error) {
+      console.error('Falha ao abrir candidatura:', error);
+      toast.error('Não foi possível confirmar os detalhes da candidatura.');
+      setSelectedApp(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (newStatus: CareerStatus) => {
     if (!selectedApp) return;
+
+    let interviewIso: string | null = null;
+    if (newStatus === 'interview_scheduled') {
+      if (!interviewAt || !interviewLocation.trim()) {
+        toast.error('Informe a data e o local ou link da entrevista.');
+        return;
+      }
+      const date = new Date(interviewAt);
+      if (Number.isNaN(date.getTime())) {
+        toast.error('A data da entrevista é inválida.');
+        return;
+      }
+      interviewIso = date.toISOString();
+    }
+    if (newStatus === 'rejected' && !internalNotes.trim()) {
+      toast.error('Informe o motivo interno do encerramento.');
+      return;
+    }
+
     setUpdatingStatus(true);
     try {
-      // 1. Tenta atualizar no Supabase
-      try {
-        await supabase
-          .from('gsa_careers_applications')
-          .update({
-            status: newStatus,
-            internal_notes: internalNotes,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', selectedApp.id);
-      } catch (err) {
-        console.warn('Atualização remota indisponível, salvando status localmente:', err);
+      const result = await callAdminRpc<{
+        success?: boolean;
+        application?: CareerApplication;
+        history?: CareerHistoryItem[];
+      }>('gsa_admin_update_career_application', {
+        p_application_id: selectedApp.id,
+        p_status: newStatus,
+        p_internal_notes: internalNotes.trim() || null,
+        p_interview_at: interviewIso,
+        p_interview_location: newStatus === 'interview_scheduled' ? interviewLocation.trim() : null,
+      });
+
+      if (!result?.success || !result.application) {
+        throw new Error('O banco não confirmou a atualização.');
       }
 
-      // 2. Atualiza no localStorage
-      try {
-        const local = JSON.parse(localStorage.getItem('gsa_career_apps') || '[]');
-        const updatedLocal = local.map((app: any) => {
-          if (app.protocol === selectedApp.protocol || app.id === selectedApp.id) {
-            return { ...app, status: newStatus, internal_notes: internalNotes, updated_at: new Date().toISOString() };
-          }
-          return app;
-        });
-        localStorage.setItem('gsa_career_apps', JSON.stringify(updatedLocal));
-      } catch (e) {
-        console.error('Erro ao atualizar status local:', e);
-      }
-
-      // 3. Atualiza na interface
-      setApplications((prev) =>
-        prev.map((app) =>
-          app.id === selectedApp.id || app.protocol === selectedApp.protocol
-            ? { ...app, status: newStatus, internal_notes: internalNotes }
-            : app
-        )
-      );
-
-      setSelectedApp((prev: any) => (prev ? { ...prev, status: newStatus, internal_notes: internalNotes } : null));
-      toast.success('Status da candidatura atualizado com sucesso!');
-    } catch (err) {
-      console.error('Erro ao atualizar status:', err);
-      toast.error('Não foi possível atualizar o status.');
+      const updated = { ...result.application, history: result.history || [] };
+      setSelectedApp(updated);
+      setApplications((current) => current.map((item) => item.id === updated.id ? updated : item));
+      setInternalNotes(updated.internal_notes || '');
+      setInterviewAt(toDateTimeLocal(updated.interview_at));
+      setInterviewLocation(updated.interview_location || '');
+      toast.success('Etapa atualizada e registrada no histórico.');
+      await fetchApplications(true);
+    } catch (error) {
+      console.error('Falha ao atualizar candidatura:', error);
+      const message = error instanceof Error ? error.message : 'Não foi possível atualizar a candidatura.';
+      toast.error(message);
     } finally {
       setUpdatingStatus(false);
     }
   };
 
-  const filteredApps = applications.filter((app) => {
-    const term = searchTerm.toLowerCase();
-    const matchesSearch =
-      !term ||
-      app.candidate_name?.toLowerCase().includes(term) ||
-      app.email?.toLowerCase().includes(term) ||
-      app.protocol?.toLowerCase().includes(term) ||
-      app.document?.includes(term) ||
-      app.desired_area?.toLowerCase().includes(term);
+  const openResume = async () => {
+    if (!selectedApp?.has_resume) return;
+    setOpeningResume(true);
 
-    const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
-    const matchesType = typeFilter === 'all' || app.employment_type === typeFilter;
+    try {
+      const reference = await callAdminRpc<{
+        success?: boolean;
+        storage_path?: string | null;
+        legacy_reference?: string | null;
+      }>('gsa_admin_get_career_resume_reference', {
+        p_application_id: selectedApp.id,
+      });
 
-    return matchesSearch && matchesStatus && matchesType;
-  });
+      if (!reference?.success) throw new Error('Referência do currículo não confirmada.');
+
+      if (reference.storage_path) {
+        const { data, error } = await supabase.storage
+          .from(CAREER_BUCKET)
+          .createSignedUrl(reference.storage_path, 300);
+        if (error || !data?.signedUrl) throw error || new Error('URL temporária não gerada.');
+        window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      if (reference.legacy_reference) {
+        window.open(reference.legacy_reference, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      throw new Error('Currículo não localizado no armazenamento.');
+    } catch (error) {
+      console.error('Falha ao abrir currículo:', error);
+      toast.error('Não foi possível abrir o currículo.');
+    } finally {
+      setOpeningResume(false);
+    }
+  };
+
+  const filteredApps = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return applications.filter((application) => {
+      const matchesSearch = !term || [
+        application.candidate_name,
+        application.email,
+        application.protocol,
+        application.document,
+        application.desired_area,
+      ].some((value) => String(value || '').toLowerCase().includes(term));
+      const matchesStatus = statusFilter === 'all' || application.status === statusFilter;
+      const matchesType = typeFilter === 'all' || application.employment_type === typeFilter;
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [applications, searchTerm, statusFilter, typeFilter]);
+
+  const metrics = useMemo(() => ({
+    total: applications.length,
+    received: applications.filter((item) => item.status === 'received').length,
+    active: applications.filter((item) => ['under_review', 'interview_scheduled'].includes(item.status)).length,
+    completed: applications.filter((item) => ['approved', 'rejected'].includes(item.status)).length,
+  }), [applications]);
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
-      {/* ─── HEADER ───────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-5 dark:border-neutral-800">
+      <div className="flex flex-col justify-between gap-4 border-b border-neutral-200 pb-5 sm:flex-row sm:items-center">
         <div>
-          <span className="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-            Recursos Humanos & Seleção
-          </span>
-          <h1 className="text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
-            Gestão de Candidaturas (Trabalhe Conosco)
-          </h1>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-            Análise de currículos, acompanhamento de talentos e atualização de etapas seletivas.
-          </p>
+          <span className="text-xs font-black uppercase tracking-widest text-emerald-600">Recursos Humanos & Seleção</span>
+          <h1 className="mt-1 text-2xl font-black text-neutral-900 sm:text-3xl">Gestão de Candidaturas</h1>
+          <p className="mt-1 text-xs text-neutral-500">Dados centralizados, histórico auditável e sincronização automática a cada 20 segundos.</p>
         </div>
-
-        <button
-          onClick={fetchApplications}
-          className="inline-flex items-center gap-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 px-4 py-2 text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>Atualizar Lista</span>
+        <button onClick={() => void fetchApplications()} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-neutral-100 px-4 py-2.5 text-xs font-bold text-neutral-700 hover:bg-neutral-200 disabled:opacity-60">
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar banco
         </button>
       </div>
 
-      {/* ─── METRIC CARDS ────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-4">
-        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm">
-          <span className="text-xs font-bold text-neutral-500">Total de Candidaturas</span>
-          <div className="mt-2 text-2xl font-black text-neutral-900 dark:text-white">{applications.length}</div>
-        </div>
-
-        <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 shadow-sm">
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Candidaturas CLT</span>
-          <div className="mt-2 text-2xl font-black text-emerald-700 dark:text-emerald-300">
-            {applications.filter((a) => a.employment_type === 'clt').length}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 p-4 shadow-sm">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">Estagiários</span>
-          <div className="mt-2 text-2xl font-black text-blue-700 dark:text-blue-300">
-            {applications.filter((a) => a.employment_type === 'estagio').length}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 p-4 shadow-sm">
-          <span className="text-xs font-bold text-purple-600 dark:text-purple-400">Em Análise / Entrevista</span>
-          <div className="mt-2 text-2xl font-black text-purple-700 dark:text-purple-300">
-            {applications.filter((a) => ['under_review', 'interview_scheduled'].includes(a.status)).length}
-          </div>
-        </div>
+        <Metric title="Total" value={metrics.total} icon={Briefcase} />
+        <Metric title="Recebidas" value={metrics.received} icon={Clock} />
+        <Metric title="Em processo" value={metrics.active} icon={Search} />
+        <Metric title="Finalizadas" value={metrics.completed} icon={ShieldCheck} />
       </div>
 
-      {/* ─── FILTROS E BUSCA ────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-          <input
-            type="text"
-            placeholder="Buscar candidato por nome, CPF, e-mail ou protocolo..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 py-2.5 pl-10 pr-4 text-xs font-medium outline-none focus:border-emerald-500"
-          />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+          <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar por nome, CPF, e-mail, protocolo ou área..." className="w-full rounded-xl border border-neutral-200 bg-white py-2.5 pl-10 pr-4 text-xs font-medium outline-none focus:border-emerald-500" />
         </div>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-2.5 text-xs font-bold outline-none"
-        >
-          <option value="all">Todos os Status</option>
-          <option value="received">Recebidas</option>
-          <option value="under_review">Em Análise</option>
-          <option value="interview_scheduled">Entrevista Agendada</option>
-          <option value="approved">Aprovados</option>
-          <option value="talent_pool">Banco de Talentos</option>
-          <option value="rejected">Encerrados</option>
+        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'all' | CareerStatus)} className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold outline-none">
+          <option value="all">Todos os status</option>
+          {Object.entries(STATUS_META).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
         </select>
-
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-2.5 text-xs font-bold outline-none"
-        >
-          <option value="all">Todas Modalidades</option>
-          <option value="clt">CLT (Efetivo)</option>
+        <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as 'all' | 'clt' | 'estagio')} className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold outline-none">
+          <option value="all">Todas as modalidades</option>
+          <option value="clt">CLT</option>
           <option value="estagio">Estágio</option>
         </select>
       </div>
 
-      {/* ─── TABELA DE CANDIDATURAS ──────────────────── */}
-      <div className="overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 font-bold uppercase tracking-wider text-neutral-500">
+            <thead className="border-b border-neutral-200 bg-neutral-50 font-bold uppercase tracking-wider text-neutral-500">
               <tr>
                 <th className="p-4">Protocolo / Data</th>
                 <th className="p-4">Candidato</th>
-                <th className="p-4">Área & Modalidade</th>
-                <th className="p-4">Pretensão Salarial</th>
+                <th className="p-4">Área</th>
+                <th className="p-4">Pretensão</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Ação</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-              {filteredApps.length > 0 ? (
-                filteredApps.map((app) => (
-                  <tr key={app.id || app.protocol} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition">
-                    <td className="p-4">
-                      <span className="font-mono font-bold text-neutral-900 dark:text-white block">{app.protocol}</span>
-                      <span className="text-[10px] text-neutral-400">{formatDate(app.created_at)}</span>
-                    </td>
-
-                    <td className="p-4">
-                      <span className="font-bold text-neutral-900 dark:text-white block">{app.candidate_name}</span>
-                      <span className="text-[10px] text-neutral-400 block">{maskCPF(app.document)} • {app.email}</span>
-                    </td>
-
-                    <td className="p-4">
-                      <span className="font-semibold text-neutral-800 dark:text-neutral-200 block">{app.desired_area}</span>
-                      <span className={`inline-block mt-0.5 rounded px-1.5 py-0.5 text-[9px] font-black uppercase ${app.employment_type === 'estagio' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'}`}>
-                        {app.employment_type === 'estagio' ? 'Estágio' : 'CLT'}
-                      </span>
-                    </td>
-
-                    <td className="p-4 font-bold text-neutral-900 dark:text-white">
-                      {app.salary_expectation ? formatCurrency(app.salary_expectation) : '-'}
-                    </td>
-
-                    <td className="p-4">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${
-                        app.status === 'approved' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' :
-                        app.status === 'interview_scheduled' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300' :
-                        app.status === 'under_review' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300' :
-                        app.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' :
-                        'bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-300'
-                      }`}>
-                        {app.status === 'approved' ? 'Aprovado' :
-                         app.status === 'interview_scheduled' ? 'Entrevista' :
-                         app.status === 'under_review' ? 'Em Análise' :
-                         app.status === 'rejected' ? 'Encerrado' : 'Recebida'}
-                      </span>
-                    </td>
-
-                    <td className="p-4 text-right">
-                      <button
-                        onClick={() => {
-                          setSelectedApp(app);
-                          setInternalNotes(app.internal_notes || '');
-                        }}
-                        className="rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition"
-                      >
-                        Avaliar
-                      </button>
-                    </td>
+            <tbody className="divide-y divide-neutral-100">
+              {loading ? (
+                <tr><td colSpan={6} className="p-10 text-center text-neutral-500">Carregando candidaturas do banco...</td></tr>
+              ) : filteredApps.length > 0 ? filteredApps.map((application) => {
+                const meta = STATUS_META[application.status] || STATUS_META.received;
+                const StatusIcon = meta.icon;
+                return (
+                  <tr key={application.id} className="hover:bg-neutral-50/70">
+                    <td className="p-4"><span className="block font-mono font-bold text-neutral-900">{application.protocol}</span><span className="text-[10px] text-neutral-400">{formatDate(application.created_at)}</span></td>
+                    <td className="p-4"><span className="block font-bold text-neutral-900">{application.candidate_name}</span><span className="block text-[10px] text-neutral-400">{maskCPF(application.document)} • {application.email}</span></td>
+                    <td className="p-4"><span className="block font-semibold text-neutral-800">{application.desired_area}</span><span className="mt-1 inline-block rounded bg-neutral-100 px-1.5 py-0.5 text-[9px] font-black uppercase">{application.employment_type === 'estagio' ? 'Estágio' : 'CLT'}</span></td>
+                    <td className="p-4 font-bold text-neutral-900">{application.salary_expectation ? formatCurrency(application.salary_expectation) : 'Não informada'}</td>
+                    <td className="p-4"><span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${meta.className}`}><StatusIcon className="h-3 w-3" /> {meta.label}</span></td>
+                    <td className="p-4 text-right"><button onClick={() => void openApplication(application)} className="rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-500/20">Avaliar</button></td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-neutral-500">
-                    Nenhuma candidatura encontrada com os filtros selecionados.
-                  </td>
-                </tr>
+                );
+              }) : (
+                <tr><td colSpan={6} className="p-10 text-center text-neutral-500">Nenhuma candidatura encontrada.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* ─── MODAL DE AVALIAÇÃO DO CANDIDATO ───────── */}
       {selectedApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-neutral-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-neutral-200 pb-4">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  Ficha do Candidato • {selectedApp.protocol}
-                </span>
-                <h2 className="text-xl font-black text-neutral-900 dark:text-white">
-                  {selectedApp.candidate_name}
-                </h2>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">{selectedApp.protocol}</span>
+                <h2 className="mt-1 text-2xl font-black text-neutral-900">{selectedApp.candidate_name}</h2>
+                <p className="mt-1 text-xs text-neutral-500">Registro confirmado no banco • Atualizado em {formatDate(selectedApp.updated_at)}</p>
               </div>
-              <button
-                onClick={() => setSelectedApp(null)}
-                className="rounded-lg p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <button onClick={() => setSelectedApp(null)} className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"><X className="h-5 w-5" /></button>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 text-xs">
-              <div className="space-y-1">
-                <span className="text-neutral-500 font-bold block">CPF:</span>
-                <span className="font-bold text-neutral-900 dark:text-white">{maskCPF(selectedApp.document)}</span>
-              </div>
+            {detailLoading ? (
+              <div className="py-16 text-center text-sm font-semibold text-neutral-500">Confirmando detalhes e histórico...</div>
+            ) : (
+              <div className="mt-5 space-y-6">
+                <div className="grid gap-4 rounded-2xl bg-neutral-50 p-4 text-xs sm:grid-cols-3">
+                  <Detail icon={User} label="CPF" value={maskCPF(selectedApp.document)} />
+                  <Detail icon={Mail} label="E-mail" value={selectedApp.email} />
+                  <Detail icon={Phone} label="Telefone" value={maskPhone(selectedApp.phone)} />
+                  <Detail icon={Briefcase} label="Área" value={selectedApp.desired_area} />
+                  <Detail icon={FileText} label="Modalidade" value={selectedApp.employment_type === 'estagio' ? 'Estágio' : 'CLT (Efetivo)'} />
+                  <Detail icon={ShieldCheck} label="Pretensão" value={selectedApp.salary_expectation ? formatCurrency(selectedApp.salary_expectation) : 'Não informada'} />
+                </div>
 
-              <div className="space-y-1">
-                <span className="text-neutral-500 font-bold block">E-mail:</span>
-                <span className="font-bold text-neutral-900 dark:text-white">{selectedApp.email}</span>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-neutral-500 font-bold block">Telefone / WhatsApp:</span>
-                <span className="font-bold text-neutral-900 dark:text-white">{maskPhone(selectedApp.phone)}</span>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-neutral-500 font-bold block">Área de Interesse:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{selectedApp.desired_area}</span>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-neutral-500 font-bold block">Modalidade:</span>
-                <span className="font-bold uppercase text-neutral-900 dark:text-white">
-                  {selectedApp.employment_type === 'estagio' ? 'Estágio' : 'CLT (Efetivo)'}
-                </span>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-neutral-500 font-bold block">Pretensão Salarial:</span>
-                <span className="font-bold text-neutral-900 dark:text-white">
-                  {selectedApp.salary_expectation ? formatCurrency(selectedApp.salary_expectation) : 'Não informada'}
-                </span>
-              </div>
-
-              <div className="space-y-1 sm:col-span-2">
-                <span className="text-neutral-500 font-bold block">Data do Envio:</span>
-                <span className="font-bold text-neutral-900 dark:text-white">{formatDate(selectedApp.created_at)}</span>
-              </div>
-            </div>
-
-            {/* CURRÍCULO ANEXADO E LINKEDIN */}
-            <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
-              <div>
-                <span className="text-[11px] font-bold text-neutral-500 block mb-1.5">Currículo do Candidato:</span>
-                {selectedApp.resume_url ? (
-                  <a
-                    href={selectedApp.resume_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    download={`curriculo_${selectedApp.candidate_name.replace(/\s+/g, '_')}`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-black text-white shadow-md transition"
-                  >
-                    <Download className="h-4 w-4" /> Baixar / Ver Currículo
-                  </a>
-                ) : (
-                  <div className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-xs font-bold text-neutral-500">
-                    <FileText className="h-4 w-4" /> Nenhum arquivo anexado
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-neutral-200 p-4">
+                    <p className="text-[11px] font-black uppercase tracking-wider text-neutral-500">Currículo</p>
+                    {selectedApp.has_resume ? (
+                      <button onClick={() => void openResume()} disabled={openingResume} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-60"><Download className="h-4 w-4" /> {openingResume ? 'Gerando acesso...' : 'Abrir por 5 minutos'}</button>
+                    ) : <p className="mt-2 text-xs text-neutral-500">Nenhum currículo confirmado no armazenamento.</p>}
                   </div>
-                )}
-              </div>
-
-              <div>
-                <span className="text-[11px] font-bold text-neutral-500 block mb-1.5">Perfil Profissional:</span>
-                {selectedApp.linkedin_url ? (
-                  <a
-                    href={selectedApp.linkedin_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2.5 text-xs font-black text-white shadow-md transition"
-                  >
-                    <ExternalLink className="h-4 w-4" /> Acessar LinkedIn
-                  </a>
-                ) : (
-                  <div className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-xs font-bold text-neutral-500">
-                    <User className="h-4 w-4" /> LinkedIn não informado
+                  <div className="rounded-2xl border border-neutral-200 p-4">
+                    <p className="text-[11px] font-black uppercase tracking-wider text-neutral-500">LinkedIn</p>
+                    {selectedApp.linkedin_url ? <a href={selectedApp.linkedin_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white hover:bg-blue-700"><ExternalLink className="h-4 w-4" /> Abrir perfil</a> : <p className="mt-2 text-xs text-neutral-500">Não informado.</p>}
                   </div>
-                )}
+                </div>
+
+                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-xs">
+                  <p className="font-black text-neutral-700">Resumo das experiências</p>
+                  <p className="mt-2 whitespace-pre-line leading-relaxed text-neutral-600">{selectedApp.notes || 'Nenhuma mensagem adicional informada.'}</p>
+                </div>
+
+                <div className="rounded-2xl border border-neutral-200 p-4">
+                  <div className="flex items-center gap-2"><CalendarClock className="h-4 w-4 text-purple-600" /><p className="text-xs font-black uppercase tracking-wider text-neutral-700">Dados de entrevista</p></div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <label><span className="mb-1 block text-[11px] font-bold text-neutral-500">Data e horário</span><input type="datetime-local" value={interviewAt} onChange={(event) => setInterviewAt(event.target.value)} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-xs outline-none focus:border-purple-500" /></label>
+                    <label><span className="mb-1 block text-[11px] font-bold text-neutral-500">Local ou link</span><input value={interviewLocation} onChange={(event) => setInterviewLocation(event.target.value)} placeholder="Google Meet, endereço ou telefone" className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-xs outline-none focus:border-purple-500" /></label>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-neutral-200 p-4">
+                  <p className="text-xs font-black uppercase tracking-wider text-neutral-700">Anotação interna do RH</p>
+                  <textarea rows={3} value={internalNotes} onChange={(event) => setInternalNotes(event.target.value)} placeholder="Obrigatória para encerramento; visível somente no painel administrativo." className="mt-3 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-xs outline-none focus:border-emerald-500" />
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {STATUS_ACTIONS.map((action) => (
+                      <button key={action.key} disabled={updatingStatus || selectedApp.status === action.key} onClick={() => void handleUpdateStatus(action.key)} className={`rounded-xl px-3.5 py-2 text-xs font-bold transition ${selectedApp.status === action.key ? 'bg-emerald-500 text-neutral-950' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'} disabled:cursor-not-allowed disabled:opacity-60`}>{action.label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-neutral-200 p-4">
+                  <div className="flex items-center gap-2"><History className="h-4 w-4 text-emerald-600" /><p className="text-xs font-black uppercase tracking-wider text-neutral-700">Histórico auditável</p></div>
+                  <div className="mt-4 space-y-3">
+                    {(selectedApp.history || []).length > 0 ? (selectedApp.history || []).map((item) => (
+                      <div key={item.id} className="flex gap-3 rounded-xl bg-neutral-50 p-3 text-xs">
+                        <div className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-black text-neutral-800">{item.from_status ? `${STATUS_META[item.from_status]?.label || item.from_status} → ` : ''}{STATUS_META[item.to_status]?.label || item.to_status}</p><span className="text-[10px] text-neutral-400">{new Date(item.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</span></div>
+                          <p className="mt-1 text-neutral-500">Responsável: {item.actor_name || item.actor_type}</p>
+                          {item.note && <p className="mt-1 whitespace-pre-line text-neutral-600">{item.note}</p>}
+                          {item.interview_at && <p className="mt-1 font-semibold text-purple-700"><MapPin className="mr-1 inline h-3 w-3" />{new Date(item.interview_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })} — {item.interview_location}</p>}
+                        </div>
+                      </div>
+                    )) : <p className="text-xs text-neutral-500">Nenhum evento registrado.</p>}
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* MENSAGEM / RESUMO DAS EXPERIÊNCIAS */}
-            <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 p-4 border border-neutral-200 dark:border-neutral-700/60 text-xs">
-              <span className="font-bold text-neutral-700 dark:text-neutral-300 block mb-1">Resumo das Experiências / Mensagem:</span>
-              <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
-                {selectedApp.notes || 'Nenhuma mensagem adicional informada pelo candidato.'}
-              </p>
-            </div>
-
-            {/* SEÇÃO DE AVALIAÇÃO DE STATUS */}
-            <div className="space-y-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
-              <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300">
-                Ações de Seleção / Alterar Status
-              </label>
-
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { key: 'under_review', label: 'Em Análise' },
-                  { key: 'interview_scheduled', label: 'Agendar Entrevista' },
-                  { key: 'approved', label: 'Aprovar' },
-                  { key: 'talent_pool', label: 'Banco de Talentos' },
-                  { key: 'rejected', label: 'Encerrar' },
-                ].map((st) => (
-                  <button
-                    key={st.key}
-                    disabled={updatingStatus}
-                    onClick={() => handleUpdateStatus(st.key)}
-                    className={`rounded-xl px-3.5 py-2 text-xs font-bold transition ${selectedApp.status === st.key ? 'bg-emerald-500 text-neutral-950 shadow-md' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200'}`}
-                  >
-                    {st.label}
-                  </button>
-                ))}
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-neutral-500 mb-1">
-                  Anotações Internas do RH (visível apenas para administradores)
-                </label>
-                <textarea
-                  rows={2}
-                  value={internalNotes}
-                  onChange={(e) => setInternalNotes(e.target.value)}
-                  placeholder="Ex: Entrevista agendada para 25/07 às 14h via Google Meet..."
-                  className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800 p-2.5 text-xs outline-none focus:border-emerald-500"
-                />
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
     </div>
   );
+}
+
+function Metric({ title, value, icon: Icon }: { title: string; value: number; icon: typeof Briefcase }) {
+  return <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-bold text-neutral-500">{title}</span><Icon className="h-4 w-4 text-emerald-600" /></div><div className="mt-2 text-2xl font-black text-neutral-900">{value}</div></div>;
+}
+
+function Detail({ icon: Icon, label, value }: { icon: typeof User; label: string; value: string }) {
+  return <div className="flex gap-2"><Icon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" /><div><span className="block text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</span><span className="mt-0.5 block break-all font-bold text-neutral-800">{value}</span></div></div>;
 }
