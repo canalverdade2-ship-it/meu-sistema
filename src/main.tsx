@@ -4,6 +4,7 @@ import App from './App.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './lib/clientFacingMessageGuard';
 import './index.css';
+import './careers.css';
 import { captureAffiliateReferralFromLocation } from './features/affiliates/attribution';
 
 captureAffiliateReferralFromLocation();
