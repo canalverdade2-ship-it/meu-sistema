@@ -133,8 +133,9 @@ jobs:
               RAISE EXCEPTION 'Motor de entrega ausente';
             END IF;
             SELECT pg_get_functiondef(to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)')) INTO v_definition;
-            IF position('pg_advisory_xact_lock' in v_definition) = 0 THEN
-              RAISE EXCEPTION 'Motor de entrega não serializa chamadas concorrentes';
+            IF position('pg_advisory_xact_lock' in v_definition) = 0
+               OR position('gsa_ads_serve:global' in v_definition) = 0 THEN
+              RAISE EXCEPTION 'Motor de entrega não serializa campanhas entre posições';
             END IF;
             IF to_regprocedure('public.gsa_ads_list_orphan_creative_paths()') IS NULL THEN
               RAISE EXCEPTION 'Rotina de criativos órfãos ausente';
@@ -147,6 +148,94 @@ jobs:
             END IF;
           END $$;
           SELECT 'ADVERTISING_SECURITY_HARDENING_OK' AS result;
+          SQL
+
+      - name: Exercise cross-placement impression limit concurrently
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO public.gsa_ad_placements(
+            id, code, name, route_pattern, module, format, position, devices, active
+          ) VALUES
+            ('00000000-0000-4000-8000-000000000201', 'CONCURRENCY_A', 'Concorrência A', '/', 'test', 'sticky_banner', 'a', ARRAY['desktop'], true),
+            ('00000000-0000-4000-8000-000000000202', 'CONCURRENCY_B', 'Concorrência B', '/', 'test', 'sticky_banner', 'b', ARRAY['desktop'], true)
+          ON CONFLICT (code) DO NOTHING;
+
+          INSERT INTO public.gsa_advertisers(
+            id, legal_name, trade_name, document, company_size, segment,
+            responsible_name, responsible_email, responsible_phone, status
+          ) VALUES (
+            '00000000-0000-4000-8000-000000000210', 'Anunciante Concorrência', 'Anunciante Concorrência',
+            '99999999999', 'micro', 'Teste', 'Responsável', 'concorrencia@example.com', '11999999999', 'active'
+          );
+
+          INSERT INTO public.gsa_ad_campaigns(
+            id, advertiser_id, name, slug, status, starts_at, ends_at,
+            frequency_model, impression_limit, paid_at, activated_at
+          ) VALUES (
+            '00000000-0000-4000-8000-000000000220',
+            '00000000-0000-4000-8000-000000000210',
+            'Campanha Concorrência', 'campanha-concorrencia', 'active',
+            now() - interval '1 minute', now() + interval '1 day',
+            'unlimited', 1, now(), now()
+          );
+
+          INSERT INTO public.gsa_ad_creatives(
+            id, campaign_id, kind, status, headline, body, approved_at
+          ) VALUES (
+            '00000000-0000-4000-8000-000000000230',
+            '00000000-0000-4000-8000-000000000220',
+            'text', 'approved', 'Teste concorrente', 'Uma impressão', now()
+          );
+
+          INSERT INTO public.gsa_ad_campaign_placements(campaign_id, placement_id, priority)
+          VALUES
+            ('00000000-0000-4000-8000-000000000220', '00000000-0000-4000-8000-000000000201', 1),
+            ('00000000-0000-4000-8000-000000000220', '00000000-0000-4000-8000-000000000202', 1);
+
+          CREATE OR REPLACE FUNCTION public.gsa_test_slow_ad_insert()
+          RETURNS trigger LANGUAGE plpgsql AS $$
+          BEGIN
+            PERFORM pg_sleep(1);
+            RETURN NEW;
+          END;
+          $$;
+          CREATE TRIGGER trg_gsa_test_slow_ad_insert
+          BEFORE INSERT ON public.gsa_ad_delivery_events
+          FOR EACH ROW EXECUTE FUNCTION public.gsa_test_slow_ad_insert();
+          SQL
+
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 -Atqc \
+            "SELECT public.gsa_ads_serve('CONCURRENCY_A','viewer-a','session-a','/','desktop')" > /tmp/ad-a.json &
+          pid_a=$!
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 -Atqc \
+            "SELECT public.gsa_ads_serve('CONCURRENCY_B','viewer-b','session-b','/','desktop')" > /tmp/ad-b.json &
+          pid_b=$!
+          wait "$pid_a"
+          wait "$pid_b"
+
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          DECLARE
+            v_events integer;
+            v_served bigint;
+          BEGIN
+            SELECT count(*) INTO v_events
+            FROM public.gsa_ad_delivery_events
+            WHERE campaign_id = '00000000-0000-4000-8000-000000000220';
+
+            SELECT COALESCE(sum(served), 0) INTO v_served
+            FROM public.gsa_ad_daily_metrics
+            WHERE campaign_id = '00000000-0000-4000-8000-000000000220';
+
+            IF v_events <> 1 OR v_served <> 1 THEN
+              RAISE EXCEPTION 'Limite concorrente violado: eventos %, métricas %', v_events, v_served;
+            END IF;
+          END $$;
+          DROP TRIGGER trg_gsa_test_slow_ad_insert ON public.gsa_ad_delivery_events;
+          DROP FUNCTION public.gsa_test_slow_ad_insert();
+          SELECT 'ADVERTISING_CONCURRENCY_LIMIT_OK' AS result;
           SQL
 
       - name: Production build
@@ -197,8 +286,10 @@ jobs:
           DECLARE v_definition text;
           BEGIN
             SELECT pg_get_functiondef(to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)')) INTO v_definition;
-            IF v_definition IS NULL OR position('pg_advisory_xact_lock' in v_definition) = 0 THEN
-              RAISE EXCEPTION 'Hardening atômico ausente em produção';
+            IF v_definition IS NULL
+               OR position('pg_advisory_xact_lock' in v_definition) = 0
+               OR position('gsa_ads_serve:global' in v_definition) = 0 THEN
+              RAISE EXCEPTION 'Hardening atômico global ausente em produção';
             END IF;
             IF to_regprocedure('public.gsa_ads_list_orphan_creative_paths()') IS NULL THEN
               RAISE EXCEPTION 'Limpeza de órfãos ausente em produção';
