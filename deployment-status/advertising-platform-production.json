@@ -1,8 +1,8 @@
 {
   "status": "failure",
-  "workflow_run_id": "29930136037",
-  "validated_sha": "70d2ece7f411e4879362116cb28978bcde88ba6c",
-  "validated_at_utc": "2026-07-22T14:46:00Z",
+  "workflow_run_id": "29965690978",
+  "validated_sha": "ec1ffc3d9f9e75efe0de25cc134233f6402429ad",
+  "validated_at_utc": "2026-07-22T23:18:20Z",
   "project_ref": "ocgajvagxagutfvgxwsy",
   "migrations": ["20260721210100", "20260721223100", "20260721223500"],
   "edge_functions": ["gsa-public-advertising", "gsa-advertiser-admin", "gsa-ad-delivery", "gsa-advertising-webhook", "gsa-advertising-scheduler"]
