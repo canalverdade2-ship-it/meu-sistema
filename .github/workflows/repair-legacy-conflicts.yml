@@ -1,0 +1,111 @@
+name: Repair Legacy Conflict Markers
+
+on:
+  push:
+    branches:
+      - agent/harden-careers-flow
+    paths:
+      - '.github/workflows/repair-legacy-conflicts.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout working branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/harden-careers-flow
+          fetch-depth: 0
+
+      - name: Remove known conflict markers
+        shell: python
+        run: |
+          from pathlib import Path
+
+          replacements = {
+              Path('src/components/admin/AffiliateAdminModule.tsx'): [
+                  (
+                      """<<<<<<< HEAD
+          function ProgramEditor({ program, onSaved }: { program: AffiliateProgram; onSaved: () => Promise<void> | void }) {
+          =======
+          function ProgramEditor({ program, onSaved }: { key?: string; program: AffiliateProgram; onSaved: () => Promise<void> }) {
+          >>>>>>> f45124e36db6ae5a7a3644728d56972b9db88b85
+          """,
+                      """function ProgramEditor({ program, onSaved }: { program: AffiliateProgram; onSaved: () => Promise<void> | void }) {
+          """,
+                  ),
+              ],
+              Path('src/components/public/AffiliatePublicPage.tsx'): [
+                  (
+                      """<<<<<<< HEAD
+              async function fetchPrograms() {
+          =======
+              void (async () => {
+          >>>>>>> f45124e36db6ae5a7a3644728d56972b9db88b85
+                try {
+                  const { data, error } = await supabase.rpc('gsa_public_affiliate_programs');
+                  if (!active || error) return;
+                  setRemotePrograms(normalizePrograms(data));
+                } catch {
+          <<<<<<< HEAD
+                  // ignore
+                }
+              }
+
+              fetchPrograms();
+          =======
+                  // Mantém os programas de fallback quando a RPC pública estiver indisponível.
+                }
+              })();
+          >>>>>>> f45124e36db6ae5a7a3644728d56972b9db88b85
+          """,
+                      """    async function fetchPrograms() {
+                try {
+                  const { data, error } = await supabase.rpc('gsa_public_affiliate_programs');
+                  if (!active || error) return;
+                  setRemotePrograms(normalizePrograms(data));
+                } catch {
+                  // Mantém os programas de fallback quando a RPC pública estiver indisponível.
+                }
+              }
+
+              void fetchPrograms();
+          """,
+                  ),
+              ],
+              Path('src/components/public/final/PublicFooter.tsx'): [
+                  (
+                      """<<<<<<< HEAD
+                  <nav aria-label=\"Publicidade\">
+          =======
+                  <nav aria-label=\"Links de publicidade\">
+          >>>>>>> f45124e36db6ae5a7a3644728d56972b9db88b85
+          """,
+                      """        <nav aria-label=\"Links de publicidade\">
+          """,
+                  ),
+              ],
+          }
+
+          for file_path, file_replacements in replacements.items():
+              content = file_path.read_text(encoding='utf-8')
+              for old, new in file_replacements:
+                  if old not in content:
+                      raise SystemExit(f'Bloco esperado não encontrado em {file_path}')
+                  content = content.replace(old, new)
+              if any(marker in content for marker in ('<<<<<<<', '=======', '>>>>>>>')):
+                  raise SystemExit(f'Marcador de conflito restante em {file_path}')
+              file_path.write_text(content, encoding='utf-8')
+
+      - name: Commit repaired files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/admin/AffiliateAdminModule.tsx src/components/public/AffiliatePublicPage.tsx src/components/public/final/PublicFooter.tsx
+          git commit -m 'Remover marcadores de conflito legados'
+          git push origin HEAD:agent/harden-careers-flow
