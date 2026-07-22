@@ -81,6 +81,24 @@ jobs:
           done
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
 
+      - name: Require IPv4-compatible database connection
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const parsed = new URL(process.env.SUPABASE_DB_URL);
+          const isSessionPooler =
+            parsed.hostname.endsWith('.pooler.supabase.com') && parsed.port === '5432';
+
+          if (!isSessionPooler) {
+            throw new Error(
+              'SUPABASE_DB_URL deve usar a string Session pooler do Supabase (host *.pooler.supabase.com, porta 5432) para funcionar no GitHub Actions.',
+            );
+          }
+
+          console.log('SUPABASE_DB_URL_SESSION_POOLER_OK');
+          NODE
+
       - name: Require optional drill credentials
         shell: bash
         run: |
@@ -172,7 +190,8 @@ jobs:
 
   database-recovery:
     name: Inventário, backup e restauração do banco
-    needs: preflight
+    needs: [preflight, deployment]
+    if: ${{ always() && needs.preflight.result == 'success' && (inputs.apply_pending_changes == false || needs.deployment.result == 'success') }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 60
