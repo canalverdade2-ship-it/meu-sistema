@@ -3,9 +3,6 @@ name: Apply GSA Ads Flow Fix
 on:
   push:
     branches: [main]
-    paths:
-      - 'scripts/apply-gsa-ads-flow-fix.py'
-      - '.github/workflows/apply-gsa-ads-flow-fix.yml'
 
 permissions:
   contents: write
@@ -16,6 +13,7 @@ concurrency:
 
 jobs:
   apply:
+    if: github.actor != 'github-actions[bot]'
     name: Corrigir fluxo completo do GSA Anúncios
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -33,7 +31,11 @@ jobs:
           cache: npm
 
       - name: Aplicar correções auditadas
-        run: python3 scripts/apply-gsa-ads-flow-fix.py
+        id: patch
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 scripts/apply-gsa-ads-flow-fix.py 2>&1 | tee gsa-ads-flow-fix.log
 
       - name: Instalar dependências
         run: npm ci
@@ -64,5 +66,22 @@ jobs:
             supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql \
             .github/workflows/deploy-advertising-platform.yml
           git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'Nenhuma correção pendente para publicar.'
+            exit 0
+          fi
           git commit -m 'Corrigir fluxo completo do GSA Anúncios'
+          git push origin HEAD:main
+
+      - name: Registrar falha para diagnóstico
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit
+          cp gsa-ads-flow-fix.log audit/gsa-ads-flow-fix-failure.log 2>/dev/null || echo 'Falha antes da geração do log.' > audit/gsa-ads-flow-fix-failure.log
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit/gsa-ads-flow-fix-failure.log
+          git commit -m 'Registrar falha da correção do GSA Anúncios' || exit 0
           git push origin HEAD:main
