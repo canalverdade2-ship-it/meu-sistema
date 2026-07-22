@@ -1,0 +1,81 @@
+┌────────────────────────────────────────────────────────────────────────────┐
+│ ?column?                                                                   │
+├────────────────────────────────────────────────────────────────────────────┤
+│ TABLE|ordens_servico|id|uuid|NO                                            │
+│ TABLE|ordens_servico|codigo_os|text|YES                                    │
+│ TABLE|ordens_servico|orcamento_id|uuid|NO                                  │
+│ TABLE|ordens_servico|cliente_id|uuid|NO                                    │
+│ TABLE|ordens_servico|status|text|YES                                       │
+│ TABLE|ordens_servico|motivo_cancelamento|text|YES                          │
+│ TABLE|ordens_servico|data_inicio|timestamp with time zone|YES              │
+│ TABLE|ordens_servico|data_fim|timestamp with time zone|YES                 │
+│ TABLE|ordens_servico|tipo_entrega|text|YES                                 │
+│ TABLE|ordens_servico|data_entrega|timestamp with time zone|YES             │
+│ TABLE|ordens_servico|link_documento|text|YES                               │
+│ TABLE|ordens_servico|documentos_solicitados_os|jsonb|YES                   │
+│ TABLE|ordens_servico|anexos_os|jsonb|YES                                   │
+│ TABLE|ordens_servico|servico_id|uuid|YES                                   │
+│ TABLE|servicos|id|uuid|NO                                                  │
+│ TABLE|servicos|codigo_servico|text|NO                                      │
+│ TABLE|servicos|nome|text|NO                                                │
+│ TABLE|servicos|descricao|text|YES                                          │
+│ TABLE|servicos|valor|numeric|NO                                            │
+│ TABLE|servicos|status|text|YES                                             │
+│ TABLE|servicos|created_at|timestamp with time zone|YES                     │
+│ TABLE|servicos|ocultar_valor|boolean|YES                                   │
+│ TABLE|servicos|tipo_cliente|text|NO                                        │
+│ TABLE|servicos|categoria|text|YES                                          │
+│ TABLE|servicos|visivel_na_loja|boolean|YES                                 │
+│ TABLE|servicos|imagem_url|text|YES                                         │
+│ TABLE|servicos|imagem_url_2|text|YES                                       │
+│ TABLE|servicos|imagem_url_3|text|YES                                       │
+│ TABLE|servicos|imagem_url_4|text|YES                                       │
+│ TABLE|servicos|imagem_url_5|text|YES                                       │
+│ TABLE|servicos|categoria_id|uuid|YES                                       │
+│ TABLE|viagens_pacote_imagens|id|uuid|NO                                    │
+│ TABLE|viagens_pacote_imagens|pacote_id|uuid|YES                            │
+│ TABLE|viagens_pacote_imagens|url|text|NO                                   │
+│ TABLE|viagens_pacote_imagens|is_capa|boolean|YES                           │
+│ TABLE|viagens_pacote_imagens|ordem|integer|YES                             │
+│ TABLE|viagens_pacote_imagens|created_at|timestamp with time zone|YES       │
+│ TABLE|viagens_pacotes|id|uuid|NO                                           │
+│ TABLE|viagens_pacotes|titulo|text|NO                                       │
+│ TABLE|viagens_pacotes|slug|text|NO                                         │
+│ TABLE|viagens_pacotes|categoria|text|YES                                   │
+│ TABLE|viagens_pacotes|origem|text|YES                                      │
+│ TABLE|viagens_pacotes|destino|text|YES                                     │
+│ TABLE|viagens_pacotes|data_ida|date|YES                                    │
+│ TABLE|viagens_pacotes|data_volta|date|YES                                  │
+│ TABLE|viagens_pacotes|dias|integer|YES                                     │
+│ TABLE|viagens_pacotes|noites|integer|YES                                   │
+│ TABLE|viagens_pacotes|hotel_nome|text|YES                                  │
+│ TABLE|viagens_pacotes|hotel_categoria|text|YES                             │
+│ TABLE|viagens_pacotes|acomodacao_tipo|text|YES                             │
+│ TABLE|viagens_pacotes|alimentacao|text|YES                                 │
+│ TABLE|viagens_pacotes|transporte_tipo|text|YES                             │
+│ TABLE|viagens_pacotes|companhia_executor|text|YES                          │
+│ TABLE|viagens_pacotes|bagagem_inclusa|text|YES                             │
+│ TABLE|viagens_pacotes|traslado_incluso|boolean|YES                         │
+│ TABLE|viagens_pacotes|itinerario|jsonb|YES                                 │
+│ TABLE|viagens_pacotes|inclusoes|jsonb|YES                                  │
+│ TABLE|viagens_pacotes|exclusoes|jsonb|YES                                  │
+│ TABLE|viagens_pacotes|regras|jsonb|YES                                     │
+│ TABLE|viagens_pacotes|documentacao_necessaria|jsonb|YES                    │
+│ TABLE|viagens_pacotes|fornecedor_id|uuid|YES                               │
+│ TABLE|viagens_pacotes|codigo_oferta_fornecedor|text|YES                    │
+│ TABLE|viagens_pacotes|preco_custo|numeric|YES                              │
+│ TABLE|viagens_pacotes|taxas_fornecedor|numeric|YES                         │
+│ TABLE|viagens_pacotes|margem_porcentagem|numeric|YES                       │
+│ TABLE|viagens_pacotes|margem_valor|numeric|YES                             │
+│ TABLE|viagens_pacotes|preco_venda|numeric|NO                               │
+│ TABLE|viagens_pacotes|preco_crianca|numeric|YES                            │
+│ TABLE|viagens_pacotes|preco_bebe|numeric|YES                               │
+│ TABLE|viagens_pacotes|parcelamento_maximo|integer|YES                      │
+│ TABLE|viagens_pacotes|limite_vendas|integer|YES                            │
+│ TABLE|viagens_pacotes|vendas_realizadas|integer|YES                        │
+│ TABLE|viagens_pacotes|prazo_promocao|timestamp with time zone|YES          │
+│ TABLE|viagens_pacotes|data_ultima_verificacao|timestamp with time zone|YES │
+│ TABLE|viagens_pacotes|status|text|YES                                      │
+│ TABLE|viagens_pacotes|created_at|timestamp with time zone|YES              │
+│ TABLE|viagens_pacotes|updated_at|timestamp with time zone|YES              │
+└────────────────────────────────────────────────────────────────────────────┘
