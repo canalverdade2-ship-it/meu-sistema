@@ -24,10 +24,13 @@ function walk(directory, output = []) {
 
 function localMigrationVersions() {
   const directory = path.join(root, 'supabase', 'migrations');
-  return fs.readdirSync(directory)
+  const versions = fs.readdirSync(directory)
     .map((name) => name.match(/^(\d{14})_/i)?.[1])
     .filter(Boolean)
     .sort();
+  const duplicates = versions.filter((version, index) => versions.indexOf(version) !== index);
+  if (duplicates.length > 0) throw new Error(`Versões de migration duplicadas: ${[...new Set(duplicates)].join(', ')}`);
+  return versions;
 }
 
 function sourceInventory() {
@@ -47,8 +50,8 @@ function sourceInventory() {
     }
 
     for (const match of content.matchAll(/\.from\(\s*['"]([^'"]+)['"]/g)) {
-      const prefix = content.slice(Math.max(0, match.index - 100), match.index);
-      if (/\.storage\s*$/.test(prefix) || /\.schema\(\s*['"]storage['"]\s*\)[\s\S]*$/.test(prefix)) continue;
+      const prefix = content.slice(Math.max(0, match.index - 80), match.index);
+      if (/\.storage\s*$/.test(prefix) || /\.schema\(\s*['"]storage['"]\s*\)\s*$/.test(prefix)) continue;
       tables.add(match[1]);
     }
 
@@ -93,7 +96,9 @@ try {
       FROM pg_trigger t
       JOIN pg_class c ON c.oid = t.tgrelid
       JOIN pg_namespace n ON n.oid = c.relnamespace
-      WHERE NOT t.tgisinternal AND t.tgenabled = 'D'
+      WHERE NOT t.tgisinternal
+        AND t.tgenabled = 'D'
+        AND n.nspname IN ('public', 'storage')
       ORDER BY n.nspname, c.relname, t.tgname
     `),
     client.query(`
@@ -129,15 +134,15 @@ try {
           'gsa_admin_write_audit',
           'gsa_provider_write_audit'
         )
-        AND (
-          has_function_privilege('anon', p.oid, 'EXECUTE')
-          OR has_function_privilege('PUBLIC', p.oid, 'EXECUTE')
-        )
+        AND has_function_privilege('anon', p.oid, 'EXECUTE')
       ORDER BY p.proname
     `),
   ]);
 
-  const remoteMigrations = migrationResult.rows.map((row) => String(row.version)).sort();
+  const remoteMigrations = migrationResult.rows
+    .map((row) => String(row.version))
+    .filter((version) => /^\d{14}$/.test(version))
+    .sort();
   const databaseTables = tableResult.rows.map((row) => String(row.table_name)).sort();
   const databaseFunctions = functionResult.rows.map((row) => String(row.proname)).sort();
   const databaseBuckets = bucketResult.rows.map((row) => String(row.id)).sort();
