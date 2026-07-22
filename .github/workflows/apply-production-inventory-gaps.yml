@@ -107,6 +107,7 @@ jobs:
           apply_if_missing 20260722022000 supabase/migrations/20260722022000_supplier_procurement_operations.sql supplier-operations-apply.log
           apply_if_missing 20260722030000 supabase/migrations/20260722030000_service_catalog_packages.sql service-catalog-apply.log
           apply_if_missing 20260722190000 supabase/migrations/20260722190000_close_production_inventory_gaps.sql inventory-gaps-apply.log
+          apply_if_missing 20260722190100 supabase/migrations/20260722190100_finalize_client_rls_and_affiliate_status.sql inventory-gaps-finalize-apply.log
 
       - name: Verify all required RPCs and RLS before history repair
         shell: bash
@@ -203,7 +204,8 @@ jobs:
             20260722021000 \
             20260722022000 \
             20260722030000 \
-            20260722190000
+            20260722190000 \
+            20260722190100
           do
             if ! awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == wanted) found=1 } END { exit found ? 0 : 1 }' inventory-migrations-pre-repair.log; then
               supabase migration repair --linked --status applied "$version" 2>&1 | tee -a inventory-migrations-repair.log
@@ -215,7 +217,7 @@ jobs:
         run: |
           set -euo pipefail
           supabase migration list --linked 2>&1 | tee inventory-migrations-after.log
-          for version in 20260721210100 20260721223100 20260722020000 20260722021000 20260722022000 20260722030000 20260722190000
+          for version in 20260721210100 20260721223100 20260722020000 20260722021000 20260722022000 20260722030000 20260722190000 20260722190100
           do
             awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == wanted) found=1 } END { exit found ? 0 : 1 }' inventory-migrations-after.log
           done
@@ -234,6 +236,7 @@ jobs:
             supplier-*-apply.log
             service-catalog-apply.log
             inventory-gaps-apply.log
+            inventory-gaps-finalize-apply.log
             inventory-gaps-verification.log
             inventory-migrations-pre-repair.log
             inventory-migrations-repair.log
