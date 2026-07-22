@@ -7,9 +7,8 @@
     "types": ["vite/client"]
   },
   "include": [
-    "src/components/ErrorBoundary.tsx",
     "src/lib/errorReporter.ts",
-    "src/lib/advertiserAccess.ts",
-    "vite.config.ts"
+    "src/routing/safeReturnTo.ts",
+    "src/vite-env.d.ts"
   ]
 }
