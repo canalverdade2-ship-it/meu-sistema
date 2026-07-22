@@ -7,6 +7,7 @@ on:
       - 'src/**'
       - 'supabase/functions/**'
       - 'supabase/migrations/20260722190000_close_production_inventory_gaps.sql'
+      - 'supabase/migrations/20260722190100_finalize_client_rls_and_affiliate_status.sql'
       - 'scripts/list-database-source-references.mjs'
       - 'scripts/check-production-inventory-gap-contracts.mjs'
       - '.github/workflows/database-source-reference-audit.yml'
