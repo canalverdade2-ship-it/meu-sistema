@@ -42,6 +42,7 @@ import { PrivacyPolicyDialog } from '../components/public/PrivacyPolicyDialog';
 import { UniversalNotificationBell, type StandardNotification } from '../components/ui/UniversalNotificationBell';
 import { maskPhone, maskCurrency, handleCurrencyInputChange } from '../lib/utils';
 import { navigate } from '../routing/navigationService';
+import { PaymentModal } from '../components/client/financeiro/PaymentModal';
 import type {
   AdvertiserPortalSnapshot,
   AdvertisingCampaign,
@@ -671,9 +672,63 @@ export function AdvertiserPortal() {
 
       if (!rpcSuccess && snapshot) {
         const updatedProposals = (snapshot.proposals || []).map((p) => p.id === proposal.id ? { ...p, status: 'accepted' as const } : p);
-        const newSnapshot = { ...snapshot, proposals: updatedProposals };
+
+        const versionObj = (proposal.version && typeof proposal.version === 'object') ? proposal.version : null;
+        const startsOn = versionObj?.starts_on || new Date().toISOString();
+        const endsOn = versionObj?.ends_on || new Date(Date.now() + 30 * 86400000).toISOString();
+
+        const existingCamp = (snapshot.campaigns || []).find((c) => c.proposal_id === proposal.id);
+        const newCampaign: AdvertisingCampaign = existingCamp || {
+          id: 'camp-' + proposal.id,
+          advertiser_id: snapshot.advertiser.id,
+          proposal_id: proposal.id,
+          name: `Campanha — ${snapshot.advertiser.company_name || 'Anúncio GSA'}`,
+          status: 'payment_pending',
+          starts_at: startsOn,
+          ends_at: endsOn,
+          paid_at: null,
+          creatives: [],
+          payment: {
+            id: 'pay-' + proposal.id,
+            campaign_id: 'camp-' + proposal.id,
+            amount: proposal.total_amount,
+            status: 'pending',
+            due_at: new Date(Date.now() + 3 * 86400000).toISOString(),
+            provider: 'manual',
+            provider_reference: null,
+            checkout_url: null,
+            pix_code: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          metrics: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const updatedCampaigns = existingCamp ? snapshot.campaigns : [...(snapshot.campaigns || []), newCampaign];
+        const updatedRequests = (snapshot.requests || []).map((r) => (r.id === proposal.request_id || r.protocol === proposal.request_id) ? { ...r, status: 'approved' as const } : r);
+
+        const newSnapshot = { ...snapshot, proposals: updatedProposals, campaigns: updatedCampaigns, requests: updatedRequests };
         setSnapshot(newSnapshot);
         try { localStorage.setItem('gsa_advertiser_session', JSON.stringify(newSnapshot)); } catch {}
+
+        try {
+          const storeProps = JSON.parse(localStorage.getItem('gsa_adv_proposals_store') || '[]');
+          const filteredProps = storeProps.filter((p: any) => p.id !== proposal.id);
+          const targetProp = updatedProposals.find((p) => p.id === proposal.id);
+          if (targetProp) filteredProps.unshift(targetProp);
+          localStorage.setItem('gsa_adv_proposals_store', JSON.stringify(filteredProps));
+
+          const storeCamps = JSON.parse(localStorage.getItem('gsa_adv_campaigns_store') || '[]');
+          const filteredCamps = storeCamps.filter((c: any) => c.id !== newCampaign.id);
+          filteredCamps.unshift(newCampaign);
+          localStorage.setItem('gsa_adv_campaigns_store', JSON.stringify(filteredCamps));
+
+          const storeReqs = JSON.parse(localStorage.getItem('gsa_adv_requests_store') || '[]');
+          const updatedReqs = storeReqs.map((r: any) => (r.id === proposal.request_id || r.protocol === proposal.request_id) ? { ...r, status: 'approved' } : r);
+          localStorage.setItem('gsa_adv_requests_store', JSON.stringify(updatedReqs));
+        } catch {}
       }
 
       toast.success('Proposta aceita. A campanha foi criada.');

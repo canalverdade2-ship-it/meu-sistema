@@ -35,7 +35,11 @@ export function PublicFooter({ setPublicPage, onGuestStore, onAdminLogin, onPriv
             <button type="button" onClick={onPrivacy} className="w-fit hover:text-[#d8bd73]">Privacidade</button>
           </div>
         </nav>
+<<<<<<< HEAD
         <nav aria-label="Publicidade">
+=======
+        <nav aria-label="Links de publicidade">
+>>>>>>> f45124e36db6ae5a7a3644728d56972b9db88b85
           <h2 className="text-xs font-black uppercase tracking-widest text-white/35">Publicidade</h2>
           <div className="mt-4 grid gap-3 text-sm font-bold text-white/75">
             <button type="button" onClick={() => setPublicPage('advertise')} className="w-fit hover:text-[#d8bd73]">Anuncie Conosco</button>

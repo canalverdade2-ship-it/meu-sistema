@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "conflicts": [
+    {
+      "version": "20260722040000",
+      "status": "superseded_unapplied",
+      "introducedCommit": "70d2ece7f411e4879362116cb28978bcde88ba6c",
+      "evidence": {
+        "advertisingWorkflowRunId": 29930136037,
+        "advertisingWorkflowStoppedAt": "Validate production configuration",
+        "databaseConnectionAttempted": false,
+        "sqlExecutionAttempted": false
+      },
+      "files": [
+        {
+          "path": "supabase/migrations/20260722040000_affiliate_program.sql",
+          "gitBlobSha": "26ed4d3545e9116b6faecbadfac13f6558a3fa11",
+          "transactionClosureMissing": true
+        },
+        {
+          "path": "supabase/migrations/20260722040000_harden_advertising_backend.sql",
+          "gitBlobSha": "b6eebf19848e4049eb493c8d4f620a992c82f216",
+          "transactionClosureMissing": true
+        }
+      ],
+      "supersededBy": [
+        "20260722120000",
+        "20260722120100"
+      ]
+    }
+  ]
+}

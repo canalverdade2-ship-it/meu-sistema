@@ -38,6 +38,7 @@
     "test:advertising": "tsx scripts/check-advertising-foundation.ts",
     "test:advertising-complete": "tsx scripts/check-advertising-completion.ts",
     "test:database-inventory": "node scripts/check-database-inventory.mjs",
+    "test:database-migration-baseline": "node scripts/check-database-inventory.mjs --validate-baseline-only",
     "test:integrity:contracts": "npm run lint && npm run typecheck:strict && npm run test:travel && npm run test:client-security && npm run test:provider && npm run test:home && npm run test:products-subscriptions && npm run test:advertising && npm run test:advertising-complete && npm run test:realtime",
     "push": "git add . && git commit -m \"Atualização automática\" && git push"
   },

@@ -1,30 +1,14 @@
 {
-  "generated_at": "2026-07-22T14:35:20.147Z",
+  "generated_at": "2026-07-22T17:56:49.338Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
-  "scanned_files": 304,
+  "scanned_files": 321,
   "blocker_count": 0,
-  "review_count": 9,
+  "review_count": 11,
   "blockers": [],
   "review": [
-    {
-      "severity": "review",
-      "rule": "runtime-prompt",
-      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
-      "file": "src/components/admin/AdvertisingAdminModule.tsx",
-      "line": 194,
-      "excerpt": "const reason = approved ? null : window.prompt('Informe o motivo da reprovação:');"
-    },
-    {
-      "severity": "review",
-      "rule": "runtime-prompt",
-      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
-      "file": "src/components/admin/AdvertisingAdminModule.tsx",
-      "line": 216,
-      "excerpt": "? window.prompt('Referência do pagamento ou comprovante:', `MANUAL-${Date.now()}`)"
-    },
     {
       "severity": "review",
       "rule": "runtime-prompt",
@@ -48,6 +32,38 @@
       "file": "src/components/admin/EmprestimosModule.tsx",
       "line": 445,
       "excerpt": "const motivo = window.prompt('Motivo da reprovacao (o cliente recebera essa mensagem):');"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/FornecedoresModule.tsx",
+      "line": 82,
+      "excerpt": "const reasonText = action === 'aprovar' ? '' : window.prompt('Informe o motivo:')?.trim();"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/FornecedoresModule.tsx",
+      "line": 86,
+      "excerpt": "const saleValue = window.prompt('Valor de venda do novo produto:', String(request.custo_unitario || 0));"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/FornecedoresModule.tsx",
+      "line": 124,
+      "excerpt": "const reasonText = action === 'aprovar' ? window.prompt('Observação da aprovação (opcional):') || '' : window.prompt('Informe o motivo:')?.trim();"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/FornecedoresModule.tsx",
+      "line": 141,
+      "excerpt": "const method = window.prompt('Forma de pagamento:', 'PIX') || 'PIX';"
     },
     {
       "severity": "review",
@@ -78,7 +94,7 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/lib/deleteRequest.ts",
-      "line": 46,
+      "line": 42,
       "excerpt": "const motivo = window.prompt('Exclusão restrita: qual o motivo para solicitar a exclusão deste registro? Sua solicitação será enviada para aprovação administrativa.');"
     }
   ]

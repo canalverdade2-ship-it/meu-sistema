@@ -75,17 +75,27 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
     document.title = 'Programa de Afiliados | GSA';
     let active = true;
 
+<<<<<<< HEAD
     async function fetchPrograms() {
+=======
+    void (async () => {
+>>>>>>> f45124e36db6ae5a7a3644728d56972b9db88b85
       try {
         const { data, error } = await supabase.rpc('gsa_public_affiliate_programs');
         if (!active || error) return;
         setRemotePrograms(normalizePrograms(data));
       } catch {
+<<<<<<< HEAD
         // ignore
       }
     }
 
     fetchPrograms();
+=======
+        // Mantém os programas de fallback quando a RPC pública estiver indisponível.
+      }
+    })();
+>>>>>>> f45124e36db6ae5a7a3644728d56972b9db88b85
 
     return () => {
       active = false;
@@ -225,4 +235,3 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
     </div>
   );
 }
-

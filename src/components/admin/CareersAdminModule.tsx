@@ -348,29 +348,60 @@ export function CareersAdminModule() {
                   {selectedApp.salary_expectation ? formatCurrency(selectedApp.salary_expectation) : 'Não informada'}
                 </span>
               </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <span className="text-neutral-500 font-bold block">Data do Envio:</span>
+                <span className="font-bold text-neutral-900 dark:text-white">{formatDate(selectedApp.created_at)}</span>
+              </div>
             </div>
 
-            {selectedApp.notes && (
-              <div className="rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-3.5 text-xs">
-                <span className="font-bold text-neutral-500 block mb-1">Resumo das Experiências:</span>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
-                  {selectedApp.notes}
-                </p>
-              </div>
-            )}
-
-            {selectedApp.linkedin_url && (
+            {/* CURRÍCULO ANEXADO E LINKEDIN */}
+            <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
               <div>
-                <a
-                  href={selectedApp.linkedin_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" /> Acessar Perfil do LinkedIn
-                </a>
+                <span className="text-[11px] font-bold text-neutral-500 block mb-1.5">Currículo do Candidato:</span>
+                {selectedApp.resume_url ? (
+                  <a
+                    href={selectedApp.resume_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    download={`curriculo_${selectedApp.candidate_name.replace(/\s+/g, '_')}`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-black text-white shadow-md transition"
+                  >
+                    <Download className="h-4 w-4" /> Baixar / Ver Currículo
+                  </a>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-xs font-bold text-neutral-500">
+                    <FileText className="h-4 w-4" /> Nenhum arquivo anexado
+                  </div>
+                )}
               </div>
-            )}
+
+              <div>
+                <span className="text-[11px] font-bold text-neutral-500 block mb-1.5">Perfil Profissional:</span>
+                {selectedApp.linkedin_url ? (
+                  <a
+                    href={selectedApp.linkedin_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2.5 text-xs font-black text-white shadow-md transition"
+                  >
+                    <ExternalLink className="h-4 w-4" /> Acessar LinkedIn
+                  </a>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-xs font-bold text-neutral-500">
+                    <User className="h-4 w-4" /> LinkedIn não informado
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* MENSAGEM / RESUMO DAS EXPERIÊNCIAS */}
+            <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 p-4 border border-neutral-200 dark:border-neutral-700/60 text-xs">
+              <span className="font-bold text-neutral-700 dark:text-neutral-300 block mb-1">Resumo das Experiências / Mensagem:</span>
+              <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
+                {selectedApp.notes || 'Nenhuma mensagem adicional informada pelo candidato.'}
+              </p>
+            </div>
 
             {/* SEÇÃO DE AVALIAÇÃO DE STATUS */}
             <div className="space-y-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
@@ -390,7 +421,7 @@ export function CareersAdminModule() {
                     key={st.key}
                     disabled={updatingStatus}
                     onClick={() => handleUpdateStatus(st.key)}
-                    className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${selectedApp.status === st.key ? 'bg-emerald-500 text-neutral-950' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200'}`}
+                    className={`rounded-xl px-3.5 py-2 text-xs font-bold transition ${selectedApp.status === st.key ? 'bg-emerald-500 text-neutral-950 shadow-md' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200'}`}
                   >
                     {st.label}
                   </button>

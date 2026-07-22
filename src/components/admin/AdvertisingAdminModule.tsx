@@ -14,7 +14,9 @@ import {
   CalendarClock,
   CheckCircle2,
   CircleDollarSign,
+  Clock3,
   ExternalLink,
+  Eye,
   FileImage,
   MailPlus,
   Megaphone,
@@ -321,21 +323,48 @@ export function AdvertisingAdminModule() {
         const session = JSON.parse(localStorage.getItem('gsa_advertiser_session') || 'null');
         const sessionProps = session?.proposals || [];
 
-        const combinedLocalProps = [...sessionProps, ...storeProps];
+        // Dar prioridade para propostas do portal do anunciante (sessionProps por último)
+        const combinedLocalProps = [...storeProps, ...sessionProps];
         if (combinedLocalProps.length > 0) {
           if (!parsedOverview.proposals) parsedOverview.proposals = [];
 
           combinedLocalProps.forEach((p: any) => {
             if (p?.id) {
-              const existingIdx = parsedOverview.proposals.findIndex((ex) => ex.id === p.id);
+              const existingIdx = parsedOverview.proposals.findIndex((ex) => ex.id === p.id || (p.request_id && ex.request_id === p.request_id));
               if (existingIdx >= 0) {
+                const existing = parsedOverview.proposals[existingIdx];
+                const finalStatus = (p.status === 'accepted' || existing.status !== 'accepted') ? (p.status || existing.status) : existing.status;
                 parsedOverview.proposals[existingIdx] = {
-                  ...parsedOverview.proposals[existingIdx],
+                  ...existing,
                   ...p,
-                  negotiations: p.negotiations?.length ? p.negotiations : parsedOverview.proposals[existingIdx].negotiations,
+                  status: finalStatus,
+                  negotiations: p.negotiations?.length ? p.negotiations : existing.negotiations,
                 };
               } else {
                 parsedOverview.proposals.unshift(p as AdvertisingProposal);
+              }
+            }
+          });
+        }
+      } catch {}
+
+      // Sincronizar campanhas locais da contingência e do portal do anunciante
+      try {
+        const storeCamps = JSON.parse(localStorage.getItem('gsa_adv_campaigns_store') || '[]');
+        const session = JSON.parse(localStorage.getItem('gsa_advertiser_session') || 'null');
+        const sessionCamps = session?.campaigns || [];
+
+        const combinedLocalCamps = [...sessionCamps, ...storeCamps];
+        if (combinedLocalCamps.length > 0) {
+          if (!parsedOverview.campaigns) parsedOverview.campaigns = [];
+
+          combinedLocalCamps.forEach((c: any) => {
+            if (c?.id) {
+              const existingIdx = parsedOverview.campaigns.findIndex((ex) => ex.id === c.id);
+              if (existingIdx >= 0) {
+                parsedOverview.campaigns[existingIdx] = { ...parsedOverview.campaigns[existingIdx], ...c };
+              } else {
+                parsedOverview.campaigns.unshift(c as AdvertisingCampaign);
               }
             }
           });
@@ -1203,6 +1232,44 @@ export function AdvertisingAdminModule() {
           <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setCampaignAction(null)} className="rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-bold">Voltar</button><button type="button" onClick={() => void updateCampaignAction()} disabled={actionId === campaignAction.campaign.id} className={`rounded-xl px-5 py-2.5 text-sm font-black text-white disabled:opacity-60 ${campaignAction.status === 'cancelled' ? 'bg-red-600' : 'bg-neutral-950'}`}>{actionId === campaignAction.campaign.id ? 'Salvando...' : 'Confirmar'}</button></div>
         </AccessibleModal>
       )}
+
+      {selectedProposalDetailsModal && (
+        <AdminProposalDetailsModal
+          proposal={selectedProposalDetailsModal}
+          request={overview.requests.find((r) => r.id === selectedProposalDetailsModal.request_id || r.protocol === selectedProposalDetailsModal.request_id)}
+          onClose={() => setSelectedProposalDetailsModal(null)}
+          onEdit={(req) => {
+            const r = req || overview.requests.find((item) => item.id === selectedProposalDetailsModal.request_id || item.protocol === selectedProposalDetailsModal.request_id);
+            setSelectedProposalDetailsModal(null);
+            if (r) openProposal(r);
+          }}
+          onInvite={() => {
+            const reqId = selectedProposalDetailsModal.request_id;
+            setSelectedProposalDetailsModal(null);
+            void inviteAdvertiser(reqId);
+          }}
+          onAction={(status) => {
+            const prop = selectedProposalDetailsModal;
+            setSelectedProposalDetailsModal(null);
+            setProposalAction({ proposal: prop, status });
+            setProposalActionMessage('');
+          }}
+          onConfigurePayment={(prop) => {
+            setSelectedProposalDetailsModal(null);
+            const camp = overview.campaigns.find((c) => c.proposal_id === prop.id || c.id === `camp-${prop.id}`);
+            if (camp?.payment) {
+              openPaymentConfiguration(camp.payment);
+            } else {
+              setTab('payments');
+            }
+          }}
+          onGoToTab={(t) => {
+            setSelectedProposalDetailsModal(null);
+            setTab(t);
+          }}
+          busy={actionId === selectedProposalDetailsModal.id}
+        />
+      )}
     </div>
   );
 }
@@ -1344,22 +1411,285 @@ function RequestCard({ request, proposal, busy, onStatus, onProposal, onInvite }
   );
 }
 
-function ProposalRow({ proposal, request, busy, onEdit, onInvite, onAction }: { key?: string; proposal: AdvertisingProposal; request?: AdvertisingRequest; busy: boolean; onEdit: (request?: AdvertisingRequest) => void; onInvite: () => void; onAction: (status: ProposalActionStatus) => void }) {
-  const editable = EDITABLE_PROPOSAL_STATUSES.includes(proposal.status);
-  const actionable = ['draft', 'sent', 'negotiating', 'final_offer'].includes(proposal.status);
+function ProposalRow({
+  proposal,
+  request,
+  busy,
+  onViewDetails,
+}: {
+  key?: string;
+  proposal: AdvertisingProposal;
+  request?: AdvertisingRequest;
+  busy: boolean;
+  onViewDetails: (proposal: AdvertisingProposal) => void;
+}) {
+  const lastNegotiation = proposal.negotiations && proposal.negotiations.length > 0
+    ? proposal.negotiations[proposal.negotiations.length - 1]
+    : null;
+  const hasAdvertiserCounter = lastNegotiation && lastNegotiation.actor_type === 'advertiser';
+
   return (
-    <article className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row"><div><span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-700">{PROPOSAL_LABELS[proposal.status]}</span><h2 className="mt-3 text-xl font-black">{proposal.company_name || request?.company_name || 'Anunciante'} · versão {proposal.current_version}</h2><p className="mt-1 text-sm text-neutral-500">Válida até {formatDate(proposal.valid_until)} · {proposal.version?.duration_days || 0} dias</p></div><p className="text-2xl font-black text-amber-700">{currency(proposal.total_amount)}</p></div>
-      {proposal.version?.terms && <p className="mt-4 whitespace-pre-wrap rounded-2xl bg-neutral-50 p-4 text-sm text-neutral-600">{proposal.version.terms}</p>}
-      {!!proposal.negotiations?.length && <div className="mt-4 border-t border-neutral-100 pt-4"><p className="text-xs font-black uppercase tracking-wider text-neutral-400">Histórico da negociação</p><div className="mt-3 space-y-2">{proposal.negotiations.map((item) => <div key={item.id} className={`rounded-xl p-3 text-sm ${item.actor_type === 'advertiser' ? 'bg-amber-50' : 'bg-neutral-50'}`}><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-black">{item.actor_type === 'advertiser' ? 'Anunciante' : 'Equipe GSA'}{item.proposed_amount ? ` · ${currency(item.proposed_amount)}` : ''}</p><time className="text-xs text-neutral-400">{formatDateTime(item.created_at)}</time></div><p className="mt-1 whitespace-pre-wrap text-neutral-600">{item.message}</p></div>)}</div></div>}
-      <div className="mt-5 flex flex-wrap gap-2">
-        {editable && <button type="button" disabled={busy} onClick={() => onEdit(request)} className="rounded-xl bg-neutral-950 px-4 py-2.5 text-xs font-black text-white">{proposal.status === 'negotiating' ? 'Responder contraproposta' : 'Criar nova versão'}</button>}
-        <button type="button" disabled={busy} onClick={onInvite} className="rounded-xl border border-neutral-200 px-4 py-2.5 text-xs font-black">Reenviar acesso ao portal</button>
-        {['sent', 'negotiating'].includes(proposal.status) && <button type="button" disabled={busy} onClick={() => onAction('final_offer')} className="rounded-xl border border-amber-300 px-4 py-2.5 text-xs font-black text-amber-800">Marcar oferta final</button>}
-        {actionable && <button type="button" disabled={busy} onClick={() => onAction('rejected')} className="rounded-xl border border-red-200 px-4 py-2.5 text-xs font-black text-red-700">Recusar</button>}
-        {actionable && <button type="button" disabled={busy} onClick={() => onAction('cancelled')} className="rounded-xl border border-neutral-300 px-4 py-2.5 text-xs font-black text-neutral-600">Cancelar</button>}
+    <article className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:border-neutral-300">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-700">
+              {PROPOSAL_LABELS[proposal.status]}
+            </span>
+            {hasAdvertiserCounter && (
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800 animate-pulse flex items-center gap-1">
+                <Clock3 className="h-3.5 w-3.5" /> Contraproposta do Anunciante
+              </span>
+            )}
+          </div>
+          <h2 className="mt-3 text-xl font-black">{proposal.company_name || request?.company_name || 'Anunciante'} · versão {proposal.current_version}</h2>
+          <p className="mt-1 text-sm text-neutral-500">Válida até {formatDate(proposal.valid_until)} · {proposal.version?.duration_days || 0} dias</p>
+        </div>
+        <div className="text-left sm:text-right">
+          <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Valor da Proposta</p>
+          <p className="text-2xl font-black text-amber-700">{currency(proposal.total_amount)}</p>
+        </div>
+      </div>
+
+      {hasAdvertiserCounter && (
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-bold text-amber-900 flex items-center justify-between gap-3">
+          <div>
+            <p className="font-black text-sm">Contraproposta enviada pelo anunciante: {currency(lastNegotiation.proposed_amount || proposal.total_amount)}</p>
+            <p className="mt-0.5 text-amber-800 font-normal line-clamp-1">"{lastNegotiation.message}"</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onViewDetails(proposal)}
+            className="shrink-0 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-black text-neutral-950 hover:bg-amber-400 transition"
+          >
+            Analisar no Modal
+          </button>
+        </div>
+      )}
+
+      <div className="mt-5 flex flex-wrap gap-2 border-t border-neutral-100 pt-5">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onViewDetails(proposal)}
+          className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 px-5 py-3 text-xs font-black text-white hover:bg-neutral-800 transition shadow-sm"
+        >
+          <Eye className="h-4 w-4 text-amber-400" /> Ver Detalhes e Gerenciar Proposta
+        </button>
       </div>
     </article>
+  );
+}
+
+function AdminProposalDetailsModal({
+  proposal,
+  request,
+  onClose,
+  onEdit,
+  onInvite,
+  onAction,
+  onConfigurePayment,
+  onGoToTab,
+  busy,
+}: {
+  proposal: AdvertisingProposal;
+  request?: AdvertisingRequest;
+  onClose: () => void;
+  onEdit: (request?: AdvertisingRequest) => void;
+  onInvite: () => void;
+  onAction: (status: ProposalActionStatus) => void;
+  onConfigurePayment: (proposal: AdvertisingProposal) => void;
+  onGoToTab: (tab: AdminTab) => void;
+  busy: boolean;
+}) {
+  const versionObj = (proposal.version && typeof proposal.version === 'object') ? proposal.version : null;
+  const lastNegotiation = proposal.negotiations && proposal.negotiations.length > 0
+    ? proposal.negotiations[proposal.negotiations.length - 1]
+    : null;
+  const hasAdvertiserCounter = lastNegotiation && lastNegotiation.actor_type === 'advertiser';
+  const editable = EDITABLE_PROPOSAL_STATUSES.includes(proposal.status);
+  const actionable = ['draft', 'sent', 'negotiating', 'final_offer'].includes(proposal.status);
+
+  return (
+    <AccessibleModal
+      title={`Proposta v${proposal.current_version} — ${proposal.company_name || request?.company_name || 'Anunciante'}`}
+      description={`Protocolo: ${request?.protocol || proposal.request_id}`}
+      onClose={onClose}
+      maxWidthClass="max-w-3xl"
+    >
+      <div className="space-y-6">
+        <div className="flex flex-col justify-between gap-4 rounded-2xl bg-neutral-950 p-5 text-white sm:flex-row sm:items-center">
+          <div>
+            <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-black text-amber-300">
+              {PROPOSAL_LABELS[proposal.status]}
+            </span>
+            <h3 className="mt-2 text-2xl font-black text-white">{proposal.company_name || request?.company_name || 'Anunciante'}</h3>
+            <p className="mt-1 text-xs text-neutral-400">Validade da oferta: {formatDate(proposal.valid_until)}</p>
+          </div>
+          <div className="text-left sm:text-right">
+            <p className="text-xs uppercase tracking-wider text-neutral-400">Valor Atual</p>
+            <p className="text-3xl font-black text-amber-400">{currency(proposal.total_amount)}</p>
+          </div>
+        </div>
+
+        {proposal.status === 'accepted' && (
+          <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-5 text-emerald-950 space-y-3 shadow-sm">
+            <div className="flex items-center gap-2 text-emerald-900 font-black text-sm">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+              <span>Proposta Formalmente Aceita pelo Anunciante!</span>
+            </div>
+            <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+              A proposta foi aceita pelo cliente e a campanha foi gerada com cobrança no valor de <strong>{currency(proposal.total_amount)}</strong>. Clique no botão abaixo para disponibilizar o link de pagamento/PIX ao anunciante.
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onConfigurePayment(proposal);
+                }}
+                className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-md transition flex items-center gap-2"
+              >
+                <CircleDollarSign className="h-4 w-4" /> Configurar Cobrança / Gerar Fatura
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onGoToTab('payments');
+                }}
+                className="rounded-xl border border-emerald-300 bg-white px-4 py-2.5 text-xs font-bold text-emerald-900 hover:bg-emerald-100 transition"
+              >
+                Ver Aba Pagamentos
+              </button>
+            </div>
+          </div>
+        )}
+
+        {hasAdvertiserCounter && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950 space-y-2 shadow-sm">
+            <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
+              <Clock3 className="h-5 w-5 text-amber-600 shrink-0 animate-pulse" />
+              <span>Contraproposta enviada pelo Anunciante</span>
+            </div>
+            <p className="text-sm font-black text-amber-900">
+              Valor proposto pelo cliente: <strong className="text-base text-amber-950">{currency(lastNegotiation.proposed_amount || proposal.total_amount)}</strong>
+            </p>
+            <div className="rounded-xl bg-white/80 p-3 text-xs text-amber-900 font-semibold border border-amber-200">
+              "{lastNegotiation.message}"
+            </div>
+            <p className="text-xs text-amber-700 font-bold">
+              Clique em <strong>"Responder Contraproposta"</strong> abaixo para gerar uma nova versão da oferta com o valor ajustado ou termos revisados.
+            </p>
+          </div>
+        )}
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200">
+            <p className="text-xs font-bold uppercase text-neutral-400">Duração</p>
+            <p className="mt-1 text-lg font-black text-neutral-900">{versionObj?.duration_days || 0} dias</p>
+          </div>
+          <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200">
+            <p className="text-xs font-bold uppercase text-neutral-400">Início</p>
+            <p className="mt-1 text-lg font-black text-neutral-900">{versionObj?.starts_on ? formatDate(versionObj.starts_on) : 'A definir'}</p>
+          </div>
+          <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200">
+            <p className="text-xs font-bold uppercase text-neutral-400">Término</p>
+            <p className="mt-1 text-lg font-black text-neutral-900">{versionObj?.ends_on ? formatDate(versionObj.ends_on) : 'A definir'}</p>
+          </div>
+        </div>
+
+        {versionObj?.terms && (
+          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+            <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-2">Termos e Condições da Proposta</h4>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-700 font-medium">{versionObj.terms}</p>
+          </div>
+        )}
+
+        {!!proposal.negotiations?.length && (
+          <div className="space-y-3 rounded-2xl border border-neutral-200 bg-white p-5">
+            <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400">Histórico Completo de Alterações e Contrapropostas</h4>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {proposal.negotiations.map((item) => (
+                <div key={item.id} className={`rounded-xl p-3 text-sm border ${item.actor_type === 'advertiser' ? 'bg-amber-50 border-amber-200' : 'bg-neutral-50 border-neutral-200'}`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-black text-neutral-900">
+                      {item.actor_type === 'advertiser' ? ' Anunciante (Cliente)' : ' Equipe GSA'}
+                      {item.proposed_amount ? ` · ${currency(item.proposed_amount)}` : ''}
+                    </p>
+                    <time className="text-xs text-neutral-400">{formatDateTime(item.created_at)}</time>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-neutral-600 font-medium">{item.message}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-100 pt-5">
+          {proposal.status === 'accepted' && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onConfigurePayment(proposal);
+              }}
+              className="rounded-xl bg-emerald-600 px-5 py-3 text-xs font-black text-white hover:bg-emerald-500 transition flex items-center gap-2 shadow-sm"
+            >
+              <CircleDollarSign className="h-4 w-4" /> Configurar Cobrança / Fatura
+            </button>
+          )}
+          {editable && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => onEdit(request)}
+              className="rounded-xl bg-neutral-950 px-5 py-3 text-xs font-black text-white hover:bg-neutral-800 transition"
+            >
+              {proposal.status === 'negotiating' || hasAdvertiserCounter ? 'Responder Contraproposta' : 'Criar Nova Versão'}
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onInvite}
+            className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs font-black text-amber-900 hover:bg-amber-100 transition"
+          >
+            Reenviar Acesso ao Portal
+          </button>
+          {['sent', 'negotiating'].includes(proposal.status) && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => onAction('final_offer')}
+              className="rounded-xl border border-amber-300 px-4 py-3 text-xs font-black text-amber-800 hover:bg-amber-50 transition"
+            >
+              Marcar Oferta Final
+            </button>
+          )}
+          {actionable && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => onAction('rejected')}
+              className="rounded-xl border border-red-200 px-4 py-3 text-xs font-black text-red-700 hover:bg-red-50 transition"
+            >
+              Recusar
+            </button>
+          )}
+          {actionable && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => onAction('cancelled')}
+              className="rounded-xl border border-neutral-300 px-4 py-3 text-xs font-black text-neutral-600 hover:bg-neutral-100 transition"
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
+      </div>
+    </AccessibleModal>
   );
 }
 
