@@ -131,11 +131,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-<<<<<<< HEAD
 function ProgramEditor({ program, onSaved }: { program: AffiliateProgram; onSaved: () => Promise<void> | void }) {
-=======
-function ProgramEditor({ program, onSaved }: { key?: string; program: AffiliateProgram; onSaved: () => Promise<void> }) {
->>>>>>> f45124e36db6ae5a7a3644728d56972b9db88b85
   const [draft, setDraft] = useState(program);
   const [saving, setSaving] = useState(false);
 
