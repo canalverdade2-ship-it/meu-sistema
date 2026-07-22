@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "useUnknownInCatchVariables": true,
+    "types": ["vite/client"]
+  },
+  "include": [
+    "src/components/ErrorBoundary.tsx",
+    "src/lib/errorReporter.ts",
+    "src/lib/advertiserAccess.ts",
+    "vite.config.ts"
+  ]
+}
