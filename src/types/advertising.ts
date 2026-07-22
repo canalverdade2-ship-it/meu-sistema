@@ -35,6 +35,7 @@ export type AdvertisingProposalStatus =
 export type AdvertisingCampaignStatus =
   | 'draft'
   | 'payment_pending'
+  | 'payment_overdue'
   | 'creative_review'
   | 'scheduled'
   | 'active'
@@ -43,7 +44,7 @@ export type AdvertisingCampaignStatus =
   | 'cancelled';
 
 export type AdvertisingCreativeStatus = 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived';
-export type AdvertisingPaymentStatus = 'pending' | 'processing' | 'paid' | 'failed' | 'refunded' | 'cancelled';
+export type AdvertisingPaymentStatus = 'pending' | 'processing' | 'paid' | 'failed' | 'overdue' | 'refunded' | 'cancelled';
 
 export interface PublicAdvertisement {
   campaign_id: string;
@@ -105,6 +106,7 @@ export interface AdvertisingProposalVersion {
   ends_on?: string | null;
   formats: AdvertisingFormat[];
   placement_codes: string[];
+  placement_shares?: Record<string, number>;
   frequency_model: 'once_per_session' | 'once_per_day' | 'interval_hours' | 'daily_limit' | 'unlimited';
   frequency_value?: number | null;
   impression_limit?: number | null;
@@ -136,8 +138,11 @@ export interface AdvertisingProposal {
   total_amount: number;
   valid_until?: string | null;
   accepted_at?: string | null;
+  accepted_version?: number | null;
+  accepted_amount?: number | null;
   version?: AdvertisingProposalVersion | null;
   negotiations?: AdvertisingNegotiation[];
+  created_at?: string;
 }
 
 export interface AdvertisingCreative {
@@ -175,7 +180,9 @@ export interface AdvertisingPayment {
   pix_code?: string | null;
   due_at?: string | null;
   paid_at?: string | null;
+  overdue_at?: string | null;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface AdvertisingMetric {
@@ -200,13 +207,21 @@ export interface AdvertisingCampaign {
   status: AdvertisingCampaignStatus;
   starts_at?: string | null;
   ends_at?: string | null;
+  devices?: string[];
   frequency_model?: string;
   frequency_value?: number | null;
   impression_limit?: number | null;
+  served_count?: number;
   paid_at?: string | null;
+  activated_at?: string | null;
+  paused_at?: string | null;
+  completed_at?: string | null;
+  cancelled_at?: string | null;
   creatives: AdvertisingCreative[];
   payment?: AdvertisingPayment | null;
   metrics: AdvertisingMetric[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AdvertisingPlacement {
