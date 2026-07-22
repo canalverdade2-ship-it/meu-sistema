@@ -28,6 +28,20 @@ includesAll('supabase/migrations/20260721223000_complete_advertising_platform.sq
   'GRANT EXECUTE ON FUNCTION public.gsa_ads_serve',
 ]);
 
+includesAll('supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql', [
+  'pg_advisory_xact_lock',
+  "hashtextextended('gsa_ads_serve:' || p_placement_code, 0)",
+  'REVOKE ALL ON FUNCTION public.gsa_ads_serve',
+  'GRANT EXECUTE ON FUNCTION public.gsa_ads_serve',
+]);
+
+includesAll('supabase/migrations/20260722090100_cleanup_orphan_ad_creatives.sql', [
+  'gsa_ads_list_orphan_creative_paths',
+  "object_row.bucket_id = 'gsa-ad-creatives'",
+  "object_row.created_at < now() - interval '1 hour'",
+  'GRANT EXECUTE ON FUNCTION public.gsa_ads_list_orphan_creative_paths() TO service_role',
+]);
+
 includesAll('src/pages/AdvertiserPortal.tsx', [
   'requestMagicLink',
   'gsa_advertiser_accept_proposal',
@@ -55,7 +69,12 @@ includesAll('src/components/ads/AdvertisingSlot.tsx', [
 ]);
 
 includesAll('supabase/functions/gsa-ad-delivery/index.ts', [
+  'MAX_BODY_BYTES',
   'AD_DELIVERY_HASH_SALT',
+  'gsa_auth_rate_limit_check',
+  "`ads:delivery:${action || 'unknown'}:ip:${ipHash}`",
+  '`ads:delivery:viewer:${viewerHash}`',
+  'too_many_attempts',
   'gsa_ads_serve',
   'gsa_ads_record_event',
   "createSignedUrl(data.ad.storage_path, 300)",
@@ -76,7 +95,10 @@ includesAll('supabase/functions/gsa-advertising-webhook/index.ts', [
 
 includesAll('supabase/functions/gsa-advertising-scheduler/index.ts', [
   'ADVERTISING_CRON_SECRET',
+  'safeEqual',
   'gsa_ads_refresh_campaign_states',
+  'gsa_ads_list_orphan_creative_paths',
+  "from('gsa-ad-creatives').remove(orphanPaths)",
 ]);
 
 console.log('ADVERTISING_COMPLETION_CONTRACTS_OK');
