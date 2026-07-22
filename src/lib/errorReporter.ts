@@ -26,6 +26,15 @@ function sanitize(value: string | undefined, maxLength: number) {
     .slice(0, maxLength);
 }
 
+function safeRoute() {
+  const parameterNames = [...new URLSearchParams(window.location.search).keys()]
+    .filter((name, index, all) => all.indexOf(name) === index)
+    .map((name) => encodeURIComponent(name))
+    .slice(0, 30);
+  const queryShape = parameterNames.length > 0 ? `?${parameterNames.join('&')}` : '';
+  return `${window.location.pathname}${queryShape}`.slice(0, 1_000);
+}
+
 function send(payload: ClientErrorPayload) {
   const endpoint = import.meta.env.VITE_ERROR_REPORTING_ENDPOINT?.trim();
   if (!endpoint || !/^https:\/\//i.test(endpoint)) return;
@@ -56,7 +65,7 @@ export function reportClientError(error: Error, context: ClientErrorContext = {}
     name: sanitize(error.name, 120) || 'Error',
     message: sanitize(error.message, 1_000) || 'Erro não identificado',
     source: sanitize(context.source, 120) || 'frontend',
-    route: `${window.location.pathname}${window.location.search}`.slice(0, 1_000),
+    route: safeRoute(),
     occurredAt: new Date().toISOString(),
     userAgent: navigator.userAgent.slice(0, 500),
     componentStack: sanitize(context.componentStack, 4_000),
