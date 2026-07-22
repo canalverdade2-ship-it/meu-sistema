@@ -1,0 +1,402 @@
+name: Production Environment Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Digite VALIDAR_PRODUCAO para autorizar acesso ao ambiente real
+        required: true
+        type: string
+      apply_pending_changes:
+        description: Aplicar migrations pendentes e redeploy das Edge Functions auditadas
+        required: true
+        default: false
+        type: boolean
+      run_storage_restore:
+        description: Testar restauração do Storage em projeto Supabase isolado
+        required: true
+        default: false
+        type: boolean
+      run_authenticated_smoke:
+        description: Executar login real, somente leitura, no portal do cliente
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-environment-validation
+  cancel-in-progress: false
+
+env:
+  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  preflight:
+    name: Validar autorização e secrets
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 5
+    env:
+      CONFIRMATION: ${{ inputs.confirmation }}
+      RUN_STORAGE_RESTORE: ${{ inputs.run_storage_restore }}
+      RUN_AUTHENTICATED_SMOKE: ${{ inputs.run_authenticated_smoke }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      TARGET_SUPABASE_URL: ${{ secrets.TARGET_SUPABASE_URL }}
+      TARGET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TARGET_SUPABASE_SERVICE_ROLE_KEY }}
+      PRODUCTION_APP_URL: ${{ secrets.PRODUCTION_APP_URL }}
+      PRODUCTION_CLIENT_CPF: ${{ secrets.PRODUCTION_CLIENT_CPF }}
+      PRODUCTION_CLIENT_PIN: ${{ secrets.PRODUCTION_CLIENT_PIN }}
+    steps:
+      - name: Require explicit authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION" = 'VALIDAR_PRODUCAO'
+
+      - name: Require production credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable_name in \
+            SUPABASE_DB_URL \
+            SUPABASE_URL \
+            SUPABASE_SERVICE_ROLE_KEY \
+            SUPABASE_ACCESS_TOKEN \
+            SUPABASE_DB_PASSWORD \
+            SUPABASE_PROJECT_ID
+          do
+            test -n "${!variable_name}" || {
+              echo "Secret obrigatório ausente: $variable_name" >&2
+              exit 1
+            }
+          done
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Require IPv4-compatible database connection
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const parsed = new URL(process.env.SUPABASE_DB_URL);
+          const isSessionPooler =
+            parsed.hostname.endsWith('.pooler.supabase.com') && parsed.port === '5432';
+
+          if (!isSessionPooler) {
+            throw new Error(
+              'SUPABASE_DB_URL deve usar a string Session pooler do Supabase (host *.pooler.supabase.com, porta 5432) para funcionar no GitHub Actions.',
+            );
+          }
+
+          console.log('SUPABASE_DB_URL_SESSION_POOLER_OK');
+          NODE
+
+      - name: Require optional drill credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$RUN_STORAGE_RESTORE" == 'true' ]]; then
+            test -n "$TARGET_SUPABASE_URL" || { echo 'Secret obrigatório ausente: TARGET_SUPABASE_URL' >&2; exit 1; }
+            test -n "$TARGET_SUPABASE_SERVICE_ROLE_KEY" || { echo 'Secret obrigatório ausente: TARGET_SUPABASE_SERVICE_ROLE_KEY' >&2; exit 1; }
+          fi
+          if [[ "$RUN_AUTHENTICATED_SMOKE" == 'true' ]]; then
+            test -n "$PRODUCTION_APP_URL" || { echo 'Secret obrigatório ausente: PRODUCTION_APP_URL' >&2; exit 1; }
+            test -n "$PRODUCTION_CLIENT_CPF" || { echo 'Secret obrigatório ausente: PRODUCTION_CLIENT_CPF' >&2; exit 1; }
+            test -n "$PRODUCTION_CLIENT_PIN" || { echo 'Secret obrigatório ausente: PRODUCTION_CLIENT_PIN' >&2; exit 1; }
+          fi
+
+  deployment:
+    name: Confirmar migrations e Edge Functions
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link exact production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Apply pending audited changes
+        if: inputs.apply_pending_changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db push --linked --include-all
+          supabase functions deploy gsa-ad-delivery --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+          supabase functions deploy gsa-advertising-scheduler --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Verify production database objects
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/verify-production.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_definition text;
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version = '20260722090000'
+            ) THEN
+              RAISE EXCEPTION 'Migration 20260722090000 ausente em produção';
+            END IF;
+            IF NOT EXISTS (
+              SELECT 1 FROM supabase_migrations.schema_migrations
+              WHERE version = '20260722090100'
+            ) THEN
+              RAISE EXCEPTION 'Migration 20260722090100 ausente em produção';
+            END IF;
+
+            SELECT pg_get_functiondef(to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)'))
+            INTO v_definition;
+            IF v_definition IS NULL
+               OR position('pg_advisory_xact_lock' in v_definition) = 0
+               OR position('gsa_ads_serve:global' in v_definition) = 0 THEN
+              RAISE EXCEPTION 'Hardening atômico global ausente em produção';
+            END IF;
+            IF to_regprocedure('public.gsa_ads_list_orphan_creative_paths()') IS NULL THEN
+              RAISE EXCEPTION 'Rotina de limpeza de criativos órfãos ausente em produção';
+            END IF;
+          END $$;
+          SELECT 'PRODUCTION_DATABASE_OBJECTS_OK' AS result;
+          SQL
+          supabase db query --linked --file /tmp/verify-production.sql
+
+      - name: Verify deployed Edge Functions
+        shell: bash
+        run: |
+          set -euo pipefail
+          functions_list="$(supabase functions list --project-ref "$SUPABASE_PROJECT_ID")"
+          printf '%s\n' "$functions_list"
+          grep -F 'gsa-ad-delivery' <<< "$functions_list"
+          grep -F 'gsa-advertising-scheduler' <<< "$functions_list"
+
+  database-recovery:
+    name: Inventário, backup e restauração do banco
+    needs: [preflight, deployment]
+    if: ${{ always() && needs.preflight.result == 'success' && (inputs.apply_pending_changes == false || needs.deployment.result == 'success') }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies and PostgreSQL client
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Compare repository and production database
+        run: npm run test:database-inventory
+
+      - name: Create ephemeral production backup
+        id: database_backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          backup_log="$(bash scripts/backup-database.sh "$RUNNER_TEMP/gsa-recovery")"
+          printf '%s\n' "$backup_log"
+          backup_dir="$(sed -n 's/^DATABASE_BACKUP_OK=//p' <<< "$backup_log" | tail -n 1)"
+          test -n "$backup_dir"
+          echo "backup_dir=$backup_dir" >> "$GITHUB_OUTPUT"
+
+      - name: Verify database backup checksums
+        shell: bash
+        env:
+          BACKUP_DIR: ${{ steps.database_backup.outputs.backup_dir }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs/promises';
+          import path from 'node:path';
+          import crypto from 'node:crypto';
+
+          const directory = process.env.BACKUP_DIR;
+          const manifest = JSON.parse(await fs.readFile(path.join(directory, 'manifest.json'), 'utf8'));
+          for (const [fileName, expectedHash] of [
+            [manifest.database_file, manifest.database_sha256],
+            [manifest.schema_file, manifest.schema_sha256],
+          ]) {
+            const content = await fs.readFile(path.join(directory, fileName));
+            const actualHash = crypto.createHash('sha256').update(content).digest('hex');
+            if (actualHash !== expectedHash) throw new Error(`Checksum divergente: ${fileName}`);
+          }
+          console.log('DATABASE_BACKUP_CHECKSUMS_OK');
+          NODE
+
+      - name: Restore public schemas into disposable PostgreSQL
+        shell: bash
+        env:
+          BACKUP_DIR: ${{ steps.database_backup.outputs.backup_dir }}
+          RESTORE_TEST_SCHEMAS: public,supabase_migrations
+        run: bash scripts/test-database-restore.sh "$BACKUP_DIR/database.dump"
+
+      - name: Upload non-sensitive inventory evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-environment-database-inventory-${{ github.run_id }}
+          path: |
+            audit/database-inventory.json
+            audit/database-inventory.md
+          if-no-files-found: ignore
+          retention-days: 30
+
+  storage-recovery:
+    name: Backup, checksum e restauração do Storage
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 90
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TARGET_SUPABASE_URL: ${{ secrets.TARGET_SUPABASE_URL }}
+      TARGET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TARGET_SUPABASE_SERVICE_ROLE_KEY }}
+      STORAGE_BACKUP_MAX_OBJECTS: 100000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create ephemeral Storage backup
+        id: storage_backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          backup_log="$(node scripts/backup-storage.mjs "$RUNNER_TEMP/gsa-recovery")"
+          printf '%s\n' "$backup_log"
+          backup_dir="$(sed -n 's/^STORAGE_BACKUP_OK=//p' <<< "$backup_log" | tail -n 1)"
+          test -n "$backup_dir"
+          echo "backup_dir=$backup_dir" >> "$GITHUB_OUTPUT"
+
+      - name: Verify every Storage object checksum
+        shell: bash
+        env:
+          BACKUP_DIR: ${{ steps.storage_backup.outputs.backup_dir }}
+        run: node scripts/verify-storage-backup.mjs "$BACKUP_DIR/manifest.json"
+
+      - name: Create redacted Storage evidence
+        shell: bash
+        env:
+          BACKUP_DIR: ${{ steps.storage_backup.outputs.backup_dir }}
+        run: |
+          set -euo pipefail
+          mkdir -p audit
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs/promises';
+          import path from 'node:path';
+          import crypto from 'node:crypto';
+
+          const manifest = JSON.parse(await fs.readFile(path.join(process.env.BACKUP_DIR, 'manifest.json'), 'utf8'));
+          const evidence = {
+            created_at_utc: manifest.created_at_utc,
+            source_project: manifest.source_project,
+            bucket_count: manifest.buckets.length,
+            object_count: manifest.objects.length,
+            total_bytes: manifest.objects.reduce((sum, object) => sum + Number(object.bytes || 0), 0),
+            aggregate_checksum: crypto
+              .createHash('sha256')
+              .update(manifest.objects.map((object) => object.sha256).sort().join('\n'))
+              .digest('hex'),
+          };
+          await fs.writeFile('audit/storage-backup-summary.json', `${JSON.stringify(evidence, null, 2)}\n`);
+          console.log('STORAGE_REDACTED_EVIDENCE_OK');
+          NODE
+
+      - name: Restore Storage into isolated project and clean up
+        if: inputs.run_storage_restore
+        shell: bash
+        env:
+          BACKUP_DIR: ${{ steps.storage_backup.outputs.backup_dir }}
+          ALLOW_STORAGE_RESTORE: 'true'
+          CLEANUP_AFTER_RESTORE: 'true'
+          RESTORE_STORAGE_PREFIX: validation-${{ github.run_id }}
+        run: node scripts/test-storage-restore.mjs "$BACKUP_DIR/manifest.json"
+
+      - name: Upload redacted Storage evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-environment-storage-summary-${{ github.run_id }}
+          path: audit/storage-backup-summary.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  authenticated-smoke:
+    name: Smoke autenticado somente leitura
+    if: inputs.run_authenticated_smoke
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ secrets.PRODUCTION_APP_URL }}
+      PRODUCTION_CLIENT_CPF: ${{ secrets.PRODUCTION_CLIENT_CPF }}
+      PRODUCTION_CLIENT_PIN: ${{ secrets.PRODUCTION_CLIENT_PIN }}
+      PRODUCTION_SMOKE: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Execute authenticated read-only smoke
+        run: npm run test:e2e:production-auth

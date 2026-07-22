@@ -1,0 +1,300 @@
+name: Advertising Security Hardening
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/advertising-security-hardening.yml'
+      - 'supabase/functions/gsa-ad-delivery/**'
+      - 'supabase/functions/gsa-advertising-scheduler/**'
+      - 'supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql'
+      - 'supabase/migrations/20260722090100_cleanup_orphan_ad_creatives.sql'
+      - 'scripts/check-advertising-completion.ts'
+      - 'package.json'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/advertising-security-hardening.yml'
+      - 'supabase/functions/gsa-ad-delivery/**'
+      - 'supabase/functions/gsa-advertising-scheduler/**'
+      - 'supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql'
+      - 'supabase/migrations/20260722090100_cleanup_orphan_ad_creatives.sql'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: advertising-security-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: advertising_security_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d advertising_security_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGPASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate TypeScript and advertising contracts
+        run: |
+          npx tsc --noEmit
+          npm run test:advertising
+          npm run test:advertising-complete
+
+      - name: Validate Edge Functions
+        run: |
+          deno check supabase/functions/gsa-ad-delivery/index.ts
+          deno check supabase/functions/gsa-advertising-scheduler/index.ts
+          deno test --allow-env supabase/functions/gsa-ad-delivery/index_test.ts
+          deno test --allow-env supabase/functions/gsa-advertising-scheduler/index_test.ts
+
+      - name: Apply advertising migrations in clean PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test <<'SQL'
+          CREATE EXTENSION IF NOT EXISTS pgcrypto;
+          DO $$ BEGIN CREATE ROLE anon NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+          DO $$ BEGIN CREATE ROLE authenticated NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+          DO $$ BEGIN CREATE ROLE service_role NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+          CREATE SCHEMA IF NOT EXISTS auth;
+          CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT '00000000-0000-0000-0000-000000000099'::uuid $$;
+          CREATE SCHEMA IF NOT EXISTS storage;
+          CREATE TABLE IF NOT EXISTS storage.buckets (
+            id text PRIMARY KEY,
+            name text NOT NULL,
+            public boolean NOT NULL DEFAULT false,
+            file_size_limit bigint,
+            allowed_mime_types text[]
+          );
+          CREATE TABLE IF NOT EXISTS storage.objects (
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+            bucket_id text NOT NULL,
+            name text NOT NULL,
+            owner uuid,
+            created_at timestamptz NOT NULL DEFAULT now()
+          );
+          ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+          CREATE OR REPLACE FUNCTION public.gsa_admin_has_module(text) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT true $$;
+          CREATE OR REPLACE FUNCTION public.gsa_current_actor_type() RETURNS text LANGUAGE sql STABLE AS $$ SELECT 'admin'::text $$;
+          CREATE OR REPLACE FUNCTION public.gsa_current_actor_id() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT '00000000-0000-0000-0000-000000000001'::uuid $$;
+          SQL
+
+          for migration in \
+            supabase/migrations/20260721210000_create_advertising_foundation.sql \
+            supabase/migrations/20260721223000_complete_advertising_platform.sql \
+            supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql \
+            supabase/migrations/20260722090100_cleanup_orphan_ad_creatives.sql
+          do
+            psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 -f "$migration"
+          done
+
+      - name: Verify hardening contracts in PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          DECLARE
+            v_definition text;
+          BEGIN
+            IF to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)') IS NULL THEN
+              RAISE EXCEPTION 'Motor de entrega ausente';
+            END IF;
+            SELECT pg_get_functiondef(to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)')) INTO v_definition;
+            IF position('pg_advisory_xact_lock' in v_definition) = 0
+               OR position('gsa_ads_serve:global' in v_definition) = 0 THEN
+              RAISE EXCEPTION 'Motor de entrega não serializa campanhas entre posições';
+            END IF;
+            IF to_regprocedure('public.gsa_ads_list_orphan_creative_paths()') IS NULL THEN
+              RAISE EXCEPTION 'Rotina de criativos órfãos ausente';
+            END IF;
+            IF has_function_privilege('anon', 'public.gsa_ads_serve(text,text,text,text,text)', 'EXECUTE')
+               OR has_function_privilege('authenticated', 'public.gsa_ads_serve(text,text,text,text,text)', 'EXECUTE')
+               OR has_function_privilege('anon', 'public.gsa_ads_list_orphan_creative_paths()', 'EXECUTE')
+               OR has_function_privilege('authenticated', 'public.gsa_ads_list_orphan_creative_paths()', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Rotina interna exposta para papéis públicos';
+            END IF;
+          END $$;
+          SELECT 'ADVERTISING_SECURITY_HARDENING_OK' AS result;
+          SQL
+
+      - name: Exercise cross-placement impression limit concurrently
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO public.gsa_ad_placements(
+            id, code, name, route_pattern, module, format, position, devices, active
+          ) VALUES
+            ('00000000-0000-4000-8000-000000000201', 'CONCURRENCY_A', 'Concorrência A', '/', 'test', 'sticky_banner', 'a', ARRAY['desktop'], true),
+            ('00000000-0000-4000-8000-000000000202', 'CONCURRENCY_B', 'Concorrência B', '/', 'test', 'sticky_banner', 'b', ARRAY['desktop'], true)
+          ON CONFLICT (code) DO NOTHING;
+
+          INSERT INTO public.gsa_advertisers(
+            id, legal_name, trade_name, document, company_size, segment,
+            responsible_name, responsible_email, responsible_phone, status
+          ) VALUES (
+            '00000000-0000-4000-8000-000000000210', 'Anunciante Concorrência', 'Anunciante Concorrência',
+            '99999999999', 'micro', 'Teste', 'Responsável', 'concorrencia@example.com', '11999999999', 'active'
+          );
+
+          INSERT INTO public.gsa_ad_campaigns(
+            id, advertiser_id, name, slug, status, starts_at, ends_at,
+            frequency_model, impression_limit, paid_at, activated_at
+          ) VALUES (
+            '00000000-0000-4000-8000-000000000220',
+            '00000000-0000-4000-8000-000000000210',
+            'Campanha Concorrência', 'campanha-concorrencia', 'active',
+            now() - interval '1 minute', now() + interval '1 day',
+            'unlimited', 1, now(), now()
+          );
+
+          INSERT INTO public.gsa_ad_creatives(
+            id, campaign_id, kind, status, headline, body, approved_at
+          ) VALUES (
+            '00000000-0000-4000-8000-000000000230',
+            '00000000-0000-4000-8000-000000000220',
+            'text', 'approved', 'Teste concorrente', 'Uma impressão', now()
+          );
+
+          INSERT INTO public.gsa_ad_campaign_placements(campaign_id, placement_id, priority)
+          VALUES
+            ('00000000-0000-4000-8000-000000000220', '00000000-0000-4000-8000-000000000201', 1),
+            ('00000000-0000-4000-8000-000000000220', '00000000-0000-4000-8000-000000000202', 1);
+
+          CREATE OR REPLACE FUNCTION public.gsa_test_slow_ad_insert()
+          RETURNS trigger LANGUAGE plpgsql AS $$
+          BEGIN
+            PERFORM pg_sleep(1);
+            RETURN NEW;
+          END;
+          $$;
+          CREATE TRIGGER trg_gsa_test_slow_ad_insert
+          BEFORE INSERT ON public.gsa_ad_delivery_events
+          FOR EACH ROW EXECUTE FUNCTION public.gsa_test_slow_ad_insert();
+          SQL
+
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 -Atqc \
+            "SELECT public.gsa_ads_serve('CONCURRENCY_A','viewer-a','session-a','/','desktop')" > /tmp/ad-a.json &
+          pid_a=$!
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 -Atqc \
+            "SELECT public.gsa_ads_serve('CONCURRENCY_B','viewer-b','session-b','/','desktop')" > /tmp/ad-b.json &
+          pid_b=$!
+          wait "$pid_a"
+          wait "$pid_b"
+
+          psql -h 127.0.0.1 -U postgres -d advertising_security_test -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          DECLARE
+            v_events integer;
+            v_served bigint;
+          BEGIN
+            SELECT count(*) INTO v_events
+            FROM public.gsa_ad_delivery_events
+            WHERE campaign_id = '00000000-0000-4000-8000-000000000220';
+
+            SELECT COALESCE(sum(served), 0) INTO v_served
+            FROM public.gsa_ad_daily_metrics
+            WHERE campaign_id = '00000000-0000-4000-8000-000000000220';
+
+            IF v_events <> 1 OR v_served <> 1 THEN
+              RAISE EXCEPTION 'Limite concorrente violado: eventos %, métricas %', v_events, v_served;
+            END IF;
+          END $$;
+          DROP TRIGGER trg_gsa_test_slow_ad_insert ON public.gsa_ad_delivery_events;
+          DROP FUNCTION public.gsa_test_slow_ad_insert();
+          SELECT 'ADVERTISING_CONCURRENCY_LIMIT_OK' AS result;
+          SQL
+
+      - name: Production build
+        run: npm run build
+
+  deploy-production:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Validate production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Apply hardening migrations
+        run: supabase db push --linked --include-all
+
+      - name: Deploy hardened functions
+        run: |
+          supabase functions deploy gsa-ad-delivery --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+          supabase functions deploy gsa-advertising-scheduler --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt
+
+      - name: Verify production objects
+        shell: bash
+        run: |
+          cat > /tmp/advertising-security-production.sql <<'SQL'
+          DO $$
+          DECLARE v_definition text;
+          BEGIN
+            SELECT pg_get_functiondef(to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)')) INTO v_definition;
+            IF v_definition IS NULL
+               OR position('pg_advisory_xact_lock' in v_definition) = 0
+               OR position('gsa_ads_serve:global' in v_definition) = 0 THEN
+              RAISE EXCEPTION 'Hardening atômico global ausente em produção';
+            END IF;
+            IF to_regprocedure('public.gsa_ads_list_orphan_creative_paths()') IS NULL THEN
+              RAISE EXCEPTION 'Limpeza de órfãos ausente em produção';
+            END IF;
+          END $$;
+          SELECT 'ADVERTISING_SECURITY_PRODUCTION_OK' AS result;
+          SQL
+          supabase db query --linked --file /tmp/advertising-security-production.sql

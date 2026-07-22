@@ -1,0 +1,231 @@
+name: Apply Advertising Production Hardening
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Digite APLICAR_HARDENING_PUBLICIDADE para autorizar a alteração em produção
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apply-advertising-production-hardening
+  cancel-in-progress: false
+
+env:
+  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  apply-production-hardening:
+    name: Aplicar hardening de publicidade
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    env:
+      CONFIRMATION: ${{ inputs.confirmation }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - name: Checkout audited revision
+        uses: actions/checkout@v4
+
+      - name: Validate explicit production authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION" = 'APLICAR_HARDENING_PUBLICIDADE'
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_ID"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link exact production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Inspect production migration history
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee advertising-migrations-before.log
+
+      - name: Apply only audited advertising migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > advertising-migrations-to-repair.txt
+          : > advertising-migration-apply.log
+
+          has_remote_version() {
+            local target="$1"
+            awk -F'|' -v target="$target" '
+              {
+                remote=$2
+                gsub(/[^0-9]/, "", remote)
+                if (remote == target) found=1
+              }
+              END { exit found ? 0 : 1 }
+            ' advertising-migrations-before.log
+          }
+
+          apply_if_missing() {
+            local version="$1"
+            local file="$2"
+            if has_remote_version "$version"; then
+              echo "Migration $version já registrada em produção." | tee -a advertising-migration-apply.log
+            else
+              echo "Aplicando migration auditada $version." | tee -a advertising-migration-apply.log
+              supabase db query --linked --file "$file" 2>&1 | tee -a advertising-migration-apply.log
+              echo "$version" >> advertising-migrations-to-repair.txt
+            fi
+          }
+
+          apply_if_missing \
+            20260722090000 \
+            supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql
+          apply_if_missing \
+            20260722090100 \
+            supabase/migrations/20260722090100_cleanup_orphan_ad_creatives.sql
+
+      - name: Verify database objects before history repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/verify-advertising-hardening.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_delivery_definition text;
+          BEGIN
+            SELECT pg_get_functiondef(to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)'))
+              INTO v_delivery_definition;
+
+            IF v_delivery_definition IS NULL
+               OR position('pg_advisory_xact_lock' in v_delivery_definition) = 0
+               OR position('gsa_ads_serve:global' in v_delivery_definition) = 0 THEN
+              RAISE EXCEPTION 'Hardening atômico global não foi comprovado';
+            END IF;
+
+            IF to_regprocedure('public.gsa_ads_list_orphan_creative_paths()') IS NULL THEN
+              RAISE EXCEPTION 'Rotina de criativos órfãos não foi comprovada';
+            END IF;
+
+            IF NOT has_function_privilege(
+              'service_role',
+              'public.gsa_ads_serve(text,text,text,text,text)',
+              'EXECUTE'
+            ) THEN
+              RAISE EXCEPTION 'service_role sem EXECUTE em gsa_ads_serve';
+            END IF;
+
+            IF has_function_privilege(
+              'anon',
+              'public.gsa_ads_serve(text,text,text,text,text)',
+              'EXECUTE'
+            ) OR has_function_privilege(
+              'authenticated',
+              'public.gsa_ads_serve(text,text,text,text,text)',
+              'EXECUTE'
+            ) THEN
+              RAISE EXCEPTION 'Função de entrega exposta a papel não autorizado';
+            END IF;
+
+            IF NOT has_function_privilege(
+              'service_role',
+              'public.gsa_ads_list_orphan_creative_paths()',
+              'EXECUTE'
+            ) THEN
+              RAISE EXCEPTION 'service_role sem EXECUTE na limpeza de órfãos';
+            END IF;
+          END $$;
+
+          SELECT 'ADVERTISING_HARDENING_OBJECTS_VERIFIED' AS result;
+          SQL
+
+          supabase db query --linked --file /tmp/verify-advertising-hardening.sql \
+            2>&1 | tee advertising-hardening-verification-before-repair.log
+          grep -q 'ADVERTISING_HARDENING_OBJECTS_VERIFIED' \
+            advertising-hardening-verification-before-repair.log
+
+      - name: Register only verified migration versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > advertising-migration-repair.log
+          while IFS= read -r version; do
+            test -n "$version" || continue
+            supabase migration repair --linked --status applied "$version" \
+              2>&1 | tee -a advertising-migration-repair.log
+          done < advertising-migrations-to-repair.txt
+
+      - name: Verify migration history after repair
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee advertising-migrations-after.log
+          for target in 20260722090000 20260722090100; do
+            awk -F'|' -v target="$target" '
+              {
+                remote=$2
+                gsub(/[^0-9]/, "", remote)
+                if (remote == target) found=1
+              }
+              END { exit found ? 0 : 1 }
+            ' advertising-migrations-after.log
+          done
+
+      - name: Deploy audited Edge Functions
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase functions deploy gsa-ad-delivery \
+            --project-ref "$SUPABASE_PROJECT_ID" \
+            --no-verify-jwt 2>&1 | tee advertising-function-delivery-deploy.log
+          supabase functions deploy gsa-advertising-scheduler \
+            --project-ref "$SUPABASE_PROJECT_ID" \
+            --no-verify-jwt 2>&1 | tee advertising-function-scheduler-deploy.log
+
+      - name: Verify deployed Edge Functions
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase functions list --project-ref "$SUPABASE_PROJECT_ID" \
+            2>&1 | tee advertising-functions-after.log
+          grep -F 'gsa-ad-delivery' advertising-functions-after.log
+          grep -F 'gsa-advertising-scheduler' advertising-functions-after.log
+
+      - name: Verify database objects after deployment
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase db query --linked --file /tmp/verify-advertising-hardening.sql \
+            2>&1 | tee advertising-hardening-verification-after.log
+          grep -q 'ADVERTISING_HARDENING_OBJECTS_VERIFIED' \
+            advertising-hardening-verification-after.log
+
+      - name: Upload non-sensitive production evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: advertising-production-hardening-${{ github.run_id }}
+          path: |
+            advertising-migrations-before.log
+            advertising-migration-apply.log
+            advertising-migrations-to-repair.txt
+            advertising-hardening-verification-before-repair.log
+            advertising-migration-repair.log
+            advertising-migrations-after.log
+            advertising-function-delivery-deploy.log
+            advertising-function-scheduler-deploy.log
+            advertising-functions-after.log
+            advertising-hardening-verification-after.log
+          if-no-files-found: ignore
+          retention-days: 30

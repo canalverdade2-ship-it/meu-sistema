@@ -1,0 +1,209 @@
+name: Production Integrity
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-integrity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  VITE_SUPABASE_URL: http://127.0.0.1:54321
+  VITE_SUPABASE_ANON_KEY: ci-anon-key-not-for-production
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  validate-application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGPASSWORD: postgres
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate operational scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n scripts/backup-database.sh
+          bash -n scripts/test-database-restore.sh
+          node --check scripts/backup-storage.mjs
+          node --check scripts/verify-storage-backup.mjs
+          node --check scripts/test-storage-restore.mjs
+          node --check scripts/check-database-inventory.mjs
+
+      - name: Validate TypeScript and production audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            npm run lint
+            npm run typecheck:strict
+          } 2>&1 | tee integrity-types.log
+
+      - name: Validate client and marketplace domains
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            npm run test:travel
+            npm run test:client-security
+            npm run test:provider
+            npm run test:home
+            npm run test:products-subscriptions
+          } 2>&1 | tee integrity-domains.log
+
+      - name: Validate advertising and Realtime contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            npm run test:advertising
+            npm run test:advertising-complete
+            npm run test:realtime
+          } 2>&1 | tee integrity-platform.log
+
+      - name: Upload contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-integrity-contracts-${{ github.run_id }}
+          path: |
+            integrity-types.log
+            integrity-domains.log
+            integrity-platform.log
+            audit/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Exercise administrative migrations and authorization
+        run: npm run test:admin
+
+      - name: Check every Edge Function entrypoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            while IFS= read -r file; do
+              echo "Deno check: $file"
+              deno check "$file"
+            done < <(find supabase/functions -mindepth 2 -maxdepth 2 -name index.ts -type f | sort)
+          } 2>&1 | tee edge-functions-check.log
+
+      - name: Run deterministic Edge Function tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            while IFS= read -r file; do
+              echo "Deno test: $file"
+              deno test --allow-env "$file"
+            done < <(find supabase/functions -mindepth 2 -maxdepth 2 -name '*_test.ts' -type f | sort)
+          } 2>&1 | tee edge-functions-test.log
+
+      - name: Upload Edge Function evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-integrity-edge-functions-${{ github.run_id }}
+          path: |
+            edge-functions-check.log
+            edge-functions-test.log
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run safe public E2E smoke tests
+        run: npm run test:e2e:smoke
+
+      - name: Production build
+        run: npm run build
+
+      - name: Upload Playwright evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-integrity-playwright-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  validate-production-database:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate-application
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Require production inventory credential
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL"
+
+      - name: Compare repository and production database
+        run: npm run test:database-inventory
+
+      - name: Upload database inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-database-inventory-${{ github.run_id }}
+          path: |
+            audit/database-inventory.json
+            audit/database-inventory.md
+          if-no-files-found: ignore
+          retention-days: 30
