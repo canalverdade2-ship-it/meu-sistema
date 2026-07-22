@@ -1,0 +1,67 @@
+name: Apply GSA Ads Flow Fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/apply-gsa-ads-flow-fix.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-gsa-ads-flow-fix
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Corrigir fluxo completo do GSA Anúncios
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Aplicar correções auditadas
+        run: python3 scripts/apply-gsa-ads-flow-fix.py
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar TypeScript e build
+        run: |
+          npx tsc --noEmit
+          npm run build
+
+      - name: Validar contratos de anúncios
+        run: |
+          npm run test:advertising
+          npm run test:advertising-complete
+
+      - name: Publicar correções diretamente na main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            src/components/public/AdvertisingPage.tsx \
+            src/components/admin/AdvertisingAdminModule.tsx \
+            src/pages/AdvertiserPortal.tsx \
+            src/types/advertising.ts \
+            supabase/config.toml \
+            supabase/functions/gsa-advertiser-access/index.ts \
+            supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql \
+            .github/workflows/deploy-advertising-platform.yml
+          git diff --cached --check
+          git commit -m 'Corrigir fluxo completo do GSA Anúncios'
+          git push origin HEAD:main
