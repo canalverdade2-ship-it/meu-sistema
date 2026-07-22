@@ -69,8 +69,49 @@ jobs:
           node --check scripts/test-storage-restore.mjs
           node --check scripts/check-database-inventory.mjs
 
-      - name: Validate contracts and strict TypeScript scope
-        run: npm run test:integrity:contracts
+      - name: Validate TypeScript and production audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            npm run lint
+            npm run typecheck:strict
+          } 2>&1 | tee integrity-types.log
+
+      - name: Validate client and marketplace domains
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            npm run test:travel
+            npm run test:client-security
+            npm run test:provider
+            npm run test:home
+            npm run test:products-subscriptions
+          } 2>&1 | tee integrity-domains.log
+
+      - name: Validate advertising and Realtime contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            npm run test:advertising
+            npm run test:advertising-complete
+            npm run test:realtime
+          } 2>&1 | tee integrity-platform.log
+
+      - name: Upload contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-integrity-contracts-${{ github.run_id }}
+          path: |
+            integrity-types.log
+            integrity-domains.log
+            integrity-platform.log
+            audit/
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Exercise administrative migrations and authorization
         run: npm run test:admin
