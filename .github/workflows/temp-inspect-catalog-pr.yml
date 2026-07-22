@@ -12,21 +12,31 @@ jobs:
   inspect:
     if: github.head_ref == 'agent/recover-service-packages'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/recover-service-packages
           fetch-depth: 0
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-      - name: Inspect catalog schema
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Link production project
         shell: bash
         run: |
           set -euo pipefail
-          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -At <<'SQL' > catalog-schema.txt
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+      - name: Inspect catalog schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/inspect-catalog.sql <<'SQL'
           SELECT 'TABLE|' || table_name || '|' || column_name || '|' || data_type || '|' || is_nullable
           FROM information_schema.columns
           WHERE table_schema='public'
@@ -40,6 +50,7 @@ jobs:
           FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
           WHERE n.nspname='public' AND p.proname IN ('gsa_admin_import_service_catalog','gsa_public_service_catalog');
           SQL
+          supabase db query --linked --file /tmp/inspect-catalog.sql > catalog-schema.txt
       - name: Commit inspection
         run: |
           git config user.name 'github-actions[bot]'
