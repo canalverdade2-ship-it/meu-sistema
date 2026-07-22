@@ -68,6 +68,7 @@ jobs:
           node --check scripts/verify-storage-backup.mjs
           node --check scripts/test-storage-restore.mjs
           node --check scripts/check-database-inventory.mjs
+          npm run test:database-migration-baseline
 
       - name: Validate TypeScript and production audit
         shell: bash
