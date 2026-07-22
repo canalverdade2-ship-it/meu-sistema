@@ -1,0 +1,49 @@
+name: Temporary Inspect Catalog PR
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    if: github.head_ref == 'agent/recover-service-packages'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/recover-service-packages
+          fetch-depth: 0
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Inspect catalog schema
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -At <<'SQL' > catalog-schema.txt
+          SELECT 'TABLE|' || table_name || '|' || column_name || '|' || data_type || '|' || is_nullable
+          FROM information_schema.columns
+          WHERE table_schema='public'
+            AND (table_name ILIKE '%servic%' OR table_name ILIKE '%pacot%')
+          ORDER BY table_name, ordinal_position;
+          SELECT 'FUNCTION|' || p.proname || '|' || pg_get_function_identity_arguments(p.oid)
+          FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+          WHERE n.nspname='public' AND p.proname IN ('gsa_public_service_catalog','gsa_admin_import_service_catalog','gsa_admin_service_catalog_snapshot','gsa_admin_save_service_package')
+          ORDER BY p.proname;
+          SELECT 'SOURCE|' || p.proname || E'\n' || pg_get_functiondef(p.oid)
+          FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+          WHERE n.nspname='public' AND p.proname IN ('gsa_admin_import_service_catalog','gsa_public_service_catalog');
+          SQL
+      - name: Commit inspection
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add catalog-schema.txt
+          git commit -m 'Registrar inspeção do catálogo real'
+          git push origin HEAD:agent/recover-service-packages
