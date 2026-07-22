@@ -44,5 +44,13 @@ export function resolveLegacyRoute(pathname: string, search: string): string | n
     return routes.marketplace.classifieds.root();
   }
 
+  // 3. Portal do anunciante anterior à padronização em /anuncios
+  if (normalizedPath === '/anunciante') {
+    return routes.login.advertiser();
+  }
+  if (normalizedPath.startsWith('/anunciante/')) {
+    return `/anuncios/${normalizedPath.slice('/anunciante/'.length)}`;
+  }
+
   return null;
 }

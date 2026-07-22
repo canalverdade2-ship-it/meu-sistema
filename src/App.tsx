@@ -21,12 +21,15 @@ import { navigate, replace } from './routing/navigationService';
 import { isRouteAllowed } from './routing/routeSecurity';
 import { readSafeReturnTo } from './routing/safeReturnTo';
 import { defaultAdminPath } from './security/collaboratorAccess';
+import { supabase } from './lib/supabase';
 
 const queryClient = new QueryClient();
 
 const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((module) => ({ default: module.SecureAdminPanel })));
 const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
 const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
+const FornecedorDashboard = lazy(() => import('./pages/Fornecedor/FornecedorDashboard').then((module) => ({ default: module.FornecedorDashboard })));
+const FornecedorAccessPage = lazy(() => import('./pages/Fornecedor/FornecedorAccessPage').then((module) => ({ default: module.FornecedorAccessPage })));
 const AdvertiserPortal = lazy(() => import('./pages/AdvertiserPortal').then((module) => ({ default: module.AdvertiserPortal })));
 const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore').then((module) => ({ default: module.MarketplaceGSAStore })));
 
@@ -44,9 +47,10 @@ export default function App() {
     colaboradorNome?: string;
     colaboradorModulos?: string[];
     prestadorId?: string;
+    fornecedorId?: string;
   }>({});
   const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const isSessionActive = !!(session.clientId || session.adminAuth || session.prestadorId);
+  const isSessionActive = !!(session.clientId || session.adminAuth || session.prestadorId || session.fornecedorId);
 
   useEffect(() => {
     const legacyRedirect = resolveLegacyRoute(window.location.pathname, window.location.search);
@@ -83,10 +87,19 @@ export default function App() {
               return;
             }
             setSession({ prestadorId: access.provider_id });
+          } else if (restored.atorTipo === 'fornecedor') {
+            const { data: access, error } = await supabase.rpc('gsa_supplier_session_access_state');
+            if (error || !(access as any)?.success) {
+              await sessionService.endSession();
+              setSession({});
+              return;
+            }
+            setSession({ fornecedorId: (access as any).supplier_id });
+            if (window.location.pathname === '/login/fornecedor') replace(routes.supplier.dashboard());
           }
-        } else if (['client', 'admin', 'provider'].includes(route.area)) {
+        } else if (['client', 'admin', 'provider'].includes(route.area) || (route.area === 'supplier' && route.module !== 'access')) {
           const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-          replace(`${routes.login.root()}?returnTo=${returnTo}`);
+          replace(route.area === 'supplier' ? `${routes.login.supplier()}?returnTo=${returnTo}` : `${routes.login.root()}?returnTo=${returnTo}`);
         }
       } catch (err) {
         console.error('Failed to restore session:', err);
@@ -137,6 +150,12 @@ export default function App() {
     replace(returnTo || routes.provider.dashboard());
   };
 
+  const handleLoginFornecedor = (fornecedorId: string) => {
+    setSession({ fornecedorId });
+    const returnTo = readSafeReturnTo(window.location.search, ['/fornecedor']);
+    replace(returnTo || routes.supplier.dashboard());
+  };
+
   const handleLogout = async (isAuto = false) => {
     if (session.adminAuth) {
       await logService.logAction({ ator_tipo: session.adminType || 'admin', ator_id: session.colaboradorId, acao: 'LOGOUT', detalhes: isAuto ? 'Logout automático por inatividade (10min)' : 'Logout efetuado com sucesso' });
@@ -144,6 +163,8 @@ export default function App() {
       await logService.logAction({ ator_tipo: 'cliente', ator_id: session.clientId, acao: 'LOGOUT', detalhes: isAuto ? 'Logout automático por inatividade (10min)' : 'Logout efetuado com sucesso' });
     } else if (session.prestadorId) {
       await logService.logAction({ ator_tipo: 'prestador', ator_id: session.prestadorId, acao: 'LOGOUT', detalhes: isAuto ? 'Logout automático por inatividade (10min)' : 'Logout efetuado com sucesso' });
+    } else if (session.fornecedorId) {
+      await logService.logAction({ ator_tipo: 'fornecedor', ator_id: session.fornecedorId, acao: 'LOGOUT', detalhes: isAuto ? 'Logout automático por inatividade (10min)' : 'Logout efetuado com sucesso' });
     }
 
     await sessionService.endSession();
@@ -151,8 +172,9 @@ export default function App() {
       localStorage.removeItem(key);
       sessionStorage.removeItem(key);
     }
+    const supplierLogout = Boolean(session.fornecedorId);
     setSession({});
-    replace(routes.public.home());
+    replace(supplierLogout ? routes.login.supplier() : routes.public.home());
   };
 
   const activeView = route.area;
@@ -162,7 +184,7 @@ export default function App() {
       replace(defaultAdminPath(session.adminType, session.colaboradorModulos || []));
     } else {
       const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-      replace(`${routes.login.root()}?returnTo=${returnTo}`);
+      replace(route.area === 'supplier' ? `${routes.login.supplier()}?returnTo=${returnTo}` : `${routes.login.root()}?returnTo=${returnTo}`);
     }
     return null;
   }
@@ -189,6 +211,7 @@ export default function App() {
                 onLoginClient={handleLoginClient}
                 onLoginAdmin={handleLoginAdmin}
                 onLoginPrestador={handleLoginPrestador}
+                onSupplierAccess={() => navigate(routes.login.supplier())}
                 onGuestStore={() => navigate(routes.marketplace.root())}
                 initialPublicPage={publicPage}
                 initialServiceSlug={route.module === 'services' ? route.itemId : undefined}
@@ -212,11 +235,12 @@ export default function App() {
               />
             )}
 
-            {activeView === 'login' && (
+            {activeView === 'login' && route.module !== 'fornecedor' && (
               <Home
                 onLoginClient={handleLoginClient}
                 onLoginAdmin={handleLoginAdmin}
                 onLoginPrestador={handleLoginPrestador}
+                onSupplierAccess={() => navigate(routes.login.supplier())}
                 onGuestStore={() => navigate(routes.marketplace.root())}
                 initialPublicPage="home"
                 onPublicPageChange={(page) => navigate(
@@ -233,8 +257,13 @@ export default function App() {
                             : routes.public.systems(),
                 )}
                 loginOnly
+                initialRestrictedTab={route.module === 'prestador' ? 'prestador' : route.module === 'colaborador' ? 'colaborador' : route.module === 'admin' ? 'gestao' : undefined}
                 onBackHome={() => navigate(routes.public.home())}
               />
+            )}
+
+            {((activeView === 'supplier' && route.module === 'access' && !session.fornecedorId) || (activeView === 'login' && route.module === 'fornecedor')) && (
+              <FornecedorAccessPage onLogin={handleLoginFornecedor} onBack={() => navigate(routes.public.home())} />
             )}
 
             {activeView === 'marketplace' && !session.clientId && (
@@ -304,6 +333,10 @@ export default function App() {
                   <PrestadorDashboard prestadorId={session.prestadorId} onLogout={handleLogout} />
                 </ProviderRouteGuard>
               </ProviderNotificationProvider>
+            )}
+
+            {activeView === 'supplier' && session.fornecedorId && (
+              <FornecedorDashboard fornecedorId={session.fornecedorId} onLogout={handleLogout} />
             )}
           </Suspense>
 

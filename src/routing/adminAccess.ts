@@ -4,6 +4,7 @@ export type AdminModule =
   | 'dashboard'
   | 'cadastro'
   | 'prestadores'
+  | 'fornecedores'
   | 'parceiros'
   | 'anuncios'
   | 'catalogo'
@@ -32,6 +33,7 @@ const VALID_MODULES = new Set<AdminModule>([
   'dashboard',
   'cadastro',
   'prestadores',
+  'fornecedores',
   'parceiros',
   'anuncios',
   'catalogo',
@@ -67,7 +69,9 @@ export function normalizeAdminModule(module?: string | null): AdminModule {
   if (value === 'tickets' || value === 'suporte') return 'atendimento';
   if (value === 'cadastros' || value === 'clientes') return 'cadastro';
   if (value === 'prestadores') return 'prestadores';
+  if (value === 'fornecedores') return 'fornecedores';
   if (value === 'parceiros') return 'parceiros';
+  if (value === 'catalogo') return 'loja';
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (['vendas', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'os'].includes(value)) return 'operacoes';
   if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';
@@ -81,7 +85,9 @@ function normalizeGrantedModule(module: string): AdminModule | null {
 
   if (value === 'clientes' || value === 'cadastros') return 'cadastro';
   if (value === 'prestadores') return 'prestadores';
+  if (value === 'fornecedores') return 'fornecedores';
   if (value === 'parceiros') return 'parceiros';
+  if (value === 'catalogo') return 'loja';
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (value === 'vendas') return 'operacoes';
   if (value === 'tickets' || value === 'suporte') return 'atendimento';
@@ -132,6 +138,7 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
 
   if (original === 'clientes') return parts('admin', 'cadastros', 'clientes', itemId);
   if (original === 'prestadores') return parts('admin', 'cadastros', 'prestadores', itemId);
+  if (original === 'fornecedores') return parts('admin', 'fornecedores', tab, itemId);
   if (original === 'orcamentos') return parts('admin', 'operacoes', 'orcamentos', itemId);
   if (original === 'emprestimos') return parts('admin', 'financeiro', 'emprestimos', itemId);
   if (original === 'credito_loja') return parts('admin', 'financeiro', 'credito', itemId);
@@ -140,9 +147,10 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     case 'dashboard': return '/admin/dashboard';
     case 'cadastro': return parts('admin', 'cadastros', tab || 'clientes', itemId);
     case 'prestadores': return parts('admin', 'cadastros', 'prestadores', itemId);
+    case 'fornecedores': return parts('admin', 'fornecedores', tab, itemId);
     case 'parceiros': return parts('admin', 'parceiros', tab, itemId);
     case 'anuncios': return parts('admin', 'anuncios', tab, itemId);
-    case 'catalogo': return parts('admin', 'catalogo', tab || 'produtos', itemId);
+    case 'catalogo': return parts('admin', 'loja', tab || 'produtos', itemId);
     case 'operacoes': return parts('admin', 'operacoes', tab || 'orcamentos', itemId);
     case 'demandas': return parts('admin', 'demandas', tab, itemId);
     case 'loja': return parts('admin', 'loja', tab, itemId);

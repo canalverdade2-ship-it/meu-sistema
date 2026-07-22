@@ -1,4 +1,4 @@
-import { ArrowRight, BriefcaseBusiness, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, PackageSearch, Sparkles, Users } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { LogoGSA } from '../ui/LogoGSA';
 
@@ -6,10 +6,11 @@ interface LoginHubProps {
   onBack?: () => void;
   onClientLogin: () => void;
   onClientRegister: () => void;
+  onSupplierAccess: () => void;
   onRestrictedAccess: () => void;
 }
 
-export function LoginHub({ onBack, onClientLogin, onClientRegister, onRestrictedAccess }: LoginHubProps) {
+export function LoginHub({ onBack, onClientLogin, onClientRegister, onSupplierAccess, onRestrictedAccess }: LoginHubProps) {
   const reduceMotion = useReducedMotion();
   const cardAnimation = reduceMotion
     ? {}
@@ -46,6 +47,13 @@ export function LoginHub({ onBack, onClientLogin, onClientRegister, onRestricted
                   <h2 className="mt-5 text-xl font-black text-[#142030]">Novo cadastro</h2>
                   <p className="mt-2 text-sm text-neutral-600">Validar indicação e criar conta.</p>
                   <ArrowRight className="absolute bottom-5 right-5 h-5 w-5 text-[#8a651f] transition-transform group-hover:translate-x-1" />
+                </motion.button>
+
+                <motion.button {...cardAnimation} transition={{ delay: 0.18 }} type="button" onClick={onSupplierAccess} className="group relative min-h-[150px] rounded-[1.5rem] border border-emerald-300 bg-emerald-50/60 p-5 text-left shadow-lg transition hover:-translate-y-0.5 hover:border-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 sm:col-span-2">
+                  <PackageSearch className="h-10 w-10 text-emerald-700" />
+                  <h2 className="mt-5 text-xl font-black text-[#142030]">Portal do Fornecedor</h2>
+                  <p className="mt-2 text-sm text-neutral-600">Acesso exclusivo para pedidos, entregas, notas fiscais e pagamentos.</p>
+                  <ArrowRight className="absolute bottom-5 right-5 h-5 w-5 text-emerald-700 transition-transform group-hover:translate-x-1" />
                 </motion.button>
               </div>
 

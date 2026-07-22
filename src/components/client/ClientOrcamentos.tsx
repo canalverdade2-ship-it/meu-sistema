@@ -13,8 +13,11 @@ import { logService } from '../../lib/logService';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { callClientRpc } from '../../lib/clientRpc';
+import { CatalogPackage, CatalogService, createClientServiceQuote, fetchClientServiceCatalog } from '../../lib/serviceCatalog';
 
 type PendingServiceRequest = {
+  itemType?: 'service' | 'package';
+  itemId?: string;
   title?: string;
   description?: string;
 };
@@ -83,13 +86,16 @@ export function ClientOrcamentos({
   useEffect(() => {
     if (initialTab === 'solicitar') {
       try {
-        const rawRequest = localStorage.getItem('gsa_pending_service_request');
+        const rawRequest = sessionStorage.getItem('gsa_pending_service_request') || localStorage.getItem('gsa_pending_service_request');
         if (rawRequest) {
           const parsed = JSON.parse(rawRequest);
           setPrefillRequest({
+            itemType: parsed?.itemType,
+            itemId: parsed?.itemId,
             title: parsed?.title || '',
             description: parsed?.description || ''
           });
+          sessionStorage.removeItem('gsa_pending_service_request');
           localStorage.removeItem('gsa_pending_service_request');
         }
       } catch (error) {
@@ -1420,6 +1426,12 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
   const [categoriaEscolhida, setCategoriaEscolhida] = useState<'servico' | 'produto' | 'assinatura' | 'emprestimo' | null>(null);
   const [step, setStep] = useState(0); // 0 = seleção categoria
   const [tituloSolicitacao, setTituloSolicitacao] = useState('');
+  const [selectedItemType, setSelectedItemType] = useState<'service' | 'package' | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string>('');
+  const [catalogServices, setCatalogServices] = useState<CatalogService[]>([]);
+  const [catalogPackages, setCatalogPackages] = useState<CatalogPackage[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState('');
   const [descricaoSolicitacao, setDescricaoSolicitacao] = useState('');
   const [nivelPrioridade, setNivelPrioridade] = useState<'baixa' | 'media' | 'alta'>('baixa');
   const [files, setFiles] = useState<{ file: File, nome: string }[]>([]);
@@ -1432,13 +1444,47 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
   const [promocaoAplicadaInfo, setPromocaoAplicadaInfo] = useState<any | null>(null);
 
   useEffect(() => {
-    if (!prefill) return;
+    let active = true;
+    setCatalogLoading(true);
+    fetchClientServiceCatalog().then((catalog) => {
+      if (!active) return;
+      setCatalogServices(catalog.services.filter((item) => item.status === 'ativo' && item.quoteAvailable));
+      setCatalogPackages(catalog.packages.filter((item) => item.status === 'ativo' && item.quoteAvailable));
+      setCatalogError('');
+    }).catch((error: any) => {
+      if (!active) return;
+      setCatalogError(error?.message || 'Não foi possível carregar o catálogo.');
+    }).finally(() => {
+      if (active) setCatalogLoading(false);
+    });
+    return () => { active = false; };
+  }, []);
 
+  useEffect(() => {
+    if (!prefill) return;
     setCategoriaEscolhida('servico');
     setStep(1);
-    setTituloSolicitacao(prefill.title || '');
     setDescricaoSolicitacao(prefill.description || '');
   }, [prefill]);
+
+  useEffect(() => {
+    if (!prefill || catalogLoading) return;
+    const packageMatch = catalogPackages.find((item) => item.id === prefill.itemId || item.title === prefill.title);
+    const serviceMatch = catalogServices.find((item) => item.id === prefill.itemId || item.title === prefill.title);
+    if (prefill.itemType === 'service' && serviceMatch) {
+      setSelectedItemType('service');
+      setSelectedItemId(serviceMatch.id);
+      setTituloSolicitacao(serviceMatch.title);
+    } else if (packageMatch) {
+      setSelectedItemType('package');
+      setSelectedItemId(packageMatch.id);
+      setTituloSolicitacao(packageMatch.title);
+    } else if (serviceMatch) {
+      setSelectedItemType('service');
+      setSelectedItemId(serviceMatch.id);
+      setTituloSolicitacao(serviceMatch.title);
+    }
+  }, [prefill, catalogLoading, catalogPackages, catalogServices]);
 
   const checkActivePromotion = async (categoria: string) => {
     try {
@@ -1594,8 +1640,8 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
 
   const handleFinish = async () => {
     if (isSubmitting) return;
-    if (!tituloSolicitacao.trim()) {
-      toast.error('Informe o serviço desejado.');
+    if (!selectedItemType || !selectedItemId) {
+      toast.error('Selecione um pacote ou serviço do catálogo.');
       return;
     }
     if (!descricaoSolicitacao.trim()) {
@@ -1638,24 +1684,15 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
         obsPromocao = `Promoção aplicada: ${promocaoAplicadaInfo.titulo} (${promocaoAplicadaInfo.codigo_promocao}).\n${obsPromocao}`.trim();
       }
 
-      const insertData: any = {
-        cliente_id: clientId,
-        codigo_orcamento: generateCode('ORC'),
-        status: 'em revisão',
-        categoria: categoriaEscolhida || 'servico',
-        data_criacao: new Date().toISOString().split('T')[0],
-        titulo_solicitacao: tituloSolicitacao.trim(),
-        descricao_solicitacao: descricaoSolicitacao.trim(),
-        nivel_prioridade: nivelPrioridade,
-        observacoes_servico: obsPromocao,
-        anexos: uploadedAnexos,
-        total: 0,
-        valor_servico: 0,
-        quantidade: 1,
-        ...(promocaoAplicadaId ? { promocao_id: promocaoAplicadaId, desconto: descontoPromocao } : {})
-      };
-
-      const newBudget = await clientOperationalWrite<{ id: string }>(clientId, 'orcamentos', 'insert', insertData);
+      void descontoPromocao;
+      const newBudget = await createClientServiceQuote({
+        itemType: selectedItemType,
+        itemId: selectedItemId,
+        description: obsPromocao,
+        priority: nivelPrioridade,
+        attachments: uploadedAnexos,
+        promotionId: promocaoAplicadaId,
+      });
 
       // Se houve promoção aplicada, notificar admin com destaque especial
       const tituloNotif = promocaoAplicadaId
@@ -1689,6 +1726,8 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
 
   const totalSteps = 3;
   const displayStep = step; // starts from 1 after category selection
+  const selectedPackage = selectedItemType === 'package' ? catalogPackages.find((item) => item.id === selectedItemId) : null;
+  const selectedService = selectedItemType === 'service' ? catalogServices.find((item) => item.id === selectedItemId) : null;
 
 
   return (
@@ -1807,15 +1846,38 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
             
             <div className="space-y-5 bg-white p-5 rounded-2xl ring-1 ring-neutral-200">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-neutral-700 uppercase tracking-widest pl-1">Serviço Desejado</label>
-                <input 
-                  type="text" 
-                  value={tituloSolicitacao}
-                  onChange={e => setTituloSolicitacao(e.target.value)}
-                  placeholder="Ex: Declaração de Imposto de Renda, Abertura de Empresa..."
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 text-sm font-medium focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
-                />
+                <label className="text-xs font-bold text-neutral-700 uppercase tracking-widest pl-1">Pacote ou serviço desejado</label>
+                {catalogLoading ? (
+                  <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-sm text-neutral-500"><span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />Carregando catálogo...</div>
+                ) : catalogError ? (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{catalogError}</div>
+                ) : (
+                  <select
+                    value={selectedItemType && selectedItemId ? `${selectedItemType}:${selectedItemId}` : ''}
+                    onChange={(event) => {
+                      const [type, id] = event.target.value.split(':') as ['service' | 'package', string];
+                      setSelectedItemType(type || null);
+                      setSelectedItemId(id || '');
+                      const item = type === 'package' ? catalogPackages.find((entry) => entry.id === id) : catalogServices.find((entry) => entry.id === id);
+                      setTituloSolicitacao(item?.title || '');
+                    }}
+                    className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-bold text-neutral-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                  >
+                    <option value="">Selecione no catálogo</option>
+                    {catalogPackages.length > 0 && <optgroup label="Pacotes de serviços">{catalogPackages.map((item) => <option key={item.id} value={`package:${item.id}`}>{item.title}</option>)}</optgroup>}
+                    {catalogServices.length > 0 && <optgroup label="Serviços avulsos">{catalogServices.map((item) => <option key={item.id} value={`service:${item.id}`}>{item.title}</option>)}</optgroup>}
+                  </select>
+                )}
+                {!catalogLoading && !catalogError && catalogPackages.length === 0 && catalogServices.length === 0 && <p className="rounded-xl bg-amber-50 p-3 text-xs font-bold text-amber-800">Nenhum item ativo está disponível. Solicite ao administrador o cadastro do catálogo.</p>}
               </div>
+
+              {(selectedPackage || selectedService) && (
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+                  <p className="text-sm font-black text-indigo-950">{selectedPackage?.title || selectedService?.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-indigo-800">{selectedPackage?.description || selectedService?.description}</p>
+                  {selectedPackage && selectedPackage.services.length > 0 && <ul className="mt-3 grid gap-1 text-xs text-indigo-900 sm:grid-cols-2">{selectedPackage.services.map((service) => <li key={service.id} className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-indigo-600" />{service.name}</li>)}</ul>}
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-neutral-700 uppercase tracking-widest pl-1">Descrição da Solicitação</label>
@@ -1963,7 +2025,7 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
           <button 
             onClick={() => {
               if (step === 1) {
-                if (!tituloSolicitacao.trim()) { toast.error('Informe o serviço desejado.'); return; }
+                if (!selectedItemType || !selectedItemId) { toast.error('Selecione um pacote ou serviço do catálogo.'); return; }
                 if (!descricaoSolicitacao.trim()) { toast.error('Descreva sua solicitação.'); return; }
               }
               setStep(step + 1)

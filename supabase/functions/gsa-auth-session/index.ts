@@ -123,7 +123,7 @@ export function normalizePayload(
   if (action === 'login_pin') {
     const documento = digits(payload.documento);
     const pin = digits(payload.pin);
-    const tipo = payload.tipo === 'cliente' || payload.tipo === 'prestador' ? payload.tipo : '';
+    const tipo = payload.tipo === 'cliente' || payload.tipo === 'prestador' || payload.tipo === 'fornecedor' ? payload.tipo : '';
     if (![11, 14].includes(documento.length) || pin.length !== 4 || !tipo) return null;
     return { documento, pin, tipo };
   }

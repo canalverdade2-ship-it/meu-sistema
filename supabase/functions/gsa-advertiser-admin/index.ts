@@ -93,7 +93,7 @@ export async function handleRequest(request: Request) {
   }
 
   const email = String(target.email).trim().toLowerCase();
-  const redirectTo = `${origin && configuredOrigins().includes(origin) ? origin : configuredOrigins()[0]}/anunciante`;
+  const redirectTo = `${origin && configuredOrigins().includes(origin) ? origin : configuredOrigins()[0]}/anuncios/login`;
   let authUser: any = null;
 
   const { data: inviteData, error: inviteError } = await service.auth.admin.inviteUserByEmail(email, {

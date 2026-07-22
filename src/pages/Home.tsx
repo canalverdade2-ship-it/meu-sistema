@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { ShieldAlert } from 'lucide-react';
+import { BriefcaseBusiness, ShieldAlert } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { GSAEnterpriseHomeFinal } from '../components/public/GSAEnterpriseHomeFinal';
 import { LoginHub } from '../components/public/LoginHub';
@@ -7,13 +7,13 @@ import { ClientAccessModal, type ClientAccessMode } from '../components/auth/Cli
 import { RestrictedAccessModal, type RestrictedTab } from '../components/auth/RestrictedAccessModal';
 import {
   getServicePackageSlug,
-  publicProducts,
-  publicServices,
-  servicePackages,
   type Audience,
+  type IconItem,
   type PublicPage,
+  type ServicePackage,
 } from '../data/publicServiceCatalog';
 import { usePublicPageMetadata } from '../hooks/usePublicPageMetadata';
+import { fetchPublicServiceCatalog } from '../lib/serviceCatalog';
 
 const SystemsPageFinal = lazy(() => import('../components/public/SystemsPageFinal').then((module) => ({ default: module.SystemsPageFinal })));
 const AdvertisingPage = lazy(() => import('../components/public/AdvertisingPage').then((module) => ({ default: module.AdvertisingPage })));
@@ -22,6 +22,7 @@ interface HomeProps {
   onLoginClient: (id: string, isRecovery?: boolean) => void;
   onLoginAdmin: (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => void;
   onLoginPrestador: (id: string) => void;
+  onSupplierAccess: () => void;
   onGuestStore?: () => void;
   initialPublicPage?: PublicPage;
   initialServiceSlug?: string;
@@ -31,6 +32,7 @@ interface HomeProps {
   onPartnerDetailChange?: (slug: string | null) => void;
   onLoginPage?: () => void;
   loginOnly?: boolean;
+  initialRestrictedTab?: RestrictedTab;
   onBackHome?: () => void;
 }
 
@@ -42,6 +44,7 @@ export function Home({
   onLoginClient,
   onLoginAdmin,
   onLoginPrestador,
+  onSupplierAccess,
   onGuestStore,
   initialPublicPage = 'home',
   initialServiceSlug,
@@ -51,6 +54,7 @@ export function Home({
   onPartnerDetailChange,
   onLoginPage,
   loginOnly = false,
+  initialRestrictedTab,
   onBackHome,
 }: HomeProps) {
   const [publicPage, setPublicPage] = useState<PublicPage>(initialPublicPage);
@@ -59,18 +63,26 @@ export function Home({
   const [clientMode, setClientMode] = useState<ClientAccessMode>('login');
   const [restrictedModalOpen, setRestrictedModalOpen] = useState(false);
   const [restrictedTab, setRestrictedTab] = useState<RestrictedTab>('prestador');
+  const [managedPackages, setManagedPackages] = useState<ServicePackage[]>([]);
+  const [managedServices, setManagedServices] = useState<IconItem[]>([]);
 
   const selectedPackage = useMemo(() => (
     initialServiceSlug
-      ? servicePackages.find((item) => getServicePackageSlug(item) === initialServiceSlug) || null
+      ? managedPackages.find((item) => getServicePackageSlug(item) === initialServiceSlug) || null
       : null
-  ), [initialServiceSlug]);
+  ), [initialServiceSlug, managedPackages]);
 
   usePublicPageMetadata(loginOnly ? 'home' : publicPage, selectedPackage, loginOnly);
 
   useEffect(() => {
     setPublicPage(initialPublicPage);
   }, [initialPublicPage]);
+
+  useEffect(() => {
+    if (!loginOnly || !initialRestrictedTab) return;
+    setRestrictedTab(initialRestrictedTab);
+    setRestrictedModalOpen(true);
+  }, [initialRestrictedTab, loginOnly]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -92,6 +104,31 @@ export function Home({
     const handleOpenLogin = () => openClient('login');
     window.addEventListener('open-client-login', handleOpenLogin);
     return () => window.removeEventListener('open-client-login', handleOpenLogin);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetchPublicServiceCatalog().then((catalog) => {
+      if (!active) return;
+      setManagedPackages(catalog.packages.map((item) => ({
+        id: item.id,
+        code: item.code,
+        audience: item.audience,
+        title: item.title,
+        subtitle: item.subtitle,
+        description: item.description,
+        services: item.services,
+      })));
+      setManagedServices(catalog.services.map((item) => ({
+        icon: BriefcaseBusiness,
+        title: item.title,
+        text: item.description,
+      })));
+    }).catch(() => {
+      setManagedPackages([]);
+      setManagedServices([]);
+    });
+    return () => { active = false; };
   }, []);
 
   const changePublicPage = (page: PublicPage) => {
@@ -120,6 +157,7 @@ export function Home({
           onBack={onBackHome}
           onClientLogin={() => openClient('login')}
           onClientRegister={() => openClient('register')}
+          onSupplierAccess={onSupplierAccess}
           onRestrictedAccess={() => openRestricted('prestador')}
         />
       ) : publicPage === 'systems' ? (
@@ -136,9 +174,8 @@ export function Home({
           setPublicPage={changePublicPage}
           publicAudience={publicAudience}
           setPublicAudience={setPublicAudience}
-          servicePackages={servicePackages}
-          publicProducts={publicProducts}
-          publicServices={publicServices}
+          servicePackages={managedPackages}
+          publicServices={managedServices}
           initialServiceSlug={initialServiceSlug}
           initialPartnerSlug={initialPartnerSlug}
           onServiceDetailChange={onServiceDetailChange}

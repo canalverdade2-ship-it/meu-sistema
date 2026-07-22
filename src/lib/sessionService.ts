@@ -271,7 +271,7 @@ export const sessionService = {
     return readStoredSession();
   },
 
-  async loginWithPin(documento: string, pin: string, tipo: 'cliente' | 'prestador') {
+  async loginWithPin(documento: string, pin: string, tipo: 'cliente' | 'prestador' | 'fornecedor') {
     return authenticate('login_pin', { documento, pin, tipo });
   },
 

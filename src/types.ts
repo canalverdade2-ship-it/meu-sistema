@@ -110,6 +110,10 @@ export type Servico = {
   categoria_id?: string;
   ocultar_valor?: boolean;
   visivel_na_loja?: boolean;
+  subtitulo_catalogo?: string;
+  visivel_catalogo_publico?: boolean;
+  disponivel_orcamento?: boolean;
+  ordem_catalogo?: number;
   imagem_url?: string;
   imagens_adicionais?: string[];
 };

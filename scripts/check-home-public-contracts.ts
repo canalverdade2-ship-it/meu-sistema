@@ -19,6 +19,7 @@ const budgetGatewayTest = read('supabase/functions/gsa-public-budget/index_test.
 const clientModal = read('src/components/auth/ClientAccessModal.tsx');
 const restrictedModal = read('src/components/auth/RestrictedAccessModal.tsx');
 const finalHome = read('src/components/public/GSAEnterpriseHomeFinal.tsx');
+const publicFooter = read('src/components/public/final/PublicFooter.tsx');
 const privacy = read('src/components/public/PrivacyPolicyDialog.tsx');
 const metadata = read('src/hooks/usePublicPageMetadata.ts');
 const app = read('src/App.tsx');
@@ -79,6 +80,7 @@ assert.match(home, /GSAEnterpriseHomeFinal/, 'A Home deve usar somente a impleme
 assert.doesNotMatch(home, /from '\.\.\/components\/public\/GSAEnterpriseHome'/, 'A implementação pública duplicada não pode entrar no bundle ativo');
 assert.match(home, /lazy\(\(\) => import\('\.\.\/components\/public\/SystemsPageFinal'/, 'Sites e Sistemas deve ser carregado sob demanda');
 assert.match(finalHome, /PrivacyPolicyDialog/, 'A Home final deve oferecer o aviso de privacidade');
+assert.match(publicFooter, /setPublicPage\('advertise'\)[\s\S]*Anuncie Conosco/, 'O rodapé da Home deve oferecer acesso ao formulário para anunciar');
 assert.match(privacy, /Não vendemos os dados enviados pelo site/, 'O aviso deve explicar compartilhamento e finalidade');
 assert.match(metadata, /setCanonical/, 'O SEO público deve ser controlado por um único hook');
 assert.match(metadata, /'@type': 'ProfessionalService'/, 'Sites e Sistemas deve publicar dados estruturados adequados');

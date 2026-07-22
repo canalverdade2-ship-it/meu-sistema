@@ -63,9 +63,9 @@ interface AcessosModuleProps {
 const AVAILABLE_MODULES = [
   ['cadastro', 'Cadastros (clientes e prestadores)'],
   ['prestadores', 'Prestadores (sem acesso a clientes)'],
-  ['catalogo', 'Catálogo'],
+  ['fornecedores', 'Fornecedores e compras de estoque'],
   ['operacoes', 'Operações'],
-  ['loja', 'Loja GSA Store'],
+  ['loja', 'Loja GSA Store (catálogo, vendas e pós-venda)'],
   ['classificados', 'Classificados'],
   ['viagens', 'Viagens'],
   ['saude', 'GSA Saúde'],

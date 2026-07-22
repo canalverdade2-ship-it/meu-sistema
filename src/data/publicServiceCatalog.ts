@@ -11,12 +11,15 @@ export interface IconItem {
 }
 
 export interface ServiceItem {
+  id?: string;
   name: string;
   desc: string;
 }
 
 export interface ServicePackage {
-  audience: Audience;
+  id?: string;
+  code?: string;
+  audience: Audience | 'AMBOS';
   title: string;
   subtitle: string;
   description: string;

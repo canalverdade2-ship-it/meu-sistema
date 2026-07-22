@@ -85,7 +85,7 @@ async function main() {
   const creditRoute = matchRoute('/admin/financeiro/credito/credit-1', '', '');
   assert.equal(creditRoute.module, 'credito_loja');
   assert.equal(creditRoute.itemId, 'credit-1');
-  assert.equal(routes.admin.categories(), '/admin/catalogo/categorias_loja');
+  assert.equal(routes.admin.categories(), '/admin/loja/categorias_loja');
   assert.equal(routes.admin.ordensServico(), '/admin/operacoes/os');
   assert.equal(routes.admin.ordensCompra(), '/admin/operacoes/produtos');
   assert.equal(routes.admin.ordensAssinatura(), '/admin/operacoes/assinaturas');

@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
+import { resolveLegacyRoute } from '../src/routing/legacyRouteResolver';
+import { routes } from '../src/routing/routeCatalog';
+import { matchRoute } from '../src/routing/routeMatcher';
 
 const read = (path: string) => readFileSync(path, 'utf8');
 
@@ -13,6 +16,8 @@ const routeMatcher = read('src/routing/routeMatcher.ts');
 const adminAccess = read('src/routing/adminAccess.ts');
 const adminPanel = read('src/pages/AdminPanel.tsx');
 const home = read('src/pages/Home.tsx');
+const advertiserAccess = read('src/lib/advertiserAccess.ts');
+const advertiserAdminGateway = read('supabase/functions/gsa-advertiser-admin/index.ts');
 
 assert.equal(existsSync('src/types/advertising.ts'), true, 'Tipos do domínio de anúncios devem existir');
 assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.gsa_advertisers/, 'Cadastro de anunciantes deve existir');
@@ -51,5 +56,15 @@ assert.match(routeCatalog, /ads: \(\) => '\/admin\/anuncios'/, 'Rota administrat
 assert.match(routeMatcher, /module: 'ads'/, 'Roteador deve reconhecer a vitrine de anúncios');
 assert.match(routeMatcher, /module: 'advertise'/, 'Roteador deve reconhecer a captação de anunciantes');
 assert.match(home, /AdvertisingPage/, 'Home deve carregar a página de anúncios sob demanda');
+assert.equal(routes.login.advertiser(), '/anuncios/login', 'Login do anunciante deve usar a rota padronizada');
+assert.equal(routes.advertiser.root(), '/anuncios/login', 'Portal do anunciante deve abrir pela rota de login padronizada');
+assert.deepEqual(
+  { area: matchRoute('/anuncios/login', '', '').area, module: matchRoute('/anuncios/login', '', '').module },
+  { area: 'advertiser', module: 'login' },
+  'Roteador deve reconhecer /anuncios/login como acesso do anunciante',
+);
+assert.equal(resolveLegacyRoute('/anunciante', ''), '/anuncios/login', 'Rota antiga do anunciante deve ser redirecionada');
+assert.match(advertiserAccess, /routes\.login\.advertiser\(\)/, 'Link mágico deve retornar para a nova rota');
+assert.match(advertiserAdminGateway, /\/anuncios\/login/, 'Convite administrativo deve retornar para a nova rota');
 
 console.log('Fundação do módulo GSA Anúncios validada com sucesso.');

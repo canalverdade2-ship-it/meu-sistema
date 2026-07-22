@@ -169,9 +169,10 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   }
 
   // 5. PORTAL DO ANUNCIANTE
-  if (segments[0] === 'anunciante') {
+  // /anuncios permanece como vitrine pública; as subrotas pertencem ao portal.
+  if (segments[0] === 'anuncios' && segments[1]) {
     area = 'advertiser';
-    module = segments[1] || 'dashboard';
+    module = segments[1];
     if (segments[2]) itemId = segments[2];
     return { pathname, search, hash, area, module, itemId, query };
   }
@@ -209,6 +210,14 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
       itemId = segments[2];
     }
     return { pathname, search, hash, area, module, submodule, itemId, query };
+  }
+
+  // 8. PORTAL DO FORNECEDOR
+  if (segments[0] === 'fornecedor') {
+    area = 'supplier';
+    module = segments[1] || 'access';
+    if (segments[2]) itemId = segments[2];
+    return { pathname, search, hash, area, module, itemId, query };
   }
 
   return { pathname, search, hash, area, module, query };

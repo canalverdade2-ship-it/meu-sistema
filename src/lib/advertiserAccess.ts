@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { routes } from '../routing/routeCatalog';
 import type { AdvertiserPortalSnapshot } from '../types/advertising';
 
 export const advertiserAccess = {
@@ -11,7 +12,7 @@ export const advertiserAccess = {
       email: normalizedEmail,
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/anunciante`,
+        emailRedirectTo: `${window.location.origin}${routes.login.advertiser()}`,
       },
     });
     if (error) throw error;

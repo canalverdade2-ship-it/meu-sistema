@@ -1,0 +1,177 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Building2, CheckCircle2, Clock3, FileText, PackageCheck, Plus,
+  RefreshCw, Search, ShoppingCart, Truck, WalletCards, XCircle,
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { Modal } from '../ui/Modal';
+import { formatCurrency, formatDate, formatDateTime, generateUUID } from '../../lib/utils';
+import {
+  createAdminSupplierOrder,
+  getAdminSupplierSnapshot,
+  resolveSupplierDocument,
+  reviewAdminSupplierDelivery,
+  reviewAdminSupplierProduct,
+  setAdminSupplierStatus,
+  updateAdminSupplierPayable,
+} from '../../lib/supplierOperations';
+import type { AdminSupplierSnapshot } from '../../types/supplier';
+
+type Tab = 'cadastros' | 'produtos' | 'pedidos' | 'entregas' | 'contas';
+
+const EMPTY: AdminSupplierSnapshot = {
+  suppliers: [], requests: [], supplier_products: [], orders: [], deliveries: [], payables: [], products: [],
+};
+
+const TABS: Array<{ id: Tab; label: string; icon: typeof Building2 }> = [
+  { id: 'cadastros', label: 'Cadastros', icon: Building2 },
+  { id: 'produtos', label: 'Produtos', icon: PackageCheck },
+  { id: 'pedidos', label: 'Pedidos de compra', icon: ShoppingCart },
+  { id: 'entregas', label: 'Entregas e NFs', icon: Truck },
+  { id: 'contas', label: 'Contas a pagar', icon: WalletCards },
+];
+
+export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
+  const [tab, setTab] = useState<Tab>((TABS.some((item) => item.id === initialTab) ? initialTab : 'cadastros') as Tab);
+  const [snapshot, setSnapshot] = useState<AdminSupplierSnapshot>(EMPTY);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [approval, setApproval] = useState<any | null>(null);
+  const [pin, setPin] = useState('');
+  const [reason, setReason] = useState('');
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [supplierId, setSupplierId] = useState('');
+  const [orderItems, setOrderItems] = useState<Array<{ fornecedor_produto_id: string; quantidade: string; custo_unitario: string }>>([]);
+  const [orderMeta, setOrderMeta] = useState({ previsao_entrega: '', vencimento_previsto: '', condicao_pagamento: '', observacoes: '' });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (initialTab && TABS.some((item) => item.id === initialTab)) setTab(initialTab as Tab);
+  }, [initialTab]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { setSnapshot(await getAdminSupplierSnapshot()); }
+    catch (error: any) { toast.error(error?.message || 'Não foi possível carregar fornecedores.'); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const filteredSuppliers = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return snapshot.suppliers.filter((item) => !term || [item.razao_social, item.nome_fantasia, item.documento, item.codigo].some((value) => String(value || '').toLowerCase().includes(term)));
+  }, [search, snapshot.suppliers]);
+
+  const activeSuppliers = snapshot.suppliers.filter((item) => item.status === 'ativo');
+  const availableLinks = snapshot.supplier_products.filter((item) => item.fornecedor_id === supplierId && item.status === 'ativo');
+
+  const changeSupplierStatus = async (status: string) => {
+    if (!approval) return;
+    if (status === 'ativo' && !/^\d{4}$/.test(pin)) return toast.error('Informe um PIN de quatro dígitos.');
+    setSaving(true);
+    try {
+      await setAdminSupplierStatus(approval.id, status, reason, status === 'ativo' ? pin : undefined);
+      toast.success(status === 'ativo' ? 'Fornecedor aprovado e acesso liberado.' : 'Status atualizado.');
+      setApproval(null); setPin(''); setReason(''); await load();
+    } catch (error: any) { toast.error(error?.message || 'Não foi possível atualizar o fornecedor.'); }
+    finally { setSaving(false); }
+  };
+
+  const reviewProduct = async (request: any, action: 'aprovar' | 'ajuste' | 'rejeitar') => {
+    const reasonText = action === 'aprovar' ? '' : window.prompt('Informe o motivo:')?.trim();
+    if (action !== 'aprovar' && !reasonText) return;
+    let payload: Record<string, unknown> = {};
+    if (action === 'aprovar' && request.tipo === 'novo') {
+      const saleValue = window.prompt('Valor de venda do novo produto:', String(request.custo_unitario || 0));
+      if (saleValue === null || Number(saleValue.replace(',', '.')) < 0) return;
+      payload = { valor_venda: Number(saleValue.replace(',', '.')), visivel_na_loja: false };
+    }
+    try {
+      await reviewAdminSupplierProduct(request.id, action, reasonText, payload);
+      toast.success(action === 'aprovar' ? 'Produto aprovado.' : 'Análise registrada.');
+      await load();
+    } catch (error: any) { toast.error(error?.message || 'Não foi possível analisar o produto.'); }
+  };
+
+  const openOrder = () => {
+    setSupplierId(activeSuppliers[0]?.id || ''); setOrderItems([]);
+    setOrderMeta({ previsao_entrega: '', vencimento_previsto: '', condicao_pagamento: '', observacoes: '' });
+    setOrderOpen(true);
+  };
+
+  const addOrderItem = () => {
+    const first = availableLinks.find((link) => !orderItems.some((item) => item.fornecedor_produto_id === link.id));
+    if (!first) return toast.error('Não há outro produto aprovado para adicionar.');
+    setOrderItems((current) => [...current, { fornecedor_produto_id: first.id, quantidade: '1', custo_unitario: String(first.custo_unitario || 0) }]);
+  };
+
+  const createOrder = async () => {
+    if (!supplierId || orderItems.length === 0) return toast.error('Selecione o fornecedor e ao menos um produto.');
+    if (orderItems.some((item) => Number(item.quantidade) <= 0 || Number(item.custo_unitario) < 0)) return toast.error('Revise quantidades e custos.');
+    setSaving(true);
+    try {
+      await createAdminSupplierOrder(generateUUID(), supplierId, {
+        ...orderMeta,
+        items: orderItems.map((item) => ({ ...item, quantidade: Number(item.quantidade), custo_unitario: Number(item.custo_unitario) })),
+      });
+      toast.success('Pedido enviado ao portal do fornecedor.'); setOrderOpen(false); await load();
+    } catch (error: any) { toast.error(error?.message || 'Não foi possível criar o pedido.'); }
+    finally { setSaving(false); }
+  };
+
+  const reviewDelivery = async (delivery: any, action: 'aprovar' | 'ajuste' | 'rejeitar') => {
+    const reasonText = action === 'aprovar' ? window.prompt('Observação da aprovação (opcional):') || '' : window.prompt('Informe o motivo:')?.trim();
+    if (action !== 'aprovar' && !reasonText) return;
+    if (action === 'aprovar' && !window.confirm(`Aprovar a NF ${delivery.numero_nota}? Isso criará a conta a pagar e liberará o estoque.`)) return;
+    try {
+      const result: any = await reviewAdminSupplierDelivery(delivery.id, action, reasonText);
+      toast.success(result?.already_processed ? 'Esta entrega já havia sido aprovada.' : action === 'aprovar' ? 'NF aprovada, estoque liberado e conta a pagar criada.' : 'Análise registrada.');
+      await load();
+    } catch (error: any) { toast.error(error?.message || 'Não foi possível analisar a entrega.'); }
+  };
+
+  const openDocument = async (reference: string) => {
+    try { window.open(await resolveSupplierDocument(reference), '_blank', 'noopener,noreferrer'); }
+    catch (error: any) { toast.error(error?.message || 'Não foi possível abrir o documento.'); }
+  };
+
+  const pay = async (payable: any) => {
+    if (!window.confirm(`Confirmar pagamento de ${formatCurrency(Number(payable.valor_pendente || 0))}?`)) return;
+    const method = window.prompt('Forma de pagamento:', 'PIX') || 'PIX';
+    try { await updateAdminSupplierPayable(payable.id, 'pagar', { forma_pagamento: method }); toast.success('Conta marcada como paga.'); await load(); }
+    catch (error: any) { toast.error(error?.message || 'Não foi possível baixar a conta.'); }
+  };
+
+  const pendingCount = snapshot.suppliers.filter((item) => ['pendente', 'em_analise'].includes(item.status)).length;
+  const pendingDeliveries = snapshot.deliveries.filter((item) => item.status === 'em_analise').length;
+  const pendingPayables = snapshot.payables.filter((item) => ['pendente', 'vencido'].includes(item.status)).reduce((sum, item) => sum + Number(item.valor_pendente || 0), 0);
+
+  return <div className="space-y-6 pb-10">
+    <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl">
+      <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">GSA Produtos</p><h1 className="mt-2 text-3xl font-black">Fornecedores e abastecimento</h1><p className="mt-2 text-sm text-white/60">Da aprovação cadastral à entrada auditada no estoque e contas a pagar.</p></div><div className="flex gap-2"><button onClick={() => void load()} className="rounded-xl bg-white/10 p-3" aria-label="Atualizar"><RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} /></button><button onClick={openOrder} className="flex items-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-black text-neutral-950"><Plus className="h-4 w-4" />Novo pedido</button></div></div>
+    </header>
+
+    <div className="grid gap-3 sm:grid-cols-3"><Metric label="Cadastros pendentes" value={pendingCount} /><Metric label="NFs em análise" value={pendingDeliveries} /><Metric label="Contas pendentes" value={formatCurrency(pendingPayables)} /></div>
+    <div className="flex gap-1 overflow-x-auto rounded-2xl bg-neutral-100 p-1">{TABS.map((item) => { const Icon = item.icon; return <button key={item.id} onClick={() => setTab(item.id)} className={`flex min-w-max flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-black ${tab === item.id ? 'bg-white text-neutral-950 shadow-sm' : 'text-neutral-500'}`}><Icon className="h-4 w-4" />{item.label}</button>; })}</div>
+
+    {tab === 'cadastros' && <section className="space-y-4"><div className="relative"><Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar fornecedor, documento ou código" className="w-full rounded-xl border border-neutral-200 py-3 pl-11 pr-4" /></div><div className="grid gap-4 lg:grid-cols-2">{filteredSuppliers.map((supplier) => <article key={supplier.id} className="rounded-2xl border border-neutral-200 bg-white p-5"><div className="flex justify-between gap-4"><div><Status value={supplier.status} /><h2 className="mt-3 font-black">{supplier.nome_fantasia || supplier.razao_social}</h2><p className="mt-1 text-sm text-neutral-500">{supplier.razao_social} · {supplier.documento}</p><p className="mt-1 text-xs text-neutral-400">{supplier.responsavel_nome} · {supplier.email}</p></div><Building2 className="h-8 w-8 text-neutral-200" /></div><div className="mt-4 flex gap-2"><button onClick={() => { setApproval(supplier); setPin(''); setReason(''); }} className="flex-1 rounded-xl bg-neutral-950 px-4 py-2.5 text-xs font-black text-white">Analisar</button>{supplier.status === 'ativo' && <button onClick={() => { setApproval(supplier); setReason(''); }} className="rounded-xl bg-red-50 px-4 py-2.5 text-xs font-black text-red-700">Suspender</button>}</div></article>)}</div></section>}
+
+    {tab === 'produtos' && <ListEmpty loading={loading} empty={snapshot.requests.length === 0} message="Nenhuma solicitação de produto."><div className="space-y-3">{snapshot.requests.map((request) => <article key={request.id} className="rounded-2xl border border-neutral-200 p-5"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-center"><div><Status value={request.status} /><h2 className="mt-2 font-black">{request.tipo === 'existente' ? request.produto_existente_nome : request.nome}</h2><p className="text-sm text-neutral-500">{request.fornecedor_nome} · {request.tipo === 'novo' ? 'Novo produto' : 'Produto existente'} · custo {formatCurrency(Number(request.custo_unitario || 0))}</p></div>{!['aprovado', 'reprovado'].includes(request.status) && <div className="flex gap-2"><button onClick={() => void reviewProduct(request, 'rejeitar')} className="rounded-xl bg-red-50 px-4 py-2 text-xs font-black text-red-700">Reprovar</button><button onClick={() => void reviewProduct(request, 'aprovar')} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white">Aprovar</button></div>}</div></article>)}</div></ListEmpty>}
+
+    {tab === 'pedidos' && <ListEmpty loading={loading} empty={snapshot.orders.length === 0} message="Nenhum pedido de compra."><div className="space-y-3">{snapshot.orders.map((order) => <article key={order.id} className="rounded-2xl border border-neutral-200 p-5"><div className="flex flex-col justify-between gap-4 md:flex-row"><div><Status value={order.status} /><h2 className="mt-2 font-black">{order.codigo} · {order.fornecedor_nome}</h2><p className="text-sm text-neutral-500">{order.items?.length || 0} produto(s) · previsto {formatCurrency(Number(order.valor_total_previsto || 0))}</p><p className="mt-1 text-xs text-neutral-400">Entrega: {order.previsao_entrega ? formatDate(order.previsao_entrega) : 'não informada'}</p></div><div className="text-sm">{order.items?.map((item: any) => <p key={item.id}>{item.produto_nome_snapshot}: <b>{item.quantidade_aprovada}/{item.quantidade_pedida}</b></p>)}</div></div></article>)}</div></ListEmpty>}
+
+    {tab === 'entregas' && <ListEmpty loading={loading} empty={snapshot.deliveries.length === 0} message="Nenhuma entrega informada."><div className="space-y-3">{snapshot.deliveries.map((delivery) => <article key={delivery.id} className="rounded-2xl border border-neutral-200 p-5"><div className="flex flex-col justify-between gap-4 lg:flex-row"><div><Status value={delivery.status} /><h2 className="mt-2 font-black">NF {delivery.numero_nota} · {delivery.fornecedor_nome}</h2><p className="text-sm text-neutral-500">Pedido {delivery.pedido_codigo} · {formatCurrency(Number(delivery.valor_total_nota || 0))} · emissão {formatDate(delivery.data_emissao)}</p><p className="mt-1 text-xs text-neutral-400">{delivery.items?.length || 0} item(ns) · enviada {formatDateTime(delivery.created_at)}</p></div><div className="flex flex-wrap items-start gap-2">{delivery.arquivo_xml && <button onClick={() => void openDocument(delivery.arquivo_xml)} className="rounded-xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700">Abrir XML</button>}{delivery.arquivo_pdf && <button onClick={() => void openDocument(delivery.arquivo_pdf)} className="rounded-xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700">Abrir PDF</button>}{['em_analise', 'ajuste_solicitado'].includes(delivery.status) && <><button onClick={() => void reviewDelivery(delivery, 'rejeitar')} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700">Reprovar</button><button onClick={() => void reviewDelivery(delivery, 'aprovar')} className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black text-white">Aprovar NF e estoque</button></>}</div></div></article>)}</div></ListEmpty>}
+
+    {tab === 'contas' && <ListEmpty loading={loading} empty={snapshot.payables.length === 0} message="Nenhuma conta a pagar de fornecedor."><div className="overflow-x-auto rounded-2xl border border-neutral-200"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-neutral-50 text-[10px] uppercase tracking-wider text-neutral-400"><tr><th className="p-4">Documento</th><th className="p-4">Fornecedor</th><th className="p-4">Vencimento</th><th className="p-4">Valor</th><th className="p-4">Status</th><th className="p-4"></th></tr></thead><tbody className="divide-y divide-neutral-100">{snapshot.payables.map((item) => <tr key={item.id}><td className="p-4 font-black">{item.numero_documento}</td><td className="p-4">{item.fornecedor_nome}</td><td className="p-4">{formatDate(item.data_vencimento)}</td><td className="p-4 font-black">{formatCurrency(Number(item.valor_pendente || item.valor_original || 0))}</td><td className="p-4"><Status value={item.status} /></td><td className="p-4">{item.status !== 'pago' && item.status !== 'cancelado' && <button onClick={() => void pay(item)} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white">Confirmar pagamento</button>}</td></tr>)}</tbody></table></div></ListEmpty>}
+
+    <Modal isOpen={!!approval} onClose={() => !saving && setApproval(null)} title="Analisar fornecedor" size="sm">{approval && <div className="space-y-4"><div className="rounded-xl bg-neutral-50 p-4"><p className="font-black">{approval.nome_fantasia || approval.razao_social}</p><p className="text-sm text-neutral-500">{approval.documento} · {approval.email}</p></div><label className="block text-sm font-bold">Motivo ou observação<textarea rows={3} value={reason} onChange={(event) => setReason(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 p-3" /></label><label className="block text-sm font-bold">PIN inicial para aprovação<input inputMode="numeric" maxLength={4} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 4))} className="mt-2 w-full rounded-xl border border-neutral-200 p-3 text-center text-xl tracking-[0.5em]" placeholder="0000" /></label><div className="grid grid-cols-3 gap-2"><button disabled={saving} onClick={() => void changeSupplierStatus('reprovado')} className="rounded-xl bg-red-50 py-3 text-xs font-black text-red-700">Reprovar</button><button disabled={saving} onClick={() => void changeSupplierStatus(approval.status === 'ativo' ? 'suspenso' : 'ajuste_solicitado')} className="rounded-xl bg-amber-50 py-3 text-xs font-black text-amber-700">{approval.status === 'ativo' ? 'Suspender' : 'Pedir ajuste'}</button><button disabled={saving} onClick={() => void changeSupplierStatus('ativo')} className="rounded-xl bg-emerald-600 py-3 text-xs font-black text-white">Aprovar</button></div></div>}</Modal>
+
+    <Modal isOpen={orderOpen} onClose={() => !saving && setOrderOpen(false)} title="Novo pedido de compra" size="wide"><div className="space-y-5"><label className="block text-sm font-bold">Fornecedor<select value={supplierId} onChange={(event) => { setSupplierId(event.target.value); setOrderItems([]); }} className="mt-2 w-full rounded-xl border border-neutral-200 p-3"><option value="">Selecione</option>{activeSuppliers.map((item) => <option key={item.id} value={item.id}>{item.nome_fantasia || item.razao_social}</option>)}</select></label><div className="grid gap-3 sm:grid-cols-3"><Field label="Previsão de entrega" type="date" value={orderMeta.previsao_entrega} onChange={(value) => setOrderMeta({ ...orderMeta, previsao_entrega: value })} /><Field label="Vencimento previsto" type="date" value={orderMeta.vencimento_previsto} onChange={(value) => setOrderMeta({ ...orderMeta, vencimento_previsto: value })} /><Field label="Condição de pagamento" value={orderMeta.condicao_pagamento} onChange={(value) => setOrderMeta({ ...orderMeta, condicao_pagamento: value })} /></div><div><div className="mb-3 flex items-center justify-between"><h3 className="font-black">Produtos</h3><button onClick={addOrderItem} className="rounded-xl bg-neutral-100 px-4 py-2 text-xs font-black">Adicionar produto</button></div><div className="space-y-2">{orderItems.map((item, index) => <div key={index} className="grid gap-2 rounded-xl bg-neutral-50 p-3 sm:grid-cols-[1fr_110px_130px_40px]"><select value={item.fornecedor_produto_id} onChange={(event) => { const link = availableLinks.find((entry) => entry.id === event.target.value); setOrderItems((current) => current.map((entry, i) => i === index ? { ...entry, fornecedor_produto_id: event.target.value, custo_unitario: String(link?.custo_unitario || 0) } : entry)); }} className="rounded-lg border border-neutral-200 p-2">{availableLinks.map((link) => <option key={link.id} value={link.id}>{link.produto_nome}</option>)}</select><input type="number" min="1" value={item.quantidade} onChange={(event) => setOrderItems((current) => current.map((entry, i) => i === index ? { ...entry, quantidade: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" placeholder="Quantidade" /><input type="number" min="0" step="0.01" value={item.custo_unitario} onChange={(event) => setOrderItems((current) => current.map((entry, i) => i === index ? { ...entry, custo_unitario: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" placeholder="Custo" /><button onClick={() => setOrderItems((current) => current.filter((_, i) => i !== index))} className="text-red-600"><XCircle className="h-5 w-5" /></button></div>)}{orderItems.length === 0 && <p className="rounded-xl border border-dashed border-neutral-200 p-5 text-center text-sm text-neutral-400">Adicione produtos aprovados para este fornecedor.</p>}</div></div><label className="block text-sm font-bold">Observações<textarea rows={3} value={orderMeta.observacoes} onChange={(event) => setOrderMeta({ ...orderMeta, observacoes: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 p-3" /></label><button disabled={saving} onClick={() => void createOrder()} className="w-full rounded-xl bg-emerald-600 py-3 font-black text-white disabled:opacity-50">{saving ? 'Enviando...' : 'Enviar pedido ao fornecedor'}</button></div></Modal>
+  </div>;
+}
+
+function Metric({ label, value }: { label: string; value: string | number }) { return <div className="rounded-2xl border border-neutral-200 bg-white p-5"><p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-2 text-2xl font-black">{value}</p></div>; }
+function Status({ value }: { value: string }) { const good = ['ativo', 'aprovado', 'pago', 'concluido'].includes(value); const bad = ['reprovado', 'cancelado', 'suspenso'].includes(value); return <span className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-black uppercase ${good ? 'bg-emerald-50 text-emerald-700' : bad ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>{String(value || '').replaceAll('_', ' ')}</span>; }
+function ListEmpty({ loading, empty, message, children }: { loading: boolean; empty: boolean; message: string; children: React.ReactNode }) { if (loading) return <div className="flex min-h-64 items-center justify-center"><RefreshCw className="h-7 w-7 animate-spin" /></div>; if (empty) return <div className="rounded-2xl border border-dashed border-neutral-200 p-14 text-center text-neutral-400"><FileText className="mx-auto mb-3 h-8 w-8" />{message}</div>; return <>{children}</>; }
+function Field({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) { return <label className="block text-sm font-bold">{label}<input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 p-3" /></label>; }

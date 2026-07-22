@@ -239,6 +239,7 @@ export function RestrictedAccessModal({ isOpen, initialTab = 'prestador', onClos
           <div className="flex gap-3"><button type="button" onClick={() => setProviderStage('document')} className="btn-secondary flex-1">Voltar</button><button type="submit" disabled={loading} className="btn-primary flex-1">{loading ? 'Enviando...' : 'Enviar cadastro'}</button></div>
         </form>
       )}
+
     </Modal>
   );
 }

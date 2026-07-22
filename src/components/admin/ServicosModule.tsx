@@ -590,11 +590,15 @@ function ServicoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
     nome: initialData?.nome || '',
     valor: initialData?.valor?.toString() || '',
     descricao: initialData?.descricao || '',
+    subtitulo_catalogo: initialData?.subtitulo_catalogo || '',
     ocultar_valor: initialData?.ocultar_valor || false,
     tipo_cliente: initialData?.tipo_cliente || 'pf' as 'pf' | 'pj' | 'ambos',
     categoria: initialData?.categoria || '',
     categoria_id: initialData?.categoria_id || '',
     visivel_na_loja: initialData?.visivel_na_loja || false,
+    visivel_catalogo_publico: initialData?.visivel_catalogo_publico ?? true,
+    disponivel_orcamento: initialData?.disponivel_orcamento ?? true,
+    ordem_catalogo: initialData?.ordem_catalogo || 0,
     imagens_adicionais: initialData ? mapColumnsToGallery(initialData) : [] as string[]
   });
 
@@ -714,6 +718,28 @@ function ServicoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
         />
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-[1fr_140px]">
+        <div>
+          <label className="mb-1 block text-sm font-bold text-neutral-700">Subtítulo no catálogo</label>
+          <input
+            type="text"
+            value={formData.subtitulo_catalogo}
+            onChange={e => setFormData({...formData, subtitulo_catalogo: e.target.value})}
+            placeholder="Ex.: Soluções previdenciárias"
+            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-bold text-neutral-700">Ordem</label>
+          <input
+            type="number"
+            value={formData.ordem_catalogo}
+            onChange={e => setFormData({...formData, ordem_catalogo: Number(e.target.value) || 0})}
+            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
+          />
+        </div>
+      </div>
+
       <div>
         <label className="mb-1 block text-sm font-bold text-neutral-700">Categoria</label>
         <select
@@ -752,6 +778,25 @@ function ServicoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
           <p className="text-[10px] font-medium text-neutral-400">Disponibiliza o serviço para solicitação no GSA Store Hub.</p>
         </div>
       </label>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4">
+          <input
+            type="checkbox"
+            checked={formData.visivel_catalogo_publico}
+            onChange={e => setFormData({...formData, visivel_catalogo_publico: e.target.checked})}
+          />
+          <span><strong className="block text-sm text-neutral-700">Exibir no catálogo público</strong><span className="text-[10px] text-neutral-400">Mostra o serviço na página do site.</span></span>
+        </label>
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4">
+          <input
+            type="checkbox"
+            checked={formData.disponivel_orcamento}
+            onChange={e => setFormData({...formData, disponivel_orcamento: e.target.checked})}
+          />
+          <span><strong className="block text-sm text-neutral-700">Disponível para orçamento</strong><span className="text-[10px] text-neutral-400">Permite seleção pelo cliente.</span></span>
+        </label>
+      </div>
 
       <div>
         <label className="flex items-center gap-3 cursor-pointer group">

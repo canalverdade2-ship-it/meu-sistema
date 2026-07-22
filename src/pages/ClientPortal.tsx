@@ -1008,7 +1008,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsMobileMenuOpen(false)}
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm lg:hidden"
           />
         )}
       </AnimatePresence>
@@ -1017,7 +1017,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
       <aside 
         onMouseEnter={() => !isMobile && setIsSidebarHovered(true)}
         onMouseLeave={() => !isMobile && setIsSidebarHovered(false)}
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-black/5 bg-[#fdfcfb] transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-[70] flex flex-col border-r border-black/5 bg-[#fdfcfb] transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 ${
           isMobileMenuOpen ? 'translate-x-0 w-72' : (isMobile ? '-translate-x-full w-72' : '')
         } ${
           !isMobile ? (isEffectiveExpanded ? 'lg:w-72' : 'lg:w-20') : ''

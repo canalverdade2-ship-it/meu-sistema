@@ -12,10 +12,11 @@ import { LojaTrocasModule } from './LojaTrocasModule';
 import { ReembolsosModule } from './ReembolsosModule';
 import { PrestadoresCadastro } from './prestadores/PrestadoresCadastro';
 import { LojaCategoriasModule } from './LojaCategoriasModule';
-import { Users, Scissors, Package, Zap, Share2, Ticket, Trophy, Megaphone, ShieldCheck, Building2, Store, Tag, ChevronLeft } from 'lucide-react';
+import { ServicePackagesModule } from './ServicePackagesModule';
+import { Users, Scissors, Package, Boxes, Zap, Share2, Ticket, Trophy, Megaphone, ShieldCheck, Building2, Store, Tag, ChevronLeft } from 'lucide-react';
 import { useAdminNotifications } from '../../hooks/useAdminNotifications';
 
-type MainTab = 'clientes' | 'servicos' | 'produtos' | 'assinaturas' | 'indicacoes' | 'vouchers' | 'premios' | 'promocoes' | 'prestadores' | 'gsa_store' | 'categorias_loja';
+type MainTab = 'clientes' | 'servicos' | 'pacotes' | 'produtos' | 'assinaturas' | 'indicacoes' | 'vouchers' | 'premios' | 'promocoes' | 'prestadores' | 'gsa_store' | 'categorias_loja';
 
 const SUB_TABS: Record<MainTab, { id: string, label: string }[]> = {
   clientes: [
@@ -25,6 +26,10 @@ const SUB_TABS: Record<MainTab, { id: string, label: string }[]> = {
     { id: 'bloqueados', label: 'Bloqueados' }
   ],
   servicos: [
+    { id: 'ativos', label: 'Ativos' },
+    { id: 'inativos', label: 'Inativos' }
+  ],
+  pacotes: [
     { id: 'ativos', label: 'Ativos' },
     { id: 'inativos', label: 'Inativos' }
   ],
@@ -182,7 +187,8 @@ export function CadastroModule({
       icon: Building2,
       badge: pendencies.cadastro_prestadores_pendentes + pendencies.cadastro_prestadores_analise + pendencies.cadastro_documentos_pendentes
     },
-    { id: 'servicos', label: 'Catálogo de Serviços', icon: Scissors },
+    { id: 'servicos', label: 'Serviços', icon: Scissors },
+    { id: 'pacotes', label: 'Pacotes de Serviços', icon: Boxes },
     { id: 'produtos', label: 'Gestão de Produtos', icon: Package },
     { id: 'assinaturas', label: 'Planos e Assinaturas', icon: Zap },
     { id: 'indicacoes', label: 'Indicações', icon: Share2 },
@@ -350,6 +356,7 @@ export function CadastroModule({
       <div key={activeTab + activeSubTab} className="min-h-[600px] animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === 'clientes' && <ClientesModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'servicos' && <ServicosModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
+        {activeTab === 'pacotes' && <ServicePackagesModule activeSubTab={activeSubTab as any} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'produtos' && <ProdutosModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'assinaturas' && <AssinaturasModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'indicacoes' && <IndicacoesModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}

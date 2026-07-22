@@ -26,7 +26,6 @@ interface GSAEnterpriseHomeFinalProps {
   publicAudience: Audience;
   setPublicAudience: (audience: Audience) => void;
   servicePackages: ServicePackage[];
-  publicProducts: IconItem[];
   publicServices: IconItem[];
   initialServiceSlug?: string;
   initialPartnerSlug?: string;
@@ -46,7 +45,7 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
   const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const filteredPackages = useMemo(
-    () => props.servicePackages.filter((item) => item.audience === props.publicAudience),
+    () => props.servicePackages.filter((item) => item.audience === props.publicAudience || item.audience === 'AMBOS'),
     [props.publicAudience, props.servicePackages],
   );
 
@@ -57,7 +56,7 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
     }
     const item = props.servicePackages.find((service) => getServicePackageSlug(service) === props.initialServiceSlug) || null;
     setSelectedPackage(item);
-    if (item) props.setPublicAudience(item.audience);
+    if (item && item.audience !== 'AMBOS') props.setPublicAudience(item.audience);
   }, [props.initialServiceSlug, props.publicPage, props.servicePackages, props.setPublicAudience]);
 
   useEffect(() => {
@@ -87,7 +86,9 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
   };
 
   const requestViaPortal = (item: ServicePackage) => {
-    sessionStorage.setItem('gsa_pending_service_request', JSON.stringify({ title: item.title, description: item.description, services: item.services, source: 'public_services', createdAt: new Date().toISOString() }));
+    const pendingRequest = JSON.stringify({ itemType: 'package', itemId: item.id, title: item.title, description: item.description, services: item.services, source: 'public_services', createdAt: new Date().toISOString() });
+    sessionStorage.setItem('gsa_pending_service_request', pendingRequest);
+    localStorage.setItem('gsa_pending_service_request', pendingRequest);
     setRequestPackage(null);
     setSelectedPackage(null);
     props.onClientLogin();
@@ -110,7 +111,7 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
       </nav>
 
       {props.publicPage === 'home' && <PublicHomeLanding reduceMotion={Boolean(reduceMotion)} setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} />}
-      {props.publicPage === 'services' && <PublicServicesPage audience={props.publicAudience} setAudience={props.setPublicAudience} packages={filteredPackages} publicProducts={props.publicProducts} publicServices={props.publicServices} onBack={() => props.setPublicPage('home')} onSelect={(item) => { setSelectedPackage(item); props.onServiceDetailChange?.(getServicePackageSlug(item)); }} />}
+      {props.publicPage === 'services' && <PublicServicesPage audience={props.publicAudience} setAudience={props.setPublicAudience} packages={filteredPackages} publicServices={props.publicServices} onBack={() => props.setPublicPage('home')} onSelect={(item) => { setSelectedPackage(item); props.onServiceDetailChange?.(getServicePackageSlug(item)); }} />}
       {props.publicPage === 'partners' && <PartnersPage selectedSlug={props.initialPartnerSlug} onSelectPartner={(slug) => props.onPartnerDetailChange?.(slug)} onBack={() => props.setPublicPage('home')} />}
 
       <PublicFooter setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} onAdminLogin={props.onAdminLogin} onPrivacy={() => setPrivacyOpen(true)} />
