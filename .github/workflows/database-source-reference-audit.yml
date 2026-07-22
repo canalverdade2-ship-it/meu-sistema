@@ -1,0 +1,33 @@
+name: Database Source Reference Audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'supabase/functions/**'
+      - 'scripts/list-database-source-references.mjs'
+      - '.github/workflows/database-source-reference-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  map-references:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout audited revision
+        uses: actions/checkout@v4
+
+      - name: Map database references
+        run: node scripts/list-database-source-references.mjs
+
+      - name: Upload reference map
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-source-references-${{ github.run_id }}
+          path: audit/database-source-references.json
+          retention-days: 30
+          if-no-files-found: error
