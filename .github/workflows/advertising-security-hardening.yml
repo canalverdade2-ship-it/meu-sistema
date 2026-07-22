@@ -7,6 +7,8 @@ on:
       - '.github/workflows/advertising-security-hardening.yml'
       - 'supabase/functions/gsa-ad-delivery/**'
       - 'supabase/functions/gsa-advertising-scheduler/**'
+      - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
+      - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
       - 'supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql'
       - 'supabase/migrations/20260722090100_cleanup_orphan_ad_creatives.sql'
       - 'scripts/check-advertising-completion.ts'
@@ -17,6 +19,8 @@ on:
       - '.github/workflows/advertising-security-hardening.yml'
       - 'supabase/functions/gsa-ad-delivery/**'
       - 'supabase/functions/gsa-advertising-scheduler/**'
+      - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
+      - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
       - 'supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql'
       - 'supabase/migrations/20260722090100_cleanup_orphan_ad_creatives.sql'
   workflow_dispatch:
@@ -112,8 +116,8 @@ jobs:
           SQL
 
           for migration in \
-            supabase/migrations/20260721210000_create_advertising_foundation.sql \
-            supabase/migrations/20260721223000_complete_advertising_platform.sql \
+            supabase/migrations/20260721210100_create_advertising_foundation.sql \
+            supabase/migrations/20260721223100_complete_advertising_platform.sql \
             supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql \
             supabase/migrations/20260722090100_cleanup_orphan_ad_creatives.sql
           do
@@ -292,7 +296,7 @@ jobs:
               RAISE EXCEPTION 'Hardening atômico global ausente em produção';
             END IF;
             IF to_regprocedure('public.gsa_ads_list_orphan_creative_paths()') IS NULL THEN
-              RAISE EXCEPTION 'Limpeza de órfãos ausente em produção';
+              RAISE EXCEPTION 'Rotina de limpeza de criativos órfãos ausente em produção';
             END IF;
           END $$;
           SELECT 'ADVERTISING_SECURITY_PRODUCTION_OK' AS result;
