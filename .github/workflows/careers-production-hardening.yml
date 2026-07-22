@@ -1,0 +1,137 @@
+name: Careers Production Hardening
+
+on:
+  pull_request:
+    paths:
+      - 'src/pages/Careers/**'
+      - 'src/components/admin/CareersAdminModule.tsx'
+      - 'src/careers.css'
+      - 'src/main.tsx'
+      - 'scripts/check-careers-contracts.ts'
+      - 'scripts/careers-production-verification.sql'
+      - 'supabase/migrations/20260722235959_harden_gsa_careers_flow.sql'
+      - 'package.json'
+      - '.github/workflows/careers-production-hardening.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/pages/Careers/**'
+      - 'src/components/admin/CareersAdminModule.tsx'
+      - 'src/careers.css'
+      - 'src/main.tsx'
+      - 'scripts/check-careers-contracts.ts'
+      - 'scripts/careers-production-verification.sql'
+      - 'supabase/migrations/20260722235959_harden_gsa_careers_flow.sql'
+      - 'package.json'
+      - '.github/workflows/careers-production-hardening.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: careers-production-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SUPABASE_CLI_VERSION: 2.101.0
+  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+  VITE_SUPABASE_URL: http://127.0.0.1:54321
+  VITE_SUPABASE_ANON_KEY: ci-anon-key-not-for-production
+
+jobs:
+  validate:
+    name: Validate careers flow
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout audited revision
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate careers contracts
+        run: npm run test:careers
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Production build
+        run: npm run build
+
+  deploy-production:
+    name: Apply careers hardening in production
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - name: Checkout validated revision
+        uses: actions/checkout@v4
+
+      - name: Validate production authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link exact production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Inspect migration history
+        run: supabase migration list --linked 2>&1 | tee careers-migrations-before.log
+
+      - name: Apply careers hardening atomically
+        run: supabase db query --linked --file supabase/migrations/20260722235959_harden_gsa_careers_flow.sql 2>&1 | tee careers-migration-apply.log
+
+      - name: Register migration version when needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee careers-migrations-after-apply.log
+          if ! awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260722235959") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' careers-migrations-after-apply.log; then
+            supabase migration repair --linked --status applied 20260722235959 2>&1 | tee careers-migration-repair.log
+          fi
+
+      - name: Verify production objects and privileges
+        run: supabase db query --linked --file scripts/careers-production-verification.sql 2>&1 | tee careers-production-verification.log && grep -q 'CAREERS_PRODUCTION_VERIFIED' careers-production-verification.log
+
+      - name: Upload production evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: careers-production-evidence-${{ github.run_id }}
+          path: |
+            careers-migrations-before.log
+            careers-migration-apply.log
+            careers-migrations-after-apply.log
+            careers-migration-repair.log
+            careers-production-verification.log
+          if-no-files-found: ignore
+          retention-days: 30
