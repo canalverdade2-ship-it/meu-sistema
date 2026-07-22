@@ -121,9 +121,10 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     setActiveTab(isAssinaturaTab ? 'assinaturas' : 'produtos');
 
     // Detalhe de Item (Produto / Assinatura)
-    if (route.itemId) {
+    const targetItemId = route.itemId || route.query.item || route.query.item_id || route.query.produto;
+    if (targetItemId) {
       setSelectedDetailsId({
-        id: route.itemId,
+        id: targetItemId,
         tipo: isAssinaturaTab ? 'assinatura' : 'produto'
       });
     } else {
@@ -247,11 +248,13 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     prazo_meses
   });
 
-  const savePendingStoreCheckout = () => {
+  const savePendingStoreCheckout = (customItems?: CartItem[]) => {
+    const itemsToSave = customItems || cartItems;
+    if (!itemsToSave || itemsToSave.length === 0) return;
     const activatedCouponIds = JSON.parse(localStorage.getItem(GUEST_ACTIVATED_STORE_COUPONS_KEY) || '[]');
 
     localStorage.setItem(PENDING_STORE_CHECKOUT_KEY, JSON.stringify({
-      items: cartItems.map(item => ({
+      items: itemsToSave.map(item => ({
         item_id: item.item_id,
         tipo: item.tipo,
         quantidade: item.quantidade,
@@ -267,6 +270,13 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       createdAt: new Date().toISOString()
     }));
   };
+
+  // Persistir automaticamente o carrinho de visitante no localStorage
+  useEffect(() => {
+    if (!clientId && cartItems.length > 0) {
+      savePendingStoreCheckout(cartItems);
+    }
+  }, [cartItems, clientId]);
 
   const importPendingStoreCheckout = async () => {
     if (!clientId) return false;
@@ -358,7 +368,8 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
         if (imported) {
           fetchCart();
           setIsCheckoutOpen(true);
-          toast.success('Carrinho recuperado. Continue sua compra.');
+          updateRouteQuery({ modal: 'checkout' });
+          toast.success('Carrinho recuperado! Continue sua compra.');
         }
       });
     }

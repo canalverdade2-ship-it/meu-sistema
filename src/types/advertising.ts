@@ -89,6 +89,7 @@ export interface AdvertisingRequest {
   intended_budget: number;
   needs_creative_service: boolean;
   notes?: string | null;
+  creative_files?: string[];
   status: AdvertisingRequestStatus;
   created_at: string;
   updated_at?: string;
@@ -108,6 +109,7 @@ export interface AdvertisingProposalVersion {
   frequency_value?: number | null;
   impression_limit?: number | null;
   terms?: string | null;
+  payment_condition?: string | null;
   created_by_type: 'admin' | 'advertiser';
   created_at: string;
 }
@@ -233,6 +235,11 @@ export interface AdvertiserProfile {
   responsible_email: string;
   responsible_phone: string;
   status: string;
+  company_name?: string;
+  document?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
 }
 
 export interface AdvertiserPortalSnapshot {

@@ -99,6 +99,16 @@
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight;
   }
+
+  /* Peso de fonte normal para campos de entrada em todo o sistema */
+  input:not([type="submit"]):not([type="button"]),
+  textarea,
+  select,
+  .form-control,
+  .input-field {
+    font-weight: 400 !important;
+    color: #111111;
+  }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -217,7 +227,7 @@
 
   /* Inputs */
   .input-field {
-    @apply w-full rounded-2xl border border-neutral-200 bg-white px-5 py-3.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/10;
+    @apply w-full rounded-2xl border border-neutral-200 bg-white px-5 py-3.5 text-sm font-normal text-neutral-900 placeholder:text-neutral-400 transition-all focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/10;
   }
   .input-field:disabled {
     @apply bg-neutral-50 opacity-60 cursor-not-allowed;

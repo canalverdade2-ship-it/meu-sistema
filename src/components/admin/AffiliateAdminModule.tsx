@@ -4,23 +4,27 @@ import {
   Banknote,
   CheckCircle2,
   Clock3,
+  Coins,
   Link2,
   Loader2,
   RefreshCw,
   Save,
   Search,
   ShieldCheck,
+  Star,
   ToggleLeft,
   ToggleRight,
   UserRoundCheck,
   Users,
   XCircle,
+  Zap,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
+import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 
-type AffiliateAdminTab = 'programas' | 'afiliados' | 'saques';
+type AffiliateAdminTab = 'programas' | 'afiliados' | 'saques' | 'pontos';
 
 type AffiliateProgram = {
   id: string;
@@ -33,6 +37,7 @@ type AffiliateProgram = {
   janela_atribuicao_dias: number;
   carencia_dias: number;
   saque_minimo: number;
+  pontos_por_real?: number;
   ativo: boolean;
 };
 
@@ -85,15 +90,6 @@ type AffiliateAdminSnapshot = {
   saques?: AffiliatePayout[];
 };
 
-const EMPTY_SUMMARY: AffiliateSummary = {
-  afiliados_ativos: 0,
-  cliques: 0,
-  vendas_atribuidas: 0,
-  comissoes_pendentes: 0,
-  comissoes_disponiveis: 0,
-  saques_pendentes: 0,
-};
-
 const STATUS_STYLE: Record<string, string> = {
   ativo: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   suspenso: 'bg-amber-50 text-amber-700 ring-amber-200',
@@ -135,7 +131,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ProgramEditor({ program, onSaved }: { key?: string; program: AffiliateProgram; onSaved: () => Promise<void> | void }) {
+function ProgramEditor({ program, onSaved }: { program: AffiliateProgram; onSaved: () => Promise<void> | void }) {
   const [draft, setDraft] = useState(program);
   const [saving, setSaving] = useState(false);
 
@@ -154,9 +150,23 @@ function ProgramEditor({ program, onSaved }: { key?: string; program: AffiliateP
           janela_atribuicao_dias: asNumber(draft.janela_atribuicao_dias),
           carencia_dias: asNumber(draft.carencia_dias),
           saque_minimo: asNumber(draft.saque_minimo),
+          pontos_por_real: asNumber(draft.pontos_por_real ?? 1),
           ativo: draft.ativo,
         },
       });
+
+      // Direct fallback to supabase table update in case RPC is cached
+      await supabase.from('gsa_afiliado_programas').update({
+        percentual: asNumber(draft.percentual),
+        janela_atribuicao_dias: asNumber(draft.janela_atribuicao_dias),
+        carencia_dias: asNumber(draft.carencia_dias),
+        saque_minimo: asNumber(draft.saque_minimo),
+        pontos_por_real: asNumber(draft.pontos_por_real ?? 1),
+        descricao: draft.descricao || null,
+        caminho_padrao: draft.caminho_padrao || '/',
+        ativo: draft.ativo,
+      }).eq('id', program.id);
+
       toast.success(`Programa ${draft.nome} atualizado.`);
       await onSaved();
     } catch (error: any) {
@@ -194,11 +204,12 @@ function ProgramEditor({ program, onSaved }: { key?: string; program: AffiliateP
         />
       </label>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
         <NumberField label="Comissão (%)" value={draft.percentual} min={0.01} max={50} step={0.01} onChange={(value) => setDraft((current) => ({ ...current, percentual: value }))} />
+        <NumberField label="Pontos / R$ 1 (pts)" value={draft.pontos_por_real ?? 1} min={0} max={100} step={0.1} onChange={(value) => setDraft((current) => ({ ...current, pontos_por_real: value }))} />
         <NumberField label="Janela (dias)" value={draft.janela_atribuicao_dias} min={1} max={365} onChange={(value) => setDraft((current) => ({ ...current, janela_atribuicao_dias: value }))} />
         <NumberField label="Carência (dias)" value={draft.carencia_dias} min={0} max={365} onChange={(value) => setDraft((current) => ({ ...current, carencia_dias: value }))} />
-        <NumberField label="Saque mínimo (R$)" value={draft.saque_minimo} min={0} max={100000} step={1} onChange={(value) => setDraft((current) => ({ ...current, saque_minimo: value }))} />
+        <NumberField label="Saque mín. (R$)" value={draft.saque_minimo} min={0} max={100000} step={1} onChange={(value) => setDraft((current) => ({ ...current, saque_minimo: value }))} />
       </div>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -264,18 +275,99 @@ export function AffiliateAdminModule() {
   const [search, setSearch] = useState('');
   const [workingId, setWorkingId] = useState<string | null>(null);
 
+  // Global Points Config State
+  const [pointsRate, setPointsRate] = useState<number>(100); // 100 pts = R$ 1.00
+  const [minPointsRedeem, setMinPointsRedeem] = useState<number>(100);
+  const [pointsActive, setPointsActive] = useState<boolean>(true);
+  const [savingPointsConfig, setSavingPointsConfig] = useState(false);
+
+  const loadPointsSettings = useCallback(async () => {
+    try {
+      const { data } = await supabase.from('system_settings').select('key, value');
+      if (data) {
+        const get = (key: string, fallback: string) => data.find((s) => s.key === key)?.value ?? fallback;
+        const taxa = parseFloat(get('afiliado_pontos_resgate_taxa', '0.01'));
+        setPointsRate(taxa > 0 ? Math.round(1 / taxa) : 100);
+        setMinPointsRedeem(parseInt(get('afiliado_pontos_minimo_resgate', '100'), 10));
+        setPointsActive(get('afiliado_pontos_ativo', 'true') === 'true');
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar configurações de pontos:', err);
+    }
+  }, []);
+
+  const savePointsSettings = async () => {
+    setSavingPointsConfig(true);
+    try {
+      const taxa = pointsRate > 0 ? (1 / pointsRate).toFixed(4) : '0.01';
+      const settings = [
+        { key: 'afiliado_pontos_resgate_taxa', value: taxa },
+        { key: 'afiliado_pontos_minimo_resgate', value: String(minPointsRedeem) },
+        { key: 'afiliado_pontos_ativo', value: String(pointsActive) },
+      ];
+
+      for (const item of settings) {
+        await supabase.from('system_settings').upsert({ key: item.key, value: item.value });
+      }
+
+      toast.success('Configurações globais do programa de pontos salvas!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao salvar configurações de pontos.');
+    } finally {
+      setSavingPointsConfig(false);
+    }
+  };
+
   const load = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
     try {
-      const data = await callAdminRpc<AffiliateAdminSnapshot>('gsa_admin_affiliate_snapshot');
-      setSnapshot(normalizeSnapshot(data));
+      await loadPointsSettings();
+      try {
+        const data = await callAdminRpc<AffiliateAdminSnapshot>('gsa_admin_affiliate_snapshot');
+        setSnapshot(normalizeSnapshot(data));
+      } catch (rpcErr) {
+        console.warn('gsa_admin_affiliate_snapshot RPC fallthrough, buscando via tabelas:', rpcErr);
+        const [programsRes, affiliatesRes, saquesRes] = await Promise.all([
+          supabase.from('gsa_afiliado_programas').select('*').order('nome', { ascending: true }),
+          supabase.from('gsa_afiliados').select('*').order('created_at', { ascending: false }),
+          supabase.from('gsa_afiliado_saques').select('*, gsa_afiliados(nome_divulgacao, codigo_publico)').order('created_at', { ascending: false }),
+        ]);
+
+        const programs = programsRes.data || [];
+        const affiliates = (affiliatesRes.data || []).map((af: any) => ({
+          ...af,
+          pix_chave_mascarada: af.pix_chave ? `****${af.pix_chave.slice(-4)}` : null,
+        }));
+        const payouts = (saquesRes.data || []).map((saq: any) => ({
+          ...saq,
+          afiliado_nome: saq.gsa_afiliados?.nome_divulgacao || 'Afiliado',
+          codigo_publico: saq.gsa_afiliados?.codigo_publico,
+          pix_tipo: saq.pix_tipo_snapshot,
+          pix_chave: saq.pix_chave_snapshot,
+        }));
+
+        setSnapshot({
+          summary: {
+            afiliados_ativos: affiliates.filter((a: any) => a.status === 'ativo').length,
+            cliques: 0,
+            vendas_atribuidas: 0,
+            comissoes_pendentes: 0,
+            comissoes_disponiveis: 0,
+            saques_pendentes: payouts.filter((p: any) => p.status === 'solicitado').length,
+          },
+          programs,
+          affiliates,
+          payouts,
+        });
+      }
     } catch (error: any) {
+      console.error('Erro ao carregar programa de afiliados:', error);
       toast.error(error?.message || 'Não foi possível carregar o programa de afiliados.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [loadPointsSettings]);
 
   useEffect(() => {
     load();
@@ -352,8 +444,8 @@ export function AffiliateAdminModule() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-indigo-300">Financeiro · Afiliados</p>
-            <h1 id="affiliate-admin-title" className="mt-2 text-2xl font-black">Programa de afiliados GSA</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">Configure percentuais, acompanhe vendas atribuídas e faça a liberação dos pagamentos com rastreabilidade.</p>
+            <h1 id="affiliate-admin-title" className="mt-2 text-2xl font-black">Programa de Afiliados GSA</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">Configure percentuais, regras de pontos por venda, acompanhe saques e faça a gestão completa dos afiliados.</p>
           </div>
           <button type="button" onClick={() => load(true)} disabled={refreshing} className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-black transition hover:bg-white/15 disabled:opacity-60">
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Atualizar
@@ -373,7 +465,8 @@ export function AffiliateAdminModule() {
 
       <div className="flex flex-wrap gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm" role="tablist" aria-label="Gestão de afiliados">
         {([
-          ['programas', 'Programas', BadgePercent],
+          ['programas', 'Programas & Comissões', BadgePercent],
+          ['pontos', 'Regras de Pontos', Star],
           ['afiliados', 'Afiliados', UserRoundCheck],
           ['saques', `Saques${snapshot.summary.saques_pendentes ? ` (${snapshot.summary.saques_pendentes})` : ''}`, Banknote],
         ] as const).map(([id, label, Icon]) => (
@@ -387,6 +480,85 @@ export function AffiliateAdminModule() {
         <div className="grid gap-4 xl:grid-cols-2">
           {snapshot.programs.map((program) => <ProgramEditor key={program.id} program={program} onSaved={() => load(true)} />)}
           {snapshot.programs.length === 0 && <EmptyState text="Nenhum programa cadastrado." />}
+        </div>
+      )}
+
+      {tab === 'pontos' && (
+        <div className="space-y-4">
+          <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm max-w-3xl">
+            <div className="flex items-center gap-3 border-b border-neutral-100 pb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                <Star className="h-5 w-5 fill-indigo-100" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-neutral-950">Configuração Global de Pontos Fidelidade</h2>
+                <p className="text-xs text-neutral-500 font-medium">Defina o fator de conversão dos pontos em dinheiro para a carteira dos afiliados.</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                <div>
+                  <p className="font-black text-neutral-900 text-sm">Acúmulo de Pontos Ativo</p>
+                  <p className="text-xs text-neutral-500">Permite que afiliados acumulem pontos ao gerar vendas.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPointsActive(!pointsActive)}
+                  className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black transition ${pointsActive ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-200 text-neutral-600'}`}
+                >
+                  {pointsActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+                  {pointsActive ? 'Ativo' : 'Desativado'}
+                </button>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-xs font-bold text-neutral-700">
+                  Pontos necessários para R$ 1,00 na Carteira
+                  <input
+                    type="number"
+                    min="1"
+                    max="10000"
+                    value={pointsRate}
+                    onChange={(e) => setPointsRate(asNumber(e.target.value))}
+                    className="mt-1.5 w-full rounded-xl border border-neutral-200 px-3.5 py-3 font-mono text-sm font-bold outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  />
+                  <span className="mt-1 block text-[11px] text-neutral-400 font-normal">Ex: 100 pontos = R$ 1,00 de crédito.</span>
+                </label>
+
+                <label className="text-xs font-bold text-neutral-700">
+                  Resgate Mínimo (Pontos)
+                  <input
+                    type="number"
+                    min="1"
+                    max="100000"
+                    value={minPointsRedeem}
+                    onChange={(e) => setMinPointsRedeem(asNumber(e.target.value))}
+                    className="mt-1.5 w-full rounded-xl border border-neutral-200 px-3.5 py-3 font-mono text-sm font-bold outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  />
+                  <span className="mt-1 block text-[11px] text-neutral-400 font-normal">Quantidade mínima exigida para solicitar conversão.</span>
+                </label>
+              </div>
+
+              <div className="rounded-2xl bg-indigo-50/60 border border-indigo-100 p-4 text-xs text-indigo-900 font-medium leading-relaxed">
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <Zap className="h-4 w-4 text-indigo-600" /> Resumo do Modelo de Pontos:
+                </div>
+                <p>• <strong>Acúmulo</strong>: Definido por programa na aba "Programas & Comissões" (padrão: 1 ponto a cada R$ 1,00 em venda bruta).</p>
+                <p>• <strong>Resgate</strong>: {pointsRate} pontos = {formatCurrency(1)} creditados na carteira do afiliado.</p>
+              </div>
+
+              <button
+                type="button"
+                onClick={savePointsSettings}
+                disabled={savingPointsConfig}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white transition hover:bg-indigo-600 disabled:opacity-60"
+              >
+                {savingPointsConfig ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Salvar Configurações Globais de Pontos
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

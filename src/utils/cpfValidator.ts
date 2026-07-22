@@ -123,3 +123,13 @@ export function validarEmail(email: string): boolean {
   const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return re.test(email.toLowerCase());
 }
+
+/**
+ * Validação genérica de documento (CPF ou CNPJ)
+ */
+export function isDocumentValid(value: string): boolean {
+  const cleaned = (value || '').replace(/\D/g, '');
+  if (cleaned.length === 11) return validarCPF(cleaned);
+  if (cleaned.length === 14) return validarCNPJ(cleaned);
+  return false;
+}

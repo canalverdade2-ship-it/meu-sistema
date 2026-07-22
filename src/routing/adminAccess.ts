@@ -6,6 +6,8 @@ export type AdminModule =
   | 'prestadores'
   | 'fornecedores'
   | 'parceiros'
+  | 'trabalhe-conosco'
+  | 'careers'
   | 'anuncios'
   | 'catalogo'
   | 'operacoes'
@@ -27,7 +29,8 @@ export type AdminModule =
   | 'acessos'
   | 'sistema'
   | 'promocoes'
-  | 'area_vip';
+  | 'area_vip'
+  | 'afiliados';
 
 const VALID_MODULES = new Set<AdminModule>([
   'dashboard',
@@ -35,6 +38,8 @@ const VALID_MODULES = new Set<AdminModule>([
   'prestadores',
   'fornecedores',
   'parceiros',
+  'trabalhe-conosco',
+  'careers',
   'anuncios',
   'catalogo',
   'operacoes',
@@ -57,6 +62,7 @@ const VALID_MODULES = new Set<AdminModule>([
   'sistema',
   'promocoes',
   'area_vip',
+  'afiliados',
 ]);
 
 /**
@@ -71,10 +77,12 @@ export function normalizeAdminModule(module?: string | null): AdminModule {
   if (value === 'prestadores') return 'prestadores';
   if (value === 'fornecedores') return 'fornecedores';
   if (value === 'parceiros') return 'parceiros';
+  if (['trabalhe-conosco', 'trabalhe_conosco', 'careers'].includes(value)) return 'trabalhe-conosco';
   if (value === 'catalogo') return 'loja';
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (['vendas', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'os'].includes(value)) return 'operacoes';
   if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';
+  if (['afiliados', 'gsa_afiliados', 'gsa-afiliados'].includes(value)) return 'afiliados';
 
   return VALID_MODULES.has(value as AdminModule) ? value as AdminModule : 'dashboard';
 }
@@ -87,11 +95,13 @@ function normalizeGrantedModule(module: string): AdminModule | null {
   if (value === 'prestadores') return 'prestadores';
   if (value === 'fornecedores') return 'fornecedores';
   if (value === 'parceiros') return 'parceiros';
+  if (['trabalhe-conosco', 'trabalhe_conosco', 'careers'].includes(value)) return 'trabalhe-conosco';
   if (value === 'catalogo') return 'loja';
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (value === 'vendas') return 'operacoes';
   if (value === 'tickets' || value === 'suporte') return 'atendimento';
   if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';
+  if (['afiliados', 'gsa_afiliados', 'gsa-afiliados'].includes(value)) return 'afiliados';
 
   return VALID_MODULES.has(value as AdminModule) ? value as AdminModule : null;
 }
@@ -142,6 +152,8 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
   if (original === 'orcamentos') return parts('admin', 'operacoes', 'orcamentos', itemId);
   if (original === 'emprestimos') return parts('admin', 'financeiro', 'emprestimos', itemId);
   if (original === 'credito_loja') return parts('admin', 'financeiro', 'credito', itemId);
+  if (original === 'afiliados') return parts('admin', 'financeiro', 'afiliados', itemId);
+  if (['trabalhe-conosco', 'trabalhe_conosco', 'careers'].includes(original)) return parts('admin', 'trabalhe-conosco', tab, itemId);
 
   switch (normalized) {
     case 'dashboard': return '/admin/dashboard';
@@ -149,6 +161,8 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     case 'prestadores': return parts('admin', 'cadastros', 'prestadores', itemId);
     case 'fornecedores': return parts('admin', 'fornecedores', tab, itemId);
     case 'parceiros': return parts('admin', 'parceiros', tab, itemId);
+    case 'trabalhe-conosco':
+    case 'careers': return parts('admin', 'trabalhe-conosco', tab, itemId);
     case 'anuncios': return parts('admin', 'anuncios', tab, itemId);
     case 'catalogo': return parts('admin', 'loja', tab || 'produtos', itemId);
     case 'operacoes': return parts('admin', 'operacoes', tab || 'orcamentos', itemId);
@@ -171,6 +185,7 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     case 'sistema': return '/admin/sistema';
     case 'promocoes': return parts('admin', 'promocoes', tab, itemId);
     case 'area_vip': return parts('admin', 'area_vip', tab, itemId);
+    case 'afiliados': return parts('admin', 'financeiro', 'afiliados', itemId);
     default: return '/admin/dashboard';
   }
 }

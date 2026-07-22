@@ -78,6 +78,7 @@ const AVAILABLE_MODULES = [
   ['fiscal', 'Fiscal'],
   ['emprestimos', 'Empréstimos'],
   ['credito_loja', 'Crédito de Loja'],
+  ['afiliados', 'GSA Afiliados (programa e saques)'],
   ['relatorios', 'Relatórios'],
   ['configuracoes', 'Configurações'],
   ['demandas', 'Demandas internas'],

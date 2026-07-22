@@ -10,6 +10,13 @@ export const routes = {
     ads: () => '/anuncios',
     advertise: () => '/anuncie',
     affiliates: () => '/afiliados',
+    affiliateDashboard: () => '/afiliados/dashboard',
+    affiliateLinks: () => '/afiliados/links',
+    affiliateCommissions: () => '/afiliados/comissoes',
+    affiliatePayouts: () => '/afiliados/saques',
+    affiliateProfile: () => '/afiliados/perfil',
+    affiliatePoints: () => '/afiliados/pontos',
+    careers: () => '/trabalhe-conosco',
     serviceDetail: (id: string) => `/servicos-e-assinaturas/${id}`,
   },
   // Login
@@ -19,7 +26,9 @@ export const routes = {
     admin: () => '/login/admin',
     provider: () => '/login/prestador',
     supplier: () => '/fornecedor/login',
+    affiliate: () => '/afiliados/login',
     advertiser: () => '/anuncios/login',
+    careers: () => '/trabalhe-conosco/acesso',
     recoverPassword: () => '/login/cliente/recuperar-senha',
   },
   // Marketplace GSA
@@ -187,6 +196,7 @@ export const routes = {
   admin: {
     dashboard: () => '/admin/dashboard',
     partners: () => '/admin/parceiros',
+    trabalheConosco: () => '/admin/trabalhe-conosco',
     ads: () => '/admin/anuncios',
     adRequest: (id: string) => `/admin/anuncios/solicitacoes/${id}`,
     clients: () => '/admin/cadastros/clientes',

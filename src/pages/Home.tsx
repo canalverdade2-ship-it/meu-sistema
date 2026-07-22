@@ -165,7 +165,6 @@ export function Home({
           onBack={onBackHome}
           onClientLogin={() => openClient('login')}
           onClientRegister={() => openClient('register')}
-          onSupplierAccess={onSupplierAccess}
           onRestrictedAccess={() => openRestricted('prestador')}
         />
       ) : publicPage === 'systems' ? (

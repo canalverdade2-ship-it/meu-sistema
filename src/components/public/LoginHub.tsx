@@ -1,4 +1,4 @@
-import { ArrowRight, BriefcaseBusiness, PackageSearch, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, Sparkles, Users } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { LogoGSA } from '../ui/LogoGSA';
 
@@ -6,11 +6,11 @@ interface LoginHubProps {
   onBack?: () => void;
   onClientLogin: () => void;
   onClientRegister: () => void;
-  onSupplierAccess: () => void;
-  onRestrictedAccess: () => void;
+  onSupplierAccess?: () => void;
+  onRestrictedAccess?: () => void;
 }
 
-export function LoginHub({ onBack, onClientLogin, onClientRegister, onSupplierAccess, onRestrictedAccess }: LoginHubProps) {
+export function LoginHub({ onBack, onClientLogin, onClientRegister, onSupplierAccess }: LoginHubProps) {
   const reduceMotion = useReducedMotion();
   const cardAnimation = reduceMotion
     ? {}
@@ -48,19 +48,15 @@ export function LoginHub({ onBack, onClientLogin, onClientRegister, onSupplierAc
                   <p className="mt-2 text-sm text-neutral-600">Validar indicação e criar conta.</p>
                   <ArrowRight className="absolute bottom-5 right-5 h-5 w-5 text-[#8a651f] transition-transform group-hover:translate-x-1" />
                 </motion.button>
-
-                <motion.button {...cardAnimation} transition={{ delay: 0.18 }} type="button" onClick={onSupplierAccess} className="group relative min-h-[150px] rounded-[1.5rem] border border-emerald-300 bg-emerald-50/60 p-5 text-left shadow-lg transition hover:-translate-y-0.5 hover:border-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 sm:col-span-2">
-                  <PackageSearch className="h-10 w-10 text-emerald-700" />
-                  <h2 className="mt-5 text-xl font-black text-[#142030]">Portal do Fornecedor</h2>
-                  <p className="mt-2 text-sm text-neutral-600">Acesso exclusivo para pedidos, entregas, notas fiscais e pagamentos.</p>
-                  <ArrowRight className="absolute bottom-5 right-5 h-5 w-5 text-emerald-700 transition-transform group-hover:translate-x-1" />
-                </motion.button>
               </div>
 
-              <button type="button" onClick={onRestrictedAccess} className="mx-auto mt-6 flex items-center gap-2 rounded-full border border-[#d8bd73]/40 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-[0.15em] text-[#142030]/70 hover:border-[#c19a43] hover:text-[#142030] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]">
-                <BriefcaseBusiness className="h-4 w-4 text-[#8a651f]" />
-                Prestador e equipe
-              </button>
+              {onSupplierAccess && (
+                <div className="mt-4 pt-4 border-t border-neutral-200">
+                  <button type="button" onClick={onSupplierAccess} className="w-full text-center text-xs font-bold text-neutral-600 hover:text-neutral-900 underline">
+                    Portal do Fornecedor (Acesso Exclusivo)
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </section>

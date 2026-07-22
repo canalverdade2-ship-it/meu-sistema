@@ -35,6 +35,10 @@ const FornecedorLandingPage = lazy(() => import('./pages/Fornecedor/FornecedorLa
 const AdvertiserPortal = lazy(() => import('./pages/AdvertiserPortal').then((module) => ({ default: module.AdvertiserPortal })));
 const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore').then((module) => ({ default: module.MarketplaceGSAStore })));
 const AffiliatePublicPage = lazy(() => import('./components/public/AffiliatePublicPage').then((module) => ({ default: module.AffiliatePublicPage })));
+const AffiliateAccessPage = lazy(() => import('./pages/Afiliado/AffiliateAccessPage').then((module) => ({ default: module.AffiliateAccessPage })));
+const AfiliadoDashboard = lazy(() => import('./pages/Afiliado/AfiliadoDashboard').then((module) => ({ default: module.AfiliadoDashboard })));
+const CareersLandingPage = lazy(() => import('./pages/Careers/CareersLandingPage').then((module) => ({ default: module.CareersLandingPage })));
+const CareersAccessPage = lazy(() => import('./pages/Careers/CareersAccessPage').then((module) => ({ default: module.CareersAccessPage })));
 
 function RouteLoading() {
   return <div className="flex min-h-[50vh] items-center justify-center bg-neutral-50 text-sm font-semibold text-neutral-600" role="status">Carregando ambiente...</div>;
@@ -159,6 +163,14 @@ export default function App() {
     replace(returnTo || routes.supplier.dashboard());
   };
 
+  const handleLoginAfiliado = (clientId?: string) => {
+    const sessionData = sessionService.getCurrentSession();
+    const id = clientId || sessionData?.atorId || session.clientId || '';
+    setSession({ clientId: id });
+    const returnTo = readSafeReturnTo(window.location.search, ['/afiliados']);
+    replace(returnTo || routes.public.affiliateDashboard());
+  };
+
   const handleLogout = async (isAuto = false) => {
     if (session.adminAuth) {
       await logService.logAction({ ator_tipo: session.adminType || 'admin', ator_id: session.colaboradorId, acao: 'LOGOUT', detalhes: isAuto ? 'Logout automático por inatividade (10min)' : 'Logout efetuado com sucesso' });
@@ -212,15 +224,53 @@ export default function App() {
         <div className="min-h-screen bg-[#f8f7f5] font-sans text-neutral-900">
           <AffiliateTrackingBridge clientId={session.clientId} />
           <Suspense fallback={<RouteLoading />}>
-            {activeView === 'public' && route.module === 'affiliates' && (
+            {activeView === 'public' && route.module === 'affiliates' && !route.itemId && (
               <AffiliatePublicPage
                 onBack={() => navigate(routes.public.home())}
-                onLogin={() => navigate(`${routes.login.root()}?mode=login&returnTo=${encodeURIComponent(routes.client.loyalty.affiliates())}`)}
-                onRegister={() => navigate(`${routes.login.root()}?mode=register&returnTo=${encodeURIComponent(routes.client.loyalty.affiliates())}`)}
+                onLogin={() => navigate('/afiliados/login')}
+                onRegister={() => navigate('/afiliados/login?mode=register')}
               />
             )}
 
-            {activeView === 'public' && route.module !== 'affiliates' && (
+            {((activeView === 'public' && route.module === 'affiliates' && ['login', 'acesso', 'cadastro'].includes(route.itemId || '')) || (activeView === 'login' && route.module === 'afiliado')) && (
+              <AffiliateAccessPage
+                initialMode={route.itemId === 'cadastro' || route.query.mode === 'register' ? 'register' : 'login'}
+                onLogin={(clientId) => handleLoginAfiliado(clientId)}
+                onBack={() => navigate(routes.public.affiliates())}
+              />
+            )}
+
+            {activeView === 'public' && route.module === 'affiliates' && ['dashboard', 'painel', 'links', 'comissoes', 'saques', 'perfil', 'pontos'].includes(route.itemId || '') && (
+              session.clientId ? (
+                <AfiliadoDashboard
+                  clientId={session.clientId}
+                  onLogout={handleLogout}
+                  activeSubRoute={route.itemId}
+                />
+              ) : (
+                <AffiliateAccessPage
+                  initialMode="login"
+                  onLogin={(clientId) => handleLoginAfiliado(clientId)}
+                  onBack={() => navigate(routes.public.affiliates())}
+                />
+              )
+            )}
+
+            {activeView === 'public' && ['trabalhe-conosco', 'careers'].includes(route.module) && !['acesso', 'login'].includes(route.itemId || '') && (
+              <CareersLandingPage
+                onBackToSite={() => navigate(routes.public.home())}
+                onAccessPortal={() => navigate(routes.login.careers())}
+              />
+            )}
+
+            {((activeView === 'public' && ['trabalhe-conosco', 'careers'].includes(route.module) && ['acesso', 'login'].includes(route.itemId || '')) || (activeView === 'login' && route.module === 'careers')) && (
+              <CareersAccessPage
+                onBackToLanding={() => navigate(routes.public.careers())}
+                onBackToSite={() => navigate(routes.public.home())}
+              />
+            )}
+
+            {activeView === 'public' && !['affiliates', 'trabalhe-conosco', 'careers'].includes(route.module) && (
               <Home
                 onLoginClient={handleLoginClient}
                 onLoginAdmin={handleLoginAdmin}
@@ -314,7 +364,12 @@ export default function App() {
                 }}
                 onBackToSite={() => navigate(routes.public.home())}
                 onRequireAuth={() => {
-                  const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+                  const params = new URLSearchParams(window.location.search);
+                  if (!params.has('modal')) {
+                    params.set('modal', 'checkout');
+                  }
+                  const returnUrl = window.location.pathname + '?' + params.toString();
+                  const returnTo = encodeURIComponent(returnUrl);
                   navigate(`${routes.login.root()}?returnTo=${returnTo}`);
                 }}
               />

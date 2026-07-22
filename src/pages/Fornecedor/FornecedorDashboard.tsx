@@ -6,6 +6,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { Modal } from '../../components/ui/Modal';
 import { LogoGSA } from '../../components/ui/LogoGSA';
+import { UniversalNotificationBell, type StandardNotification } from '../../components/ui/UniversalNotificationBell';
 import { formatCurrency, formatDate, formatDateTime, generateUUID } from '../../lib/utils';
 import {
   getSupplierSnapshot, markSupplierOrderSeen, requestSupplierProduct,
@@ -52,13 +53,40 @@ export function FornecedorDashboard({ fornecedorId, onLogout }: { fornecedorId: 
     }
   };
 
-  const unread = snapshot.notifications.filter((item) => !item.lida).length;
+  const formattedNotifications = useMemo<StandardNotification[]>(() => {
+    return (snapshot.notifications || []).map((n) => ({
+      id: String(n.id || Math.random()),
+      titulo: String(n.titulo || n.title || 'Notificação do Fornecedor'),
+      mensagem: String(n.mensagem || n.message || ''),
+      lida: Boolean(n.lida),
+      created_at: String(n.created_at || new Date().toISOString()),
+      modulo: n.modulo,
+      tab: n.tab,
+      item_id: n.item_id,
+    }));
+  }, [snapshot.notifications]);
+
+  const unread = formattedNotifications.filter((item) => !item.lida).length;
   const pendingOrders = snapshot.orders.filter((item) => !['concluido', 'cancelado'].includes(item.status)).length;
   const pendingDeliveries = snapshot.deliveries.filter((item) => ['em_analise', 'ajuste_solicitado'].includes(item.status)).length;
   const receivable = snapshot.payables.filter((item) => item.status !== 'cancelado').reduce((sum, item) => sum + Number(item.valor_pendente || 0), 0);
 
+  const handleMarkAsRead = async (id: string) => {
+    setSnapshot((prev) => ({
+      ...prev,
+      notifications: prev.notifications.map((item) => item.id === id ? { ...item, lida: true } : item),
+    }));
+  };
+
+  const handleMarkAllAsRead = async () => {
+    setSnapshot((prev) => ({
+      ...prev,
+      notifications: prev.notifications.map((item) => ({ ...item, lida: true })),
+    }));
+  };
+
   return <div className="min-h-screen bg-[#f5f5f2] text-neutral-900">
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-neutral-200 bg-white/95 px-4 backdrop-blur lg:px-8"><div className="flex items-center gap-3"><button onClick={() => setSidebar(true)} className="rounded-xl p-2 lg:hidden"><Menu className="h-5 w-5" /></button><LogoGSA size="sm" variant="dark" /><div><p className="text-sm font-black">Portal do Fornecedor</p><p className="max-w-48 truncate text-[10px] font-semibold uppercase tracking-wider text-neutral-400">{snapshot.supplier?.nome_fantasia || snapshot.supplier?.razao_social || 'GSA Produtos'}</p></div></div><div className="flex items-center gap-2"><button onClick={() => void load()} className="rounded-xl border border-neutral-200 p-2.5"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /></button><div className="relative rounded-xl border border-neutral-200 p-2.5"><Bell className="h-4 w-4" />{unread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-black text-white">{unread}</span>}</div><button onClick={onLogout} className="rounded-xl bg-neutral-950 p-2.5 text-white" aria-label="Sair"><LogOut className="h-4 w-4" /></button></div></header>
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-neutral-200 bg-white/95 px-4 backdrop-blur lg:px-8"><div className="flex items-center gap-3"><button onClick={() => setSidebar(true)} className="rounded-xl p-2 lg:hidden"><Menu className="h-5 w-5" /></button><LogoGSA size="sm" variant="dark" /><div><p className="text-sm font-black">Portal do Fornecedor</p><p className="max-w-48 truncate text-[10px] font-semibold uppercase tracking-wider text-neutral-400">{snapshot.supplier?.nome_fantasia || snapshot.supplier?.razao_social || 'GSA Produtos'}</p></div></div><div className="flex items-center gap-2"><button onClick={() => void load()} className="rounded-xl border border-neutral-200 p-2.5"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /></button><UniversalNotificationBell variant="client" notifications={formattedNotifications} unreadCount={unread} onMarkAsRead={handleMarkAsRead} onMarkAllAsRead={handleMarkAllAsRead} onNavigate={(_mod, _tab, _itemId) => { navigate(routes.supplier.dashboard()); }} /><button onClick={onLogout} className="rounded-xl bg-neutral-950 p-2.5 text-white" aria-label="Sair"><LogOut className="h-4 w-4" /></button></div></header>
 
     <div className="mx-auto flex max-w-[1500px]">
       <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 border-r border-neutral-200 bg-white p-4 lg:block"><Navigation active={active} onNavigate={(path) => navigate(path)} /></aside>

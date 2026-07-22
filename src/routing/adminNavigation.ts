@@ -271,6 +271,7 @@ export const ADMIN_PERMISSION_GROUPS = [
     ['emprestimos', 'Empréstimos'],
   ] },
   { label: 'Relacionamento', options: [
+    ['trabalhe-conosco', 'Trabalhe Conosco'],
     ['fidelidade', 'Fidelidade'],
     ['area_vip', 'Área VIP'],
     ['atendimento', 'Atendimento'],
@@ -282,7 +283,7 @@ export const ADMIN_PERMISSION_GROUPS = [
   ] },
 ] as const satisfies ReadonlyArray<{
   label: string;
-  options: ReadonlyArray<readonly [Exclude<AdminModule, 'dashboard' | 'acessos' | 'catalogo' | 'parceiros' | 'anuncios'>, string]>;
+  options: ReadonlyArray<readonly [Exclude<AdminModule, 'dashboard' | 'acessos' | 'catalogo' | 'parceiros' | 'anuncios' | 'careers'>, string]>;
 }>;
 
 export function flattenAdminNavigation(groups: AdminNavigationGroup[] = ADMIN_NAVIGATION_GROUPS) {

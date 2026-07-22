@@ -27,12 +27,13 @@ async function excludes(path: string, patterns: string[]) {
 }
 
 async function main() {
-  assert.equal(routes.login.supplier(), '/fornecedor');
+  assert.equal(routes.login.supplier(), '/fornecedor/login');
   assert.equal(routes.supplier.dashboard(), '/fornecedor/dashboard');
   assert.equal(routes.admin.suppliers(), '/admin/fornecedores');
   assert.equal(matchRoute('/fornecedor/pedidos', '', '').area, 'supplier');
   assert.equal(matchRoute('/fornecedor/pedidos', '', '').module, 'pedidos');
-  assert.equal(matchRoute('/fornecedor', '', '').module, 'access');
+  assert.equal(matchRoute('/fornecedor', '', '').module, 'home');
+  assert.equal(matchRoute('/fornecedor/login', '', '').module, 'login');
   assert.equal(normalizeAdminModule('fornecedores'), 'fornecedores');
   assert.equal(adminModulePath('fornecedores'), '/admin/fornecedores');
   assert.equal(canAccessAdminModule('admin', [], 'fornecedores'), true);

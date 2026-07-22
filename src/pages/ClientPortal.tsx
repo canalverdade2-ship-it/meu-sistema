@@ -352,9 +352,23 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
       else if (tab === 'assinaturas') path = routes.client.services.assinaturas();
       else path = routes.client.services.root();
     } else if (module === 'financeiro') {
-      path = routes.client.finance.root();
+      if (tab === 'faturas') path = itemId ? routes.client.finance.invoice(itemId) : routes.client.finance.faturas();
+      else if (tab === 'nf' || tab === 'notas-fiscais') path = itemId ? routes.client.finance.nota(itemId) : routes.client.finance.notas();
+      else if (tab === 'extrato') path = itemId ? routes.client.finance.movimentacao(itemId) : routes.client.finance.extrato();
+      else if (tab === 'saques') path = itemId ? routes.client.finance.saque(itemId) : routes.client.finance.saques();
+      else if (tab === 'transferencias') path = itemId ? routes.client.finance.transferencia(itemId) : routes.client.finance.transferencias();
+      else if (tab === 'credito' || tab === 'credito_loja') path = itemId ? routes.client.finance.solicitacaoCredito(itemId) : routes.client.finance.credito();
+      else if (tab === 'emprestimos') path = itemId ? routes.client.finance.emprestimo(itemId) : routes.client.finance.emprestimos();
+      else path = routes.client.finance.root();
     } else if (module === 'fidelidade') {
-      path = tab === 'afiliados' ? routes.client.loyalty.affiliates() : routes.client.loyalty.root();
+      if (tab === 'pontos') path = routes.client.loyalty.pontos();
+      else if (tab === 'vouchers') path = itemId ? routes.client.loyalty.voucher(itemId) : routes.client.loyalty.vouchers();
+      else if (tab === 'promocoes') path = itemId ? routes.client.loyalty.promocao(itemId) : routes.client.loyalty.promocoes();
+      else if (tab === 'premios') path = itemId ? routes.client.loyalty.premio(itemId) : routes.client.loyalty.premios();
+      else if (tab === 'indique-ganhe' || tab === 'indique_ganhe') path = itemId ? routes.client.loyalty.indicacao(itemId) : routes.client.loyalty.indiqueGanhe();
+      else if (tab === 'afiliados') path = routes.client.loyalty.affiliates();
+      else if (tab === 'area-vip' || tab === 'area_vip') path = routes.client.loyalty.vip();
+      else path = routes.client.loyalty.root();
     } else if (module === 'suporte') {
       path = routes.client.support();
     } else if ((module as string) === 'gsa_store') {

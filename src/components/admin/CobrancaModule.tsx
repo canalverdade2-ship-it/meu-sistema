@@ -8,7 +8,7 @@ import { logService } from '../../lib/logService';
 import { 
   Gavel, AlertTriangle, MessageCircle, Settings, History, Send, Clock, CheckCircle,
   Activity, User, Briefcase, Scale, Target, Banknote,
-  TrendingUp, TrendingDown, ShieldAlert, Search, Filter, XCircle, Trash2, FileText
+  TrendingUp, TrendingDown, ShieldAlert, Search, Filter, XCircle, Trash2, FileText, Layers
 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
@@ -45,6 +45,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   const [isWpModalOpen, setIsWpModalOpen] = useState(false);
   const [wpMessage, setWpMessage] = useState('');
   const [isGerarCobrancaOpen, setIsGerarCobrancaOpen] = useState(false);
+  const [selectedFaturaIds, setSelectedFaturaIds] = useState<string[]>([]);
+  const [batchProcessing, setBatchProcessing] = useState(false);
   
   const [isAcordoModalOpen, setIsAcordoModalOpen] = useState(false);
   const [acordoData, setAcordoData] = useState({ parcelas: 1, dtPrimeiroVenc: '', desconto: 0, tipo_desconto: 'fixo', observacoes: '' });
@@ -183,7 +185,88 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
 
   const openGerarCobrancaModal = () => {
     setIsGerarCobrancaOpen(true);
+    setSelectedFaturaIds([]);
     fetchFaturasElegiveisCobranca();
+  };
+
+  const toggleSelectFatura = (id: string) => {
+    setSelectedFaturaIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllFaturas = () => {
+    if (selectedFaturaIds.length === faturasElegiveis.length) {
+      setSelectedFaturaIds([]);
+    } else {
+      setSelectedFaturaIds(faturasElegiveis.map((f) => f.id));
+    }
+  };
+
+  const handleGerarCobrancasEmLote = async () => {
+    const idsToProcess = selectedFaturaIds.length > 0 ? selectedFaturaIds : faturasElegiveis.map((f) => f.id);
+    if (idsToProcess.length === 0) {
+      toast.error('Nenhuma fatura elegível para gerar cobrança.');
+      return;
+    }
+
+    setBatchProcessing(true);
+    let successCount = 0;
+    let existsCount = 0;
+    let errorCount = 0;
+
+    try {
+      const session = getAdminSessionForRpc();
+      for (const faturaId of idsToProcess) {
+        const fatura = faturasElegiveis.find((f) => f.id === faturaId);
+        try {
+          const { data, error } = await supabase.rpc('gsa_admin_criar_cobranca_fatura', {
+            p_sessao_id: session.sessaoId,
+            p_session_token: session.sessionToken,
+            p_fatura_id: faturaId
+          });
+
+          if (error) {
+            errorCount++;
+          } else if (data?.already_exists) {
+            existsCount++;
+          } else {
+            successCount++;
+            if (fatura) {
+              await logService.logAction({
+                ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+                ator_nome: colaboradorNome || 'Administrador',
+                acao: 'GERAR_COBRANCA',
+                detalhes: `Cobrança em lote gerada para a fatura ${fatura.codigo_fatura || fatura.id}.`
+              });
+            }
+          }
+        } catch {
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} cobrança(s) gerada(s) em lote com sucesso!`);
+      }
+      if (existsCount > 0) {
+        toast(`${existsCount} fatura(s) já possuíam cobrança ativa.`, { icon: 'ℹ️' });
+      }
+      if (errorCount > 0) {
+        toast.error(`Falha ao gerar cobrança em ${errorCount} fatura(s).`);
+      }
+
+      setSelectedFaturaIds([]);
+      fetchDados();
+      fetchFaturasElegiveisCobranca();
+      setActiveTab('fila');
+      setIsGerarCobrancaOpen(false);
+    } catch (err: any) {
+      console.error('Erro ao gerar cobranças em lote:', err);
+      toast.error('Erro ao processar cobranças em lote.');
+    } finally {
+      setBatchProcessing(false);
+    }
   };
 
   const handleGerarCobrancaFatura = async (fatura: any) => {
@@ -1239,21 +1322,41 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
       )}
 
       {/* --- Modals --- */}
-      <Modal isOpen={isGerarCobrancaOpen} onClose={() => setIsGerarCobrancaOpen(false)} title="Gerar Cobranca" size="wide">
+      <Modal isOpen={isGerarCobrancaOpen} onClose={() => setIsGerarCobrancaOpen(false)} title="Gerar Cobrança" size="wide">
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-neutral-50 p-4 ring-1 ring-neutral-100">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-rose-500">Faturas vencidas sem cobranca</p>
-              <p className="text-sm font-bold text-neutral-600">Selecione uma fatura vencida para criar a cobranca na fila.</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-rose-500">Faturas vencidas sem cobrança</p>
+              <p className="text-sm font-bold text-neutral-600">
+                Selecione as faturas desejadas ou gere a cobrança em lote para todas as pendentes.
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={fetchFaturasElegiveisCobranca}
-              className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-neutral-700 shadow-sm ring-1 ring-neutral-200 transition-all hover:ring-rose-200 hover:text-rose-600"
-            >
-              <Activity className={`h-4 w-4 ${loadingFaturasElegiveis ? 'animate-spin' : ''}`} />
-              Atualizar
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={fetchFaturasElegiveisCobranca}
+                disabled={loadingFaturasElegiveis || batchProcessing}
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-neutral-700 shadow-sm ring-1 ring-neutral-200 transition-all hover:ring-rose-200 hover:text-rose-600 disabled:opacity-50"
+              >
+                <Activity className={`h-4 w-4 ${loadingFaturasElegiveis ? 'animate-spin' : ''}`} />
+                Atualizar
+              </button>
+              {faturasElegiveis.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleGerarCobrancasEmLote}
+                  disabled={batchProcessing || loadingFaturasElegiveis}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-rose-500/25 transition-all hover:from-rose-600 hover:to-rose-700 disabled:opacity-50"
+                >
+                  <Layers className={`h-4 w-4 ${batchProcessing ? 'animate-spin' : ''}`} />
+                  {batchProcessing
+                    ? 'Gerando...'
+                    : selectedFaturaIds.length > 0
+                    ? `Gerar (${selectedFaturaIds.length}) em Lote`
+                    : `Gerar Todas em Lote (${faturasElegiveis.length})`}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="overflow-hidden rounded-3xl border border-neutral-100 bg-white">
@@ -1261,7 +1364,17 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
               <table className="w-full text-left">
                 <thead className="bg-neutral-50">
                   <tr>
-                    {['Fatura', 'Cliente', 'Vencimento', 'Valor', 'Acao'].map(h => (
+                    <th className="w-10 px-4 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={faturasElegiveis.length > 0 && selectedFaturaIds.length === faturasElegiveis.length}
+                        onChange={toggleSelectAllFaturas}
+                        disabled={batchProcessing || loadingFaturasElegiveis || faturasElegiveis.length === 0}
+                        className="h-4 w-4 rounded border-neutral-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                        title="Selecionar / Deselecionar todas"
+                      />
+                    </th>
+                    {['Fatura', 'Cliente', 'Vencimento', 'Valor', 'Ação'].map(h => (
                       <th key={h} className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-neutral-400">{h}</th>
                     ))}
                   </tr>
@@ -1269,39 +1382,52 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
                 <tbody className="divide-y divide-neutral-100">
                   {loadingFaturasElegiveis ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center">
+                      <td colSpan={6} className="py-12 text-center">
                         <Activity className="mx-auto h-7 w-7 animate-spin text-neutral-300" />
                       </td>
                     </tr>
                   ) : faturasElegiveis.length > 0 ? (
-                    faturasElegiveis.map((fatura: any) => (
-                      <tr key={fatura.id} className="hover:bg-neutral-50/60">
-                        <td className="px-5 py-4">
-                          <p className="font-mono text-xs font-black text-indigo-600">#{fatura.codigo_fatura || fatura.id.slice(0, 8)}</p>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">{fatura.status}</p>
-                        </td>
-                        <td className="px-5 py-4">
-                          <p className="text-sm font-black text-neutral-900">{fatura.clientes?.nome || 'Cliente nao informado'}</p>
-                          <p className="text-[10px] font-bold text-neutral-400">{fatura.clientes?.telefone ? maskPhone(fatura.clientes.telefone) : fatura.clientes?.email || 'Sem contato'}</p>
-                        </td>
-                        <td className="px-5 py-4 text-xs font-bold text-rose-500">{formatDate(fatura.data_vencimento)}</td>
-                        <td className="px-5 py-4 text-sm font-black text-neutral-900">{formatCurrency(fatura.valor_final_pendente || fatura.valor_total || 0)}</td>
-                        <td className="px-5 py-4">
-                          <button
-                            type="button"
-                            onClick={() => handleGerarCobrancaFatura(fatura)}
-                            className="rounded-2xl bg-rose-500 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-rose-500/20 transition-all hover:bg-rose-600"
-                          >
-                            Gerar Cobranca
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                    faturasElegiveis.map((fatura: any) => {
+                      const isSelected = selectedFaturaIds.includes(fatura.id);
+                      return (
+                        <tr key={fatura.id} className={`transition-colors hover:bg-neutral-50/60 ${isSelected ? 'bg-rose-50/40' : ''}`}>
+                          <td className="px-4 py-4 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectFatura(fatura.id)}
+                              disabled={batchProcessing}
+                              className="h-4 w-4 rounded border-neutral-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="px-5 py-4">
+                            <p className="font-mono text-xs font-black text-indigo-600">#{fatura.codigo_fatura || fatura.id.slice(0, 8)}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">{fatura.status}</p>
+                          </td>
+                          <td className="px-5 py-4">
+                            <p className="text-sm font-black text-neutral-900">{fatura.clientes?.nome || 'Cliente não informado'}</p>
+                            <p className="text-[10px] font-bold text-neutral-400">{fatura.clientes?.telefone ? maskPhone(fatura.clientes.telefone) : fatura.clientes?.email || 'Sem contato'}</p>
+                          </td>
+                          <td className="px-5 py-4 text-xs font-bold text-rose-500">{formatDate(fatura.data_vencimento)}</td>
+                          <td className="px-5 py-4 text-sm font-black text-neutral-900">{formatCurrency(fatura.valor_final_pendente || fatura.valor_total || 0)}</td>
+                          <td className="px-5 py-4">
+                            <button
+                              type="button"
+                              onClick={() => handleGerarCobrancaFatura(fatura)}
+                              disabled={batchProcessing}
+                              className="rounded-2xl bg-rose-500 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-rose-500/20 transition-all hover:bg-rose-600 disabled:opacity-50"
+                            >
+                              Gerar Cobrança
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-14 text-center">
+                      <td colSpan={6} className="py-14 text-center">
                         <FileText className="mx-auto mb-3 h-10 w-10 text-neutral-200" />
-                        <p className="text-sm font-bold text-neutral-400">Nenhuma fatura vencida sem cobranca encontrada.</p>
+                        <p className="text-sm font-bold text-neutral-400">Nenhuma fatura vencida sem cobrança encontrada.</p>
                       </td>
                     </tr>
                   )}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   BarChart3,
+  Briefcase,
   ChevronRight,
   ClipboardList,
   Clock,
@@ -19,6 +20,7 @@ import {
   Receipt,
   Server,
   Settings,
+  Share2,
   ShieldAlert,
   Store,
   Tags,
@@ -40,6 +42,7 @@ import { CollaboratorDashboard } from '../components/admin/CollaboratorDashboard
 import { CadastroModule } from '../components/admin/CadastroModule';
 import { VendasModule } from '../components/admin/VendasModule';
 import { FinanceiroModule } from '../components/admin/FinanceiroModule';
+import { AffiliateAdminModule } from '../components/admin/AffiliateAdminModule';
 import { TicketsModule } from '../components/admin/TicketsModule';
 import { RelatoriosModule } from '../components/admin/RelatoriosModule';
 import { ConfiguracoesModule } from '../components/admin/ConfiguracoesModule';
@@ -58,6 +61,7 @@ import { ProtectionAdminModule } from '../components/admin/ProtectionAdminModule
 import { PartnersAdminModule } from '../components/admin/PartnersAdminModule';
 import { AdvertisingAdminModule } from '../components/admin/AdvertisingAdminModule';
 import { FornecedoresModule } from '../components/admin/FornecedoresModule';
+import { CareersAdminModule } from '../components/admin/CareersAdminModule';
 import {
   adminPathFor,
   hasAdminModuleAccess,
@@ -87,6 +91,7 @@ const MENU_GROUPS: MenuGroup[] = [
     { id: 'classificados', label: 'Classificados GSA', icon: Tags },
     { id: 'anuncios', label: 'GSA Anúncios', icon: Megaphone },
     { id: 'viagens', label: 'Viagens GSA', icon: Plane },
+    { id: 'afiliados', label: 'GSA Afiliados', icon: Share2 },
     { id: 'saude', label: 'GSA Saúde', icon: HeartPulse },
     { id: 'seguros', label: 'GSA Seguros', icon: ShieldAlert },
   ]},
@@ -99,6 +104,7 @@ const MENU_GROUPS: MenuGroup[] = [
   ]},
   { label: 'Relacionamento', items: [
     { id: 'parceiros', label: 'Parceiros', icon: Handshake },
+    { id: 'trabalhe-conosco', label: 'Trabalhe Conosco', icon: Briefcase },
     { id: 'fidelidade', label: 'Fidelidade', icon: Gift },
     { id: 'promocoes', label: 'Promoções por Quantidade', icon: Tags },
     { id: 'area_vip', label: 'Área VIP', icon: Gift },
@@ -225,7 +231,9 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
         {normalizedActive === 'promocoes' && <ErrorBoundary><PromocaoQuantidadeModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} /></ErrorBoundary>}
         {normalizedActive === 'classificados' && <ErrorBoundary><ClassifiedsModule initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
         {normalizedActive === 'anuncios' && <ErrorBoundary><AdvertisingAdminModule /></ErrorBoundary>}
+        {['trabalhe-conosco', 'careers'].includes(normalizedActive) && <ErrorBoundary><CareersAdminModule /></ErrorBoundary>}
         {normalizedActive === 'viagens' && <ErrorBoundary><TravelAdminModule /></ErrorBoundary>}
+        {normalizedActive === 'afiliados' && <ErrorBoundary><AffiliateAdminModule /></ErrorBoundary>}
         {normalizedActive === 'saude' && <ErrorBoundary><ProtectionAdminModule domain="saude" initialTab={activeTab} initialItemId={activeItemId} /></ErrorBoundary>}
         {normalizedActive === 'seguros' && <ErrorBoundary><ProtectionAdminModule domain="seguros" initialTab={activeTab} initialItemId={activeItemId} /></ErrorBoundary>}
       </div></div>

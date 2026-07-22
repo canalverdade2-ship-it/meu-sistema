@@ -28,9 +28,10 @@ export function PublicFooter({ setPublicPage, onGuestStore, onAdminLogin, onPriv
             <button type="button" onClick={onGuestStore} className="w-fit hover:text-[#d8bd73]">Marketplace</button>
             <button type="button" onClick={() => setPublicPage('systems')} className="w-fit hover:text-[#d8bd73]">Sites e Sistemas</button>
             <button type="button" onClick={() => setPublicPage('partners')} className="w-fit hover:text-[#d8bd73]">Parceiros</button>
-            <button type="button" onClick={onAdminLogin} className="w-fit hover:text-[#d8bd73]">Acesso restrito</button>
-            <a href="/fornecedor" className="w-fit hover:text-[#d8bd73]">Portal do fornecedor</a>
-            <a href="/afiliados" className="w-fit hover:text-[#d8bd73]">Programa de afiliados</a>
+            <button type="button" onClick={onAdminLogin} className="w-fit hover:text-[#d8bd73]">Acesso Restrito</button>
+            <a href="/fornecedor" className="w-fit hover:text-[#d8bd73]">Portal do Fornecedor</a>
+            <a href="/afiliados" className="w-fit hover:text-[#d8bd73]">Programa de Afiliados</a>
+            <a href="/trabalhe-conosco" className="w-fit hover:text-[#d8bd73]">Trabalhe Conosco</a>
             <button type="button" onClick={onPrivacy} className="w-fit hover:text-[#d8bd73]">Privacidade</button>
           </div>
         </nav>

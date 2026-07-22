@@ -43,7 +43,9 @@ export function ClientFinanceiro({
     if (tab === 'credito_loja' || tab === 'credito') return 'credito';
     if (tab === 'emprestimos') return 'emprestimos';
     if (tab === 'transferencias') return 'transferencias';
-    if (tab === 'nf' || tab === 'extrato' || tab === 'saques' || tab === 'faturas') return tab;
+    if (tab === 'nf' || tab === 'notas-fiscais' || tab === 'extrato' || tab === 'saques' || tab === 'faturas') {
+      return tab === 'notas-fiscais' ? 'nf' : (tab as FinanceiroTab);
+    }
     return '';
   };
 
@@ -127,11 +129,10 @@ export function ClientFinanceiro({
   }, [initialItemId]);
 
   useEffect(() => {
-    if (initialTab) {
-      setActiveTab(normalizeInitialTab(initialTab));
-      setIsSubmoduleOpen(true);
-    }
-  }, [initialTab]);
+    const tab = normalizeInitialTab(initialTab);
+    setActiveTab(tab);
+    setIsSubmoduleOpen(Boolean(tab || initialItemId));
+  }, [initialTab, initialItemId]);
 
   useEffect(() => {
     const handleTabChange = (e: any) => {

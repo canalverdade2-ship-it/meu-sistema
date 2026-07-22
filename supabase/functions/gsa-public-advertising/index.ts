@@ -266,7 +266,7 @@ export async function handleRequest(request: Request) {
 
   const { data: identityLimit, error: identityLimitError } = await admin.rpc('gsa_auth_rate_limit_check', {
     p_bucket_key: `ads:identity:${identityHash}`,
-    p_limit: 3,
+    p_limit: 5,
     p_window_seconds: 86400,
     p_block_seconds: 86400,
   });

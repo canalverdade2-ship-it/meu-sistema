@@ -64,8 +64,17 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   if (normalizedPath === '/anuncie') {
     return { pathname, search, hash, area: 'public', module: 'advertise', query };
   }
-  if (normalizedPath === '/afiliados') {
-    return { pathname, search, hash, area: 'public', module: 'affiliates', query };
+  if (normalizedPath === '/afiliados' || normalizedPath.startsWith('/afiliados/')) {
+    area = 'public';
+    module = 'affiliates';
+    if (segments[1]) itemId = segments[1];
+    return { pathname, search, hash, area, module, itemId, query };
+  }
+  if (normalizedPath === '/trabalhe-conosco' || normalizedPath.startsWith('/trabalhe-conosco/')) {
+    area = 'public';
+    module = 'trabalhe-conosco';
+    if (segments[1]) itemId = segments[1];
+    return { pathname, search, hash, area, module, itemId, query };
   }
 
   // 3. MARKETPLACE
@@ -194,6 +203,9 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     } else if (module === 'financeiro' && ['credito', 'credito-loja', 'credito_loja'].includes(segments[2] || '')) {
       module = 'credito_loja';
       if (segments[3]) itemId = segments[3];
+    } else if (module === 'financeiro' && segments[2] === 'afiliados') {
+      module = 'afiliados';
+      if (segments[3]) itemId = segments[3];
     } else if ((module === 'saude' || module === 'seguros') && segments[2]) {
       submodule = segments[2];
       if (segments[3]) itemId = segments[3];
@@ -221,13 +233,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   // 8. PORTAL DO FORNECEDOR
   if (segments[0] === 'fornecedor') {
     area = 'supplier';
-    if (segments[1] === 'login') {
-      module = 'login';
-    } else if (segments[1] === 'dashboard') {
-      module = 'dashboard';
-    } else {
-      module = 'home';
-    }
+    module = segments[1] || 'home';
     if (segments[2]) itemId = segments[2];
     return { pathname, search, hash, area, module, itemId, query };
   }

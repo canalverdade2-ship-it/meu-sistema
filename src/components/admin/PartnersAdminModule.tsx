@@ -22,6 +22,8 @@ import {
   type PartnerServiceMode,
   type PartnerStatus,
 } from '../../features/partners/types';
+import { maskCEP, maskPhone } from '../../lib/utils';
+import { consultarCEP } from '../../utils/viaCep';
 import { Modal } from '../ui/Modal';
 
 const EMPTY_FORM: PartnerFormData = {
@@ -264,15 +266,15 @@ function PartnerFormModal({ partner, open, onClose, onSaved }: { partner: Partne
         </FormSection>
 
         <FormSection title="Contatos e presença digital" icon={<Globe2 className="h-5 w-5" />}>
-          <div className="grid gap-4 md:grid-cols-3"><Field label="Telefone" value={form.phone || ''} onChange={(value) => update('phone', value)} /><Field label="WhatsApp" value={form.whatsapp || ''} onChange={(value) => update('whatsapp', value)} /><Field label="E-mail" type="email" value={form.email || ''} onChange={(value) => update('email', value)} /></div>
+          <div className="grid gap-4 md:grid-cols-3"><Field label="Telefone" value={form.phone || ''} onChange={(value) => update('phone', maskPhone(value))} placeholder="(00) 0000-0000" /><Field label="WhatsApp" value={form.whatsapp || ''} onChange={(value) => update('whatsapp', maskPhone(value))} placeholder="(00) 00000-0000" /><Field label="E-mail" type="email" value={form.email || ''} onChange={(value) => update('email', value)} /></div>
           <div className="grid gap-4 md:grid-cols-2"><Field label="Site" value={form.website || ''} onChange={(value) => update('website', value)} /><Field label="Instagram" value={form.instagram || ''} onChange={(value) => update('instagram', value)} /></div>
           <div className="grid gap-4 md:grid-cols-2"><Field label="Facebook" value={form.facebook || ''} onChange={(value) => update('facebook', value)} /><Field label="LinkedIn" value={form.linkedin || ''} onChange={(value) => update('linkedin', value)} /></div>
         </FormSection>
 
         <FormSection title="Localização e atendimento" icon={<MapPin className="h-5 w-5" />}>
-          <div className="grid gap-4 md:grid-cols-[1fr_140px]"><Field label="Endereço" value={form.street || ''} onChange={(value) => update('street', value)} /><Field label="Número" value={form.number || ''} onChange={(value) => update('number', value)} /></div>
-          <div className="grid gap-4 md:grid-cols-3"><Field label="Complemento" value={form.complement || ''} onChange={(value) => update('complement', value)} /><Field label="Bairro" value={form.neighborhood || ''} onChange={(value) => update('neighborhood', value)} /><Field label="CEP" value={form.zip_code || ''} onChange={(value) => update('zip_code', value)} /></div>
-          <div className="grid gap-4 md:grid-cols-[1fr_120px]"><Field label="Cidade" value={form.city || ''} onChange={(value) => update('city', value)} /><Field label="Estado" value={form.state || ''} onChange={(value) => update('state', value.toUpperCase().slice(0, 2))} /></div>
+          <div className="grid gap-4 md:grid-cols-[150px_1fr_140px]"><Field label="CEP" value={form.zip_code || ''} onChange={async (value) => { const masked = maskCEP(value); update('zip_code', masked); const clean = value.replace(/\D/g, ''); if (clean.length === 8) { const d = await consultarCEP(clean); if (d) { setForm((c) => ({ ...c, zip_code: masked, street: d.logradouro || c.street, neighborhood: d.bairro || c.neighborhood, city: d.localidade || c.city, state: d.uf || c.state })); toast.success('Endereço localizado via CEP.'); } } }} placeholder="00000-000" /><Field label="Endereço" value={form.street || ''} onChange={(value) => update('street', value)} /><Field label="Número" value={form.number || ''} onChange={(value) => update('number', value)} /></div>
+          <div className="grid gap-4 md:grid-cols-2"><Field label="Complemento" value={form.complement || ''} onChange={(value) => update('complement', value)} /><Field label="Bairro" value={form.neighborhood || ''} onChange={(value) => update('neighborhood', value)} /></div>
+          <div className="grid gap-4 md:grid-cols-[1fr_120px]"><Field label="Cidade" value={form.city || ''} onChange={(value) => update('city', value)} /><Field label="Estado" value={form.state || ''} onChange={(value) => update('state', value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 2))} placeholder="SP" /></div>
           <div className="grid gap-4 md:grid-cols-2"><Field label="Link do mapa" value={form.maps_url || ''} onChange={(value) => update('maps_url', value)} /><Field label="Horário de atendimento" value={form.business_hours || ''} onChange={(value) => update('business_hours', value)} /></div>
           <div className="grid gap-4 md:grid-cols-2"><label className="grid gap-2 text-sm font-bold text-neutral-700">Modalidade<select value={form.service_mode} onChange={(event) => update('service_mode', event.target.value as PartnerServiceMode)} className="input-field"><option value="presencial">Presencial</option><option value="online">On-line</option><option value="hibrido">Presencial e on-line</option></select></label><Area label="Regiões atendidas (uma por linha)" value={regionsText} onChange={setRegionsText} rows={3} /></div>
         </FormSection>
@@ -298,9 +300,19 @@ function FormSection({ title, icon, children }: { title: string; icon: React.Rea
 }
 
 function Field({ label, value, onChange, required = false, type = 'text', maxLength }: { label: string; value: string; onChange: (value: string) => void; required?: boolean; type?: string; maxLength?: number }) {
-  return <label className="grid gap-2 text-sm font-bold text-neutral-700">{label}<input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} maxLength={maxLength} className="input-field" /></label>;
+  return (
+    <div className="grid gap-1.5 text-sm">
+      <span className="font-bold text-neutral-800">{label}</span>
+      <input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} maxLength={maxLength} className="input-field font-normal text-neutral-900" />
+    </div>
+  );
 }
 
 function Area({ label, value, onChange, rows }: { label: string; value: string; onChange: (value: string) => void; rows: number }) {
-  return <label className="grid gap-2 text-sm font-bold text-neutral-700">{label}<textarea value={value} onChange={(event) => onChange(event.target.value)} rows={rows} className="input-field resize-y" /></label>;
+  return (
+    <div className="grid gap-1.5 text-sm">
+      <span className="font-bold text-neutral-800">{label}</span>
+      <textarea value={value} onChange={(event) => onChange(event.target.value)} rows={rows} className="input-field font-normal text-neutral-900 resize-y" />
+    </div>
+  );
 }

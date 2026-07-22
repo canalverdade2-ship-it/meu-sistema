@@ -103,7 +103,7 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
             <LogoGSA size="md" variant="light" />
           </button>
           <button type="button" onClick={onLogin} className="rounded-xl border border-[#d8bd73]/50 px-4 py-2 text-sm font-bold text-[#e6ce8b] transition hover:bg-[#d8bd73]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]">
-            Já sou afiliado
+            LOGIN AFILIADO
           </button>
         </nav>
       </header>
@@ -114,7 +114,7 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
           <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-[#d8bd73]/30 bg-[#d8bd73]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-[#e6ce8b]">
-                <BadgeDollarSign className="h-4 w-4" /> Programa de afiliados GSA
+                <BadgeDollarSign className="h-4 w-4" /> Programa de Afiliados GSA
               </div>
               <h1 className="mt-7 max-w-4xl font-serif text-4xl leading-tight sm:text-5xl lg:text-6xl">
                 Indique soluções GSA e ganhe por vendas realizadas pelo seu link.

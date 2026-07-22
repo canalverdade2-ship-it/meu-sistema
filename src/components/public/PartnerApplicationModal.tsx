@@ -15,6 +15,9 @@ import {
 import { toast } from 'react-hot-toast';
 import { submitPartnerApplication } from '../../features/partners/service';
 import type { PartnerApplicationData, PartnerServiceMode } from '../../features/partners/types';
+import { maskCEP, maskCNPJ, maskCPF, maskPhone } from '../../lib/utils';
+import { validarCNPJ, validarCPF } from '../../utils/cpfValidator';
+import { consultarCEP } from '../../utils/viaCep';
 import { Modal } from '../ui/Modal';
 
 interface PartnerApplicationModalProps {
@@ -25,6 +28,14 @@ interface PartnerApplicationModalProps {
 const STEP_LABELS = ['Empresa', 'Contato', 'Atuação', 'Imagens e envio'];
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+function formatTaxDocument(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 11) {
+    return maskCPF(digits);
+  }
+  return maskCNPJ(digits);
+}
 
 function emptyApplication(startedAt = new Date().toISOString()): PartnerApplicationData {
   return {
@@ -90,6 +101,7 @@ export function PartnerApplicationModal({ open, onClose }: PartnerApplicationMod
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const [protocol, setProtocol] = useState<string | null>(null);
+  const [loadingCep, setLoadingCep] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -101,7 +113,38 @@ export function PartnerApplicationModal({ open, onClose }: PartnerApplicationMod
     setLogoFile(null);
     setCoverFile(null);
     setProtocol(null);
+    setLoadingCep(false);
   }, [open]);
+
+  const handleZipCodeChange = async (rawValue: string) => {
+    const masked = maskCEP(rawValue);
+    update('zip_code', masked);
+
+    const clean = rawValue.replace(/\D/g, '');
+    if (clean.length === 8) {
+      setLoadingCep(true);
+      try {
+        const data = await consultarCEP(clean);
+        if (data) {
+          setForm((current) => ({
+            ...current,
+            zip_code: masked,
+            street: data.logradouro || current.street,
+            neighborhood: data.bairro || current.neighborhood,
+            city: data.localidade || current.city,
+            state: data.uf || current.state,
+          }));
+          toast.success('Endereço localizado via CEP!');
+        } else {
+          toast.error('CEP não encontrado. Preencha o endereço manualmente.');
+        }
+      } catch (e) {
+        console.error('Erro na consulta de CEP:', e);
+      } finally {
+        setLoadingCep(false);
+      }
+    }
+  };
 
   const logoPreview = useMemo(() => logoFile ? URL.createObjectURL(logoFile) : null, [logoFile]);
   const coverPreview = useMemo(() => coverFile ? URL.createObjectURL(coverFile) : null, [coverFile]);
@@ -120,7 +163,13 @@ export function PartnerApplicationModal({ open, onClose }: PartnerApplicationMod
       const documentDigits = onlyDigits(form.tax_document);
       if (form.name.trim().length < 2) return fail('Informe o nome da empresa ou profissional.');
       if (form.legal_name.trim().length < 2) return fail('Informe a razão social ou o nome completo.');
-      if (![11, 14].includes(documentDigits.length)) return fail('Informe um CPF ou CNPJ válido para análise cadastral.');
+      if (documentDigits.length === 11) {
+        if (!validarCPF(documentDigits)) return fail('CPF informado é inválido.');
+      } else if (documentDigits.length === 14) {
+        if (!validarCNPJ(documentDigits)) return fail('CNPJ informado é inválido.');
+      } else {
+        return fail('Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido para análise cadastral.');
+      }
       if (form.category.trim().length < 2) return fail('Informe a categoria de atuação.');
       if (form.short_description.trim().length < 20) return fail('A descrição curta deve ter pelo menos 20 caracteres.');
     }
@@ -128,8 +177,10 @@ export function PartnerApplicationModal({ open, onClose }: PartnerApplicationMod
     if (step === 1) {
       if (form.contact_person.trim().length < 2) return fail('Informe o responsável pela solicitação.');
       if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) return fail('Informe um e-mail válido.');
-      if (onlyDigits(form.whatsapp).length < 10) return fail('Informe um WhatsApp válido.');
-      if (form.city.trim().length < 2 || form.state.trim().length !== 2) return fail('Informe cidade e estado.');
+      if (onlyDigits(form.whatsapp).length < 10) return fail('Informe um WhatsApp válido com DDD (mínimo 10 dígitos).');
+      if (form.phone && onlyDigits(form.phone).length < 10) return fail('Informe um telefone válido com DDD (mínimo 10 dígitos).');
+      if (form.zip_code && onlyDigits(form.zip_code).length !== 8) return fail('Informe um CEP válido (8 dígitos).');
+      if (form.city.trim().length < 2 || form.state.trim().length !== 2) return fail('Informe cidade e estado (UF com 2 letras).');
     }
 
     if (step === 2) {
@@ -218,7 +269,7 @@ export function PartnerApplicationModal({ open, onClose }: PartnerApplicationMod
               <Field label="Razão social ou nome completo" required value={form.legal_name} onChange={(value) => update('legal_name', value)} maxLength={180} />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="CPF ou CNPJ" required value={form.tax_document} onChange={(value) => update('tax_document', value)} maxLength={18} inputMode="numeric" />
+              <Field label="CPF ou CNPJ" required value={form.tax_document} onChange={(value) => update('tax_document', formatTaxDocument(value))} maxLength={18} inputMode="numeric" placeholder="000.000.000-00 ou 00.000.000/0000-00" />
               <Field label="Categoria de atuação" required value={form.category} onChange={(value) => update('category', value)} placeholder="Ex.: Saúde, Contabilidade, Tecnologia" maxLength={100} />
             </div>
             <Area label="Descrição curta" required value={form.short_description} onChange={(value) => update('short_description', value)} rows={3} maxLength={280} placeholder="Resuma o que sua empresa oferece e seu principal diferencial." />
@@ -231,27 +282,27 @@ export function PartnerApplicationModal({ open, onClose }: PartnerApplicationMod
             <FormSection icon={<UserRound className="h-5 w-5" />} title="Responsável e contatos">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Responsável pela solicitação" required value={form.contact_person} onChange={(value) => update('contact_person', value)} maxLength={160} />
-                <Field label="E-mail" required type="email" value={form.email} onChange={(value) => update('email', value)} maxLength={180} />
+                <Field label="E-mail" required type="email" value={form.email} onChange={(value) => update('email', value)} maxLength={180} placeholder="exemplo@empresa.com.br" />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Telefone" value={form.phone} onChange={(value) => update('phone', value)} inputMode="tel" maxLength={20} />
-                <Field label="WhatsApp" required value={form.whatsapp} onChange={(value) => update('whatsapp', value)} inputMode="tel" maxLength={20} />
+                <Field label="Telefone" value={form.phone} onChange={(value) => update('phone', maskPhone(value))} inputMode="tel" maxLength={15} placeholder="(00) 0000-0000" />
+                <Field label="WhatsApp" required value={form.whatsapp} onChange={(value) => update('whatsapp', maskPhone(value))} inputMode="tel" maxLength={15} placeholder="(00) 00000-0000" />
               </div>
             </FormSection>
 
             <FormSection icon={<MapPin className="h-5 w-5" />} title="Endereço">
-              <div className="grid gap-4 md:grid-cols-[1fr_150px]">
+              <div className="grid gap-4 md:grid-cols-[160px_1fr_120px]">
+                <Field label={loadingCep ? 'CEP (buscando...)' : 'CEP'} value={form.zip_code} onChange={handleZipCodeChange} inputMode="numeric" maxLength={9} placeholder="00000-000" />
                 <Field label="Rua ou avenida" value={form.street} onChange={(value) => update('street', value)} maxLength={180} />
                 <Field label="Número" value={form.number} onChange={(value) => update('number', value)} maxLength={30} />
               </div>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Complemento" value={form.complement} onChange={(value) => update('complement', value)} maxLength={100} />
                 <Field label="Bairro" value={form.neighborhood} onChange={(value) => update('neighborhood', value)} maxLength={100} />
-                <Field label="CEP" value={form.zip_code} onChange={(value) => update('zip_code', value)} inputMode="numeric" maxLength={10} />
               </div>
               <div className="grid gap-4 md:grid-cols-[1fr_120px]">
                 <Field label="Cidade" required value={form.city} onChange={(value) => update('city', value)} maxLength={100} />
-                <Field label="Estado" required value={form.state} onChange={(value) => update('state', value.toUpperCase().slice(0, 2))} maxLength={2} />
+                <Field label="Estado" required value={form.state} onChange={(value) => update('state', value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 2))} maxLength={2} placeholder="SP" />
               </div>
             </FormSection>
           </div>
@@ -360,10 +411,10 @@ function Field({
   inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
 }) {
   return (
-    <label className="grid gap-2 text-sm font-bold text-neutral-700">
-      {label}
-      <input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} maxLength={maxLength} placeholder={placeholder} inputMode={inputMode} className="input-field" />
-    </label>
+    <div className="grid gap-1.5 text-sm">
+      <span className="font-bold text-neutral-800">{label}</span>
+      <input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} maxLength={maxLength} placeholder={placeholder} inputMode={inputMode} className="input-field font-normal text-neutral-900" />
+    </div>
   );
 }
 
@@ -385,10 +436,10 @@ function Area({
   placeholder?: string;
 }) {
   return (
-    <label className="grid gap-2 text-sm font-bold text-neutral-700">
-      {label}
-      <textarea required={required} value={value} onChange={(event) => onChange(event.target.value)} rows={rows} maxLength={maxLength} placeholder={placeholder} className="input-field resize-y" />
-    </label>
+    <div className="grid gap-1.5 text-sm">
+      <span className="font-bold text-neutral-800">{label}</span>
+      <textarea required={required} value={value} onChange={(event) => onChange(event.target.value)} rows={rows} maxLength={maxLength} placeholder={placeholder} className="input-field font-normal text-neutral-900 resize-y" />
+    </div>
   );
 }
 

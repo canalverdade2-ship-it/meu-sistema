@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, ArrowRight, Building2, CheckCircle2,
+  ArrowLeft, Building2, CheckCircle2,
   PackageCheck, ShieldCheck, Truck, LockKeyhole
 } from 'lucide-react';
 import { LogoGSA } from '../../components/ui/LogoGSA';
@@ -34,7 +34,7 @@ export function FornecedorLandingPage({ onAccessLogin, onBackToSite }: Fornecedo
             className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-neutral-950 transition-all duration-300 hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-900/30"
           >
             <LockKeyhole className="h-3.5 w-3.5" />
-            <span>Acessar área do fornecedor</span>
+            <span>LOGIN FORNECEDOR</span>
           </button>
         </div>
       </header>
@@ -105,16 +105,7 @@ export function FornecedorLandingPage({ onAccessLogin, onBackToSite }: Fornecedo
               </div>
             </div>
 
-            {/* CTA Button */}
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <button
-                onClick={onAccessLogin}
-                className="group relative inline-flex items-center gap-3 rounded-2xl bg-emerald-500 px-8 py-4 text-base font-black text-neutral-950 shadow-2xl shadow-emerald-900/50 transition-all duration-300 hover:bg-emerald-400 hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <span>Acessar área do fornecedor</span>
-                <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </button>
-            </div>
+
           </motion.div>
         </div>
       </main>

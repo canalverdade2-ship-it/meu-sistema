@@ -23,8 +23,9 @@ interface ClientFidelidadeProps {
 }
 
 const normalizeTab = (tab?: string): FidelidadeTab | undefined => {
-  if (tab === 'area_vip') return 'area-vip';
-  if (tab === 'pontos' || tab === 'vouchers' || tab === 'promocoes' || tab === 'premios' || tab === 'indique-ganhe' || tab === 'afiliados' || tab === 'area-vip') {
+  if (tab === 'area_vip' || tab === 'area-vip') return 'area-vip';
+  if (tab === 'indique_ganhe' || tab === 'indique-ganhe') return 'indique-ganhe';
+  if (tab === 'pontos' || tab === 'vouchers' || tab === 'promocoes' || tab === 'premios' || tab === 'afiliados') {
     return tab;
   }
   return undefined;

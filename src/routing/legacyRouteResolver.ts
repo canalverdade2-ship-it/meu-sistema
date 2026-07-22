@@ -32,6 +32,13 @@ export function resolveLegacyRoute(pathname: string, search: string): string | n
     return routes.marketplace.menu();
   }
   if (normalizedPath === '/loja' || normalizedPath === '/cliente/gsa-store/shop') {
+    if (search) {
+      const params = new URLSearchParams(search);
+      const itemId = params.get('item') || params.get('item_id') || params.get('produto');
+      if (itemId) {
+        return routes.marketplace.store.product(itemId);
+      }
+    }
     return routes.marketplace.store.products();
   }
   if (normalizedPath === '/loja-gsa-store/produtos-assinaturas' || normalizedPath === '/cliente/gsa-store/produtos-assinaturas') {
