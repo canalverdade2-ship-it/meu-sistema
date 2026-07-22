@@ -5,10 +5,46 @@ import pg from 'pg';
 const { Client } = pg;
 const root = process.cwd();
 const auditDirectory = path.join(root, 'audit');
-const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
+const migrationBaselinePath = path.join(auditDirectory, 'database-migration-baseline.json');
 
-if (!connectionString) {
-  throw new Error('SUPABASE_DB_URL ou DATABASE_URL deve ser configurada para validar o inventário do banco.');
+function assertVersionArray(name, values) {
+  if (!Array.isArray(values)) throw new Error(`${name} deve ser uma lista.`);
+  const normalized = [...values].map(String);
+  if (normalized.some((value) => !/^\d{14}$/.test(value))) {
+    throw new Error(`${name} contém versão inválida.`);
+  }
+  const sortedUnique = [...new Set(normalized)].sort();
+  if (sortedUnique.length !== normalized.length || sortedUnique.some((value, index) => value !== normalized[index])) {
+    throw new Error(`${name} deve estar ordenada e sem duplicidades.`);
+  }
+  return normalized;
+}
+
+function readMigrationBaseline() {
+  const baseline = JSON.parse(fs.readFileSync(migrationBaselinePath, 'utf8'));
+  if (baseline.schemaVersion !== 1) throw new Error('Versão de schema do baseline de migrations não suportada.');
+  if (!baseline.source || typeof baseline.source !== 'object') throw new Error('Fonte do baseline de migrations ausente.');
+
+  const duplicateCounts = baseline.legacyDuplicateLocalVersionCounts;
+  if (!duplicateCounts || typeof duplicateCounts !== 'object' || Array.isArray(duplicateCounts)) {
+    throw new Error('legacyDuplicateLocalVersionCounts deve ser um objeto.');
+  }
+
+  const normalizedDuplicateCounts = {};
+  for (const version of Object.keys(duplicateCounts).sort()) {
+    const count = Number(duplicateCounts[version]);
+    if (!/^\d{14}$/.test(version) || !Number.isInteger(count) || count < 2) {
+      throw new Error(`Baseline de duplicidade inválido para ${version}.`);
+    }
+    normalizedDuplicateCounts[version] = count;
+  }
+
+  return {
+    ...baseline,
+    legacyDuplicateLocalVersionCounts: normalizedDuplicateCounts,
+    legacyLocalOnlyVersions: assertVersionArray('legacyLocalOnlyVersions', baseline.legacyLocalOnlyVersions),
+    legacyRemoteOnlyVersions: assertVersionArray('legacyRemoteOnlyVersions', baseline.legacyRemoteOnlyVersions),
+  };
 }
 
 function walk(directory, output = []) {
@@ -22,15 +58,18 @@ function walk(directory, output = []) {
   return output;
 }
 
-function localMigrationVersions() {
+function localMigrationInventory() {
   const directory = path.join(root, 'supabase', 'migrations');
-  const versions = fs.readdirSync(directory)
-    .map((name) => name.match(/^(\d{14})_/i)?.[1])
-    .filter(Boolean)
-    .sort();
-  const duplicates = versions.filter((version, index) => versions.indexOf(version) !== index);
-  if (duplicates.length > 0) throw new Error(`Versões de migration duplicadas: ${[...new Set(duplicates)].join(', ')}`);
-  return versions;
+  const counts = new Map();
+  for (const name of fs.readdirSync(directory)) {
+    const version = name.match(/^(\d{14})_/i)?.[1];
+    if (!version) continue;
+    counts.set(version, (counts.get(version) || 0) + 1);
+  }
+  return {
+    versions: [...counts.keys()].sort(),
+    counts,
+  };
 }
 
 function sourceInventory() {
@@ -76,6 +115,48 @@ function difference(expected, actual) {
   return expected.filter((value) => !actualSet.has(value));
 }
 
+function intersection(left, right) {
+  const rightSet = new Set(right);
+  return left.filter((value) => rightSet.has(value));
+}
+
+function duplicateCountFindings(localMigration, baseline) {
+  const versions = new Set([
+    ...localMigration.counts.keys(),
+    ...Object.keys(baseline.legacyDuplicateLocalVersionCounts),
+  ]);
+  const findings = [];
+  for (const version of [...versions].sort()) {
+    const actualCount = localMigration.counts.get(version) || 0;
+    const expectedCount = baseline.legacyDuplicateLocalVersionCounts[version] || 1;
+    if (actualCount > 1 && actualCount !== expectedCount) {
+      findings.push({
+        version,
+        actualCount,
+        expectedLegacyCount: baseline.legacyDuplicateLocalVersionCounts[version] || null,
+      });
+    }
+  }
+  return findings;
+}
+
+const migrationBaseline = readMigrationBaseline();
+const localMigration = localMigrationInventory();
+const unexpectedDuplicateMigrationVersions = duplicateCountFindings(localMigration, migrationBaseline);
+
+if (process.argv.includes('--validate-baseline-only')) {
+  if (unexpectedDuplicateMigrationVersions.length > 0) {
+    throw new Error(`Duplicidades de migration fora do baseline: ${JSON.stringify(unexpectedDuplicateMigrationVersions)}`);
+  }
+  console.log('DATABASE_MIGRATION_BASELINE_OK');
+  process.exit(0);
+}
+
+const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('SUPABASE_DB_URL ou DATABASE_URL deve ser configurada para validar o inventário do banco.');
+}
+
 const client = new Client({
   connectionString,
   ssl: process.env.PGSSLMODE === 'disable' ? false : { rejectUnauthorized: false },
@@ -83,7 +164,7 @@ const client = new Client({
 
 await client.connect();
 try {
-  const localMigrations = localMigrationVersions();
+  const localMigrations = localMigration.versions;
   const source = sourceInventory();
 
   const [migrationResult, tableResult, functionResult, bucketResult, disabledTriggerResult, exposedTableResult, criticalFunctionResult] = await Promise.all([
@@ -139,17 +220,36 @@ try {
     `),
   ]);
 
-  const remoteMigrations = migrationResult.rows
-    .map((row) => String(row.version))
-    .filter((version) => /^\d{14}$/.test(version))
-    .sort();
+  const remoteMigrations = [...new Set(
+    migrationResult.rows
+      .map((row) => String(row.version))
+      .filter((version) => /^\d{14}$/.test(version)),
+  )].sort();
   const databaseTables = tableResult.rows.map((row) => String(row.table_name)).sort();
   const databaseFunctions = functionResult.rows.map((row) => String(row.proname)).sort();
   const databaseBuckets = bucketResult.rows.map((row) => String(row.id)).sort();
 
+  const allLocalOnlyVersions = difference(localMigrations, remoteMigrations);
+  const allRemoteOnlyVersions = difference(remoteMigrations, localMigrations);
+  const legacyDuplicateLocalVersions = Object.entries(migrationBaseline.legacyDuplicateLocalVersionCounts)
+    .filter(([version, expectedCount]) => localMigration.counts.get(version) === expectedCount)
+    .map(([version]) => version);
+  const resolvedLegacyDuplicateLocalVersions = Object.keys(migrationBaseline.legacyDuplicateLocalVersionCounts)
+    .filter((version) => (localMigration.counts.get(version) || 0) <= 1);
+
+  const legacy = {
+    duplicateLocalVersions: legacyDuplicateLocalVersions,
+    localOnlyVersions: intersection(allLocalOnlyVersions, migrationBaseline.legacyLocalOnlyVersions),
+    remoteOnlyVersions: intersection(allRemoteOnlyVersions, migrationBaseline.legacyRemoteOnlyVersions),
+    resolvedDuplicateLocalVersions: resolvedLegacyDuplicateLocalVersions,
+    resolvedLocalOnlyVersions: difference(migrationBaseline.legacyLocalOnlyVersions, allLocalOnlyVersions),
+    resolvedRemoteOnlyVersions: difference(migrationBaseline.legacyRemoteOnlyVersions, allRemoteOnlyVersions),
+  };
+
   const findings = {
-    missingMigrationsInDatabase: difference(localMigrations, remoteMigrations),
-    migrationsMissingFromRepository: difference(remoteMigrations, localMigrations),
+    unexpectedDuplicateMigrationVersions,
+    missingMigrationsInDatabase: difference(allLocalOnlyVersions, migrationBaseline.legacyLocalOnlyVersions),
+    migrationsMissingFromRepository: difference(allRemoteOnlyVersions, migrationBaseline.legacyRemoteOnlyVersions),
     missingReferencedTables: difference(source.tables, databaseTables),
     missingReferencedRpcs: difference(source.rpcs, databaseFunctions),
     missingReferencedBuckets: difference(source.buckets, databaseBuckets),
@@ -167,6 +267,11 @@ try {
       functionCount: databaseFunctions.length,
       bucketCount: databaseBuckets.length,
     },
+    migrationBaseline: {
+      capturedAt: migrationBaseline.capturedAt,
+      source: migrationBaseline.source,
+      observedLegacy: legacy,
+    },
     findings,
   };
 
@@ -182,7 +287,16 @@ try {
     `- Funções públicas: ${report.database.functionCount}`,
     `- Buckets: ${report.database.bucketCount}`,
     '',
-    '## Achados',
+    '## Baseline legado reconhecido',
+    '',
+    `- Duplicidades locais legadas presentes: ${legacy.duplicateLocalVersions.length}`,
+    `- Versões locais legadas sem registro remoto: ${legacy.localOnlyVersions.length}`,
+    `- Versões remotas legadas sem arquivo local: ${legacy.remoteOnlyVersions.length}`,
+    `- Duplicidades legadas já resolvidas: ${legacy.resolvedDuplicateLocalVersions.length}`,
+    `- Divergências locais legadas já resolvidas: ${legacy.resolvedLocalOnlyVersions.length}`,
+    `- Divergências remotas legadas já resolvidas: ${legacy.resolvedRemoteOnlyVersions.length}`,
+    '',
+    '## Achados bloqueadores',
     '',
     ...Object.entries(findings).map(([key, values]) => `- ${key}: ${values.length}`),
     '',
