@@ -7,6 +7,12 @@ coverage/
 .env*
 !.env.example
 
+# Backups de produção e testes de restauração
+/backups/
+*.dump
+*.backup
+*.pgdump
+
 # Playwright
 /test-results/
 /playwright-report/
