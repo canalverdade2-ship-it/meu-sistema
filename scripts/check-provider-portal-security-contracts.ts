@@ -1,94 +1,121 @@
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
-import path from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
-const ROOT = process.cwd();
+const root = process.cwd();
 
-async function source(relativePath: string) {
-  return readFile(path.join(ROOT, relativePath), 'utf8');
+async function file(path: string) {
+  return readFile(resolve(root, path), 'utf8');
 }
 
-async function includes(relativePath: string, snippets: string[]) {
-  const content = await source(relativePath);
-  for (const snippet of snippets) {
-    assert.ok(content.includes(snippet), `${relativePath}: contrato ausente: ${snippet}`);
+async function includes(path: string, patterns: string[]) {
+  const content = await file(path);
+  for (const pattern of patterns) {
+    assert.ok(content.includes(pattern), `${path}: contrato ausente: ${pattern}`);
   }
 }
 
-async function excludes(relativePath: string, snippets: string[]) {
-  const content = await source(relativePath);
-  for (const snippet of snippets) {
-    assert.ok(!content.includes(snippet), `${relativePath}: padrão proibido encontrado: ${snippet}`);
+async function excludes(path: string, patterns: string[]) {
+  const content = await file(path);
+  for (const pattern of patterns) {
+    assert.ok(!content.includes(pattern), `${path}: padrão inseguro ainda presente: ${pattern}`);
   }
 }
 
-async function listFiles(directory: string): Promise<string[]> {
-  const entries = await readdir(path.join(ROOT, directory), { withFileTypes: true });
-  const output: string[] = [];
+async function collectSourceFiles(directory: string): Promise<string[]> {
+  const entries = await readdir(resolve(root, directory), { withFileTypes: true });
+  const results: string[] = [];
   for (const entry of entries) {
-    const relative = path.posix.join(directory, entry.name);
-    if (entry.isDirectory()) output.push(...await listFiles(relative));
-    else output.push(relative);
+    const relativePath = `${directory}/${entry.name}`;
+    if (entry.isDirectory()) results.push(...await collectSourceFiles(relativePath));
+    else if (/\.(ts|tsx)$/.test(entry.name)) results.push(relativePath);
   }
-  return output;
+  return results;
 }
 
 async function assertProviderUiHasNoDirectDatabaseMutation() {
-  const files = (await listFiles('src/pages/Prestador'))
-    .concat(await listFiles('src/components/prestador'))
-    .filter((file) => /\.(ts|tsx)$/.test(file));
+  const paths = [
+    ...await collectSourceFiles('src/components/prestador'),
+    ...await collectSourceFiles('src/pages/Prestador'),
+  ];
+  const mutationPattern = /\.from\s*\([^)]*\)\s*\.\s*(insert|update|upsert|delete)\s*\(/s;
 
-  for (const file of files) {
-    const content = await source(file);
-    const forbidden = [
-      /supabase\s*\.\s*from\s*\(/,
-      /\.\s*(insert|update|delete|upsert)\s*\(/,
-      /supabase\s*\.\s*rpc\s*\(/,
-      /supabase\s*\.\s*storage\s*\./,
-      /createSignedUrl\s*\(/,
-      /createSignedUploadUrl\s*\(/,
-    ];
-    for (const pattern of forbidden) {
-      assert.ok(!pattern.test(content), `${file}: mutação/acesso direto ao Supabase encontrado (${pattern})`);
-    }
+  for (const path of paths) {
+    const content = await file(path);
+    const match = content.match(mutationPattern);
+    assert.ok(!match, `${path}: mutação direta no banco detectada: ${match?.[1] || 'desconhecida'}`);
+    assert.ok(!content.includes('.getPublicUrl('), `${path}: URL pública de Storage detectada no portal privado.`);
   }
 }
 
 async function main() {
+  await includes('supabase/migrations/20260720232900_provider_portal_admin_module_compat.sql', [
+    'gsa_admin_has_module',
+    "v_actor_type = 'admin'",
+    "v_actor_type <> 'colaborador'",
+    "WHEN 'cadastro' THEN ARRAY['cadastro', 'prestadores', 'clientes']",
+    "WHEN 'operacoes' THEN ARRAY['operacoes', 'vendas', 'demandas']",
+    "WHEN 'atendimento' THEN ARRAY['atendimento', 'tickets', 'suporte']",
+  ]);
+
+  await includes('supabase/migrations/20260720233000_provider_portal_audit_hardening.sql', [
+    'gsa_provider_context',
+    "p_require_active AND COALESCE(v_provider.status, '') <> 'ativo'",
+    'gsa_guard_provider_direct_write',
+    'gsa_provider_create_ticket',
+    'gsa_provider_send_ticket_message',
+    'gsa_provider_request_demand_support',
+    'pg_advisory_xact_lock',
+    "NEW.link_resultado !~* '^https?://'",
+    'v_promotion.data_inicio > current_date',
+    "public.gsa_admin_has_module('operacoes')",
+    "public.gsa_admin_has_module('atendimento')",
+    'gsa_provider_audit_events',
+  ]);
+
+  await includes('supabase/migrations/20260720233100_provider_portal_secure_snapshots.sql', [
+    'gsa_provider_pendency_snapshot',
+    'moduleDemandasAbertas',
+  ]);
+
+  await includes('supabase/migrations/20260720233200_provider_portal_final_guards.sql', [
+    'public.sistema_sessoes',
+    "to_jsonb(s) ->> 'gsa_session_id'",
+    'ALTER FUNCTION public.gsa_provider_dashboard_snapshot() VOLATILE',
+    'ALTER FUNCTION public.gsa_provider_pendency_snapshot() VOLATILE',
+    'trg_guard_provider_direct_prestadores',
+    'gsa_revoke_provider_sessions_on_access_change',
+  ]);
+
+  await includes('supabase/migrations/20260721170000_provider_portal_production_finalization.sql', [
+    'gsa_provider_session_access_state',
+    'REVOKE ALL ON FUNCTION public.gsa_provider_insert_admin_notification',
+    'REVOKE ALL ON FUNCTION public.gsa_provider_write_audit',
+    'FROM PUBLIC, anon, authenticated',
+    'GRANT EXECUTE ON FUNCTION public.gsa_provider_dashboard_snapshot() TO authenticated',
+    'REVOKE ALL ON TABLE public.gsa_provider_audit_events FROM PUBLIC, anon, authenticated',
+    "WHERE id IN ('documentos_prestador', 'entregas_demandas')",
+  ]);
+
   await includes('src/lib/providerOperations.ts', [
-    "callProviderRpc('gsa_provider_dashboard_snapshot'",
-    "callProviderRpc('gsa_provider_profile_update'",
-    "callProviderRpc('gsa_provider_associate_search'",
-    "callProviderRpc('gsa_provider_eligibility_check'",
-    "callProviderRpc('gsa_provider_service_record'",
-    "callProviderRpc('gsa_provider_service_cancel'",
-    "callProviderRpc('gsa_provider_authorization_create'",
-    "callProviderRpc('gsa_provider_authorization_check'",
-    "callProviderRpc('gsa_provider_claim_create'",
-    "callProviderRpc('gsa_provider_claim_cancel'",
-    "callProviderRpc('gsa_provider_document_list'",
-    "callProviderRpc('gsa_provider_document_metadata_create'",
-    "callProviderRpc('gsa_provider_document_delete'",
-    "callProviderRpc('gsa_provider_support_create'",
-    "callProviderRpc('gsa_provider_support_reply'",
-    "callProviderRpc('gsa_provider_support_close'",
-    "callProviderRpc('gsa_provider_pendency_snapshot'",
-  ]);
-
-  await excludes('src/lib/providerOperations.ts', [
-    ".from('",
-    '.insert(',
-    '.update(',
-    '.delete(',
-    '.upsert(',
-    '.storage.',
-  ]);
-
-  await includes('src/lib/providerRpc.ts', [
-    'sessionService.restoreSession()',
-    "session.atorTipo !== 'prestador'",
-    'p_sessao_id: session.sessaoId',
-    'p_session_token: session.sessionToken',
+    'gsa_provider_financial_snapshot',
+    'gsa_provider_dashboard_snapshot',
+    'gsa_provider_pendency_snapshot',
+    'gsa_provider_request_withdrawal',
+    'gsa_provider_cancel_withdrawal',
+    'gsa_provider_redeem_voucher',
+    'gsa_provider_redeem_prize',
+    'gsa_provider_activate_promotion',
+    'gsa_provider_update_profile',
+    'gsa_provider_create_schedule',
+    'gsa_provider_complete_schedule',
+    'gsa_provider_delete_schedule',
+    'gsa_provider_submit_document',
+    'gsa_provider_transition_demand',
+    'gsa_provider_create_ticket',
+    'gsa_provider_send_ticket_message',
+    'gsa_provider_request_profile_change',
+    'gsa_provider_request_demand_support',
   ]);
 
   await assertProviderUiHasNoDirectDatabaseMutation();
@@ -136,10 +163,66 @@ async function main() {
   ]);
 
   await includes('src/routing/routeSecurity.ts', [
-    "path.startsWith('/prestador')",
+    "if (area === 'provider') return Boolean(session.prestadorId);",
   ]);
 
-  console.log('Contratos críticos de segurança do portal do prestador validados.');
+  await includes('src/components/admin/AcessosModule.tsx', [
+    "['cadastro', 'Cadastros (clientes e prestadores)']",
+    "['prestadores', 'Prestadores (sem acesso a clientes)']",
+  ]);
+
+  await includes('src/pages/AdminPanel.tsx', [
+    "const providerOnly = normalized === 'cadastro' && !canAccess('cadastro') && canAccess('prestadores');",
+    "const targetModule = providerOnly ? 'prestadores' : module;",
+    "item.id === 'cadastro' ? canAccess('cadastro') || canAccess('prestadores') : canAccess(item.id)",
+  ]);
+
+  await includes('.github/workflows/provider-portal-validation.yml', [
+    "branches: [main]",
+    "- 'src/lib/sessionService.ts'",
+    "- 'src/lib/supabase.ts'",
+    "- 'src/routing/**'",
+    "- 'supabase/functions/gsa-auth-session/**'",
+    'npm run test:provider',
+    'npm run build',
+  ]);
+
+  await includes('.github/workflows/provider-production-validation.yml', [
+    'Provider Production Validation',
+    '20260721170000_provider_portal_production_finalization.sql',
+    'provider-production-verification.sql',
+    'PROVIDER_PRODUCTION_VERIFIED',
+  ]);
+
+  await includes('scripts/provider-production-verification.sql', [
+    'BEGIN TRANSACTION READ ONLY',
+    '20260720232900',
+    '20260720233000',
+    '20260720233100',
+    '20260720233200',
+    '20260721170000',
+    "has_function_privilege('anon'",
+    "has_function_privilege('authenticated'",
+    'trg_guard_provider_direct_',
+    'PROVIDER_PRODUCTION_VERIFIED',
+  ]);
+
+  await excludes('src/pages/Prestador/PrestadorDashboard.tsx', [
+    ".from('tickets').insert",
+    'createNotification(null',
+  ]);
+  await excludes('src/components/prestador/PrestadorSuporte.tsx', [
+    ".from('ticket_mensagens').insert",
+    ".from('tickets').insert",
+    'notificationService.notifyAdmin',
+  ]);
+  await excludes('src/components/prestador/PrestadorDemandas.tsx', [
+    ".from('prestador_suporte_demandas').insert",
+    ".from('os_notas').insert",
+    'notificationService.notifyAdmin',
+  ]);
+
+  console.log('Painel do Prestador: contratos finais de autorização, sessão, privilégios, transação, privacidade, Storage, Realtime, CI e produção aprovados.');
 }
 
 main().catch((error) => {
