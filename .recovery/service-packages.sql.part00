@@ -1,0 +1,171 @@
+BEGIN;
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+ALTER TABLE public.servicos
+  ADD COLUMN IF NOT EXISTS ordem_exibicao integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS orcamento_disponivel boolean NOT NULL DEFAULT true;
+
+CREATE TABLE IF NOT EXISTS public.gsa_service_packages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo text NOT NULL UNIQUE,
+  titulo text NOT NULL,
+  subtitulo text NOT NULL DEFAULT '',
+  descricao text NOT NULL DEFAULT '',
+  publico text NOT NULL CHECK (publico IN ('pf','pj','ambos')),
+  status text NOT NULL DEFAULT 'ativo' CHECK (status IN ('ativo','inativo')),
+  visivel_publico boolean NOT NULL DEFAULT true,
+  orcamento_disponivel boolean NOT NULL DEFAULT true,
+  ordem_exibicao integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.gsa_service_package_items (
+  pacote_id uuid NOT NULL REFERENCES public.gsa_service_packages(id) ON DELETE CASCADE,
+  servico_id uuid NOT NULL REFERENCES public.servicos(id) ON DELETE RESTRICT,
+  nome_snapshot text NOT NULL,
+  descricao_snapshot text NOT NULL DEFAULT '',
+  ordem_exibicao integer NOT NULL DEFAULT 0,
+  PRIMARY KEY (pacote_id, servico_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_gsa_service_packages_public
+  ON public.gsa_service_packages (status, visivel_publico, publico, ordem_exibicao);
+CREATE INDEX IF NOT EXISTS idx_gsa_service_package_items_order
+  ON public.gsa_service_package_items (pacote_id, ordem_exibicao);
+
+ALTER TABLE public.gsa_service_packages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.gsa_service_package_items ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON public.gsa_service_packages FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON public.gsa_service_package_items FROM PUBLIC, anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.gsa_service_catalog_package_json(p_id uuid)
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT jsonb_build_object(
+    'id', p.id,
+    'code', p.codigo,
+    'title', p.titulo,
+    'subtitle', p.subtitulo,
+    'description', p.descricao,
+    'audience', upper(p.publico),
+    'serviceIds', COALESCE((
+      SELECT jsonb_agg(i.servico_id ORDER BY i.ordem_exibicao)
+      FROM public.gsa_service_package_items i
+      WHERE i.pacote_id = p.id
+    ), '[]'::jsonb),
+    'services', COALESCE((
+      SELECT jsonb_agg(jsonb_build_object(
+        'id', i.servico_id,
+        'name', i.nome_snapshot,
+        'desc', i.descricao_snapshot
+      ) ORDER BY i.ordem_exibicao)
+      FROM public.gsa_service_package_items i
+      WHERE i.pacote_id = p.id
+    ), '[]'::jsonb),
+    'status', p.status,
+    'publicVisible', p.visivel_publico,
+    'quoteAvailable', p.orcamento_disponivel,
+    'order', p.ordem_exibicao
+  )
+  FROM public.gsa_service_packages p
+  WHERE p.id = p_id
+$$;
+
+CREATE OR REPLACE FUNCTION public.gsa_public_service_catalog(p_audience text DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_audience text := CASE WHEN lower(COALESCE(p_audience,'')) IN ('pf','pj') THEN lower(p_audience) ELSE NULL END;
+  v_services jsonb;
+  v_packages jsonb;
+BEGIN
+  SELECT COALESCE(jsonb_agg(jsonb_build_object(
+    'id', s.id,
+    'code', s.codigo_servico,
+    'name', s.nome,
+    'title', s.nome,
+    'subtitle', s.categoria,
+    'description', COALESCE(s.descricao,''),
+    'audience', upper(s.tipo_cliente),
+    'price', s.valor,
+    'hidePrice', COALESCE(s.ocultar_valor,false),
+    'status', COALESCE(s.status,'ativo'),
+    'publicVisible', COALESCE(s.visivel_na_loja,false),
+    'quoteAvailable', COALESCE(s.orcamento_disponivel,true),
+    'order', COALESCE(s.ordem_exibicao,0)
+  ) ORDER BY COALESCE(s.ordem_exibicao,0), s.nome), '[]'::jsonb)
+  INTO v_services
+  FROM public.servicos s
+  WHERE lower(COALESCE(s.status,'ativo')) = 'ativo'
+    AND COALESCE(s.visivel_na_loja,false)
+    AND (v_audience IS NULL OR lower(s.tipo_cliente) IN (v_audience,'ambos'));
+
+  SELECT COALESCE(jsonb_agg(public.gsa_service_catalog_package_json(p.id)
+    ORDER BY p.ordem_exibicao, p.titulo), '[]'::jsonb)
+  INTO v_packages
+  FROM public.gsa_service_packages p
+  WHERE p.status='ativo'
+    AND p.visivel_publico
+    AND (v_audience IS NULL OR p.publico IN (v_audience,'ambos'));
+
+  RETURN jsonb_build_object('services', v_services, 'packages', v_packages);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.gsa_admin_service_catalog_snapshot(
+  p_sessao_id uuid,
+  p_session_token text
+) RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_services jsonb;
+  v_packages jsonb;
+BEGIN
+  PERFORM public.gsa_admin_validate_context(p_sessao_id, p_session_token);
+
+  SELECT COALESCE(jsonb_agg(jsonb_build_object(
+    'id', s.id, 'code', s.codigo_servico, 'name', s.nome, 'title', s.nome,
+    'subtitle', s.categoria, 'description', COALESCE(s.descricao,''),
+    'audience', upper(s.tipo_cliente), 'price', s.valor,
+    'hidePrice', COALESCE(s.ocultar_valor,false), 'status', COALESCE(s.status,'ativo'),
+    'publicVisible', COALESCE(s.visivel_na_loja,false),
+    'quoteAvailable', COALESCE(s.orcamento_disponivel,true),
+    'order', COALESCE(s.ordem_exibicao,0)
+  ) ORDER BY COALESCE(s.ordem_exibicao,0), s.nome), '[]'::jsonb)
+  INTO v_services FROM public.servicos s;
+
+  SELECT COALESCE(jsonb_agg(public.gsa_service_catalog_package_json(p.id)
+    ORDER BY p.ordem_exibicao, p.titulo), '[]'::jsonb)
+  INTO v_packages FROM public.gsa_service_packages p;
+
+  RETURN jsonb_build_object('services', v_services, 'packages', v_packages);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.gsa_admin_save_service_package(
+  p_sessao_id uuid,
+  p_session_token text,
+  p_package_id uuid,
+  p_payload jsonb
+) RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_id uuid := COALESCE(p_package_id, gen_random_uuid());
+  v_publico text := lower(COALESCE(p_payload->>'audience','pf'));
