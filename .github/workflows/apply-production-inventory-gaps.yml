@@ -79,7 +79,7 @@ jobs:
             IF to_regclass('public.gsa_advertisers') IS NULL
                OR to_regclass('public.gsa_ad_campaigns') IS NULL
                OR to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)') IS NULL
-               OR to_regprocedure('public.gsa_ads_record_event(text,text,text,text,text,text)') IS NULL THEN
+               OR to_regprocedure('public.gsa_ads_record_event(uuid,text)') IS NULL THEN
               RAISE EXCEPTION 'A plataforma de publicidade não está completa para registrar as versões renumeradas.';
             END IF;
           END $$;
