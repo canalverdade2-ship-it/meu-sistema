@@ -21,10 +21,30 @@ cleanup() {
 trap cleanup EXIT
 
 createdb "$restore_database"
+
+restore_schemas="${RESTORE_TEST_SCHEMAS:-public,supabase_migrations}"
+IFS=',' read -r -a schema_names <<< "$restore_schemas"
+restore_args=()
+for schema_name in "${schema_names[@]}"; do
+  schema_name="${schema_name//[[:space:]]/}"
+  [[ -n "$schema_name" ]] || continue
+  [[ "$schema_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
+    echo "Schema inválido em RESTORE_TEST_SCHEMAS: $schema_name" >&2
+    exit 1
+  }
+  restore_args+=(--schema="$schema_name")
+done
+
+if [[ "${#restore_args[@]}" -eq 0 ]]; then
+  echo 'RESTORE_TEST_SCHEMAS não contém schemas válidos.' >&2
+  exit 1
+fi
+
 pg_restore \
   --exit-on-error \
   --no-owner \
   --no-acl \
+  "${restore_args[@]}" \
   --dbname="$restore_database" \
   "$backup_file"
 

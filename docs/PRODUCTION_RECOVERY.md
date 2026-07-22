@@ -29,7 +29,7 @@ Use um PostgreSQL local descartável com privilégios para criar e excluir banco
 npm run restore:test-database -- /caminho/seguro/database.dump
 ```
 
-O teste cria um banco temporário, restaura o dump, valida tabelas públicas, funções e o histórico de migrations e exclui o banco ao terminar.
+O teste restaura por padrão os schemas `public` e `supabase_migrations`, valida tabelas públicas, funções e o histórico de migrations e exclui o banco temporário ao terminar. Para ampliar o escopo de forma consciente, configure `RESTORE_TEST_SCHEMAS` com uma lista separada por vírgulas.
 
 ## Supabase Storage
 
@@ -65,6 +65,50 @@ Proteções obrigatórias da rotina:
 - restaura sob um prefixo isolado;
 - baixa novamente cada arquivo e confere o checksum;
 - remove os objetos restaurados ao final, salvo quando `CLEANUP_AFTER_RESTORE=false` for definido explicitamente.
+
+## Workflow de validação do ambiente real
+
+O workflow **Production Environment Validation** é iniciado manualmente em GitHub Actions. Ele não executa por `push` e exige a confirmação literal `VALIDAR_PRODUCAO`.
+
+### Secrets obrigatórios no environment `production`
+
+- `SUPABASE_DB_URL`;
+- `SUPABASE_URL`;
+- `SUPABASE_SERVICE_ROLE_KEY`;
+- `SUPABASE_ACCESS_TOKEN`;
+- `SUPABASE_DB_PASSWORD`;
+- `SUPABASE_PROJECT_ID`.
+
+Para o teste isolado de Storage:
+
+- `TARGET_SUPABASE_URL`;
+- `TARGET_SUPABASE_SERVICE_ROLE_KEY`.
+
+Para o smoke autenticado somente leitura:
+
+- `PRODUCTION_APP_URL`;
+- `PRODUCTION_CLIENT_CPF`;
+- `PRODUCTION_CLIENT_PIN`.
+
+Use uma conta de cliente exclusiva para monitoramento, com o menor acesso necessário e sem informações pessoais reais além do identificador técnico exigido pelo fluxo.
+
+### Etapas executadas
+
+1. Confirmação do projeto Supabase esperado e presença dos secrets.
+2. Verificação das migrations críticas e das Edge Functions de publicidade.
+3. Aplicação opcional das migrations pendentes e redeploy das funções auditadas.
+4. Inventário código versus banco de produção.
+5. Backup efêmero do banco, validação dos checksums e restauração em PostgreSQL descartável.
+6. Backup efêmero do Storage e verificação de todos os checksums.
+7. Restauração opcional do Storage em projeto isolado, seguida de limpeza automática.
+8. Login autenticado opcional no portal do cliente, sem criação ou alteração de registros.
+
+### Proteção dos dados no CI
+
+- dumps e objetos do Storage ficam apenas no diretório temporário do runner e não são enviados como artifacts;
+- o artifact do Storage contém somente contagens, volume total e checksum agregado, sem nomes de buckets ou objetos;
+- o smoke autenticado desabilita screenshots, vídeos e traces para não persistir conteúdo da sessão;
+- os logs não imprimem CPF, PIN, URLs de conexão ou service role keys.
 
 ## Frequência mínima recomendada
 

@@ -29,6 +29,7 @@
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/1-public-smoke.spec.ts",
     "test:e2e:real": "ALLOW_REAL_DATA_STRESS_TEST=true playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3",
+    "test:e2e:production-auth": "playwright test tests/e2e/2-authenticated-production-smoke.spec.ts --workers=1",
     "test:e2e:full": "playwright test",
     "test:stress": "npm run test:e2e:real",
     "test:products-subscriptions": "tsx scripts/check-products-subscriptions-contracts.ts",
