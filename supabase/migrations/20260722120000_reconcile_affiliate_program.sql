@@ -7,6 +7,7 @@ BEGIN;
 DO $$
 DECLARE
   v_table text;
+  v_program_count integer;
 BEGIN
   FOREACH v_table IN ARRAY ARRAY[
     'gsa_afiliado_programas',
@@ -33,12 +34,12 @@ BEGIN
     RAISE EXCEPTION 'Funções obrigatórias do programa de afiliados ausentes';
   END IF;
 
-  IF NOT EXISTS (
-    SELECT 1 FROM public.gsa_afiliado_programas
-    WHERE codigo IN ('loja','viagens','classificados','servicos','saude','seguros')
-    GROUP BY true
-    HAVING count(DISTINCT codigo) = 6
-  ) THEN
+  SELECT count(DISTINCT codigo)
+    INTO v_program_count
+    FROM public.gsa_afiliado_programas
+   WHERE codigo IN ('loja','viagens','classificados','servicos','saude','seguros');
+
+  IF v_program_count <> 6 THEN
     RAISE EXCEPTION 'Catálogo inicial do programa de afiliados incompleto';
   END IF;
 END $$;
