@@ -33,8 +33,8 @@ function send(payload: ClientErrorPayload) {
   const body = JSON.stringify(payload);
   try {
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(endpoint, new Blob([body], { type: 'application/json' }));
-      return;
+      const accepted = navigator.sendBeacon(endpoint, new Blob([body], { type: 'application/json' }));
+      if (accepted) return;
     }
   } catch {
     // O fallback abaixo cobre navegadores sem suporte ou bloqueios do sendBeacon.
