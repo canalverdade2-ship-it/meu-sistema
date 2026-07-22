@@ -1,0 +1,60 @@
+name: Temporary Inspect Service Catalog Schema
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    if: github.event.head_commit.message == 'Inspecionar esquema real do catálogo de serviços'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Inspect catalog objects
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL"
+          psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -At <<'SQL' > /tmp/catalog-schema.txt
+          SELECT 'TABLE|' || table_name || '|' || column_name || '|' || data_type || '|' || is_nullable
+          FROM information_schema.columns
+          WHERE table_schema='public'
+            AND (table_name ILIKE '%servic%' OR table_name ILIKE '%pacot%')
+          ORDER BY table_name, ordinal_position;
+
+          SELECT 'FUNCTION|' || p.proname || '|' || pg_get_function_identity_arguments(p.oid)
+          FROM pg_proc p
+          JOIN pg_namespace n ON n.oid=p.pronamespace
+          WHERE n.nspname='public'
+            AND p.proname IN (
+              'gsa_public_service_catalog',
+              'gsa_admin_service_catalog_snapshot',
+              'gsa_admin_import_service_catalog',
+              'gsa_admin_save_service_package'
+            )
+          ORDER BY p.proname;
+
+          SELECT 'SOURCE|' || p.proname || E'\n' || pg_get_functiondef(p.oid)
+          FROM pg_proc p
+          JOIN pg_namespace n ON n.oid=p.pronamespace
+          WHERE n.nspname='public'
+            AND p.proname IN ('gsa_admin_import_service_catalog','gsa_public_service_catalog');
+          SQL
+          cp /tmp/catalog-schema.txt audit-service-catalog-schema.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add audit-service-catalog-schema.txt
+          git commit -m 'Registrar esquema real do catálogo de serviços'
+          git pull --rebase origin main
+          git push origin HEAD:main
