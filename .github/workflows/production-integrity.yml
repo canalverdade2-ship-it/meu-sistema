@@ -120,19 +120,34 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          while IFS= read -r file; do
-            echo "Deno check: $file"
-            deno check "$file"
-          done < <(find supabase/functions -mindepth 2 -maxdepth 2 -name index.ts -type f | sort)
+          {
+            while IFS= read -r file; do
+              echo "Deno check: $file"
+              deno check "$file"
+            done < <(find supabase/functions -mindepth 2 -maxdepth 2 -name index.ts -type f | sort)
+          } 2>&1 | tee edge-functions-check.log
 
       - name: Run deterministic Edge Function tests
         shell: bash
         run: |
           set -euo pipefail
-          while IFS= read -r file; do
-            echo "Deno test: $file"
-            deno test --allow-env "$file"
-          done < <(find supabase/functions -mindepth 2 -maxdepth 2 -name '*_test.ts' -type f | sort)
+          {
+            while IFS= read -r file; do
+              echo "Deno test: $file"
+              deno test --allow-env "$file"
+            done < <(find supabase/functions -mindepth 2 -maxdepth 2 -name '*_test.ts' -type f | sort)
+          } 2>&1 | tee edge-functions-test.log
+
+      - name: Upload Edge Function evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-integrity-edge-functions-${{ github.run_id }}
+          path: |
+            edge-functions-check.log
+            edge-functions-test.log
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
