@@ -1,8 +1,9 @@
 BEGIN;
 
--- A seleção e o registro de uma impressão precisam acontecer na mesma fila lógica.
--- O lock transacional por posição evita que chamadas concorrentes ultrapassem
--- limites de frequência ou de impressões usando o mesmo snapshot anterior.
+-- A seleção, a validação dos limites e o registro de uma impressão precisam
+-- acontecer na mesma fila lógica. O lock global é propositalmente conservador:
+-- uma campanha pode estar vinculada a posições diferentes, portanto locks por
+-- posição ainda permitiriam ultrapassar o limite total em chamadas concorrentes.
 CREATE OR REPLACE FUNCTION public.gsa_ads_serve(
   p_placement_code text,
   p_viewer_hash text,
@@ -25,9 +26,9 @@ BEGIN
     RAISE EXCEPTION 'Identificadores de entrega inválidos' USING ERRCODE = '22023';
   END IF;
 
-  -- Cada chamada subsequente para a mesma posição obtém um snapshot novo
-  -- somente depois que a chamada anterior confirmou a impressão e a métrica.
-  PERFORM pg_advisory_xact_lock(hashtextextended('gsa_ads_serve:' || p_placement_code, 0));
+  -- Garante que duas posições diferentes não consumam simultaneamente o mesmo
+  -- saldo de impressões ou a mesma janela de frequência de uma campanha.
+  PERFORM pg_advisory_xact_lock(hashtextextended('gsa_ads_serve:global', 0));
   PERFORM public.gsa_ads_refresh_campaign_states();
 
   SELECT c.id AS campaign_id, c.name, c.slug, c.frequency_model, c.frequency_value,
