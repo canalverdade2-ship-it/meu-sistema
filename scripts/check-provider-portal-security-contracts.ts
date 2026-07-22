@@ -143,7 +143,7 @@ async function main() {
     'appMetadata.gsa_session_id !== sessaoId',
     'appMetadata.gsa_actor_type !== atorTipo',
     'appMetadata.gsa_actor_id !== atorId',
-    "async loginWithPin(documento: string, pin: string, tipo: 'cliente' | 'prestador')",
+    "async loginWithPin(documento: string, pin: string, tipo: 'cliente' | 'prestador' | 'fornecedor')",
     "rpc('gsa_validate_session'",
     "await supabase.auth.signOut({ scope: 'local' })",
   ]);

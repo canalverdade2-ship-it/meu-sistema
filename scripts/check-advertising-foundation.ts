@@ -10,6 +10,7 @@ const migration = read('supabase/migrations/20260721210100_create_advertising_fo
 const gateway = read('supabase/functions/gsa-public-advertising/index.ts');
 const gatewayTest = read('supabase/functions/gsa-public-advertising/index_test.ts');
 const publicPage = read('src/components/public/AdvertisingPage.tsx');
+const advertisingSlot = read('src/components/ads/AdvertisingSlot.tsx');
 const adminModule = read('src/components/admin/AdvertisingAdminModule.tsx');
 const routeCatalog = read('src/routing/routeCatalog.ts');
 const routeMatcher = read('src/routing/routeMatcher.ts');
@@ -41,7 +42,9 @@ assert.doesNotMatch(gatewayTest, /from\s+['"]https?:\/\//, 'Testes Deno não dev
 
 assert.match(publicPage, /Quero anunciar/, 'Página pública deve possuir CTA comercial');
 assert.match(publicPage, /gsa-public-advertising/, 'Formulário deve usar a Edge Function');
-assert.match(publicPage, /gsa_public_list_active_ads/, 'Vitrine deve carregar apenas campanhas elegíveis');
+assert.match(publicPage, /AdvertisingSlot/, 'Vitrine deve renderizar o componente central de entrega elegível');
+assert.match(advertisingSlot, /gsa-ad-delivery/, 'Componente de vitrine deve usar o gateway de entrega auditado');
+assert.match(advertisingSlot, /action:\s*'serve'/, 'Vitrine deve solicitar apenas campanhas elegíveis pelo gateway');
 assert.match(publicPage, /Proposta antes do pagamento/, 'Fluxo comercial deve estar explicado');
 assert.match(publicPage, /fechamento imediato/, 'Lightbox não pode bloquear o fechamento');
 assert.doesNotMatch(publicPage, /\.rpc\('gsa_public_submit_advertising_request'/, 'Navegador não pode chamar a RPC interna diretamente');

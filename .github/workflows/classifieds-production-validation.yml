@@ -34,10 +34,49 @@ concurrency:
   group: classifieds-production-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  SUPABASE_CLI_VERSION: 2.101.0
+  VITE_SUPABASE_URL: http://127.0.0.1:54321
+  VITE_SUPABASE_ANON_KEY: ci-anon-key-not-for-production
+
 jobs:
-  validate-production:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+  validate:
+    name: Validar classificados
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout audited revision
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Classifieds contracts
+        run: npm run test:classificados
+
+      - name: Check Classifieds media Edge Function
+        run: deno check supabase/functions/gsa-classified-media/index.ts
+
+      - name: Production build
+        run: npm run build
+
+  validate-production:
+    name: Validar classificados em produção
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
     timeout-minutes: 30
     env:
       EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
@@ -48,6 +87,7 @@ jobs:
     steps:
       - name: Checkout audited revision
         uses: actions/checkout@v4
+
       - name: Validate production authorization
         shell: bash
         run: |
@@ -56,18 +96,23 @@ jobs:
           test -n "$SUPABASE_DB_PASSWORD"
           test -n "$SUPABASE_PROJECT_ID"
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+
       - name: Check Classifieds media Edge Function
         run: deno check supabase/functions/gsa-classified-media/index.ts
+
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
       - name: Link expected production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
       - name: Inspect migration history before deployment
         run: supabase migration list --linked 2>&1 | tee classifieds-migrations-before.log
 
@@ -95,12 +140,16 @@ jobs:
 
       - name: Verify Classifieds production storage
         run: supabase db query --linked --file scripts/classifieds-media-production-verification.sql 2>&1 | tee classifieds-production-verification.log && grep -q 'CLASSIFIEDS_MEDIA_STORAGE_VERIFIED' classifieds-production-verification.log
+
       - name: Verify Classifieds commission configuration
         run: supabase db query --linked --file scripts/classifieds-commission-production-verification.sql 2>&1 | tee classifieds-commission-verification.log && grep -q 'CLASSIFIEDS_COMMISSION_CONFIG_VERIFIED' classifieds-commission-verification.log
+
       - name: Verify Classifieds create listing RPC
         run: supabase db query --linked --file scripts/classifieds-create-listing-production-verification.sql 2>&1 | tee classifieds-create-listing-verification.log && grep -q 'CLASSIFIEDS_CREATE_LISTING_RPC_VERIFIED' classifieds-create-listing-verification.log
+
       - name: Verify complete Classifieds operational schema
         run: supabase db query --linked --file scripts/classifieds-complete-production-verification.sql 2>&1 | tee classifieds-complete-verification.log && grep -q 'CLASSIFIEDS_COMPLETE_OPERATIONAL_SCHEMA_VERIFIED' classifieds-complete-verification.log
+
       - name: Verify Classifieds review and adjustment flow
         shell: bash
         run: |
@@ -112,8 +161,10 @@ jobs:
 
       - name: Deploy authenticated Classifieds media gateway
         run: supabase functions deploy gsa-classified-media --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee classifieds-function-deploy.log
+
       - name: Verify Classifieds media gateway deployment
         run: supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee classifieds-functions-after.log && grep -q 'gsa-classified-media' classifieds-functions-after.log
+
       - name: Upload production audit evidence
         if: always()
         uses: actions/upload-artifact@v4
