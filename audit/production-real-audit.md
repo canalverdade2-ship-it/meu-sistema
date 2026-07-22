@@ -1,12 +1,12 @@
 # Auditoria de operação real
 
-Gerada em: 2026-07-22T23:48:23.903Z
+Gerada em: 2026-07-22T23:49:51.075Z
 
 Arquivos executáveis examinados: **327**
 
 Bloqueadores explícitos: **0**
 
-Ocorrências para revisão humana: **12**
+Ocorrências para revisão humana: **11**
 
 ## Bloqueadores
 
@@ -24,5 +24,4 @@ Nenhum bloqueador explícito encontrado.
 - `src/components/admin/demandas/DemandasDetalhesModal.tsx:166` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Informe o motivo da recusa:');`
 - `src/components/admin/demandas/DemandasDetalhesModal.tsx:358` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Motivo para recusar a contraproposta do prestador:');`
 - `src/components/admin/demandas/DemandasDetalhesModal.tsx:402` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Por que deseja cancelar esta demanda?');`
-- `src/components/public/AdvertisingPage.tsx:694` — Referência a mock em código executável — `{/* MOSTRADOR / PREVIEW MOCKUP DO CRIATIVO */}`
 - `src/lib/deleteRequest.ts:42` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = window.prompt('Exclusão restrita: qual o motivo para solicitar a exclusão deste registro? Sua solicitação será enviada para aprovação administrativa.');`
