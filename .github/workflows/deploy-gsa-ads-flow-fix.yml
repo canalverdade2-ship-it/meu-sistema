@@ -1,0 +1,163 @@
+name: Deploy GSA Ads Flow Fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/components/public/AdvertisingPage.tsx'
+      - 'src/components/admin/AdvertisingAdminModule.tsx'
+      - 'src/pages/AdvertiserPortal.tsx'
+      - 'src/types/advertising.ts'
+      - 'supabase/functions/gsa-advertiser-access/**'
+      - 'supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql'
+      - '.github/workflows/deploy-gsa-ads-flow-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-gsa-ads-flow-fix-production
+  cancel-in-progress: false
+
+env:
+  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 35
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      ADVERTISING_ALLOWED_ORIGINS: ${{ vars.ADVERTISING_ALLOWED_ORIGINS || 'https://grupo-gsa.com.br,https://www.grupo-gsa.com.br' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Validar fontes alteradas
+        run: |
+          deno check supabase/functions/gsa-advertiser-access/index.ts
+          grep -q "gsa-public-advertising" src/components/public/AdvertisingPage.tsx
+          grep -q "gsa_admin_advertising_overview" src/components/admin/AdvertisingAdminModule.tsx
+          grep -q "gsa_advertiser_portal_snapshot" src/pages/AdvertiserPortal.tsx
+          ! grep -q "gsa_adv_requests_store\|gsa_adv_proposals_store\|gsa_adv_campaigns_store\|gsa_advertiser_session\|anunciantes_solicitacoes" src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
+
+      - name: Validar configuração de produção
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          test -n "$ADVERTISING_ALLOWED_ORIGINS"
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Conectar ao projeto correto
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Aplicar hardening e migração de integridade
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp supabase/migrations/20260722040000_harden_advertising_backend.sql /tmp/gsa-ads-hardening.sql
+          printf '\nCOMMIT;\n' >> /tmp/gsa-ads-hardening.sql
+          supabase db query --linked --file /tmp/gsa-ads-hardening.sql 2>&1 | tee gsa-ads-hardening.log
+          supabase db query --linked --file supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql 2>&1 | tee gsa-ads-flow-migration.log
+
+          supabase migration list --linked 2>&1 | tee gsa-ads-migrations-before-repair.log
+          for version in 20260722120100 20260722235900; do
+            if ! awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == wanted) found=1 } END { exit found ? 0 : 1 }' gsa-ads-migrations-before-repair.log; then
+              supabase migration repair --linked --status applied "$version"
+            fi
+          done
+
+      - name: Configurar origens e publicar função
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase secrets set "ALLOWED_ORIGINS=${ADVERTISING_ALLOWED_ORIGINS}" --project-ref "$SUPABASE_PROJECT_ID"
+          supabase functions deploy gsa-advertiser-access --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt 2>&1 | tee gsa-advertiser-access-deploy.log
+
+      - name: Verificar banco e permissões
+        shell: bash
+        run: |
+          cat > /tmp/verify-gsa-ads-flow.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regprocedure('public.gsa_public_validate_advertising_protocol(text)') IS NULL
+               OR to_regprocedure('public.gsa_ads_claim_protocol_for_user(text,uuid)') IS NULL
+               OR to_regprocedure('public.gsa_advertiser_update_profile(jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_advertiser_accept_proposal(uuid)') IS NULL
+               OR to_regprocedure('public.gsa_admin_update_ad_campaign_status(uuid,text)') IS NULL THEN
+              RAISE EXCEPTION 'Funções obrigatórias do fluxo de anúncios ausentes';
+            END IF;
+            IF to_regclass('public.gsa_ad_rate_limit_buckets') IS NULL
+               OR to_regclass('public.gsa_ad_maintenance_state') IS NULL
+               OR to_regclass('public.gsa_ad_payments') IS NULL
+               OR to_regclass('public.gsa_ad_delivery_events') IS NULL THEN
+              RAISE EXCEPTION 'Tabelas obrigatórias do fluxo de anúncios ausentes';
+            END IF;
+            IF has_function_privilege('anon', 'public.gsa_advertiser_portal_snapshot()', 'EXECUTE')
+               OR has_function_privilege('anon', 'public.gsa_advertiser_accept_proposal(uuid)', 'EXECUTE')
+               OR has_function_privilege('anon', 'public.gsa_advertiser_counter_proposal(uuid,numeric,text)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'RPC de anunciante ainda exposta ao papel anon';
+            END IF;
+            IF NOT has_function_privilege('authenticated', 'public.gsa_advertiser_update_profile(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Perfil do anunciante sem permissão autenticada';
+            END IF;
+          END $$;
+          SELECT 'GSA_ADS_FLOW_FIX_VERIFIED' AS result;
+          SQL
+          supabase db query --linked --file /tmp/verify-gsa-ads-flow.sql 2>&1 | tee gsa-ads-flow-verification.log
+          grep -q 'GSA_ADS_FLOW_FIX_VERIFIED' gsa-ads-flow-verification.log
+          supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee gsa-ads-functions.log
+          grep -q 'gsa-advertiser-access' gsa-ads-functions.log
+
+      - name: Registrar sucesso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          cat > deployment-status/gsa-ads-flow-fix-production.json <<JSON
+          {
+            "status": "success",
+            "workflow_run_id": "${GITHUB_RUN_ID}",
+            "validated_sha": "${GITHUB_SHA}",
+            "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "project_ref": "${SUPABASE_PROJECT_ID}",
+            "migration": "20260722235900",
+            "edge_function": "gsa-advertiser-access"
+          }
+          JSON
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add deployment-status/gsa-ads-flow-fix-production.json
+          git commit -m 'Registrar implantação das correções do GSA Anúncios' || exit 0
+          git push origin HEAD:main
+
+      - name: Evidências
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-ads-flow-fix-${{ github.run_id }}
+          path: |
+            gsa-ads-hardening.log
+            gsa-ads-flow-migration.log
+            gsa-ads-migrations-before-repair.log
+            gsa-advertiser-access-deploy.log
+            gsa-ads-flow-verification.log
+            gsa-ads-functions.log
+          if-no-files-found: ignore
+          retention-days: 30
