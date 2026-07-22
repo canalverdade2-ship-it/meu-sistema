@@ -54,7 +54,7 @@ test.describe('Smoke autenticado de produção', () => {
         productionPin.length,
       );
       for (let index = 0; index < productionPin.length; index += 1) {
-        await pinInputs.nth(index).fill(productionPin[index]);
+        await pinInputs.nth(index).fill(productionPin.charAt(index));
       }
     }
 
@@ -62,7 +62,8 @@ test.describe('Smoke autenticado de produção', () => {
     await expect(enterButton).toBeEnabled({ timeout: 10_000 });
     await enterButton.click();
 
-    const portalMarker = page.getByText(/Meus Atendimentos|Minha Conta|Bem-vindo|Área do Cliente/i).first();
+    await expect(dialog).toBeHidden({ timeout: 30_000 });
+    const portalMarker = page.getByText(/Meus Atendimentos|Minha Conta|Bem-vindo/i).first();
     await expect(portalMarker).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(/Algo deu errado|Erro inesperado|Falha inesperada/i).first()).toHaveCount(0);
     expect(pageErrors, `Erros não tratados no navegador: ${pageErrors.join(' | ')}`).toEqual([]);
