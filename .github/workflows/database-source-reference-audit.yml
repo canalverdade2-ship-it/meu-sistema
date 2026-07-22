@@ -6,8 +6,11 @@ on:
     paths:
       - 'src/**'
       - 'supabase/functions/**'
+      - 'supabase/migrations/20260722190000_close_production_inventory_gaps.sql'
       - 'scripts/list-database-source-references.mjs'
+      - 'scripts/check-production-inventory-gap-contracts.mjs'
       - '.github/workflows/database-source-reference-audit.yml'
+      - '.github/workflows/apply-production-inventory-gaps.yml'
   workflow_dispatch:
 
 permissions:
@@ -20,6 +23,9 @@ jobs:
     steps:
       - name: Checkout audited revision
         uses: actions/checkout@v4
+
+      - name: Validate production inventory gap contracts
+        run: node scripts/check-production-inventory-gap-contracts.mjs
 
       - name: Map database references
         run: node scripts/list-database-source-references.mjs
