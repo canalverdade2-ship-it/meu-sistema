@@ -1,0 +1,170 @@
+name: Reconcile Duplicate Migration 20260722040000
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Digite RECONCILIAR_MIGRATION_20260722040000 para autorizar a correção em produção
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reconcile-duplicate-migration-20260722040000
+  cancel-in-progress: false
+
+env:
+  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  reconcile:
+    name: Reconciliar afiliados e publicidade
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 40
+    env:
+      CONFIRMATION: ${{ inputs.confirmation }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Checkout audited revision
+        uses: actions/checkout@v4
+
+      - name: Validate explicit production authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION" = 'RECONCILIAR_MIGRATION_20260722040000'
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link exact production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Inspect migration history before reconciliation
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee migration-conflict-before.log
+
+      - name: Build transactionally complete audited SQL files
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp supabase/migrations/20260722040000_affiliate_program.sql /tmp/affiliate-program-reconciled.sql
+          printf '\nCOMMIT;\n' >> /tmp/affiliate-program-reconciled.sql
+          cp supabase/migrations/20260722040000_harden_advertising_backend.sql /tmp/advertising-backend-reconciled.sql
+          printf '\nCOMMIT;\n' >> /tmp/advertising-backend-reconciled.sql
+          tail -n 3 /tmp/affiliate-program-reconciled.sql
+          tail -n 3 /tmp/advertising-backend-reconciled.sql
+
+      - name: Apply affiliate program SQL atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase db query --linked --file /tmp/affiliate-program-reconciled.sql 2>&1 | tee affiliate-program-apply.log
+
+      - name: Apply advertising backend SQL atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase db query --linked --file /tmp/advertising-backend-reconciled.sql 2>&1 | tee advertising-backend-apply.log
+
+      - name: Verify both domains before history repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase db query --linked --file supabase/migrations/20260722120000_reconcile_affiliate_program.sql 2>&1 | tee affiliate-program-verify.log
+          supabase db query --linked --file supabase/migrations/20260722120100_reconcile_advertising_backend.sql 2>&1 | tee advertising-backend-verify.log
+
+      - name: Register only unique verified versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee migration-conflict-pre-repair.log
+
+          for version in 20260722120000 20260722120100
+          do
+            if ! awk -F'|' -v wanted="$version" '
+              {
+                remote=$2
+                gsub(/[^0-9]/, "", remote)
+                if (remote == wanted) found=1
+              }
+              END { exit found ? 0 : 1 }
+            ' migration-conflict-pre-repair.log; then
+              supabase migration repair --linked --status applied "$version" 2>&1 | tee -a migration-conflict-repair.log
+            fi
+          done
+
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260722040000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' migration-conflict-pre-repair.log; then
+            supabase migration repair --linked --status reverted 20260722040000 2>&1 | tee -a migration-conflict-repair.log
+          fi
+
+      - name: Verify final migration history and database state
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee migration-conflict-after.log
+          for version in 20260722120000 20260722120100
+          do
+            awk -F'|' -v wanted="$version" '
+              {
+                remote=$2
+                gsub(/[^0-9]/, "", remote)
+                if (remote == wanted) found=1
+              }
+              END { exit found ? 0 : 1 }
+            ' migration-conflict-after.log
+          done
+          ! awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260722040000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' migration-conflict-after.log
+          supabase db query --linked --file supabase/migrations/20260722120000_reconcile_affiliate_program.sql
+          supabase db query --linked --file supabase/migrations/20260722120100_reconcile_advertising_backend.sql
+          echo 'DUPLICATE_MIGRATION_20260722040000_RECONCILED'
+
+      - name: Upload non-sensitive reconciliation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: duplicate-migration-20260722040000-${{ github.run_id }}
+          path: |
+            migration-conflict-before.log
+            affiliate-program-apply.log
+            advertising-backend-apply.log
+            affiliate-program-verify.log
+            advertising-backend-verify.log
+            migration-conflict-pre-repair.log
+            migration-conflict-repair.log
+            migration-conflict-after.log
+          if-no-files-found: ignore
+          retention-days: 30
