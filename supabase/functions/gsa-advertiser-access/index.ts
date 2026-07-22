@@ -1,3 +1,4 @@
+// Acesso público controlado: valida protocolo no banco e vincula a conta somente após conferência dos dados.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.98.0';
 
 type JsonRecord = Record<string, unknown>;
