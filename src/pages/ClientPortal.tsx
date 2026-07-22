@@ -117,6 +117,7 @@ const CLIENT_ROUTE_MODULES: Record<string, Module> = {
   promocoes: 'fidelidade',
   premios: 'fidelidade',
   'indique-ganhe': 'fidelidade',
+  afiliados: 'fidelidade',
   'area-vip': 'fidelidade',
   transferencias: 'financeiro',
   emprestimos: 'financeiro',
@@ -164,6 +165,7 @@ const FIDELIDADE_ROUTE_TABS: Record<string, string> = {
   promocoes: 'promocoes',
   premios: 'premios',
   'indique-ganhe': 'indique-ganhe',
+  afiliados: 'afiliados',
   'area-vip': 'area-vip',
   area_vip: 'area-vip'
 };
@@ -352,7 +354,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     } else if (module === 'financeiro') {
       path = routes.client.finance.root();
     } else if (module === 'fidelidade') {
-      path = routes.client.loyalty.root();
+      path = tab === 'afiliados' ? routes.client.loyalty.affiliates() : routes.client.loyalty.root();
     } else if (module === 'suporte') {
       path = routes.client.support();
     } else if ((module as string) === 'gsa_store') {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, Crown, Gift, Megaphone, Star, Ticket, Trophy, Users } from 'lucide-react';
+import { ChevronLeft, Crown, Gift, Megaphone, Share2, Star, Ticket, Trophy, Users } from 'lucide-react';
 import { Cliente } from '../../types';
 import { ClientPontos } from './ClientPontos';
 import { ClientVouchers } from './ClientVouchers';
@@ -7,9 +7,10 @@ import { ClientPromocoes } from './ClientPromocoes';
 import ClientPremios from './ClientPremios';
 import { ClientIndiqueGanhe } from './ClientIndiqueGanhe';
 import { ClientAreaVIP } from './ClientAreaVIP';
+import { ClientAffiliatePanel } from './ClientAffiliatePanel';
 import { useClientNotifications } from '../../hooks/useClientNotifications';
 
-type FidelidadeTab = 'pontos' | 'vouchers' | 'promocoes' | 'premios' | 'indique-ganhe' | 'area-vip';
+type FidelidadeTab = 'pontos' | 'vouchers' | 'promocoes' | 'premios' | 'indique-ganhe' | 'afiliados' | 'area-vip';
 
 interface ClientFidelidadeProps {
   clientId: string;
@@ -23,7 +24,7 @@ interface ClientFidelidadeProps {
 
 const normalizeTab = (tab?: string): FidelidadeTab | undefined => {
   if (tab === 'area_vip') return 'area-vip';
-  if (tab === 'pontos' || tab === 'vouchers' || tab === 'promocoes' || tab === 'premios' || tab === 'indique-ganhe' || tab === 'area-vip') {
+  if (tab === 'pontos' || tab === 'vouchers' || tab === 'promocoes' || tab === 'premios' || tab === 'indique-ganhe' || tab === 'afiliados' || tab === 'area-vip') {
     return tab;
   }
   return undefined;
@@ -51,6 +52,7 @@ export function ClientFidelidade({
     { id: 'promocoes', label: 'Promoções', icon: Megaphone, badge: pendencies.modulePromocoes },
     { id: 'premios', label: 'Prêmios', icon: Trophy },
     { id: 'indique-ganhe', label: 'Indique e Ganhe', icon: Users, badge: pendencies.moduleIndiqueGanhe },
+    { id: 'afiliados', label: 'Afiliados GSA', icon: Share2 },
     { id: 'area-vip', label: 'Área VIP', icon: Crown, locked: vipModuleConfig?.oculto || !vipModuleConfig?.ativo },
   ];
   const tabs = fidelidadeTabsBase.filter(tab => !(tab.id === 'area-vip' && vipModuleConfig?.oculto));
@@ -145,6 +147,7 @@ export function ClientFidelidade({
       {activeTab === 'promocoes' && <ClientPromocoes clientId={clientId} initialItemId={initialItemId} />}
       {activeTab === 'premios' && <ClientPremios clientId={clientId} initialItemId={initialItemId} />}
       {activeTab === 'indique-ganhe' && <ClientIndiqueGanhe clientId={clientId} initialItemId={initialItemId} />}
+      {activeTab === 'afiliados' && <ClientAffiliatePanel clientId={clientId} />}
       {activeTab === 'area-vip' && (
         vipModuleConfig?.ativo
           ? <ClientAreaVIP cliente={cliente} initialItemId={initialItemId} />

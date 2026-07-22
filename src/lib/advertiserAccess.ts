@@ -26,7 +26,16 @@ export const advertiserAccess = {
       if (error.code === '42501') return null;
       throw error;
     }
-    return data as AdvertiserPortalSnapshot;
+    const snapshot = data as AdvertiserPortalSnapshot;
+    // Defense in depth for environments that still expose the legacy payment row.
+    // Provider webhook payloads are operational data and must never remain in portal state.
+    snapshot.campaigns = (snapshot.campaigns || []).map((campaign) => {
+      if (!campaign.payment) return campaign;
+      const sanitizedPayment = { ...campaign.payment } as typeof campaign.payment & { raw_payload?: unknown };
+      delete sanitizedPayment.raw_payload;
+      return { ...campaign, payment: sanitizedPayment };
+    });
+    return snapshot;
   },
 
   async signOut() {

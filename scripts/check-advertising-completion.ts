@@ -10,7 +10,7 @@ function includesAll(path: string, values: string[]) {
   for (const value of values) assert.ok(content.includes(value), `${path} deve conter ${value}`);
 }
 
-includesAll('supabase/migrations/20260721223000_complete_advertising_platform.sql', [
+includesAll('supabase/migrations/20260721223100_complete_advertising_platform.sql', [
   'gsa_ad_payments',
   'gsa_ad_payment_events',
   'gsa_ad_delivery_events',

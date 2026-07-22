@@ -9,6 +9,7 @@ import {
 import { LogoGSA } from '../../ui/LogoGSA';
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
+import { AdvertisingSlot } from '../../ads/AdvertisingSlot';
 
 interface MarketplaceHomeProps {
   onSelectModule: (moduleName: 'produtos-assinaturas' | 'pacotes-viagem' | 'classificados' | 'saude' | 'seguros') => void;
@@ -394,6 +395,7 @@ export function MarketplaceHome({
         {/* ─── MODULE CARDS ──────────────────────── */}
         <div className="max-w-7xl mx-auto px-5 pb-4 sm:pb-16 w-full flex-1 flex flex-col justify-between">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-5 flex-1">
+            <AdvertisingSlot placementCode="MARKETPLACE_SPONSORED_CARD" variant="card" className="h-full" />
             {modules.map((mod, i) => (
               <ModuleCard
                 key={mod.key}

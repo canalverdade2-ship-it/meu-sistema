@@ -144,6 +144,8 @@ export interface AdvertisingCreative {
   kind: 'image' | 'video' | 'text';
   status: AdvertisingCreativeStatus;
   storage_path?: string | null;
+  /** Short-lived signed URL returned by trusted overview RPCs. Never persist it. */
+  asset_url?: string | null;
   target_url?: string | null;
   headline?: string | null;
   body?: string | null;
@@ -151,6 +153,7 @@ export interface AdvertisingCreative {
   width?: number | null;
   height?: number | null;
   duration_seconds?: number | null;
+  metadata?: Record<string, unknown>;
   rejection_reason?: string | null;
   approved_at?: string | null;
   created_at: string;

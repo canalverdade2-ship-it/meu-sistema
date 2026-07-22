@@ -9,6 +9,7 @@ import { LogoGSA } from '../../ui/LogoGSA';
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
 import { MarketplaceSubmoduleCard } from './MarketplaceSubmoduleCard';
+import { AdvertisingSlot } from '../../ads/AdvertisingSlot';
 
 interface ClassifiedsHubPageProps {
   onBack: () => void;
@@ -137,6 +138,8 @@ export function ClassifiedsHubPage({ onBack, isPublic = false }: ClassifiedsHubP
           </div>
         </div>
       </nav>
+
+      <AdvertisingSlot placementCode="CLASSIFIEDS_BANNER_TOP" variant="banner" className="mx-auto my-4 max-w-7xl" />
 
       {/* ─── HERO SECTION ────────────────────── */}
       <section className="relative overflow-hidden bg-[#0a0a0a]">

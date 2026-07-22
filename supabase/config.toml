@@ -9,3 +9,25 @@ entrypoint = "./functions/import-products-from-file/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/import-products-from-file/*.html" ]
+
+# Funções públicas possuem controles próprios (CORS, rate limit, HMAC ou segredo de cron).
+[functions.gsa-public-advertising]
+enabled = true
+verify_jwt = false
+
+[functions.gsa-ad-delivery]
+enabled = true
+verify_jwt = false
+
+[functions.gsa-advertising-webhook]
+enabled = true
+verify_jwt = false
+
+[functions.gsa-advertising-scheduler]
+enabled = true
+verify_jwt = false
+
+# Esta função exige sessão Supabase válida e ainda reconfirma o usuário e o módulo no servidor.
+[functions.gsa-advertiser-admin]
+enabled = true
+verify_jwt = true

@@ -23,12 +23,14 @@ export function PublicFooter({ setPublicPage, onGuestStore, onAdminLogin, onPriv
         <nav aria-label="Links do rodapé">
           <h2 className="text-xs font-black uppercase tracking-widest text-white/35">Ambientes</h2>
           <div className="mt-4 grid gap-3 text-sm font-bold text-white/75">
+            <button type="button" onClick={() => setPublicPage('free-tools')} className="w-fit hover:text-[#d8bd73]">Serviços Gratuitos</button>
             <button type="button" onClick={() => setPublicPage('services')} className="w-fit hover:text-[#d8bd73]">Serviços e Assinaturas</button>
             <button type="button" onClick={onGuestStore} className="w-fit hover:text-[#d8bd73]">Marketplace</button>
             <button type="button" onClick={() => setPublicPage('systems')} className="w-fit hover:text-[#d8bd73]">Sites e Sistemas</button>
             <button type="button" onClick={() => setPublicPage('partners')} className="w-fit hover:text-[#d8bd73]">Parceiros</button>
             <button type="button" onClick={onAdminLogin} className="w-fit hover:text-[#d8bd73]">Acesso restrito</button>
             <a href="/fornecedor" className="w-fit hover:text-[#d8bd73]">Portal do fornecedor</a>
+            <a href="/afiliados" className="w-fit hover:text-[#d8bd73]">Programa de afiliados</a>
             <button type="button" onClick={onPrivacy} className="w-fit hover:text-[#d8bd73]">Privacidade</button>
           </div>
         </nav>

@@ -3,11 +3,13 @@ export const routes = {
   public: {
     home: () => '/',
     services: () => '/servicos-e-assinaturas',
+    freeTools: () => '/servicos-gratuitos',
     systems: () => '/criacao-de-site-e-sistemas',
     partners: () => '/parceiros',
     partner: (slug: string) => `/parceiros/${slug}`,
     ads: () => '/anuncios',
     advertise: () => '/anuncie',
+    affiliates: () => '/afiliados',
     serviceDetail: (id: string) => `/servicos-e-assinaturas/${id}`,
   },
   // Login
@@ -167,6 +169,7 @@ export const routes = {
       premios: () => '/cliente/fidelidade/premios',
       premio: (id: string) => `/cliente/fidelidade/premios/${id}`,
       indiqueGanhe: () => '/cliente/fidelidade/indique-ganhe',
+      affiliates: () => '/cliente/fidelidade/afiliados',
       indicacao: (id: string) => `/cliente/fidelidade/indique-ganhe/${id}`,
       vip: () => '/cliente/fidelidade/area-vip',
     }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, FileText, CheckCircle, XCircle, Wallet, Ticket, CreditCard, Filter, Printer, ArrowDownCircle, Check, X, Info, Landmark, Send, MessageSquare, ClipboardList, History, Building2, Plus, Calendar, Clock, User, ShoppingBag, ChevronLeft, Repeat2, Gavel, Receipt } from 'lucide-react';
+import { Search, FileText, CheckCircle, XCircle, Wallet, Ticket, CreditCard, Filter, Printer, ArrowDownCircle, Check, X, Info, Landmark, Send, MessageSquare, ClipboardList, History, Building2, Plus, Calendar, Clock, User, ShoppingBag, ChevronLeft, Repeat2, Gavel, Receipt, BadgePercent } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Fatura, Cliente, Voucher, Saque } from '../../types';
 import { Modal } from '../ui/Modal';
@@ -18,6 +18,7 @@ import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { CobrancaModule } from './CobrancaModule';
 import { FiscalModule } from './FiscalModule';
+import { AffiliateAdminModule } from './AffiliateAdminModule';
 import { sessionService } from '../../lib/sessionService';
 
 let syncFaturasPromise: Promise<void> | null = null;
@@ -53,7 +54,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
   const [activeTab, setActiveTab] = useState<'pendentes' | 'pagos' | 'cancelados' | 'saques' | 'transferencias'>('pendentes');
   const [showSubTabs, setShowSubTabs] = useState(false);
   const [isSubmoduleOpen, setIsSubmoduleOpen] = useState(Boolean(initialTab || initialItemId));
-  const [financeiroSubmodule, setFinanceiroSubmodule] = useState<'core' | 'cobranca' | 'fiscal'>('core');
+  const [financeiroSubmodule, setFinanceiroSubmodule] = useState<'core' | 'cobranca' | 'fiscal' | 'afiliados'>('core');
 
   // ── 2. Data state ─────────────────────────────────────────────────────────
   const [faturas, setFaturas] = useState<Fatura[]>([]);
@@ -391,7 +392,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
     setShowSubTabs(false);
   };
 
-  const openFinanceiroArea = (area: 'cobranca' | 'fiscal') => {
+  const openFinanceiroArea = (area: 'cobranca' | 'fiscal' | 'afiliados') => {
     setFinanceiroSubmodule(area);
     setShowSubTabs(false);
     setIsSubmoduleOpen(true);
@@ -406,6 +407,8 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
         openFinanceiroArea('cobranca');
       } else if (initialTab === 'fiscal') {
         openFinanceiroArea('fiscal');
+      } else if (initialTab === 'afiliados') {
+        openFinanceiroArea('afiliados');
       } else if (initialTab === 'saques' || initialTab === 'transferencias') {
         setFinanceiroSubmodule('core');
         setMainTab('clientes');
@@ -1129,6 +1132,13 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
       icon: Receipt,
       badge: pendencies.moduleFiscal,
       onClick: () => openFinanceiroArea('fiscal')
+    },
+    {
+      id: 'afiliados',
+      title: 'Afiliados',
+      icon: BadgePercent,
+      badge: 0,
+      onClick: () => openFinanceiroArea('afiliados')
     }
   ];
 
@@ -1209,6 +1219,22 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
           colaboradorId={colaboradorId}
           colaboradorNome={colaboradorNome}
         />
+      </div>
+    );
+  }
+
+  if (financeiroSubmodule === 'afiliados') {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+        <button
+          type="button"
+          onClick={backToFinanceiroHome}
+          className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-black text-neutral-700 shadow-sm transition-all hover:border-indigo-200 hover:text-indigo-600"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Voltar
+        </button>
+        <AffiliateAdminModule />
       </div>
     );
   }

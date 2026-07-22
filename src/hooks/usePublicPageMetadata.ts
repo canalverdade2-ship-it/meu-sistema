@@ -36,6 +36,8 @@ export function usePublicPageMetadata(page: PublicPage, selectedPackage: Service
         ? `${selectedPackage.title} | GSA HUB`
         : page === 'services'
           ? 'Serviços e Assinaturas | GSA HUB'
+          : page === 'free-tools'
+            ? 'Calculadoras e Serviços Gratuitos | GSA HUB'
           : page === 'systems'
             ? 'Criação de Sites e Sistemas | GSA HUB'
             : page === 'partners'
@@ -51,6 +53,8 @@ export function usePublicPageMetadata(page: PublicPage, selectedPackage: Service
       : selectedPackage?.description
         || (page === 'services'
           ? 'Pacotes administrativos, financeiros, veiculares, previdenciários e empresariais do GSA HUB.'
+          : page === 'free-tools'
+            ? 'Calculadoras trabalhistas e previdenciárias gratuitas para simular rescisão, aposentadoria pelo INSS e férias.'
           : page === 'systems'
             ? 'Criação de sites, lojas virtuais, aplicativos, sistemas web, integrações e automações sob medida.'
             : page === 'partners'
@@ -67,6 +71,8 @@ export function usePublicPageMetadata(page: PublicPage, selectedPackage: Service
         ? window.location.pathname
         : page === 'services'
           ? '/servicos-e-assinaturas'
+          : page === 'free-tools'
+            ? '/servicos-gratuitos'
           : page === 'systems'
             ? '/criacao-de-site-e-sistemas'
             : page === 'partners'
@@ -77,7 +83,7 @@ export function usePublicPageMetadata(page: PublicPage, selectedPackage: Service
                   ? '/anuncie'
                   : '/';
     const canonical = new URL(canonicalPath, window.location.origin).toString();
-    const image = new URL('/logo.svg', window.location.origin).toString();
+    const image = new URL(page === 'free-tools' ? '/og-servicos-gratuitos.png' : '/logo.svg', window.location.origin).toString();
 
     document.title = title;
     setCanonical(canonical);

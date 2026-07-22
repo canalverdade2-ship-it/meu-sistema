@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { sessionService } from './sessionService';
 import { toast } from 'react-hot-toast';
 
 /**
@@ -7,40 +8,35 @@ import { toast } from 'react-hot-toast';
  * Colaboradores precisam abrir uma solicitação para aprovação.
  */
 export async function canDeleteRecord(tabela: string, registro_id: string): Promise<boolean> {
-  const rawSession = localStorage.getItem('_gsa_sess');
-  if (!rawSession) {
+  const storedSession = sessionService.getCurrentSession();
+  if (!storedSession?.sessaoId || !storedSession.sessionToken) {
     toast.error('Sessão inválida.');
     return false;
   }
 
   try {
-    let storedSession: { sessaoId?: string; sessionToken?: string } = {};
-    try {
-      storedSession = JSON.parse(atob(rawSession));
-    } catch {
-      toast.error('Sessão inválida.');
-      return false;
-    }
-
-    if (!storedSession.sessaoId || !storedSession.sessionToken) {
-      toast.error('Sessão inválida.');
-      return false;
-    }
-
     const { data: sessionData, error: sessionError } = await supabase
       .rpc('gsa_validate_session', {
         p_sessao_id: storedSession.sessaoId,
         p_session_token: storedSession.sessionToken
-      })
-      .single();
+      });
+    const validatedSession = Array.isArray(sessionData) ? sessionData[0] : sessionData;
 
-    if (sessionError || !sessionData || !(sessionData as any).is_valid) {
+    if (sessionError || !validatedSession || !(validatedSession as any).is_valid) {
       toast.error('Sessão expirada ou inválida.');
       return false;
     }
 
-    if ((sessionData as any).ator_tipo !== 'colaborador') {
+    const actorType = (validatedSession as any).ator_tipo || storedSession.atorTipo;
+    const actorId = (validatedSession as any).ator_id || storedSession.atorId;
+
+    if (actorType !== 'colaborador') {
       return true;
+    }
+
+    if (!actorId) {
+      toast.error('Não foi possível identificar o colaborador.');
+      return false;
     }
 
     const motivo = window.prompt('Exclusão restrita: qual o motivo para solicitar a exclusão deste registro? Sua solicitação será enviada para aprovação administrativa.');
@@ -51,7 +47,7 @@ export async function canDeleteRecord(tabela: string, registro_id: string): Prom
     }
 
     const { error } = await supabase.from('solicitacoes_exclusao').insert([{
-      colaborador_id: (sessionData as any).ator_id,
+      colaborador_id: actorId,
       tabela,
       registro_id,
       motivo: motivo.trim()

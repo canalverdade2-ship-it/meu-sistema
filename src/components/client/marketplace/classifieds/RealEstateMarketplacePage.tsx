@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Search, MapPin, Building2, Bed, Bath, Car as CarIcon, Maximize, Filter, X } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
+import { AdvertisingSlot } from '../../../ads/AdvertisingSlot';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
 
@@ -102,6 +103,8 @@ export function RealEstateMarketplacePage({ onBack }: { onBack: () => void }) {
           <div className="w-20" /> {/* Spacer */}
         </div>
       </nav>
+
+      <AdvertisingSlot placementCode="CLASSIFIEDS_BANNER_TOP" variant="banner" className="mx-auto my-4 max-w-7xl" />
 
       {/* HEADER / FILTERS */}
       <div className="bg-[#1a1a1a] text-white py-12 px-5">

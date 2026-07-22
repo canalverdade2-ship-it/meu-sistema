@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { clientOperationalWrite } from '../../../../lib/clientOperationalWrite';
 import { notificationService } from '../../../../lib/notificationService';
 import { supabase } from '../../../../lib/supabase';
+import { AdvertisingSlot } from '../../../ads/AdvertisingSlot';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
 
@@ -187,6 +188,8 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
           </div>
         </div>
       </nav>
+
+      <AdvertisingSlot placementCode="CLASSIFIEDS_BANNER_TOP" variant="banner" className="mx-auto my-4 max-w-7xl" />
 
       <div className="max-w-7xl mx-auto px-5 pt-8">
         <div className="grid lg:grid-cols-[1fr_400px] gap-10">

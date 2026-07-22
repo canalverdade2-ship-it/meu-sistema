@@ -21,8 +21,8 @@ on:
       - 'supabase/functions/gsa-ad-delivery/**'
       - 'supabase/functions/gsa-advertising-webhook/**'
       - 'supabase/functions/gsa-advertising-scheduler/**'
-      - 'supabase/migrations/20260721210000_create_advertising_foundation.sql'
-      - 'supabase/migrations/20260721223000_complete_advertising_platform.sql'
+      - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
+      - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
       - 'scripts/check-advertising-foundation.ts'
       - 'scripts/check-advertising-completion.ts'
       - 'package.json'
@@ -37,7 +37,7 @@ on:
       - 'supabase/functions/gsa-ad-delivery/**'
       - 'supabase/functions/gsa-advertising-webhook/**'
       - 'supabase/functions/gsa-advertising-scheduler/**'
-      - 'supabase/migrations/20260721223000_complete_advertising_platform.sql'
+      - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
 
 permissions:
   contents: read
@@ -130,8 +130,8 @@ jobs:
           CREATE OR REPLACE FUNCTION public.gsa_current_actor_type() RETURNS text LANGUAGE sql STABLE AS $$ SELECT 'admin'::text $$;
           CREATE OR REPLACE FUNCTION public.gsa_current_actor_id() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT '00000000-0000-0000-0000-000000000001'::uuid $$;
           SQL
-          psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 -f supabase/migrations/20260721210000_create_advertising_foundation.sql
-          psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 -f supabase/migrations/20260721223000_complete_advertising_platform.sql
+          psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 -f supabase/migrations/20260721210100_create_advertising_foundation.sql
+          psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 -f supabase/migrations/20260721223100_complete_advertising_platform.sql
           psql -h 127.0.0.1 -U postgres -d advertising_test -v ON_ERROR_STOP=1 <<'SQL'
           DO $test$
           DECLARE

@@ -85,6 +85,14 @@ export function Home({
   }, [initialRestrictedTab, loginOnly]);
 
   useEffect(() => {
+    if (!loginOnly) return;
+    const mode = new URLSearchParams(window.location.search).get('mode');
+    if (mode !== 'login' && mode !== 'register') return;
+    setClientMode(mode);
+    setClientModalOpen(true);
+  }, [loginOnly]);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('msg') !== 'revoked') return;
 

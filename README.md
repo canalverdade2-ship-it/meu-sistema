@@ -86,3 +86,19 @@ Documentos de passageiros usam:
 ```
 
 Nunca exponha a chave `service_role` no navegador. Operações administrativas privilegiadas devem permanecer no backend, em RPCs protegidas ou Edge Functions.
+
+## GSA Anúncios
+
+As funções públicas de captação e veiculação usam CORS por lista explícita, limitação de requisições e RPCs internas restritas ao `service_role`. Antes de implantar, configure a variável de repositório `ADVERTISING_ALLOWED_ORIGINS` com uma ou mais origens HTTPS separadas por vírgula. O workflow converte essa variável no segredo `ALLOWED_ORIGINS` do Supabase e interrompe a implantação quando a configuração é ausente ou insegura.
+
+As funções de webhook e agendamento são públicas somente no gateway: o webhook exige HMAC e o agendador exige um segredo próprio. A função administrativa `gsa-advertiser-admin` mantém a verificação JWT do Supabase habilitada e reconfirma a permissão do módulo no banco.
+
+Validação local principal:
+
+```bash
+npm run test:advertising
+npm run test:advertising-complete
+npm run build
+```
+
+O workflow `advertising-foundation.yml` também executa os testes Deno e exercita o fluxo completo em um PostgreSQL temporário, incluindo proposta, cobrança, criativo, entrega e métricas.

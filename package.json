@@ -18,6 +18,7 @@
     "test:provider": "tsx scripts/check-provider-portal-security-contracts.ts",
     "test:suppliers": "tsx scripts/check-supplier-procurement-contracts.ts",
     "test:home": "tsx scripts/check-home-public-contracts.ts && npm run test:partners",
+    "test:free-tools": "tsx scripts/check-free-tools-contracts.ts",
     "test:partners": "tsx scripts/check-partners-contracts.ts && deno check supabase/functions/gsa-partner-application/index.ts",
     "test:e2e": "playwright test",
     "test:e2e:full": "playwright test",

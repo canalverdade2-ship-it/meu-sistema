@@ -22,6 +22,7 @@ import { isRouteAllowed } from './routing/routeSecurity';
 import { readSafeReturnTo } from './routing/safeReturnTo';
 import { defaultAdminPath } from './security/collaboratorAccess';
 import { supabase } from './lib/supabase';
+import { AffiliateTrackingBridge } from './components/AffiliateTrackingBridge';
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const FornecedorDashboard = lazy(() => import('./pages/Fornecedor/FornecedorDash
 const FornecedorAccessPage = lazy(() => import('./pages/Fornecedor/FornecedorAccessPage').then((module) => ({ default: module.FornecedorAccessPage })));
 const AdvertiserPortal = lazy(() => import('./pages/AdvertiserPortal').then((module) => ({ default: module.AdvertiserPortal })));
 const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore').then((module) => ({ default: module.MarketplaceGSAStore })));
+const AffiliatePublicPage = lazy(() => import('./components/public/AffiliatePublicPage').then((module) => ({ default: module.AffiliatePublicPage })));
 
 function RouteLoading() {
   return <div className="flex min-h-[50vh] items-center justify-center bg-neutral-50 text-sm font-semibold text-neutral-600" role="status">Carregando ambiente...</div>;
@@ -191,6 +193,8 @@ export default function App() {
 
   const publicPage = route.module === 'services'
     ? 'services'
+    : route.module === 'free-tools'
+      ? 'free-tools'
     : route.module === 'systems'
       ? 'systems'
       : route.module === 'partners'
@@ -205,8 +209,17 @@ export default function App() {
     <FileViewerProvider>
       <QueryClientProvider client={queryClient}>
         <div className="min-h-screen bg-[#f8f7f5] font-sans text-neutral-900">
+          <AffiliateTrackingBridge clientId={session.clientId} />
           <Suspense fallback={<RouteLoading />}>
-            {activeView === 'public' && (
+            {activeView === 'public' && route.module === 'affiliates' && (
+              <AffiliatePublicPage
+                onBack={() => navigate(routes.public.home())}
+                onLogin={() => navigate(`${routes.login.root()}?mode=login&returnTo=${encodeURIComponent(routes.client.loyalty.affiliates())}`)}
+                onRegister={() => navigate(`${routes.login.root()}?mode=register&returnTo=${encodeURIComponent(routes.client.loyalty.affiliates())}`)}
+              />
+            )}
+
+            {activeView === 'public' && route.module !== 'affiliates' && (
               <Home
                 onLoginClient={handleLoginClient}
                 onLoginAdmin={handleLoginAdmin}
@@ -223,6 +236,8 @@ export default function App() {
                     ? routes.public.home()
                     : page === 'services'
                       ? routes.public.services()
+                      : page === 'free-tools'
+                        ? routes.public.freeTools()
                       : page === 'partners'
                         ? routes.public.partners()
                         : page === 'ads'
@@ -248,6 +263,8 @@ export default function App() {
                     ? routes.public.home()
                     : page === 'services'
                       ? routes.public.services()
+                      : page === 'free-tools'
+                        ? routes.public.freeTools()
                       : page === 'partners'
                         ? routes.public.partners()
                         : page === 'ads'

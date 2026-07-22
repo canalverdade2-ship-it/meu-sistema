@@ -6,7 +6,7 @@ import { matchRoute } from '../src/routing/routeMatcher';
 
 const read = (path: string) => readFileSync(path, 'utf8');
 
-const migration = read('supabase/migrations/20260721210000_create_advertising_foundation.sql');
+const migration = read('supabase/migrations/20260721210100_create_advertising_foundation.sql');
 const gateway = read('supabase/functions/gsa-public-advertising/index.ts');
 const gatewayTest = read('supabase/functions/gsa-public-advertising/index_test.ts');
 const publicPage = read('src/components/public/AdvertisingPage.tsx');

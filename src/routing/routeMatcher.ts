@@ -64,6 +64,9 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   if (normalizedPath === '/anuncie') {
     return { pathname, search, hash, area: 'public', module: 'advertise', query };
   }
+  if (normalizedPath === '/afiliados') {
+    return { pathname, search, hash, area: 'public', module: 'affiliates', query };
+  }
 
   // 3. MARKETPLACE
   if (segments[0] === 'marketplace') {
@@ -175,6 +178,9 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     module = segments[1];
     if (segments[2]) itemId = segments[2];
     return { pathname, search, hash, area, module, itemId, query };
+  }
+  if (normalizedPath === '/servicos-gratuitos') {
+    return { pathname, search, hash, area: 'public', module: 'free-tools', query };
   }
 
   // 6. PAINEL ADMINISTRATIVO

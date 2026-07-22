@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Search, MapPin, Boxes, Package, Tag } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
+import { AdvertisingSlot } from '../../../ads/AdvertisingSlot';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
 
@@ -86,6 +87,8 @@ export function GeneralClassifiedsPage({ onBack }: { onBack: () => void }) {
           <div className="w-20" />
         </div>
       </nav>
+
+      <AdvertisingSlot placementCode="CLASSIFIEDS_BANNER_TOP" variant="banner" className="mx-auto my-4 max-w-7xl" />
 
       <div className="bg-[#1a1a1a] text-white py-12 px-5">
         <div className="max-w-7xl mx-auto">

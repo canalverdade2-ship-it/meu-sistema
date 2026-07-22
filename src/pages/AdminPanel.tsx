@@ -1,10 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ChevronDown,
+  BarChart3,
   ChevronRight,
+  ClipboardList,
   Clock,
+  CreditCard,
+  Gavel,
+  Gift,
+  Handshake,
+  HeartPulse,
+  Landmark,
+  LayoutDashboard,
   LogOut,
   Menu,
+  Megaphone,
+  MessageSquare,
+  Plane,
+  Receipt,
+  Server,
+  Settings,
+  ShieldAlert,
+  Store,
+  Tags,
+  Truck,
+  Users,
   X,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -40,10 +59,6 @@ import { PartnersAdminModule } from '../components/admin/PartnersAdminModule';
 import { AdvertisingAdminModule } from '../components/admin/AdvertisingAdminModule';
 import { FornecedoresModule } from '../components/admin/FornecedoresModule';
 import {
-  ADMIN_NAVIGATION_GROUPS,
-  type AdminNavigationEntry,
-} from '../routing/adminNavigation';
-import {
   adminPathFor,
   hasAdminModuleAccess,
   normalizeAdminModule,
@@ -57,6 +72,45 @@ interface AdminPanelProps {
   colaboradorNomeInicial?: string;
   colaboradorModulos: string[];
 }
+
+type MenuItem = { id: string; label: string; icon: typeof LayoutDashboard };
+type MenuGroup = { label: string; items: MenuItem[] };
+
+const MENU_GROUPS: MenuGroup[] = [
+  { label: 'Principal', items: [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'cadastro', label: 'Cadastros', icon: Users },
+    { id: 'fornecedores', label: 'Fornecedores', icon: Truck },
+    { id: 'operacoes', label: 'Operações', icon: ClipboardList },
+    { id: 'demandas', label: 'Minhas Demandas', icon: ClipboardList },
+    { id: 'loja', label: 'Loja GSA Store', icon: Store },
+    { id: 'classificados', label: 'Classificados GSA', icon: Tags },
+    { id: 'anuncios', label: 'GSA Anúncios', icon: Megaphone },
+    { id: 'viagens', label: 'Viagens GSA', icon: Plane },
+    { id: 'saude', label: 'GSA Saúde', icon: HeartPulse },
+    { id: 'seguros', label: 'GSA Seguros', icon: ShieldAlert },
+  ]},
+  { label: 'Financeiro', items: [
+    { id: 'financeiro', label: 'Financeiro', icon: Landmark },
+    { id: 'cobranca', label: 'Cobrança', icon: Gavel },
+    { id: 'fiscal', label: 'Fiscal', icon: Receipt },
+    { id: 'emprestimos', label: 'Empréstimos', icon: Landmark },
+    { id: 'credito_loja', label: 'Crédito da Loja', icon: CreditCard },
+  ]},
+  { label: 'Relacionamento', items: [
+    { id: 'parceiros', label: 'Parceiros', icon: Handshake },
+    { id: 'fidelidade', label: 'Fidelidade', icon: Gift },
+    { id: 'promocoes', label: 'Promoções por Quantidade', icon: Tags },
+    { id: 'area_vip', label: 'Área VIP', icon: Gift },
+    { id: 'atendimento', label: 'Atendimento', icon: MessageSquare },
+  ]},
+  { label: 'Gestão', items: [
+    { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
+    { id: 'configuracoes', label: 'Configurações', icon: Settings },
+  ]},
+  { label: 'Acesso', items: [{ id: 'acessos', label: 'Gerenciar Acessos', icon: ShieldAlert }] },
+  { label: 'Infraestrutura', items: [{ id: 'sistema', label: 'Saúde do Sistema', icon: Server }] },
+];
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
