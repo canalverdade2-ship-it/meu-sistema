@@ -1,12 +1,12 @@
 {
   "status": "failure",
-  "workflow_run_id": "29936060260",
-  "validated_sha": "f3631e3d586f8ce023b346b0351b4bf02b51325a",
-  "validated_at_utc": "2026-07-22T16:02:38Z",
+  "workflow_run_id": "29965690938",
+  "validated_sha": "ec1ffc3d9f9e75efe0de25cc134233f6402429ad",
+  "validated_at_utc": "2026-07-22T23:18:55Z",
   "scope": "collaborator-panel-authorization-session-rls-rpcs-audit",
   "migration": "20260721130000",
-  "validation": "success",
-  "database": "failure",
-  "frontend": "success",
-  "tests": "success"
+  "validation": "failure",
+  "database": "skipped",
+  "frontend": "failure",
+  "tests": "failure"
 }
