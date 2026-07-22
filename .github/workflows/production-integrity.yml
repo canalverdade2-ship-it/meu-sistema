@@ -58,6 +58,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate operational scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n scripts/backup-database.sh
+          bash -n scripts/test-database-restore.sh
+          node --check scripts/backup-storage.mjs
+          node --check scripts/verify-storage-backup.mjs
+          node --check scripts/test-storage-restore.mjs
+          node --check scripts/check-database-inventory.mjs
+
       - name: Validate contracts and strict TypeScript scope
         run: npm run test:integrity:contracts
 
