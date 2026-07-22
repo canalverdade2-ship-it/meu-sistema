@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-22T17:56:49.338Z",
+  "generated_at": "2026-07-22T23:18:07.604Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
-  "scanned_files": 321,
+  "scanned_files": 327,
   "blocker_count": 0,
-  "review_count": 11,
+  "review_count": 12,
   "blockers": [],
   "review": [
     {
@@ -88,6 +88,14 @@
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
       "line": 402,
       "excerpt": "const motivo = prompt('Por que deseja cancelar esta demanda?');"
+    },
+    {
+      "severity": "review",
+      "rule": "mock-reference",
+      "description": "Referência a mock em código executável",
+      "file": "src/components/public/AdvertisingPage.tsx",
+      "line": 694,
+      "excerpt": "{/* MOSTRADOR / PREVIEW MOCKUP DO CRIATIVO */}"
     },
     {
       "severity": "review",
