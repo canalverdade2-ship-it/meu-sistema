@@ -1,4 +1,4 @@
-name: Temporary Inspect Catalog PR
+name: Recover Real Service Packages
 
 on:
   pull_request:
@@ -9,10 +9,10 @@ permissions:
   contents: write
 
 jobs:
-  inspect:
-    if: github.head_ref == 'agent/recover-service-packages'
+  recover:
+    if: github.head_ref == 'agent/recover-service-packages' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -23,38 +23,76 @@ jobs:
         with:
           ref: agent/recover-service-packages
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Build permanent migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .recovery/service-packages.sql.part00 .recovery/service-packages.sql.part01 .recovery/service-packages.sql.part02 > supabase/migrations/20260722170000_restore_real_service_packages.sql
+      - name: Validate application
+        run: |
+          npm ci
+          npm run lint
+          npm run build
       - name: Link production project
         shell: bash
         run: |
           set -euo pipefail
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
           supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
-      - name: Inspect catalog schema
+      - name: Apply recovery in production
         shell: bash
         run: |
           set -euo pipefail
-          cat > /tmp/inspect-catalog.sql <<'SQL'
-          SELECT 'TABLE|' || table_name || '|' || column_name || '|' || data_type || '|' || is_nullable
-          FROM information_schema.columns
-          WHERE table_schema='public'
-            AND (table_name ILIKE '%servic%' OR table_name ILIKE '%pacot%')
-          ORDER BY table_name, ordinal_position;
-          SELECT 'FUNCTION|' || p.proname || '|' || pg_get_function_identity_arguments(p.oid)
-          FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-          WHERE n.nspname='public' AND p.proname IN ('gsa_public_service_catalog','gsa_admin_import_service_catalog','gsa_admin_service_catalog_snapshot','gsa_admin_save_service_package')
-          ORDER BY p.proname;
-          SELECT 'SOURCE|' || p.proname || E'\n' || pg_get_functiondef(p.oid)
-          FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
-          WHERE n.nspname='public' AND p.proname IN ('gsa_admin_import_service_catalog','gsa_public_service_catalog');
-          SQL
-          supabase db query --linked --file /tmp/inspect-catalog.sql > catalog-schema.txt
-      - name: Commit inspection
+          supabase db query --linked --file supabase/migrations/20260722170000_restore_real_service_packages.sql
+          supabase migration repair --linked --status applied 20260722170000 || true
+      - name: Verify recovered catalog
+        shell: bash
         run: |
+          set -euo pipefail
+          cat > /tmp/verify.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_pf integer;
+            v_pj integer;
+            v_public jsonb;
+          BEGIN
+            SELECT count(*) FILTER (WHERE publico='pf'), count(*) FILTER (WHERE publico='pj')
+              INTO v_pf, v_pj
+              FROM public.gsa_service_packages
+             WHERE status='ativo' AND visivel_publico;
+            IF v_pf <> 5 OR v_pj <> 7 THEN
+              RAISE EXCEPTION 'Pacotes recuperados incorretamente: PF %, PJ %', v_pf, v_pj;
+            END IF;
+            v_public := public.gsa_public_service_catalog(NULL);
+            IF jsonb_array_length(v_public->'packages') <> 12 THEN
+              RAISE EXCEPTION 'Catálogo público não retornou 12 pacotes';
+            END IF;
+            IF to_regprocedure('public.gsa_admin_service_catalog_snapshot(uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_save_service_package(uuid,text,uuid,jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_admin_delete_service_package(uuid,text,uuid)') IS NULL
+               OR to_regprocedure('public.gsa_admin_import_service_catalog(uuid,text,jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'RPCs administrativas do catálogo ausentes';
+            END IF;
+          END $$;
+          SELECT 'SERVICE_PACKAGES_RECOVERED' AS result;
+          SQL
+          supabase db query --linked --file /tmp/verify.sql | tee recovery-verification.log
+          grep -q SERVICE_PACKAGES_RECOVERED recovery-verification.log
+      - name: Publish permanent recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .recovery catalog-schema.txt recover-service-packages-branch-trigger.txt
+          rm -f .github/workflows/temp-inspect-catalog-pr.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add catalog-schema.txt
-          git commit -m 'Registrar inspeção do catálogo real'
+          git add -A
+          git commit -m 'Recuperar pacotes reais de serviços PF e PJ'
           git push origin HEAD:agent/recover-service-packages
