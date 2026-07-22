@@ -30,7 +30,7 @@ includesAll('supabase/migrations/20260721223000_complete_advertising_platform.sq
 
 includesAll('supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql', [
   'pg_advisory_xact_lock',
-  "hashtextextended('gsa_ads_serve:' || p_placement_code, 0)",
+  "hashtextextended('gsa_ads_serve:global', 0)",
   'REVOKE ALL ON FUNCTION public.gsa_ads_serve',
   'GRANT EXECUTE ON FUNCTION public.gsa_ads_serve',
 ]);
