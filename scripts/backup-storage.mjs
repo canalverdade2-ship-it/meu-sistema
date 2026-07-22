@@ -20,22 +20,24 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 });
 
 function safePathSegment(value) {
-  const normalized = String(value || '').replace(/[^a-zA-Z0-9._-]+/g, '_');
+  const normalized = String(value || '').replace(/[^a-zA-Z0-9._-]+/g, '_').slice(-120);
   if (!normalized || normalized === '.' || normalized === '..') throw new Error('Segmento de caminho inválido.');
   return normalized;
 }
 
-function safeObjectPath(objectName) {
+function normalizedObjectName(objectName) {
   const normalized = path.posix.normalize(`/${String(objectName || '')}`).slice(1);
   if (!normalized || normalized.startsWith('../') || normalized.includes('/../')) {
     throw new Error(`Caminho inseguro no Storage: ${objectName}`);
   }
-  return normalized.split('/').map(safePathSegment).join('/');
+  return normalized;
 }
 
-async function sha256(filePath) {
-  const content = await fs.readFile(filePath);
-  return crypto.createHash('sha256').update(content).digest('hex');
+function backupObjectPath(objectName) {
+  const normalized = normalizedObjectName(objectName);
+  const objectHash = crypto.createHash('sha256').update(normalized).digest('hex');
+  const basename = safePathSegment(path.posix.basename(normalized));
+  return path.posix.join(objectHash.slice(0, 2), objectHash.slice(2, 4), `${objectHash}-${basename}`);
 }
 
 async function listDirectory(bucketId, prefix = '') {
@@ -79,21 +81,23 @@ async function backupBucket(bucket, manifest) {
         throw new Error(`Limite de segurança de ${maxObjects} objetos atingido.`);
       }
 
-      const { data, error } = await supabase.storage.from(bucketId).download(objectName);
-      if (error || !data) throw new Error(`Falha ao baixar ${bucketId}/${objectName}: ${error?.message || 'sem dados'}`);
+      const normalizedName = normalizedObjectName(objectName);
+      const { data, error } = await supabase.storage.from(bucketId).download(normalizedName);
+      if (error || !data) throw new Error(`Falha ao baixar ${bucketId}/${normalizedName}: ${error?.message || 'sem dados'}`);
 
-      const relativePath = safeObjectPath(objectName);
-      const destination = path.join(bucketDirectory, relativePath);
+      const relativePath = backupObjectPath(normalizedName);
+      const destination = path.join(bucketDirectory, ...relativePath.split('/'));
       await fs.mkdir(path.dirname(destination), { recursive: true });
       const buffer = Buffer.from(await data.arrayBuffer());
-      await fs.writeFile(destination, buffer, { mode: 0o600 });
+      const contentHash = crypto.createHash('sha256').update(buffer).digest('hex');
+      await fs.writeFile(destination, buffer, { mode: 0o600, flag: 'wx' });
 
       manifest.objects.push({
         bucket: bucketId,
-        object_name: objectName,
+        object_name: normalizedName,
         backup_path: path.relative(backupDirectory, destination).replaceAll(path.sep, '/'),
         bytes: buffer.length,
-        sha256: await sha256(destination),
+        sha256: contentHash,
         content_type: entry.metadata?.mimetype || data.type || null,
         updated_at: entry.updated_at || null,
       });
@@ -125,7 +129,7 @@ for (const bucket of buckets || []) await backupBucket(bucket, manifest);
 await fs.writeFile(
   path.join(backupDirectory, 'manifest.json'),
   `${JSON.stringify(manifest, null, 2)}\n`,
-  { mode: 0o600 },
+  { mode: 0o600, flag: 'wx' },
 );
 
 console.log(`STORAGE_BACKUP_OK=${backupDirectory}`);
