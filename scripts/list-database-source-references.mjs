@@ -3,7 +3,8 @@ import path from 'node:path';
 
 const root = process.cwd();
 const outputDirectory = path.join(root, 'audit');
-const validIdentifier = /^[a-z_][a-z0-9_]*$/i;
+const validSqlIdentifier = /^[a-z_][a-z0-9_]*$/i;
+const validBucketIdentifier = /^[a-z0-9][a-z0-9_-]*$/i;
 
 function walk(directory, output = []) {
   if (!fs.existsSync(directory)) return output;
@@ -20,9 +21,9 @@ function lineNumber(content, index) {
   return content.slice(0, index).split('\n').length;
 }
 
-function addReference(target, value, filePath, line) {
+function addReference(target, value, filePath, line, validator = validSqlIdentifier) {
   const normalized = String(value || '').trim();
-  if (!validIdentifier.test(normalized)) return false;
+  if (!validator.test(normalized)) return false;
   const references = target.get(normalized) || [];
   references.push({ file: filePath, line });
   target.set(normalized, references);
@@ -54,7 +55,7 @@ for (const absolutePath of sourceFiles) {
   const filePath = path.relative(root, absolutePath).replaceAll('\\', '/');
 
   for (const match of content.matchAll(/\.storage\s*\.from\(\s*['"]([^'"]+)['"]/g)) {
-    if (!addReference(buckets, match[1], filePath, lineNumber(content, match.index))) {
+    if (!addReference(buckets, match[1], filePath, lineNumber(content, match.index), validBucketIdentifier)) {
       rejected.push({ kind: 'bucket', value: match[1], file: filePath, line: lineNumber(content, match.index) });
     }
   }
