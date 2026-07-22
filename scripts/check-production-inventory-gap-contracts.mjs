@@ -2,15 +2,20 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const migrationPath = 'supabase/migrations/20260722190000_close_production_inventory_gaps.sql';
+const finalizationPath = 'supabase/migrations/20260722190100_finalize_client_rls_and_affiliate_status.sql';
 const workflowPath = '.github/workflows/apply-production-inventory-gaps.yml';
 const mapperPath = 'scripts/list-database-source-references.mjs';
 
 const migration = fs.readFileSync(migrationPath, 'utf8');
+const finalization = fs.readFileSync(finalizationPath, 'utf8');
 const workflow = fs.readFileSync(workflowPath, 'utf8');
 const mapper = fs.readFileSync(mapperPath, 'utf8');
+const migrationPlan = `${migration}\n${finalization}`;
 
-assert.match(migration, /^BEGIN;/m, 'A migration deve iniciar transação explícita.');
-assert.match(migration, /^COMMIT;$/m, 'A migration deve concluir a transação.');
+for (const [name, sql] of [['principal', migration], ['finalização', finalization]]) {
+  assert.match(sql, /^BEGIN;/m, `A migration de ${name} deve iniciar transação explícita.`);
+  assert.match(sql, /^COMMIT;$/m, `A migration de ${name} deve concluir a transação.`);
+}
 
 const requiredRpcs = [
   'gsa_admin_affiliate_snapshot',
@@ -41,7 +46,7 @@ const requiredRpcs = [
 
 for (const rpc of requiredRpcs) {
   assert.ok(
-    migration.includes(rpc) || workflow.includes(rpc),
+    migrationPlan.includes(rpc) || workflow.includes(rpc),
     `RPC obrigatória ausente do plano de aplicação/verificação: ${rpc}`,
   );
 }
@@ -63,7 +68,7 @@ const protectedTables = [
   'promocoes_quantidade_ativadas',
 ];
 for (const table of protectedTables) {
-  assert.ok(migration.includes(table), `Tabela sem proteção declarada: ${table}`);
+  assert.ok(migrationPlan.includes(table), `Tabela sem proteção declarada: ${table}`);
   assert.ok(workflow.includes(table), `Tabela sem verificação de produção: ${table}`);
 }
 
@@ -75,10 +80,13 @@ for (const version of [
   '20260722022000',
   '20260722030000',
   '20260722190000',
+  '20260722190100',
 ]) {
   assert.ok(workflow.includes(version), `Versão não contemplada pelo workflow: ${version}`);
 }
 
+assert.match(finalization, /DROP POLICY IF EXISTS/, 'Políticas antigas devem ser removidas antes da regra canônica.');
+assert.match(finalization, /status = public\.gsa_afiliados\.status/, 'A adesão repetida não pode remover suspensão administrativa.');
 assert.match(workflow, /environment:\s*production/, 'O workflow deve usar o ambiente production.');
 assert.match(workflow, /FECHAR_INVENTARIO_PRODUCAO/, 'A confirmação manual explícita é obrigatória.');
 assert.doesNotMatch(workflow, /supabase db push/, 'O workflow não pode usar db push sobre o histórico legado.');
