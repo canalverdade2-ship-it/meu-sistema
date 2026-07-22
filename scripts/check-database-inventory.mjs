@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
@@ -6,6 +7,7 @@ const { Client } = pg;
 const root = process.cwd();
 const auditDirectory = path.join(root, 'audit');
 const migrationBaselinePath = path.join(auditDirectory, 'database-migration-baseline.json');
+const migrationConflictsPath = path.join(auditDirectory, 'database-migration-conflicts.json');
 
 function assertVersionArray(name, values) {
   if (!Array.isArray(values)) throw new Error(`${name} deve ser uma lista.`);
@@ -18,6 +20,11 @@ function assertVersionArray(name, values) {
     throw new Error(`${name} deve estar ordenada e sem duplicidades.`);
   }
   return normalized;
+}
+
+function gitBlobSha(content) {
+  const body = Buffer.isBuffer(content) ? content : Buffer.from(content);
+  return crypto.createHash('sha1').update(`blob ${body.length}\0`).update(body).digest('hex');
 }
 
 function readMigrationBaseline() {
@@ -47,6 +54,49 @@ function readMigrationBaseline() {
   };
 }
 
+function readMigrationConflicts() {
+  const ledger = JSON.parse(fs.readFileSync(migrationConflictsPath, 'utf8'));
+  if (ledger.schemaVersion !== 1 || !Array.isArray(ledger.conflicts)) {
+    throw new Error('Ledger de conflitos de migration inválido.');
+  }
+
+  const seenVersions = new Set();
+  return ledger.conflicts.map((conflict) => {
+    const version = String(conflict.version || '');
+    if (!/^\d{14}$/.test(version) || seenVersions.has(version)) {
+      throw new Error(`Versão inválida ou repetida no ledger de conflitos: ${version}`);
+    }
+    seenVersions.add(version);
+
+    if (conflict.status !== 'superseded_unapplied') {
+      throw new Error(`Status de conflito não suportado para ${version}.`);
+    }
+    if (!Array.isArray(conflict.files) || conflict.files.length < 2) {
+      throw new Error(`Conflito ${version} deve listar pelo menos dois arquivos.`);
+    }
+
+    const files = conflict.files.map((file) => {
+      const relativePath = String(file.path || '').replaceAll('\\', '/');
+      const expectedSha = String(file.gitBlobSha || '');
+      if (!relativePath.startsWith('supabase/migrations/') || !/^[0-9a-f]{40}$/.test(expectedSha)) {
+        throw new Error(`Arquivo inválido no conflito ${version}: ${relativePath}`);
+      }
+      const fileVersion = path.basename(relativePath).match(/^(\d{14})_/)?.[1];
+      if (fileVersion !== version) {
+        throw new Error(`Arquivo ${relativePath} não corresponde à versão ${version}.`);
+      }
+      return { ...file, path: relativePath, gitBlobSha: expectedSha };
+    });
+
+    return {
+      ...conflict,
+      version,
+      files,
+      supersededBy: assertVersionArray(`supersededBy(${version})`, conflict.supersededBy),
+    };
+  });
+}
+
 function walk(directory, output = []) {
   if (!fs.existsSync(directory)) return output;
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
@@ -61,14 +111,23 @@ function walk(directory, output = []) {
 function localMigrationInventory() {
   const directory = path.join(root, 'supabase', 'migrations');
   const counts = new Map();
-  for (const name of fs.readdirSync(directory)) {
+  const filesByVersion = new Map();
+
+  for (const name of fs.readdirSync(directory).sort()) {
     const version = name.match(/^(\d{14})_/i)?.[1];
     if (!version) continue;
+    const absolutePath = path.join(directory, name);
+    const relativePath = path.relative(root, absolutePath).replaceAll('\\', '/');
+    const content = fs.readFileSync(absolutePath);
+    const item = { path: relativePath, gitBlobSha: gitBlobSha(content) };
     counts.set(version, (counts.get(version) || 0) + 1);
+    filesByVersion.set(version, [...(filesByVersion.get(version) || []), item]);
   }
+
   return {
     versions: [...counts.keys()].sort(),
     counts,
+    filesByVersion,
   };
 }
 
@@ -120,33 +179,60 @@ function intersection(left, right) {
   return left.filter((value) => rightSet.has(value));
 }
 
-function duplicateCountFindings(localMigration, baseline) {
+function exactConflictMatches(localMigration, conflict) {
+  const actualFiles = [...(localMigration.filesByVersion.get(conflict.version) || [])]
+    .sort((a, b) => a.path.localeCompare(b.path));
+  const expectedFiles = [...conflict.files]
+    .map(({ path: filePath, gitBlobSha: sha }) => ({ path: filePath, gitBlobSha: sha }))
+    .sort((a, b) => a.path.localeCompare(b.path));
+  return JSON.stringify(actualFiles) === JSON.stringify(expectedFiles);
+}
+
+function duplicateFindings(localMigration, baseline, conflicts) {
+  const conflictByVersion = new Map(conflicts.map((conflict) => [conflict.version, conflict]));
   const versions = new Set([
     ...localMigration.counts.keys(),
     ...Object.keys(baseline.legacyDuplicateLocalVersionCounts),
+    ...conflictByVersion.keys(),
   ]);
   const findings = [];
+
   for (const version of [...versions].sort()) {
     const actualCount = localMigration.counts.get(version) || 0;
-    const expectedCount = baseline.legacyDuplicateLocalVersionCounts[version] || 1;
-    if (actualCount > 1 && actualCount !== expectedCount) {
-      findings.push({
-        version,
-        actualCount,
-        expectedLegacyCount: baseline.legacyDuplicateLocalVersionCounts[version] || null,
-      });
-    }
+    if (actualCount <= 1) continue;
+
+    const expectedLegacyCount = baseline.legacyDuplicateLocalVersionCounts[version];
+    if (expectedLegacyCount && actualCount === expectedLegacyCount) continue;
+
+    const conflict = conflictByVersion.get(version);
+    if (conflict && actualCount === conflict.files.length && exactConflictMatches(localMigration, conflict)) continue;
+
+    findings.push({
+      version,
+      actualCount,
+      expectedLegacyCount: expectedLegacyCount || null,
+      expectedConflictFiles: conflict?.files || null,
+      actualFiles: localMigration.filesByVersion.get(version) || [],
+    });
   }
   return findings;
 }
 
 const migrationBaseline = readMigrationBaseline();
+const migrationConflicts = readMigrationConflicts();
 const localMigration = localMigrationInventory();
-const unexpectedDuplicateMigrationVersions = duplicateCountFindings(localMigration, migrationBaseline);
+const unexpectedDuplicateMigrationVersions = duplicateFindings(localMigration, migrationBaseline, migrationConflicts);
+const missingConflictSupersedingVersions = migrationConflicts.flatMap((conflict) =>
+  conflict.supersededBy.filter((version) => !localMigration.counts.has(version)).map((version) => ({
+    conflictVersion: conflict.version,
+    missingSupersedingVersion: version,
+  })),
+);
 
 if (process.argv.includes('--validate-baseline-only')) {
-  if (unexpectedDuplicateMigrationVersions.length > 0) {
-    throw new Error(`Duplicidades de migration fora do baseline: ${JSON.stringify(unexpectedDuplicateMigrationVersions)}`);
+  const baselineFindings = [...unexpectedDuplicateMigrationVersions, ...missingConflictSupersedingVersions];
+  if (baselineFindings.length > 0) {
+    throw new Error(`Baseline/ledger de migrations inválido: ${JSON.stringify(baselineFindings)}`);
   }
   console.log('DATABASE_MIGRATION_BASELINE_OK');
   process.exit(0);
@@ -228,6 +314,7 @@ try {
   const databaseTables = tableResult.rows.map((row) => String(row.table_name)).sort();
   const databaseFunctions = functionResult.rows.map((row) => String(row.proname)).sort();
   const databaseBuckets = bucketResult.rows.map((row) => String(row.id)).sort();
+  const conflictVersions = migrationConflicts.map((conflict) => conflict.version);
 
   const allLocalOnlyVersions = difference(localMigrations, remoteMigrations);
   const allRemoteOnlyVersions = difference(remoteMigrations, localMigrations);
@@ -246,9 +333,24 @@ try {
     resolvedRemoteOnlyVersions: difference(migrationBaseline.legacyRemoteOnlyVersions, allRemoteOnlyVersions),
   };
 
+  const knownConflicts = migrationConflicts.map((conflict) => ({
+    version: conflict.version,
+    status: conflict.status,
+    exactLocalFilesVerified: exactConflictMatches(localMigration, conflict),
+    registeredRemotely: remoteMigrations.includes(conflict.version),
+    supersededBy: conflict.supersededBy,
+  }));
+
+  const recognizedLocalOnly = [
+    ...migrationBaseline.legacyLocalOnlyVersions,
+    ...conflictVersions,
+  ];
+
   const findings = {
     unexpectedDuplicateMigrationVersions,
-    missingMigrationsInDatabase: difference(allLocalOnlyVersions, migrationBaseline.legacyLocalOnlyVersions),
+    missingConflictSupersedingVersions,
+    registeredSupersededConflictVersions: conflictVersions.filter((version) => remoteMigrations.includes(version)),
+    missingMigrationsInDatabase: difference(allLocalOnlyVersions, recognizedLocalOnly),
     migrationsMissingFromRepository: difference(allRemoteOnlyVersions, migrationBaseline.legacyRemoteOnlyVersions),
     missingReferencedTables: difference(source.tables, databaseTables),
     missingReferencedRpcs: difference(source.rpcs, databaseFunctions),
@@ -271,6 +373,7 @@ try {
       capturedAt: migrationBaseline.capturedAt,
       source: migrationBaseline.source,
       observedLegacy: legacy,
+      knownConflicts,
     },
     findings,
   };
@@ -295,6 +398,7 @@ try {
     `- Duplicidades legadas já resolvidas: ${legacy.resolvedDuplicateLocalVersions.length}`,
     `- Divergências locais legadas já resolvidas: ${legacy.resolvedLocalOnlyVersions.length}`,
     `- Divergências remotas legadas já resolvidas: ${legacy.resolvedRemoteOnlyVersions.length}`,
+    `- Conflitos pós-baseline reconhecidos por hash: ${knownConflicts.length}`,
     '',
     '## Achados bloqueadores',
     '',
