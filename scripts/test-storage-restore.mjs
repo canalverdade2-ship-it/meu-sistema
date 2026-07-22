@@ -27,6 +27,15 @@ const restorePrefix = process.env.RESTORE_STORAGE_PREFIX || `restore-test-${Date
 if (!/^[a-zA-Z0-9._-]+$/.test(restorePrefix)) throw new Error('RESTORE_STORAGE_PREFIX inválido.');
 const cleanupAfterRestore = process.env.CLEANUP_AFTER_RESTORE !== 'false';
 
+function safeObjectName(value) {
+  const raw = String(value || '').replace(/\\/g, '/');
+  const normalized = path.posix.normalize(`/${raw}`).slice(1);
+  if (!normalized || raw.startsWith('/') || normalized.startsWith('../') || normalized.includes('/../')) {
+    throw new Error(`Nome de objeto inseguro no manifesto: ${value}`);
+  }
+  return normalized;
+}
+
 const supabase = createClient(targetUrl, targetServiceRoleKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
@@ -34,6 +43,7 @@ const supabase = createClient(targetUrl, targetServiceRoleKey, {
 const { data: existingBuckets, error: bucketListError } = await supabase.storage.listBuckets();
 if (bucketListError) throw new Error(`Falha ao listar buckets de destino: ${bucketListError.message}`);
 const existingIds = new Set((existingBuckets || []).map((bucket) => bucket.id));
+const createdBuckets = [];
 
 for (const bucket of manifest.buckets) {
   if (existingIds.has(bucket.id)) continue;
@@ -43,6 +53,7 @@ for (const bucket of manifest.buckets) {
     allowedMimeTypes: bucket.allowed_mime_types || undefined,
   });
   if (error) throw new Error(`Falha ao criar bucket ${bucket.id}: ${error.message}`);
+  createdBuckets.push(bucket.id);
 }
 
 const uploadedByBucket = new Map();
@@ -51,13 +62,14 @@ try {
     const localPath = path.resolve(backupDirectory, object.backup_path);
     if (!localPath.startsWith(`${backupDirectory}${path.sep}`)) throw new Error(`Caminho inválido: ${object.backup_path}`);
     const content = await fs.readFile(localPath);
-    const restoredPath = `${restorePrefix}/${object.object_name}`;
+    const objectName = safeObjectName(object.object_name);
+    const restoredPath = `${restorePrefix}/${objectName}`;
 
     const { error: uploadError } = await supabase.storage.from(object.bucket).upload(restoredPath, content, {
       contentType: object.content_type || 'application/octet-stream',
       upsert: false,
     });
-    if (uploadError) throw new Error(`Falha ao restaurar ${object.bucket}/${object.object_name}: ${uploadError.message}`);
+    if (uploadError) throw new Error(`Falha ao restaurar ${object.bucket}/${objectName}: ${uploadError.message}`);
 
     const paths = uploadedByBucket.get(object.bucket) || [];
     paths.push(restoredPath);
@@ -79,6 +91,11 @@ try {
         const { error } = await supabase.storage.from(bucket).remove(paths.slice(offset, offset + 100));
         if (error) console.error(`Falha ao limpar restauração de teste em ${bucket}:`, error.message);
       }
+    }
+
+    for (const bucket of createdBuckets.reverse()) {
+      const { error } = await supabase.storage.deleteBucket(bucket);
+      if (error) console.error(`Falha ao remover bucket temporário ${bucket}:`, error.message);
     }
   }
 }
