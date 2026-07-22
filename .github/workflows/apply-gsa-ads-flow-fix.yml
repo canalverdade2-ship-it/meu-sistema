@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/apply-gsa-ads-flow-fix.py'
+      - '.github/workflows/apply-gsa-ads-flow-fix.yml'
 
 permissions:
   contents: write
