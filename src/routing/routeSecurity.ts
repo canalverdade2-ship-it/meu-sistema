@@ -18,7 +18,7 @@ export function isRouteAllowed(
 ): boolean {
   if (area === 'client') return Boolean(session.clientId);
   if (area === 'provider') return Boolean(session.prestadorId);
-  if (area === 'supplier') return module === 'access' || Boolean(session.fornecedorId);
+  if (area === 'supplier') return ['home', 'login', 'access'].includes(module || '') || Boolean(session.fornecedorId);
   // O portal do anunciante valida o Supabase Auth e o vínculo da empresa no próprio módulo.
   if (area === 'advertiser') return true;
   if (area === 'admin') {

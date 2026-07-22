@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Code2, LogIn, MessageCircle, Palette, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Code2, LogIn, MessageCircle, Palette } from 'lucide-react';
 import { LogoGSA } from '../ui/LogoGSA';
 import { navigate } from '../../routing/navigationService';
 import { BrandJourneyPage } from './BrandJourneyPage';
@@ -105,7 +105,7 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
         <section className="overflow-hidden bg-[#e4c777] py-16 text-neutral-950">
           <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:px-8">
             <div>
-              <div className="flex items-center gap-3 text-[#6f5723]"><Palette className="h-7 w-7" /><Sparkles className="h-5 w-5" /></div>
+              <div className="flex items-center gap-3 text-[#6f5723]"><Palette className="h-7 w-7" /></div>
               <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-neutral-700">Antes da tecnologia</p>
               <h2 className="mt-3 max-w-4xl text-3xl font-black sm:text-5xl">Sua empresa ainda precisa de nome, logo, identidade e redes sociais?</h2>
               <p className="mt-5 max-w-3xl text-base leading-7 text-neutral-800">Conheça a jornada Empresa do Zero ao Digital: uma solução integrada para construir marca, site, conteúdo, canais de atendimento e presença nas redes sociais.</p>

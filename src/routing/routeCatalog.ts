@@ -18,7 +18,7 @@ export const routes = {
     client: () => '/login/cliente',
     admin: () => '/login/admin',
     provider: () => '/login/prestador',
-    supplier: () => '/fornecedor',
+    supplier: () => '/fornecedor/login',
     advertiser: () => '/anuncios/login',
     recoverPassword: () => '/login/cliente/recuperar-senha',
   },
@@ -279,7 +279,9 @@ export const routes = {
   },
   // Portal do Fornecedor
   supplier: {
-    access: () => '/fornecedor',
+    home: () => '/fornecedor',
+    login: () => '/fornecedor/login',
+    access: () => '/fornecedor/login',
     dashboard: () => '/fornecedor/dashboard',
     products: () => '/fornecedor/produtos',
     productRequest: () => '/fornecedor/produtos/novo',

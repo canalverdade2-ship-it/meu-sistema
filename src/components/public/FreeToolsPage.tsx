@@ -14,7 +14,6 @@ import {
   Palmtree,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
 import {
   calculateTerminationEstimate,
@@ -453,7 +452,7 @@ export function FreeToolsPage({ onBack, onServices }: FreeToolsPageProps) {
           <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm font-black text-white/60 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"><ArrowLeft className="h-4 w-4" /> Voltar ao início</button>
           <div className="mt-10 grid items-end gap-10 lg:grid-cols-[1fr_0.65fr]">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#d8bd73]/30 bg-[#d8bd73]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#efd991]"><Sparkles className="h-4 w-4" /> 100% grátis · sem cadastro</span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#d8bd73]/30 bg-[#d8bd73]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#efd991]">100% grátis · sem cadastro</span>
               <h1 className="mt-6 max-w-4xl text-4xl font-black leading-[1.06] tracking-tight sm:text-6xl lg:text-7xl">Informação útil para decisões mais <span className="font-serif font-medium italic text-[#d8bd73]">seguras.</span></h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-white/65 sm:text-lg">Calculadoras e simuladores gratuitos para orientar dúvidas trabalhistas, previdenciárias e financeiras em poucos minutos.</p>
             </div>

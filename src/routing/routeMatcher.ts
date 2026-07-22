@@ -221,7 +221,13 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   // 8. PORTAL DO FORNECEDOR
   if (segments[0] === 'fornecedor') {
     area = 'supplier';
-    module = segments[1] || 'access';
+    if (segments[1] === 'login') {
+      module = 'login';
+    } else if (segments[1] === 'dashboard') {
+      module = 'dashboard';
+    } else {
+      module = 'home';
+    }
     if (segments[2]) itemId = segments[2];
     return { pathname, search, hash, area, module, itemId, query };
   }

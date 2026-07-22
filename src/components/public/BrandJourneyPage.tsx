@@ -17,7 +17,6 @@ import {
   Rocket,
   Share2,
   ShoppingBag,
-  Sparkles,
   Target,
   Users,
 } from 'lucide-react';
@@ -45,7 +44,7 @@ const journey = [
 ];
 
 const services = [
-  { icon: Sparkles, title: 'Criação de nome', text: 'Nome fantasia, conceito, personalidade e direcionamento inicial da marca.' },
+  { icon: Lightbulb, title: 'Criação de nome', text: 'Nome fantasia, conceito, personalidade e direcionamento inicial da marca.' },
   { icon: Palette, title: 'Logo e identidade visual', text: 'Logo, versões, cores, tipografia, aplicações e padronização visual.' },
   { icon: LayoutTemplate, title: 'Materiais da empresa', text: 'Cartão digital, assinatura de e-mail, apresentações, catálogos e peças institucionais.' },
   { icon: Globe2, title: 'Sites e landing pages', text: 'Estrutura profissional para apresentar serviços, captar contatos e fortalecer credibilidade.' },
@@ -184,10 +183,7 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
 
           <div className="relative mx-auto grid min-h-[calc(100svh-6rem)] max-w-7xl items-center gap-14 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#e4c777]/35 bg-[#e4c777]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#e4c777]">
-                <Sparkles className="h-4 w-4" /> Sua empresa do zero ao digital
-              </div>
-              <h1 className="mt-7 max-w-4xl text-4xl font-black leading-[1.04] sm:text-6xl lg:text-7xl">
+              <h1 className="max-w-4xl text-4xl font-black leading-[1.04] sm:text-6xl lg:text-7xl">
                 Da primeira ideia a uma marca pronta para <span className="text-[#e4c777]">ser vista, lembrada e escolhida.</span>
               </h1>
               <p className="mt-7 max-w-2xl text-base leading-8 text-white/70 sm:text-lg">

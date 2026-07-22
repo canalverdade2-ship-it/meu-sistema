@@ -31,6 +31,7 @@ const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => 
 const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
 const FornecedorDashboard = lazy(() => import('./pages/Fornecedor/FornecedorDashboard').then((module) => ({ default: module.FornecedorDashboard })));
 const FornecedorAccessPage = lazy(() => import('./pages/Fornecedor/FornecedorAccessPage').then((module) => ({ default: module.FornecedorAccessPage })));
+const FornecedorLandingPage = lazy(() => import('./pages/Fornecedor/FornecedorLandingPage').then((module) => ({ default: module.FornecedorLandingPage })));
 const AdvertiserPortal = lazy(() => import('./pages/AdvertiserPortal').then((module) => ({ default: module.AdvertiserPortal })));
 const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore').then((module) => ({ default: module.MarketplaceGSAStore })));
 const AffiliatePublicPage = lazy(() => import('./components/public/AffiliatePublicPage').then((module) => ({ default: module.AffiliatePublicPage })));
@@ -99,7 +100,7 @@ export default function App() {
             setSession({ fornecedorId: (access as any).supplier_id });
             if (window.location.pathname === '/login/fornecedor') replace(routes.supplier.dashboard());
           }
-        } else if (['client', 'admin', 'provider'].includes(route.area) || (route.area === 'supplier' && route.module !== 'access')) {
+        } else if (['client', 'admin', 'provider'].includes(route.area) || (route.area === 'supplier' && !['home', 'login', 'access'].includes(route.module))) {
           const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
           replace(route.area === 'supplier' ? `${routes.login.supplier()}?returnTo=${returnTo}` : `${routes.login.root()}?returnTo=${returnTo}`);
         }
@@ -279,8 +280,15 @@ export default function App() {
               />
             )}
 
-            {((activeView === 'supplier' && route.module === 'access' && !session.fornecedorId) || (activeView === 'login' && route.module === 'fornecedor')) && (
-              <FornecedorAccessPage onLogin={handleLoginFornecedor} onBack={() => navigate(routes.public.home())} />
+            {activeView === 'supplier' && route.module === 'home' && !session.fornecedorId && (
+              <FornecedorLandingPage
+                onAccessLogin={() => navigate(routes.supplier.login())}
+                onBackToSite={() => navigate(routes.public.home())}
+              />
+            )}
+
+            {((activeView === 'supplier' && ['login', 'access'].includes(route.module) && !session.fornecedorId) || (activeView === 'login' && route.module === 'fornecedor')) && (
+              <FornecedorAccessPage onLogin={handleLoginFornecedor} onBack={() => navigate(routes.supplier.home())} />
             )}
 
             {activeView === 'marketplace' && !session.clientId && (

@@ -75,10 +75,17 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
     document.title = 'Programa de Afiliados | GSA';
     let active = true;
 
-    supabase.rpc('gsa_public_affiliate_programs').then(({ data, error }) => {
-      if (!active || error) return;
-      setRemotePrograms(normalizePrograms(data));
-    }).catch(() => undefined);
+    async function fetchPrograms() {
+      try {
+        const { data, error } = await supabase.rpc('gsa_public_affiliate_programs');
+        if (!active || error) return;
+        setRemotePrograms(normalizePrograms(data));
+      } catch {
+        // ignore
+      }
+    }
+
+    fetchPrograms();
 
     return () => {
       active = false;
