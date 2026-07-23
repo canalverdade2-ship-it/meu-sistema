@@ -1,0 +1,210 @@
+name: Finalize Advertising and Inventory Production Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/finalize-advertising-inventory-production-once.yml
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: finalize-advertising-inventory-production-once
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    name: Corrigir hardening e comprovar inventário
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 150
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_CLI_VERSION: 2.101.0
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Validate and link production project
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_DB_URL"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Reapply audited idempotent advertising hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db query --linked \
+            --file supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql \
+            2>&1 | tee advertising-atomicity-reapply.log
+          supabase db query --linked \
+            --file supabase/migrations/20260722090100_cleanup_orphan_ad_creatives.sql \
+            2>&1 | tee advertising-orphan-cleanup-reapply.log
+
+      - name: Verify hardened advertising database objects
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/verify-final-advertising.sql <<'SQL'
+          DO $$
+          DECLARE
+            v_definition text;
+          BEGIN
+            SELECT pg_get_functiondef(to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)'))
+              INTO v_definition;
+            IF v_definition IS NULL
+               OR position('pg_advisory_xact_lock' in v_definition) = 0
+               OR position('gsa_ads_serve:global' in v_definition) = 0 THEN
+              RAISE EXCEPTION 'Lock global da entrega de anúncios ausente';
+            END IF;
+            IF to_regprocedure('public.gsa_ads_list_orphan_creative_paths()') IS NULL THEN
+              RAISE EXCEPTION 'Rotina de criativos órfãos ausente';
+            END IF;
+            IF has_function_privilege('anon','public.gsa_ads_serve(text,text,text,text,text)','EXECUTE')
+               OR has_function_privilege('authenticated','public.gsa_ads_serve(text,text,text,text,text)','EXECUTE') THEN
+              RAISE EXCEPTION 'Entrega de anúncios exposta a papel não autorizado';
+            END IF;
+            IF NOT has_function_privilege('service_role','public.gsa_ads_serve(text,text,text,text,text)','EXECUTE') THEN
+              RAISE EXCEPTION 'service_role sem acesso à entrega de anúncios';
+            END IF;
+          END $$;
+          SELECT 'FINAL_ADVERTISING_HARDENING_OK' AS result;
+          SQL
+          supabase db query --linked --file /tmp/verify-final-advertising.sql \
+            2>&1 | tee advertising-final-verification.log
+          grep -q 'FINAL_ADVERTISING_HARDENING_OK' advertising-final-verification.log
+
+      - name: Deploy and verify audited advertising Edge Functions
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase functions deploy gsa-ad-delivery \
+            --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt \
+            2>&1 | tee advertising-delivery-deploy.log
+          supabase functions deploy gsa-advertising-scheduler \
+            --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt \
+            2>&1 | tee advertising-scheduler-deploy.log
+          supabase functions list --project-ref "$SUPABASE_PROJECT_ID" \
+            2>&1 | tee advertising-functions-final.log
+          grep -F 'gsa-ad-delivery' advertising-functions-final.log
+          grep -F 'gsa-advertising-scheduler' advertising-functions-final.log
+
+      - name: Verify repository and production inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test:database-inventory 2>&1 | tee final-database-inventory.log
+          grep -q 'DATABASE_INVENTORY_OK' final-database-inventory.log
+
+      - name: Run official production validation
+        id: official
+        shell: bash
+        run: |
+          set -uo pipefail
+          started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          validation_exit=0
+          gh workflow run production-environment-validation.yml \
+            --repo "$REPOSITORY" --ref main \
+            -f confirmation=VALIDAR_PRODUCAO \
+            -f apply_pending_changes=false \
+            -f run_storage_restore=false \
+            -f run_authenticated_smoke=false \
+            || validation_exit=90
+
+          run_id=""
+          if [[ "$validation_exit" -eq 0 ]]; then
+            for attempt in $(seq 1 90); do
+              run_id="$(
+                gh run list --repo "$REPOSITORY" \
+                  --workflow production-environment-validation.yml \
+                  --event workflow_dispatch --branch main --limit 30 \
+                  --json databaseId,createdAt \
+                  --jq ".[] | select(.createdAt >= \"$started_at\") | .databaseId" \
+                | head -n 1
+              )"
+              [[ -n "$run_id" ]] && break
+              sleep 5
+            done
+            [[ -n "$run_id" ]] || validation_exit=91
+          fi
+
+          if [[ "$validation_exit" -eq 0 ]]; then
+            gh run watch "$run_id" --repo "$REPOSITORY" --exit-status --interval 10 \
+              || validation_exit=$?
+          fi
+
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "exit_code=$validation_exit" >> "$GITHUB_OUTPUT"
+
+      - name: Publish final non-sensitive evidence
+        if: always()
+        shell: bash
+        env:
+          VALIDATION_RUN_ID: ${{ steps.official.outputs.run_id }}
+          VALIDATION_EXIT_CODE: ${{ steps.official.outputs.exit_code }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          result="success"
+          if [[ -z "${VALIDATION_EXIT_CODE:-}" || "${VALIDATION_EXIT_CODE}" != "0" ]]; then
+            result="failure"
+          fi
+          cat > deployment-status/final-advertising-inventory-production.json <<JSON
+          {
+            "generated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "result": "$result",
+            "advertising_atomicity_reapplied": true,
+            "orphan_cleanup_reapplied": true,
+            "edge_functions_redeployed": true,
+            "database_inventory_passed": true,
+            "official_validation": {
+              "run_id": "${VALIDATION_RUN_ID:-}",
+              "url": "${VALIDATION_RUN_ID:+https://github.com/$REPOSITORY/actions/runs/$VALIDATION_RUN_ID}",
+              "exit_code": ${VALIDATION_EXIT_CODE:-99},
+              "storage_restore": false,
+              "authenticated_smoke": false
+            }
+          }
+          JSON
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add deployment-status/final-advertising-inventory-production.json \
+            audit/database-inventory.json audit/database-inventory.md || true
+          git commit -m "Registrar fechamento de publicidade e inventário" || true
+          pushed=false
+          for attempt in $(seq 1 8); do
+            git pull --rebase origin main || { git rebase --abort || true; sleep 5; continue; }
+            if git push origin HEAD:main; then pushed=true; break; fi
+            sleep 5
+          done
+          test "$pushed" = true
+          test "$result" = success
