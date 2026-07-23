@@ -285,7 +285,7 @@ export function AdvertiserPortal() {
   );
 }
 
-function Card({ children }: { children: React.ReactNode }) { return <article className="rounded-2xl border bg-white p-5 shadow-sm">{children}</article>; }
+function Card({ children }: { key?: string; children: React.ReactNode }) { return <article className="rounded-2xl border bg-white p-5 shadow-sm">{children}</article>; }
 function ListEmpty({ empty, text, children }: { empty: boolean; text: string; children: React.ReactNode }) { return <div className="space-y-3">{empty ? <div className="rounded-2xl border border-dashed bg-white p-10 text-center text-sm font-bold text-neutral-400">{text}</div> : children}</div>; }
 function Input({ label, value, onChange, type = 'text', placeholder, disabled, dark }: { label: string; value: string; onChange: (value: string) => void; type?: string; placeholder?: string; disabled?: boolean; dark?: boolean }) { return <label className={`block text-sm font-bold ${dark ? 'text-white/70' : ''}`}>{label}<input required type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} className={`mt-1 w-full rounded-xl border px-3 py-2 font-normal outline-none disabled:opacity-60 ${dark ? 'border-white/10 bg-neutral-950 text-white' : 'bg-white'}`} /></label>; }
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) { return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><div className="w-full max-w-lg rounded-3xl bg-white p-6"><div className="mb-5 flex justify-between"><h2 className="text-xl font-black">{title}</h2><button onClick={onClose} type="button">×</button></div>{children}</div></div>; }

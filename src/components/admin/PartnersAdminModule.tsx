@@ -299,11 +299,11 @@ function FormSection({ title, icon, children }: { title: string; icon: React.Rea
   return <section className="space-y-4 rounded-2xl border border-neutral-200 bg-neutral-50/60 p-5"><h2 className="flex items-center gap-2 text-base font-black text-neutral-900">{icon}{title}</h2>{children}</section>;
 }
 
-function Field({ label, value, onChange, required = false, type = 'text', maxLength }: { label: string; value: string; onChange: (value: string) => void; required?: boolean; type?: string; maxLength?: number }) {
+function Field({ label, value, onChange, required = false, type = 'text', maxLength, placeholder }: { label: string; value: string; onChange: (value: string) => void | Promise<void>; required?: boolean; type?: string; maxLength?: number; placeholder?: string }) {
   return (
     <div className="grid gap-1.5 text-sm">
       <span className="font-bold text-neutral-800">{label}</span>
-      <input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} maxLength={maxLength} className="input-field font-normal text-neutral-900" />
+      <input required={required} type={type} value={value} onChange={(event) => { void onChange(event.target.value); }} maxLength={maxLength} placeholder={placeholder} className="input-field font-normal text-neutral-900" />
     </div>
   );
 }

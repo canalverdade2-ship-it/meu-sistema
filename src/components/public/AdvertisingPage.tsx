@@ -323,7 +323,7 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
         </form>
       </section>
 
-      <PrivacyPolicyDialog open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      <PrivacyPolicyDialog isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </main>
   );
 }

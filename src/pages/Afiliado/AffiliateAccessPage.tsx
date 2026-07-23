@@ -258,7 +258,7 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
                   </div>
 
                   <div className="flex justify-center">
-                    <PinInput value={pin} onChange={setPin} disabled={loading} onComplete={login} />
+                    <PinInput value={pin} onChange={setPin} disabled={loading} onEnter={() => { void login(); }} />
                   </div>
 
                   <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-between">

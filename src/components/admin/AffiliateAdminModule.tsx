@@ -131,7 +131,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ProgramEditor({ program, onSaved }: { program: AffiliateProgram; onSaved: () => Promise<void> | void }) {
+function ProgramEditor({ program, onSaved }: { key?: string; program: AffiliateProgram; onSaved: () => Promise<void> | void }) {
   const [draft, setDraft] = useState(program);
   const [saving, setSaving] = useState(false);
 
