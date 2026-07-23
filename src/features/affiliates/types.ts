@@ -1,5 +1,5 @@
 export type AffiliateStatus = 'ativo' | 'suspenso' | 'encerrado';
-export type AffiliateCommissionStatus = 'pendente' | 'disponivel' | 'paga' | 'revertida';
+export type AffiliateCommissionStatus = 'pendente' | 'disponivel' | 'paga' | 'estornada';
 export type AffiliatePayoutStatus = 'solicitado' | 'aprovado' | 'pago' | 'rejeitado' | 'cancelado';
 
 export interface AffiliateProfile {
@@ -77,11 +77,11 @@ export interface AffiliateSummary {
   totalPago: number;
   totalSolicitado: number;
   saqueMinimo: number;
-  pontos: number;
-  saldoCarteira: number;
-  pontosTaxa: number;
-  pontosMinimo: number;
-  pontosAtivo: boolean;
+  pontos?: number;
+  saldoCarteira?: number;
+  pontosTaxa?: number;
+  pontosMinimo?: number;
+  pontosAtivo?: boolean;
 }
 
 export interface AffiliateSnapshot {

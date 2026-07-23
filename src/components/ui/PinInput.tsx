@@ -9,9 +9,10 @@ interface PinInputProps {
   autoFocus?: boolean;
   label?: string;
   onEnter?: () => void;
+  onComplete?: () => void;
 }
 
-export function PinInput({ value, onChange, disabled = false, error = false, autoFocus = true, label, onEnter }: PinInputProps) {
+export function PinInput({ value, onChange, disabled = false, error = false, autoFocus = true, label, onEnter, onComplete }: PinInputProps) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const reduceMotion = useReducedMotion();
@@ -29,8 +30,10 @@ export function PinInput({ value, onChange, disabled = false, error = false, aut
     if (!typedValue) return;
     const newDigits = [...digits];
     newDigits[index] = typedValue.slice(-1);
-    onChange(newDigits.join('').replace(/ /g, ''));
+    const nextValue = newDigits.join('').replace(/ /g, '');
+    onChange(nextValue);
     if (index < 3) inputRefs.current[index + 1]?.focus();
+    if (nextValue.length === 4) window.setTimeout(() => onComplete?.(), 0);
   };
 
   const handleKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -61,6 +64,7 @@ export function PinInput({ value, onChange, disabled = false, error = false, aut
     if (!pastedData) return;
     onChange(pastedData);
     inputRefs.current[Math.min(pastedData.length, 3)]?.focus();
+    if (pastedData.length === 4) window.setTimeout(() => onComplete?.(), 0);
   };
 
   return (
