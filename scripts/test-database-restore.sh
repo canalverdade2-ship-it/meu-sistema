@@ -7,21 +7,10 @@ if [[ -z "$backup_file" || ! -f "$backup_file" ]]; then
   exit 1
 fi
 
-for command_name in createdb dropdb pg_restore psql sha256sum; do
-  command -v "$command_name" >/dev/null 2>&1 || {
-    echo "$command_name não está instalado." >&2
-    exit 1
-  }
-done
-
+backup_file_absolute="$(cd "$(dirname "$backup_file")" && pwd)/$(basename "$backup_file")"
+backup_directory="$(dirname "$backup_file_absolute")"
+manifest_file="$backup_directory/manifest.json"
 restore_database="gsa_restore_test_$(date -u +%Y%m%d%H%M%S)_$RANDOM"
-cleanup() {
-  dropdb --if-exists "$restore_database" >/dev/null 2>&1 || true
-}
-trap cleanup EXIT
-
-createdb "$restore_database"
-
 restore_schemas="${RESTORE_TEST_SCHEMAS:-public,supabase_migrations}"
 IFS=',' read -r -a schema_names <<< "$restore_schemas"
 restore_args=()
@@ -40,15 +29,18 @@ if [[ "${#restore_args[@]}" -eq 0 ]]; then
   exit 1
 fi
 
-pg_restore \
-  --exit-on-error \
-  --no-owner \
-  --no-acl \
-  "${restore_args[@]}" \
-  --dbname="$restore_database" \
-  "$backup_file"
+server_major=""
+if [[ -f "$manifest_file" ]] && command -v node >/dev/null 2>&1; then
+  server_major="$(node --input-type=module - "$manifest_file" <<'NODE'
+import fs from 'node:fs';
+const manifest = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+process.stdout.write(String(manifest.server_major || ''));
+NODE
+)"
+fi
 
-psql --dbname="$restore_database" -v ON_ERROR_STOP=1 <<'SQL'
+validate_restored_database() {
+  psql --dbname="$restore_database" -v ON_ERROR_STOP=1 <<'SQL'
 DO $$
 DECLARE
   v_tables integer;
@@ -78,5 +70,104 @@ END $$;
 
 SELECT 'DATABASE_RESTORE_TEST_OK' AS result;
 SQL
+}
+
+if [[ "$server_major" =~ ^[0-9]+$ ]] && command -v docker >/dev/null 2>&1; then
+  container_name="gsa-restore-pg${server_major}-${GITHUB_RUN_ID:-local}-$RANDOM"
+  restore_password="gsa_restore_${RANDOM}_${RANDOM}"
+  cleanup() {
+    docker rm -f "$container_name" >/dev/null 2>&1 || true
+  }
+  trap cleanup EXIT
+
+  docker run -d \
+    --name "$container_name" \
+    -e POSTGRES_PASSWORD="$restore_password" \
+    "postgres:${server_major}" >/dev/null
+
+  ready=false
+  for attempt in $(seq 1 60); do
+    if docker exec "$container_name" pg_isready -U postgres >/dev/null 2>&1; then
+      ready=true
+      break
+    fi
+    sleep 2
+  done
+  [[ "$ready" == true ]] || {
+    echo "PostgreSQL $server_major descartável não ficou pronto." >&2
+    exit 1
+  }
+
+  docker cp "$backup_file_absolute" "$container_name:/tmp/database.dump" >/dev/null
+  docker exec -e PGPASSWORD="$restore_password" "$container_name" \
+    createdb -U postgres "$restore_database"
+
+  docker exec \
+    -e PGPASSWORD="$restore_password" \
+    -e PGOPTIONS='-c check_function_bodies=off' \
+    "$container_name" \
+    pg_restore \
+      --exit-on-error \
+      --no-owner \
+      --no-acl \
+      "${restore_args[@]}" \
+      --username=postgres \
+      --dbname="$restore_database" \
+      /tmp/database.dump
+
+  docker exec -i -e PGPASSWORD="$restore_password" "$container_name" \
+    psql --username=postgres --dbname="$restore_database" -v ON_ERROR_STOP=1 <<'SQL'
+DO $$
+DECLARE
+  v_tables integer;
+  v_functions integer;
+BEGIN
+  SELECT count(*) INTO v_tables
+  FROM information_schema.tables
+  WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
+
+  SELECT count(*) INTO v_functions
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public';
+
+  IF v_tables = 0 THEN
+    RAISE EXCEPTION 'Restauração não contém tabelas públicas';
+  END IF;
+
+  IF v_functions = 0 THEN
+    RAISE EXCEPTION 'Restauração não contém funções públicas';
+  END IF;
+
+  IF to_regclass('supabase_migrations.schema_migrations') IS NULL THEN
+    RAISE EXCEPTION 'Histórico de migrations ausente na restauração';
+  END IF;
+END $$;
+
+SELECT 'DATABASE_RESTORE_TEST_OK' AS result;
+SQL
+else
+  for command_name in createdb dropdb pg_restore psql; do
+    command -v "$command_name" >/dev/null 2>&1 || {
+      echo "$command_name não está instalado." >&2
+      exit 1
+    }
+  done
+
+  cleanup() {
+    dropdb --if-exists "$restore_database" >/dev/null 2>&1 || true
+  }
+  trap cleanup EXIT
+
+  createdb "$restore_database"
+  PGOPTIONS='-c check_function_bodies=off' pg_restore \
+    --exit-on-error \
+    --no-owner \
+    --no-acl \
+    "${restore_args[@]}" \
+    --dbname="$restore_database" \
+    "$backup_file_absolute"
+  validate_restored_database
+fi
 
 printf 'DATABASE_RESTORE_TEST_OK=%s\n' "$restore_database"
