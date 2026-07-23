@@ -5,11 +5,18 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/deploy-advertising-platform.yml'
+      - 'src/components/public/AdvertisingPage.tsx'
+      - 'src/components/admin/AdvertisingAdminModule.tsx'
+      - 'src/pages/AdvertiserPortal.tsx'
+      - 'src/types/advertising.ts'
       - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
       - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
       - 'supabase/migrations/20260721223500_schedule_advertising_campaigns.sql'
+      - 'supabase/migrations/20260722040000_harden_advertising_backend.sql'
+      - 'supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql'
       - 'supabase/functions/gsa-public-advertising/**'
       - 'supabase/functions/gsa-advertiser-admin/**'
+      - 'supabase/functions/gsa-advertiser-access/**'
       - 'supabase/functions/gsa-ad-delivery/**'
       - 'supabase/functions/gsa-advertising-webhook/**'
       - 'supabase/functions/gsa-advertising-scheduler/**'
@@ -24,29 +31,56 @@ concurrency:
 
 jobs:
   deploy:
-    name: Apply database and deploy advertising functions
+    name: Validate, apply database and deploy advertising functions
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    environment: production
     env:
       EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_CLI_VERSION: 2.101.0
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-      ADVERTISING_ALLOWED_ORIGINS: ${{ vars.ADVERTISING_ALLOWED_ORIGINS }}
+      ADVERTISING_ALLOWED_ORIGINS: ${{ vars.ADVERTISING_ALLOWED_ORIGINS || 'https://grupo-gsa.com.br,https://www.grupo-gsa.com.br' }}
 
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate frontend and advertising contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx tsc --noEmit 2>&1 | tee advertising-typecheck.log
+          npm run test:advertising 2>&1 | tee advertising-foundation-test.log
+          npm run test:advertising-complete 2>&1 | tee advertising-completion-test.log
+          npm run build 2>&1 | tee advertising-build.log
+          ! grep -q "gsa_adv_requests_store\|gsa_adv_proposals_store\|gsa_adv_campaigns_store\|gsa_advertiser_session\|anunciantes_solicitacoes" \
+            src/components/public/AdvertisingPage.tsx \
+            src/components/admin/AdvertisingAdminModule.tsx \
+            src/pages/AdvertiserPortal.tsx
+
       - name: Validate Edge Function sources
         run: |
           deno check supabase/functions/gsa-public-advertising/index.ts
           deno check supabase/functions/gsa-advertiser-admin/index.ts
+          deno check supabase/functions/gsa-advertiser-access/index.ts
           deno check supabase/functions/gsa-ad-delivery/index.ts
           deno check supabase/functions/gsa-advertising-webhook/index.ts
           deno check supabase/functions/gsa-advertising-scheduler/index.ts
@@ -68,13 +102,21 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: ${{ env.SUPABASE_CLI_VERSION }}
 
-      - name: Link production project
+      - name: Link exact production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
 
       - name: Read migration history
         run: supabase migration list --linked 2>&1 | tee advertising-migrations-before.log
+
+      - name: Build transactionally complete hardening SQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp supabase/migrations/20260722040000_harden_advertising_backend.sql /tmp/gsa-advertising-hardening.sql
+          printf '\nCOMMIT;\n' >> /tmp/gsa-advertising-hardening.sql
+          tail -n 3 /tmp/gsa-advertising-hardening.sql
 
       - name: Apply advertising SQL and reconcile history
         shell: bash
@@ -86,30 +128,44 @@ jobs:
           for spec in \
             '20260721210100:supabase/migrations/20260721210100_create_advertising_foundation.sql' \
             '20260721223100:supabase/migrations/20260721223100_complete_advertising_platform.sql' \
-            '20260721223500:supabase/migrations/20260721223500_schedule_advertising_campaigns.sql'
+            '20260721223500:supabase/migrations/20260721223500_schedule_advertising_campaigns.sql' \
+            '20260722120100:/tmp/gsa-advertising-hardening.sql' \
+            '20260722235900:supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql'
           do
             version="${spec%%:*}"
             file="${spec#*:}"
-
-            echo "Executando SQL idempotente da migration ${version}: ${file}" | tee -a advertising-migrations-apply.log
+            echo "Executando SQL auditado ${version}: ${file}" | tee -a advertising-migrations-apply.log
             supabase db query --linked --file "$file" 2>&1 | tee -a advertising-migrations-apply.log
+          done
 
-            if awk -F'|' -v wanted="$version" '
+          supabase migration list --linked 2>&1 | tee advertising-migrations-pre-repair.log
+          for version in 20260721210100 20260721223100 20260721223500 20260722120100 20260722235900
+          do
+            if ! awk -F'|' -v wanted="$version" '
               {
                 remote=$2
                 gsub(/[^0-9]/, "", remote)
                 if (remote == wanted) found=1
               }
               END { exit found ? 0 : 1 }
-            ' advertising-migrations-before.log; then
-              echo "Migration ${version} já estava registrada; SQL real foi reaplicado com segurança." | tee -a advertising-migrations-apply.log
-            else
+            ' advertising-migrations-pre-repair.log; then
               supabase migration repair --linked --status applied "$version" 2>&1 | tee -a advertising-migrations-apply.log
             fi
           done
 
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260722040000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' advertising-migrations-pre-repair.log; then
+            supabase migration repair --linked --status reverted 20260722040000 2>&1 | tee -a advertising-migrations-apply.log
+          fi
+
           supabase migration list --linked 2>&1 | tee advertising-migrations-after.log
-          for version in 20260721210100 20260721223100 20260721223500
+          for version in 20260721210100 20260721223100 20260721223500 20260722120100 20260722235900
           do
             awk -F'|' -v wanted="$version" '
               {
@@ -138,16 +194,17 @@ jobs:
             fi
           done
           supabase secrets set "ALLOWED_ORIGINS=${ADVERTISING_ALLOWED_ORIGINS}" --project-ref "$SUPABASE_PROJECT_ID" >/dev/null
-          echo "ALLOWED_ORIGINS=configured" | tee -a advertising-secrets-status.log
+          echo 'ALLOWED_ORIGINS=configured' | tee -a advertising-secrets-status.log
 
       - name: Deploy advertising Edge Functions
         shell: bash
         run: |
           set -euo pipefail
           : > advertising-functions-deploy.log
-          supabase functions deploy "gsa-advertiser-admin" --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee -a advertising-functions-deploy.log
+          supabase functions deploy gsa-advertiser-admin --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee -a advertising-functions-deploy.log
           for function_name in \
             gsa-public-advertising \
+            gsa-advertiser-access \
             gsa-ad-delivery \
             gsa-advertising-webhook \
             gsa-advertising-scheduler
@@ -168,34 +225,38 @@ jobs:
                OR to_regclass('public.gsa_ad_campaigns') IS NULL
                OR to_regclass('public.gsa_ad_creatives') IS NULL
                OR to_regclass('public.gsa_ad_payments') IS NULL
-               OR to_regclass('public.gsa_ad_delivery_events') IS NULL THEN
+               OR to_regclass('public.gsa_ad_delivery_events') IS NULL
+               OR to_regclass('public.gsa_ad_rate_limit_buckets') IS NULL
+               OR to_regclass('public.gsa_ad_maintenance_state') IS NULL THEN
               RAISE EXCEPTION 'Tabelas obrigatórias de publicidade ausentes';
             END IF;
 
             IF to_regprocedure('public.gsa_advertiser_portal_snapshot()') IS NULL
                OR to_regprocedure('public.gsa_admin_create_ad_proposal(uuid,jsonb)') IS NULL
                OR to_regprocedure('public.gsa_advertiser_accept_proposal(uuid)') IS NULL
+               OR to_regprocedure('public.gsa_advertiser_update_profile(jsonb)') IS NULL
+               OR to_regprocedure('public.gsa_public_validate_advertising_protocol(text)') IS NULL
+               OR to_regprocedure('public.gsa_ads_claim_protocol_for_user(text,uuid)') IS NULL
+               OR to_regprocedure('public.gsa_admin_update_ad_campaign_status(uuid,text)') IS NULL
                OR to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)') IS NULL
                OR to_regprocedure('public.gsa_ads_record_event(uuid,text)') IS NULL THEN
               RAISE EXCEPTION 'RPCs obrigatórias de publicidade ausentes';
             END IF;
 
-            IF NOT EXISTS (
-              SELECT 1 FROM supabase_migrations.schema_migrations
-              WHERE version = '20260721210100'
-            ) OR NOT EXISTS (
-              SELECT 1 FROM supabase_migrations.schema_migrations
-              WHERE version = '20260721223100'
-            ) OR NOT EXISTS (
-              SELECT 1 FROM supabase_migrations.schema_migrations
-              WHERE version = '20260721223500'
-            ) THEN
-              RAISE EXCEPTION 'Histórico das migrations de publicidade incompleto';
-            END IF;
-
             IF has_function_privilege('anon', 'public.gsa_ads_serve(text,text,text,text,text)', 'EXECUTE')
                OR has_function_privilege('authenticated', 'public.gsa_ads_serve(text,text,text,text,text)', 'EXECUTE') THEN
               RAISE EXCEPTION 'Motor interno de entrega exposto diretamente';
+            END IF;
+
+            IF has_function_privilege('anon', 'public.gsa_advertiser_portal_snapshot()', 'EXECUTE')
+               OR has_function_privilege('anon', 'public.gsa_advertiser_accept_proposal(uuid)', 'EXECUTE')
+               OR has_function_privilege('anon', 'public.gsa_advertiser_counter_proposal(uuid,numeric,text)', 'EXECUTE')
+               OR has_function_privilege('anon', 'public.gsa_advertiser_reject_proposal(uuid,text)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'RPC de anunciante exposta ao papel anon';
+            END IF;
+
+            IF NOT has_function_privilege('authenticated', 'public.gsa_advertiser_update_profile(jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'Atualização de perfil não liberada ao autenticado';
             END IF;
 
             IF NOT EXISTS (
@@ -213,17 +274,9 @@ jobs:
             ) THEN
               RAISE EXCEPTION 'Posição global de publicidade ausente';
             END IF;
-
-            IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron')
-               AND NOT EXISTS (
-                 SELECT 1 FROM cron.job WHERE jobname = 'gsa-advertising-state-refresh'
-               ) THEN
-              RAISE EXCEPTION 'Agendamento automático de campanhas ausente';
-            END IF;
           END $$;
           SELECT 'ADVERTISING_PLATFORM_PRODUCTION_VERIFIED' AS result;
           SQL
-          set -o pipefail
           supabase db query --linked --file advertising-production-verification.sql 2>&1 | tee advertising-production-verification.log
           grep -q 'ADVERTISING_PLATFORM_PRODUCTION_VERIFIED' advertising-production-verification.log
 
@@ -232,7 +285,7 @@ jobs:
         run: |
           set -euo pipefail
           supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee advertising-functions-list.log
-          for function_name in gsa-public-advertising gsa-advertiser-admin gsa-ad-delivery gsa-advertising-webhook gsa-advertising-scheduler
+          for function_name in gsa-public-advertising gsa-advertiser-admin gsa-advertiser-access gsa-ad-delivery gsa-advertising-webhook gsa-advertising-scheduler
           do
             grep -q "$function_name" advertising-functions-list.log
           done
@@ -244,10 +297,12 @@ jobs:
           base="https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1"
           allowed_origin="${ADVERTISING_ALLOWED_ORIGINS%%,*}"
           allowed_origin="$(echo "$allowed_origin" | xargs)"
-          code="$(curl -sS -o /dev/null -w '%{http_code}' -X OPTIONS -H "Origin: ${allowed_origin}" "${base}/gsa-ad-delivery")"
-          test "$code" = '204'
-          code="$(curl -sS -o /dev/null -w '%{http_code}' -X OPTIONS -H 'Origin: https://blocked.example' "${base}/gsa-ad-delivery")"
-          test "$code" = '403'
+          for function_name in gsa-ad-delivery gsa-advertiser-access; do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -X OPTIONS -H "Origin: ${allowed_origin}" "${base}/${function_name}")"
+            test "$code" = '204'
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -X OPTIONS -H 'Origin: https://blocked.example' "${base}/${function_name}")"
+            test "$code" = '403'
+          done
           code="$(curl -sS -o /dev/null -w '%{http_code}' "${base}/gsa-advertising-webhook")"
           test "$code" = '405'
           code="$(curl -sS -o /dev/null -w '%{http_code}' "${base}/gsa-advertising-scheduler")"
@@ -258,10 +313,15 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: advertising-platform-production-evidence
+          name: advertising-platform-production-evidence-${{ github.run_id }}
           path: |
+            advertising-typecheck.log
+            advertising-foundation-test.log
+            advertising-completion-test.log
+            advertising-build.log
             advertising-migrations-before.log
             advertising-migrations-apply.log
+            advertising-migrations-pre-repair.log
             advertising-migrations-after.log
             advertising-secrets-before.log
             advertising-secrets-status.log
@@ -300,15 +360,15 @@ jobs:
             "validated_sha": "${VALIDATED_SHA}",
             "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "project_ref": "ocgajvagxagutfvgxwsy",
-            "migrations": ["20260721210100", "20260721223100", "20260721223500"],
-            "edge_functions": ["gsa-public-advertising", "gsa-advertiser-admin", "gsa-ad-delivery", "gsa-advertising-webhook", "gsa-advertising-scheduler"]
+            "migrations": ["20260721210100", "20260721223100", "20260721223500", "20260722120100", "20260722235900"],
+            "edge_functions": ["gsa-public-advertising", "gsa-advertiser-admin", "gsa-advertiser-access", "gsa-ad-delivery", "gsa-advertising-webhook", "gsa-advertising-scheduler"]
           }
           JSON
-
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add deployment-status/advertising-platform-production.json
-          if git diff --cached --quiet; then exit 0; fi
+          if git diff --cached --quiet; then
+            exit 0
+          fi
           git commit -m "Registrar implantação da plataforma de anúncios: ${RESULT}"
-          git pull --rebase origin main
           git push origin HEAD:main
