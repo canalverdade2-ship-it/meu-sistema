@@ -1,0 +1,173 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Building2,
+  FileCheck2,
+  FileUp,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Package,
+  Plus,
+  RefreshCw,
+  Save,
+  ShoppingCart,
+  Truck,
+  UserRound,
+  WalletCards,
+  X,
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { Modal } from '../../components/ui/Modal';
+import { LogoGSA } from '../../components/ui/LogoGSA';
+import { UniversalNotificationBell, type StandardNotification } from '../../components/ui/UniversalNotificationBell';
+import { supabase } from '../../lib/supabase';
+import { formatCurrency, formatDate, formatDateTime, generateUUID } from '../../lib/utils';
+import {
+  getSupplierSnapshot,
+  markAllSupplierNotificationsRead,
+  markSupplierNotificationRead,
+  markSupplierOrderSeen,
+  requestSupplierProduct,
+  submitSupplierDelivery,
+  uploadSupplierInvoice,
+  updateSupplierProfile,
+} from '../../lib/supplierOperations';
+import { navigate } from '../../routing/navigationService';
+import { routes } from '../../routing/routeCatalog';
+import { useAppLocation } from '../../routing/useAppLocation';
+import type { SupplierOrder, SupplierSnapshot } from '../../types/supplier';
+
+const EMPTY: SupplierSnapshot = {
+  supplier: {},
+  products: [],
+  catalog: [],
+  requests: [],
+  orders: [],
+  deliveries: [],
+  payables: [],
+  notifications: [],
+};
+
+const MENU = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: routes.supplier.dashboard() },
+  { id: 'produtos', label: 'Produtos', icon: Package, path: routes.supplier.products() },
+  { id: 'pedidos', label: 'Pedidos de compra', icon: ShoppingCart, path: routes.supplier.orders() },
+  { id: 'entregas', label: 'Entregas e NFs', icon: Truck, path: routes.supplier.deliveries() },
+  { id: 'financeiro', label: 'Financeiro', icon: WalletCards, path: routes.supplier.payables() },
+  { id: 'perfil', label: 'Perfil e pagamento', icon: UserRound, path: '/fornecedor/perfil' },
+];
+
+export function FornecedorDashboard({ fornecedorId, onLogout }: { fornecedorId: string; onLogout: () => void }) {
+  const route = useAppLocation();
+  const active = MENU.some((item) => item.id === route.module) ? route.module : 'dashboard';
+  const [snapshot, setSnapshot] = useState<SupplierSnapshot>(EMPTY);
+  const [loading, setLoading] = useState(true);
+  const [sidebar, setSidebar] = useState(false);
+  const [productOpen, setProductOpen] = useState(false);
+  const [productRequest, setProductRequest] = useState<Record<string, any> | null>(null);
+  const [deliveryOrder, setDeliveryOrder] = useState<SupplierOrder | null>(null);
+  const [saving, setSaving] = useState(false);
+  const openingOrderRef = useRef<string | null>(null);
+
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      setSnapshot(await getSupplierSnapshot());
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível carregar o portal.');
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useEffect(() => {
+    if (['home', 'login', 'access'].includes(route.module)) {
+      navigate(routes.supplier.dashboard());
+    }
+  }, [route.module]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`supplier-sync:${fornecedorId}`)
+      .on('broadcast', { event: 'refresh' }, () => void load(true))
+      .subscribe();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void load(true);
+    }, 30_000);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void load(true);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+      void supabase.removeChannel(channel);
+    };
+  }, [fornecedorId, load]);
+
+  const openOrder = useCallback(async (order: SupplierOrder) => {
+    if (openingOrderRef.current === order.id) return;
+    openingOrderRef.current = order.id;
+    setDeliveryOrder(order);
+    try {
+      if (order.status === 'enviado') {
+        await markSupplierOrderSeen(order.id);
+        await load(true);
+      }
+    } catch {
+      // A atualização visual do status não bloqueia o envio da entrega.
+    } finally {
+      openingOrderRef.current = null;
+    }
+  }, [load]);
+
+  useEffect(() => {
+    if (route.module === 'produtos' && route.itemId === 'novo') {
+      setProductRequest(null);
+      setProductOpen(true);
+    }
+  }, [route.itemId, route.module]);
+
+  useEffect(() => {
+    if (route.module !== 'pedidos' || !route.itemId || loading) return;
+    const order = snapshot.orders.find((item) => item.id === route.itemId);
+    if (order && deliveryOrder?.id !== order.id) void openOrder(order);
+  }, [deliveryOrder?.id, loading, openOrder, route.itemId, route.module, snapshot.orders]);
+
+  const formattedNotifications = useMemo<StandardNotification[]>(() => (
+    (snapshot.notifications || []).map((notification) => ({
+      id: String(notification.id || Math.random()),
+      titulo: String(notification.titulo || notification.title || 'Notificação do Fornecedor'),
+      mensagem: String(notification.mensagem || notification.message || ''),
+      lida: Boolean(notification.lida),
+      created_at: String(notification.created_at || new Date().toISOString()),
+      modulo: notification.modulo,
+      tab: notification.tab,
+      item_id: notification.item_id,
+    }))
+  ), [snapshot.notifications]);
+
+  const unread = formattedNotifications.filter((item) => !item.lida).length;
+  const pendingOrders = snapshot.orders.filter((item) => !['concluido', 'cancelado'].includes(item.status)).length;
+  const pendingDeliveries = snapshot.deliveries.filter((item) => ['em_analise', 'ajuste_solicitado'].includes(item.status)).length;
+  const receivable = snapshot.payables
+    .filter((item) => item.status !== 'cancelado')
+    .reduce((sum, item) => sum + Number(item.valor_pendente || 0), 0);
+
+  const handleMarkAsRead = async (id: string) => {
+    setSnapshot((current) => ({
+      ...current,
+      notifications: current.notifications.map((item) => String(item.id) === id ? { ...item, lida: true } : item),
+    }));
+    try {
+      await markSupplierNotificationRead(id);
+    } catch (error) {
+      console.error('Falha ao marcar notificação do fornecedor:', error);
+      await load(true);
+    }
+  };
+
