@@ -1,0 +1,23 @@
+generated_at_utc=2026-07-23T13:34:39Z
+validated_sha=2f97985f3a459f183934846010dd47beac5ab7fb
+--- affiliate migrations ---
+supabase/migrations/20260722233000_complete_affiliate_flow.sql
+--- cart and promotion migrations ---
+supabase/migrations/20260525000000_add_prazo_meses.sql
+supabase/migrations/20260609000002_add_promocoes_quantidade_ativadas.sql
+supabase/migrations/20260711121000_fix_store_checkout_discounts_coupons.sql
+supabase/migrations/20260711174000_client_operational_write_rpc.sql
+supabase/migrations/20260711174500_extend_client_operational_write_whitelist.sql
+supabase/migrations/20260711175000_extend_operational_write_final_tables.sql
+supabase/migrations/20260714056000_atomic_session_store_checkout.sql
+supabase/migrations/20260716180000_secure_client_pin_recovery.sql
+supabase/migrations/20260716183010_update_checkout_function.sql
+supabase/migrations/20260716183500_product_discount_validity.sql
+supabase/migrations/20260720232000_harden_client_portal_audit_findings.sql
+--- production database ---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                       ?column?                                                                       │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ TABLE|loja_carrinhos|rls=true|force=false|acl={postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres}                │
+│ TABLE|promocoes_quantidade_ativadas|rls=true|force=false|acl={postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=arwd/postgres} │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
