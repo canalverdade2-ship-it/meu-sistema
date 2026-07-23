@@ -1,0 +1,38 @@
+name: Observe PR225 DB Rollback Once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/observe-pr225-db-rollback-once.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Capture diagnostic run
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 35
+          run="$(gh run list --repo "$REPOSITORY" --workflow diagnose-pr225-db-rollback-once.yml --limit 5 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
+          mkdir -p deployment-status
+          jq -n --arg generated_at_utc "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson diagnostic "$run" '{generated_at_utc:$generated_at_utc,diagnostic:$diagnostic}' > deployment-status/pr225-db-rollback-progress.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add deployment-status/pr225-db-rollback-progress.json
+          git commit -m 'Registrar andamento do rollback da PR 225'
+          git pull --rebase origin main
+          git push origin HEAD:main
