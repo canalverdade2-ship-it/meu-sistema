@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-23T23:10:38.671Z",
+  "generated_at": "2026-07-23T23:28:34.048Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
   "scanned_files": 332,
   "blocker_count": 0,
-  "review_count": 8,
+  "review_count": 9,
   "blockers": [],
   "review": [
     {
@@ -64,6 +64,14 @@
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
       "line": 402,
       "excerpt": "const motivo = prompt('Por que deseja cancelar esta demanda?');"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/public/SystemsPageFinal.tsx",
+      "line": 293,
+      "excerpt": "<p className=\"text-xs leading-5 text-slate-500\">A demonstração apresenta referências conceituais. Estrutura, visual, regras e módulos são definidos para cada negócio.</p>"
     },
     {
       "severity": "review",
