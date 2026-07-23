@@ -1,33 +1,33 @@
 {
-  "generated_at_utc": "2026-07-23T11:19:29Z",
-  "controller": {
-    "conclusion": "",
-    "createdAt": "2026-07-23T11:17:07Z",
-    "databaseId": 30002548047,
+  "generated_at_utc": "2026-07-23T11:52:05Z",
+  "core_controller": {
+    "conclusion": "failure",
+    "createdAt": "2026-07-23T11:49:09Z",
+    "databaseId": 30004560083,
     "event": "push",
-    "headSha": "519e6a65e11323fdfeb918175693f9cfd9e72569",
-    "status": "pending",
-    "updatedAt": "2026-07-23T11:17:08Z",
-    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30002548047"
-  },
-  "inventory": {
-    "conclusion": "success",
-    "createdAt": "2026-07-23T11:14:53Z",
-    "databaseId": 30002402242,
-    "event": "workflow_dispatch",
-    "headSha": "e26334b5ba3559c075a6de3fcf0ec2f23d803301",
+    "headSha": "1337598b3c29c99d868869dc3f59bbee60053ec1",
     "status": "completed",
-    "updatedAt": "2026-07-23T11:15:38Z",
-    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30002402242"
+    "updatedAt": "2026-07-23T11:51:57Z",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30004560083"
+  },
+  "advertising_controller": {
+    "conclusion": "failure",
+    "createdAt": "2026-07-23T11:37:52Z",
+    "databaseId": 30003852386,
+    "event": "push",
+    "headSha": "c35e12334265fb31f49f6cabda91abad5d33b8bf",
+    "status": "completed",
+    "updatedAt": "2026-07-23T11:40:24Z",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30003852386"
   },
   "validation": {
     "conclusion": "failure",
-    "createdAt": "2026-07-23T11:15:43Z",
-    "databaseId": 30002459741,
+    "createdAt": "2026-07-23T11:49:15Z",
+    "databaseId": 30004566197,
     "event": "workflow_dispatch",
-    "headSha": "9751f0613b8bf35fe65dbf6ac1966a960f503e59",
+    "headSha": "1337598b3c29c99d868869dc3f59bbee60053ec1",
     "status": "completed",
-    "updatedAt": "2026-07-23T11:15:54Z",
-    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30002459741"
+    "updatedAt": "2026-07-23T11:51:51Z",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30004566197"
   }
 }
