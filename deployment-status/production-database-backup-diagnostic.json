@@ -1,0 +1,10 @@
+{
+  "generated_at_utc": "2026-07-23T11:42:53Z",
+  "server_version": "",
+  "server_major": "",
+  "pg_dump_version": "16.14 (Ubuntu 16.14-1.pgdg24.04+1)",
+  "pg_dump_major": "16",
+  "schema_dump_exit_code": 1,
+  "classification": "unknown",
+  "docker_available": true
+}
