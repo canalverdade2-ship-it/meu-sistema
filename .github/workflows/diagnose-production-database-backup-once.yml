@@ -14,7 +14,7 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 20
+    timeout-minutes: 45
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
     steps:
@@ -34,124 +34,102 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Diagnose without exposing credentials
+      - name: Create backup and classify restore failure safely
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
           mkdir -p deployment-status
+
+          backup_exit=0
+          backup_log="$(bash scripts/backup-database.sh "$RUNNER_TEMP/gsa-restore-diagnostic" 2>/tmp/backup-diagnostic-error.log)" || backup_exit=$?
+          backup_dir="$(sed -n 's/^DATABASE_BACKUP_OK=//p' <<< "$backup_log" | tail -n 1)"
+          restore_exit=99
+
+          if [[ "$backup_exit" -eq 0 && -n "$backup_dir" ]]; then
+            set +e
+            RESTORE_TEST_SCHEMAS=public,supabase_migrations \
+              bash scripts/test-database-restore.sh "$backup_dir/database.dump" \
+              >/tmp/restore-diagnostic-output.log \
+              2>/tmp/restore-diagnostic-error.log
+            restore_exit=$?
+            set -e
+          else
+            : > /tmp/restore-diagnostic-error.log
+          fi
+
+          BACKUP_EXIT="$backup_exit" RESTORE_EXIT="$restore_exit" BACKUP_DIR="$backup_dir" \
           node --input-type=module <<'NODE'
           import crypto from 'node:crypto';
           import fs from 'node:fs/promises';
-          import { spawnSync } from 'node:child_process';
-          import pg from 'pg';
+          import path from 'node:path';
 
-          const connectionString = process.env.SUPABASE_DB_URL;
-          const parsed = new URL(connectionString);
-          const { Client } = pg;
-          const client = new Client({ connectionString, ssl: { rejectUnauthorized: false } });
-
-          let serverVersion = '';
-          let serverVersionNum = '';
-          let nodePgConnected = false;
-          let nodePgErrorClass = '';
-          try {
-            await client.connect();
-            const result = await client.query('SHOW server_version');
-            const numberResult = await client.query('SHOW server_version_num');
-            serverVersion = String(result.rows[0]?.server_version || '');
-            serverVersionNum = String(numberResult.rows[0]?.server_version_num || '');
-            nodePgConnected = true;
-          } catch (error) {
-            nodePgErrorClass = error?.code ? String(error.code) : error?.name ? String(error.name) : 'unknown';
-          } finally {
-            await client.end().catch(() => {});
-          }
-
-          const clientVersionResult = spawnSync('pg_dump', ['--version'], { encoding: 'utf8' });
-          const clientVersion = String(clientVersionResult.stdout || '').replace(/^pg_dump \(PostgreSQL\)\s*/, '').trim();
-
-          const classify = (stderr, code) => {
-            const text = String(stderr || '');
-            const flags = {
-              version_mismatch: /server version|version mismatch/i.test(text),
-              no_password: /no password supplied/i.test(text),
-              authentication_failed: /password authentication failed|authentication failed/i.test(text),
-              tenant_or_user_not_found: /tenant or user not found|invalid tenant/i.test(text),
-              ssl_or_certificate: /ssl|certificate|root certificate/i.test(text),
-              connection_failure: /could not connect|connection to server|timeout|network|could not translate host/i.test(text),
-              permission_denied: /permission denied/i.test(text),
-              query_failed: /query failed/i.test(text),
-              unsupported_client_option: /unrecognized option|unsupported option/i.test(text),
-              prepared_statement: /prepared statement/i.test(text),
-              role_missing: /role .* does not exist/i.test(text),
-              database_missing: /database .* does not exist/i.test(text),
-            };
-            const priority = Object.entries(flags).find(([, value]) => value)?.[0] || (code === 0 ? 'success' : 'unknown');
-            return {
-              exit_code: code,
-              classification: priority,
-              flags,
-              stderr_bytes: Buffer.byteLength(text),
-              stderr_sha256: crypto.createHash('sha256').update(text).digest('hex'),
-            };
+          const read = async (file) => {
+            try { return await fs.readFile(file, 'utf8'); } catch { return ''; }
           };
+          const backupError = await read('/tmp/backup-diagnostic-error.log');
+          const restoreError = await read('/tmp/restore-diagnostic-error.log');
+          const restoreOutput = await read('/tmp/restore-diagnostic-output.log');
+          const combined = `${restoreError}\n${restoreOutput}`;
 
-          const uriDump = spawnSync('pg_dump', [
-            connectionString,
-            '--schema-only',
-            '--no-owner',
-            '--no-acl',
-            '--file=/tmp/schema-uri.sql',
-          ], {
-            encoding: 'utf8',
-            env: { ...process.env, PGCONNECT_TIMEOUT: '20', PGSSLMODE: 'require' },
-          });
+          const extract = (regex) => combined.match(regex)?.[1] || '';
+          const flags = {
+            role_missing: /role ["']?[^"'\s]+["']? does not exist/i.test(combined),
+            schema_missing: /schema ["']?[^"']+["']? does not exist/i.test(combined),
+            relation_missing: /relation ["']?[^"']+["']? does not exist/i.test(combined),
+            extension_missing: /extension ["']?[^"']+["']? is not available|could not open extension control file/i.test(combined),
+            type_missing: /type ["']?[^"']+["']? does not exist/i.test(combined),
+            function_missing: /function ["']?[^"']+["']? does not exist/i.test(combined),
+            unsupported_dump_version: /unsupported version|version mismatch/i.test(combined),
+            duplicate_object: /already exists|duplicate object/i.test(combined),
+            permission_denied: /permission denied/i.test(combined),
+            foreign_key_failure: /foreign key|violates foreign key constraint/i.test(combined),
+            check_constraint_failure: /check constraint|violates check constraint/i.test(combined),
+            syntax_error: /syntax error/i.test(combined),
+            docker_failure: /docker:|container.*not|daemon/i.test(combined),
+            function_body_failure: /check_function_bodies|error during inlining|cannot change name of input parameter/i.test(combined),
+          };
+          const classification = Object.entries(flags).find(([, value]) => value)?.[0]
+            || (Number(process.env.RESTORE_EXIT) === 0 ? 'success' : 'unknown');
 
-          const parameterDump = spawnSync('pg_dump', [
-            '-h', parsed.hostname,
-            '-p', parsed.port || '5432',
-            '-U', decodeURIComponent(parsed.username),
-            '-d', parsed.pathname.replace(/^\//, '') || 'postgres',
-            '--schema-only',
-            '--no-owner',
-            '--no-acl',
-            '--file=/tmp/schema-parameters.sql',
-          ], {
-            encoding: 'utf8',
-            env: {
-              ...process.env,
-              PGPASSWORD: decodeURIComponent(parsed.password),
-              PGCONNECT_TIMEOUT: '20',
-              PGSSLMODE: 'require',
-            },
-          });
-
-          const serverMajor = /^\d+$/.test(serverVersionNum) ? Math.floor(Number(serverVersionNum) / 10000) : null;
-          const clientMajorMatch = clientVersion.match(/^(\d+)/);
-          const clientMajor = clientMajorMatch ? Number(clientMajorMatch[1]) : null;
+          let manifest = null;
+          if (process.env.BACKUP_DIR) {
+            try {
+              manifest = JSON.parse(await fs.readFile(path.join(process.env.BACKUP_DIR, 'manifest.json'), 'utf8'));
+            } catch {}
+          }
 
           const evidence = {
             generated_at_utc: new Date().toISOString(),
-            node_pg_connected: nodePgConnected,
-            node_pg_error_class: nodePgErrorClass,
-            server_version: serverVersion,
-            server_major: serverMajor,
-            pg_dump_version: clientVersion,
-            pg_dump_major: clientMajor,
-            uri_mode: classify(uriDump.stderr, uriDump.status ?? 99),
-            parameter_mode: classify(parameterDump.stderr, parameterDump.status ?? 99),
-            docker_available: spawnSync('docker', ['--version']).status === 0,
+            backup_exit_code: Number(process.env.BACKUP_EXIT),
+            backup_error_bytes: Buffer.byteLength(backupError),
+            backup_error_sha256: crypto.createHash('sha256').update(backupError).digest('hex'),
+            backup_manifest: manifest ? {
+              server_major: manifest.server_major,
+              client_source: manifest.client_source,
+              database_bytes: manifest.database_bytes,
+              schema_bytes: manifest.schema_bytes,
+            } : null,
+            restore_exit_code: Number(process.env.RESTORE_EXIT),
+            classification,
+            flags,
+            missing_role: extract(/role ["']?([^"'\s]+)["']? does not exist/i),
+            missing_schema: extract(/schema ["']?([^"']+)["']? does not exist/i),
+            missing_relation: extract(/relation ["']?([^"']+)["']? does not exist/i),
+            missing_extension: extract(/extension ["']?([^"']+)["']? (?:is not available|could not be opened)/i),
+            missing_type: extract(/type ["']?([^"']+)["']? does not exist/i),
+            restore_error_bytes: Buffer.byteLength(combined),
+            restore_error_sha256: crypto.createHash('sha256').update(combined).digest('hex'),
           };
 
           await fs.writeFile(
-            'deployment-status/production-database-backup-diagnostic.json',
+            'deployment-status/production-database-restore-diagnostic.json',
             `${JSON.stringify(evidence, null, 2)}\n`,
           );
           NODE
 
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add deployment-status/production-database-backup-diagnostic.json
-          git commit -m "Registrar diagnóstico refinado do backup do banco"
+          git add deployment-status/production-database-restore-diagnostic.json
+          git commit -m "Registrar diagnóstico seguro da restauração do banco"
           git pull --rebase origin main
           git push origin HEAD:main
