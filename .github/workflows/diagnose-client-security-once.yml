@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   diagnose:
-    name: Diagnosticar contratos atuais do cliente
+    name: Diagnosticar contratos e Deno do cliente
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -30,22 +30,35 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Run client security contracts
-        id: contracts
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run client security and Deno validation
         shell: bash
         run: |
           set +e
           npm ci >/tmp/client-security-install.log 2>&1
           install_exit=$?
           test_exit=99
+          deno_check_exit=99
+          deno_test_exit=99
           if [[ "$install_exit" -eq 0 ]]; then
             npm run test:client-security >/tmp/client-security-test.log 2>&1
             test_exit=$?
+            deno check supabase/functions/gsa-auth-session/index.ts >/tmp/client-deno-check.log 2>&1
+            deno_check_exit=$?
+            deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts >/tmp/client-deno-test.log 2>&1
+            deno_test_exit=$?
           else
             : >/tmp/client-security-test.log
+            : >/tmp/client-deno-check.log
+            : >/tmp/client-deno-test.log
           fi
           printf '%s' "$install_exit" >/tmp/client-security-install-exit
           printf '%s' "$test_exit" >/tmp/client-security-test-exit
+          printf '%s' "$deno_check_exit" >/tmp/client-deno-check-exit
+          printf '%s' "$deno_test_exit" >/tmp/client-deno-test-exit
           exit 0
 
       - name: Build diagnostic evidence
@@ -55,9 +68,11 @@ jobs:
           set -euo pipefail
           install_exit="$(cat /tmp/client-security-install-exit 2>/dev/null || echo 99)"
           test_exit="$(cat /tmp/client-security-test-exit 2>/dev/null || echo 99)"
+          deno_check_exit="$(cat /tmp/client-deno-check-exit 2>/dev/null || echo 99)"
+          deno_test_exit="$(cat /tmp/client-deno-test-exit 2>/dev/null || echo 99)"
           mkdir -p deployment-status
 
-          INSTALL_EXIT="$install_exit" TEST_EXIT="$test_exit" node --input-type=module <<'NODE'
+          INSTALL_EXIT="$install_exit" TEST_EXIT="$test_exit" DENO_CHECK_EXIT="$deno_check_exit" DENO_TEST_EXIT="$deno_test_exit" node --input-type=module <<'NODE'
           import crypto from 'node:crypto';
           import fs from 'node:fs/promises';
 
@@ -66,20 +81,31 @@ jobs:
           };
           const installLog = await read('/tmp/client-security-install.log');
           const testLog = await read('/tmp/client-security-test.log');
-          const lines = testLog.split(/\r?\n/).filter(Boolean);
-          const tail = lines.slice(-120);
-          const failedMarkers = lines.filter((line) => /fail|error|assert|missing|ausente|esperado|expected|not found|não encontrado/i.test(line)).slice(-80);
+          const denoCheckLog = await read('/tmp/client-deno-check.log');
+          const denoTestLog = await read('/tmp/client-deno-test.log');
+          const combined = `${testLog}\n${denoCheckLog}\n${denoTestLog}`;
+          const lines = combined.split(/\r?\n/).filter(Boolean);
+          const tail = lines.slice(-180);
+          const failedMarkers = lines.filter((line) => /fail|error|assert|missing|ausente|esperado|expected|not found|não encontrado|TS\d+/i.test(line)).slice(-120);
+          const success = [
+            process.env.INSTALL_EXIT,
+            process.env.TEST_EXIT,
+            process.env.DENO_CHECK_EXIT,
+            process.env.DENO_TEST_EXIT,
+          ].every((value) => Number(value) === 0);
 
           const evidence = {
             generated_at_utc: new Date().toISOString(),
             validated_sha: process.env.GITHUB_SHA,
             install_exit_code: Number(process.env.INSTALL_EXIT),
             test_exit_code: Number(process.env.TEST_EXIT),
-            result: Number(process.env.INSTALL_EXIT) === 0 && Number(process.env.TEST_EXIT) === 0 ? 'success' : 'failure',
-            install_log_bytes: Buffer.byteLength(installLog),
+            deno_check_exit_code: Number(process.env.DENO_CHECK_EXIT),
+            deno_test_exit_code: Number(process.env.DENO_TEST_EXIT),
+            result: success ? 'success' : 'failure',
             install_log_sha256: crypto.createHash('sha256').update(installLog).digest('hex'),
-            test_log_bytes: Buffer.byteLength(testLog),
             test_log_sha256: crypto.createHash('sha256').update(testLog).digest('hex'),
+            deno_check_log_sha256: crypto.createHash('sha256').update(denoCheckLog).digest('hex'),
+            deno_test_log_sha256: crypto.createHash('sha256').update(denoTestLog).digest('hex'),
             failed_markers: failedMarkers,
             tail,
           };
@@ -104,7 +130,7 @@ jobs:
             mkdir -p deployment-status
             cp /tmp/client-security-diagnostic.json deployment-status/client-security-diagnostic.json
             git add deployment-status/client-security-diagnostic.json
-            git commit -m "Registrar diagnóstico dos contratos de segurança do cliente" || true
+            git commit -m "Registrar diagnóstico Deno do gateway do cliente" || true
             if git push origin HEAD:main; then
               published=true
               break
