@@ -23,7 +23,6 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,7 +39,6 @@ jobs:
           set -euo pipefail
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$SUPABASE_DB_PASSWORD"
-          test -n "$SUPABASE_DB_URL"
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
           supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
 
@@ -57,84 +55,53 @@ jobs:
         run: |
           set -euo pipefail
           cat > /tmp/pr225-diagnostic/query.sql <<'SQL'
-          WITH target_functions(name) AS (
-            VALUES
-              ('gsa_client_affiliate_snapshot'),
-              ('gsa_client_join_affiliate'),
-              ('gsa_client_update_affiliate_profile'),
-              ('gsa_client_create_affiliate_link'),
-              ('gsa_client_request_affiliate_payout'),
-              ('gsa_client_cancel_affiliate_payout'),
-              ('gsa_admin_affiliate_snapshot'),
-              ('gsa_admin_update_affiliate_program'),
-              ('gsa_admin_set_affiliate_status'),
-              ('gsa_admin_decide_affiliate_payout')
-          )
-          SELECT jsonb_pretty(jsonb_build_object(
-            'migration_versions', COALESCE((
-              SELECT jsonb_agg(version ORDER BY version)
-              FROM supabase_migrations.schema_migrations
-              WHERE version IN ('20260722190000','20260722190100','20260722233000','20260722233100','20260722233200')
-            ), '[]'::jsonb),
-            'functions', COALESCE((
-              SELECT jsonb_agg(jsonb_build_object(
-                'name', p.proname,
-                'signature', pg_get_function_identity_arguments(p.oid),
-                'definition_md5', md5(pg_get_functiondef(p.oid)),
-                'owner', pg_get_userbyid(p.proowner)
-              ) ORDER BY p.proname, pg_get_function_identity_arguments(p.oid))
-              FROM pg_proc p
-              JOIN pg_namespace n ON n.oid = p.pronamespace
-              JOIN target_functions t ON t.name = p.proname
-              WHERE n.nspname = 'public'
-            ), '[]'::jsonb),
-            'policies', COALESCE((
-              SELECT jsonb_agg(jsonb_build_object(
-                'table', tablename,
-                'name', policyname,
-                'roles', roles,
-                'command', cmd,
-                'using_md5', md5(COALESCE(qual,'')),
-                'check_md5', md5(COALESCE(with_check,''))
-              ) ORDER BY tablename, policyname)
-              FROM pg_policies
-              WHERE schemaname = 'public'
-                AND tablename IN ('loja_carrinhos','promocoes_quantidade_ativadas')
-            ), '[]'::jsonb),
-            'tables', COALESCE((
-              SELECT jsonb_agg(jsonb_build_object(
-                'table', c.relname,
-                'rls', c.relrowsecurity,
-                'force_rls', c.relforcerowsecurity,
-                'acl', COALESCE(c.relacl::text, '')
-              ) ORDER BY c.relname)
-              FROM pg_class c
-              JOIN pg_namespace n ON n.oid = c.relnamespace
-              WHERE n.nspname='public'
-                AND c.relname IN ('loja_carrinhos','promocoes_quantidade_ativadas')
-            ), '[]'::jsonb)
-          ));
+          SELECT 'MIGRATION|' || version
+          FROM supabase_migrations.schema_migrations
+          WHERE version IN ('20260722190000','20260722190100','20260722233000','20260722233100','20260722233200')
+          ORDER BY version;
+
+          SELECT 'FUNCTION|' || p.proname || '|' || pg_get_function_identity_arguments(p.oid) || '|' || md5(pg_get_functiondef(p.oid))
+          FROM pg_proc p
+          JOIN pg_namespace n ON n.oid = p.pronamespace
+          WHERE n.nspname = 'public'
+            AND p.proname IN (
+              'gsa_client_affiliate_snapshot','gsa_client_join_affiliate','gsa_client_update_affiliate_profile',
+              'gsa_client_create_affiliate_link','gsa_client_request_affiliate_payout','gsa_client_cancel_affiliate_payout',
+              'gsa_admin_affiliate_snapshot','gsa_admin_update_affiliate_program','gsa_admin_set_affiliate_status',
+              'gsa_admin_decide_affiliate_payout'
+            )
+          ORDER BY p.proname, pg_get_function_identity_arguments(p.oid);
+
+          SELECT 'POLICY|' || tablename || '|' || policyname || '|' || cmd || '|' || md5(coalesce(qual,'')) || '|' || md5(coalesce(with_check,''))
+          FROM pg_policies
+          WHERE schemaname = 'public'
+            AND tablename IN ('loja_carrinhos','promocoes_quantidade_ativadas')
+          ORDER BY tablename, policyname;
+
+          SELECT 'TABLE|' || c.relname || '|rls=' || c.relrowsecurity || '|force=' || c.relforcerowsecurity || '|acl=' || coalesce(c.relacl::text,'')
+          FROM pg_class c
+          JOIN pg_namespace n ON n.oid = c.relnamespace
+          WHERE n.nspname = 'public'
+            AND c.relname IN ('loja_carrinhos','promocoes_quantidade_ativadas')
+          ORDER BY c.relname;
           SQL
-          psql "$SUPABASE_DB_URL" -X -A -t -v ON_ERROR_STOP=1 -f /tmp/pr225-diagnostic/query.sql > /tmp/pr225-diagnostic/db.json
+          supabase db query --linked --file /tmp/pr225-diagnostic/query.sql 2>&1 | tee /tmp/pr225-diagnostic/db.log
 
       - name: Build sanitized evidence
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p deployment-status
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const lines = (path) => fs.existsSync(path) ? fs.readFileSync(path, 'utf8').split(/\r?\n/).filter(Boolean) : [];
-          const database = JSON.parse(fs.readFileSync('/tmp/pr225-diagnostic/db.json','utf8'));
-          const evidence = {
-            generated_at_utc: new Date().toISOString(),
-            validated_sha: process.env.GITHUB_SHA,
-            affiliate_migration_files: lines('/tmp/pr225-diagnostic/affiliate-files.txt'),
-            cart_promotion_migration_files: lines('/tmp/pr225-diagnostic/cart-promotion-files.txt'),
-            database,
-          };
-          fs.writeFileSync('deployment-status/pr225-db-rollback-diagnostic.json', `${JSON.stringify(evidence, null, 2)}\n`);
-          NODE
+          {
+            echo "generated_at_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "validated_sha=$GITHUB_SHA"
+            echo '--- affiliate migrations ---'
+            cat /tmp/pr225-diagnostic/affiliate-files.txt
+            echo '--- cart and promotion migrations ---'
+            cat /tmp/pr225-diagnostic/cart-promotion-files.txt
+            echo '--- production database ---'
+            cat /tmp/pr225-diagnostic/db.log
+          } > deployment-status/pr225-db-rollback-diagnostic.txt
 
       - name: Publish diagnostic evidence
         shell: bash
@@ -142,7 +109,7 @@ jobs:
           set -euo pipefail
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add deployment-status/pr225-db-rollback-diagnostic.json
+          git add deployment-status/pr225-db-rollback-diagnostic.txt
           git commit -m 'Registrar diagnostico do rollback da PR 225' || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
