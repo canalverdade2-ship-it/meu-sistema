@@ -105,7 +105,7 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.gsa_public_register_affiliate(p_payload jsonb)
+CREATE OR REPLACE FUNCTION public.gsa_public_register_affiliate(p_payload jsonb DEFAULT '{}'::jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER

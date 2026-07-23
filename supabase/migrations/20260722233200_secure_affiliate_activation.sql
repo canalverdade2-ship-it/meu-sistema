@@ -3,7 +3,7 @@ BEGIN;
 -- O perfil de afiliado só pode ser criado ou alterado depois que o cliente
 -- comprovar a posse da conta GSA pelo login com PIN. Mantemos a assinatura
 -- antiga apenas para responder de forma segura a clientes desatualizados.
-CREATE OR REPLACE FUNCTION public.gsa_public_register_affiliate(p_payload jsonb)
+CREATE OR REPLACE FUNCTION public.gsa_public_register_affiliate(p_payload jsonb DEFAULT '{}'::jsonb)
 RETURNS jsonb
 LANGUAGE sql
 STABLE
