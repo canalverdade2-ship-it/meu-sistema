@@ -1,0 +1,4 @@
+-- Alias histórico remoto comprovado no Supabase de produção.
+-- O SQL canônico permanece em 20260722180000_create_gsa_careers_foundation.sql.
+-- O estado atual e seguro é finalizado por 20260722235959_harden_gsa_careers_flow.sql.
+-- No-op intencional para preservar a reprodutibilidade do histórico sem reaplicar permissões antigas.
