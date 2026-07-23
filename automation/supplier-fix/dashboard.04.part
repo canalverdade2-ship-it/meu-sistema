@@ -1,0 +1,96 @@
+      bairro: supplier?.bairro || '', cidade: supplier?.cidade || '', estado: supplier?.estado || '',
+      banco: bank.banco || '', agencia: bank.agencia || '', conta: bank.conta || '', tipo_conta: bank.tipo_conta || '',
+      tipo_chave_pix: bank.tipo_chave_pix || '', chave_pix: bank.chave_pix || '', titular: bank.titular || '',
+      documento_titular: bank.documento_titular || '',
+    });
+  }, [supplier, bank.agencia, bank.banco, bank.chave_pix, bank.conta, bank.documento_titular, bank.tipo_chave_pix, bank.tipo_conta, bank.titular]);
+
+  const set = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }));
+  return (
+    <Page title="Perfil e dados de pagamento" description="Mantenha os dados de contato e recebimento atualizados para evitar atrasos no pagamento.">
+      <div className="grid gap-6 xl:grid-cols-2">
+        <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+          <h2 className="font-black">Contato e endereço</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <Field label="E-mail" value={form.email} onChange={(value) => set('email', value)} />
+            <Field label="Telefone" value={form.telefone} onChange={(value) => set('telefone', value.replace(/\D/g, '').slice(0, 11))} />
+            <Field label="CEP" value={form.cep} onChange={(value) => set('cep', value.replace(/\D/g, '').slice(0, 8))} />
+            <Field label="Endereço" value={form.endereco} onChange={(value) => set('endereco', value)} />
+            <Field label="Número" value={form.numero} onChange={(value) => set('numero', value)} />
+            <Field label="Complemento" value={form.complemento} onChange={(value) => set('complemento', value)} />
+            <Field label="Bairro" value={form.bairro} onChange={(value) => set('bairro', value)} />
+            <Field label="Cidade" value={form.cidade} onChange={(value) => set('cidade', value)} />
+            <Field label="UF" value={form.estado} onChange={(value) => set('estado', value.toUpperCase().slice(0, 2))} />
+          </div>
+        </section>
+        <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+          <h2 className="font-black">Dados bancários e PIX</h2>
+          <p className="mt-1 text-xs text-neutral-500">Os pagamentos só devem ser feitos para os dados registrados neste perfil.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <Field label="Banco" value={form.banco} onChange={(value) => set('banco', value)} />
+            <Field label="Agência" value={form.agencia} onChange={(value) => set('agencia', value)} />
+            <Field label="Conta" value={form.conta} onChange={(value) => set('conta', value)} />
+            <Field label="Tipo de conta" value={form.tipo_conta} onChange={(value) => set('tipo_conta', value)} />
+            <Field label="Tipo de chave PIX" value={form.tipo_chave_pix} onChange={(value) => set('tipo_chave_pix', value)} />
+            <Field label="Chave PIX" value={form.chave_pix} onChange={(value) => set('chave_pix', value)} />
+            <Field label="Titular" value={form.titular} onChange={(value) => set('titular', value)} />
+            <Field label="CPF/CNPJ do titular" value={form.documento_titular} onChange={(value) => set('documento_titular', value.replace(/\D/g, '').slice(0, 14))} />
+          </div>
+        </section>
+      </div>
+      <button
+        type="button"
+        disabled={saving || !form.email.trim() || ![10, 11].includes(form.telefone.length)}
+        onClick={() => void onSave({
+          email: form.email.trim(), telefone: form.telefone, cep: form.cep, endereco: form.endereco, numero: form.numero,
+          complemento: form.complemento, bairro: form.bairro, cidade: form.cidade, estado: form.estado,
+          dados_bancarios: {
+            banco: form.banco, agencia: form.agencia, conta: form.conta, tipo_conta: form.tipo_conta,
+            tipo_chave_pix: form.tipo_chave_pix, chave_pix: form.chave_pix, titular: form.titular,
+            documento_titular: form.documento_titular,
+          },
+        })}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 font-black text-white disabled:opacity-50"
+      >
+        <Save className="h-4 w-4" />{saving ? 'Salvando...' : 'Salvar perfil'}
+      </button>
+    </Page>
+  );
+}
+
+function ProductRequestModal({ isOpen, snapshot, request, saving, onClose, onSubmit }: {
+  isOpen: boolean;
+  snapshot: SupplierSnapshot;
+  request: Record<string, any> | null;
+  saving: boolean;
+  onClose: () => void;
+  onSubmit: (payload: Record<string, unknown>) => Promise<void>;
+}) {
+  const [type, setType] = useState<'existente' | 'novo'>('existente');
+  const [form, setForm] = useState({ produto_id: '', nome: '', descricao: '', codigo_barras: '', custo_unitario: '', quantidade_minima: '1', prazo_entrega_dias: '0', observacoes: '' });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const nextType = request?.tipo === 'novo' ? 'novo' : 'existente';
+    setType(nextType);
+    setForm({
+      produto_id: request?.produto_id || snapshot.catalog[0]?.id || '',
+      nome: request?.nome || '',
+      descricao: request?.descricao || '',
+      codigo_barras: request?.codigo_barras || '',
+      custo_unitario: String(request?.custo_unitario ?? ''),
+      quantidade_minima: String(request?.quantidade_minima ?? 1),
+      prazo_entrega_dias: String(request?.prazo_entrega_dias ?? 0),
+      observacoes: request?.observacoes || '',
+    });
+  }, [isOpen, request, snapshot.catalog]);
+
+  const valid = type === 'existente' ? Boolean(form.produto_id) : form.nome.trim().length >= 3;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={request ? 'Corrigir solicitação de produto' : 'Solicitar produto'} size="wide">
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 gap-2 rounded-xl bg-neutral-100 p-1">
+          <button type="button" disabled={Boolean(request)} onClick={() => setType('existente')} className={`rounded-lg py-3 text-sm font-black ${type === 'existente' ? 'bg-white shadow' : 'text-neutral-500'} disabled:opacity-60`}>Produto existente</button>
+          <button type="button" disabled={Boolean(request)} onClick={() => setType('novo')} className={`rounded-lg py-3 text-sm font-black ${type === 'novo' ? 'bg-white shadow' : 'text-neutral-500'} disabled:opacity-60`}>Novo produto</button>
+        </div>
