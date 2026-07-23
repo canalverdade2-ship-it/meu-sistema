@@ -1,5 +1,25 @@
 {
-  "generated_at_utc": "2026-07-23T12:20:27Z",
+  "generated_at_utc": "2026-07-23T12:34:11Z",
+  "client_recovery": {
+    "conclusion": "failure",
+    "createdAt": "2026-07-23T12:29:59Z",
+    "databaseId": 30007221626,
+    "event": "push",
+    "headSha": "8eafd06b8c46d7b11eb2733f69e04ec515cf8545",
+    "status": "completed",
+    "updatedAt": "2026-07-23T12:30:31Z",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30007221626"
+  },
+  "restore_diagnostic": {
+    "conclusion": "",
+    "createdAt": "2026-07-23T12:31:34Z",
+    "databaseId": 30007334194,
+    "event": "push",
+    "headSha": "5711373dd3a5abb951c06c4c983d688f41356e0e",
+    "status": "in_progress",
+    "updatedAt": "2026-07-23T12:31:38Z",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30007334194"
+  },
   "core_controller": {
     "conclusion": "failure",
     "createdAt": "2026-07-23T12:17:16Z",
