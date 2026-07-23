@@ -14,7 +14,7 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
     steps:
@@ -23,62 +23,135 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Install PostgreSQL client
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies and PostgreSQL client
         run: |
+          npm ci
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
       - name: Diagnose without exposing credentials
         shell: bash
         run: |
-          set -uo pipefail
+          set -euo pipefail
           mkdir -p deployment-status
-          server_version="$(psql "$SUPABASE_DB_URL" -Atc 'SHOW server_version' 2>/tmp/psql-error.log || true)"
-          server_version_num="$(psql "$SUPABASE_DB_URL" -Atc 'SHOW server_version_num' 2>/tmp/psql-num-error.log || true)"
-          client_version="$(pg_dump --version | sed 's/^pg_dump (PostgreSQL) //')"
+          node --input-type=module <<'NODE'
+          import crypto from 'node:crypto';
+          import fs from 'node:fs/promises';
+          import { spawnSync } from 'node:child_process';
+          import pg from 'pg';
 
-          set +e
-          pg_dump "$SUPABASE_DB_URL" --schema-only --no-owner --no-acl --file=/tmp/schema-test.sql 2>/tmp/pg-dump-error.log
-          exit_code=$?
-          set -e
+          const connectionString = process.env.SUPABASE_DB_URL;
+          const parsed = new URL(connectionString);
+          const { Client } = pg;
+          const client = new Client({ connectionString, ssl: { rejectUnauthorized: false } });
 
-          classification="unknown"
-          if [[ "$exit_code" -eq 0 ]]; then
-            classification="success"
-          elif grep -qi 'server version.*pg_dump version' /tmp/pg-dump-error.log; then
-            classification="client_server_version_mismatch"
-          elif grep -qi 'permission denied' /tmp/pg-dump-error.log; then
-            classification="permission_denied"
-          elif grep -Eqi 'could not connect|connection.*failed|timeout|network' /tmp/pg-dump-error.log; then
-            classification="connection_failure"
-          elif grep -qi 'unsupported version' /tmp/pg-dump-error.log; then
-            classification="unsupported_version"
-          elif grep -qi 'unrecognized option' /tmp/pg-dump-error.log; then
-            classification="unsupported_client_option"
-          fi
-
-          client_major="$(sed -E 's/^([0-9]+).*/\1/' <<< "$client_version")"
-          server_major=""
-          if [[ "$server_version_num" =~ ^[0-9]+$ ]]; then
-            server_major="$((server_version_num / 10000))"
-          fi
-
-          cat > deployment-status/production-database-backup-diagnostic.json <<JSON
-          {
-            "generated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "server_version": "$server_version",
-            "server_major": "${server_major}",
-            "pg_dump_version": "$client_version",
-            "pg_dump_major": "${client_major}",
-            "schema_dump_exit_code": $exit_code,
-            "classification": "$classification",
-            "docker_available": $(command -v docker >/dev/null 2>&1 && echo true || echo false)
+          let serverVersion = '';
+          let serverVersionNum = '';
+          let nodePgConnected = false;
+          let nodePgErrorClass = '';
+          try {
+            await client.connect();
+            const result = await client.query('SHOW server_version');
+            const numberResult = await client.query('SHOW server_version_num');
+            serverVersion = String(result.rows[0]?.server_version || '');
+            serverVersionNum = String(numberResult.rows[0]?.server_version_num || '');
+            nodePgConnected = true;
+          } catch (error) {
+            nodePgErrorClass = error?.code ? String(error.code) : error?.name ? String(error.name) : 'unknown';
+          } finally {
+            await client.end().catch(() => {});
           }
-          JSON
+
+          const clientVersionResult = spawnSync('pg_dump', ['--version'], { encoding: 'utf8' });
+          const clientVersion = String(clientVersionResult.stdout || '').replace(/^pg_dump \(PostgreSQL\)\s*/, '').trim();
+
+          const classify = (stderr, code) => {
+            const text = String(stderr || '');
+            const flags = {
+              version_mismatch: /server version|version mismatch/i.test(text),
+              no_password: /no password supplied/i.test(text),
+              authentication_failed: /password authentication failed|authentication failed/i.test(text),
+              tenant_or_user_not_found: /tenant or user not found|invalid tenant/i.test(text),
+              ssl_or_certificate: /ssl|certificate|root certificate/i.test(text),
+              connection_failure: /could not connect|connection to server|timeout|network|could not translate host/i.test(text),
+              permission_denied: /permission denied/i.test(text),
+              query_failed: /query failed/i.test(text),
+              unsupported_client_option: /unrecognized option|unsupported option/i.test(text),
+              prepared_statement: /prepared statement/i.test(text),
+              role_missing: /role .* does not exist/i.test(text),
+              database_missing: /database .* does not exist/i.test(text),
+            };
+            const priority = Object.entries(flags).find(([, value]) => value)?.[0] || (code === 0 ? 'success' : 'unknown');
+            return {
+              exit_code: code,
+              classification: priority,
+              flags,
+              stderr_bytes: Buffer.byteLength(text),
+              stderr_sha256: crypto.createHash('sha256').update(text).digest('hex'),
+            };
+          };
+
+          const uriDump = spawnSync('pg_dump', [
+            connectionString,
+            '--schema-only',
+            '--no-owner',
+            '--no-acl',
+            '--file=/tmp/schema-uri.sql',
+          ], {
+            encoding: 'utf8',
+            env: { ...process.env, PGCONNECT_TIMEOUT: '20', PGSSLMODE: 'require' },
+          });
+
+          const parameterDump = spawnSync('pg_dump', [
+            '-h', parsed.hostname,
+            '-p', parsed.port || '5432',
+            '-U', decodeURIComponent(parsed.username),
+            '-d', parsed.pathname.replace(/^\//, '') || 'postgres',
+            '--schema-only',
+            '--no-owner',
+            '--no-acl',
+            '--file=/tmp/schema-parameters.sql',
+          ], {
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              PGPASSWORD: decodeURIComponent(parsed.password),
+              PGCONNECT_TIMEOUT: '20',
+              PGSSLMODE: 'require',
+            },
+          });
+
+          const serverMajor = /^\d+$/.test(serverVersionNum) ? Math.floor(Number(serverVersionNum) / 10000) : null;
+          const clientMajorMatch = clientVersion.match(/^(\d+)/);
+          const clientMajor = clientMajorMatch ? Number(clientMajorMatch[1]) : null;
+
+          const evidence = {
+            generated_at_utc: new Date().toISOString(),
+            node_pg_connected: nodePgConnected,
+            node_pg_error_class: nodePgErrorClass,
+            server_version: serverVersion,
+            server_major: serverMajor,
+            pg_dump_version: clientVersion,
+            pg_dump_major: clientMajor,
+            uri_mode: classify(uriDump.stderr, uriDump.status ?? 99),
+            parameter_mode: classify(parameterDump.stderr, parameterDump.status ?? 99),
+            docker_available: spawnSync('docker', ['--version']).status === 0,
+          };
+
+          await fs.writeFile(
+            'deployment-status/production-database-backup-diagnostic.json',
+            `${JSON.stringify(evidence, null, 2)}\n`,
+          );
+          NODE
 
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add deployment-status/production-database-backup-diagnostic.json
-          git commit -m "Registrar diagnóstico do backup do banco"
+          git commit -m "Registrar diagnóstico refinado do backup do banco"
           git pull --rebase origin main
           git push origin HEAD:main
