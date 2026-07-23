@@ -1,30 +1,21 @@
 {
-  "generated_at_utc": "2026-07-23T12:20:59.768Z",
+  "generated_at_utc": "2026-07-23T12:36:09.835Z",
+  "validated_sha": "d3c9cdccdd8951aa7e9f57da9eef070683cc183f",
   "install_exit_code": 0,
-  "test_exit_code": 1,
-  "result": "failure",
-  "install_log_bytes": 614,
-  "install_log_sha256": "bb9637ea90e6ecd00300ccb84e946344c4df86a7ce173b271d81b9ac4cd54b1d",
-  "test_log_bytes": 1015,
-  "test_log_sha256": "40cd04d57f0119b8b7361bd136ec5ce5f1f255c0c0348c6308f5dbdf6243ee5d",
-  "failed_markers": [
-    "      throw new Error(`${relativePath}: contrato ausente: ${value}`);",
-    "Error: supabase/functions/gsa-auth-session/index.ts: contrato ausente: signInWithOtp",
-    "    at assertContains (/home/runner/work/meu-sistema/meu-sistema/scripts/check-client-portal-security-contracts.ts:18:13)"
-  ],
+  "test_exit_code": 0,
+  "result": "success",
+  "install_log_bytes": 615,
+  "install_log_sha256": "3b2870311451f9a2d4e9a521481697b6af23736db64044656a78c31e372744e9",
+  "test_log_bytes": 489,
+  "test_log_sha256": "7a9860793f36b34b8bc636fe7ef14f6ec4e47ec286a1767113e84849f374fc9f",
+  "failed_markers": [],
   "tail": [
     "> react-example@0.0.0 test:client-security",
     "> tsx scripts/check-client-portal-security-contracts.ts && tsx scripts/check-client-session-restore-contract.ts && npm run test:classificados",
     "Contratos críticos de segurança do painel do cliente validados.",
-    "/home/runner/work/meu-sistema/meu-sistema/scripts/check-client-portal-security-contracts.ts:18",
-    "      throw new Error(`${relativePath}: contrato ausente: ${value}`);",
-    "            ^",
-    "Error: supabase/functions/gsa-auth-session/index.ts: contrato ausente: signInWithOtp",
-    "    at assertContains (/home/runner/work/meu-sistema/meu-sistema/scripts/check-client-portal-security-contracts.ts:18:13)",
-    "    at <anonymous> (/home/runner/work/meu-sistema/meu-sistema/scripts/check-client-portal-security-contracts.ts:144:1)",
-    "    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)",
-    "    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)",
-    "    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)",
-    "Node.js v22.23.1"
+    "Regressão da restauração de sessão do cliente validada.",
+    "> react-example@0.0.0 test:classificados",
+    "> tsx scripts/check-classifieds-production-contracts.ts",
+    "Classificados validados para upload e proposta moderada reais em produção."
   ]
 }
