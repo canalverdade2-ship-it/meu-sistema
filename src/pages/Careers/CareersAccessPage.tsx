@@ -15,8 +15,9 @@ import {
 import { toast } from 'react-hot-toast';
 import { LogoGSA } from '../../components/ui/LogoGSA';
 import { supabase } from '../../lib/supabase';
-import { formatDate } from '../../lib/utils';
+import { formatDate, maskCPF } from '../../lib/utils';
 import { validarCPF } from '../../utils/cpfValidator';
+import '../../careers.css';
 
 interface CareersAccessPageProps {
   onBackToLanding: () => void;
@@ -162,7 +163,7 @@ export function CareersAccessPage({ onBackToLanding, onBackToSite }: CareersAcce
               </label>
               <label>
                 <span className="mb-2 block text-[11px] font-black uppercase tracking-wider text-neutral-300">CPF</span>
-                <input value={document} onChange={(event) => setDocument(event.target.value)} placeholder="000.000.000-00" className="career-input" inputMode="numeric" autoComplete="off" />
+                <input value={document} onChange={(event) => setDocument(maskCPF(event.target.value))} placeholder="000.000.000-00" className="career-input" inputMode="numeric" autoComplete="off" />
               </label>
               <button type="submit" disabled={loading} className="mt-auto flex h-[50px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 text-sm font-black uppercase tracking-wider text-neutral-950 hover:bg-emerald-400 disabled:opacity-60">
                 <Search className="h-4 w-4" /> {loading ? 'Buscando...' : 'Consultar'}
@@ -219,7 +220,7 @@ export function CareersAccessPage({ onBackToLanding, onBackToSite }: CareersAcce
         </div>
       </main>
 
-      <footer className="border-t border-emerald-900/30 bg-[#0a120e] py-6 text-center text-xs text-neutral-500">Grupo GSA &copy; {new Date().getFullYear()} — Portal do Candidato</footer>
+      <footer className="border-t border-emerald-900/30 bg-[#0a120e] py-6 text-center text-xs text-neutral-500">GSA HUB &copy; {new Date().getFullYear()} — Portal do Candidato</footer>
     </div>
   );
 }

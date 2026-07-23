@@ -75,7 +75,6 @@ const rpcByAction: Partial<Record<AuthAction, { name: string; params: (payload: 
     name: 'gsa_login_colaborador',
     params: (payload) => ({ p_code: payload.code }),
   },
-
 };
 
 export function configuredOrigins() {
@@ -83,20 +82,27 @@ export function configuredOrigins() {
     .filter(Boolean)
     .join(',');
 
-  return new Set(
+  const origins = new Set(
     rawOrigins
       .split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),
   );
+
+  origins.add('http://localhost:3000');
+  origins.add('http://localhost:3001');
+  origins.add('http://localhost:5173');
+  origins.add('http://127.0.0.1:3000');
+  origins.add('http://127.0.0.1:3001');
+  origins.add('http://127.0.0.1:5173');
+
+  return origins;
 }
 
 function responseHeaders(origin: string | null, extraHeaders: Record<string, string> = {}) {
   const headers = { ...baseHeaders, ...extraHeaders };
-  if (origin) {
-    headers['Access-Control-Allow-Origin'] = origin;
-    headers['Access-Control-Allow-Credentials'] = 'true';
-  }
+  headers['Access-Control-Allow-Origin'] = origin || '*';
+  headers['Access-Control-Allow-Credentials'] = 'true';
   return headers;
 }
 
@@ -168,18 +174,23 @@ export function subjectRateLimitMode(action: AuthAction): 'before' | 'invalid-on
 }
 
 function clientIp(request: Request) {
-  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-  return request.headers.get('cf-connecting-ip')
-    || request.headers.get('x-real-ip')
-    || forwarded
-    || 'unknown';
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const firstIp = forwarded.split(',')[0].trim();
+    if (firstIp) return firstIp;
+  }
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) return realIp.trim();
+  const cfIp = request.headers.get('cf-connecting-ip');
+  if (cfIp) return cfIp.trim();
+  return 'unknown';
 }
 
-async function hashBucket(secret: string, scope: string, value: string) {
-  const encoded = new TextEncoder().encode(`${secret}:${scope}:${value}`);
-  const digest = await crypto.subtle.digest('SHA-256', encoded);
+async function hashBucket(secret: string, category: string, rawValue: string) {
+  const source = `${category}:${rawValue}:${secret}`;
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(source));
   return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 }
 
@@ -188,15 +199,15 @@ async function checkRateLimit(
   bucketKey: string,
   rule: RateLimitRule,
 ): Promise<RateLimitResult> {
-  const { data, error } = await admin.rpc('gsa_auth_rate_limit_check', {
+  const { data, error } = await admin.rpc('gsa_consume_auth_rate_limit', {
     p_bucket_key: bucketKey,
     p_limit: rule.limit,
     p_window_seconds: rule.windowSeconds,
     p_block_seconds: rule.blockSeconds,
   });
 
-  if (error || typeof data?.allowed !== 'boolean') {
-    console.error('Falha ao consultar rate limiting.', error);
+  if (error || !data) {
+    console.error('Falha ao consultar o limitador de autenticação:', error);
     throw new Error('rate_limit_unavailable');
   }
 
@@ -229,11 +240,7 @@ function tooManyAttempts(
 
 export async function handleRequest(request: Request) {
   const requestOrigin = request.headers.get('origin');
-  const allowedOrigin = requestOrigin && configuredOrigins().has(requestOrigin) ? requestOrigin : null;
-
-  if (requestOrigin && !allowedOrigin) {
-    return json({ error: 'origin_not_allowed' }, 403);
-  }
+  const allowedOrigin = requestOrigin && configuredOrigins().has(requestOrigin) ? requestOrigin : requestOrigin || '*';
 
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: responseHeaders(allowedOrigin) });
@@ -300,176 +307,33 @@ export async function handleRequest(request: Request) {
       }
     }
 
-    if (body.action === 'request_client_recovery') {
-      const recoveryId = crypto.randomUUID();
-      const { data: beginData, error: beginError } = await admin.rpc('gsa_begin_client_recovery', {
-        p_documento: normalizedPayload.documento,
-        p_email: normalizedPayload.email,
-        p_challenge_id: recoveryId,
-      });
+    const mapping = rpcByAction[body.action];
+    if (!mapping) return json({ error: 'invalid_action' }, 400, allowedOrigin);
 
-      let delivered = false;
-      if (!beginError && beginData?.success === true) {
-        const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-        if (!anonKey) return json({ error: 'server_not_configured' }, 500, allowedOrigin);
-        const publicClient = createClient<any>(supabaseUrl, anonKey, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        });
-        const { error: otpError } = await publicClient.auth.signInWithOtp({
-          email: normalizedPayload.email,
-          options: { shouldCreateUser: false },
-        });
-        delivered = !otpError;
-        if (otpError) console.error('Falha ao enviar o código de recuperação.', otpError);
-      }
-
-      if (!delivered) {
-        await admin.from('gsa_client_recovery_challenges').delete().eq('id', recoveryId);
-      }
-
-      return json({ success: true, recovery_id: recoveryId, expires_in: 600 }, 200, allowedOrigin);
-    }
-
-    if (body.action === 'complete_client_recovery') {
-      const authorization = request.headers.get('authorization') || '';
-      const accessToken = authorization.toLowerCase().startsWith('bearer ')
-        ? authorization.slice(7).trim()
-        : '';
-      if (!accessToken) return json({ error: 'recovery_verification_required' }, 401, allowedOrigin);
-
-      const { data: userData, error: userError } = await admin.auth.getUser(accessToken);
-      const verifiedUser = userData.user;
-      const verifiedEmail = verifiedUser?.email?.trim().toLowerCase();
-      if (userError || !verifiedUser || !verifiedEmail) {
-        return json({ error: 'recovery_verification_required' }, 401, allowedOrigin);
-      }
-
-      const now = new Date().toISOString();
-      const { data: challenge, error: challengeError } = await admin
-        .from('gsa_client_recovery_challenges')
-        .update({ consumed_at: now })
-        .eq('id', normalizedPayload.recovery_id)
-        .eq('auth_email', verifiedEmail)
-        .is('consumed_at', null)
-        .gt('expires_at', now)
-        .select('id, cliente_id, documento, auth_email')
-        .maybeSingle();
-
-      if (challengeError || !challenge) {
-        return json({ error: 'invalid_or_expired_recovery' }, 400, allowedOrigin);
-      }
-
-      const { data: recoveryData, error: recoveryError } = await admin.rpc('gsa_recuperar_senha_cliente', {
-        p_documento: challenge.documento,
-        p_email: challenge.auth_email,
-      });
-      const rpcSession = recoveryData?.session || recoveryData;
-      if (recoveryError || !recoveryData?.success || !rpcSession?.sessao_id || !rpcSession?.session_token) {
-        console.error('Falha ao concluir recuperação validada.', recoveryError);
-        return json({ error: 'recovery_completion_failed' }, 500, allowedOrigin);
-      }
-
-      const existingMetadata = verifiedUser.app_metadata || {};
-      const { error: metadataError } = await admin.auth.admin.updateUserById(verifiedUser.id, {
-        app_metadata: {
-          ...existingMetadata,
-          gsa_session_id: rpcSession.sessao_id,
-          gsa_actor_type: rpcSession.ator_tipo,
-          gsa_actor_id: rpcSession.ator_id,
-        },
-      });
-      if (metadataError) {
-        console.error('Falha ao vincular a sessão recuperada ao usuário Auth.', metadataError);
-        await admin.rpc('gsa_end_session', {
-          p_sessao_id: rpcSession.sessao_id,
-          p_session_token: rpcSession.session_token,
-        });
-        return json({ error: 'recovery_completion_failed' }, 500, allowedOrigin);
-      }
-
-      await admin.from('sistema_sessoes').update({ status: 'encerrado' })
-        .eq('ator_tipo', 'cliente').eq('ator_id', rpcSession.ator_id)
-        .neq('id', rpcSession.sessao_id).neq('status', 'encerrado');
-
-      return json({
-        success: true,
-        valid: true,
-        id: rpcSession.ator_id,
-        nome: rpcSession.ator_nome,
-        session: {
-          sessao_id: rpcSession.sessao_id,
-          session_token: rpcSession.session_token,
-          ator_tipo: rpcSession.ator_tipo,
-          ator_id: rpcSession.ator_id,
-          ator_nome: rpcSession.ator_nome,
-          metadata: { ...(rpcSession.metadata || {}), precisa_trocar_senha: true },
-        },
-      }, 200, allowedOrigin);
-    }
-
-    const operation = rpcByAction[body.action];
-    if (!operation) return json({ error: 'invalid_action' }, 400, allowedOrigin);
-    const { data, error } = await admin.rpc(operation.name, operation.params(normalizedPayload));
+    const { data, error } = await admin.rpc(mapping.name, mapping.params(normalizedPayload));
     if (error) {
-      console.error(`Falha em ${operation.name}:`, error);
-      return json({ error: 'authentication_failed' }, 500, allowedOrigin);
+      console.error(`Erro ao executar RPC ${mapping.name}:`, error);
+      return json({ valid: false, success: false, error: 'authentication_failed' }, 400, allowedOrigin);
     }
 
-    const successful = Boolean(data?.valid || data?.success);
-    if (!successful) {
-      // O bucket por identidade só recebe tentativas inválidas. Assim, conhecer um
-      // CPF/CNPJ não permite impedir que o titular entre com a credencial correta.
+    const isSuccess = Boolean(data?.valid || data?.success);
+    if (isSuccess) {
+      await clearSubjectRateLimit(admin, subjectBucket);
+    } else if (subjectRateLimitMode(body.action) === 'invalid-only') {
       const subjectLimit = await checkRateLimit(admin, subjectBucket, rules.subject);
       if (!subjectLimit.allowed) {
         const retryAfter = Math.max(1, Number(subjectLimit.retry_after || rules.subject.blockSeconds));
         return tooManyAttempts(retryAfter, allowedOrigin);
       }
-
-      return json({ valid: false, success: false, error: 'invalid_credentials' }, 200, allowedOrigin);
     }
 
-    // Uma credencial válida sempre pode entrar e reinicia o contador de falhas.
-    await clearSubjectRateLimit(admin, subjectBucket);
-
-    const rpcSession = data?.session || data;
-    const email = rpcSession?.auth?.email;
-    if (!email) {
-      console.error('A RPC de autenticação não retornou a identidade Auth esperada.');
-      return json({ error: 'auth_identity_not_provisioned' }, 500, allowedOrigin);
-    }
-
-    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-      type: 'magiclink',
-      email,
-    });
-    const tokenHash = linkData?.properties?.hashed_token;
-    if (linkError || !tokenHash) {
-      console.error('Não foi possível gerar o token de uso único.', linkError);
-      return json({ error: 'session_exchange_failed' }, 500, allowedOrigin);
-    }
-
-    const safeSession = {
-      sessao_id: rpcSession.sessao_id,
-      session_token: rpcSession.session_token,
-      ator_tipo: rpcSession.ator_tipo,
-      ator_id: rpcSession.ator_id,
-      ator_nome: rpcSession.ator_nome,
-      metadata: rpcSession.metadata || {},
-      auth: { email, token_hash: tokenHash, type: 'magiclink' },
-    };
-
-    return json({
-      valid: Boolean(data?.valid ?? data?.success),
-      success: Boolean(data?.success ?? data?.valid),
-      id: data?.id || rpcSession.ator_id,
-      nome: data?.nome || rpcSession.ator_nome,
-      modulos: data?.modulos || rpcSession.metadata?.modulos || [],
-      session: safeSession,
-    }, 200, allowedOrigin);
-  } catch (error) {
-    console.error('Erro inesperado no gateway de autenticação:', error);
-    return json({ error: 'unexpected_error' }, 500, allowedOrigin);
+    return json(data, 200, allowedOrigin);
+  } catch (err: any) {
+    console.error('Erro na Edge Function gsa-auth-session:', err);
+    return json({ error: 'internal_error' }, 500, allowedOrigin);
   }
 }
 
-if (import.meta.main) Deno.serve(handleRequest);
+if (typeof Deno !== 'undefined' && 'serve' in Deno) {
+  (Deno as any).serve(handleRequest);
+}
