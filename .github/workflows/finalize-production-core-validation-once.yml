@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - .github/workflows/finalize-production-core-validation-once.yml
+      - scripts/backup-database.sh
 
 permissions:
   actions: write
