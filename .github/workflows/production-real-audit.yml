@@ -32,21 +32,35 @@ jobs:
         with:
           node-version: 22
 
-      - name: Scan runtime for demonstrations and simulations
-        run: node scripts/audit-production-real.mjs
-
-      - name: Commit current audit report
+      - name: Restore original GSA Ads colors
         shell: bash
         run: |
           set -euo pipefail
-          if test -z "$(git status --porcelain -- audit/production-real-audit.json audit/production-real-audit.md)"; then
-            echo 'Relatório sem mudanças.'
+          python3 scripts/restore-gsa-ads-colors.py
+          git diff --check
+          grep -q 'bg-neutral-950/90 backdrop-blur-xl' src/components/public/AdvertisingPage.tsx
+          grep -q 'radial-gradient(circle_at_top_right' src/components/public/AdvertisingPage.tsx
+          grep -q 'border-neutral-200 bg-white' src/components/admin/AdvertisingAdminModule.tsx
+          grep -q 'bg-white/95 backdrop-blur-xl' src/pages/AdvertiserPortal.tsx
+          grep -q 'bg-neutral-950 p-3 text-white' src/pages/AdvertiserPortal.tsx
+          ! grep -q 'gsa_adv_requests_store\|gsa_adv_proposals_store\|gsa_adv_campaigns_store\|gsa_advertiser_session\|anunciantes_solicitacoes' src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
+
+      - name: Scan runtime for demonstrations and simulations
+        run: node scripts/audit-production-real.mjs
+
+      - name: Commit current audit report and restored colors
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -z "$(git status --porcelain -- audit/production-real-audit.json audit/production-real-audit.md src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx)"; then
+            echo 'Relatório e identidade visual sem mudanças.'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add audit/production-real-audit.json audit/production-real-audit.md
-          git commit -m 'Atualizar auditoria de operação real'
+          git add audit/production-real-audit.json audit/production-real-audit.md src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
+          git diff --cached --check
+          git commit -m 'Restaurar cores originais do GSA Anúncios e atualizar auditoria'
           git pull --rebase origin main
           git push origin HEAD:main
 
