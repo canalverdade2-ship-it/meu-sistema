@@ -1,5 +1,3 @@
-// Mantém a identidade visual pública alinhada ao padrão original da GSA.
-// Atualização visual validada sem alteração da lógica operacional.
 import { Mail, MessageCircle } from 'lucide-react';
 import { LogoGSA } from '../../ui/LogoGSA';
 import type { PublicPage } from '../../../data/publicServiceCatalog';
