@@ -1,0 +1,145 @@
+name: One-time Apply Supplier Portal Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apply-supplier-production.trigger'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: one-time-apply-supplier-production
+  cancel-in-progress: false
+
+env:
+  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 45
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Validate supplier application
+        run: |
+          set -euo pipefail
+          npx tsc --noEmit
+          npm run test:suppliers
+          npm run build
+
+      - name: Validate exact production target
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Record migration history before apply
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee supplier-migrations-before.log
+
+      - name: Apply complete supplier flow
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          for migration in \
+            supabase/migrations/20260722020000_supplier_procurement_foundation.sql \
+            supabase/migrations/20260722021000_supplier_auth_and_onboarding.sql \
+            supabase/migrations/20260722022000_supplier_procurement_operations.sql \
+            supabase/migrations/20260723050000_supplier_onboarding_completion.sql \
+            supabase/migrations/20260723051000_supplier_product_adjustments.sql \
+            supabase/migrations/20260723052000_supplier_delivery_idempotency.sql \
+            supabase/migrations/20260723053000_supplier_payment_completion.sql
+          do
+            log_name="supplier-$(basename "$migration" .sql).log"
+            supabase db query --linked --file "$migration" 2>&1 | tee "$log_name"
+          done
+
+      - name: Verify production supplier objects
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase db query --linked --file scripts/sql/check-supplier-flow.sql 2>&1 | tee supplier-flow-verify.log
+
+      - name: Reconcile supplier migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee supplier-migrations-pre-repair.log
+          for version in \
+            20260722020000 \
+            20260722021000 \
+            20260722022000 \
+            20260723050000 \
+            20260723051000 \
+            20260723052000 \
+            20260723053000
+          do
+            if ! awk -F'|' -v wanted="$version" '
+              {
+                remote=$2
+                gsub(/[^0-9]/, "", remote)
+                if (remote == wanted) found=1
+              }
+              END { exit found ? 0 : 1 }
+            ' supplier-migrations-pre-repair.log; then
+              supabase migration repair --linked --status applied "$version" 2>&1 | tee -a supplier-migration-repair.log
+            fi
+          done
+
+      - name: Final supplier production verification
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee supplier-migrations-after.log
+          supabase db query --linked --file scripts/sql/check-supplier-flow.sql 2>&1 | tee supplier-final-verify.log
+          echo 'SUPPLIER_PORTAL_PRODUCTION_APPLIED'
+
+      - name: Upload non-sensitive evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supplier-portal-production-${{ github.run_id }}
+          path: |
+            supplier-migrations-before.log
+            supplier-20260722020000_supplier_procurement_foundation.log
+            supplier-20260722021000_supplier_auth_and_onboarding.log
+            supplier-20260722022000_supplier_procurement_operations.log
+            supplier-20260723050000_supplier_onboarding_completion.log
+            supplier-20260723051000_supplier_product_adjustments.log
+            supplier-20260723052000_supplier_delivery_idempotency.log
+            supplier-20260723053000_supplier_payment_completion.log
+            supplier-flow-verify.log
+            supplier-migrations-pre-repair.log
+            supplier-migration-repair.log
+            supplier-migrations-after.log
+            supplier-final-verify.log
+          if-no-files-found: ignore
+          retention-days: 30
