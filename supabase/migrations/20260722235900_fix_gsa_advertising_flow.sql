@@ -183,11 +183,17 @@ GRANT EXECUTE ON FUNCTION public.gsa_ads_claim_protocol_for_user(text,uuid) TO s
 REVOKE ALL ON FUNCTION public.gsa_advertiser_update_profile(jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.gsa_advertiser_update_profile(jsonb) TO authenticated, service_role;
 
-REVOKE ALL ON FUNCTION public.gsa_advertiser_portal_snapshot() FROM anon;
-REVOKE ALL ON FUNCTION public.gsa_advertiser_counter_proposal(uuid,numeric,text) FROM anon;
-REVOKE ALL ON FUNCTION public.gsa_advertiser_reject_proposal(uuid,text) FROM anon;
-REVOKE ALL ON FUNCTION public.gsa_advertiser_accept_proposal(uuid) FROM anon;
-REVOKE ALL ON FUNCTION public.gsa_advertiser_save_creative(uuid,uuid,text,text,text,text,text,text,integer,integer,numeric) FROM anon;
-REVOKE ALL ON FUNCTION public.gsa_advertiser_submit_creative(uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.gsa_advertiser_portal_snapshot() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.gsa_advertiser_counter_proposal(uuid,numeric,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.gsa_advertiser_reject_proposal(uuid,text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.gsa_advertiser_accept_proposal(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.gsa_advertiser_save_creative(uuid,uuid,text,text,text,text,text,text,integer,integer,numeric) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.gsa_advertiser_submit_creative(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.gsa_advertiser_portal_snapshot() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.gsa_advertiser_counter_proposal(uuid,numeric,text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.gsa_advertiser_reject_proposal(uuid,text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.gsa_advertiser_accept_proposal(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.gsa_advertiser_save_creative(uuid,uuid,text,text,text,text,text,text,integer,integer,numeric) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.gsa_advertiser_submit_creative(uuid) TO authenticated, service_role;
 
 COMMIT;
