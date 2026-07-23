@@ -1,0 +1,11 @@
+{
+  "generated_at_utc": "2026-07-23T11:22:36Z",
+  "result": "failure",
+  "workflow": "Production Environment Validation",
+  "run_id": "30002814449",
+  "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30002814449",
+  "apply_pending_changes": false,
+  "run_storage_restore": false,
+  "run_authenticated_smoke": false,
+  "exit_code": 1
+}
