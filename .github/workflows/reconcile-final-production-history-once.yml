@@ -1,0 +1,232 @@
+name: Reconcile Final Production History Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/reconcile-final-production-history-once.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reconcile-final-production-history-once
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    name: Verificar estado seguro e reconciliar histórico
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_CLI_VERSION: 2.101.0
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Validate production target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_DB_URL"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Verify current secure state and inspect remote-only versions
+        id: verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs/promises';
+          import pg from 'pg';
+
+          const { Client } = pg;
+          const client = new Client({
+            connectionString: process.env.SUPABASE_DB_URL,
+            ssl: { rejectUnauthorized: false },
+          });
+          await client.connect();
+
+          const scalar = async (sql, params = []) => (await client.query(sql, params)).rows[0]?.value;
+          const existsRegclass = async (name) => Boolean(await scalar('SELECT to_regclass($1) IS NOT NULL AS value', [name]));
+          const existsFunction = async (name) => Boolean(await scalar(`
+            SELECT EXISTS (
+              SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+              WHERE n.nspname='public' AND p.proname=$1
+            ) AS value
+          `, [name]));
+          const migrationExists = async (version) => Boolean(await scalar(
+            'SELECT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version=$1) AS value',
+            [version],
+          ));
+
+          const remoteColumns = new Set((await client.query(`
+            SELECT column_name FROM information_schema.columns
+            WHERE table_schema='supabase_migrations' AND table_name='schema_migrations'
+          `)).rows.map((row) => row.column_name));
+          const remoteSelect = ['version::text AS version'];
+          if (remoteColumns.has('name')) remoteSelect.push('name::text AS name');
+          if (remoteColumns.has('statements')) {
+            remoteSelect.push("COALESCE(array_length(statements,1),0)::integer AS statement_count");
+            remoteSelect.push("encode(digest(COALESCE(array_to_string(statements, E'\\n'),''), 'sha256'),'hex') AS statements_sha256");
+          }
+          const remoteOnly = (await client.query(`
+            SELECT ${remoteSelect.join(', ')}
+            FROM supabase_migrations.schema_migrations
+            WHERE version IN ('20260722225320','20260722225335')
+            ORDER BY version
+          `)).rows;
+
+          const packageCount = Number(await scalar('SELECT count(*)::integer AS value FROM public.gsa_service_packages'));
+          const careersPublicPolicy = Boolean(await scalar(`
+            SELECT EXISTS (
+              SELECT 1 FROM pg_policies
+              WHERE schemaname='public' AND tablename='gsa_careers_applications'
+                AND policyname='gsa_careers_public_select'
+            ) AS value
+          `));
+          const careersAnonSelect = Boolean(await scalar(
+            "SELECT has_table_privilege('anon','public.gsa_careers_applications','SELECT') AS value",
+          ));
+          const careersAuthenticatedSelect = Boolean(await scalar(
+            "SELECT has_table_privilege('authenticated','public.gsa_careers_applications','SELECT') AS value",
+          ));
+
+          const advertiserAnonExecutable = (await client.query(`
+            SELECT p.oid::regprocedure::text AS signature
+            FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+            WHERE n.nspname='public'
+              AND p.proname IN (
+                'gsa_advertiser_portal_snapshot',
+                'gsa_advertiser_counter_proposal',
+                'gsa_advertiser_reject_proposal',
+                'gsa_advertiser_accept_proposal',
+                'gsa_advertiser_save_creative',
+                'gsa_advertiser_submit_creative'
+              )
+              AND has_function_privilege('anon', p.oid, 'EXECUTE')
+            ORDER BY 1
+          `)).rows.map((row) => row.signature);
+
+          const adsServeDefinition = await scalar(`
+            SELECT COALESCE(pg_get_functiondef(to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)')),'') AS value
+          `);
+
+          const checks = {
+            service_packages_table: await existsRegclass('public.gsa_service_packages'),
+            service_package_items_table: await existsRegclass('public.gsa_service_package_items'),
+            service_public_catalog_rpc: await existsFunction('gsa_public_service_catalog'),
+            service_admin_catalog_rpc: await existsFunction('gsa_admin_service_catalog_snapshot'),
+            service_package_count_at_least_12: packageCount >= 12,
+            careers_applications_table: await existsRegclass('public.gsa_careers_applications'),
+            careers_history_table: await existsRegclass('public.gsa_careers_application_history'),
+            careers_public_submit_rpc: await existsFunction('gsa_public_submit_career_application'),
+            careers_public_lookup_rpc: await existsFunction('gsa_public_get_career_application'),
+            careers_public_select_policy_absent: !careersPublicPolicy,
+            careers_anon_table_select_revoked: !careersAnonSelect,
+            careers_authenticated_table_select_revoked: !careersAuthenticatedSelect,
+            advertiser_portal_rpc_present: await existsFunction('gsa_advertiser_portal_snapshot'),
+            advertiser_anon_execute_revoked: advertiserAnonExecutable.length === 0,
+            advertising_hardening_migration_20260722090000: await migrationExists('20260722090000'),
+            advertising_cleanup_migration_20260722090100: await migrationExists('20260722090100'),
+            advertising_global_lock_present: String(adsServeDefinition).includes('pg_advisory_xact_lock') && String(adsServeDefinition).includes('gsa_ads_serve:global'),
+            advertising_orphan_cleanup_rpc: await existsFunction('gsa_ads_list_orphan_creative_paths'),
+          };
+
+          const repairChecks = [
+            'service_packages_table',
+            'service_package_items_table',
+            'service_public_catalog_rpc',
+            'service_admin_catalog_rpc',
+            'service_package_count_at_least_12',
+            'careers_applications_table',
+            'careers_history_table',
+            'careers_public_submit_rpc',
+            'careers_public_lookup_rpc',
+            'careers_public_select_policy_absent',
+            'careers_anon_table_select_revoked',
+            'careers_authenticated_table_select_revoked',
+            'advertiser_portal_rpc_present',
+            'advertiser_anon_execute_revoked',
+          ];
+          const safeToRepair = repairChecks.every((key) => checks[key] === true);
+
+          const evidence = {
+            generated_at_utc: new Date().toISOString(),
+            project_id_verified: process.env.SUPABASE_PROJECT_ID === process.env.EXPECTED_PROJECT_ID,
+            package_count: packageCount,
+            advertiser_anon_executable_signatures: advertiserAnonExecutable,
+            remote_only_versions: remoteOnly,
+            checks,
+            safe_to_repair: safeToRepair,
+          };
+          await fs.writeFile('deployment-status/final-migration-history-diagnostic.json', `${JSON.stringify(evidence, null, 2)}\n`);
+          await fs.appendFile(process.env.GITHUB_OUTPUT, `safe_to_repair=${safeToRepair}\n`);
+          await client.end();
+          if (!safeToRepair) process.exit(1);
+          NODE
+
+      - name: Register four verified local migration versions
+        if: steps.verify.outputs.safe_to_repair == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee /tmp/migrations-before.log
+          for version in 20260722170000 20260722180000 20260722193500 20260722195000
+          do
+            if ! awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/,"",remote); if(remote==wanted) found=1 } END{exit found?0:1}' /tmp/migrations-before.log; then
+              supabase migration repair --linked --status applied "$version"
+            fi
+          done
+
+      - name: Verify repaired versions and refresh inventory evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee deployment-status/final-migration-history-list.log
+          for version in 20260722170000 20260722180000 20260722193500 20260722195000
+          do
+            awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/,"",remote); if(remote==wanted) found=1 } END{exit found?0:1}' deployment-status/final-migration-history-list.log
+          done
+
+      - name: Publish non-sensitive reconciliation evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add deployment-status/final-migration-history-diagnostic.json deployment-status/final-migration-history-list.log || true
+          git commit -m "Registrar reconciliação final do histórico de migrations" || true
+          pushed=false
+          for attempt in $(seq 1 8); do
+            git pull --rebase origin main || { git rebase --abort || true; sleep 5; continue; }
+            if git push origin HEAD:main; then pushed=true; break; fi
+            sleep 5
+          done
+          test "$pushed" = true
