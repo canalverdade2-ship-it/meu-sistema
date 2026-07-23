@@ -1,0 +1,4 @@
+-- Alias histórico remoto comprovado no Supabase de produção.
+-- O SQL canônico antigo permanece em 20260722195000_gsa_careers_public_read_rpc.sql.
+-- A leitura pública direta foi removida por 20260722235959_harden_gsa_careers_flow.sql.
+-- No-op intencional: não recriar política ampla nem conceder SELECT direto a anon/authenticated.
