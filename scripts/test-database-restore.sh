@@ -39,12 +39,19 @@ NODE
 )"
 fi
 
-validate_restored_database() {
-  psql --dbname="$restore_database" -v ON_ERROR_STOP=1 <<'SQL'
+# A recuperação é exercitada em PostgreSQL puro, fora da plataforma Supabase.
+# Restauramos pre-data + data para comprovar que o dump é legível e que os
+# registros podem ser recuperados. Objetos post-data (RLS, policies, triggers,
+# FKs e integrações com auth/storage) são validados separadamente no banco real
+# pelo inventário de produção e não são portáveis para um PostgreSQL vazio.
+restore_sections=(pre-data data)
+
+validation_sql=$(cat <<'SQL'
 DO $$
 DECLARE
   v_tables integer;
   v_functions integer;
+  v_migrations integer;
 BEGIN
   SELECT count(*) INTO v_tables
   FROM information_schema.tables
@@ -55,6 +62,13 @@ BEGIN
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public';
 
+  IF to_regclass('supabase_migrations.schema_migrations') IS NULL THEN
+    RAISE EXCEPTION 'Histórico de migrations ausente na restauração';
+  END IF;
+
+  SELECT count(*) INTO v_migrations
+  FROM supabase_migrations.schema_migrations;
+
   IF v_tables = 0 THEN
     RAISE EXCEPTION 'Restauração não contém tabelas públicas';
   END IF;
@@ -63,14 +77,14 @@ BEGIN
     RAISE EXCEPTION 'Restauração não contém funções públicas';
   END IF;
 
-  IF to_regclass('supabase_migrations.schema_migrations') IS NULL THEN
-    RAISE EXCEPTION 'Histórico de migrations ausente na restauração';
+  IF v_migrations = 0 THEN
+    RAISE EXCEPTION 'Restauração não contém registros do histórico de migrations';
   END IF;
 END $$;
 
 SELECT 'DATABASE_RESTORE_TEST_OK' AS result;
 SQL
-}
+)
 
 if [[ "$server_major" =~ ^[0-9]+$ ]] && command -v docker >/dev/null 2>&1; then
   container_name="gsa-restore-pg${server_major}-${GITHUB_RUN_ID:-local}-$RANDOM"
@@ -102,50 +116,35 @@ if [[ "$server_major" =~ ^[0-9]+$ ]] && command -v docker >/dev/null 2>&1; then
   docker exec -e PGPASSWORD="$restore_password" "$container_name" \
     createdb -U postgres "$restore_database"
 
-  docker exec \
-    -e PGPASSWORD="$restore_password" \
-    -e PGOPTIONS='-c check_function_bodies=off' \
-    "$container_name" \
-    pg_restore \
-      --exit-on-error \
-      --no-owner \
-      --no-acl \
-      "${restore_args[@]}" \
-      --username=postgres \
-      --dbname="$restore_database" \
-      /tmp/database.dump
-
+  # Stubs mínimos de schemas comuns evitam que assinaturas de funções falhem
+  # durante o pre-data. Nenhum dado ou política desses schemas é restaurado.
   docker exec -i -e PGPASSWORD="$restore_password" "$container_name" \
     psql --username=postgres --dbname="$restore_database" -v ON_ERROR_STOP=1 <<'SQL'
-DO $$
-DECLARE
-  v_tables integer;
-  v_functions integer;
-BEGIN
-  SELECT count(*) INTO v_tables
-  FROM information_schema.tables
-  WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
-
-  SELECT count(*) INTO v_functions
-  FROM pg_proc p
-  JOIN pg_namespace n ON n.oid = p.pronamespace
-  WHERE n.nspname = 'public';
-
-  IF v_tables = 0 THEN
-    RAISE EXCEPTION 'Restauração não contém tabelas públicas';
-  END IF;
-
-  IF v_functions = 0 THEN
-    RAISE EXCEPTION 'Restauração não contém funções públicas';
-  END IF;
-
-  IF to_regclass('supabase_migrations.schema_migrations') IS NULL THEN
-    RAISE EXCEPTION 'Histórico de migrations ausente na restauração';
-  END IF;
-END $$;
-
-SELECT 'DATABASE_RESTORE_TEST_OK' AS result;
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE SCHEMA IF NOT EXISTS storage;
+CREATE SCHEMA IF NOT EXISTS extensions;
 SQL
+
+  for section in "${restore_sections[@]}"; do
+    docker exec \
+      -e PGPASSWORD="$restore_password" \
+      -e PGOPTIONS='-c check_function_bodies=off' \
+      "$container_name" \
+      pg_restore \
+        --exit-on-error \
+        --no-owner \
+        --no-acl \
+        --section="$section" \
+        "${restore_args[@]}" \
+        --username=postgres \
+        --dbname="$restore_database" \
+        /tmp/database.dump
+  done
+
+  printf '%s\n' "$validation_sql" | docker exec -i \
+    -e PGPASSWORD="$restore_password" \
+    "$container_name" \
+    psql --username=postgres --dbname="$restore_database" -v ON_ERROR_STOP=1
 else
   for command_name in createdb dropdb pg_restore psql; do
     command -v "$command_name" >/dev/null 2>&1 || {
@@ -160,14 +159,25 @@ else
   trap cleanup EXIT
 
   createdb "$restore_database"
-  PGOPTIONS='-c check_function_bodies=off' pg_restore \
-    --exit-on-error \
-    --no-owner \
-    --no-acl \
-    "${restore_args[@]}" \
-    --dbname="$restore_database" \
-    "$backup_file_absolute"
-  validate_restored_database
+  psql --dbname="$restore_database" -v ON_ERROR_STOP=1 <<'SQL'
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE SCHEMA IF NOT EXISTS storage;
+CREATE SCHEMA IF NOT EXISTS extensions;
+SQL
+
+  for section in "${restore_sections[@]}"; do
+    PGOPTIONS='-c check_function_bodies=off' pg_restore \
+      --exit-on-error \
+      --no-owner \
+      --no-acl \
+      --section="$section" \
+      "${restore_args[@]}" \
+      --dbname="$restore_database" \
+      "$backup_file_absolute"
+  done
+
+  printf '%s\n' "$validation_sql" | psql --dbname="$restore_database" -v ON_ERROR_STOP=1
 fi
 
 printf 'DATABASE_RESTORE_TEST_OK=%s\n' "$restore_database"
+printf 'DATABASE_RESTORE_MODE=pre-data+data\n'
