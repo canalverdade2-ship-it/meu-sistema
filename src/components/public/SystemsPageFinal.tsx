@@ -5,7 +5,6 @@ import {
   Boxes,
   Check,
   ChevronRight,
-  CircleCheck,
   Code2,
   Database,
   Gauge,
@@ -15,7 +14,6 @@ import {
   Link2,
   MessageCircle,
   MonitorSmartphone,
-  MousePointerClick,
   Rocket,
   Search,
   ShieldCheck,
@@ -175,42 +173,89 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
       <PublicHeader currentPage="systems" onClientLogin={onLogin} />
 
       <main>
-        <section className="relative overflow-hidden border-b border-cyan-300/10 pt-24">
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(102,211,232,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(102,211,232,0.045)_1px,transparent_1px)] bg-[size:42px_42px]" />
-          <div className="pointer-events-none absolute left-[58%] top-20 h-72 w-72 rounded-full bg-cyan-300/8 blur-[110px]" />
-
-          <div className="relative mx-auto grid min-h-[calc(100svh-6rem)] max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:py-24">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200">
-                <CircleCheck className="h-3.5 w-3.5" />
-                Soluções digitais sob medida
-              </div>
-              <h1 className="mt-6 text-4xl font-black leading-[1.03] tracking-[-0.045em] sm:text-6xl lg:text-[4.35rem]">
-                Transformamos processos e ideias em experiências digitais que funcionam.
+        <section className="border-b border-white/10 bg-[#08121e] pt-24">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-24">
+            <div className="max-w-3xl">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d7b96e]">
+                Criação de sites e sistemas
+              </p>
+              <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.08] tracking-[-0.035em] sm:text-5xl lg:text-[3.65rem]">
+                Sites e sistemas desenvolvidos para a realidade da sua empresa.
               </h1>
-              <p className="mt-6 max-w-xl text-base leading-8 text-slate-300 sm:text-lg">
-                Sites, lojas, portais, aplicativos, sistemas, automações e integrações planejados para a realidade da sua empresa.
+              <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+                Projetamos soluções digitais para apresentar serviços, vender, atender clientes, organizar processos e conectar a operação — sem obrigar sua empresa a se adaptar a uma estrutura genérica.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <button type="button" onClick={() => setBudgetOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-300 px-6 py-4 text-sm font-black text-[#07101b] transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                <button
+                  type="button"
+                  onClick={() => setBudgetOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-[#d7b96e] px-6 py-4 text-sm font-black text-[#111820] transition hover:bg-[#e3c982] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
                   Solicitar análise do projeto
                   <ArrowRight className="h-4 w-4" />
                 </button>
-                <button type="button" onClick={() => exploreSolution('systems')} className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/16 bg-white/[0.03] px-6 py-4 text-sm font-black text-white transition hover:border-cyan-300/45 hover:bg-cyan-300/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
-                  Explorar soluções
-                  <MousePointerClick className="h-4 w-4" />
+                <button
+                  type="button"
+                  onClick={() => exploreSolution('systems')}
+                  className="inline-flex items-center justify-center gap-2 rounded-[8px] border border-white/20 px-6 py-4 text-sm font-black text-white transition hover:border-[#d7b96e] hover:text-[#e3cb8d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7b96e]"
+                >
+                  Conhecer as soluções
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="mt-9 grid max-w-xl grid-cols-3 divide-x divide-white/10 border-y border-white/10 py-4">
-                <div className="pr-4"><strong className="block text-lg">Estratégia</strong><span className="mt-1 block text-[10px] uppercase tracking-wider text-slate-500">antes do código</span></div>
-                <div className="px-4"><strong className="block text-lg">Experiência</strong><span className="mt-1 block text-[10px] uppercase tracking-wider text-slate-500">para cada usuário</span></div>
-                <div className="pl-4"><strong className="block text-lg">Evolução</strong><span className="mt-1 block text-[10px] uppercase tracking-wider text-slate-500">após a entrega</span></div>
-              </div>
+              <ul className="mt-9 grid max-w-2xl gap-3 border-t border-white/10 pt-6 sm:grid-cols-3" aria-label="Diferenciais do desenvolvimento">
+                {[
+                  'Escopo definido antes do desenvolvimento',
+                  'Experiência adaptada para cada usuário',
+                  'Base preparada para evolução',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-xs font-semibold leading-5 text-slate-400">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#d7b96e]" strokeWidth={3} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <DigitalWorkspacePreview />
+            <aside className="border border-white/12 bg-[#0d1926] p-5 sm:p-7 lg:p-8">
+              <div className="border-b border-white/10 pb-5">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d7b96e]">O que desenvolvemos</p>
+                <h2 className="mt-3 text-2xl font-black leading-tight">Soluções definidas pelo objetivo do negócio.</h2>
+                <p className="mt-3 text-sm leading-6 text-slate-400">
+                  Cada projeto combina somente os módulos, integrações e experiências necessários para o resultado esperado.
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-2">
+                {solutions.map(({ id, icon: Icon, title }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => exploreSolution(id)}
+                    className="group flex items-center gap-3 border-b border-white/8 py-4 text-left transition hover:text-[#e3cb8d] sm:odd:pr-4 sm:even:border-l sm:even:pl-4"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-white/12 text-[#d7b96e] transition group-hover:border-[#d7b96e]/50">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="text-sm font-black">{title}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-6">
+                <p className="text-[9px] font-black uppercase tracking-[0.17em] text-slate-500">Como o projeto avança</p>
+                <div className="mt-3 grid grid-cols-4 border border-white/10">
+                  {['Diagnóstico', 'Arquitetura', 'Desenvolvimento', 'Implantação'].map((step, index) => (
+                    <div key={step} className="border-r border-white/10 px-2 py-3 text-center last:border-r-0">
+                      <span className="block text-[9px] font-black text-[#d7b96e]">0{index + 1}</span>
+                      <span className="mt-1 block text-[8px] font-bold text-slate-500 sm:text-[9px]">{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </aside>
           </div>
         </section>
 
@@ -347,7 +392,7 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
           </div>
         </section>
 
-        <section className="bg-[#dff7fb] px-4 py-14 text-[#07101b] sm:px-6 sm:py-18 lg:px-8">
+        <section className="bg-[#dff7fb] px-4 py-14 text-[#07101b] sm:px-6 sm:py-16 lg:px-8">
           <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[1fr_auto]">
             <div className="max-w-3xl">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#08788e]">Próximo passo</p>
@@ -384,47 +429,6 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
       <SystemsExamplesDialog category={selectedExample} onClose={() => setSelectedExample(null)} onRequestBudget={() => setBudgetOpen(true)} />
       <SystemsBudgetModal isOpen={budgetOpen} onClose={() => setBudgetOpen(false)} />
       <PrivacyPolicyDialog isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
-    </div>
-  );
-}
-
-function DigitalWorkspacePreview() {
-  return (
-    <div className="relative mx-auto w-full max-w-2xl">
-      <div className="absolute -inset-8 rounded-full bg-cyan-300/5 blur-3xl" />
-      <div className="relative overflow-hidden rounded-2xl border border-white/12 bg-[#0b1623] shadow-[0_35px_100px_rgba(0,0,0,0.48)]">
-        <div className="flex h-11 items-center gap-2 border-b border-white/8 bg-[#0d1b2a] px-4">
-          <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" /><span className="h-2.5 w-2.5 rounded-full bg-amber-300/70" /><span className="h-2.5 w-2.5 rounded-full bg-emerald-300/70" />
-          <div className="mx-auto flex h-6 w-2/5 items-center justify-center rounded-md bg-white/5 text-[8px] font-bold text-slate-500">workspace.gsa</div>
-        </div>
-        <div className="grid min-h-[410px] grid-cols-[58px_1fr] sm:grid-cols-[78px_1fr]">
-          <div className="border-r border-white/8 bg-[#08111c] p-3">
-            <div className="flex h-9 items-center justify-center rounded-lg bg-cyan-300 text-[#07101b]"><Boxes className="h-4 w-4" /></div>
-            {[BarChart3, Workflow, Database, ShieldCheck].map((Icon, index) => <div key={index} className="mt-3 flex h-9 items-center justify-center rounded-lg text-slate-600"><Icon className="h-4 w-4" /></div>)}
-          </div>
-          <div className="p-4 sm:p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-300">Visão operacional</p><h2 className="mt-2 text-xl font-black sm:text-2xl">Painel da empresa</h2></div>
-              <span className="rounded-full border border-emerald-300/20 bg-emerald-300/8 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-emerald-300">Operação ativa</span>
-            </div>
-            <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
-              {[['24', 'Solicitações'], ['08', 'Em análise'], ['92%', 'Concluídas']].map(([value, label]) => <div key={label} className="rounded-lg border border-white/8 bg-white/[0.025] p-3"><strong className="block text-lg text-white sm:text-xl">{value}</strong><span className="mt-1 block text-[8px] uppercase tracking-wider text-slate-500">{label}</span></div>)}
-            </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4">
-                <div className="flex items-center justify-between"><span className="text-xs font-black">Fluxo de trabalho</span><Workflow className="h-4 w-4 text-cyan-300" /></div>
-                <div className="mt-5 space-y-3">{['Nova solicitação recebida', 'Análise atribuída à equipe', 'Cliente notificado'].map((item, index) => <div key={item} className="flex items-center gap-3"><span className={`h-2 w-2 rounded-full ${index === 0 ? 'bg-cyan-300' : 'bg-slate-600'}`} /><span className="h-1.5 flex-1 rounded-full bg-white/8" /><span className="text-[8px] text-slate-500">{item.split(' ')[0]}</span></div>)}</div>
-              </div>
-              <div className="rounded-xl border border-white/8 bg-cyan-300/[0.04] p-4">
-                <p className="text-[9px] font-black uppercase tracking-wider text-cyan-300">Automação</p>
-                <div className="mt-5 flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-300 text-[#07101b]"><MousePointerClick className="h-4 w-4" /></span><ArrowRight className="h-4 w-4 text-slate-600" /><span className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10"><MessageCircle className="h-4 w-4 text-cyan-300" /></span></div>
-                <p className="mt-5 text-[9px] leading-4 text-slate-500">Uma ação atualiza o processo e avisa o responsável automaticamente.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="absolute -bottom-5 -left-3 hidden rounded-xl border border-cyan-300/20 bg-[#0d1b2a] px-4 py-3 shadow-2xl sm:block"><div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-300/10 text-cyan-300"><ShieldCheck className="h-4 w-4" /></span><div><strong className="block text-[10px]">Acessos controlados</strong><span className="text-[8px] text-slate-500">cada usuário vê o necessário</span></div></div></div>
     </div>
   );
 }
