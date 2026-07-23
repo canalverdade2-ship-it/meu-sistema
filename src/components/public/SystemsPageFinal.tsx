@@ -22,6 +22,10 @@ import { PublicHeader } from './final/PublicHeader';
 import { BrandJourneyPage } from './BrandJourneyPage';
 import { SystemsBudgetModal } from './SystemsBudgetModal';
 import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
+import {
+  SystemsExamplesDialog,
+  type SystemExampleCategory,
+} from './SystemsExamplesDialog';
 
 const WHATSAPP_NUMBER = '5511920857756';
 
@@ -31,6 +35,7 @@ interface SystemsPageFinalProps {
 }
 
 interface SolutionItem {
+  id: SystemExampleCategory;
   icon: LucideIcon;
   title: string;
   text: string;
@@ -39,36 +44,42 @@ interface SolutionItem {
 
 const solutions: SolutionItem[] = [
   {
+    id: 'sites',
     icon: Globe2,
     title: 'Sites institucionais',
     text: 'Apresentação profissional de empresas, serviços, produtos e projetos, com navegação clara e adaptação para celular.',
     fit: 'Presença digital, autoridade e geração de contatos.',
   },
   {
+    id: 'stores',
     icon: ShoppingCart,
     title: 'Lojas virtuais',
     text: 'Estrutura organizada para catálogo, pedidos, pagamentos e acompanhamento da operação comercial.',
     fit: 'Venda de produtos, serviços e assinaturas.',
   },
   {
+    id: 'systems',
     icon: Code2,
     title: 'Sistemas personalizados',
     text: 'Ambientes digitais criados para centralizar informações, regras, processos, usuários e rotinas da empresa.',
     fit: 'Gestão, operação e controle interno.',
   },
   {
+    id: 'portals',
     icon: Smartphone,
     title: 'Portais e aplicativos',
     text: 'Experiências digitais para clientes, equipes, parceiros ou prestadores acessarem serviços e informações com segurança.',
     fit: 'Atendimento, relacionamento e autosserviço.',
   },
   {
+    id: 'automations',
     icon: Workflow,
     title: 'Automações',
     text: 'Fluxos que reduzem tarefas repetitivas, organizam etapas e ajudam a equipe a trabalhar com mais consistência.',
     fit: 'Produtividade e padronização de processos.',
   },
   {
+    id: 'integrations',
     icon: Link2,
     title: 'Integrações',
     text: 'Conexão entre plataformas, meios de pagamento, canais de atendimento e ferramentas já utilizadas pela empresa.',
@@ -123,6 +134,7 @@ const foundations = [
 export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [selectedExample, setSelectedExample] = useState<SystemExampleCategory | null>(null);
   const isBrandJourney = window.location.pathname.replace(/\/+$/, '') === '/empresa-do-zero-ao-digital';
 
   if (isBrandJourney) {
@@ -233,12 +245,21 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
               <p className="mt-5 text-sm leading-7 text-neutral-600 sm:text-base">
                 Cada solução é construída para cumprir uma função clara: apresentar melhor, vender, atender, organizar processos ou conectar operações.
               </p>
+              <p className="mt-4 text-xs font-bold leading-5 text-[#80672c]">
+                Selecione uma categoria para visualizar modelos demonstrativos.
+              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              {solutions.map(({ icon: Icon, title, text, fit }) => (
-                <article key={title} className="rounded-[10px] border border-[#ddd8ce] bg-white p-5 transition hover:border-[#c8b06e] sm:p-6">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#0a1420] text-[#d7b96e]">
+              {solutions.map(({ id, icon: Icon, title, text, fit }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setSelectedExample(id)}
+                  aria-label={`Ver modelos de ${title}`}
+                  className="group rounded-[10px] border border-[#ddd8ce] bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-[#c8b06e] hover:shadow-[0_12px_28px_rgba(16,24,32,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80672c] focus-visible:ring-offset-2 sm:p-6"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#0a1420] text-[#d7b96e] transition group-hover:bg-[#132434]">
                     <Icon className="h-5 w-5" />
                   </span>
                   <h3 className="mt-5 text-lg font-black text-[#111820]">{title}</h3>
@@ -246,7 +267,11 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
                   <p className="mt-4 border-t border-[#ebe7df] pt-4 text-xs font-bold leading-5 text-[#6d5727]">
                     {fit}
                   </p>
-                </article>
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#80672c]">
+                    Ver modelos
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </button>
               ))}
             </div>
           </div>
@@ -368,6 +393,11 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
         </div>
       </footer>
 
+      <SystemsExamplesDialog
+        category={selectedExample}
+        onClose={() => setSelectedExample(null)}
+        onRequestBudget={() => setBudgetOpen(true)}
+      />
       <SystemsBudgetModal isOpen={budgetOpen} onClose={() => setBudgetOpen(false)} />
       <PrivacyPolicyDialog isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </div>
