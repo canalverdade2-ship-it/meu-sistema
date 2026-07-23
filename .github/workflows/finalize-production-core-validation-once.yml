@@ -1,0 +1,107 @@
+name: Finalize Production Core Validation Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/finalize-production-core-validation-once.yml
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: finalize-production-core-validation-once
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Dispatch, monitor and record production validation
+        shell: bash
+        run: |
+          set -uo pipefail
+          started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          gh workflow run production-environment-validation.yml \
+            --repo "$REPOSITORY" \
+            --ref main \
+            -f confirmation=VALIDAR_PRODUCAO \
+            -f apply_pending_changes=false \
+            -f run_storage_restore=false \
+            -f run_authenticated_smoke=false
+
+          run_id=""
+          for attempt in $(seq 1 60); do
+            run_id="$(
+              gh run list \
+                --repo "$REPOSITORY" \
+                --workflow production-environment-validation.yml \
+                --event workflow_dispatch \
+                --branch main \
+                --limit 30 \
+                --json databaseId,createdAt \
+                --jq ".[] | select(.createdAt >= \"$started_at\") | .databaseId" \
+              | head -n 1
+            )"
+            [[ -n "$run_id" ]] && break
+            sleep 5
+          done
+
+          validation_exit=0
+          if [[ -z "$run_id" ]]; then
+            validation_exit=91
+          else
+            gh run watch "$run_id" --repo "$REPOSITORY" --exit-status --interval 10 || validation_exit=$?
+          fi
+
+          mkdir -p deployment-status
+          result="success"
+          [[ "$validation_exit" -ne 0 ]] && result="failure"
+
+          cat > deployment-status/production-core-validation.json <<JSON
+          {
+            "generated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "result": "$result",
+            "workflow": "Production Environment Validation",
+            "run_id": "$run_id",
+            "url": "${run_id:+https://github.com/$REPOSITORY/actions/runs/$run_id}",
+            "apply_pending_changes": false,
+            "run_storage_restore": false,
+            "run_authenticated_smoke": false,
+            "exit_code": $validation_exit
+          }
+          JSON
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add deployment-status/production-core-validation.json
+          git commit -m "Registrar validação final do núcleo de produção" || true
+
+          pushed=false
+          for attempt in $(seq 1 8); do
+            git pull --rebase origin main || {
+              git rebase --abort || true
+              sleep 5
+              continue
+            }
+            if git push origin HEAD:main; then
+              pushed=true
+              break
+            fi
+            sleep 5
+          done
+
+          [[ "$pushed" == true ]] || exit 93
+          [[ "$result" == success ]] || exit 1
