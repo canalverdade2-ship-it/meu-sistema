@@ -2,7 +2,7 @@ import { PostgrestError } from '@supabase/supabase-js';
 
 /**
  * Wrapper para chamadas ao Supabase que fornece erros detalhados.
- * Recebe uma query PostgREST já construída pelo chamador.
+ * @param query A query do Supabase (ex: supabase.from('...').select('...'))
  * @returns Os dados retornados pela query
  * @throws Erro com detalhes se a query falhar
  */
