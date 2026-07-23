@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { clientOperationalWrite } from '../lib/clientOperationalWrite';
 import { toast } from 'react-hot-toast';
 
 export interface CartItem {
@@ -21,7 +22,7 @@ export function useStoreCart(clientId: string | undefined, productsData: any) {
       setIsLoadingCart(false);
       return;
     }
-    
+
     setIsLoadingCart(true);
     try {
       const { data, error } = await supabase.from('loja_carrinhos').select('*').eq('cliente_id', clientId);
@@ -57,13 +58,15 @@ export function useStoreCart(clientId: string | undefined, productsData: any) {
 
   const updateQuantity = useCallback(async (id: string, qty: number) => {
     if (!clientId) return;
-    
-    // Atualização Otimista
+
+    // Atualização otimista; a identidade do cliente é derivada da sessão no servidor.
     setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantidade: qty } : item));
-    
+
     try {
-      const { error } = await supabase.from('loja_carrinhos').update({ quantidade: qty, updated_at: new Date().toISOString() }).eq('id', id);
-      if (error) throw error;
+      await clientOperationalWrite(clientId, 'loja_carrinhos', 'update', {
+        quantidade: qty,
+        updated_at: new Date().toISOString(),
+      }, { id });
     } catch (err) {
       console.error(err);
       toast.error('Erro ao atualizar quantidade.');
@@ -73,13 +76,12 @@ export function useStoreCart(clientId: string | undefined, productsData: any) {
 
   const removeItem = useCallback(async (id: string) => {
     if (!clientId) return;
-    
-    // Atualização Otimista
+
+    // Atualização otimista; a exclusão é autorizada pela sessão dentro da RPC.
     setCartItems(prev => prev.filter(item => item.id !== id));
-    
+
     try {
-      const { error } = await supabase.from('loja_carrinhos').delete().eq('id', id);
-      if (error) throw error;
+      await clientOperationalWrite(clientId, 'loja_carrinhos', 'delete', {}, { id });
       toast.success('Item removido do carrinho.');
     } catch (err) {
       console.error(err);
