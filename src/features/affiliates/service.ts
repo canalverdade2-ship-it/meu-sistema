@@ -57,6 +57,7 @@ const normalizeProgram = (value: unknown): AffiliateProgram => {
     janelaAtribuicaoDias: number(item.janela_atribuicao_dias, item.janelaAtribuicaoDias),
     carenciaDias: number(item.carencia_dias, item.carenciaDias),
     saqueMinimo: number(item.saque_minimo, item.saqueMinimo),
+    pontosPorReal: number(item.pontos_por_real, item.pontosPorReal),
     ativo: bool(item.ativo),
   };
 };
@@ -124,7 +125,12 @@ export function normalizeAffiliateSnapshot(value: unknown): AffiliateSnapshot {
       totalDisponivel: number(summary.total_disponivel, summary.totalDisponivel, summary.saldo_disponivel),
       totalPago: number(summary.total_pago, summary.totalPago),
       totalSolicitado: number(summary.total_solicitado, summary.totalSolicitado),
-      saqueMinimo: number(summary.saque_minimo, summary.saqueMinimo),
+      saqueMinimo: number(summary.saque_minimo, summary.saqueMinimo, 50),
+      pontos: number(summary.pontos),
+      saldoCarteira: number(summary.saldo_carteira, summary.saldoCarteira),
+      pontosTaxa: number(summary.pontos_taxa, summary.pontosTaxa, 0.01),
+      pontosMinimo: number(summary.pontos_minimo, summary.pontosMinimo, 100),
+      pontosAtivo: bool(summary.pontos_ativo, true),
     },
     commissions: list(root.commissions || root.comissoes).map(normalizeCommission).filter(item => item.id),
     payouts: list(root.payouts || root.saques).map(normalizePayout).filter(item => item.id),
@@ -177,3 +183,10 @@ export async function cancelAffiliatePayout(payoutId: string): Promise<Affiliate
   return fetchAffiliateSnapshot();
 }
 
+export async function redeemAffiliatePoints(points: number, requestId: string): Promise<AffiliateSnapshot> {
+  await callClientRpc('gsa_client_redeem_affiliate_points', {
+    p_request_id: requestId,
+    p_pontos: points,
+  });
+  return fetchAffiliateSnapshot();
+}

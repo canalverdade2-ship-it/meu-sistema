@@ -25,6 +25,7 @@ export interface AffiliateProgram {
   janelaAtribuicaoDias: number;
   carenciaDias: number;
   saqueMinimo: number;
+  pontosPorReal: number;
   ativo: boolean;
 }
 
@@ -76,6 +77,11 @@ export interface AffiliateSummary {
   totalPago: number;
   totalSolicitado: number;
   saqueMinimo: number;
+  pontos?: number;
+  saldoCarteira?: number;
+  pontosTaxa?: number;
+  pontosMinimo?: number;
+  pontosAtivo?: boolean;
 }
 
 export interface AffiliateSnapshot {
@@ -102,4 +108,3 @@ export interface CreateAffiliateLinkInput {
   destino: string;
   titulo: string;
 }
-

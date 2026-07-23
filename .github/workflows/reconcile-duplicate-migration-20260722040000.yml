@@ -69,12 +69,21 @@ jobs:
           tail -n 3 /tmp/affiliate-program-reconciled.sql
           tail -n 3 /tmp/advertising-backend-reconciled.sql
 
-      - name: Apply affiliate program SQL atomically
+      - name: Apply affiliate foundation SQL atomically
         shell: bash
         run: |
           set -euo pipefail
           set -o pipefail
           supabase db query --linked --file /tmp/affiliate-program-reconciled.sql 2>&1 | tee affiliate-program-apply.log
+
+      - name: Apply complete affiliate flow
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase db query --linked --file supabase/migrations/20260722233000_complete_affiliate_flow.sql 2>&1 | tee affiliate-flow-completion.log
+          supabase db query --linked --file supabase/migrations/20260722233100_harden_affiliate_payout_idempotency.sql 2>&1 | tee affiliate-payout-hardening.log
+          supabase db query --linked --file supabase/migrations/20260722233200_secure_affiliate_activation.sql 2>&1 | tee affiliate-activation-security.log
 
       - name: Apply advertising backend SQL atomically
         shell: bash
@@ -89,6 +98,7 @@ jobs:
           set -euo pipefail
           set -o pipefail
           supabase db query --linked --file supabase/migrations/20260722120000_reconcile_affiliate_program.sql 2>&1 | tee affiliate-program-verify.log
+          supabase db query --linked --file scripts/sql/check-affiliate-flow.sql 2>&1 | tee affiliate-flow-verify.log
           supabase db query --linked --file supabase/migrations/20260722120100_reconcile_advertising_backend.sql 2>&1 | tee advertising-backend-verify.log
 
       - name: Register only unique verified versions
@@ -98,7 +108,7 @@ jobs:
           set -o pipefail
           supabase migration list --linked 2>&1 | tee migration-conflict-pre-repair.log
 
-          for version in 20260722120000 20260722120100
+          for version in 20260722120000 20260722120100 20260722233000 20260722233100 20260722233200
           do
             if ! awk -F'|' -v wanted="$version" '
               {
@@ -129,7 +139,7 @@ jobs:
           set -euo pipefail
           set -o pipefail
           supabase migration list --linked 2>&1 | tee migration-conflict-after.log
-          for version in 20260722120000 20260722120100
+          for version in 20260722120000 20260722120100 20260722233000 20260722233100 20260722233200
           do
             awk -F'|' -v wanted="$version" '
               {
@@ -148,9 +158,10 @@ jobs:
             }
             END { exit found ? 0 : 1 }
           ' migration-conflict-after.log
-          supabase db query --linked --file supabase/migrations/20260722120000_reconcile_affiliate_program.sql
+          supabase db query --linked --file scripts/sql/check-affiliate-flow.sql
           supabase db query --linked --file supabase/migrations/20260722120100_reconcile_advertising_backend.sql
           echo 'DUPLICATE_MIGRATION_20260722040000_RECONCILED'
+          echo 'GSA_AFFILIATE_FLOW_COMPLETED'
 
       - name: Upload non-sensitive reconciliation evidence
         if: always()
@@ -160,6 +171,10 @@ jobs:
           path: |
             migration-conflict-before.log
             affiliate-program-apply.log
+            affiliate-flow-completion.log
+            affiliate-payout-hardening.log
+            affiliate-activation-security.log
+            affiliate-flow-verify.log
             advertising-backend-apply.log
             affiliate-program-verify.log
             advertising-backend-verify.log
