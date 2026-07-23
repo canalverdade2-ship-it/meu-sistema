@@ -1,23 +1,23 @@
 {
-  "generated_at_utc": "2026-07-23T12:15:19.360Z",
+  "generated_at_utc": "2026-07-23T12:34:47.701Z",
   "backup_exit_code": 0,
   "backup_error_bytes": 2094,
-  "backup_error_sha256": "f4f105eccc66f21bdc556724e4e8f0f0a6c228f0e7b03c2de12515c12a738874",
+  "backup_error_sha256": "172b0f621b198537a579c57bbe44ffd06f7c5f4579e7f1d05702798712a7b37d",
   "backup_manifest": {
     "server_major": 17,
     "client_source": "docker-postgres-17",
-    "database_bytes": 3100906,
+    "database_bytes": 3101426,
     "schema_bytes": 2068665
   },
   "restore_exit_code": 1,
-  "classification": "function_missing",
+  "classification": "schema_missing",
   "flags": {
     "role_missing": false,
-    "schema_missing": false,
+    "schema_missing": true,
     "relation_missing": false,
     "extension_missing": false,
     "type_missing": false,
-    "function_missing": true,
+    "function_missing": false,
     "language_missing": false,
     "unsupported_dump_version": false,
     "duplicate_object": false,
@@ -33,12 +33,12 @@
     "database_connection_failure": false
   },
   "missing_role": "",
-  "missing_schema": "",
+  "missing_schema": "supabase_migrations",
   "missing_relation": "",
   "missing_extension": "",
   "missing_type": "",
-  "missing_function": "extensions.uuid_generate_v4()",
+  "missing_function": "",
   "missing_language": "",
-  "restore_error_bytes": 805,
-  "restore_error_sha256": "a13b7835c75124a4346e551afca791261304dac08366abd178bef11d29f88618"
+  "restore_error_bytes": 460,
+  "restore_error_sha256": "d62cf4ba46ded33f3156b5ba8aa7fb1ce45ef096f4278ce1e934853cffe06061"
 }
