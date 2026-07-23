@@ -1,0 +1,152 @@
+name: Finalize Client Recovery Production Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - supabase/functions/gsa-auth-session/index.ts
+      - supabase/functions/gsa-auth-session/index_test.ts
+      - scripts/check-client-portal-security-contracts.ts
+      - .github/workflows/finalize-client-recovery-production-once.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finalize-client-recovery-production-once
+  cancel-in-progress: false
+
+jobs:
+  validate-deploy:
+    name: Validar e publicar recuperação segura
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    env:
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+      SUPABASE_CLI_VERSION: 2.101.0
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate client security contracts
+        run: npm run test:client-security
+
+      - name: Validate authentication Edge Function
+        shell: bash
+        run: |
+          set -euo pipefail
+          deno check supabase/functions/gsa-auth-session/index.ts
+          deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
+          grep -F "signInWithOtp" supabase/functions/gsa-auth-session/index.ts
+          grep -F "recovery_verification_required" supabase/functions/gsa-auth-session/index.ts
+          grep -F "gsa_begin_client_recovery" supabase/functions/gsa-auth-session/index.ts
+          grep -F "gsa_recuperar_senha_cliente" supabase/functions/gsa-auth-session/index.ts
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Validate exact production project
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Verify required recovery database objects
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/verify-client-recovery.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regclass('public.gsa_client_recovery_challenges') IS NULL THEN
+              RAISE EXCEPTION 'Tabela de desafios de recuperação ausente';
+            END IF;
+            IF to_regprocedure('public.gsa_begin_client_recovery(text,text,uuid)') IS NULL THEN
+              RAISE EXCEPTION 'RPC de início da recuperação ausente';
+            END IF;
+            IF to_regprocedure('public.gsa_recuperar_senha_cliente(text,text)') IS NULL THEN
+              RAISE EXCEPTION 'RPC de conclusão da recuperação ausente';
+            END IF;
+            IF has_table_privilege('anon','public.gsa_client_recovery_challenges','SELECT')
+               OR has_table_privilege('authenticated','public.gsa_client_recovery_challenges','SELECT') THEN
+              RAISE EXCEPTION 'Tabela de desafios exposta diretamente';
+            END IF;
+          END $$;
+          SELECT 'CLIENT_RECOVERY_DATABASE_OK' AS result;
+          SQL
+          supabase db query --linked --file /tmp/verify-client-recovery.sql \
+            2>&1 | tee /tmp/client-recovery-database.log
+          grep -F 'CLIENT_RECOVERY_DATABASE_OK' /tmp/client-recovery-database.log
+
+      - name: Deploy authentication gateway
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase functions deploy gsa-auth-session \
+            --project-ref "$SUPABASE_PROJECT_ID" \
+            --no-verify-jwt \
+            2>&1 | tee /tmp/client-recovery-deploy.log
+          supabase functions list --project-ref "$SUPABASE_PROJECT_ID" \
+            2>&1 | tee /tmp/client-recovery-functions.log
+          grep -F 'gsa-auth-session' /tmp/client-recovery-functions.log
+
+      - name: Record non-sensitive completion evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          result="${{ job.status }}"
+          cat > /tmp/client-recovery-production.json <<JSON
+          {
+            "generated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "result": "$result",
+            "validated_sha": "${{ github.sha }}",
+            "client_security_contracts": "$result",
+            "edge_function_validation": "$result",
+            "database_objects": "$result",
+            "edge_function_deployment": "$result"
+          }
+          JSON
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          published=false
+          for attempt in $(seq 1 10); do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p deployment-status
+            cp /tmp/client-recovery-production.json deployment-status/client-recovery-production.json
+            git add deployment-status/client-recovery-production.json
+            git commit -m "Registrar implantação da recuperação segura do cliente: $result" || true
+            if git push origin HEAD:main; then
+              published=true
+              break
+            fi
+            sleep 5
+          done
+          test "$published" = true
+          test "$result" = success
