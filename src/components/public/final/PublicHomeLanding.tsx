@@ -67,9 +67,9 @@ export function PublicHomeLanding({ reduceMotion, setPublicPage, onGuestStore }:
           fetchPriority="high"
           decoding="async"
           referrerPolicy="no-referrer"
-          className="absolute inset-0 h-full w-full object-cover opacity-30 mix-blend-luminosity"
+          className="absolute inset-0 h-full w-full object-cover opacity-65 mix-blend-luminosity sm:opacity-30"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050608]/90 via-[#050608]/80 to-[#050608]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050608]/65 via-[#050608]/50 to-[#050608] sm:from-[#050608]/90 sm:via-[#050608]/80 sm:to-[#050608]" />
 
         <div className="relative z-10 mx-auto flex min-h-[calc(100svh-6rem)] max-w-7xl flex-col items-center justify-center px-4 pb-20 pt-8 text-center sm:px-6 lg:px-8">
           <AdvertisingSlot placementCode="HOME_BANNER_TOP" variant="banner" className="mb-8 w-full max-w-5xl text-left" />

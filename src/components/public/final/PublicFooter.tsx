@@ -27,7 +27,7 @@ export function PublicFooter({ setPublicPage, onGuestStore, onAdminLogin, onPriv
             <button type="button" onClick={() => setPublicPage('services')} className="w-fit hover:text-[#d8bd73]">Serviços e Assinaturas</button>
             <button type="button" onClick={onGuestStore} className="w-fit hover:text-[#d8bd73]">Marketplace</button>
             <button type="button" onClick={() => setPublicPage('systems')} className="w-fit hover:text-[#d8bd73]">Sites e Sistemas</button>
-            <button type="button" onClick={() => setPublicPage('partners')} className="w-fit hover:text-[#d8bd73]">Parceiros</button>
+            <button type="button" onClick={() => setPublicPage('partners')} className="w-fit hover:text-[#d8bd73]">Nossos Parceiros</button>
             <button type="button" onClick={onAdminLogin} className="w-fit hover:text-[#d8bd73]">Acesso Restrito</button>
             <a href="/fornecedor" className="w-fit hover:text-[#d8bd73]">Portal do Fornecedor</a>
             <a href="/afiliados" className="w-fit hover:text-[#d8bd73]">Programa de Afiliados</a>
