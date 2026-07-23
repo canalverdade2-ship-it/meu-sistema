@@ -38,7 +38,7 @@ export function PublicHomeLanding({ reduceMotion, setPublicPage, onGuestStore }:
     },
     {
       icon: Palette,
-      title: 'Construção de Marca',
+      title: 'Empresa do Zero ao Digital',
       subtitle: 'Branding & Estrutura',
       text: 'Construção completa da sua marca: registro, site, identidade visual e redes sociais.',
       badge: 'Aceleração',
