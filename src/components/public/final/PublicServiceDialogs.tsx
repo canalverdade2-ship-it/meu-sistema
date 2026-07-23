@@ -187,7 +187,7 @@ export function ServiceDetailsDialog({
                     <ArrowRight className="h-4 w-4" />
                   </button>
                   <p className="mt-3 text-center text-[11px] leading-4 text-neutral-500">
-                    Você poderá escolher o canal de atendimento na próxima etapa.
+                    Na próxima etapa, você poderá escolher o canal de atendimento.
                   </p>
                 </div>
               </aside>
