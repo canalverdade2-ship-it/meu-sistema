@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   observe:
-    name: Observar validação com extensões
+    name: Observar cliente e restauração
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -29,22 +29,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sleep 110
+          sleep 45
 
+          client_recovery="$(gh run list --repo "$REPOSITORY" --workflow finalize-client-recovery-production-once.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
+          restore_diagnostic="$(gh run list --repo "$REPOSITORY" --workflow diagnose-production-database-backup-once.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
           core_controller="$(gh run list --repo "$REPOSITORY" --workflow finalize-production-core-validation-once.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
           validation="$(gh run list --repo "$REPOSITORY" --workflow production-environment-validation.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
 
           mkdir -p deployment-status
           jq -n \
             --arg generated_at_utc "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson client_recovery "$client_recovery" \
+            --argjson restore_diagnostic "$restore_diagnostic" \
             --argjson core_controller "$core_controller" \
             --argjson validation "$validation" \
-            '{generated_at_utc: $generated_at_utc, core_controller: $core_controller, validation: $validation}' \
+            '{generated_at_utc: $generated_at_utc, client_recovery: $client_recovery, restore_diagnostic: $restore_diagnostic, core_controller: $core_controller, validation: $validation}' \
             > deployment-status/production-finalization-progress.json
 
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add deployment-status/production-finalization-progress.json
-          git commit -m "Registrar andamento da validação com extensões"
+          git commit -m "Registrar andamento do cliente e da restauração"
           git pull --rebase origin main
           git push origin HEAD:main
