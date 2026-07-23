@@ -75,7 +75,7 @@ export async function uploadSupplierInvoice(
   file: File,
   supplierId: string,
   orderId: string,
-  requestId: string,
+  requestId: string = crypto.randomUUID(),
 ) {
   const extension = ensureFile(file, INVOICE_EXTENSIONS, 'a nota fiscal');
   const path = `${supplierId}/notas-fiscais/${orderId}/${requestId}.${extension}`;
