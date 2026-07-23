@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test';
 
-const PUBLIC_ROUTES = ['/', '/anuncios', '/empresa-do-zero-ao-digital', '/anunciante'];
+const PUBLIC_ROUTES = [
+  '/',
+  '/anuncios',
+  '/empresa-do-zero-ao-digital',
+  '/anunciante',
+  '/fornecedor',
+  '/fornecedor/login',
+];
 
 test.describe('Smoke seguro das rotas públicas', () => {
   test.beforeEach(async ({ page }) => {

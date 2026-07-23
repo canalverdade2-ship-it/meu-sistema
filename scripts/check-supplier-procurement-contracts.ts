@@ -32,6 +32,7 @@ async function main() {
   assert.equal(routes.admin.suppliers(), '/admin/fornecedores');
   assert.equal(matchRoute('/fornecedor/pedidos', '', '').area, 'supplier');
   assert.equal(matchRoute('/fornecedor/pedidos', '', '').module, 'pedidos');
+  assert.equal(matchRoute('/fornecedor/pedidos/123', '', '').itemId, '123');
   assert.equal(matchRoute('/fornecedor', '', '').module, 'home');
   assert.equal(matchRoute('/fornecedor/login', '', '').module, 'login');
   assert.equal(normalizeAdminModule('fornecedores'), 'fornecedores');
@@ -54,18 +55,38 @@ async function main() {
   ]);
   await excludes('src/components/auth/RestrictedAccessModal.tsx', ["'fornecedor'", 'gsa_public_register_supplier']);
   await contains('src/components/public/LoginHub.tsx', ['onSupplierAccess', 'Portal do Fornecedor']);
+
   await contains('src/components/admin/FornecedoresModule.tsx', [
     'Novo pedido',
-    "reviewProduct(request, 'aprovar')",
-    'Aprovar NF e estoque',
-    'Contas a pagar',
-    'reviewAdminSupplierDelivery',
+    "openProductReview(request, 'ajuste')",
+    "openDeliveryReview(delivery, 'ajuste')",
+    'Aprovar NF e liberar estoque',
+    'Comprovante obrigatório',
+    'uploadAdminSupplierPaymentProof',
+    'notifySupplierPortal',
   ]);
+  await excludes('src/components/admin/FornecedoresModule.tsx', ['window.prompt(', 'window.confirm(']);
+
   await contains('src/pages/Fornecedor/FornecedorDashboard.tsx', [
-    'Novo produto',
-    'Enviar entrega e nota fiscal',
-    'submitSupplierDelivery',
-    'Quantidades entregues',
+    'Corrigir e reenviar',
+    'markSupplierNotificationRead',
+    'markAllSupplierNotificationsRead',
+    'updateSupplierProfile',
+    'Perfil e dados de pagamento',
+    "channel(`supplier-sync:${fornecedorId}`)",
+    'requestId',
+    'uploadSupplierInvoice(xml, fornecedorId, deliveryOrder.id, requestId)',
+    "route.module === 'pedidos'",
+  ]);
+
+  await contains('src/lib/supplierOperations.ts', [
+    'gsa_supplier_mark_notification_read',
+    'gsa_supplier_update_profile',
+    'gsa_supplier_mark_notifications_read',
+    'gsa_supplier_update_profile',
+    'comprovantes-pagamento',
+    'upsert: true',
+    'notifySupplierPortal',
   ]);
 
   await contains('supabase/migrations/20260722020000_supplier_procurement_foundation.sql', [
@@ -95,14 +116,35 @@ async function main() {
     "v_action <> 'aprovar'",
     "v_delivery.status = 'aprovado'",
   ]);
+  await contains('supabase/migrations/20260723050000_supplier_onboarding_completion.sql', [
+    'REENVIAR_PRE_CADASTRO',
+    'gsa_supplier_update_profile',
+  ]);
+  await contains('supabase/migrations/20260723051000_supplier_product_adjustments.sql', [
+    'REENVIAR_SOLICITACAO_PRODUTO',
+    'gsa_supplier_mark_notification_read',
+  ]);
+  await contains('supabase/migrations/20260723052000_supplier_delivery_idempotency.sql', [
+    'Referencia XML invalida para esta operacao',
+    'request_id',
+  ]);
+  await contains('supabase/migrations/20260723053000_supplier_payment_completion.sql', [
+    'O comprovante de pagamento e obrigatorio',
+    'Pagamento confirmado',
+  ]);
 
   const stockUpdate = operations.indexOf('UPDATE public.produtos', operations.indexOf('gsa_admin_review_supplier_delivery'));
   const historyInsert = operations.indexOf('INSERT INTO public.loja_estoque_historico', stockUpdate);
   const payableInsert = operations.indexOf('INSERT INTO public.contas_pagar', historyInsert);
-  assert.ok(stockUpdate > 0 && historyInsert > stockUpdate && payableInsert > historyInsert,
-    'A aprovacao da NF deve atualizar estoque, historico e contas a pagar na mesma operacao.');
+  assert.ok(
+    stockUpdate > 0 && historyInsert > stockUpdate && payableInsert > historyInsert,
+    'A aprovacao da NF deve atualizar estoque, historico e contas a pagar na mesma operacao.',
+  );
 
-  console.log('Contratos do portal e do fluxo de compras de fornecedores validados.');
+  const packageJson = JSON.parse(await read('package.json'));
+  assert.match(packageJson.scripts['test:integrity:contracts'], /test:suppliers/);
+
+  console.log('Contratos completos do portal e do fluxo de compras de fornecedores validados.');
 }
 
 main().catch((error) => {
