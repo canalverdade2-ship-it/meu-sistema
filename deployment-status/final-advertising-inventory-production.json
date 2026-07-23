@@ -1,0 +1,15 @@
+{
+  "generated_at_utc": "2026-07-23T11:40:21Z",
+  "result": "failure",
+  "advertising_atomicity_reapplied": true,
+  "orphan_cleanup_reapplied": true,
+  "edge_functions_redeployed": true,
+  "database_inventory_passed": true,
+  "official_validation": {
+    "run_id": "30003895957",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30003895957",
+    "exit_code": 1,
+    "storage_restore": false,
+    "authenticated_smoke": false
+  }
+}
