@@ -10,15 +10,12 @@ import {
 import { AccessibleDialog } from '../../ui/AccessibleDialog';
 import type { ServicePackage } from '../../../data/publicServiceCatalog';
 
-<<<<<<< HEAD
-=======
 function getAudienceLabel(audience: ServicePackage['audience']) {
   if (audience === 'PJ') return 'Para empresas';
   if (audience === 'PF') return 'Para você';
   return 'Para pessoas e empresas';
 }
 
->>>>>>> 99415315e4ab807c136f091440989c091519cabf
 export function ServiceDetailsDialog({
   selectedPackage,
   onClose,
@@ -33,46 +30,6 @@ export function ServiceDetailsDialog({
       isOpen={Boolean(selectedPackage)}
       onClose={onClose}
       ariaLabel={selectedPackage ? `Detalhes do pacote ${selectedPackage.title}` : 'Detalhes do pacote'}
-<<<<<<< HEAD
-      panelClassName="w-full max-w-3xl my-auto max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-4 sm:p-6 shadow-2xl transition-all"
-    >
-      {selectedPackage && (
-        <div className="flex flex-col">
-          <div className="flex items-start justify-between gap-3">
-            <div className="pr-2">
-              <p className="text-xs font-black uppercase tracking-widest text-[#8a6e2f]">{selectedPackage.subtitle}</p>
-              <h2 className="mt-1.5 text-xl sm:text-3xl font-black text-neutral-900">{selectedPackage.title}</h2>
-              <p className="mt-2 text-xs sm:text-sm leading-6 text-neutral-600">{selectedPackage.description}</p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              data-dialog-autofocus
-              aria-label="Fechar detalhes"
-              className="shrink-0 rounded-lg bg-neutral-100 p-2 text-neutral-600 transition hover:bg-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="mt-5 sm:mt-7 grid gap-3 grid-cols-1 sm:grid-cols-2">
-            {selectedPackage.services.map((service) => (
-              <div key={service.name} className="rounded-xl border border-neutral-100 bg-neutral-50 p-3.5 sm:p-4">
-                <strong className="text-sm sm:text-base font-bold text-neutral-900 block">{service.name}</strong>
-                <p className="mt-1.5 text-xs sm:text-sm leading-5 text-neutral-600">{service.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => onInterest(selectedPackage)}
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-black uppercase tracking-wider text-white transition hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]"
-          >
-            <span>Tenho interesse</span>
-            <ArrowRight className="h-4 w-4 text-[#d8bd73]" />
-          </button>
-=======
       overlayClassName="items-end justify-center overflow-y-auto bg-[#03070d]/80 p-0 backdrop-blur-md sm:items-center sm:p-5"
       panelClassName="max-h-[calc(100dvh-0.5rem)] max-w-5xl overflow-hidden rounded-t-[2rem] border border-white/10 bg-[#f7f4ed] shadow-[0_32px_90px_rgba(0,0,0,0.45)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[2rem]"
     >
@@ -193,7 +150,6 @@ export function ServiceDetailsDialog({
               </aside>
             </div>
           </div>
->>>>>>> 99415315e4ab807c136f091440989c091519cabf
         </div>
       )}
     </AccessibleDialog>
@@ -218,33 +174,6 @@ export function RequestChannelDialog({
       isOpen={Boolean(selectedPackage)}
       onClose={onClose}
       ariaLabel="Escolher canal de atendimento"
-<<<<<<< HEAD
-      panelClassName="w-full max-w-xl my-auto max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-4 sm:p-6 shadow-2xl transition-all"
-    >
-      {selectedPackage && (
-        <div className="flex flex-col">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-[#8a6e2f]">Solicitar atendimento</p>
-              <h2 className="mt-1.5 text-lg sm:text-2xl font-black text-neutral-900">{selectedPackage.title}</h2>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              data-dialog-autofocus
-              aria-label="Fechar canais de atendimento"
-              className="shrink-0 rounded-lg bg-neutral-100 p-2 text-neutral-600 transition hover:bg-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="mt-5 grid gap-3 grid-cols-1 sm:grid-cols-3">
-            <ChannelButton icon={MessageCircle} title="WhatsApp" onClick={() => onWhatsApp(selectedPackage)} />
-            <ChannelButton icon={Mail} title="E-mail" onClick={() => onEmail(selectedPackage)} />
-            <ChannelButton icon={LogIn} title="Portal" onClick={() => onPortal(selectedPackage)} />
-          </div>
-=======
       overlayClassName="items-end justify-center overflow-y-auto bg-[#03070d]/80 p-0 backdrop-blur-md sm:items-center sm:p-5"
       panelClassName="max-h-[calc(100dvh-0.5rem)] max-w-3xl overflow-hidden rounded-t-[2rem] border border-white/10 bg-[#f7f4ed] shadow-[0_32px_90px_rgba(0,0,0,0.45)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[2rem]"
     >
@@ -298,7 +227,6 @@ export function RequestChannelDialog({
               O canal escolhido não altera o escopo do pacote.
             </p>
           </div>
->>>>>>> 99415315e4ab807c136f091440989c091519cabf
         </div>
       )}
     </AccessibleDialog>
@@ -308,32 +236,20 @@ export function RequestChannelDialog({
 function ChannelButton({
   icon: Icon,
   title,
-<<<<<<< HEAD
-=======
   description,
   badge,
->>>>>>> 99415315e4ab807c136f091440989c091519cabf
   onClick,
 }: {
   icon: typeof MessageCircle;
   title: string;
-<<<<<<< HEAD
-=======
   description: string;
   badge?: string;
->>>>>>> 99415315e4ab807c136f091440989c091519cabf
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-<<<<<<< HEAD
-      className="flex items-center sm:flex-col sm:items-start justify-start gap-3 sm:gap-2 rounded-xl border border-neutral-200 p-4 text-left transition hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]"
-    >
-      <Icon className="h-6 w-6 shrink-0 text-[#8a6e2f]" />
-      <strong className="block text-sm font-bold text-neutral-900">{title}</strong>
-=======
       className="group relative rounded-2xl border border-[#ddd6c8] bg-white p-5 text-left shadow-[0_10px_26px_rgba(16,24,32,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-[#cdb36d] hover:shadow-[0_16px_34px_rgba(16,24,32,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f] focus-visible:ring-offset-2"
     >
       {badge && (
@@ -349,7 +265,6 @@ function ChannelButton({
       <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#806729]">
         Continuar <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
       </span>
->>>>>>> 99415315e4ab807c136f091440989c091519cabf
     </button>
   );
 }
