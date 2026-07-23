@@ -1,0 +1,145 @@
+name: Restore Original Affiliate Colors
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/temp-restore-affiliate-colors.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: restore-original-affiliate-colors
+  cancel-in-progress: false
+
+jobs:
+  restore:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Restore previous visual palette
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: Path, before: str, after: str) -> None:
+              content = path.read_text(encoding='utf-8')
+              count = content.count(before)
+              if count != 1:
+                  raise SystemExit(f'{path}: esperado 1 trecho, encontrado {count}: {before[:100]}')
+              path.write_text(content.replace(before, after, 1), encoding='utf-8')
+
+          dashboard = Path('src/pages/Afiliado/AfiliadoDashboard.tsx')
+
+          replace_once(
+              dashboard,
+              '<section className="rounded-3xl bg-slate-950 p-6 text-white">',
+              '<section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">',
+          )
+          replace_once(
+              dashboard,
+              '<p className="text-xs font-black uppercase tracking-[0.2em] text-amber-400">Visão geral</p>',
+              '<p className="text-xs font-black uppercase tracking-[0.2em] text-[#7a5a1b]">Visão geral</p>',
+          )
+          replace_once(
+              dashboard,
+              '<h1 className="mt-2 text-2xl font-black">Olá, {snapshot.affiliate.nomeDivulgacao}</h1>',
+              '<h1 className="mt-2 text-2xl font-black text-slate-900">Olá, {snapshot.affiliate.nomeDivulgacao}</h1>',
+          )
+          replace_once(
+              dashboard,
+              '<p className="mt-2 text-sm text-slate-400">Os dados são atualizados pelo backend seguro e sincronizados periodicamente.</p>',
+              '<p className="mt-2 text-sm text-slate-500">Os dados são atualizados pelo backend seguro e sincronizados periodicamente.</p>',
+          )
+          replace_once(
+              dashboard,
+              'className="text-xs font-black text-indigo-600">Gerenciar links</button>',
+              'className="text-xs font-black text-[#7a5a1b] hover:text-[#947624]">Gerenciar links</button>',
+          )
+          replace_once(
+              dashboard,
+              '<div className="rounded-3xl bg-slate-950 p-6 text-white"><p className="text-xs font-bold uppercase tracking-wider text-slate-400">Saldo disponível para saque</p>',
+              '<div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] p-5 text-white shadow-md"><p className="text-xs font-bold uppercase tracking-wider text-slate-300">Saldo disponível para saque</p>',
+          )
+          replace_once(
+              dashboard,
+              '<div className="rounded-3xl bg-indigo-950 p-6 text-white"><p className="text-xs font-bold uppercase tracking-wider text-indigo-300">Pontos do afiliado</p>',
+              '<div className="rounded-2xl border border-indigo-900 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 p-5 text-white shadow-md"><p className="text-xs font-bold uppercase tracking-wider text-indigo-200">Pontos do afiliado</p>',
+          )
+          replace_once(
+              dashboard,
+              "return <nav className=\"space-y-1\">{items.map(([id, label, Icon]) => <button key={id} type=\"button\" onClick={() => onSelect(id)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold ${activeTab === id ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100'}`}><Icon className=\"h-4 w-4\" />{label}</button>)}</nav>;",
+              "return <nav className=\"space-y-1\">{items.map(([id, label, Icon]) => { const selected = activeTab === id; return <button key={id} type=\"button\" onClick={() => onSelect(id)} className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition ${selected ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}><Icon className={`h-4 w-4 ${selected ? 'text-amber-400' : 'text-slate-400'}`} />{label}</button>; })}</nav>;",
+          )
+          replace_once(
+              dashboard,
+              "return <button type=\"button\" onClick={onClick} className={`flex flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] ${active ? 'font-black text-slate-950' : 'text-slate-400'}`}><Icon className=\"h-4 w-4\" />{label}</button>;",
+              "return <button type=\"button\" onClick={onClick} className={`flex flex-col items-center justify-center rounded-xl px-3 py-1 text-[10px] transition ${active ? 'font-bold text-slate-900' : 'font-medium text-slate-400 hover:text-slate-600'}`}><div className={`rounded-lg p-1 ${active ? 'bg-slate-900 text-amber-400' : ''}`}><Icon className=\"h-4 w-4\" /></div>{label}</button>;",
+          )
+          replace_once(
+              dashboard,
+              'return <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><Icon className="h-5 w-5 text-indigo-600" /><p className="mt-3 text-xl font-black">{value}</p><p className="mt-1 text-xs font-bold text-slate-500">{label}</p></article>;',
+              'return <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5eece] text-[#7a5a1b]"><Icon className="h-5 w-5" /></span><p className="mt-3 text-xl font-black text-slate-900">{value}</p><p className="mt-1 text-xs font-bold text-slate-500">{label}</p></article>;',
+          )
+
+          admin = Path('src/components/admin/AffiliateAdminModule.tsx')
+          replace_once(
+              admin,
+              "{ label: 'Afiliados ativos', value: snapshot.summary.afiliados_ativos.toLocaleString('pt-BR'), icon: Users },\n    { label: 'Vendas atribuídas', value: snapshot.summary.vendas_atribuidas.toLocaleString('pt-BR'), icon: Link2 },\n    { label: 'Em carência', value: formatCurrency(snapshot.summary.comissoes_pendentes), icon: Clock3 },\n    { label: 'Disponível', value: formatCurrency(snapshot.summary.comissoes_disponiveis), icon: Banknote },",
+              "{ label: 'Afiliados ativos', value: snapshot.summary.afiliados_ativos.toLocaleString('pt-BR'), icon: Users, color: 'text-indigo-600 bg-indigo-50' },\n    { label: 'Vendas atribuídas', value: snapshot.summary.vendas_atribuidas.toLocaleString('pt-BR'), icon: Link2, color: 'text-sky-600 bg-sky-50' },\n    { label: 'Em carência', value: formatCurrency(snapshot.summary.comissoes_pendentes), icon: Clock3, color: 'text-amber-600 bg-amber-50' },\n    { label: 'Disponível', value: formatCurrency(snapshot.summary.comissoes_disponiveis), icon: Banknote, color: 'text-emerald-600 bg-emerald-50' },",
+          )
+          replace_once(
+              admin,
+              '<div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{cards.map(({ label, value, icon: Icon }) => <article key={label} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"><Icon className="h-5 w-5 text-indigo-600" /><p className="mt-3 text-xl font-black text-neutral-950">{value}</p><p className="mt-1 text-xs font-bold text-neutral-500">{label}</p></article>)}</div>',
+              '<div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{cards.map(({ label, value, icon: Icon, color }) => <article key={label} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}><Icon className="h-5 w-5" /></span><p className="mt-3 text-xl font-black text-neutral-950">{value}</p><p className="mt-1 text-xs font-bold text-neutral-500">{label}</p></article>)}</div>',
+          )
+          replace_once(
+              admin,
+              'className="w-full rounded-xl border border-neutral-200 py-2.5 pl-10 pr-3 text-sm"',
+              'className="w-full rounded-xl border border-neutral-200 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"',
+          )
+          replace_once(
+              admin,
+              'className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-4 py-3 text-xs font-black uppercase tracking-wider text-white disabled:opacity-60"',
+              'className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-4 py-3 text-xs font-black uppercase tracking-wider text-white transition hover:bg-indigo-600 disabled:opacity-60"',
+          )
+
+          print('Paleta original dos painéis de afiliados restaurada.')
+          PY
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Validate affiliate contracts
+        run: npm run test:affiliates
+
+      - name: Validate TypeScript
+        run: npx tsc --noEmit
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Commit restored colors directly to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/pages/Afiliado/AfiliadoDashboard.tsx src/components/admin/AffiliateAdminModule.tsx
+          git commit -m 'Restaurar cores originais das páginas de afiliados'
+          git pull --rebase origin main
+          git push origin HEAD:main
