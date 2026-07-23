@@ -1,0 +1,48 @@
+name: Temporary Affiliate Source Autofix
+
+on:
+  push:
+    branches:
+      - agent/corrigir-gsa-afiliados
+    paths:
+      - '.github/workflows/temp-affiliate-source-autofix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/corrigir-gsa-afiliados
+      - name: Patch local component props
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              Path('src/components/admin/AffiliateAdminModule.tsx'): (
+                  "function ProgramEditor({ program, onSaved }: { program: AffiliateProgram; onSaved: () => Promise<void> }) {",
+                  "function ProgramEditor({ program, onSaved }: { key?: string; program: AffiliateProgram; onSaved: () => Promise<void> }) {",
+              ),
+              Path('src/pages/Afiliado/AfiliadoDashboard.tsx'): (
+                  "function LinkCard({ link }: { link: AffiliateSnapshot['links'][number] }) {",
+                  "function LinkCard({ link }: { key?: string; link: AffiliateSnapshot['links'][number] }) {",
+              ),
+          }
+
+          for path, (before, after) in replacements.items():
+              content = path.read_text(encoding='utf-8')
+              if before not in content:
+                  raise SystemExit(f'Assinatura esperada ausente: {path}')
+              path.write_text(content.replace(before, after), encoding='utf-8')
+          PY
+      - name: Commit source fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/admin/AffiliateAdminModule.tsx src/pages/Afiliado/AfiliadoDashboard.tsx
+          git commit -m 'Corrigir props locais do GSA Afiliados'
+          git push origin HEAD:agent/corrigir-gsa-afiliados
