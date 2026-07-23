@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-23T23:31:06.020Z",
+  "generated_at": "2026-07-23T23:50:40.781Z",
   "scope": [
     "src",
     "supabase/functions"
@@ -126,7 +126,7 @@
       "rule": "demo-reference",
       "description": "Referência a demonstração em código executável",
       "file": "src/components/public/SystemsPageFinal.tsx",
-      "line": 293,
+      "line": 338,
       "excerpt": "<p className=\"text-xs leading-5 text-slate-500\">A demonstração apresenta referências conceituais. Estrutura, visual, regras e módulos são definidos para cada negócio.</p>"
     },
     {
