@@ -1,0 +1,13 @@
+{
+  "generated_at_utc": "2026-07-23T13:56:34Z",
+  "rollback": {
+    "conclusion": "",
+    "createdAt": "2026-07-23T13:53:18Z",
+    "databaseId": 30013222955,
+    "event": "push",
+    "headSha": "96b87cf8775dfddbe69e42e9f021851252bd1764",
+    "status": "in_progress",
+    "updatedAt": "2026-07-23T13:53:22Z",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30013222955"
+  }
+}
