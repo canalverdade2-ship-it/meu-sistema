@@ -1,4 +1,6 @@
 from pathlib import Path
+import runpy
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -70,4 +72,18 @@ for path in [
     if any(marker in content for marker in ("<<<<<<<", "=======", ">>>>>>>")):
         raise RuntimeError(f"Marcador de conflito restante em {path}")
 
-print("Conflitos ativos resolvidos com sucesso.")
+# Aplicação visual temporária: preserva toda a lógica real e restaura apenas classes de estilo.
+runpy.run_path(str(ROOT / "scripts/restore-gsa-ads-colors.py"), run_name="__main__")
+subprocess.run(
+    [
+        "git",
+        "add",
+        "src/components/public/AdvertisingPage.tsx",
+        "src/components/admin/AdvertisingAdminModule.tsx",
+        "src/pages/AdvertiserPortal.tsx",
+    ],
+    cwd=ROOT,
+    check=True,
+)
+
+print("Conflitos ativos resolvidos e identidade visual original restaurada com sucesso.")
