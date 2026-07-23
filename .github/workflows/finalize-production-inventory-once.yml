@@ -1,0 +1,166 @@
+name: Finalize Production Inventory Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/finalize-production-inventory-once.yml
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: finalize-production-inventory-once
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    name: Executar e comprovar fechamento integral
+    runs-on: ubuntu-latest
+    timeout-minutes: 210
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+      TARGET_SHA: ${{ github.sha }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Execute production workflows and record result
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          wait_for_dispatched_run() {
+            local workflow_file="$1"
+            local run_id=""
+            for attempt in $(seq 1 60); do
+              run_id="$(
+                gh run list \
+                  --repo "$REPOSITORY" \
+                  --workflow "$workflow_file" \
+                  --event workflow_dispatch \
+                  --branch main \
+                  --limit 30 \
+                  --json databaseId,headSha,createdAt \
+                  --jq ".[] | select(.headSha == \"$TARGET_SHA\") | .databaseId" \
+                | head -n 1
+              )"
+              if [[ -n "$run_id" ]]; then
+                printf '%s\n' "$run_id"
+                return 0
+              fi
+              sleep 5
+            done
+            return 1
+          }
+
+          run_and_watch() {
+            local workflow_file="$1"
+            shift
+            local label="$1"
+            shift
+
+            echo "Disparando: $label"
+            if ! gh workflow run "$workflow_file" --repo "$REPOSITORY" --ref main "$@"; then
+              echo "Falha ao disparar $label" >&2
+              return 90
+            fi
+
+            local run_id
+            if ! run_id="$(wait_for_dispatched_run "$workflow_file")"; then
+              echo "Execução não localizada para $label" >&2
+              return 91
+            fi
+
+            echo "$run_id" > "/tmp/${workflow_file}.run-id"
+            echo "Acompanhando $label: https://github.com/$REPOSITORY/actions/runs/$run_id"
+            gh run watch "$run_id" --repo "$REPOSITORY" --exit-status --interval 10
+          }
+
+          inventory_exit=0
+          validation_exit=0
+
+          run_and_watch \
+            apply-production-inventory-gaps.yml \
+            "Apply Production Inventory Gaps" \
+            -f confirmation=FECHAR_INVENTARIO_PRODUCAO \
+            || inventory_exit=$?
+
+          if [[ "$inventory_exit" -eq 0 ]]; then
+            run_and_watch \
+              production-environment-validation.yml \
+              "Production Environment Validation completa" \
+              -f confirmation=VALIDAR_PRODUCAO \
+              -f apply_pending_changes=false \
+              -f run_storage_restore=true \
+              -f run_authenticated_smoke=true \
+              || validation_exit=$?
+          else
+            validation_exit=92
+          fi
+
+          inventory_run_id="$(cat /tmp/apply-production-inventory-gaps.yml.run-id 2>/dev/null || true)"
+          validation_run_id="$(cat /tmp/production-environment-validation.yml.run-id 2>/dev/null || true)"
+
+          mkdir -p deployment-status
+          result="success"
+          if [[ "$inventory_exit" -ne 0 || "$validation_exit" -ne 0 ]]; then
+            result="failure"
+          fi
+
+          cat > deployment-status/production-finalization.json <<JSON
+          {
+            "generated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "source_commit": "$TARGET_SHA",
+            "result": "$result",
+            "inventory": {
+              "workflow": "Apply Production Inventory Gaps",
+              "run_id": "${inventory_run_id}",
+              "url": "${inventory_run_id:+https://github.com/$REPOSITORY/actions/runs/$inventory_run_id}",
+              "exit_code": $inventory_exit
+            },
+            "validation": {
+              "workflow": "Production Environment Validation",
+              "run_id": "${validation_run_id}",
+              "url": "${validation_run_id:+https://github.com/$REPOSITORY/actions/runs/$validation_run_id}",
+              "apply_pending_changes": false,
+              "run_storage_restore": true,
+              "run_authenticated_smoke": true,
+              "exit_code": $validation_exit
+            }
+          }
+          JSON
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add deployment-status/production-finalization.json
+          git commit -m "Registrar fechamento integral de produção" || true
+
+          pushed=false
+          for attempt in $(seq 1 8); do
+            git pull --rebase origin main || {
+              git rebase --abort || true
+              sleep 5
+              continue
+            }
+            if git push origin HEAD:main; then
+              pushed=true
+              break
+            fi
+            sleep 5
+          done
+
+          if [[ "$pushed" != true ]]; then
+            echo "Não foi possível publicar a evidência final" >&2
+            exit 93
+          fi
+
+          if [[ "$result" != success ]]; then
+            exit 1
+          fi
