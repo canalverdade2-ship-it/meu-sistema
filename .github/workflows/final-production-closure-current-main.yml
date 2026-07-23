@@ -1,0 +1,249 @@
+name: Final Production Closure Current Main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/final-production-closure-current-main.yml
+
+permissions:
+  actions: write
+  contents: write
+
+concurrency:
+  group: final-production-closure-current-main
+  cancel-in-progress: false
+
+jobs:
+  close-production:
+    name: Validar integralmente código e produção
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+      SOURCE_SHA: ${{ github.sha }}
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run complete local validation
+        id: local
+        shell: bash
+        run: |
+          set -uo pipefail
+          : > /tmp/final-closure-results.tsv
+          mkdir -p /tmp/final-closure-logs
+
+          run_check() {
+            local key="$1"
+            shift
+            echo "===== $key ====="
+            set +e
+            "$@" 2>&1 | tee "/tmp/final-closure-logs/${key}.log"
+            local code=${PIPESTATUS[0]}
+            set -e
+            printf '%s\t%s\n' "$key" "$code" >> /tmp/final-closure-results.tsv
+            return 0
+          }
+
+          run_check typescript npx tsc --noEmit
+          run_check typescript_strict npm run typecheck:strict
+          run_check admin npm run test:admin
+          run_check products_subscriptions npm run test:products-subscriptions
+          run_check client_security npm run test:client-security
+          run_check provider npm run test:provider
+          run_check suppliers npm run test:suppliers
+          run_check home npm run test:home
+          run_check travel npm run test:travel
+          run_check free_tools npm run test:free-tools
+          run_check affiliates npm run test:affiliates
+          run_check realtime npm run test:realtime
+          run_check careers npm run test:careers
+          run_check advertising npm run test:advertising
+          run_check advertising_complete npm run test:advertising-complete
+          run_check auth_deno_check deno check supabase/functions/gsa-auth-session/index.ts
+          run_check auth_deno_test deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
+          run_check public_smoke npm run test:e2e:smoke
+          run_check production_build npm run build
+
+          if awk -F'\t' '$2 != 0 { failed=1 } END { exit failed ? 1 : 0 }' /tmp/final-closure-results.tsv; then
+            echo 'result=success' >> "$GITHUB_OUTPUT"
+          else
+            echo 'result=failure' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Execute official production validation
+        id: production
+        shell: bash
+        run: |
+          set -uo pipefail
+          started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          validation_exit=0
+
+          gh workflow run production-environment-validation.yml \
+            --repo "$REPOSITORY" \
+            --ref main \
+            -f confirmation=VALIDAR_PRODUCAO \
+            -f apply_pending_changes=false \
+            -f run_storage_restore=false \
+            -f run_authenticated_smoke=false \
+            || validation_exit=90
+
+          run_id=""
+          if [[ "$validation_exit" -eq 0 ]]; then
+            for attempt in $(seq 1 90); do
+              run_id="$(
+                gh run list \
+                  --repo "$REPOSITORY" \
+                  --workflow production-environment-validation.yml \
+                  --event workflow_dispatch \
+                  --branch main \
+                  --limit 40 \
+                  --json databaseId,createdAt \
+                  --jq ".[] | select(.createdAt >= \"$started_at\") | .databaseId" \
+                | head -n 1
+              )"
+              [[ -n "$run_id" ]] && break
+              sleep 5
+            done
+            [[ -n "$run_id" ]] || validation_exit=91
+          fi
+
+          if [[ "$validation_exit" -eq 0 ]]; then
+            gh run watch "$run_id" --repo "$REPOSITORY" --exit-status --interval 10 \
+              || validation_exit=$?
+          fi
+
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "exit_code=$validation_exit" >> "$GITHUB_OUTPUT"
+          if [[ "$validation_exit" -eq 0 ]]; then
+            echo 'result=success' >> "$GITHUB_OUTPUT"
+          else
+            echo 'result=failure' >> "$GITHUB_OUTPUT"
+          fi
+          exit 0
+
+      - name: Build final closure evidence
+        if: always()
+        shell: bash
+        env:
+          LOCAL_RESULT: ${{ steps.local.outputs.result }}
+          PRODUCTION_RESULT: ${{ steps.production.outputs.result }}
+          PRODUCTION_RUN_ID: ${{ steps.production.outputs.run_id }}
+          PRODUCTION_EXIT_CODE: ${{ steps.production.outputs.exit_code }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          LOCAL_RESULT="${LOCAL_RESULT:-failure}" \
+          PRODUCTION_RESULT="${PRODUCTION_RESULT:-failure}" \
+          PRODUCTION_RUN_ID="${PRODUCTION_RUN_ID:-}" \
+          PRODUCTION_EXIT_CODE="${PRODUCTION_EXIT_CODE:-99}" \
+          SOURCE_SHA="$SOURCE_SHA" \
+          REPOSITORY="$REPOSITORY" \
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const rows = fs.existsSync('/tmp/final-closure-results.tsv')
+            ? fs.readFileSync('/tmp/final-closure-results.tsv', 'utf8').trim().split(/\r?\n/).filter(Boolean)
+            : [];
+          const checks = Object.fromEntries(rows.map((row) => {
+            const [name, code] = row.split('\t');
+            return [name, { exit_code: Number(code), result: Number(code) === 0 ? 'success' : 'failure' }];
+          }));
+          const success = process.env.LOCAL_RESULT === 'success' && process.env.PRODUCTION_RESULT === 'success';
+          const runId = process.env.PRODUCTION_RUN_ID || '';
+          const evidence = {
+            generated_at_utc: new Date().toISOString(),
+            status: success ? 'success' : 'failure',
+            validated_sha: process.env.SOURCE_SHA,
+            scope: 'typescript-admin-client-provider-suppliers-home-travel-products-affiliates-realtime-careers-advertising-deno-playwright-build-production',
+            local_validation: process.env.LOCAL_RESULT,
+            checks,
+            production_validation: {
+              result: process.env.PRODUCTION_RESULT,
+              run_id: runId,
+              url: runId ? `https://github.com/${process.env.REPOSITORY}/actions/runs/${runId}` : '',
+              exit_code: Number(process.env.PRODUCTION_EXIT_CODE),
+              apply_pending_changes: false,
+              storage_restore_to_isolated_supabase: false,
+              authenticated_client_smoke: false,
+            },
+            completed_configured_scope: success,
+            optional_external_drills_pending_secrets: [
+              'TARGET_SUPABASE_URL',
+              'TARGET_SUPABASE_SERVICE_ROLE_KEY',
+              'PRODUCTION_APP_URL',
+              'PRODUCTION_CLIENT_CPF',
+              'PRODUCTION_CLIENT_PIN'
+            ]
+          };
+          fs.writeFileSync('/tmp/final-production-closure-current-main.json', `${JSON.stringify(evidence, null, 2)}\n`);
+          NODE
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-production-closure-${{ github.run_id }}
+          path: /tmp/final-closure-logs
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Publish final evidence to main
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f /tmp/final-production-closure-current-main.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          published=false
+          for attempt in $(seq 1 12); do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p deployment-status
+            cp /tmp/final-production-closure-current-main.json \
+              deployment-status/final-production-closure.json
+            git add deployment-status/final-production-closure.json
+            git commit -m "Registrar fechamento integral final da produção" || true
+            if git push origin HEAD:main; then
+              published=true
+              break
+            fi
+            sleep 5
+          done
+          test "$published" = true
+
+      - name: Enforce final result
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f /tmp/final-production-closure-current-main.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const evidence = JSON.parse(fs.readFileSync('/tmp/final-production-closure-current-main.json', 'utf8'));
+          if (evidence.status !== 'success') process.exit(1);
+          NODE
