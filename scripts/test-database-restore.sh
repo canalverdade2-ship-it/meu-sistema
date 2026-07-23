@@ -46,6 +46,15 @@ fi
 # pelo inventário de produção e não são portáveis para um PostgreSQL vazio.
 restore_sections=(pre-data data)
 
+bootstrap_sql=$(cat <<'SQL'
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE SCHEMA IF NOT EXISTS storage;
+CREATE SCHEMA IF NOT EXISTS extensions;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+SQL
+)
+
 validation_sql=$(cat <<'SQL'
 DO $$
 DECLARE
@@ -79,6 +88,10 @@ BEGIN
 
   IF v_migrations = 0 THEN
     RAISE EXCEPTION 'Restauração não contém registros do histórico de migrations';
+  END IF;
+
+  IF to_regprocedure('extensions.uuid_generate_v4()') IS NULL THEN
+    RAISE EXCEPTION 'Extensão uuid-ossp ausente na restauração descartável';
   END IF;
 END $$;
 
@@ -116,14 +129,10 @@ if [[ "$server_major" =~ ^[0-9]+$ ]] && command -v docker >/dev/null 2>&1; then
   docker exec -e PGPASSWORD="$restore_password" "$container_name" \
     createdb -U postgres "$restore_database"
 
-  # Stubs mínimos de schemas comuns evitam que assinaturas de funções falhem
-  # durante o pre-data. Nenhum dado ou política desses schemas é restaurado.
-  docker exec -i -e PGPASSWORD="$restore_password" "$container_name" \
-    psql --username=postgres --dbname="$restore_database" -v ON_ERROR_STOP=1 <<'SQL'
-CREATE SCHEMA IF NOT EXISTS auth;
-CREATE SCHEMA IF NOT EXISTS storage;
-CREATE SCHEMA IF NOT EXISTS extensions;
-SQL
+  printf '%s\n' "$bootstrap_sql" | docker exec -i \
+    -e PGPASSWORD="$restore_password" \
+    "$container_name" \
+    psql --username=postgres --dbname="$restore_database" -v ON_ERROR_STOP=1
 
   for section in "${restore_sections[@]}"; do
     docker exec \
@@ -159,11 +168,7 @@ else
   trap cleanup EXIT
 
   createdb "$restore_database"
-  psql --dbname="$restore_database" -v ON_ERROR_STOP=1 <<'SQL'
-CREATE SCHEMA IF NOT EXISTS auth;
-CREATE SCHEMA IF NOT EXISTS storage;
-CREATE SCHEMA IF NOT EXISTS extensions;
-SQL
+  printf '%s\n' "$bootstrap_sql" | psql --dbname="$restore_database" -v ON_ERROR_STOP=1
 
   for section in "${restore_sections[@]}"; do
     PGOPTIONS='-c check_function_bodies=off' pg_restore \
