@@ -9,12 +9,6 @@ import {
 import { AccessibleDialog } from '../../ui/AccessibleDialog';
 import type { ServicePackage } from '../../../data/publicServiceCatalog';
 
-function getAudienceLabel(audience: ServicePackage['audience']) {
-  if (audience === 'PJ') return 'Para empresas';
-  if (audience === 'PF') return 'Para você';
-  return 'Para pessoas e empresas';
-}
-
 export function ServiceDetailsDialog({
   selectedPackage,
   onClose,
@@ -37,19 +31,10 @@ export function ServiceDetailsDialog({
           <header className="shrink-0 border-b border-white/10 bg-[#0a1420] px-4 py-4 text-white sm:px-6 sm:py-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-[#d8bd73]/35 bg-[#d8bd73]/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#e5cf91]">
-                    {getAudienceLabel(selectedPackage.audience)}
-                  </span>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/50">
-                    Serviços e assinaturas
-                  </span>
-                </div>
-
-                <p className="mt-3 text-[10px] font-black uppercase tracking-[0.14em] text-[#d8bd73]">
-                  {selectedPackage.subtitle}
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#d8bd73]">
+                  Detalhes do pacote
                 </p>
-                <h2 className="mt-1 text-2xl font-black leading-tight tracking-tight sm:text-3xl">
+                <h2 className="mt-1.5 text-2xl font-black leading-tight tracking-tight sm:text-3xl">
                   {selectedPackage.title}
                 </h2>
                 <p className="mt-2 max-w-2xl text-xs leading-5 text-white/65 sm:text-sm sm:leading-6">
