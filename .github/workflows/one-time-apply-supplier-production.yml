@@ -8,7 +8,7 @@ on:
       - 'apply-supplier-production.trigger'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: one-time-apply-supplier-production
@@ -29,6 +29,8 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -143,3 +145,40 @@ jobs:
             supplier-final-verify.log
           if-no-files-found: ignore
           retention-days: 30
+
+      - name: Record supplier production result
+        if: always()
+        env:
+          RESULT: ${{ job.status }}
+          RUN_ID: ${{ github.run_id }}
+          VALIDATED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          cat > deployment-status/supplier-production.json <<EOF
+          {
+            "status": "$RESULT",
+            "workflow_run_id": "$RUN_ID",
+            "validated_sha": "$VALIDATED_SHA",
+            "project_ref": "$EXPECTED_PROJECT_ID",
+            "module": "supplier-portal",
+            "migrations": "$RESULT",
+            "database_objects": "$RESULT",
+            "recorded_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment-status/supplier-production.json
+          git commit -m "Registrar implantação do Portal do Fornecedor: $RESULT" || true
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Remove one-time supplier deployment files
+        if: success()
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/one-time-apply-supplier-production.yml apply-supplier-production.trigger
+          git commit -m "Remover aplicador temporário do Portal do Fornecedor"
+          git pull --rebase origin main
+          git push origin HEAD:main
