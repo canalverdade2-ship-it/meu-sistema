@@ -1,0 +1,128 @@
+          if (route.module === 'pedidos' && route.itemId) navigate(routes.supplier.orders());
+        }}
+        onSubmit={async (requestId, payload, xml, pdf) => {
+          if (!deliveryOrder) return;
+          setSaving(true);
+          try {
+            const [xmlReference, pdfReference] = await Promise.all([
+              xml ? uploadSupplierInvoice(xml, fornecedorId, deliveryOrder.id, requestId) : Promise.resolve(null),
+              pdf ? uploadSupplierInvoice(pdf, fornecedorId, deliveryOrder.id, requestId) : Promise.resolve(null),
+            ]);
+            await submitSupplierDelivery(requestId, deliveryOrder.id, {
+              ...payload,
+              arquivo_xml: xmlReference,
+              arquivo_pdf: pdfReference,
+            });
+            toast.success('Entrega e nota fiscal enviadas para análise.');
+            setDeliveryOrder(null);
+            navigate(routes.supplier.deliveries());
+            await load(true);
+          } catch (error: any) {
+            toast.error(error?.message || 'Não foi possível enviar a entrega. Você pode tentar novamente sem duplicar a operação.');
+          } finally {
+            setSaving(false);
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+function Navigation({ active, onNavigate }: { active: string; onNavigate: (path: string) => void }) {
+  return (
+    <nav className="space-y-1">
+      {MENU.map((item) => {
+        const Icon = item.icon;
+        return (
+          <button
+            type="button"
+            key={item.id}
+            onClick={() => onNavigate(item.path)}
+            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-bold ${active === item.id ? 'bg-neutral-950 text-white shadow-lg' : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900'}`}
+          >
+            <Icon className="h-5 w-5" />{item.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+function Dashboard({ snapshot, pendingOrders, pendingDeliveries, receivable, onNavigate }: {
+  snapshot: SupplierSnapshot;
+  pendingOrders: number;
+  pendingDeliveries: number;
+  receivable: number;
+  onNavigate: (path: string) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <section className="rounded-[2rem] bg-neutral-950 p-7 text-white">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Bem-vindo</p>
+        <h1 className="mt-2 text-3xl font-black">{snapshot.supplier?.nome_fantasia || snapshot.supplier?.razao_social || 'Fornecedor'}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-white/60">Acompanhe produtos aprovados, pedidos de compra, entregas, notas fiscais e pagamentos.</p>
+      </section>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Metric label="Produtos aprovados" value={snapshot.products.length} icon={Package} />
+        <Metric label="Pedidos em aberto" value={pendingOrders} icon={ShoppingCart} />
+        <Metric label="Entregas em análise" value={pendingDeliveries} icon={Truck} />
+        <Metric label="Valores pendentes" value={formatCurrency(receivable)} icon={WalletCards} />
+      </div>
+      <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-black">Pedidos recentes</h2>
+          <button type="button" onClick={() => onNavigate(routes.supplier.orders())} className="text-xs font-black text-emerald-700">Ver todos</button>
+        </div>
+        <div className="mt-4 space-y-2">
+          {snapshot.orders.slice(0, 5).map((order) => (
+            <button type="button" key={order.id} onClick={() => onNavigate(routes.supplier.order(order.id))} className="flex w-full items-center justify-between rounded-xl bg-neutral-50 p-4 text-left">
+              <div><p className="font-black">{order.codigo}</p><p className="text-xs text-neutral-500">{order.items?.length || 0} produto(s)</p></div>
+              <Status value={order.status} />
+            </button>
+          ))}
+          {snapshot.orders.length === 0 && <p className="py-8 text-center text-sm text-neutral-400">Nenhum pedido recebido.</p>}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Products({ snapshot, loading, onNew, onCorrect }: {
+  snapshot: SupplierSnapshot;
+  loading: boolean;
+  onNew: () => void;
+  onCorrect: (request: Record<string, any>) => void;
+}) {
+  return (
+    <Page
+      title="Produtos fornecidos"
+      description="Somente produtos aprovados podem ser incluídos em pedidos da GSA."
+      action={<button type="button" onClick={onNew} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white"><Plus className="h-4 w-4" />Solicitar produto</button>}
+    >
+      <div className="grid gap-4 lg:grid-cols-2">
+        {snapshot.products.map((product) => (
+          <article key={product.id} className="rounded-2xl border border-neutral-200 bg-white p-5">
+            <div className="flex justify-between">
+              <div>
+                <Status value={product.status} />
+                <h2 className="mt-3 font-black">{product.produto_nome}</h2>
+                <p className="text-sm text-neutral-500">{product.codigo_produto || 'Sem código'} · custo {formatCurrency(Number(product.custo_unitario || 0))}</p>
+              </div>
+              <Package className="h-7 w-7 text-neutral-300" />
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+              <Small label="Mínimo" value={product.quantidade_minima} />
+              <Small label="Prazo" value={`${product.prazo_entrega_dias} dias`} />
+              <Small label="Estoque GSA" value={product.estoque_disponivel || 0} />
+            </div>
+          </article>
+        ))}
+        {!loading && snapshot.products.length === 0 && <Empty text="Nenhum produto aprovado ainda." />}
+      </div>
+      <div className="mt-8">
+        <h2 className="mb-3 font-black">Solicitações recentes</h2>
+        <div className="space-y-2">
+          {snapshot.requests.map((request) => (
+            <div key={request.id} className="flex flex-col justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-4 sm:flex-row sm:items-center">
+              <div>
+                <p className="font-bold">{request.nome || snapshot.catalog.find((item) => item.id === request.produto_id)?.nome || 'Produto existente'}</p>
