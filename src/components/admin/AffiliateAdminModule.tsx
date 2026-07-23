@@ -238,7 +238,7 @@ export function AffiliateAdminModule() {
   );
 }
 
-function ProgramEditor({ program, onSaved }: { program: AffiliateProgram; onSaved: () => Promise<void> }) {
+function ProgramEditor({ program, onSaved }: { key?: string; program: AffiliateProgram; onSaved: () => Promise<void> }) {
   const [draft, setDraft] = useState(program);
   const [saving, setSaving] = useState(false);
   useEffect(() => setDraft(program), [program]);

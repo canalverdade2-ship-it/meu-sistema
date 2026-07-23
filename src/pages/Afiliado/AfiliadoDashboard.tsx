@@ -383,7 +383,7 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
   return <div className="rounded-xl bg-slate-50 p-4"><p className="text-[10px] font-black uppercase tracking-wider text-slate-500">{label}</p><p className="mt-1 font-black">{value}</p></div>;
 }
 
-function LinkCard({ link }: { link: AffiliateSnapshot['links'][number] }) {
+function LinkCard({ link }: { key?: string; link: AffiliateSnapshot['links'][number] }) {
   const url = affiliateUrl(link);
   const copy = async () => {
     await navigator.clipboard.writeText(url);
