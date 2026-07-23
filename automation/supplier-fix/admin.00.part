@@ -1,0 +1,156 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Building2,
+  FileText,
+  FileUp,
+  PackageCheck,
+  Plus,
+  RefreshCw,
+  Search,
+  ShoppingCart,
+  Truck,
+  WalletCards,
+  XCircle,
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { Modal } from '../ui/Modal';
+import { formatCurrency, formatDate, formatDateTime, generateUUID } from '../../lib/utils';
+import {
+  createAdminSupplierOrder,
+  getAdminSupplierSnapshot,
+  notifySupplierPortal,
+  resolveSupplierDocument,
+  reviewAdminSupplierDelivery,
+  reviewAdminSupplierProduct,
+  setAdminSupplierStatus,
+  updateAdminSupplierPayable,
+  uploadAdminSupplierPaymentProof,
+} from '../../lib/supplierOperations';
+import { navigate } from '../../routing/navigationService';
+import { useAppLocation } from '../../routing/useAppLocation';
+import type { AdminSupplierSnapshot } from '../../types/supplier';
+
+type Tab = 'cadastros' | 'produtos' | 'pedidos' | 'entregas' | 'contas';
+type ProductAction = 'aprovar' | 'ajuste' | 'rejeitar';
+type DeliveryAction = 'aprovar' | 'ajuste' | 'rejeitar';
+
+const EMPTY: AdminSupplierSnapshot = {
+  suppliers: [],
+  requests: [],
+  supplier_products: [],
+  orders: [],
+  deliveries: [],
+  payables: [],
+  products: [],
+};
+
+const TABS: Array<{ id: Tab; label: string; icon: typeof Building2 }> = [
+  { id: 'cadastros', label: 'Cadastros', icon: Building2 },
+  { id: 'produtos', label: 'Produtos', icon: PackageCheck },
+  { id: 'pedidos', label: 'Pedidos de compra', icon: ShoppingCart },
+  { id: 'entregas', label: 'Entregas e NFs', icon: Truck },
+  { id: 'contas', label: 'Contas a pagar', icon: WalletCards },
+];
+
+export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
+  const route = useAppLocation();
+  const [tab, setTab] = useState<Tab>((TABS.some((item) => item.id === initialTab) ? initialTab : 'cadastros') as Tab);
+  const [snapshot, setSnapshot] = useState<AdminSupplierSnapshot>(EMPTY);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [approval, setApproval] = useState<any | null>(null);
+  const [pin, setPin] = useState('');
+  const [reason, setReason] = useState('');
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [supplierId, setSupplierId] = useState('');
+  const [orderItems, setOrderItems] = useState<Array<{ fornecedor_produto_id: string; quantidade: string; custo_unitario: string }>>([]);
+  const [orderMeta, setOrderMeta] = useState({ previsao_entrega: '', vencimento_previsto: '', condicao_pagamento: '', observacoes: '' });
+  const [productReview, setProductReview] = useState<{ request: any; action: ProductAction } | null>(null);
+  const [productReason, setProductReason] = useState('');
+  const [saleValue, setSaleValue] = useState('');
+  const [deliveryReview, setDeliveryReview] = useState<{ delivery: any; action: DeliveryAction } | null>(null);
+  const [deliveryReason, setDeliveryReason] = useState('');
+  const [payment, setPayment] = useState<any | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState('PIX');
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [paymentProof, setPaymentProof] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (initialTab && TABS.some((item) => item.id === initialTab)) setTab(initialTab as Tab);
+  }, [initialTab]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      setSnapshot(await getAdminSupplierSnapshot());
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível carregar fornecedores.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useEffect(() => {
+    if (route.module !== 'fornecedores' || route.submodule !== 'cadastros' || !route.itemId || loading) return;
+    const supplier = snapshot.suppliers.find((item) => item.id === route.itemId);
+    if (supplier && approval?.id !== supplier.id) {
+      setTab('cadastros');
+      setApproval(supplier);
+      setPin('');
+      setReason('');
+    }
+  }, [approval?.id, loading, route.itemId, route.module, route.submodule, snapshot.suppliers]);
+
+  const filteredSuppliers = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return snapshot.suppliers.filter((item) => !term || [item.razao_social, item.nome_fantasia, item.documento, item.codigo]
+      .some((value) => String(value || '').toLowerCase().includes(term)));
+  }, [search, snapshot.suppliers]);
+
+  const activeSuppliers = snapshot.suppliers.filter((item) => item.status === 'ativo');
+  const availableLinks = snapshot.supplier_products.filter((item) => item.fornecedor_id === supplierId && item.status === 'ativo');
+
+  const changeSupplierStatus = async (status: string) => {
+    if (!approval) return;
+    if (status === 'ativo' && !/^\d{4}$/.test(pin)) return toast.error('Informe um PIN de quatro dígitos.');
+    if (status !== 'ativo' && reason.trim().length < 3) return toast.error('Informe o motivo da alteração.');
+    setSaving(true);
+    try {
+      await setAdminSupplierStatus(approval.id, status, reason, status === 'ativo' ? pin : undefined);
+      toast.success(status === 'ativo' ? 'Fornecedor aprovado e acesso liberado.' : 'Status atualizado.');
+      setApproval(null);
+      setPin('');
+      setReason('');
+      navigate('/admin/fornecedores/cadastros');
+      await load();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível atualizar o fornecedor.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openProductReview = (request: any, action: ProductAction) => {
+    setProductReview({ request, action });
+    setProductReason('');
+    setSaleValue(String(request.custo_unitario || 0));
+  };
+
+  const submitProductReview = async () => {
+    if (!productReview) return;
+    const { request, action } = productReview;
+    if (action !== 'aprovar' && productReason.trim().length < 3) return toast.error('Informe o motivo.');
+    if (action === 'aprovar' && request.tipo === 'novo' && (!saleValue.trim() || Number(saleValue.replace(',', '.')) < 0)) {
+      return toast.error('Informe um valor de venda válido.');
+    }
+    setSaving(true);
+    try {
+      const payload = action === 'aprovar' && request.tipo === 'novo'
+        ? { valor_venda: Number(saleValue.replace(',', '.')), visivel_na_loja: false }
+        : {};
+      await reviewAdminSupplierProduct(request.id, action, productReason, payload);
