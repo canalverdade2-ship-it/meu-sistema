@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   observe:
+    name: Observar restauração portátil final
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -28,24 +29,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sleep 20
+          sleep 75
 
           core_controller="$(gh run list --repo "$REPOSITORY" --workflow finalize-production-core-validation-once.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
           validation="$(gh run list --repo "$REPOSITORY" --workflow production-environment-validation.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
-          restore_diagnostic="$(gh run list --repo "$REPOSITORY" --workflow diagnose-production-database-backup-once.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
 
           mkdir -p deployment-status
           jq -n \
             --arg generated_at_utc "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --argjson core_controller "$core_controller" \
             --argjson validation "$validation" \
-            --argjson restore_diagnostic "$restore_diagnostic" \
-            '{generated_at_utc: $generated_at_utc, core_controller: $core_controller, validation: $validation, restore_diagnostic: $restore_diagnostic}' \
+            '{generated_at_utc: $generated_at_utc, core_controller: $core_controller, validation: $validation}' \
             > deployment-status/production-finalization-progress.json
 
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add deployment-status/production-finalization-progress.json
-          git commit -m "Registrar andamento do diagnóstico da restauração"
+          git commit -m "Registrar andamento da restauração portátil final"
           git pull --rebase origin main
           git push origin HEAD:main
