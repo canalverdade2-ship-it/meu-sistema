@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, MessageCircle, X } from 'lucide-react';
+import { CheckCircle2, MessageCircle, Send, ShieldCheck, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { AccessibleDialog } from '../ui/AccessibleDialog';
 import { supabase } from '../../lib/supabase';
@@ -159,84 +159,142 @@ export function SystemsBudgetModal({ isOpen, onClose }: SystemsBudgetModalProps)
       onClose={closeSafely}
       closeOnBackdrop={!submitting}
       ariaLabel="Solicitar orçamento de projeto digital"
-      panelClassName="max-w-4xl rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
+      overlayClassName="items-center justify-center overflow-y-auto bg-[#03070d]/78 p-3 backdrop-blur-sm sm:p-6"
+      panelClassName="max-h-[90dvh] max-w-2xl overflow-hidden rounded-[1.25rem] border border-white/15 bg-white shadow-[0_28px_90px_rgba(0,0,0,0.48)]"
     >
       {protocol ? (
-        <div className="text-center">
-          <CheckCircle2 data-dialog-autofocus className="mx-auto h-14 w-14 text-emerald-600" tabIndex={-1} />
-          <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-[#8a6e2f]">Solicitação recebida</p>
-          <h2 className="mt-3 text-3xl font-black text-neutral-950">Seu projeto já está em análise</h2>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-neutral-600">
-            Nossa equipe retornará pelo contato informado. O código abaixo é o mesmo registrado no orçamento e pode ser usado no atendimento.
-          </p>
-          <div className="mx-auto mt-6 max-w-md rounded-xl border border-neutral-200 bg-neutral-50 px-5 py-4">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">Protocolo do orçamento</span>
-            <strong className="mt-1 block text-lg text-neutral-950">{protocol}</strong>
-          </div>
-          <div className="mt-7 grid gap-3 sm:grid-cols-2">
-            <button type="button" onClick={openWhatsApp} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d6b25e] px-5 py-4 font-black text-neutral-950">
-              <MessageCircle className="h-5 w-5" /> Falar pelo WhatsApp
+        <div className="flex max-h-[90dvh] flex-col">
+          <header className="flex items-start justify-between gap-4 border-b border-white/10 bg-[#0a1420] px-5 py-4 text-white sm:px-6 sm:py-5">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d7b96e]">Orçamento registrado</p>
+              <h2 className="mt-1 text-xl font-black sm:text-2xl">Solicitação recebida</h2>
+            </div>
+            <button
+              type="button"
+              onClick={closeSafely}
+              aria-label="Fechar confirmação"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/75 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7b96e]"
+            >
+              <X className="h-4 w-4" />
             </button>
-            <button type="button" onClick={closeSafely} className="rounded-xl border border-neutral-200 px-5 py-4 font-black text-neutral-700 hover:bg-neutral-50">
-              Fechar
-            </button>
+          </header>
+
+          <div className="overflow-y-auto px-5 py-6 text-center sm:px-8 sm:py-8">
+            <CheckCircle2 data-dialog-autofocus className="mx-auto h-12 w-12 text-emerald-600" tabIndex={-1} />
+            <h3 className="mt-4 text-2xl font-black text-[#111820]">Seu projeto já está em análise</h3>
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-neutral-600">
+              Nossa equipe retornará pelo contato informado. Guarde o protocolo abaixo para acompanhar o atendimento.
+            </p>
+            <div className="mx-auto mt-5 max-w-sm rounded-[10px] border border-[#ddd8ce] bg-[#f7f5f0] px-5 py-4">
+              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-500">Protocolo do orçamento</span>
+              <strong className="mt-1 block text-lg text-[#111820]">{protocol}</strong>
+            </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={openWhatsApp}
+                className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#d7b96e] px-5 py-3.5 text-sm font-black text-[#111820] transition hover:bg-[#e2c982]"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Falar pelo WhatsApp
+              </button>
+              <button
+                type="button"
+                onClick={closeSafely}
+                className="rounded-[10px] border border-[#ddd8ce] px-5 py-3.5 text-sm font-black text-neutral-700 transition hover:bg-neutral-50"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       ) : (
-        <form onSubmit={submit} className="space-y-5" noValidate>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8a6e2f]">Solicitar orçamento</p>
-              <h2 className="mt-2 text-2xl font-black text-neutral-950">Marca, presença digital, sites e sistemas</h2>
-              <p className="mt-2 text-sm leading-6 text-neutral-600">Conte-nos o que você precisa. É possível contratar uma etapa específica ou solicitar a jornada completa.</p>
+        <form onSubmit={submit} className="flex max-h-[90dvh] min-h-0 flex-col" noValidate>
+          <header className="shrink-0 border-b border-white/10 bg-[#0a1420] px-5 py-4 text-white sm:px-6 sm:py-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d7b96e]">Solicitar orçamento</p>
+                <h2 className="mt-1 text-xl font-black leading-tight sm:text-2xl">Conte-nos sobre o seu projeto</h2>
+                <p className="mt-1.5 text-xs leading-5 text-white/62 sm:text-sm">
+                  Preencha as informações principais para iniciarmos a análise.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeSafely}
+                aria-label="Fechar orçamento"
+                data-dialog-autofocus
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/75 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7b96e]"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <button type="button" onClick={closeSafely} aria-label="Fechar orçamento" className="rounded-lg bg-neutral-100 p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f]">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          </header>
 
           <div className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
             <label htmlFor="budget-website">Website</label>
             <input id="budget-website" tabIndex={-1} autoComplete="off" value={form.website} onChange={(event) => update('website', event.target.value)} />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="budget-name" className="mb-2 block text-sm font-bold text-neutral-700">Nome</label>
-              <input id="budget-name" required data-dialog-autofocus autoComplete="name" maxLength={120} value={form.nome} onChange={(event) => update('nome', event.target.value)} placeholder="Seu nome ou razão social" className="input-field" />
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#f7f5f0] px-4 py-4 sm:px-6 sm:py-5">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+              <div>
+                <label htmlFor="budget-name" className="mb-1.5 block text-xs font-black text-neutral-700">Nome ou empresa</label>
+                <input id="budget-name" required autoComplete="name" maxLength={120} value={form.nome} onChange={(event) => update('nome', event.target.value)} placeholder="Seu nome ou razão social" className="input-field" />
+              </div>
+              <div>
+                <label htmlFor="budget-email" className="mb-1.5 block text-xs font-black text-neutral-700">E-mail</label>
+                <input id="budget-email" required type="email" inputMode="email" autoComplete="email" maxLength={160} value={form.email} onChange={(event) => update('email', event.target.value)} placeholder="voce@exemplo.com" className="input-field" />
+              </div>
+              <div>
+                <label htmlFor="budget-phone" className="mb-1.5 block text-xs font-black text-neutral-700">Telefone com DDD</label>
+                <input id="budget-phone" required type="tel" inputMode="tel" autoComplete="tel" value={form.telefone} onChange={(event) => update('telefone', maskPhone(event.target.value))} placeholder="(11) 99999-9999" className="input-field" />
+              </div>
+              <div>
+                <label htmlFor="budget-type" className="mb-1.5 block text-xs font-black text-neutral-700">Tipo de projeto</label>
+                <select id="budget-type" required value={form.tipo} onChange={(event) => update('tipo', event.target.value)} className="input-field">
+                  <option value="">Selecione</option>
+                  {PROJECT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+              </div>
             </div>
-            <div>
-              <label htmlFor="budget-email" className="mb-2 block text-sm font-bold text-neutral-700">E-mail</label>
-              <input id="budget-email" required type="email" inputMode="email" autoComplete="email" maxLength={160} value={form.email} onChange={(event) => update('email', event.target.value)} placeholder="voce@exemplo.com" className="input-field" />
+
+            <div className="mt-4">
+              <div className="mb-1.5 flex items-center justify-between gap-4">
+                <label htmlFor="budget-request" className="block text-xs font-black text-neutral-700">Descreva sua necessidade</label>
+                <span className="text-[10px] font-bold text-neutral-400">{form.solicitacao.length}/2000</span>
+              </div>
+              <textarea
+                id="budget-request"
+                required
+                rows={4}
+                minLength={20}
+                maxLength={2000}
+                value={form.solicitacao}
+                onChange={(event) => update('solicitacao', event.target.value)}
+                placeholder="Explique sua ideia, o público, o que já existe e o resultado que deseja alcançar."
+                className="input-field min-h-[112px] resize-y"
+              />
+            </div>
+
+            <div className="mt-4 flex items-start gap-2.5 rounded-[10px] border border-[#ded8cc] bg-white px-3.5 py-3">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#80672c]" />
+              <p className="text-[11px] leading-5 text-neutral-500">
+                Seus dados serão usados somente para analisar a solicitação, registrar sua origem e entrar em contato sobre o projeto.
+              </p>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="budget-phone" className="mb-2 block text-sm font-bold text-neutral-700">Telefone com DDD</label>
-              <input id="budget-phone" required type="tel" inputMode="tel" autoComplete="tel" value={form.telefone} onChange={(event) => update('telefone', maskPhone(event.target.value))} placeholder="(11) 99999-9999" className="input-field" />
-            </div>
-            <div>
-              <label htmlFor="budget-type" className="mb-2 block text-sm font-bold text-neutral-700">Tipo de projeto</label>
-              <select id="budget-type" required value={form.tipo} onChange={(event) => update('tipo', event.target.value)} className="input-field">
-                <option value="">Selecione</option>
-                {PROJECT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-2 flex items-center justify-between gap-4">
-              <label htmlFor="budget-request" className="block text-sm font-bold text-neutral-700">Descreva sua necessidade</label>
-              <span className="text-xs text-neutral-400">{form.solicitacao.length}/2000</span>
-            </div>
-            <textarea id="budget-request" required rows={6} minLength={20} maxLength={2000} value={form.solicitacao} onChange={(event) => update('solicitacao', event.target.value)} placeholder="Explique sua ideia, o público, o que já existe e quais resultados você busca alcançar." className="input-field resize-none" />
-          </div>
-
-          <p className="text-xs leading-5 text-neutral-500">
-            Usaremos os dados para analisar a solicitação e entrar em contato. Também registramos a página de origem, o domínio de referência e parâmetros de campanha para medir a origem do atendimento; esses metadados não são usados para autenticação.
-          </p>
-          <button type="submit" disabled={submitting} className="btn-primary w-full">{submitting ? 'Enviando...' : 'Enviar solicitação'}</button>
+          <footer className="shrink-0 border-t border-[#ddd8ce] bg-white px-4 py-3 sm:px-6 sm:py-4">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#0a1420] px-5 py-3.5 text-sm font-black text-white shadow-[0_10px_24px_rgba(8,17,29,0.18)] transition hover:bg-[#142434] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#80672c] focus-visible:ring-offset-2"
+            >
+              {submitting ? 'Enviando solicitação...' : 'Enviar solicitação'}
+              {!submitting && <Send className="h-4 w-4" />}
+            </button>
+          </footer>
         </form>
       )}
     </AccessibleDialog>
