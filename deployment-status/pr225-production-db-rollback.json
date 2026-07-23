@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-07-23T13:56:35.862Z",
+  "status": "success",
+  "workflow_run_id": "30013222955",
+  "validated_sha": "96b87cf8775dfddbe69e42e9f021851252bd1764",
+  "production_project_verified": true,
+  "backup": {
+    "format": "postgresql-custom",
+    "server_major": 17,
+    "client_source": "docker-postgres-17",
+    "database_sha256": "e0551370c795eb869c409c7b968f2ae8d1edd321f69bd1a86f4936f58f79bb4f",
+    "database_bytes": 3103551,
+    "schema_sha256": "7b516b663314288ec903c88ea8d4d31c0e97940fcf0fa3371e2150e9d45818ec",
+    "schema_bytes": 2068665
+  },
+  "pr225_versions_reverted": [
+    "20260722190000",
+    "20260722190100"
+  ],
+  "pr225_policies_removed": 8,
+  "current_select_policies_installed": 2,
+  "direct_authenticated_writes_removed": true,
+  "rls_preserved": true,
+  "canonical_affiliate_flow_restored": true,
+  "records_deleted": false
+}
