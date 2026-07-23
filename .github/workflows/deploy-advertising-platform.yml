@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/deploy-advertising-platform.yml'
+      - 'scripts/restore-gsa-ads-colors.py'
+      - 'scripts/resolve-active-merge-conflicts.py'
       - 'src/components/public/AdvertisingPage.tsx'
       - 'src/components/admin/AdvertisingAdminModule.tsx'
       - 'src/pages/AdvertiserPortal.tsx'
@@ -61,7 +63,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/components/admin/AffiliateAdminModule.tsx src/components/public/AffiliatePublicPage.tsx src/components/public/final/PublicFooter.tsx
           if ! git diff --cached --quiet; then
-            git commit -m 'Resolver conflitos que bloqueavam o build de produção'
+            git commit -m 'Restaurar cores originais das páginas do GSA Anúncios'
+            git pull --rebase origin main
             git push origin HEAD:main
           fi
 
