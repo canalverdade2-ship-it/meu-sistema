@@ -1,0 +1,358 @@
+name: Rollback PR225 Production V2 Once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rollback-pr225-production-v2-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rollback-pr225-production
+  cancel-in-progress: false
+
+env:
+  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  rollback:
+    name: Reverter PR 225 preservando leituras atuais
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 60
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate exact production target and credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_DB_URL"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link exact production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Verify direct browser mutations were migrated to protected RPC
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p rollback-pr225-v2-evidence
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const files = [];
+          const walk = (dir) => {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const absolute = path.join(dir, entry.name);
+              if (entry.isDirectory()) walk(absolute);
+              else if (/\.(ts|tsx|js|jsx)$/.test(entry.name)) files.push(absolute);
+            }
+          };
+          walk('src');
+          const pattern = /\.from\s*\(\s*['"](loja_carrinhos|promocoes_quantidade_ativadas)['"]\s*\)\s*\.(insert|update|delete|upsert)\b/gs;
+          const findings = [];
+          for (const file of files) {
+            const content = fs.readFileSync(file, 'utf8');
+            for (const match of content.matchAll(pattern)) {
+              findings.push({ file, table: match[1], operation: match[2], line: content.slice(0, match.index).split('\n').length });
+            }
+          }
+          fs.writeFileSync('rollback-pr225-v2-evidence/direct-browser-mutations.json', `${JSON.stringify(findings, null, 2)}\n`);
+          if (findings.length) {
+            console.error(JSON.stringify(findings, null, 2));
+            process.exit(1);
+          }
+          console.log('DIRECT_BROWSER_MUTATIONS_REMOVED');
+          NODE
+
+      - name: Create full database backup before rollback
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/backup-database.sh rollback-pr225-v2-backups 2>&1 | tee rollback-pr225-v2-evidence/database-backup.log
+          backup_dir="$(find rollback-pr225-v2-backups -maxdepth 1 -type d -name 'database-*' | sort | tail -n 1)"
+          test -n "$backup_dir"
+          test -f "$backup_dir/database.dump"
+          test -f "$backup_dir/schema.sql"
+          test -f "$backup_dir/manifest.json"
+          printf '%s' "$backup_dir" > rollback-pr225-v2-evidence/backup-directory.txt
+
+      - name: Record migration history before rollback
+        run: supabase migration list --linked 2>&1 | tee rollback-pr225-v2-evidence/migrations-before.log
+
+      - name: Replace PR 225 policies with current session-bound read policies
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/rollback-pr225-access-v2.sql <<'SQL'
+          BEGIN;
+
+          ALTER TABLE public.loja_carrinhos ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.promocoes_quantidade_ativadas ENABLE ROW LEVEL SECURITY;
+
+          DROP POLICY IF EXISTS gsa_client_cart_select ON public.loja_carrinhos;
+          DROP POLICY IF EXISTS gsa_client_cart_insert ON public.loja_carrinhos;
+          DROP POLICY IF EXISTS gsa_client_cart_update ON public.loja_carrinhos;
+          DROP POLICY IF EXISTS gsa_client_cart_delete ON public.loja_carrinhos;
+          DROP POLICY IF EXISTS gsa_client_quantity_promotions_select ON public.promocoes_quantidade_ativadas;
+          DROP POLICY IF EXISTS gsa_client_quantity_promotions_insert ON public.promocoes_quantidade_ativadas;
+          DROP POLICY IF EXISTS gsa_client_quantity_promotions_update ON public.promocoes_quantidade_ativadas;
+          DROP POLICY IF EXISTS gsa_client_quantity_promotions_delete ON public.promocoes_quantidade_ativadas;
+
+          DROP POLICY IF EXISTS gsa_current_client_cart_select ON public.loja_carrinhos;
+          CREATE POLICY gsa_current_client_cart_select
+          ON public.loja_carrinhos
+          FOR SELECT TO authenticated
+          USING (
+            public.gsa_jwt_session_is_valid()
+            AND public.gsa_jwt_actor_type() = 'cliente'
+            AND cliente_id = public.gsa_jwt_actor_id()
+          );
+
+          DROP POLICY IF EXISTS gsa_current_client_quantity_promotions_select ON public.promocoes_quantidade_ativadas;
+          CREATE POLICY gsa_current_client_quantity_promotions_select
+          ON public.promocoes_quantidade_ativadas
+          FOR SELECT TO authenticated
+          USING (
+            public.gsa_jwt_session_is_valid()
+            AND public.gsa_jwt_actor_type() = 'cliente'
+            AND cliente_id = public.gsa_jwt_actor_id()
+          );
+
+          REVOKE ALL ON TABLE public.loja_carrinhos FROM PUBLIC, anon, authenticated;
+          REVOKE ALL ON TABLE public.promocoes_quantidade_ativadas FROM PUBLIC, anon, authenticated;
+          GRANT SELECT ON TABLE public.loja_carrinhos TO authenticated;
+          GRANT SELECT ON TABLE public.promocoes_quantidade_ativadas TO authenticated;
+          GRANT ALL ON TABLE public.loja_carrinhos TO service_role;
+          GRANT ALL ON TABLE public.promocoes_quantidade_ativadas TO service_role;
+
+          COMMIT;
+          SQL
+          supabase db query --linked --file /tmp/rollback-pr225-access-v2.sql 2>&1 \
+            | tee rollback-pr225-v2-evidence/access-rollback.log
+
+      - name: Restore current canonical affiliate functions
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db query --linked --file supabase/migrations/20260722233000_complete_affiliate_flow.sql 2>&1 \
+            | tee rollback-pr225-v2-evidence/affiliate-flow-restore.log
+          supabase db query --linked --file supabase/migrations/20260722233100_harden_affiliate_payout_idempotency.sql 2>&1 \
+            | tee rollback-pr225-v2-evidence/affiliate-payout-restore.log
+          supabase db query --linked --file supabase/migrations/20260722233200_secure_affiliate_activation.sql 2>&1 \
+            | tee rollback-pr225-v2-evidence/affiliate-activation-restore.log
+
+      - name: Verify canonical affiliate database flow
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase db query --linked --file supabase/migrations/20260722120000_reconcile_affiliate_program.sql 2>&1 \
+            | tee rollback-pr225-v2-evidence/affiliate-foundation-verify.log
+          supabase db query --linked --file scripts/sql/check-affiliate-flow.sql 2>&1 \
+            | tee rollback-pr225-v2-evidence/affiliate-flow-verify.log
+
+      - name: Reconcile migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee rollback-pr225-v2-evidence/migrations-pre-repair.log
+          migration_exists() {
+            local version="$1"
+            awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == wanted) found=1 } END { exit found ? 0 : 1 }' rollback-pr225-v2-evidence/migrations-pre-repair.log
+          }
+          for version in 20260722190000 20260722190100; do
+            if migration_exists "$version"; then
+              supabase migration repair --linked --status reverted "$version" 2>&1 | tee -a rollback-pr225-v2-evidence/migration-repair.log
+            fi
+          done
+          for version in 20260722120000 20260722233000 20260722233100 20260722233200; do
+            if ! migration_exists "$version"; then
+              supabase migration repair --linked --status applied "$version" 2>&1 | tee -a rollback-pr225-v2-evidence/migration-repair.log
+            fi
+          done
+          if migration_exists 20260722040000; then
+            supabase migration repair --linked --status reverted 20260722040000 2>&1 | tee -a rollback-pr225-v2-evidence/migration-repair.log
+          fi
+
+      - name: Verify production rollback state
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/verify-pr225-rollback-v2.sql <<'SQL'
+          DO $$
+          DECLARE v_policy text;
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+              WHERE n.nspname='public' AND c.relname='loja_carrinhos' AND c.relrowsecurity
+            ) OR NOT EXISTS (
+              SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+              WHERE n.nspname='public' AND c.relname='promocoes_quantidade_ativadas' AND c.relrowsecurity
+            ) THEN RAISE EXCEPTION 'RLS não está habilitado nas tabelas operacionais.'; END IF;
+
+            FOREACH v_policy IN ARRAY ARRAY[
+              'gsa_client_cart_select','gsa_client_cart_insert','gsa_client_cart_update','gsa_client_cart_delete',
+              'gsa_client_quantity_promotions_select','gsa_client_quantity_promotions_insert',
+              'gsa_client_quantity_promotions_update','gsa_client_quantity_promotions_delete'
+            ] LOOP
+              IF EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND policyname=v_policy) THEN
+                RAISE EXCEPTION 'Política da PR 225 ainda presente: %', v_policy;
+              END IF;
+            END LOOP;
+
+            IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='loja_carrinhos' AND policyname='gsa_current_client_cart_select')
+               OR NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='promocoes_quantidade_ativadas' AND policyname='gsa_current_client_quantity_promotions_select') THEN
+              RAISE EXCEPTION 'Políticas atuais de leitura não foram instaladas.';
+            END IF;
+
+            IF NOT has_table_privilege('authenticated','public.loja_carrinhos','SELECT')
+               OR NOT has_table_privilege('authenticated','public.promocoes_quantidade_ativadas','SELECT') THEN
+              RAISE EXCEPTION 'Leitura autenticada necessária não está disponível.';
+            END IF;
+
+            IF has_table_privilege('authenticated','public.loja_carrinhos','INSERT')
+               OR has_table_privilege('authenticated','public.loja_carrinhos','UPDATE')
+               OR has_table_privilege('authenticated','public.loja_carrinhos','DELETE')
+               OR has_table_privilege('authenticated','public.promocoes_quantidade_ativadas','INSERT')
+               OR has_table_privilege('authenticated','public.promocoes_quantidade_ativadas','UPDATE')
+               OR has_table_privilege('authenticated','public.promocoes_quantidade_ativadas','DELETE') THEN
+              RAISE EXCEPTION 'Escrita direta da PR 225 ainda está disponível.';
+            END IF;
+
+            IF position('gsa_affiliate_release_due_commissions' IN pg_get_functiondef('public.gsa_client_affiliate_snapshot(uuid,text)'::regprocedure)) = 0 THEN
+              RAISE EXCEPTION 'Snapshot de afiliados não corresponde à versão atual.';
+            END IF;
+            IF position('Perfil suspenso ou encerrado' IN pg_get_functiondef('public.gsa_client_join_affiliate(uuid,text,text,text,text,text)'::regprocedure)) = 0 THEN
+              RAISE EXCEPTION 'Adesão de afiliados não corresponde à versão atual.';
+            END IF;
+            IF position('Identificador de solicitacao ja utilizado' IN pg_get_functiondef('public.gsa_client_request_affiliate_payout(uuid,text,uuid,numeric)'::regprocedure)) = 0 THEN
+              RAISE EXCEPTION 'Saque de afiliados não contém a proteção idempotente atual.';
+            END IF;
+            IF position('requires_authentication' IN pg_get_functiondef('public.gsa_public_register_affiliate(jsonb)'::regprocedure)) = 0 THEN
+              RAISE EXCEPTION 'Ativação pública de afiliados não exige autenticação.';
+            END IF;
+          END $$;
+          SELECT 'PR225_DATABASE_ROLLBACK_V2_VERIFIED' AS result;
+          SQL
+          supabase db query --linked --file /tmp/verify-pr225-rollback-v2.sql 2>&1 \
+            | tee rollback-pr225-v2-evidence/database-verify.log
+
+      - name: Verify final migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee rollback-pr225-v2-evidence/migrations-after.log
+          for version in 20260722190000 20260722190100; do
+            if awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == wanted) found=1 } END { exit found ? 0 : 1 }' rollback-pr225-v2-evidence/migrations-after.log; then
+              echo "Versão da PR 225 ainda aplicada: $version" >&2
+              exit 1
+            fi
+          done
+          for version in 20260722120000 20260722233000 20260722233100 20260722233200; do
+            awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/, "", remote); if (remote == wanted) found=1 } END { exit found ? 0 : 1 }' rollback-pr225-v2-evidence/migrations-after.log
+          done
+
+      - name: Validate current source contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test:affiliates 2>&1 | tee rollback-pr225-v2-evidence/affiliate-contracts.log
+          npx tsc --noEmit 2>&1 | tee rollback-pr225-v2-evidence/typescript.log
+
+      - name: Build success evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          backup_dir="$(cat rollback-pr225-v2-evidence/backup-directory.txt)"
+          mkdir -p deployment-status
+          BACKUP_DIR="$backup_dir" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const manifest = JSON.parse(fs.readFileSync(`${process.env.BACKUP_DIR}/manifest.json`, 'utf8'));
+          const evidence = {
+            generated_at_utc: new Date().toISOString(),
+            status: 'success',
+            workflow_run_id: process.env.GITHUB_RUN_ID,
+            validated_sha: process.env.GITHUB_SHA,
+            production_project_verified: true,
+            backup: {
+              format: manifest.format,
+              server_major: manifest.server_major,
+              client_source: manifest.client_source,
+              database_sha256: manifest.database_sha256,
+              database_bytes: manifest.database_bytes,
+              schema_sha256: manifest.schema_sha256,
+              schema_bytes: manifest.schema_bytes,
+            },
+            pr225_versions_reverted: ['20260722190000','20260722190100'],
+            pr225_policies_removed: 8,
+            current_select_policies_installed: 2,
+            direct_authenticated_writes_removed: true,
+            rls_preserved: true,
+            canonical_affiliate_flow_restored: true,
+            records_deleted: false,
+          };
+          fs.writeFileSync('deployment-status/pr225-production-db-rollback.json', `${JSON.stringify(evidence, null, 2)}\n`);
+          NODE
+
+      - name: Upload backup and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr225-production-db-rollback-v2-${{ github.run_id }}
+          path: |
+            rollback-pr225-v2-backups/**
+            rollback-pr225-v2-evidence/**
+            deployment-status/pr225-production-db-rollback.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Publish successful rollback evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp deployment-status/pr225-production-db-rollback.json /tmp/pr225-production-db-rollback.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          published=false
+          for attempt in $(seq 1 10); do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p deployment-status
+            cp /tmp/pr225-production-db-rollback.json deployment-status/pr225-production-db-rollback.json
+            git add deployment-status/pr225-production-db-rollback.json
+            git commit -m 'Registrar rollback concluido da PR 225 no Supabase' || true
+            if git push origin HEAD:main; then published=true; break; fi
+            sleep 5
+          done
+          test "$published" = true
