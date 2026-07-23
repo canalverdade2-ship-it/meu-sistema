@@ -1,0 +1,12 @@
+{
+  "status": "success",
+  "workflow_run_id": "29968375542",
+  "validated_sha": "253fa879323e39b4011cde9aba421a82f6517a19",
+  "validated_at_utc": "2026-07-23T00:12:40Z",
+  "scope": "careers-form-candidate-portal-admin-rpcs-rls-storage-history",
+  "migration": "20260722235959",
+  "validation": "success",
+  "database": "success",
+  "frontend": "success",
+  "tests": "success"
+}
