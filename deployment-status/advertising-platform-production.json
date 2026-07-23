@@ -1,9 +1,9 @@
 {
   "status": "failure",
-  "workflow_run_id": "29965690978",
-  "validated_sha": "ec1ffc3d9f9e75efe0de25cc134233f6402429ad",
-  "validated_at_utc": "2026-07-22T23:18:20Z",
+  "workflow_run_id": "29968070700",
+  "validated_sha": "24f2b105073c6880b63e8ec7e1542f3b71677b90",
+  "validated_at_utc": "2026-07-23T00:05:59Z",
   "project_ref": "ocgajvagxagutfvgxwsy",
-  "migrations": ["20260721210100", "20260721223100", "20260721223500"],
-  "edge_functions": ["gsa-public-advertising", "gsa-advertiser-admin", "gsa-ad-delivery", "gsa-advertising-webhook", "gsa-advertising-scheduler"]
+  "migrations": ["20260721210100", "20260721223100", "20260721223500", "20260722120100", "20260722235900"],
+  "edge_functions": ["gsa-public-advertising", "gsa-advertiser-admin", "gsa-advertiser-access", "gsa-ad-delivery", "gsa-advertising-webhook", "gsa-advertising-scheduler"]
 }
