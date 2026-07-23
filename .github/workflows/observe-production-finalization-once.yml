@@ -1,0 +1,51 @@
+name: Observe Production Finalization Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/observe-production-finalization-once.yml
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Capture current workflow state
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 20
+
+          controller="$(gh run list --repo "$REPOSITORY" --workflow finalize-production-inventory-once.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
+          inventory="$(gh run list --repo "$REPOSITORY" --workflow apply-production-inventory-gaps.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
+          validation="$(gh run list --repo "$REPOSITORY" --workflow production-environment-validation.yml --limit 10 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,event,url --jq '.[0] // {}')"
+
+          mkdir -p deployment-status
+          jq -n \
+            --arg generated_at_utc "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson controller "$controller" \
+            --argjson inventory "$inventory" \
+            --argjson validation "$validation" \
+            '{generated_at_utc: $generated_at_utc, controller: $controller, inventory: $inventory, validation: $validation}' \
+            > deployment-status/production-finalization-progress.json
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add deployment-status/production-finalization-progress.json
+          git commit -m "Registrar andamento do fechamento de produção"
+          git pull --rebase origin main
+          git push origin HEAD:main
