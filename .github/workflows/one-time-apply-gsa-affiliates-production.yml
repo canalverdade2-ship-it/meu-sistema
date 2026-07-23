@@ -1,0 +1,132 @@
+name: One-time Apply GSA Affiliates Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apply-gsa-affiliates-production.trigger'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: one-time-apply-gsa-affiliates-production
+  cancel-in-progress: false
+
+env:
+  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 40
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate exact production target
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Record migration history before apply
+        run: |
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee affiliate-migrations-before.log
+
+      - name: Build transactionally complete foundation
+        run: |
+          set -euo pipefail
+          cp supabase/migrations/20260722040000_affiliate_program.sql /tmp/affiliate-foundation.sql
+          printf '\nCOMMIT;\n' >> /tmp/affiliate-foundation.sql
+
+      - name: Apply affiliate database flow
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase db query --linked --file /tmp/affiliate-foundation.sql 2>&1 | tee affiliate-foundation.log
+          supabase db query --linked --file supabase/migrations/20260722233000_complete_affiliate_flow.sql 2>&1 | tee affiliate-completion.log
+          supabase db query --linked --file supabase/migrations/20260722233100_harden_affiliate_payout_idempotency.sql 2>&1 | tee affiliate-payout-hardening.log
+          supabase db query --linked --file supabase/migrations/20260722233200_secure_affiliate_activation.sql 2>&1 | tee affiliate-activation-security.log
+
+      - name: Verify tables functions catalog and routes
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase db query --linked --file supabase/migrations/20260722120000_reconcile_affiliate_program.sql 2>&1 | tee affiliate-foundation-verify.log
+          supabase db query --linked --file scripts/sql/check-affiliate-flow.sql 2>&1 | tee affiliate-flow-verify.log
+
+      - name: Reconcile migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee affiliate-migrations-pre-repair.log
+
+          for version in 20260722120000 20260722233000 20260722233100 20260722233200
+          do
+            if ! awk -F'|' -v wanted="$version" '
+              {
+                remote=$2
+                gsub(/[^0-9]/, "", remote)
+                if (remote == wanted) found=1
+              }
+              END { exit found ? 0 : 1 }
+            ' affiliate-migrations-pre-repair.log; then
+              supabase migration repair --linked --status applied "$version" 2>&1 | tee -a affiliate-migration-repair.log
+            fi
+          done
+
+          if awk -F'|' '
+            {
+              remote=$2
+              gsub(/[^0-9]/, "", remote)
+              if (remote == "20260722040000") found=1
+            }
+            END { exit found ? 0 : 1 }
+          ' affiliate-migrations-pre-repair.log; then
+            supabase migration repair --linked --status reverted 20260722040000 2>&1 | tee -a affiliate-migration-repair.log
+          fi
+
+      - name: Final production verification
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          supabase migration list --linked 2>&1 | tee affiliate-migrations-after.log
+          supabase db query --linked --file scripts/sql/check-affiliate-flow.sql 2>&1 | tee affiliate-final-verify.log
+          echo 'GSA_AFFILIATES_PRODUCTION_APPLIED'
+
+      - name: Upload non-sensitive evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-affiliates-production-${{ github.run_id }}
+          path: |
+            affiliate-migrations-before.log
+            affiliate-foundation.log
+            affiliate-completion.log
+            affiliate-payout-hardening.log
+            affiliate-activation-security.log
+            affiliate-foundation-verify.log
+            affiliate-flow-verify.log
+            affiliate-migrations-pre-repair.log
+            affiliate-migration-repair.log
+            affiliate-migrations-after.log
+            affiliate-final-verify.log
+          if-no-files-found: ignore
+          retention-days: 30
