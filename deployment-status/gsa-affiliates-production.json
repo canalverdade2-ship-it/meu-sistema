@@ -3,12 +3,12 @@
   "module": "gsa-affiliates",
   "environment": "production",
   "projectRef": "ocgajvagxagutfvgxwsy",
-  "status": "failure",
-  "phase": "apply-affiliate-database-flow",
-  "workflowRunId": 29969653475,
+  "status": "success",
+  "phase": "final-production-verification",
+  "workflowRunId": 29969797187,
   "workflowRunAttempt": 1,
-  "sourceSha": "7d0f4271adb85c0b9f84f370fa65c7fbf4a56271",
-  "recordedAt": "2026-07-23T00:38:58.303271+00:00",
-  "databaseVerified": false,
-  "contractsVerified": false
+  "sourceSha": "1a48c389e3ae903c0addb8001951fc88878a7c7d",
+  "recordedAt": "2026-07-23T00:42:29.151640+00:00",
+  "databaseVerified": true,
+  "contractsVerified": true
 }
