@@ -1,15 +1,15 @@
 {
-  "generated_at_utc": "2026-07-23T12:43:09.683Z",
-  "validated_sha": "699764cc8fe8a33cef96b53c1e4ffbb554c227d5",
+  "generated_at_utc": "2026-07-23T22:11:10.664Z",
+  "validated_sha": "471b7fb058a0ccfc1f4b2b3e79579cfaa3831298",
   "install_exit_code": 0,
   "test_exit_code": 0,
   "deno_check_exit_code": 0,
   "deno_test_exit_code": 0,
   "result": "success",
-  "install_log_sha256": "1fa600f7790a7df4db6aa24de6aad880c1ef8d35bf8f25bade882b56dd048773",
+  "install_log_sha256": "3b2870311451f9a2d4e9a521481697b6af23736db64044656a78c31e372744e9",
   "test_log_sha256": "7a9860793f36b34b8bc636fe7ef14f6ec4e47ec286a1767113e84849f374fc9f",
   "deno_check_log_sha256": "aee25f4b8c9046d60fc4c45931f6186f6374b30bb4c738e69d12221399a49b5b",
-  "deno_test_log_sha256": "c06ef0a80d3e8f0319d7401ff62ca1da5495ad273268bd9de36535256eb3dcf6",
+  "deno_test_log_sha256": "faf9aa833f4a0b6ebfca82fec02b8f9068871fd710effc61da37a57fe2f77867",
   "failed_markers": [
     "\u001b[0m\u001b[32mDownload\u001b[0m https://esm.sh/@supabase/auth-js@2.110.8/dist/module/lib/errors.d.ts",
     "\u001b[0m\u001b[32mDownload\u001b[0m https://esm.sh/@supabase/auth-js@2.110.8/dist/module/lib/error-codes.d.ts",
@@ -44,7 +44,7 @@
     "\u001b[0m\u001b[32mDownload\u001b[0m https://jsr.io/@std/assert/1.0.19/fail.ts",
     "\u001b[0m\u001b[32mDownload\u001b[0m https://jsr.io/@std/assert/1.0.19/unimplemented.ts",
     "\u001b[0m\u001b[32mDownload\u001b[0m https://jsr.io/@std/assert/1.0.19/unreachable.ts",
-    "\u001b[0m\u001b[32mok\u001b[0m | 6 passed | 0 failed \u001b[0m\u001b[38;5;245m(11ms)\u001b[0m"
+    "\u001b[0m\u001b[32mok\u001b[0m | 6 passed | 0 failed \u001b[0m\u001b[38;5;245m(13ms)\u001b[0m"
   ],
   "tail": [
     "> react-example@0.0.0 test:client-security",
@@ -148,12 +148,12 @@
     "\u001b[0m\u001b[32mDownload\u001b[0m https://jsr.io/@std/internal/1.0.14/types.ts",
     "\u001b[0m\u001b[32mCheck\u001b[0m supabase/functions/gsa-auth-session/index_test.ts",
     "\u001b[0m\u001b[38;5;245mrunning 6 tests from ./supabase/functions/gsa-auth-session/index_test.ts\u001b[0m",
-    "normaliza somente documentos, PINs e tipos válidos ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(633µs)\u001b[0m",
-    "rejeita origem não autorizada antes de acessar o banco ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(7ms)\u001b[0m",
-    "autoriza preflight somente para origem configurada ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(309µs)\u001b[0m",
-    "autoriza todas as origens locais usadas no desenvolvimento ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(412µs)\u001b[0m",
-    "normaliza recuperação somente com e-mail válido e desafio UUID ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(276µs)\u001b[0m",
-    "aplica limite por identidade antes dos fluxos de recuperação ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(59µs)\u001b[0m",
-    "\u001b[0m\u001b[32mok\u001b[0m | 6 passed | 0 failed \u001b[0m\u001b[38;5;245m(11ms)\u001b[0m"
+    "normaliza somente documentos, PINs e tipos válidos ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(872µs)\u001b[0m",
+    "rejeita origem não autorizada antes de acessar o banco ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(8ms)\u001b[0m",
+    "autoriza preflight somente para origem configurada ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(399µs)\u001b[0m",
+    "autoriza todas as origens locais usadas no desenvolvimento ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(618µs)\u001b[0m",
+    "normaliza recuperação somente com e-mail válido e desafio UUID ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(269µs)\u001b[0m",
+    "aplica limite por identidade antes dos fluxos de recuperação ... \u001b[0m\u001b[32mok\u001b[0m \u001b[0m\u001b[38;5;245m(99µs)\u001b[0m",
+    "\u001b[0m\u001b[32mok\u001b[0m | 6 passed | 0 failed \u001b[0m\u001b[38;5;245m(13ms)\u001b[0m"
   ]
 }
