@@ -1,0 +1,9 @@
+{
+  "generated_at_utc": "2026-07-23T12:30:25Z",
+  "result": "failure",
+  "validated_sha": "8eafd06b8c46d7b11eb2733f69e04ec515cf8545",
+  "client_security_contracts": "failure",
+  "edge_function_validation": "failure",
+  "database_objects": "failure",
+  "edge_function_deployment": "failure"
+}
