@@ -25,31 +25,53 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Restaurar somente a identidade visual anterior
+      - name: Aplicar, verificar e registrar restauração
         shell: bash
         run: |
-          set -euo pipefail
-          python3 scripts/restore-gsa-ads-colors.py
-          git diff --check
-          grep -q 'bg-neutral-950/90 backdrop-blur-xl' src/components/public/AdvertisingPage.tsx
-          grep -q 'radial-gradient(circle_at_top_right' src/components/public/AdvertisingPage.tsx
-          grep -q 'border-neutral-200 bg-white' src/components/admin/AdvertisingAdminModule.tsx
-          grep -q 'bg-white/95 backdrop-blur-xl' src/pages/AdvertiserPortal.tsx
-          grep -q 'bg-neutral-950 p-3 text-white' src/pages/AdvertiserPortal.tsx
-          ! grep -q 'gsa_adv_requests_store\|gsa_adv_proposals_store\|gsa_adv_campaigns_store\|gsa_advertiser_session\|anunciantes_solicitacoes' src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
+          set -u
+          mkdir -p deployment-status
+          set +e
+          python3 scripts/restore-gsa-ads-colors.py > restore-gsa-ads-colors.log 2>&1
+          result=$?
+          set -e
 
-      - name: Gravar cores restauradas diretamente na main
-        shell: bash
-        run: |
-          set -euo pipefail
+          if [ "$result" -eq 0 ]; then
+            git diff --check
+            grep -q 'bg-neutral-950/90 backdrop-blur-xl' src/components/public/AdvertisingPage.tsx
+            grep -q 'radial-gradient(circle_at_top_right' src/components/public/AdvertisingPage.tsx
+            grep -q 'border-neutral-200 bg-white' src/components/admin/AdvertisingAdminModule.tsx
+            grep -q 'bg-white/95 backdrop-blur-xl' src/pages/AdvertiserPortal.tsx
+            grep -q 'bg-neutral-950 p-3 text-white' src/pages/AdvertiserPortal.tsx
+            ! grep -q 'gsa_adv_requests_store\|gsa_adv_proposals_store\|gsa_adv_campaigns_store\|gsa_advertiser_session\|anunciantes_solicitacoes' src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
+            status=success
+          else
+            status=failure
+          fi
+
+          python3 - "$status" "$result" <<'PY'
+          import json, pathlib, sys
+          status, code = sys.argv[1], int(sys.argv[2])
+          log_path = pathlib.Path('restore-gsa-ads-colors.log')
+          payload = {
+              'status': status,
+              'exit_code': code,
+              'workflow_run_id': '${{ github.run_id }}',
+              'validated_sha': '${{ github.sha }}',
+              'log': log_path.read_text(encoding='utf-8', errors='replace')[-4000:],
+          }
+          pathlib.Path('deployment-status/gsa-ads-colors-restoration.json').write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
-          git diff --cached --check
-          if git diff --cached --quiet; then
-            echo 'Nenhuma alteração visual pendente.'
-            exit 0
+          git add deployment-status/gsa-ads-colors-restoration.json restore-gsa-ads-colors.log
+          if [ "$result" -eq 0 ]; then
+            git add src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
           fi
-          git commit -m 'Restaurar cores originais das páginas do GSA Anúncios'
+          git diff --cached --check
+          git commit -m "Registrar restauração das cores do GSA Anúncios: ${status}" || exit "$result"
           git pull --rebase origin main
           git push origin HEAD:main
+          exit "$result"
