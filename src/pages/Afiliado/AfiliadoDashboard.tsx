@@ -276,6 +276,8 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
 
   const saldoCarteira = Number(clientData?.saldo_carteira || 0);
   const pontosAcumulados = Number(clientData?.pontos || 0);
+  const ptsInputVal = Number.parseInt(pontosResgateInput, 10) || 0;
+  const valorEquivalenteResgate = ptsInputVal * pontosTaxa;
   const comissoesPendentes = commissions.filter((c) => c.status === 'pendente').reduce((sum, c) => sum + Number(c.valor || 0), 0);
   const comissoesDisponiveis = commissions.filter((c) => c.status === 'disponivel').reduce((sum, c) => sum + Number(c.valor || 0), 0);
 
@@ -405,7 +407,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
             onMarkAsRead={markAsRead}
             onMarkAllAsRead={markAllAsRead}
             onNavigate={(mod, tab) => {
-              if (tab) setActiveTab(tab as TabType);
+              if (tab) navigateToTab(tab as TabType);
             }}
           />
 
