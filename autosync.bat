@@ -1,25 +1,24 @@
 @echo off
-chcp 65001 > nul
-title GSA HUB - Sincronização Automática
+title GSA HUB - Sincronizacao Automatica
 color 0A
 
 echo =======================================================
-echo     GSA HUB - SINCRONIZAÇÃO AUTOMÁTICA EM EXECUÇÃO
+echo     GSA HUB - SINCRONIZACAO AUTOMATICA EM EXECUCAO
 echo =======================================================
 echo.
 
 :loop
-echo [%time:~0,8%] Verificando e baixando atualizações do GitHub...
+echo Verificando e baixando atualizacoes do GitHub...
 git pull origin main --autostash --no-edit >nul 2>&1
 
 git add .
 git diff-index --quiet HEAD || (
-    echo [%time:~0,8%] Enviando alterações para o GitHub...
-    git commit -m "Auto Sync - %date% %time:~0,8%" >nul 2>&1
+    echo Enviando alteracoes para o GitHub...
+    git commit -m "Auto Sync" >nul 2>&1
     git push origin main >nul 2>&1
 )
 
-echo [%time:~0,8%] [OK] Projeto 100%% atualizado! Próxima verificação em 10s...
+echo [OK] Projeto 100%% atualizado! Proxima verificacao em 10s...
 echo -------------------------------------------------------
 
 timeout /t 10 >nul
