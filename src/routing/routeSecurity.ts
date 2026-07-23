@@ -10,6 +10,12 @@ interface SessionState {
   fornecedorId?: string;
 }
 
+function isAffiliatePublicAccessRoute() {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  return ['/afiliados', '/afiliados/login', '/afiliados/acesso', '/afiliados/cadastro'].includes(path);
+}
+
 export function isRouteAllowed(
   area: AppArea,
   session: SessionState,
@@ -19,6 +25,9 @@ export function isRouteAllowed(
   if (area === 'client') return Boolean(session.clientId);
   if (area === 'provider') return Boolean(session.prestadorId);
   if (area === 'supplier') return ['home', 'login', 'access'].includes(module || '') || Boolean(session.fornecedorId);
+  if (area === 'public' && module === 'affiliates') {
+    return isAffiliatePublicAccessRoute() || Boolean(session.clientId);
+  }
   // O portal do anunciante valida o Supabase Auth e o vínculo da empresa no próprio módulo.
   if (area === 'advertiser') return true;
   if (area === 'admin') {
