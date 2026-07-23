@@ -1,10 +1,50 @@
 {
-  "generated_at_utc": "2026-07-23T11:42:53Z",
-  "server_version": "",
-  "server_major": "",
+  "generated_at_utc": "2026-07-23T11:45:48.489Z",
+  "node_pg_connected": true,
+  "node_pg_error_class": "",
+  "server_version": "17.6",
+  "server_major": 17,
   "pg_dump_version": "16.14 (Ubuntu 16.14-1.pgdg24.04+1)",
-  "pg_dump_major": "16",
-  "schema_dump_exit_code": 1,
-  "classification": "unknown",
+  "pg_dump_major": 16,
+  "uri_mode": {
+    "exit_code": 1,
+    "classification": "connection_failure",
+    "flags": {
+      "version_mismatch": false,
+      "no_password": false,
+      "authentication_failed": false,
+      "tenant_or_user_not_found": false,
+      "ssl_or_certificate": false,
+      "connection_failure": true,
+      "permission_denied": false,
+      "query_failed": false,
+      "unsupported_client_option": false,
+      "prepared_statement": false,
+      "role_missing": false,
+      "database_missing": false
+    },
+    "stderr_bytes": 131,
+    "stderr_sha256": "fda4043df44c9b3f72aa170ed5d63df334d77e14c4df3bc2bb550ac6240d4704"
+  },
+  "parameter_mode": {
+    "exit_code": 1,
+    "classification": "version_mismatch",
+    "flags": {
+      "version_mismatch": true,
+      "no_password": false,
+      "authentication_failed": false,
+      "tenant_or_user_not_found": false,
+      "ssl_or_certificate": false,
+      "connection_failure": false,
+      "permission_denied": false,
+      "query_failed": false,
+      "unsupported_client_option": false,
+      "prepared_statement": false,
+      "role_missing": false,
+      "database_missing": false
+    },
+    "stderr_bytes": 151,
+    "stderr_sha256": "d44e60cf545ce7c2ced0ae9e0b2bf91c62ed5b9bd43ceaff86a19ddf2417e50f"
+  },
   "docker_available": true
 }
