@@ -34,30 +34,53 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Create backup and classify restore failure safely
+      - name: Create temporary production backup
+        id: backup
         shell: bash
         run: |
-          set -uo pipefail
-          mkdir -p deployment-status
+          set +e
+          bash scripts/backup-database.sh "$RUNNER_TEMP/gsa-restore-diagnostic" \
+            >/tmp/backup-diagnostic-output.log \
+            2>/tmp/backup-diagnostic-error.log
+          code=$?
+          backup_dir="$(sed -n 's/^DATABASE_BACKUP_OK=//p' /tmp/backup-diagnostic-output.log | tail -n 1)"
+          printf '%s' "$code" >/tmp/backup-exit-code
+          printf '%s' "$backup_dir" >/tmp/backup-directory
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          echo "backup_dir=$backup_dir" >> "$GITHUB_OUTPUT"
+          exit 0
 
-          backup_exit=0
-          backup_log="$(bash scripts/backup-database.sh "$RUNNER_TEMP/gsa-restore-diagnostic" 2>/tmp/backup-diagnostic-error.log)" || backup_exit=$?
-          backup_dir="$(sed -n 's/^DATABASE_BACKUP_OK=//p' <<< "$backup_log" | tail -n 1)"
-          restore_exit=99
-
-          if [[ "$backup_exit" -eq 0 && -n "$backup_dir" ]]; then
-            set +e
+      - name: Exercise isolated database restore
+        id: restore
+        shell: bash
+        run: |
+          set +e
+          backup_exit="$(cat /tmp/backup-exit-code 2>/dev/null || echo 99)"
+          backup_dir="$(cat /tmp/backup-directory 2>/dev/null || true)"
+          restore_code=99
+          if [[ "$backup_exit" == "0" && -n "$backup_dir" && -f "$backup_dir/database.dump" ]]; then
             RESTORE_TEST_SCHEMAS=public,supabase_migrations \
               bash scripts/test-database-restore.sh "$backup_dir/database.dump" \
               >/tmp/restore-diagnostic-output.log \
               2>/tmp/restore-diagnostic-error.log
-            restore_exit=$?
-            set -e
+            restore_code=$?
           else
-            : > /tmp/restore-diagnostic-error.log
+            printf 'Backup indisponível para restauração\n' >/tmp/restore-diagnostic-error.log
+            : >/tmp/restore-diagnostic-output.log
           fi
+          printf '%s' "$restore_code" >/tmp/restore-exit-code
+          echo "exit_code=$restore_code" >> "$GITHUB_OUTPUT"
+          exit 0
 
-          BACKUP_EXIT="$backup_exit" RESTORE_EXIT="$restore_exit" BACKUP_DIR="$backup_dir" \
+      - name: Build redacted diagnostic evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          BACKUP_EXIT="$(cat /tmp/backup-exit-code 2>/dev/null || echo 99)" \
+          RESTORE_EXIT="$(cat /tmp/restore-exit-code 2>/dev/null || echo 99)" \
+          BACKUP_DIR="$(cat /tmp/backup-directory 2>/dev/null || true)" \
           node --input-type=module <<'NODE'
           import crypto from 'node:crypto';
           import fs from 'node:fs/promises';
@@ -71,7 +94,6 @@ jobs:
           const restoreOutput = await read('/tmp/restore-diagnostic-output.log');
           const combined = `${restoreError}\n${restoreOutput}`;
 
-          const extract = (regex) => combined.match(regex)?.[1] || '';
           const flags = {
             role_missing: /role ["']?[^"'\s]+["']? does not exist/i.test(combined),
             schema_missing: /schema ["']?[^"']+["']? does not exist/i.test(combined),
@@ -79,18 +101,24 @@ jobs:
             extension_missing: /extension ["']?[^"']+["']? is not available|could not open extension control file/i.test(combined),
             type_missing: /type ["']?[^"']+["']? does not exist/i.test(combined),
             function_missing: /function ["']?[^"']+["']? does not exist/i.test(combined),
+            language_missing: /language ["']?[^"']+["']? does not exist/i.test(combined),
             unsupported_dump_version: /unsupported version|version mismatch/i.test(combined),
             duplicate_object: /already exists|duplicate object/i.test(combined),
             permission_denied: /permission denied/i.test(combined),
+            copy_failure: /COPY failed|error while processing data for table/i.test(combined),
+            not_null_failure: /null value in column|not-null constraint/i.test(combined),
             foreign_key_failure: /foreign key|violates foreign key constraint/i.test(combined),
             check_constraint_failure: /check constraint|violates check constraint/i.test(combined),
             syntax_error: /syntax error/i.test(combined),
             docker_failure: /docker:|container.*not|daemon/i.test(combined),
             function_body_failure: /check_function_bodies|error during inlining|cannot change name of input parameter/i.test(combined),
+            invalid_configuration: /unrecognized configuration parameter|invalid value for parameter/i.test(combined),
+            database_connection_failure: /could not connect|connection.*failed|timeout/i.test(combined),
           };
           const classification = Object.entries(flags).find(([, value]) => value)?.[0]
             || (Number(process.env.RESTORE_EXIT) === 0 ? 'success' : 'unknown');
 
+          const extract = (regex) => combined.match(regex)?.[1] || '';
           let manifest = null;
           if (process.env.BACKUP_DIR) {
             try {
@@ -117,19 +145,39 @@ jobs:
             missing_relation: extract(/relation ["']?([^"']+)["']? does not exist/i),
             missing_extension: extract(/extension ["']?([^"']+)["']? (?:is not available|could not be opened)/i),
             missing_type: extract(/type ["']?([^"']+)["']? does not exist/i),
+            missing_function: extract(/function ["']?([^"']+)["']? does not exist/i),
+            missing_language: extract(/language ["']?([^"']+)["']? does not exist/i),
             restore_error_bytes: Buffer.byteLength(combined),
             restore_error_sha256: crypto.createHash('sha256').update(combined).digest('hex'),
           };
 
-          await fs.writeFile(
-            'deployment-status/production-database-restore-diagnostic.json',
-            `${JSON.stringify(evidence, null, 2)}\n`,
-          );
+          const serialized = `${JSON.stringify(evidence, null, 2)}\n`;
+          await fs.writeFile('/tmp/production-database-restore-diagnostic.json', serialized);
+          await fs.writeFile('deployment-status/production-database-restore-diagnostic.json', serialized);
           NODE
 
+      - name: Publish diagnostic evidence even after failure
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f /tmp/production-database-restore-diagnostic.json
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add deployment-status/production-database-restore-diagnostic.json
-          git commit -m "Registrar diagnóstico seguro da restauração do banco"
-          git pull --rebase origin main
-          git push origin HEAD:main
+
+          published=false
+          for attempt in $(seq 1 10); do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p deployment-status
+            cp /tmp/production-database-restore-diagnostic.json \
+              deployment-status/production-database-restore-diagnostic.json
+            git add deployment-status/production-database-restore-diagnostic.json
+            git commit -m "Registrar diagnóstico seguro da restauração do banco" || true
+            if git push origin HEAD:main; then
+              published=true
+              break
+            fi
+            sleep 5
+          done
+          test "$published" = true
