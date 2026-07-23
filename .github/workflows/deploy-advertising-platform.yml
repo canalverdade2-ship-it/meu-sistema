@@ -1,4 +1,4 @@
-name: Deploy Advertising Platform
+name: Restore Original GSA Ads Colors
 
 on:
   push:
@@ -6,234 +6,50 @@ on:
     paths:
       - '.github/workflows/deploy-advertising-platform.yml'
       - 'scripts/restore-gsa-ads-colors.py'
-      - 'scripts/resolve-active-merge-conflicts.py'
-      - 'src/components/public/AdvertisingPage.tsx'
-      - 'src/components/admin/AdvertisingAdminModule.tsx'
-      - 'src/pages/AdvertiserPortal.tsx'
-      - 'src/types/advertising.ts'
-      - 'src/components/admin/AffiliateAdminModule.tsx'
-      - 'src/components/public/AffiliatePublicPage.tsx'
-      - 'src/components/public/final/PublicFooter.tsx'
-      - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
-      - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
-      - 'supabase/migrations/20260721223500_schedule_advertising_campaigns.sql'
-      - 'supabase/migrations/20260722040000_harden_advertising_backend.sql'
-      - 'supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql'
-      - 'supabase/functions/gsa-public-advertising/**'
-      - 'supabase/functions/gsa-advertiser-admin/**'
-      - 'supabase/functions/gsa-advertiser-access/**'
-      - 'supabase/functions/gsa-ad-delivery/**'
-      - 'supabase/functions/gsa-advertising-webhook/**'
-      - 'supabase/functions/gsa-advertising-scheduler/**'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: deploy-advertising-platform-production
+  group: restore-original-gsa-ads-colors-${{ github.sha }}
   cancel-in-progress: false
 
-env:
-  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
-  SUPABASE_CLI_VERSION: 2.101.0
-
 jobs:
-  deploy:
+  restore-colors:
     runs-on: ubuntu-latest
-    environment: production
-    timeout-minutes: 45
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-      ADVERTISING_ALLOWED_ORIGINS: ${{ vars.ADVERTISING_ALLOWED_ORIGINS || 'https://grupo-gsa.com.br,https://www.grupo-gsa.com.br' }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Resolve and persist active merge conflicts
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 scripts/resolve-active-merge-conflicts.py
-          git diff --check
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/components/admin/AffiliateAdminModule.tsx src/components/public/AffiliatePublicPage.tsx src/components/public/final/PublicFooter.tsx
-          if ! git diff --cached --quiet; then
-            git commit -m 'Restaurar cores originais das páginas do GSA Anúncios'
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-      - run: npm ci
-
-      - name: Validate frontend and contracts
-        shell: bash
-        run: |
-          set -euo pipefail
-          npx tsc --noEmit 2>&1 | tee advertising-typecheck.log
-          npm run test:advertising 2>&1 | tee advertising-foundation-test.log
-          npm run test:advertising-complete 2>&1 | tee advertising-completion-test.log
-          npm run build 2>&1 | tee advertising-build.log
-          ! grep -q "gsa_adv_requests_store\|gsa_adv_proposals_store\|gsa_adv_campaigns_store\|gsa_advertiser_session\|anunciantes_solicitacoes" src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
-
-      - name: Validate Edge Functions
-        run: |
-          deno check supabase/functions/gsa-public-advertising/index.ts
-          deno check supabase/functions/gsa-advertiser-admin/index.ts
-          deno check supabase/functions/gsa-advertiser-access/index.ts
-          deno check supabase/functions/gsa-ad-delivery/index.ts
-          deno check supabase/functions/gsa-advertising-webhook/index.ts
-          deno check supabase/functions/gsa-advertising-scheduler/index.ts
-
-      - name: Validate production configuration
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "$SUPABASE_ACCESS_TOKEN"
-          test -n "$SUPABASE_DB_PASSWORD"
-          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          IFS=',' read -ra origins <<< "$ADVERTISING_ALLOWED_ORIGINS"
-          for origin in "${origins[@]}"; do
-            origin="$(echo "$origin" | xargs)"
-            [[ "$origin" =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?$ ]]
-          done
-
-      - uses: supabase/setup-cli@v1
-        with:
-          version: ${{ env.SUPABASE_CLI_VERSION }}
-      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
-      - run: supabase migration list --linked 2>&1 | tee advertising-migrations-before.log
-
-      - name: Apply audited SQL
-        shell: bash
-        run: |
-          set -euo pipefail
-          cp supabase/migrations/20260722040000_harden_advertising_backend.sql /tmp/hardening.sql
-          printf '\nCOMMIT;\n' >> /tmp/hardening.sql
-          : > advertising-migrations-apply.log
-          for spec in \
-            '20260721210100:supabase/migrations/20260721210100_create_advertising_foundation.sql' \
-            '20260721223100:supabase/migrations/20260721223100_complete_advertising_platform.sql' \
-            '20260721223500:supabase/migrations/20260721223500_schedule_advertising_campaigns.sql' \
-            '20260722120100:/tmp/hardening.sql' \
-            '20260722235900:supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql'; do
-              version="${spec%%:*}"; file="${spec#*:}"
-              supabase db query --linked --file "$file" 2>&1 | tee -a advertising-migrations-apply.log
-          done
-          supabase migration list --linked 2>&1 | tee advertising-migrations-pre-repair.log
-          for version in 20260721210100 20260721223100 20260721223500 20260722120100 20260722235900; do
-            if ! awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/,"",remote); if(remote==wanted) found=1 } END{exit found?0:1}' advertising-migrations-pre-repair.log; then
-              supabase migration repair --linked --status applied "$version" | tee -a advertising-migrations-apply.log
-            fi
-          done
-          if awk -F'|' '{ remote=$2; gsub(/[^0-9]/,"",remote); if(remote=="20260722040000") found=1 } END{exit found?0:1}' advertising-migrations-pre-repair.log; then
-            supabase migration repair --linked --status reverted 20260722040000 | tee -a advertising-migrations-apply.log
-          fi
-          supabase migration list --linked 2>&1 | tee advertising-migrations-after.log
-
-      - name: Configure secrets
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase secrets list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee advertising-secrets-before.log
-          : > advertising-secrets-status.log
-          for name in AD_DELIVERY_HASH_SALT ADVERTISING_WEBHOOK_SECRET ADVERTISING_CRON_SECRET; do
-            if grep -Eq "(^|[[:space:]|])${name}([[:space:]|]|$)" advertising-secrets-before.log; then
-              echo "${name}=preserved" | tee -a advertising-secrets-status.log
-            else
-              value="$(openssl rand -hex 32)"
-              supabase secrets set "${name}=${value}" --project-ref "$SUPABASE_PROJECT_ID" >/dev/null
-              echo "${name}=created" | tee -a advertising-secrets-status.log
-            fi
-          done
-          supabase secrets set "ALLOWED_ORIGINS=${ADVERTISING_ALLOWED_ORIGINS}" --project-ref "$SUPABASE_PROJECT_ID" >/dev/null
-
-      - name: Deploy Edge Functions
-        shell: bash
-        run: |
-          set -euo pipefail
-          : > advertising-functions-deploy.log
-          supabase functions deploy gsa-advertiser-admin --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee -a advertising-functions-deploy.log
-          for fn in gsa-public-advertising gsa-advertiser-access gsa-ad-delivery gsa-advertising-webhook gsa-advertising-scheduler; do
-            supabase functions deploy "$fn" --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt 2>&1 | tee -a advertising-functions-deploy.log
-          done
-
-      - name: Verify production
-        shell: bash
-        run: |
-          cat > /tmp/verify.sql <<'SQL'
-          DO $$ BEGIN
-            IF to_regclass('public.gsa_advertisers') IS NULL OR to_regclass('public.gsa_ad_requests') IS NULL OR to_regclass('public.gsa_ad_proposals') IS NULL OR to_regclass('public.gsa_ad_campaigns') IS NULL OR to_regclass('public.gsa_ad_creatives') IS NULL OR to_regclass('public.gsa_ad_payments') IS NULL OR to_regclass('public.gsa_ad_delivery_events') IS NULL OR to_regclass('public.gsa_ad_rate_limit_buckets') IS NULL OR to_regclass('public.gsa_ad_maintenance_state') IS NULL THEN RAISE EXCEPTION 'Tabelas obrigatorias ausentes'; END IF;
-            IF to_regprocedure('public.gsa_advertiser_portal_snapshot()') IS NULL OR to_regprocedure('public.gsa_admin_create_ad_proposal(uuid,jsonb)') IS NULL OR to_regprocedure('public.gsa_advertiser_accept_proposal(uuid)') IS NULL OR to_regprocedure('public.gsa_advertiser_update_profile(jsonb)') IS NULL OR to_regprocedure('public.gsa_public_validate_advertising_protocol(text)') IS NULL OR to_regprocedure('public.gsa_ads_claim_protocol_for_user(text,uuid)') IS NULL OR to_regprocedure('public.gsa_admin_update_ad_campaign_status(uuid,text)') IS NULL OR to_regprocedure('public.gsa_ads_serve(text,text,text,text,text)') IS NULL OR to_regprocedure('public.gsa_ads_record_event(uuid,text)') IS NULL THEN RAISE EXCEPTION 'RPCs obrigatorias ausentes'; END IF;
-            IF has_function_privilege('anon','public.gsa_advertiser_portal_snapshot()','EXECUTE') OR has_function_privilege('anon','public.gsa_advertiser_accept_proposal(uuid)','EXECUTE') OR has_function_privilege('anon','public.gsa_advertiser_counter_proposal(uuid,numeric,text)','EXECUTE') OR has_function_privilege('anon','public.gsa_advertiser_reject_proposal(uuid,text)','EXECUTE') THEN RAISE EXCEPTION 'RPC de anunciante exposta'; END IF;
-            IF NOT has_function_privilege('authenticated','public.gsa_advertiser_update_profile(jsonb)','EXECUTE') THEN RAISE EXCEPTION 'Perfil sem permissao'; END IF;
-          END $$;
-          SELECT 'ADVERTISING_PLATFORM_PRODUCTION_VERIFIED' AS result;
-          SQL
-          supabase db query --linked --file /tmp/verify.sql 2>&1 | tee advertising-production-verification.log
-          grep -q ADVERTISING_PLATFORM_PRODUCTION_VERIFIED advertising-production-verification.log
-          supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee advertising-functions-list.log
-          for fn in gsa-public-advertising gsa-advertiser-admin gsa-advertiser-access gsa-ad-delivery gsa-advertising-webhook gsa-advertising-scheduler; do grep -q "$fn" advertising-functions-list.log; done
-
-      - name: Smoke test public boundaries
-        shell: bash
-        run: |
-          set -euo pipefail
-          base="https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1"
-          origin="${ADVERTISING_ALLOWED_ORIGINS%%,*}"; origin="$(echo "$origin"|xargs)"
-          for fn in gsa-ad-delivery gsa-advertiser-access; do
-            test "$(curl -sS -o /dev/null -w '%{http_code}' -X OPTIONS -H "Origin: ${origin}" "${base}/${fn}")" = 204
-            test "$(curl -sS -o /dev/null -w '%{http_code}' -X OPTIONS -H 'Origin: https://blocked.example' "${base}/${fn}")" = 403
-          done
-          test "$(curl -sS -o /dev/null -w '%{http_code}' "${base}/gsa-advertising-webhook")" = 405
-          test "$(curl -sS -o /dev/null -w '%{http_code}' "${base}/gsa-advertising-scheduler")" = 405
-          echo ADVERTISING_EDGE_BOUNDARIES_OK | tee advertising-smoke-test.log
-
-      - name: Upload evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: advertising-platform-production-evidence-${{ github.run_id }}
-          path: |
-            advertising-*.log
-          if-no-files-found: ignore
-          retention-days: 30
-
-  report:
-    needs: deploy
-    if: always()
-    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
-      - name: Record deployment result
-        env:
-          RESULT: ${{ needs.deploy.result }}
-          RUN_ID: ${{ github.run_id }}
-          VALIDATED_SHA: ${{ github.sha }}
+
+      - name: Restaurar somente a identidade visual anterior
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p deployment-status
-          cat > deployment-status/advertising-platform-production.json <<JSON
-          {"status":"${RESULT}","workflow_run_id":"${RUN_ID}","validated_sha":"${VALIDATED_SHA}","validated_at_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","project_ref":"ocgajvagxagutfvgxwsy","migrations":["20260721210100","20260721223100","20260721223500","20260722120100","20260722235900"],"edge_functions":["gsa-public-advertising","gsa-advertiser-admin","gsa-advertiser-access","gsa-ad-delivery","gsa-advertising-webhook","gsa-advertising-scheduler"]}
-          JSON
+          python3 scripts/restore-gsa-ads-colors.py
+          git diff --check
+          grep -q 'bg-neutral-950/90 backdrop-blur-xl' src/components/public/AdvertisingPage.tsx
+          grep -q 'radial-gradient(circle_at_top_right' src/components/public/AdvertisingPage.tsx
+          grep -q 'border-neutral-200 bg-white' src/components/admin/AdvertisingAdminModule.tsx
+          grep -q 'bg-white/95 backdrop-blur-xl' src/pages/AdvertiserPortal.tsx
+          grep -q 'bg-neutral-950 p-3 text-white' src/pages/AdvertiserPortal.tsx
+          ! grep -q 'gsa_adv_requests_store\|gsa_adv_proposals_store\|gsa_adv_campaigns_store\|gsa_advertiser_session\|anunciantes_solicitacoes' src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
+
+      - name: Gravar cores restauradas diretamente na main
+        shell: bash
+        run: |
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add deployment-status/advertising-platform-production.json
-          git diff --cached --quiet && exit 0
-          git commit -m "Registrar implantação da plataforma de anúncios: ${RESULT}"
+          git add src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'Nenhuma alteração visual pendente.'
+            exit 0
+          fi
+          git commit -m 'Restaurar cores originais das páginas do GSA Anúncios'
+          git pull --rebase origin main
           git push origin HEAD:main
