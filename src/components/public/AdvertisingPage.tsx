@@ -192,7 +192,7 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-neutral-950/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-neutral-950/90 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
           <button type="button" onClick={onBack} className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-bold text-white/70 hover:bg-white/10">
             <ArrowLeft className="h-4 w-4" /> Voltar
@@ -201,12 +201,12 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
             <button type="button" onClick={onLogin} className="hidden rounded-full px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/10 sm:block">
               Portal do anunciante
             </button>
-            <a href="#formulario-anunciante" className="rounded-full bg-amber-400 px-5 py-2.5 text-sm font-black text-neutral-950">Quero anunciar</a>
+            <a href="#formulario-anunciante" className="rounded-full bg-amber-400 px-5 py-2.5 text-sm font-black text-neutral-950 transition hover:bg-amber-300">Quero anunciar</a>
           </div>
         </div>
       </header>
 
-      <section className="border-b border-white/10 px-5 py-20 text-center">
+      <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.22),transparent_38%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.18),transparent_35%)] px-5 py-20 text-center sm:py-28">
         <div className="mx-auto max-w-5xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-xs font-black uppercase tracking-[.22em] text-amber-200">
             <Megaphone className="h-4 w-4" /> GSA Anúncios
@@ -221,7 +221,7 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
         </div>
       </section>
 
-      <section className="px-5 py-14">
+      <section className="border-y border-white/10 bg-white/[0.03] px-5 py-16">
         <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-3">
           {[
             { icon: LayoutGrid, title: 'Inventário organizado', text: 'Posições, formatos, dispositivos e períodos controlados.' },
@@ -237,34 +237,34 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
         </div>
       </section>
 
-      <section className="px-5 pb-10">
+      <section className="px-5 py-16">
         <div className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-black/30 p-5">
           <div className="mb-4 flex items-center gap-2 text-sm font-black"><BadgeCheck className="h-5 w-5 text-amber-300" /> Vitrine de campanhas ativas</div>
           <AdvertisingSlot placementCode="ADS_PUBLIC_SHOWCASE" className="min-h-28" />
         </div>
       </section>
 
-      <section id="formulario-anunciante" className="px-5 py-16">
-        <form onSubmit={submit} className="mx-auto max-w-5xl space-y-8 rounded-[2rem] border border-white/10 bg-neutral-900 p-6 shadow-2xl sm:p-10">
+      <section id="formulario-anunciante" className="scroll-mt-20 border-t border-white/10 bg-neutral-900 px-5 py-16">
+        <form onSubmit={submit} className="mx-auto max-w-5xl space-y-8 rounded-[2rem] border border-white/10 bg-neutral-950 p-6 shadow-2xl sm:p-10">
           <div>
             <h2 className="text-2xl font-black">Solicitar proposta de anúncio</h2>
             <p className="mt-2 text-sm text-white/60">O protocolo só será exibido depois que o banco confirmar a gravação.</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <input required value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="Empresa / Razão Social" className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
-            <input required value={form.document} onChange={(e) => setForm({ ...form, document: e.target.value })} placeholder="CPF ou CNPJ" className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
-            <select required value={form.company_size} onChange={(e) => setForm({ ...form, company_size: e.target.value })} className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3">
+            <input required value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="Empresa / Razão Social" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
+            <input required value={form.document} onChange={(e) => setForm({ ...form, document: e.target.value })} placeholder="CPF ou CNPJ" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
+            <select required value={form.company_size} onChange={(e) => setForm({ ...form, company_size: e.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300">
               <option value="">Porte da empresa</option><option value="autonomo">Autônomo</option><option value="mei">MEI</option><option value="micro">Microempresa</option><option value="pequena">Pequena</option><option value="media">Média</option><option value="grande">Grande</option>
             </select>
-            <input required value={form.segment} onChange={(e) => setForm({ ...form, segment: e.target.value })} placeholder="Segmento" className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
-            <input required value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} placeholder="Responsável pelo contato" className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
-            <input required type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} placeholder="E-mail" className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
-            <input required value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} placeholder="Telefone / WhatsApp" className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
-            <input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="Site (opcional)" className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
+            <input required value={form.segment} onChange={(e) => setForm({ ...form, segment: e.target.value })} placeholder="Segmento" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
+            <input required value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} placeholder="Responsável pelo contato" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
+            <input required type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} placeholder="E-mail" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
+            <input required value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} placeholder="Telefone / WhatsApp" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
+            <input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="Site (opcional)" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
           </div>
 
-          <textarea required value={form.objective} onChange={(e) => setForm({ ...form, objective: e.target.value })} placeholder="Objetivo da campanha" rows={3} className="w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
+          <textarea required value={form.objective} onChange={(e) => setForm({ ...form, objective: e.target.value })} placeholder="Objetivo da campanha" rows={3} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
 
           <fieldset>
             <legend className="mb-3 font-black">Formatos desejados</legend>
@@ -299,13 +299,13 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
           </fieldset>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <input type="date" min={today} value={form.desired_start_date} onChange={(e) => setForm({ ...form, desired_start_date: e.target.value })} className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
-            <input type="date" min={form.desired_start_date || today} value={form.desired_end_date} onChange={(e) => setForm({ ...form, desired_end_date: e.target.value })} className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
-            <input required type="number" min="1" step="0.01" value={form.intended_budget} onChange={(e) => setForm({ ...form, intended_budget: e.target.value })} placeholder="Investimento pretendido" className="rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
+            <input type="date" min={today} value={form.desired_start_date} onChange={(e) => setForm({ ...form, desired_start_date: e.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
+            <input type="date" min={form.desired_start_date || today} value={form.desired_end_date} onChange={(e) => setForm({ ...form, desired_end_date: e.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
+            <input required type="number" min="1" step="0.01" value={form.intended_budget} onChange={(e) => setForm({ ...form, intended_budget: e.target.value })} placeholder="Investimento pretendido" className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
           </div>
 
           <label className="flex items-start gap-3 rounded-xl border border-white/10 p-4"><input type="checkbox" checked={form.needs_creative_service} onChange={(e) => setForm({ ...form, needs_creative_service: e.target.checked })} /><span><strong>Preciso que a GSA crie a arte</strong><small className="block text-white/50">O serviço será detalhado na proposta.</small></span></label>
-          <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Observações" rows={3} className="w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-3" />
+          <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Observações" rows={3} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-amber-300" />
           <input tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.website_confirmation} onChange={(e) => setForm({ ...form, website_confirmation: e.target.value })} className="hidden" />
 
           <label className="flex items-start gap-3 text-sm text-white/70"><input type="checkbox" checked={privacyAccepted} onChange={(e) => setPrivacyAccepted(e.target.checked)} /><span>Li e aceito a <button type="button" onClick={() => setPrivacyOpen(true)} className="font-bold text-amber-300 underline">política de privacidade</button>.</span></label>
