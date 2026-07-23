@@ -1,0 +1,20 @@
+{
+  "generated_at_utc": "2026-07-23T11:21:15Z",
+  "source_commit": "e26334b5ba3559c075a6de3fcf0ec2f23d803301",
+  "result": "failure",
+  "inventory": {
+    "workflow": "Apply Production Inventory Gaps",
+    "run_id": "30002402242",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30002402242",
+    "exit_code": 0
+  },
+  "validation": {
+    "workflow": "Production Environment Validation",
+    "run_id": "",
+    "url": "",
+    "apply_pending_changes": false,
+    "run_storage_restore": true,
+    "run_authenticated_smoke": true,
+    "exit_code": 91
+  }
+}
