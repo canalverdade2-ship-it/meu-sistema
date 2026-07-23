@@ -27,36 +27,91 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Restore and commit original GSA Ads colors
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --rebase origin main
+          python3 - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+            'src/components/public/AdvertisingPage.tsx': [
+              ('bg-neutral-950/95 backdrop-blur', 'bg-neutral-950/90 backdrop-blur-xl'),
+              ('<section className="border-b border-white/10 px-5 py-20 text-center">', '<section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.22),transparent_38%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.18),transparent_35%)] px-5 py-20 text-center sm:py-28">'),
+              ('<section className="px-5 py-14">', '<section className="border-y border-white/10 bg-white/[0.03] px-5 py-16">'),
+              ('<section className="px-5 pb-10">', '<section className="px-5 py-16">'),
+              ('<section id="formulario-anunciante" className="px-5 py-16">', '<section id="formulario-anunciante" className="scroll-mt-20 border-t border-white/10 bg-neutral-900 px-5 py-16">'),
+              ('bg-neutral-900 p-6 shadow-2xl sm:p-10', 'bg-neutral-950 p-6 shadow-2xl sm:p-10'),
+              ('bg-neutral-950 px-4 py-3', 'bg-white/5 px-4 py-3 outline-none focus:border-amber-300'),
+              ('text-neutral-950">Quero anunciar', 'text-neutral-950 transition hover:bg-amber-300">Quero anunciar'),
+            ],
+            'src/components/admin/AdvertisingAdminModule.tsx': [
+              ('border border-white/10 bg-white p-10', 'border border-neutral-200 bg-white p-10'),
+              ('rounded-xl border px-4 py-2 text-sm font-bold', 'rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-bold text-neutral-700 shadow-sm hover:bg-neutral-50'),
+              ('rounded-2xl border bg-white p-4', 'rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm'),
+              ('rounded-2xl border bg-white p-2', 'rounded-2xl border border-neutral-200 bg-white p-2'),
+              ('rounded-xl border bg-white py-2.5', 'rounded-xl border border-neutral-200 bg-white py-2.5'),
+              ('rounded-2xl border bg-white p-5', 'rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm'),
+              ('rounded-xl border px-3 py-2', 'rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400'),
+              ('border border-dashed bg-white', 'border border-dashed border-neutral-200 bg-white'),
+            ],
+            'src/pages/AdvertiserPortal.tsx': [
+              ('flex min-h-screen items-center justify-center bg-neutral-950 p-5', 'flex min-h-screen flex-col items-center justify-center bg-neutral-950 px-4 py-10 sm:py-16'),
+              ('w-full max-w-xl rounded-[2rem] border border-white/10 bg-neutral-900 p-6 shadow-2xl sm:p-10', 'w-full max-w-xl overflow-hidden rounded-[2.5rem] border border-white/10 bg-neutral-900/90 p-6 shadow-2xl backdrop-blur-xl sm:p-10'),
+              ('rounded-2xl bg-amber-400 p-3 text-neutral-950', 'flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400 text-neutral-950 shadow-lg shadow-amber-400/20'),
+              ('mb-6 grid grid-cols-2 gap-2 rounded-xl bg-black/30 p-1', 'mb-6 grid grid-cols-2 gap-2 rounded-2xl border border-white/5 bg-black/40 p-1.5'),
+              ('<main className="min-h-screen bg-neutral-100 text-neutral-950">', '<main className="min-h-screen bg-neutral-100 text-neutral-900">'),
+              ('<header className="border-b bg-neutral-950 px-5 py-4 text-white"><div className="mx-auto flex max-w-7xl items-center justify-between"><div className="flex items-center gap-3"><Megaphone className="h-6 w-6 text-amber-300" /><div><h1 className="font-black">Portal do Anunciante</h1><p className="text-xs text-white/50">{snapshot.advertiser.trade_name || snapshot.advertiser.legal_name}</p></div></div><div className="flex gap-2">', '<header className="sticky top-0 z-30 border-b border-neutral-200 bg-white/95 backdrop-blur-xl"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6"><div className="min-w-0"><p className="text-xs font-black uppercase tracking-[0.18em] text-amber-600">GSA Anúncios</p><p className="truncate font-black">{snapshot.advertiser.trade_name || snapshot.advertiser.legal_name}</p></div><div className="flex items-center gap-2">'),
+              ('rounded-lg p-2 hover:bg-white/10', 'rounded-xl p-2.5 text-neutral-500 hover:bg-neutral-100'),
+              ('flex items-center gap-1 rounded-lg p-2 text-sm font-bold hover:bg-white/10', 'flex items-center gap-2 rounded-xl border border-neutral-200 px-3 py-2 text-sm font-bold text-neutral-600 hover:bg-neutral-50'),
+              ('mx-auto grid max-w-7xl gap-6 p-5 lg:grid-cols-[240px_1fr]', 'mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[220px_minmax(0,1fr)]'),
+              ('<aside className="h-fit rounded-2xl border bg-white p-2">', '<aside className="h-fit rounded-2xl bg-neutral-950 p-3 text-white lg:sticky lg:top-22">'),
+              ("tab === id ? 'bg-neutral-950 text-white' : 'text-neutral-600 hover:bg-neutral-100'", "tab === id ? 'bg-white text-neutral-950' : 'text-white/55 hover:bg-white/5 hover:text-white'"),
+              ('rounded-2xl border bg-white p-5 shadow-sm', 'rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm'),
+              ('border border-dashed bg-white', 'border border-dashed border-neutral-200 bg-white'),
+            ],
+          }
+
+          for filename, pairs in replacements.items():
+              path = Path(filename)
+              text = path.read_text(encoding='utf-8')
+              for old, new in pairs:
+                  if new not in text:
+                      text = text.replace(old, new)
+              path.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+          ! grep -q 'gsa_adv_requests_store\|gsa_adv_proposals_store\|gsa_adv_campaigns_store\|gsa_advertiser_session\|anunciantes_solicitacoes' src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
+          if ! git diff --cached --quiet; then
+            git commit -m 'Restaurar cores originais do GSA Anúncios'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Restore original GSA Ads colors
-        shell: bash
-        run: |
-          set -euo pipefail
-          sed -i 's/required: bool = True/required: bool = False/' scripts/restore-gsa-ads-colors.py
-          python3 scripts/restore-gsa-ads-colors.py
-          git diff --check
-          ! grep -q 'gsa_adv_requests_store\|gsa_adv_proposals_store\|gsa_adv_campaigns_store\|gsa_advertiser_session\|anunciantes_solicitacoes' src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
-
       - name: Scan runtime for demonstrations and simulations
         run: node scripts/audit-production-real.mjs
 
-      - name: Commit current audit report and restored colors
+      - name: Commit current audit report
         shell: bash
         run: |
           set -euo pipefail
-          if test -z "$(git status --porcelain -- audit/production-real-audit.json audit/production-real-audit.md src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx)"; then
-            echo 'Relatório e identidade visual sem mudanças.'
+          if test -z "$(git status --porcelain -- audit/production-real-audit.json audit/production-real-audit.md)"; then
+            echo 'Relatório sem mudanças.'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add audit/production-real-audit.json audit/production-real-audit.md src/components/public/AdvertisingPage.tsx src/components/admin/AdvertisingAdminModule.tsx src/pages/AdvertiserPortal.tsx
-          git diff --cached --check
-          git commit -m 'Restaurar cores originais do GSA Anúncios e atualizar auditoria'
+          git add audit/production-real-audit.json audit/production-real-audit.md
+          git commit -m 'Atualizar auditoria de operação real'
           git pull --rebase origin main
           git push origin HEAD:main
 
