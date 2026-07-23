@@ -27,7 +27,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: careers-production-${{ github.ref }}
@@ -135,3 +135,57 @@ jobs:
             careers-production-verification.log
           if-no-files-found: ignore
           retention-days: 30
+
+  record-result:
+    name: Record careers production result
+    if: always() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    needs: [validate, deploy-production]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Write deployment evidence
+        shell: bash
+        env:
+          VALIDATION_RESULT: ${{ needs.validate.result }}
+          DEPLOYMENT_RESULT: ${{ needs.deploy-production.result }}
+          VALIDATED_SHA: ${{ github.sha }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          final_status="failure"
+          if [ "$VALIDATION_RESULT" = "success" ] && [ "$DEPLOYMENT_RESULT" = "success" ]; then
+            final_status="success"
+          fi
+          cat > deployment-status/careers-production.json <<JSON
+          {
+            "status": "$final_status",
+            "workflow_run_id": "$WORKFLOW_RUN_ID",
+            "validated_sha": "$VALIDATED_SHA",
+            "validated_at_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "scope": "careers-form-candidate-portal-admin-rpcs-rls-storage-history",
+            "migration": "20260722235959",
+            "validation": "$VALIDATION_RESULT",
+            "database": "$DEPLOYMENT_RESULT",
+            "frontend": "$VALIDATION_RESULT",
+            "tests": "$VALIDATION_RESULT"
+          }
+          JSON
+
+      - name: Commit production result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add deployment-status/careers-production.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Registrar implantação do Trabalhe Conosco: ${{ needs.deploy-production.result }}"
+          git push origin HEAD:main
