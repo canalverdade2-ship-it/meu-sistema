@@ -1,33 +1,23 @@
 {
-  "generated_at_utc": "2026-07-23T12:04:41Z",
+  "generated_at_utc": "2026-07-23T12:10:52Z",
   "core_controller": {
     "conclusion": "failure",
-    "createdAt": "2026-07-23T11:56:15Z",
-    "databaseId": 30005005402,
+    "createdAt": "2026-07-23T12:08:16Z",
+    "databaseId": 30005793581,
     "event": "push",
-    "headSha": "50aa95ec40fdfc55ac0eedf7c2555ec9b80fc2b8",
+    "headSha": "7e53ac55ab3d5403a005e46c32d2fea235e52af1",
     "status": "completed",
-    "updatedAt": "2026-07-23T11:58:50Z",
-    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30005005402"
+    "updatedAt": "2026-07-23T12:10:48Z",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30005793581"
   },
   "validation": {
     "conclusion": "failure",
-    "createdAt": "2026-07-23T11:56:23Z",
-    "databaseId": 30005013092,
+    "createdAt": "2026-07-23T12:08:24Z",
+    "databaseId": 30005801680,
     "event": "workflow_dispatch",
-    "headSha": "2f9dd53c6b0336d33aa3492652484fbc90086914",
+    "headSha": "7e53ac55ab3d5403a005e46c32d2fea235e52af1",
     "status": "completed",
-    "updatedAt": "2026-07-23T11:58:36Z",
-    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30005013092"
-  },
-  "restore_diagnostic": {
-    "conclusion": "failure",
-    "createdAt": "2026-07-23T12:01:25Z",
-    "databaseId": 30005339087,
-    "event": "push",
-    "headSha": "5bb5c8dff63485c5eb6feff599cfd6e0199e527d",
-    "status": "completed",
-    "updatedAt": "2026-07-23T12:04:13Z",
-    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30005339087"
+    "updatedAt": "2026-07-23T12:10:33Z",
+    "url": "https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/30005801680"
   }
 }
