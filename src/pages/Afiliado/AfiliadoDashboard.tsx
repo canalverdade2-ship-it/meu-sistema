@@ -276,10 +276,10 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
         <main className="min-w-0 flex-1 space-y-5 p-4 sm:p-6 lg:p-8">
           {activeTab === 'dashboard' && (
             <>
-              <section className="rounded-3xl bg-slate-950 p-6 text-white">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-400">Visão geral</p>
-                <h1 className="mt-2 text-2xl font-black">Olá, {snapshot.affiliate.nomeDivulgacao}</h1>
-                <p className="mt-2 text-sm text-slate-400">Os dados são atualizados pelo backend seguro e sincronizados periodicamente.</p>
+              <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#7a5a1b]">Visão geral</p>
+                <h1 className="mt-2 text-2xl font-black text-slate-900">Olá, {snapshot.affiliate.nomeDivulgacao}</h1>
+                <p className="mt-2 text-sm text-slate-500">Os dados são atualizados pelo backend seguro e sincronizados periodicamente.</p>
               </section>
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <MetricCard label="Disponível" value={formatCurrency(snapshot.summary.totalDisponivel)} icon={WalletCards} />
@@ -288,7 +288,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                 <MetricCard label="Cliques" value={snapshot.summary.cliques.toLocaleString('pt-BR')} icon={Share2} />
               </div>
               <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between"><div><h2 className="font-black">Links ativos</h2><p className="text-xs text-slate-500">Use somente estes códigos para receber atribuição.</p></div><button type="button" onClick={() => navigateToTab('links')} className="text-xs font-black text-indigo-600">Gerenciar links</button></div>
+                <div className="flex items-center justify-between"><div><h2 className="font-black">Links ativos</h2><p className="text-xs text-slate-500">Use somente estes códigos para receber atribuição.</p></div><button type="button" onClick={() => navigateToTab('links')} className="text-xs font-black text-[#7a5a1b] hover:text-[#947624]">Gerenciar links</button></div>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {snapshot.links.slice(0, 4).map((link) => <LinkCard key={link.id} link={link} />)}
                   {snapshot.links.length === 0 && <Empty text="Nenhum link criado ainda." />}
@@ -323,7 +323,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
 
           {activeTab === 'saques' && (
             <section className="space-y-5">
-              <div className="rounded-3xl bg-slate-950 p-6 text-white"><p className="text-xs font-bold uppercase tracking-wider text-slate-400">Saldo disponível para saque</p><p className="mt-2 text-3xl font-black text-emerald-400">{formatCurrency(snapshot.summary.totalDisponivel)}</p><p className="mt-2 text-xs text-slate-400">Mínimo: {formatCurrency(snapshot.summary.saqueMinimo)} · PIX {snapshot.affiliate.pixTipo}</p></div>
+              <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] p-5 text-white shadow-md"><p className="text-xs font-bold uppercase tracking-wider text-slate-300">Saldo disponível para saque</p><p className="mt-2 text-3xl font-black text-emerald-400">{formatCurrency(snapshot.summary.totalDisponivel)}</p><p className="mt-2 text-xs text-slate-400">Mínimo: {formatCurrency(snapshot.summary.saqueMinimo)} · PIX {snapshot.affiliate.pixTipo}</p></div>
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                 <form onSubmit={requestPayout} className="flex flex-col gap-3 sm:flex-row sm:items-end"><label className="flex-1 text-xs font-bold text-slate-600">Valor do saque<input required value={payoutValue} onChange={(event) => setPayoutValue(formatCurrencyInput(event.target.value))} placeholder="0,00" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-base" /></label><button disabled={working || snapshot.summary.totalDisponivel < snapshot.summary.saqueMinimo} className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-black text-white disabled:opacity-50">Solicitar PIX</button></form>
               </div>
@@ -333,7 +333,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
 
           {activeTab === 'pontos' && (
             <section className="space-y-5">
-              <div className="rounded-3xl bg-indigo-950 p-6 text-white"><p className="text-xs font-bold uppercase tracking-wider text-indigo-300">Pontos do afiliado</p><p className="mt-2 text-4xl font-black">{snapshot.summary.pontos.toLocaleString('pt-BR')} pts</p><p className="mt-2 text-sm text-indigo-200">Carteira: {formatCurrency(snapshot.summary.saldoCarteira)} · {(1 / snapshot.summary.pontosTaxa).toLocaleString('pt-BR')} pontos = R$ 1,00</p></div>
+              <div className="rounded-2xl border border-indigo-900 bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 p-5 text-white shadow-md"><p className="text-xs font-bold uppercase tracking-wider text-indigo-200">Pontos do afiliado</p><p className="mt-2 text-4xl font-black">{snapshot.summary.pontos.toLocaleString('pt-BR')} pts</p><p className="mt-2 text-sm text-indigo-200">Carteira: {formatCurrency(snapshot.summary.saldoCarteira)} · {(1 / snapshot.summary.pontosTaxa).toLocaleString('pt-BR')} pontos = R$ 1,00</p></div>
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><form onSubmit={redeemPoints} className="space-y-4"><label className="block text-xs font-bold text-slate-600">Quantidade de pontos<input required type="number" min={snapshot.summary.pontosMinimo} max={snapshot.summary.pontos} value={pointsValue} onChange={(event) => setPointsValue(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-base" /></label><div className="rounded-xl bg-slate-50 p-4 text-sm">Crédito previsto: <strong className="text-emerald-700">{formatCurrency(pointsCredit)}</strong></div><button disabled={working || !snapshot.summary.pontosAtivo} className="w-full rounded-xl bg-indigo-600 px-5 py-3 text-sm font-black text-white disabled:opacity-50">Converter para carteira</button></form></div>
             </section>
           )}
@@ -368,15 +368,15 @@ function SidebarNav({ activeTab, onSelect }: { activeTab: TabType; onSelect: (ta
     ['pontos', 'Pontos', Star],
     ['perfil', 'Meu perfil', User],
   ] as const;
-  return <nav className="space-y-1">{items.map(([id, label, Icon]) => <button key={id} type="button" onClick={() => onSelect(id)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold ${activeTab === id ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100'}`}><Icon className="h-4 w-4" />{label}</button>)}</nav>;
+  return <nav className="space-y-1">{items.map(([id, label, Icon]) => { const selected = activeTab === id; return <button key={id} type="button" onClick={() => onSelect(id)} className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition ${selected ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}><Icon className={`h-4 w-4 ${selected ? 'text-amber-400' : 'text-slate-400'}`} />{label}</button>; })}</nav>;
 }
 
 function MobileNavItem({ icon: Icon, label, active, onClick }: { icon: typeof LayoutDashboard; label: string; active: boolean; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className={`flex flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] ${active ? 'font-black text-slate-950' : 'text-slate-400'}`}><Icon className="h-4 w-4" />{label}</button>;
+  return <button type="button" onClick={onClick} className={`flex flex-col items-center justify-center rounded-xl px-3 py-1 text-[10px] transition ${active ? 'font-bold text-slate-900' : 'font-medium text-slate-400 hover:text-slate-600'}`}><div className={`rounded-lg p-1 ${active ? 'bg-slate-900 text-amber-400' : ''}`}><Icon className="h-4 w-4" /></div>{label}</button>;
 }
 
 function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: typeof WalletCards }) {
-  return <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><Icon className="h-5 w-5 text-indigo-600" /><p className="mt-3 text-xl font-black">{value}</p><p className="mt-1 text-xs font-bold text-slate-500">{label}</p></article>;
+  return <article className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f5eece] text-[#7a5a1b]"><Icon className="h-5 w-5" /></span><p className="mt-3 text-xl font-black text-slate-900">{value}</p><p className="mt-1 text-xs font-bold text-slate-500">{label}</p></article>;
 }
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
