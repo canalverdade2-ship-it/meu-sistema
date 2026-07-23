@@ -1,17 +1,22 @@
 name: Diagnose Client Security Once
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
       - .github/workflows/diagnose-client-security-once.yml
+      - supabase/functions/gsa-auth-session/index.ts
+      - supabase/functions/gsa-auth-session/index_test.ts
+      - scripts/check-client-portal-security-contracts.ts
 
 permissions:
   contents: write
 
 jobs:
   diagnose:
+    name: Diagnosticar contratos atuais do cliente
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -67,6 +72,7 @@ jobs:
 
           const evidence = {
             generated_at_utc: new Date().toISOString(),
+            validated_sha: process.env.GITHUB_SHA,
             install_exit_code: Number(process.env.INSTALL_EXIT),
             test_exit_code: Number(process.env.TEST_EXIT),
             result: Number(process.env.INSTALL_EXIT) === 0 && Number(process.env.TEST_EXIT) === 0 ? 'success' : 'failure',
