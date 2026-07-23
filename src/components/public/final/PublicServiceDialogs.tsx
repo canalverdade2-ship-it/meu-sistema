@@ -1,11 +1,10 @@
 import {
   ArrowRight,
-  Check,
   LogIn,
   Mail,
   MessageCircle,
-  ShieldCheck,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import { AccessibleDialog } from '../../ui/AccessibleDialog';
 import type { ServicePackage } from '../../../data/publicServiceCatalog';
@@ -30,33 +29,30 @@ export function ServiceDetailsDialog({
       isOpen={Boolean(selectedPackage)}
       onClose={onClose}
       ariaLabel={selectedPackage ? `Detalhes do pacote ${selectedPackage.title}` : 'Detalhes do pacote'}
-      overlayClassName="items-end justify-center overflow-y-auto bg-[#03070d]/80 p-0 backdrop-blur-md sm:items-center sm:p-5"
-      panelClassName="max-h-[calc(100dvh-0.5rem)] max-w-5xl overflow-hidden rounded-t-[2rem] border border-white/10 bg-[#f7f4ed] shadow-[0_32px_90px_rgba(0,0,0,0.45)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[2rem]"
+      overlayClassName="items-center justify-center overflow-y-auto bg-[#03070d]/75 p-3 backdrop-blur-sm sm:p-6"
+      panelClassName="max-h-[92dvh] max-w-3xl overflow-hidden rounded-[1.5rem] border border-white/15 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.42)]"
     >
       {selectedPackage && (
-        <div className="flex max-h-[inherit] flex-col">
-          <header className="relative overflow-hidden bg-[#08111d] px-5 pb-7 pt-6 text-white sm:px-8 sm:pb-9 sm:pt-8 lg:px-10">
-            <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full border border-[#d8bd73]/15" />
-            <div className="pointer-events-none absolute -right-7 -top-8 h-36 w-36 rounded-full bg-[#d8bd73]/10 blur-3xl" />
-
-            <div className="relative flex items-start justify-between gap-5">
-              <div className="min-w-0 max-w-3xl">
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="rounded-full border border-[#d8bd73]/35 bg-[#d8bd73]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#e6cf8c]">
+        <div className="flex max-h-[92dvh] min-h-0 flex-col">
+          <header className="shrink-0 border-b border-white/10 bg-[#0a1420] px-4 py-4 text-white sm:px-6 sm:py-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-[#d8bd73]/35 bg-[#d8bd73]/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#e5cf91]">
                     {getAudienceLabel(selectedPackage.audience)}
                   </span>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/50">
                     Serviços e assinaturas
                   </span>
                 </div>
 
-                <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-[#d8bd73]">
+                <p className="mt-3 text-[10px] font-black uppercase tracking-[0.14em] text-[#d8bd73]">
                   {selectedPackage.subtitle}
                 </p>
-                <h2 className="mt-2 max-w-2xl font-serif text-3xl font-semibold leading-tight tracking-[-0.02em] sm:text-4xl lg:text-[2.7rem]">
+                <h2 className="mt-1 text-2xl font-black leading-tight tracking-tight sm:text-3xl">
                   {selectedPackage.title}
                 </h2>
-                <p className="mt-4 max-w-2xl text-sm leading-6 text-white/68 sm:text-base sm:leading-7">
+                <p className="mt-2 max-w-2xl text-xs leading-5 text-white/65 sm:text-sm sm:leading-6">
                   {selectedPackage.description}
                 </p>
               </div>
@@ -66,90 +62,56 @@ export function ServiceDetailsDialog({
                 onClick={onClose}
                 data-dialog-autofocus
                 aria-label="Fechar detalhes"
-                className="shrink-0 rounded-full border border-white/15 bg-white/5 p-2.5 text-white/75 transition hover:border-white/30 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/75 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           </header>
 
-          <div className="overflow-y-auto overscroll-contain">
-            <div className="grid lg:grid-cols-[minmax(0,1fr)_320px]">
-              <section className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10" aria-labelledby="included-services-title">
-                <div className="flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#8a6e2f]">
-                      Escopo do pacote
-                    </p>
-                    <h3 id="included-services-title" className="mt-1.5 text-2xl font-black tracking-tight text-[#101820]">
-                      O que está incluído
-                    </h3>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-[#d8bd73]/35 bg-white px-3 py-1.5 text-xs font-black text-[#6d5727] shadow-sm">
-                    {selectedPackage.services.length} {selectedPackage.services.length === 1 ? 'serviço' : 'serviços'}
-                  </span>
-                </div>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  {selectedPackage.services.map((service, index) => (
-                    <article
-                      key={`${service.name}-${index}`}
-                      className="group rounded-2xl border border-[#ded8cc] bg-white p-5 shadow-[0_10px_28px_rgba(16,24,32,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-[#cdb36d]/60 hover:shadow-[0_16px_35px_rgba(16,24,32,0.09)]"
-                    >
-                      <div className="flex items-start gap-3.5">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0c1724] text-xs font-black text-[#d8bd73]">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <div>
-                          <h4 className="font-black leading-5 text-[#101820]">{service.name}</h4>
-                          <p className="mt-2 text-sm leading-6 text-neutral-600">{service.desc}</p>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </section>
-
-              <aside className="border-t border-[#ddd6c8] bg-[#eee8dc] px-5 py-7 sm:px-8 sm:py-9 lg:border-l lg:border-t-0 lg:px-7">
-                <div className="lg:sticky lg:top-0">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0b1521] text-[#d8bd73] shadow-lg">
-                    <ShieldCheck className="h-5 w-5" />
-                  </span>
-                  <h3 className="mt-5 text-xl font-black tracking-tight text-[#101820]">Atendimento organizado do início ao fim</h3>
-                  <p className="mt-3 text-sm leading-6 text-neutral-600">
-                    Sua solicitação é direcionada para análise, definição do escopo e acompanhamento pelos canais da GSA.
-                  </p>
-
-                  <ul className="mt-6 space-y-3" aria-label="Vantagens do atendimento">
-                    {[
-                      'Análise inicial da necessidade',
-                      'Escopo confirmado antes da contratação',
-                      'Acompanhamento centralizado da solicitação',
-                    ].map((benefit) => (
-                      <li key={benefit} className="flex items-start gap-3 text-sm font-semibold leading-5 text-[#27313b]">
-                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[#806729] shadow-sm">
-                          <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                        </span>
-                        {benefit}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    type="button"
-                    onClick={() => onInterest(selectedPackage)}
-                    className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0a1420] px-5 py-4 text-sm font-black text-white shadow-[0_14px_30px_rgba(8,17,29,0.22)] transition hover:-translate-y-0.5 hover:bg-[#111f2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f] focus-visible:ring-offset-2"
-                  >
-                    Solicitar atendimento
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                  <p className="mt-3 text-center text-[11px] leading-4 text-neutral-500">
-                    Na próxima etapa, você poderá escolher o canal de atendimento.
-                  </p>
-                </div>
-              </aside>
+          <section
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#f7f5f0] px-4 py-4 sm:px-6 sm:py-5"
+            aria-labelledby="included-services-title"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h3 id="included-services-title" className="text-lg font-black tracking-tight text-[#101820] sm:text-xl">
+                O que está incluído
+              </h3>
+              <span className="shrink-0 rounded-full border border-[#d8bd73]/40 bg-white px-2.5 py-1 text-[11px] font-black text-[#6d5727] shadow-sm">
+                {selectedPackage.services.length} {selectedPackage.services.length === 1 ? 'serviço' : 'serviços'}
+              </span>
             </div>
-          </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 sm:gap-3">
+              {selectedPackage.services.map((service, index) => (
+                <article
+                  key={`${service.name}-${index}`}
+                  className="rounded-xl border border-[#ddd8ce] bg-white px-3 py-3 shadow-[0_4px_14px_rgba(16,24,32,0.04)] sm:px-4 sm:py-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0b1521] text-[10px] font-black text-[#d8bd73]">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-black leading-5 text-[#101820] sm:text-[15px]">{service.name}</h4>
+                      <p className="mt-1 text-xs leading-5 text-neutral-600 sm:text-sm">{service.desc}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <footer className="shrink-0 border-t border-[#e3ded4] bg-white px-4 py-3 sm:px-6 sm:py-4">
+            <button
+              type="button"
+              onClick={() => onInterest(selectedPackage)}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0a1420] px-5 py-3.5 text-sm font-black text-white shadow-[0_10px_24px_rgba(8,17,29,0.2)] transition hover:bg-[#132334] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f] focus-visible:ring-offset-2"
+            >
+              Solicitar atendimento
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </footer>
         </div>
       )}
     </AccessibleDialog>
@@ -174,19 +136,18 @@ export function RequestChannelDialog({
       isOpen={Boolean(selectedPackage)}
       onClose={onClose}
       ariaLabel="Escolher canal de atendimento"
-      overlayClassName="items-end justify-center overflow-y-auto bg-[#03070d]/80 p-0 backdrop-blur-md sm:items-center sm:p-5"
-      panelClassName="max-h-[calc(100dvh-0.5rem)] max-w-3xl overflow-hidden rounded-t-[2rem] border border-white/10 bg-[#f7f4ed] shadow-[0_32px_90px_rgba(0,0,0,0.45)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[2rem]"
+      overlayClassName="items-center justify-center overflow-y-auto bg-[#03070d]/75 p-3 backdrop-blur-sm sm:p-6"
+      panelClassName="max-h-[92dvh] max-w-lg overflow-hidden rounded-[1.5rem] border border-white/15 bg-white shadow-[0_24px_80px_rgba(0,0,0,0.42)]"
     >
       {selectedPackage && (
-        <div className="overflow-y-auto overscroll-contain">
-          <header className="relative overflow-hidden bg-[#08111d] px-5 pb-7 pt-6 text-white sm:px-8 sm:pb-8 sm:pt-8">
-            <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full border border-[#d8bd73]/15" />
-            <div className="relative flex items-start justify-between gap-5">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#d8bd73]">Solicitar atendimento</p>
-                <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">Escolha como prefere continuar</h2>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-white/65">
-                  Selecione um canal para falar sobre o pacote <strong className="text-white">{selectedPackage.title}</strong>.
+        <div className="flex max-h-[92dvh] min-h-0 flex-col">
+          <header className="shrink-0 border-b border-white/10 bg-[#0a1420] px-4 py-4 text-white sm:px-6 sm:py-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#d8bd73]">Solicitar atendimento</p>
+                <h2 className="mt-1 text-xl font-black leading-tight sm:text-2xl">Escolha como deseja continuar</h2>
+                <p className="mt-2 text-xs leading-5 text-white/65 sm:text-sm">
+                  Pacote: <strong className="text-white">{selectedPackage.title}</strong>
                 </p>
               </div>
               <button
@@ -194,15 +155,15 @@ export function RequestChannelDialog({
                 onClick={onClose}
                 data-dialog-autofocus
                 aria-label="Fechar canais de atendimento"
-                className="shrink-0 rounded-full border border-white/15 bg-white/5 p-2.5 text-white/75 transition hover:border-white/30 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/75 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           </header>
 
-          <div className="px-5 py-7 sm:px-8 sm:py-8">
-            <div className="grid gap-3 sm:grid-cols-3">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[#f7f5f0] p-4 sm:p-5">
+            <div className="space-y-2.5">
               <ChannelButton
                 icon={MessageCircle}
                 title="WhatsApp"
@@ -223,9 +184,6 @@ export function RequestChannelDialog({
                 onClick={() => onPortal(selectedPackage)}
               />
             </div>
-            <p className="mt-5 text-center text-xs leading-5 text-neutral-500">
-              O canal escolhido não altera o escopo do pacote.
-            </p>
           </div>
         </div>
       )}
@@ -240,7 +198,7 @@ function ChannelButton({
   badge,
   onClick,
 }: {
-  icon: typeof MessageCircle;
+  icon: LucideIcon;
   title: string;
   description: string;
   badge?: string;
@@ -250,21 +208,23 @@ function ChannelButton({
     <button
       type="button"
       onClick={onClick}
-      className="group relative rounded-2xl border border-[#ddd6c8] bg-white p-5 text-left shadow-[0_10px_26px_rgba(16,24,32,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-[#cdb36d] hover:shadow-[0_16px_34px_rgba(16,24,32,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f] focus-visible:ring-offset-2"
+      className="group flex w-full items-center gap-3 rounded-xl border border-[#ddd8ce] bg-white p-3.5 text-left shadow-[0_4px_14px_rgba(16,24,32,0.04)] transition hover:border-[#cdb36d] hover:shadow-[0_8px_20px_rgba(16,24,32,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a6e2f] focus-visible:ring-offset-2"
     >
-      {badge && (
-        <span className="absolute right-3 top-3 rounded-full bg-[#ede3c7] px-2 py-1 text-[9px] font-black uppercase tracking-wider text-[#6d5727]">
-          {badge}
-        </span>
-      )}
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0b1521] text-[#d8bd73] transition group-hover:bg-[#132334]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0b1521] text-[#d8bd73]">
         <Icon className="h-5 w-5" />
       </span>
-      <strong className="mt-4 block text-base text-[#101820]">{title}</strong>
-      <span className="mt-2 block text-sm leading-5 text-neutral-600">{description}</span>
-      <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#806729]">
-        Continuar <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-2">
+          <strong className="text-sm text-[#101820]">{title}</strong>
+          {badge && (
+            <span className="rounded-full bg-[#ede3c7] px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#6d5727]">
+              {badge}
+            </span>
+          )}
+        </span>
+        <span className="mt-0.5 block text-xs leading-5 text-neutral-600">{description}</span>
       </span>
+      <ArrowRight className="h-4 w-4 shrink-0 text-[#806729] transition-transform group-hover:translate-x-0.5" />
     </button>
   );
 }
