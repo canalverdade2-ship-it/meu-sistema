@@ -27,7 +27,9 @@
     "test:home": "tsx scripts/check-home-public-contracts.ts && npm run test:partners",
     "test:free-tools": "tsx scripts/check-free-tools-contracts.ts",
     "test:partners": "tsx scripts/check-partners-contracts.ts && deno check supabase/functions/gsa-partner-application/index.ts",
+    "test:affiliates": "tsx scripts/check-affiliate-contracts.ts",
     "test:realtime": "tsx scripts/check-realtime-contracts.ts",
+    "test:careers": "tsx scripts/check-careers-contracts.ts",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/1-public-smoke.spec.ts",
     "test:e2e:real": "ALLOW_REAL_DATA_STRESS_TEST=true playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3",
@@ -39,7 +41,7 @@
     "test:advertising-complete": "tsx scripts/check-advertising-completion.ts",
     "test:database-inventory": "node scripts/check-database-inventory.mjs",
     "test:database-migration-baseline": "node scripts/check-database-inventory.mjs --validate-baseline-only",
-    "test:integrity:contracts": "npm run lint && npm run typecheck:strict && npm run test:travel && npm run test:client-security && npm run test:provider && npm run test:suppliers && npm run test:home && npm run test:products-subscriptions && npm run test:advertising && npm run test:advertising-complete && npm run test:realtime",
+    "test:integrity:contracts": "npm run lint && npm run typecheck:strict && npm run test:travel && npm run test:client-security && npm run test:provider && npm run test:suppliers && npm run test:home && npm run test:products-subscriptions && npm run test:advertising && npm run test:advertising-complete && npm run test:affiliates && npm run test:realtime && npm run test:careers",
     "push": "git add . && git commit -m \"Atualização automática\" && git push"
   },
   "dependencies": {
@@ -78,6 +80,7 @@
     "@playwright/test": "^1.61.1",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
+    "@types/papaparse": "^5.5.2",
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.21",
     "cpf-cnpj-validator": "^2.1.2",
