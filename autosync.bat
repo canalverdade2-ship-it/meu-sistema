@@ -5,23 +5,14 @@ cd /d "C:\Users\Adriano Farias\Downloads\remix-9.10_-grupo-gsa---gestão-de-serv
 
 :loop
 
+git pull --rebase
+
 git add .
 
 git diff --cached --quiet
 if errorlevel 1 (
-    echo.
-    echo ======================================
-    echo [%date% %time%] Alteracao detectada...
-    echo ======================================
-
-    git pull --rebase
-
     git commit -m "Auto Sync"
-
     git push
-
-    echo.
-    echo Sincronizacao concluida!
 )
 
 timeout /t 2 >nul
