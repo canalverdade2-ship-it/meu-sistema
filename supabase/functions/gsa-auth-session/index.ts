@@ -439,6 +439,6 @@ export async function handleRequest(request: Request) {
   }
 }
 
-if (typeof Deno !== 'undefined' && 'serve' in Deno) {
-  (Deno as any).serve(handleRequest);
+if (import.meta.main) {
+  Deno.serve(handleRequest);
 }
