@@ -8,7 +8,7 @@ on:
       - 'apply-gsa-affiliates-production.trigger'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: one-time-apply-gsa-affiliates-production
@@ -27,11 +27,16 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      DEPLOYMENT_PHASE: starting
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Validate exact production target
         run: |
+          echo 'DEPLOYMENT_PHASE=validate-production-target' >> "$GITHUB_ENV"
           set -euo pipefail
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$SUPABASE_DB_PASSWORD"
@@ -42,21 +47,26 @@ jobs:
           version: ${{ env.SUPABASE_CLI_VERSION }}
 
       - name: Link production project
-        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+        run: |
+          echo 'DEPLOYMENT_PHASE=link-production-project' >> "$GITHUB_ENV"
+          supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
 
       - name: Record migration history before apply
         run: |
+          echo 'DEPLOYMENT_PHASE=inspect-migration-history' >> "$GITHUB_ENV"
           set -o pipefail
           supabase migration list --linked 2>&1 | tee affiliate-migrations-before.log
 
       - name: Build transactionally complete foundation
         run: |
+          echo 'DEPLOYMENT_PHASE=build-affiliate-foundation' >> "$GITHUB_ENV"
           set -euo pipefail
           cp supabase/migrations/20260722040000_affiliate_program.sql /tmp/affiliate-foundation.sql
           printf '\nCOMMIT;\n' >> /tmp/affiliate-foundation.sql
 
       - name: Apply affiliate database flow
         run: |
+          echo 'DEPLOYMENT_PHASE=apply-affiliate-database-flow' >> "$GITHUB_ENV"
           set -euo pipefail
           set -o pipefail
           supabase db query --linked --file /tmp/affiliate-foundation.sql 2>&1 | tee affiliate-foundation.log
@@ -66,6 +76,7 @@ jobs:
 
       - name: Verify tables functions catalog and routes
         run: |
+          echo 'DEPLOYMENT_PHASE=verify-affiliate-flow' >> "$GITHUB_ENV"
           set -euo pipefail
           set -o pipefail
           supabase db query --linked --file supabase/migrations/20260722120000_reconcile_affiliate_program.sql 2>&1 | tee affiliate-foundation-verify.log
@@ -74,6 +85,7 @@ jobs:
       - name: Reconcile migration history
         shell: bash
         run: |
+          echo 'DEPLOYMENT_PHASE=reconcile-migration-history' >> "$GITHUB_ENV"
           set -euo pipefail
           set -o pipefail
           supabase migration list --linked 2>&1 | tee affiliate-migrations-pre-repair.log
@@ -105,6 +117,7 @@ jobs:
 
       - name: Final production verification
         run: |
+          echo 'DEPLOYMENT_PHASE=final-production-verification' >> "$GITHUB_ENV"
           set -euo pipefail
           set -o pipefail
           supabase migration list --linked 2>&1 | tee affiliate-migrations-after.log
@@ -130,3 +143,49 @@ jobs:
             affiliate-final-verify.log
           if-no-files-found: ignore
           retention-days: 30
+
+      - name: Register deployment result in repository
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p deployment-status
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          status = os.environ['JOB_STATUS']
+          payload = {
+              'schemaVersion': 1,
+              'module': 'gsa-affiliates',
+              'environment': 'production',
+              'projectRef': 'ocgajvagxagutfvgxwsy',
+              'status': status,
+              'phase': os.environ.get('DEPLOYMENT_PHASE', 'unknown'),
+              'workflowRunId': int(os.environ['RUN_ID']),
+              'workflowRunAttempt': int(os.environ['RUN_ATTEMPT']),
+              'sourceSha': os.environ['SOURCE_SHA'],
+              'recordedAt': datetime.now(timezone.utc).isoformat(),
+              'databaseVerified': status == 'success',
+              'contractsVerified': status == 'success',
+          }
+          Path('deployment-status/gsa-affiliates-production.json').write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add deployment-status/gsa-affiliates-production.json
+          git commit -m "Registrar aplicacao do GSA Afiliados: $JOB_STATUS" || exit 0
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
