@@ -1,0 +1,41 @@
+{
+  "generated_at_utc": "2026-07-23T11:34:11.511Z",
+  "project_id_verified": true,
+  "package_count": 12,
+  "advertiser_anon_executable_signatures": [],
+  "remote_only_versions": [
+    {
+      "version": "20260722225320",
+      "name": "create_gsa_careers_foundation",
+      "statement_count": 1,
+      "statements_sha256": "d71216343c5cb5a35198fa9888019617dfabf64017335fab22f46d54267ff2f9"
+    },
+    {
+      "version": "20260722225335",
+      "name": "gsa_careers_public_read_rpc",
+      "statement_count": 1,
+      "statements_sha256": "0fb78ffc97ab8b81b792f59c78a38cf153a6f3b80d065f4f10685b4e76fbb2c4"
+    }
+  ],
+  "checks": {
+    "service_packages_table": true,
+    "service_package_items_table": true,
+    "service_public_catalog_rpc": true,
+    "service_admin_catalog_rpc": true,
+    "service_package_count_at_least_12": true,
+    "careers_applications_table": true,
+    "careers_history_table": true,
+    "careers_public_submit_rpc": true,
+    "careers_public_lookup_rpc": true,
+    "careers_public_select_policy_absent": true,
+    "careers_anon_table_select_revoked": true,
+    "careers_authenticated_table_select_revoked": true,
+    "advertiser_portal_rpc_present": true,
+    "advertiser_anon_execute_revoked": true,
+    "advertising_hardening_migration_20260722090000": true,
+    "advertising_cleanup_migration_20260722090100": true,
+    "advertising_global_lock_present": false,
+    "advertising_orphan_cleanup_rpc": true
+  },
+  "safe_to_repair": true
+}
