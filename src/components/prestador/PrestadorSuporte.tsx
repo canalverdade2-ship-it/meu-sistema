@@ -96,7 +96,7 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
     const channel = supabase.channel(`provider-tickets-${prestadorId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, () => void loadTickets())
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel).catch(console.error); };
   }, [activeTab, prestadorId, initialItemId]);
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
         setSelectedTicket((current) => current ? { ...current, ...(payload.new as ProviderTicket) } : current);
       })
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel).catch(console.error); };
   }, [selectedTicket?.id]);
 
   useEffect(() => {

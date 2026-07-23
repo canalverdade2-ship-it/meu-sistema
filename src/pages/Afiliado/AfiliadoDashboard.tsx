@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { copyToClipboard } from '../../lib/utils';
 import {
   BadgeDollarSign,
   Banknote,
@@ -386,7 +387,7 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
 function LinkCard({ link }: { key?: string; link: AffiliateSnapshot['links'][number] }) {
   const url = affiliateUrl(link);
   const copy = async () => {
-    await navigator.clipboard.writeText(url);
+    await copyToClipboard(url);
     toast.success('Link copiado.');
   };
   return <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="font-black">{link.titulo}</p><p className="mt-1 text-xs text-slate-500">{link.programaNome} · código {link.codigo}</p></div><button type="button" onClick={() => void copy()} className="rounded-lg bg-slate-950 p-2 text-white" title="Copiar link"><Copy className="h-4 w-4" /></button></div><input readOnly value={url} className="mt-3 w-full rounded-lg bg-slate-50 px-3 py-2 font-mono text-[11px] text-slate-600" /><div className="mt-3 flex gap-4 text-xs text-slate-500"><span>{link.cliques} cliques</span><span>{link.conversoes} conversões</span><span>{formatCurrency(link.comissaoTotal)}</span></div></article>;

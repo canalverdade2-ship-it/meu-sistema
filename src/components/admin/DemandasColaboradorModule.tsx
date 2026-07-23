@@ -160,7 +160,7 @@ export function DemandasColaboradorModule({ colaboradorId, colaboradorNome, admi
 
     return () => {
       clearTimeout(timeoutId);
-      void supabase.removeChannel(channel);
+      supabase.removeChannel(channel).catch(console.error);
     };
   }, [colaboradorId, adminType, selectedDemanda?.id]);
 

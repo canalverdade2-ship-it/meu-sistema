@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { copyToClipboard } from '../../lib/utils';
 import { ArrowDownCircle, ArrowDownRight, ArrowUpRight, CheckCircle, Clock, Copy, DollarSign, Wallet, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
@@ -83,7 +84,7 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel).catch(console.error); };
   }, [prestadorId]);
 
   useEffect(() => {
@@ -158,7 +159,7 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
 
   const copyPix = async (value?: string | null) => {
     if (!value) return;
-    await navigator.clipboard.writeText(value);
+    await copyToClipboard(value);
     toast.success('Chave PIX copiada.');
   };
 

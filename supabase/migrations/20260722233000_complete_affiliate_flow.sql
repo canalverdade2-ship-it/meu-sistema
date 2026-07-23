@@ -235,7 +235,7 @@ BEGIN
 
   SELECT coalesce(max(CASE WHEN key = 'afiliado_pontos_resgate_taxa' THEN value::numeric END), 0.01),
          coalesce(max(CASE WHEN key = 'afiliado_pontos_minimo_resgate' THEN value::integer END), 100),
-         coalesce(max(CASE WHEN key = 'afiliado_pontos_ativo' THEN value::boolean END), true)
+         coalesce(max(CASE WHEN key = 'afiliado_pontos_ativo' THEN value END)::boolean, true)
     INTO v_points_rate, v_points_minimum, v_points_active
   FROM public.system_settings
   WHERE key IN ('afiliado_pontos_resgate_taxa','afiliado_pontos_minimo_resgate','afiliado_pontos_ativo');
@@ -526,7 +526,7 @@ BEGIN
 
   SELECT coalesce(max(CASE WHEN key = 'afiliado_pontos_resgate_taxa' THEN value::numeric END), 0.01),
          coalesce(max(CASE WHEN key = 'afiliado_pontos_minimo_resgate' THEN value::numeric END), 100),
-         coalesce(max(CASE WHEN key = 'afiliado_pontos_ativo' THEN value::boolean END), true)
+         coalesce(max(CASE WHEN key = 'afiliado_pontos_ativo' THEN value END)::boolean, true)
     INTO v_rate, v_minimum, v_active
   FROM public.system_settings
   WHERE key IN ('afiliado_pontos_resgate_taxa','afiliado_pontos_minimo_resgate','afiliado_pontos_ativo');

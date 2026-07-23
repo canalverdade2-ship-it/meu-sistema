@@ -19,6 +19,7 @@ import { validarCNPJ, validarCPF } from '../../utils/cpfValidator';
 import { copyToClipboard } from '../../lib/utils';
 import { AdvertisingSlot } from '../ads/AdvertisingSlot';
 import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
+import { PublicHeader } from './final/PublicHeader';
 
 const FORMATS: Array<{ id: AdvertisingFormat; title: string; description: string }> = [
   { id: 'responsive_banner', title: 'Banner responsivo', description: 'Faixa horizontal adaptada ao celular e ao computador.' },
@@ -192,19 +193,7 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-neutral-950/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
-          <button type="button" onClick={onBack} className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-bold text-white/70 hover:bg-white/10">
-            <ArrowLeft className="h-4 w-4" /> Voltar
-          </button>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={onLogin} className="hidden rounded-full px-4 py-2 text-sm font-bold text-white/70 hover:bg-white/10 sm:block">
-              Portal do anunciante
-            </button>
-            <a href="#formulario-anunciante" className="rounded-full bg-amber-400 px-5 py-2.5 text-sm font-black text-neutral-950 transition hover:bg-amber-300">Quero anunciar</a>
-          </div>
-        </div>
-      </header>
+      <PublicHeader currentPage="ads" onClientLogin={onLogin} />
 
       <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.22),transparent_38%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.18),transparent_35%)] px-5 py-20 text-center sm:py-28">
         <div className="mx-auto max-w-5xl">

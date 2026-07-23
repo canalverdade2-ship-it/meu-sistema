@@ -47,7 +47,7 @@ export function PrestadorPremios({ prestadorId, initialItemId }: { prestadorId: 
     const channel = supabase.channel(`provider-prizes-${prestadorId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel).catch(console.error); };
   }, [prestadorId]);
 
   useEffect(() => {

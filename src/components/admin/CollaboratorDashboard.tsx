@@ -95,7 +95,7 @@ export function CollaboratorDashboard({ colaboradorId, colaboradorNome, colabora
     channel.subscribe();
     return () => {
       window.clearTimeout(timer);
-      void supabase.removeChannel(channel);
+      supabase.removeChannel(channel).catch(console.error);
     };
   }, [colaboradorId, fetchData, modules]);
 

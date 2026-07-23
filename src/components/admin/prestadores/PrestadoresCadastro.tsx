@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { copyToClipboard } from '../../../lib/utils';
 import { supabase } from '../../../lib/supabase';
 import { Search, Filter, MoreVertical, CheckCircle, XCircle, Clock, AlertCircle, Eye, Trash2, UserPlus, Tag, Copy, Wallet, History, PlusCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle, CreditCard, Building2, FileText, ClipboardList, Gift, Phone, Mail, Pencil, Save } from 'lucide-react';
 import { Modal } from '../../ui/Modal';
@@ -561,51 +562,19 @@ export function PrestadoresCadastro({
                           {prestador.credencial_acesso || prestador.id?.slice(0, 6).toUpperCase()}
                         </span>
                         <button 
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
                             const code = prestador.credencial_acesso || prestador.id?.slice(0, 6).toUpperCase();
-                            if (navigator.clipboard && window.isSecureContext) {
-                              navigator.clipboard.writeText(code).then(() => {
-                                toast.success('Código copiado!');
-                              }).catch(() => {
-                                const textArea = document.createElement("textarea");
-                                textArea.value = code;
-                                textArea.style.position = "fixed";
-                                textArea.style.left = "-9999px";
-                                textArea.style.top = "0";
-                                document.body.appendChild(textArea);
-                                textArea.focus();
-                                textArea.select();
-                                try {
-                                  document.execCommand('copy');
-                                  toast.success('Código copiado!');
-                                } catch (err) {
-                                  toast.error('Erro ao copiar.');
-                                }
-                                document.body.removeChild(textArea);
-                              });
+                            const success = await copyToClipboard(code);
+                            if (success) {
+                              toast.success('Código copiado!');
                             } else {
-                              const textArea = document.createElement("textarea");
-                              textArea.value = code;
-                              textArea.style.position = "fixed";
-                              textArea.style.left = "-9999px";
-                              textArea.style.top = "0";
-                              document.body.appendChild(textArea);
-                              textArea.focus();
-                              textArea.select();
-                              try {
-                                document.execCommand('copy');
-                                toast.success('Código copiado!');
-                              } catch (err) {
-                                toast.error('Erro ao copiar.');
-                              }
-                              document.body.removeChild(textArea);
+                              toast.error('Erro ao copiar.');
                             }
                           }}
-                          className="p-1 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
-                          title="Copiar Código"
+                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-neutral-400 shadow-sm ring-1 ring-neutral-200 transition-all hover:bg-neutral-50 hover:text-indigo-600 hover:ring-indigo-200"
                         >
-                          <Copy className="h-3 w-3" />
+                          <Copy className="h-4 w-4" />
                         </button>
                       </div>
                     </div>

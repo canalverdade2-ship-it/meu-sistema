@@ -51,7 +51,7 @@ export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load())
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel).catch(console.error); };
   }, [prestadorId]);
 
   useEffect(() => {

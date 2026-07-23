@@ -153,7 +153,8 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
   }, [activeModule, activeTab, activeItemId]);
   useEffect(() => {
     if (adminType !== 'colaborador' || !colaboradorId || colaboradorNomeInicial) return;
-    supabase.from('colaboradores').select('nome').eq('id', colaboradorId).single().then(({ data }) => {
+    supabase.from('colaboradores').select('nome').eq('id', colaboradorId).single().then(({ data, error }) => {
+      if (error) console.error("Erro ao buscar nome colaborador:", error);
       if (data?.nome) setColaboradorNome(data.nome);
     });
   }, [adminType, colaboradorId, colaboradorNomeInicial]);

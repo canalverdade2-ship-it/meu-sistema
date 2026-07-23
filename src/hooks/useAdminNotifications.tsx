@@ -322,7 +322,7 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
-      void supabase.removeChannel(channel);
+      supabase.removeChannel(channel).catch(console.error);
     };
   }, [refreshAll, scheduleRefresh]);
 

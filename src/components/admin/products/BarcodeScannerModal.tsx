@@ -60,7 +60,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onDetected }: BarcodeScan
           // Attempt to turn off torch before stopping
           try {
             track.applyConstraints({ advanced: [{ torch: false }] as any }).catch(() => {});
-          } catch (e) {}
+          } catch (e) { console.error("Erro capturado:", e); }
           track.stop();
         }
       });
@@ -237,7 +237,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onDetected }: BarcodeScan
     
     // Play sound & vibrate
     if (navigator.vibrate) {
-      try { navigator.vibrate(100); } catch(e) {}
+      try { navigator.vibrate(100); } catch (e) { console.error("Erro capturado:", e); }
     }
     playBeep();
 
@@ -273,7 +273,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onDetected }: BarcodeScan
         gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.1);
         osc.stop(ctx.currentTime + 0.1);
       }
-    } catch(e) {} // ignore audio errors
+    } catch (e) { console.error("Erro capturado:", e); } // ignore audio errors
   };
 
   const startDetectionLoop = async () => {

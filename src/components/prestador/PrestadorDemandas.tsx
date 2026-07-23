@@ -147,7 +147,7 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void loadDemands())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_suporte_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void refreshCounts())
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel).catch(console.error); };
   }, [prestadorId, refreshCounts]);
 
   useEffect(() => {
@@ -159,7 +159,7 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
     const channel = supabase.channel(`provider-demand-history-${selected.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas_historico', filter: `demanda_id=eq.${selected.id}` }, () => void loadHistory(selected.id))
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel).catch(console.error); };
   }, [selected?.id]);
 
   useEffect(() => {

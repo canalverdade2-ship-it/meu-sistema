@@ -241,7 +241,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
               });
             }
           }
-        } catch {
+        } catch (error) {
+          console.error("Erro ao gerar cobrança em lote:", error);
           errorCount++;
         }
       }

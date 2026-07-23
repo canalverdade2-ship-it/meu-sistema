@@ -56,7 +56,7 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
     const channel = supabase.channel(`provider-documents-${prestadorId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(channel).catch(console.error); };
   }, [prestadorId]);
 
   useEffect(() => {

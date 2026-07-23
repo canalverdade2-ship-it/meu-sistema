@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { copyToClipboard } from '../../../lib/utils';
 import { Ticket, CheckCircle, AlertCircle, Copy } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { formatCurrency, formatDate } from '../../../lib/utils';
@@ -126,8 +127,8 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
 
   const copiarCupom = async (cupom: any) => {
     try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(cupom.codigo_cupom);
+      if (copyToClipboard) {
+        await copyToClipboard(cupom.codigo_cupom);
       } else {
         const textArea = document.createElement('textarea');
         textArea.value = cupom.codigo_cupom;

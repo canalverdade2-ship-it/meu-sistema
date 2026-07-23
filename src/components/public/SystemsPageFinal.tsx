@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Code2, LogIn, MessageCircle, Palette } from 'lucide-react';
 import { LogoGSA } from '../ui/LogoGSA';
 import { navigate } from '../../routing/navigationService';
+import { PublicHeader } from './final/PublicHeader';
 import { BrandJourneyPage } from './BrandJourneyPage';
 import { SystemsBudgetModal } from './SystemsBudgetModal';
 import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
@@ -51,15 +52,7 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
 
   return (
     <div className="min-h-screen bg-[#f4f1ea] text-neutral-950">
-      <nav className="fixed inset-x-0 top-0 z-[90] border-b border-white/10 bg-[#080c12]/95 py-3 shadow-xl backdrop-blur-xl" aria-label="Navegação da página Sites e Sistemas">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <button type="button" onClick={onBack} aria-label="Voltar para a página inicial" className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"><LogoGSA size="md" variant="light" /></button>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={onBack} className="hidden items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white/70 hover:text-white sm:inline-flex"><ArrowLeft className="h-4 w-4" /> Início</button>
-            <button type="button" onClick={onLogin} className="inline-flex items-center gap-2 rounded-lg border border-[#d8bd73]/50 bg-white/5 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-[#d8bd73] transition hover:bg-[#d8bd73]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"><LogIn className="h-4 w-4" /> Login</button>
-          </div>
-        </div>
-      </nav>
+      <PublicHeader currentPage="systems" onClientLogin={onLogin} />
 
       <main>
         <section className="relative overflow-hidden bg-neutral-950 pt-24 text-white">

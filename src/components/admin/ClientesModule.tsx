@@ -397,7 +397,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
               const storagePath = decodeURIComponent(pathSegments.slice(bucketIndex + 1).join('/'));
               if (storagePath) await supabase.storage.from(bucket).remove([storagePath]);
             }
-          } catch (err) { }
+          } catch (err) { console.error("Erro capturado:", err); }
         }
       };
 
@@ -971,7 +971,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
       if (editandoNotaId) {
         const { error } = await supabase
           .from('cliente_notas_admin')
-          .update({ nota: novaNotaAdmin.trim(), updated_at: new Date().toISOString() })
+          .update({ conteudo: novaNotaAdmin.trim() })
           .eq('id', editandoNotaId);
         if (error) throw error;
         toast.success('Informação atualizada.');
@@ -980,7 +980,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
           .from('cliente_notas_admin')
           .insert([{
             cliente_id: cliente.id,
-            nota: colaboradorNome ? `${novaNotaAdmin.trim()} [Adicionado por: ${colaboradorNome}]` : novaNotaAdmin.trim()
+            conteudo: colaboradorNome ? `${novaNotaAdmin.trim()} [Adicionado por: ${colaboradorNome}]` : novaNotaAdmin.trim()
           }]);
         if (error) throw error;
         toast.success('Informação adicionada.');

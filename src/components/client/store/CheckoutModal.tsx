@@ -558,7 +558,8 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           if (priceChanged) {
             toast.error('O preço de alguns produtos no seu carrinho foi atualizado. Recarregando...');
             setTimeout(() => {
-              window.location.reload();
+              onClose();
+              if (onSuccess) onSuccess();
             }, 2000);
             return;
           }

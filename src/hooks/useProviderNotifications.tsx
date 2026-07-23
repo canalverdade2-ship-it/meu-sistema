@@ -252,7 +252,7 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
       mountedRef.current = false;
       if (debounceTimer) clearTimeout(debounceTimer);
       window.clearInterval(heartbeat);
-      void supabase.removeChannel(channel);
+      supabase.removeChannel(channel).catch(console.error);
     };
   }, [prestadorId, refreshCounts]);
 

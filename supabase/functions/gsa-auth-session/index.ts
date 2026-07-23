@@ -77,10 +77,22 @@ const rpcByAction: Partial<Record<AuthAction, { name: string; params: (payload: 
   },
 };
 
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://10.0.2.189:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
 export function configuredOrigins() {
-  const rawOrigins = [Deno.env.get('ALLOWED_ORIGINS'), Deno.env.get('ALLOWED_ORIGIN')]
+  const envOrigins = [Deno.env.get('ALLOWED_ORIGINS'), Deno.env.get('ALLOWED_ORIGIN')]
     .filter(Boolean)
     .join(',');
+
+  const rawOrigins = envOrigins
+    ? `${envOrigins},${DEFAULT_ALLOWED_ORIGINS.join(',')}`
+    : DEFAULT_ALLOWED_ORIGINS.join(',');
 
   return new Set(
     rawOrigins
@@ -424,6 +436,19 @@ export async function handleRequest(request: Request) {
     const isSuccess = Boolean(data?.valid || data?.success);
     if (isSuccess) {
       await clearSubjectRateLimit(admin, subjectBucket);
+      const authObj = data?.session?.auth || data?.auth;
+      if (authObj?.email) {
+        const linkRes = await admin.auth.admin.generateLink({
+          type: 'magiclink',
+          email: authObj.email,
+        });
+        const hashedToken = linkRes.data?.properties?.hashed_token;
+        if (hashedToken) {
+          authObj.token_hash = hashedToken;
+        } else if (linkRes.error) {
+          console.error('Falha ao gerar token de ativação Supabase Auth:', linkRes.error);
+        }
+      }
     } else if (subjectRateLimitMode(body.action) === 'invalid-only') {
       const subjectLimit = await checkRateLimit(admin, subjectBucket, rules.subject);
       if (!subjectLimit.allowed) {

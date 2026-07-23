@@ -287,7 +287,8 @@ function SolicitacoesTab() {
         .select('id, nome, email, telefone, codigo_cliente')
         .eq('id', detailsItem.cliente_id)
         .maybeSingle()
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) console.error("Erro cliente travel:", error);
           if (data) setClientDetails(data);
         });
     } else {
@@ -304,7 +305,8 @@ function SolicitacoesTab() {
           query = query.eq('telefone', searchPhone);
         }
 
-        query.limit(1).maybeSingle().then(({ data }) => {
+        query.limit(1).maybeSingle().then(({ data, error }) => {
+          if (error) console.error("Erro busca cliente travel:", error);
           if (data) {
             setClientDetails(data);
             callAdminRpc('gsa_admin_travel_link_lead', { p_quote_id: detailsItem.id, p_client_id: data.id })
@@ -313,7 +315,7 @@ function SolicitacoesTab() {
                 toast.success(`Cliente ${data.nome} vinculado automaticamente ao orçamento!`);
                 void list.load();
               })
-              .catch(() => {});
+              .catch(err => console.error("Erro ao vincular lead:", err));
           }
         });
       }

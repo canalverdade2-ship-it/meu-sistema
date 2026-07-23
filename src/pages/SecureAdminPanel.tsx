@@ -117,7 +117,7 @@ export function SecureAdminPanel(props: SecureAdminPanelProps) {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('gsa-session-revoked', onRevoked);
-      void supabase.removeChannel(channel);
+      supabase.removeChannel(channel).catch(console.error);
     };
   }, [props.adminType, props.colaboradorId, refreshAccess, revoke]);
 

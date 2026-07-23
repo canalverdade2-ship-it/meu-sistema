@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { copyToClipboard } from '../../lib/utils';
 import {
   CheckCircle,
   Copy,
@@ -391,7 +392,7 @@ export function AcessosModule(_props: AcessosModuleProps) {
 
       {issuedCredential && (
         <Overlay onClose={() => setIssuedCredential(null)}>
-          <div className="text-center"><span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700"><KeyRound className="h-7 w-7" /></span><h2 className="mt-4 text-2xl font-black">Credencial de {issuedCredential.nome}</h2><p className="mt-2 text-sm text-neutral-500">Ela é exibida somente agora. Envie por um canal seguro.</p><div className="mt-6 rounded-2xl bg-neutral-950 p-5 font-mono text-xl font-black tracking-widest text-white break-all">{issuedCredential.credential}</div><button type="button" onClick={async () => { await navigator.clipboard.writeText(issuedCredential.credential); toast.success('Credencial copiada.'); }} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-black text-white"><Copy className="h-4 w-4" /> Copiar credencial</button><button type="button" onClick={() => setIssuedCredential(null)} className="mt-3 w-full rounded-xl border border-neutral-200 px-5 py-3 font-bold">Fechar</button></div>
+          <div className="text-center"><span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700"><KeyRound className="h-7 w-7" /></span><h2 className="mt-4 text-2xl font-black">Credencial de {issuedCredential.nome}</h2><p className="mt-2 text-sm text-neutral-500">Ela é exibida somente agora. Envie por um canal seguro.</p><div className="mt-6 rounded-2xl bg-neutral-950 p-5 font-mono text-xl font-black tracking-widest text-white break-all">{issuedCredential.credential}</div><button type="button" onClick={async () => { await copyToClipboard(issuedCredential.credential); toast.success('Credencial copiada.'); }} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-black text-white"><Copy className="h-4 w-4" /> Copiar credencial</button><button type="button" onClick={() => setIssuedCredential(null)} className="mt-3 w-full rounded-xl border border-neutral-200 px-5 py-3 font-bold">Fechar</button></div>
         </Overlay>
       )}
     </div>

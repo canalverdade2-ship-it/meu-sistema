@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { copyToClipboard } from '../../../../lib/utils';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MapPin, Shield, CheckCircle2, Calendar, Share2, Heart, MessageCircle, Send, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -169,7 +170,7 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
             <button
               type="button"
               onClick={() => {
-                void navigator.clipboard?.writeText(window.location.href);
+                void copyToClipboard(window.location.href);
                 toast.success('Link do anúncio copiado.');
               }}
               className="h-10 w-10 rounded-full border border-black/10 flex items-center justify-center text-neutral-500 hover:bg-white transition-colors"

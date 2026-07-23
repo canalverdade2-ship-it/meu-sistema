@@ -52,11 +52,29 @@ interface ApplicationPayload {
   company_website?: unknown;
 }
 
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://10.0.2.189:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
 function configuredOrigins() {
-  const raw = [Deno.env.get('ALLOWED_ORIGINS'), Deno.env.get('ALLOWED_ORIGIN')]
+  const envOrigins = [Deno.env.get('ALLOWED_ORIGINS'), Deno.env.get('ALLOWED_ORIGIN')]
     .filter(Boolean)
     .join(',');
-  return new Set(raw.split(',').map((origin) => origin.trim()).filter(Boolean));
+
+  const rawOrigins = envOrigins
+    ? `${envOrigins},${DEFAULT_ALLOWED_ORIGINS.join(',')}`
+    : DEFAULT_ALLOWED_ORIGINS.join(',');
+
+  return new Set(
+    rawOrigins
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  );
 }
 
 function resolveOrigin(request: Request) {

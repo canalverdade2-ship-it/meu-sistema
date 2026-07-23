@@ -121,14 +121,14 @@ export function ClientIndiqueGanhe({
     try {
       const { data } = await supabase.from('clientes').select('*').eq('id', clientId).single();
       if (data) setCliente(data);
-    } catch (e) {}
+    } catch (e) { console.error("Erro capturado:", e); }
   };
 
   const fetchSettings = async () => {
     try {
       const s = await fetchReferralSettings();
       setSettings(s);
-    } catch (e) {}
+    } catch (e) { console.error("Erro capturado:", e); }
   };
 
   const fetchIndicacoes = async () => {
