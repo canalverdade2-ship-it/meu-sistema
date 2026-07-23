@@ -1,39 +1,22 @@
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FormEvent,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import {
-  BadgeDollarSign,
   BarChart3,
   CalendarClock,
   CheckCircle2,
-  CircleDollarSign,
-  Clock3,
-  ExternalLink,
-  Eye,
   FileImage,
   MailPlus,
   Megaphone,
   MessageSquareText,
-  Palette,
   Pause,
   Play,
   RefreshCw,
   Search,
-  ShieldCheck,
+  Settings2,
   WalletCards,
-  X,
   XCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
-import { handleCurrencyInputChange, maskCurrency, unmaskCurrency } from '../../lib/utils';
 import type {
   AdvertisingAdminOverview,
   AdvertisingCampaign,
@@ -43,1720 +26,292 @@ import type {
   AdvertisingPaymentStatus,
   AdvertisingPlacement,
   AdvertisingProposal,
-  AdvertisingProposalStatus,
   AdvertisingRequest,
   AdvertisingRequestStatus,
 } from '../../types/advertising';
 
-type AdminTab = 'requests' | 'proposals' | 'campaigns' | 'creatives' | 'payments' | 'inventory';
-type ProposalActionStatus = Extract<AdvertisingProposalStatus, 'final_offer' | 'rejected' | 'cancelled'>;
-
-const PAGE_SIZE = 20;
-const TERMINAL_PROPOSAL_STATUSES: AdvertisingProposalStatus[] = ['accepted', 'rejected', 'expired', 'cancelled'];
-const EDITABLE_PROPOSAL_STATUSES: AdvertisingProposalStatus[] = ['draft', 'sent', 'negotiating'];
-
-const TABS: Array<{ id: AdminTab; label: string; icon: typeof Megaphone }> = [
-  { id: 'requests', label: 'Solicitações', icon: Megaphone },
-  { id: 'proposals', label: 'Propostas', icon: MessageSquareText },
-  { id: 'campaigns', label: 'Campanhas', icon: CalendarClock },
-  { id: 'creatives', label: 'Criativos', icon: FileImage },
-  { id: 'payments', label: 'Pagamentos', icon: WalletCards },
-  { id: 'inventory', label: 'Inventário', icon: BarChart3 },
-];
+const EMPTY: AdvertisingAdminOverview = { requests: [], proposals: [], campaigns: [], placements: [] };
+type Tab = 'requests' | 'proposals' | 'campaigns' | 'creatives' | 'payments' | 'inventory';
 
 const REQUEST_LABELS: Record<AdvertisingRequestStatus, string> = {
-  draft: 'Rascunho',
-  submitted: 'Recebida',
-  under_review: 'Em análise',
-  awaiting_information: 'Aguardando informações',
-  proposal_sent: 'Proposta enviada',
-  negotiation_requested: 'Em negociação',
-  accepted: 'Aceita',
-  rejected: 'Recusada',
-  cancelled: 'Cancelada',
+  draft: 'Rascunho', submitted: 'Recebida', under_review: 'Em análise', awaiting_information: 'Aguardando informações',
+  proposal_sent: 'Proposta enviada', negotiation_requested: 'Em negociação', accepted: 'Aceita', rejected: 'Recusada', cancelled: 'Cancelada',
 };
-
-const PROPOSAL_LABELS: Record<AdvertisingProposalStatus, string> = {
-  draft: 'Rascunho',
-  sent: 'Enviada',
-  negotiating: 'Em negociação',
-  final_offer: 'Oferta final',
-  accepted: 'Aceita',
-  rejected: 'Recusada',
-  expired: 'Expirada',
-  cancelled: 'Cancelada',
-};
-
 const CAMPAIGN_LABELS: Record<AdvertisingCampaignStatus, string> = {
-  draft: 'Rascunho',
-  payment_pending: 'Aguardando pagamento',
-  creative_review: 'Criativo em análise',
-  scheduled: 'Agendada',
-  active: 'Ativa',
-  paused: 'Pausada',
-  completed: 'Concluída',
-  cancelled: 'Cancelada',
+  draft: 'Rascunho', payment_pending: 'Aguardando pagamento', payment_overdue: 'Pagamento vencido', creative_review: 'Criativo em análise',
+  scheduled: 'Agendada', active: 'Ativa', paused: 'Pausada', completed: 'Concluída', cancelled: 'Cancelada',
 };
-
 const PAYMENT_LABELS: Record<AdvertisingPaymentStatus, string> = {
-  pending: 'Pendente',
-  processing: 'Em processamento',
-  paid: 'Pago',
-  failed: 'Falhou',
-  refunded: 'Estornado',
-  cancelled: 'Cancelado',
+  pending: 'Pendente', processing: 'Em processamento', paid: 'Pago', failed: 'Falhou', overdue: 'Vencido', refunded: 'Estornado', cancelled: 'Cancelado',
 };
 
-const EMPTY_OVERVIEW: AdvertisingAdminOverview = { requests: [], proposals: [], campaigns: [], placements: [] };
-
-function currency(value: number | string | null | undefined) {
+function money(value: unknown) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
 }
-
-function formatDate(value?: string | null) {
+function date(value?: string | null) {
   if (!value) return 'A definir';
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'Data inválida';
-  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(parsed);
+  return Number.isNaN(parsed.getTime()) ? 'Data inválida' : new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(parsed);
 }
-
-function formatDateTime(value?: string | null) {
-  if (!value) return '';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return '';
-  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(parsed);
+function message(error: unknown, fallback: string) {
+  return error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : fallback;
 }
-
-function defaultDate(offsetDays: number) {
+function today(offset = 0) {
   const value = new Date();
-  value.setDate(value.getDate() + offsetDays);
+  value.setDate(value.getDate() + offset);
   return value.toISOString().slice(0, 10);
 }
 
-function toDateTimeLocal(value?: string | null) {
-  const parsed = value ? new Date(value) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-  const safe = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-  const offset = safe.getTimezoneOffset() * 60_000;
-  return new Date(safe.getTime() - offset).toISOString().slice(0, 16);
-}
-
-function safeHttpsUrl(value?: string | null) {
-  if (!value) return null;
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === 'https:' ? parsed.toString() : null;
-  } catch {
-    return null;
-  }
-}
-
-function messageFromError(error: unknown, fallback: string) {
-  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
-    return error.message;
-  }
-  return fallback;
-}
-
 export function AdvertisingAdminModule() {
-  const [overview, setOverview] = useState<AdvertisingAdminOverview>(EMPTY_OVERVIEW);
-  const [tab, setTab] = useState<AdminTab>('requests');
+  const [overview, setOverview] = useState<AdvertisingAdminOverview>(EMPTY);
+  const [tab, setTab] = useState<Tab>('requests');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [actionId, setActionId] = useState<string | null>(null);
-
   const [proposalRequest, setProposalRequest] = useState<AdvertisingRequest | null>(null);
   const [amount, setAmount] = useState('');
-  const [startsOn, setStartsOn] = useState(defaultDate(7));
-  const [endsOn, setEndsOn] = useState(defaultDate(36));
-  const [validUntil, setValidUntil] = useState(defaultDate(7));
+  const [startsOn, setStartsOn] = useState(today(7));
+  const [endsOn, setEndsOn] = useState(today(36));
+  const [validUntil, setValidUntil] = useState(today(7));
   const [frequencyModel, setFrequencyModel] = useState('once_per_day');
   const [frequencyValue, setFrequencyValue] = useState('1');
   const [impressionLimit, setImpressionLimit] = useState('');
   const [terms, setTerms] = useState('A publicação depende da confirmação do pagamento e da aprovação do criativo.');
-  const [paymentCondition, setPaymentCondition] = useState('PIX À Vista (Liberação Imediata)');
-  const [customPaymentCondition, setCustomPaymentCondition] = useState('');
-  const [finalOffer, setFinalOffer] = useState(false);
-  const [creativeServiceFee, setCreativeServiceFee] = useState('0,00');
-  const [creativeProductionDays, setCreativeProductionDays] = useState('2');
-  const [creativeBriefing, setCreativeBriefing] = useState('');
-
-  const [reviewDialog, setReviewDialog] = useState<{ creative: AdvertisingCreative; approved: boolean } | null>(null);
+  const [reviewCreative, setReviewCreative] = useState<AdvertisingCreative | null>(null);
+  const [reviewApproved, setReviewApproved] = useState(true);
   const [reviewReason, setReviewReason] = useState('');
-  const [paymentDialog, setPaymentDialog] = useState<{ payment: AdvertisingPayment; status: AdvertisingPaymentStatus } | null>(null);
+  const [paymentAction, setPaymentAction] = useState<{ payment: AdvertisingPayment; status: AdvertisingPaymentStatus } | null>(null);
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('manual');
-  const [paymentConfiguration, setPaymentConfiguration] = useState<AdvertisingPayment | null>(null);
-  const [configurationProvider, setConfigurationProvider] = useState('manual');
-  const [configurationReference, setConfigurationReference] = useState('');
-  const [configurationCheckoutUrl, setConfigurationCheckoutUrl] = useState('');
-  const [configurationPixCode, setConfigurationPixCode] = useState('');
-  const [configurationDueAt, setConfigurationDueAt] = useState(toDateTimeLocal());
-  const [proposalAction, setProposalAction] = useState<{ proposal: AdvertisingProposal; status: ProposalActionStatus } | null>(null);
-  const [proposalActionMessage, setProposalActionMessage] = useState('');
-  const [selectedProposalDetailsModal, setSelectedProposalDetailsModal] = useState<AdvertisingProposal | null>(null);
-  const [campaignAction, setCampaignAction] = useState<{ campaign: AdvertisingCampaign; status: AdvertisingCampaignStatus } | null>(null);
-  const [placementDialog, setPlacementDialog] = useState<AdvertisingPlacement | null>(null);
+  const [placement, setPlacement] = useState<AdvertisingPlacement | null>(null);
+  const [capacity, setCapacity] = useState('1');
+  const [basePrice, setBasePrice] = useState('0');
   const [placementActive, setPlacementActive] = useState(true);
-  const [placementCapacity, setPlacementCapacity] = useState('1');
   const [placementExclusive, setPlacementExclusive] = useState(false);
-  const [placementPrice, setPlacementPrice] = useState('0');
   const [placementDevices, setPlacementDevices] = useState<string[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await supabase.rpc('gsa_admin_advertising_overview');
-      const parsedOverview: AdvertisingAdminOverview = (data || { requests: [], proposals: [], campaigns: [], placements: [] }) as AdvertisingAdminOverview;
-
-      if (!parsedOverview.requests) parsedOverview.requests = [];
-
-      // 1. Buscar solicitações registradas na tabela de contingência/fallback
-      try {
-        const { data: fallbackSol } = await supabase.from('anunciantes_solicitacoes').select('*');
-        if (fallbackSol && fallbackSol.length > 0) {
-          const existingProtos = new Set(parsedOverview.requests.map((r) => r.protocol));
-          
-          fallbackSol.forEach((row: any) => {
-            const proto = row.protocolo || row.dados?.protocol || 'ADV-2026-104IY';
-            if (!existingProtos.has(proto)) {
-              parsedOverview.requests.unshift({
-                id: row.id || proto,
-                protocol: proto,
-                status: row.status || 'submitted',
-                company_name: row.dados?.company_name || row.empresa || 'Empresa Anunciante',
-                document: row.dados?.document || row.cnpj_cpf || '',
-                company_size: row.dados?.company_size || 'micro',
-                segment: row.dados?.segment || 'Geral',
-                contact_name: row.dados?.contact_name || 'Responsável',
-                contact_email: row.dados?.contact_email || 'contato@empresa.com',
-                contact_phone: row.dados?.contact_phone || '(11) 99999-9999',
-                website: row.dados?.website || '',
-                objective: row.dados?.objective || 'Divulgação de Marca',
-                desired_formats: row.dados?.desired_formats || ['responsive_banner'],
-                desired_pages: row.dados?.desired_pages || ['HOME_BANNER_TOP'],
-                devices: row.dados?.devices || ['desktop', 'mobile'],
-                desired_start_date: row.dados?.desired_start_date || new Date().toISOString().slice(0, 10),
-                desired_end_date: row.dados?.desired_end_date || '',
-                intended_budget: row.dados?.intended_budget || 500,
-                needs_creative_service: row.dados?.needs_creative_service || false,
-                notes: row.dados?.notes || '',
-                created_at: row.created_at || new Date().toISOString(),
-                updated_at: row.created_at || new Date().toISOString(),
-              } as AdvertisingRequest);
-            }
-          });
-        }
-      } catch {
-        // Tabela opcional de fallback
-      }
-
-      // 2. Buscar solicitações registradas no localStorage (para testes e contingência local)
-      try {
-        const localRequests = JSON.parse(localStorage.getItem('gsa_adv_requests_store') || '[]');
-        if (Array.isArray(localRequests) && localRequests.length > 0) {
-          const existingProtos = new Set(parsedOverview.requests.map((r) => r.protocol));
-          localRequests.forEach((req: any) => {
-            if (req?.protocol && !existingProtos.has(req.protocol)) {
-              parsedOverview.requests.unshift(req as AdvertisingRequest);
-            }
-          });
-        }
-      } catch {
-        // ignora se localStorage estiver corrompido
-      }
-
-      // 3. Se nenhuma solicitação for encontrada no banco, exibir o registro do protocolo ADV-2026-104IY com o status salvo
-      if (!parsedOverview.requests || parsedOverview.requests.length === 0) {
-        let currentStatus: AdvertisingRequestStatus = 'submitted';
-        try {
-          const store = JSON.parse(localStorage.getItem('gsa_adv_requests_store') || '[]');
-          const matchStore = Array.isArray(store) ? store.find((s: any) => s.protocol === 'ADV-2026-104IY' || s.id === 'a1b2c3d4-e5f6-4789-a012-34567890abcd') : null;
-          if (matchStore?.status) currentStatus = matchStore.status;
-
-          const session = JSON.parse(localStorage.getItem('gsa_advertiser_session') || 'null');
-          const matchSess = session?.requests?.find((s: any) => s.protocol === 'ADV-2026-104IY');
-          if (matchSess?.status) currentStatus = matchSess.status;
-        } catch {}
-
-        parsedOverview.requests = [{
-          id: 'a1b2c3d4-e5f6-4789-a012-34567890abcd',
-          protocol: 'ADV-2026-104IY',
-          status: currentStatus,
-          company_name: 'Empresa Anunciante GSA',
-          document: '44.921.139/0001-83',
-          company_size: 'micro',
-          segment: 'Serviços & Tecnologia',
-          contact_name: 'Contato Anunciante',
-          contact_email: 'admin@portal.com',
-          contact_phone: '(11) 99999-9999',
-          website: 'https://grupo-gsa.com.br',
-          objective: 'Divulgação de Marca e Serviços',
-          desired_formats: ['responsive_banner', 'hero'],
-          desired_pages: ['HOME_BANNER_TOP'],
-          devices: ['desktop', 'mobile'],
-          desired_start_date: new Date().toISOString().slice(0, 10),
-          desired_end_date: '',
-          intended_budget: 1500,
-          needs_creative_service: true,
-          notes: 'Solicitação inicial de anúncio registrada no sistema.',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        } as AdvertisingRequest];
-      } else {
-        // Se houver solicitações do banco, sincronizar qualquer status alterado localmente
-        try {
-          const store = JSON.parse(localStorage.getItem('gsa_adv_requests_store') || '[]');
-          if (Array.isArray(store) && store.length > 0) {
-            parsedOverview.requests = parsedOverview.requests.map((req) => {
-              const match = store.find((s: any) => s.protocol === req.protocol || s.id === req.id);
-              return match?.status ? { ...req, status: match.status } : req;
-            });
-          }
-        } catch {}
-      }
-
-      // Sincronizar propostas locais da contingência e do portal do anunciante
-      try {
-        const storeProps = JSON.parse(localStorage.getItem('gsa_adv_proposals_store') || '[]');
-        const session = JSON.parse(localStorage.getItem('gsa_advertiser_session') || 'null');
-        const sessionProps = session?.proposals || [];
-
-        // Dar prioridade para propostas do portal do anunciante (sessionProps por último)
-        const combinedLocalProps = [...storeProps, ...sessionProps];
-        if (combinedLocalProps.length > 0) {
-          if (!parsedOverview.proposals) parsedOverview.proposals = [];
-
-          combinedLocalProps.forEach((p: any) => {
-            if (p?.id) {
-              const existingIdx = parsedOverview.proposals.findIndex((ex) => ex.id === p.id || (p.request_id && ex.request_id === p.request_id));
-              if (existingIdx >= 0) {
-                const existing = parsedOverview.proposals[existingIdx];
-                const finalStatus = (p.status === 'accepted' || existing.status !== 'accepted') ? (p.status || existing.status) : existing.status;
-                parsedOverview.proposals[existingIdx] = {
-                  ...existing,
-                  ...p,
-                  status: finalStatus,
-                  negotiations: p.negotiations?.length ? p.negotiations : existing.negotiations,
-                };
-              } else {
-                parsedOverview.proposals.unshift(p as AdvertisingProposal);
-              }
-            }
-          });
-        }
-      } catch {}
-
-      // Sincronizar campanhas locais da contingência e do portal do anunciante
-      try {
-        const storeCamps = JSON.parse(localStorage.getItem('gsa_adv_campaigns_store') || '[]');
-        const session = JSON.parse(localStorage.getItem('gsa_advertiser_session') || 'null');
-        const sessionCamps = session?.campaigns || [];
-
-        const combinedLocalCamps = [...sessionCamps, ...storeCamps];
-        if (combinedLocalCamps.length > 0) {
-          if (!parsedOverview.campaigns) parsedOverview.campaigns = [];
-
-          combinedLocalCamps.forEach((c: any) => {
-            if (c?.id) {
-              const existingIdx = parsedOverview.campaigns.findIndex((ex) => ex.id === c.id);
-              if (existingIdx >= 0) {
-                parsedOverview.campaigns[existingIdx] = { ...parsedOverview.campaigns[existingIdx], ...c };
-              } else {
-                parsedOverview.campaigns.unshift(c as AdvertisingCampaign);
-              }
-            }
-          });
-        }
-      } catch {}
-
-      setOverview(parsedOverview);
+      const { data, error } = await supabase.rpc('gsa_admin_advertising_overview');
+      if (error) throw error;
+      const result = (data || EMPTY) as AdvertisingAdminOverview;
+      setOverview({ requests: result.requests || [], proposals: result.proposals || [], campaigns: result.campaigns || [], placements: result.placements || [] });
     } catch (error) {
-      console.error('Falha ao carregar operação de anúncios:', error);
-      toast.error('Não foi possível carregar o módulo de anúncios.');
+      console.error('Falha ao carregar GSA Anúncios:', error);
+      setOverview(EMPTY);
+      toast.error(message(error, 'Não foi possível carregar o módulo de anúncios.'));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => { void load(); }, [load]);
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [tab, search, status]);
 
   const filteredRequests = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return overview.requests.filter((request) => {
-      if (status !== 'all' && request.status !== status) return false;
-      if (!term) return true;
-      return [request.protocol, request.company_name, request.segment, request.contact_name, request.contact_email]
-        .some((value) => String(value || '').toLowerCase().includes(term));
-    });
-  }, [overview.requests, search, status]);
+    return overview.requests.filter((item) => !term || [item.protocol, item.company_name, item.contact_name, item.contact_email].some((value) => String(value || '').toLowerCase().includes(term)));
+  }, [overview.requests, search]);
 
-  const summary = useMemo(() => {
-    const payments = overview.campaigns.map((campaign) => campaign.payment).filter(Boolean) as AdvertisingPayment[];
-    const metrics = overview.campaigns.flatMap((campaign) => campaign.metrics || []);
-    return {
-      requests: overview.requests.length,
-      proposals: overview.proposals.filter((proposal) => ['sent', 'negotiating', 'final_offer'].includes(proposal.status)).length,
-      active: overview.campaigns.filter((campaign) => campaign.status === 'active').length,
-      revenue: payments.filter((payment) => payment.status === 'paid').reduce((sum, payment) => sum + Number(payment.amount || 0), 0),
-      served: metrics.reduce((sum, row) => sum + Number(row.served || 0), 0),
-    };
-  }, [overview]);
+  const creatives = useMemo(() => overview.campaigns.flatMap((campaign) => campaign.creatives || []), [overview.campaigns]);
+  const payments = useMemo(() => overview.campaigns.map((campaign) => campaign.payment).filter(Boolean) as AdvertisingPayment[], [overview.campaigns]);
+  const totals = useMemo(() => ({
+    requests: overview.requests.length,
+    active: overview.campaigns.filter((campaign) => campaign.status === 'active').length,
+    pending: overview.proposals.filter((proposal) => ['sent', 'negotiating', 'final_offer'].includes(proposal.status)).length,
+    revenue: payments.filter((payment) => payment.status === 'paid').reduce((sum, payment) => sum + Number(payment.amount || 0), 0),
+  }), [overview, payments]);
 
-  const updateStatus = async (requestId: string, nextStatus: AdvertisingRequestStatus) => {
-    setActionId(requestId);
+  const rpc = async (name: string, payload: Record<string, unknown>, successMessage: string) => {
+    const { data, error } = await supabase.rpc(name, payload);
+    if (error || data?.success === false) throw error || new Error(data?.error || 'Operação recusada pelo servidor.');
+    toast.success(successMessage);
+    await load();
+    return data;
+  };
+
+  const updateRequest = async (request: AdvertisingRequest, status: AdvertisingRequestStatus) => {
+    setActionId(request.id);
     try {
-      // Identificar o objeto e o protocolo correto da solicitação
-      const targetReq = overview.requests.find((r) => r.id === requestId || r.protocol === requestId);
-      const targetProto = targetReq?.protocol || requestId;
-
-      // 1. Tentar RPC se o ID for um UUID válido do Supabase
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestId);
-      if (isUuid) {
-        const { error } = await supabase.rpc('gsa_admin_update_ad_request_status', { p_request_id: requestId, p_status: nextStatus });
-        if (error) console.warn('Aviso ao atualizar via RPC:', error);
-      }
-
-      // Tentar atualizar tabela de contingência se existir no banco
-      try {
-        await supabase
-          .from('anunciantes_solicitacoes')
-          .update({ status: nextStatus })
-          .or(`protocolo.eq.${targetProto},protocolo.eq.${requestId},id.eq.${requestId}`);
-      } catch {}
-
-      // 2. Atualizar estado local do overview
-      setOverview((prev) => ({
-        ...prev,
-        requests: prev.requests.map((r) =>
-          r.id === requestId || r.protocol === targetProto || r.protocol === requestId
-            ? { ...r, status: nextStatus }
-            : r
-        )
-      }));
-
-      // 3. Atualizar no gsa_adv_requests_store
-      try {
-        const localRequests = JSON.parse(localStorage.getItem('gsa_adv_requests_store') || '[]');
-        if (Array.isArray(localRequests)) {
-          const updated = localRequests.map((r: any) =>
-            r.id === requestId || r.protocol === targetProto || r.protocol === requestId
-              ? { ...r, status: nextStatus }
-              : r
-          );
-          localStorage.setItem('gsa_adv_requests_store', JSON.stringify(updated));
-        }
-      } catch {}
-
-      // 4. Atualizar no gsa_advertiser_session
-      try {
-        const localSession = JSON.parse(localStorage.getItem('gsa_advertiser_session') || 'null');
-        if (localSession && localSession.requests) {
-          localSession.requests = localSession.requests.map((r: any) =>
-            r.id === requestId || r.protocol === targetProto || r.protocol === requestId
-              ? { ...r, status: nextStatus }
-              : r
-          );
-          localStorage.setItem('gsa_advertiser_session', JSON.stringify(localSession));
-        }
-      } catch {}
-
-      // 5. Notificar abas abertas
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('storage'));
-      }
-
-      toast.success(`Solicitação atualizada para "${REQUEST_LABELS[nextStatus]}".`);
+      await rpc('gsa_admin_update_ad_request_status', { p_request_id: request.id, p_status: status }, `Solicitação atualizada para ${REQUEST_LABELS[status]}.`);
     } catch (error) {
-      console.error('Falha ao atualizar solicitação:', error);
-      toast.error('Não foi possível atualizar a solicitação. Tente novamente.');
-    } finally {
-      setActionId(null);
-    }
+      toast.error(message(error, 'Não foi possível atualizar a solicitação.'));
+    } finally { setActionId(null); }
   };
 
   const openProposal = (request: AdvertisingRequest) => {
-    const existing = overview.proposals.find((proposal) => proposal.request_id === request.id);
-    if (existing && TERMINAL_PROPOSAL_STATUSES.includes(existing.status)) {
-      toast.error('Esta proposta está encerrada e não pode receber uma nova versão.');
-      return;
-    }
-    if (['accepted', 'rejected', 'cancelled'].includes(request.status)) {
-      toast.error('A solicitação está encerrada.');
-      return;
-    }
-    const lastCounter = [...(existing?.negotiations || [])].reverse().find((item) => item.actor_type === 'advertiser' && item.proposed_amount);
-    const initialAmountNum = Number(lastCounter?.proposed_amount || existing?.total_amount || request.intended_budget || 0);
+    if (['accepted', 'rejected', 'cancelled'].includes(request.status)) return toast.error('Esta solicitação está encerrada.');
+    const current = overview.proposals.find((proposal) => proposal.request_id === request.id);
+    if (current && ['accepted', 'rejected', 'cancelled'].includes(current.status)) return toast.error('A proposta desta solicitação está encerrada.');
     setProposalRequest(request);
-    setAmount(maskCurrency(initialAmountNum));
-    setStartsOn(existing?.version?.starts_on || request.desired_start_date || defaultDate(7));
-    setEndsOn(existing?.version?.ends_on || request.desired_end_date || defaultDate(36));
-    setValidUntil(defaultDate(7));
-    setFrequencyModel(existing?.version?.frequency_model || 'once_per_day');
-    setFrequencyValue(String(existing?.version?.frequency_value || 1));
-    setImpressionLimit(existing?.version?.impression_limit ? String(existing.version.impression_limit) : '');
-    setTerms(existing?.version?.terms || 'A publicação depende da confirmação do pagamento e da aprovação do criativo.');
-    setFinalOffer(existing?.status === 'negotiating');
-    setCreativeServiceFee(maskCurrency(0));
-    setCreativeProductionDays('2');
-    setCreativeBriefing(
-      request.needs_creative_service
-        ? 'Criação de arte profissional inclusa pela equipe de design GSA. Enviaremos prévia para validação antes da publicação.'
-        : ''
-    );
+    setAmount(String(current?.total_amount || request.intended_budget || ''));
+    setStartsOn(current?.version?.starts_on || request.desired_start_date || today(7));
+    setEndsOn(current?.version?.ends_on || request.desired_end_date || today(36));
+    setFrequencyModel(current?.version?.frequency_model || 'once_per_day');
+    setFrequencyValue(String(current?.version?.frequency_value || 1));
+    setImpressionLimit(current?.version?.impression_limit ? String(current.version.impression_limit) : '');
+    setTerms(current?.version?.terms || 'A publicação depende da confirmação do pagamento e da aprovação do criativo.');
   };
 
-  const inviteAdvertiser = async (requestId: string, quiet = false) => {
-    const { data, error } = await supabase.functions.invoke<{ success: boolean; already_linked?: boolean }>('gsa-advertiser-admin', {
-      body: { action: 'invite', request_id: requestId },
-    });
-    if (error || !data?.success) {
-      if (!quiet) toast.error('O acesso ao portal não pôde ser enviado.');
-      return false;
-    }
-    if (!quiet) toast.success(data.already_linked ? 'Portal do anunciante já estava liberado.' : 'Convite do portal enviado.');
-    return true;
-  };
-
-  const createProposal = async (event: FormEvent) => {
+  const submitProposal = async (event: FormEvent) => {
     event.preventDefault();
     if (!proposalRequest) return;
-    const numericAmount = unmaskCurrency(amount);
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-      toast.error('Informe um valor de proposta válido.');
-      return;
-    }
-    if (endsOn < startsOn) {
-      toast.error('A data de término não pode ser anterior ao início.');
-      return;
-    }
+    const numericAmount = Number(amount.replace(',', '.'));
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) return toast.error('Informe um valor válido.');
+    if (endsOn < startsOn) return toast.error('A data final não pode ser anterior à inicial.');
     setActionId(proposalRequest.id);
-    let finalTerms = terms.trim();
-
-    const selectedPaymentCond = paymentCondition === 'outros'
-      ? (customPaymentCondition.trim() || 'A combinar')
-      : paymentCondition;
-
-    if (!finalTerms.includes('[💳 Condição de Pagamento]')) {
-      finalTerms = `[💳 Condição de Pagamento]: ${selectedPaymentCond}\n\n${finalTerms}`;
-    }
-
-    if (proposalRequest.needs_creative_service) {
-      const feeNum = unmaskCurrency(creativeServiceFee);
-      const feeText = feeNum > 0 ? `Taxa adicional de arte: R$ ${creativeServiceFee}` : 'Criação de arte inclusa no valor total da proposta';
-      const daysText = creativeProductionDays ? `Prazo de produção da arte: ${creativeProductionDays} dia(s) útil(eis)` : '';
-      const briefingText = creativeBriefing.trim() ? `Detalhes: ${creativeBriefing.trim()}` : '';
-      const creativeSummary = `[🎨 Serviço de Criação GSA]: ${feeText}. ${daysText}. ${briefingText}`.trim();
-      if (!finalTerms.includes('[🎨 Serviço de Criação GSA]')) {
-        finalTerms = `${finalTerms}\n\n${creativeSummary}`;
-      }
-    }
-
     try {
-      let createdVersion = 1;
-      let createdData: any = null;
-
-      try {
-        const { data, error } = await supabase.rpc('gsa_admin_create_ad_proposal', {
-          p_request_id: proposalRequest.id,
-          p_payload: {
-            amount: numericAmount,
-            starts_on: startsOn,
-            ends_on: endsOn,
-            valid_until: `${validUntil}T23:59:59-03:00`,
-            formats: proposalRequest.desired_formats,
-            placement_codes: proposalRequest.desired_pages,
-            frequency_model: frequencyModel,
-            frequency_value: frequencyModel === 'unlimited' ? null : Number(frequencyValue || 1),
-            impression_limit: impressionLimit ? Number(impressionLimit) : null,
-            terms: finalTerms,
-            payment_condition: selectedPaymentCond,
-            final_offer: finalOffer,
-          },
-        });
-
-        if (!error && data?.success) {
-          createdData = data;
-          createdVersion = data.version || 1;
-        }
-      } catch (rpcErr) {
-        console.warn('RPC gsa_admin_create_ad_proposal fallback:', rpcErr);
-      }
-
-      // Se a solicitação não existia no banco do Supabase RPC (ex.: solicitação de contingência/lead local)
-      if (!createdData) {
-        const durationDays = startsOn && endsOn
-          ? Math.max(1, Math.ceil((new Date(endsOn).getTime() - new Date(startsOn).getTime()) / (1000 * 60 * 60 * 24)))
-          : 30;
-
-        const versionObj: AdvertisingProposalVersion = {
-          id: `prop-v1-${Date.now()}`,
-          proposal_id: `prop-${proposalRequest.protocol || Date.now()}`,
-          version: 1,
+      const data = await rpc('gsa_admin_create_ad_proposal', {
+        p_request_id: proposalRequest.id,
+        p_payload: {
           amount: numericAmount,
-          duration_days: durationDays,
           starts_on: startsOn,
           ends_on: endsOn,
-          formats: proposalRequest.desired_formats || ['responsive_banner'],
-          placement_codes: proposalRequest.desired_pages || ['HOME_BANNER_TOP'],
-          frequency_model: frequencyModel,
-          frequency_value: frequencyModel === 'unlimited' ? null : Number(frequencyValue || 1),
-          impression_limit: impressionLimit ? Number(impressionLimit) : null,
-          terms: finalTerms,
-          created_by_type: 'admin',
-          created_at: new Date().toISOString(),
-        };
-        (versionObj as any).payment_condition = selectedPaymentCond;
-
-        const localProposal: AdvertisingProposal = {
-          id: `prop-${proposalRequest.protocol || Date.now()}`,
-          request_id: proposalRequest.id,
-          status: finalOffer ? 'final_offer' : 'sent',
-          current_version: 1,
-          total_amount: numericAmount,
           valid_until: `${validUntil}T23:59:59-03:00`,
-          version: versionObj,
-          negotiations: [],
-        } as any;
-
-        try {
-          // 1. Salvar proposta localmente
-          const storeProps = JSON.parse(localStorage.getItem('gsa_adv_proposals_store') || '[]');
-          const filteredProps = storeProps.filter((p: any) => p.request_id !== proposalRequest.id && p.id !== localProposal.id);
-          filteredProps.unshift(localProposal);
-          localStorage.setItem('gsa_adv_proposals_store', JSON.stringify(filteredProps));
-
-          // 2. Atualizar status da solicitação para 'proposal_sent'
-          const storeReqs = JSON.parse(localStorage.getItem('gsa_adv_requests_store') || '[]');
-          const updatedReqs = storeReqs.map((req: any) => {
-            if (req.id === proposalRequest.id || req.protocol === proposalRequest.protocol) {
-              return { ...req, status: 'proposal_sent', updated_at: new Date().toISOString() };
-            }
-            return req;
-          });
-          localStorage.setItem('gsa_adv_requests_store', JSON.stringify(updatedReqs));
-
-          // 3. Atualizar sessão do anunciante se ativa no navegador
-          const session = JSON.parse(localStorage.getItem('gsa_advertiser_session') || 'null');
-          if (session) {
-            if (!session.proposals) session.proposals = [];
-            session.proposals = session.proposals.filter((p: any) => p.request_id !== proposalRequest.id && p.id !== localProposal.id);
-            session.proposals.unshift(localProposal);
-            if (session.requests) {
-              session.requests = session.requests.map((r: any) => 
-                (r.id === proposalRequest.id || r.protocol === proposalRequest.protocol) ? { ...r, status: 'proposal_sent' } : r
-              );
-            }
-            localStorage.setItem('gsa_advertiser_session', JSON.stringify(session));
-          }
-        } catch {}
-      }
-
-      const invited = await inviteAdvertiser(proposalRequest.id, true);
-      toast.success(invited
-        ? `Proposta v${createdVersion} criada e liberada no portal.`
-        : `Proposta v${createdVersion} criada com sucesso.`);
+          formats: proposalRequest.desired_formats,
+          placement_codes: proposalRequest.desired_pages,
+          frequency_model: frequencyModel,
+          frequency_value: ['unlimited', 'once_per_session', 'once_per_day'].includes(frequencyModel) ? null : Number(frequencyValue || 1),
+          impression_limit: impressionLimit ? Number(impressionLimit) : null,
+          terms: terms.trim(),
+        },
+      }, 'Proposta gravada no sistema.');
+      const { data: invite, error: inviteError } = await supabase.functions.invoke('gsa-advertiser-admin', { body: { action: 'invite', request_id: proposalRequest.id } });
+      if (inviteError || !invite?.success) toast.error('A proposta foi criada, mas o convite do portal não foi enviado. Reenvie o acesso.');
+      else toast.success(data?.version ? `Proposta v${data.version} liberada no portal.` : 'Portal do anunciante liberado.');
       setProposalRequest(null);
       setTab('proposals');
-      await load();
     } catch (error) {
-      console.error('Falha ao criar proposta:', error);
-      toast.error(messageFromError(error, 'Não foi possível criar a proposta.'));
-    } finally {
-      setActionId(null);
-    }
+      toast.error(message(error, 'Não foi possível criar a proposta.'));
+    } finally { setActionId(null); }
   };
 
-  const reviewCreative = async (event: FormEvent) => {
+  const invite = async (request: AdvertisingRequest) => {
+    setActionId(request.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('gsa-advertiser-admin', { body: { action: 'invite', request_id: request.id } });
+      if (error || !data?.success) throw error || new Error('Convite recusado.');
+      toast.success(data.already_linked ? 'Acesso reenviado ao anunciante.' : 'Convite enviado ao anunciante.');
+      await load();
+    } catch (error) { toast.error(message(error, 'Não foi possível enviar o acesso.')); }
+    finally { setActionId(null); }
+  };
+
+  const submitReview = async (event: FormEvent) => {
     event.preventDefault();
-    if (!reviewDialog) return;
-    const reason = reviewReason.trim();
-    if (!reviewDialog.approved && reason.length < 5) {
-      toast.error('Explique o ajuste necessário com pelo menos 5 caracteres.');
-      return;
-    }
-    setActionId(reviewDialog.creative.id);
+    if (!reviewCreative) return;
+    if (!reviewApproved && reviewReason.trim().length < 5) return toast.error('Explique o ajuste necessário.');
+    setActionId(reviewCreative.id);
     try {
-      const { error } = await supabase.rpc('gsa_admin_review_ad_creative', {
-        p_creative_id: reviewDialog.creative.id,
-        p_approved: reviewDialog.approved,
-        p_reason: reviewDialog.approved ? null : reason,
-      });
-      if (error) throw error;
-      toast.success(reviewDialog.approved ? 'Criativo aprovado.' : 'Criativo devolvido para correção.');
-      setReviewDialog(null);
-      setReviewReason('');
-      await load();
-    } catch (error) {
-      console.error('Falha ao analisar criativo:', error);
-      toast.error(messageFromError(error, 'Não foi possível analisar o criativo.'));
-    } finally {
-      setActionId(null);
-    }
+      await rpc('gsa_admin_review_ad_creative', { p_creative_id: reviewCreative.id, p_approved: reviewApproved, p_reason: reviewApproved ? null : reviewReason.trim() }, reviewApproved ? 'Criativo aprovado.' : 'Criativo devolvido para correção.');
+      setReviewCreative(null); setReviewReason('');
+    } catch (error) { toast.error(message(error, 'Não foi possível analisar o criativo.')); }
+    finally { setActionId(null); }
   };
 
-  const openPaymentAction = (payment: AdvertisingPayment, nextStatus: AdvertisingPaymentStatus) => {
-    setPaymentDialog({ payment, status: nextStatus });
-    setPaymentReference(payment.provider_reference || (nextStatus === 'paid' ? `MANUAL-${Date.now()}` : ''));
-    setPaymentMethod(payment.payment_method || 'manual');
-  };
-
-  const markPayment = async (event: FormEvent) => {
+  const submitPayment = async (event: FormEvent) => {
     event.preventDefault();
-    if (!paymentDialog) return;
-    const reference = paymentReference.trim();
-    if (paymentDialog.status === 'paid' && !reference) {
-      toast.error('Informe a referência ou o comprovante do pagamento.');
-      return;
-    }
-    setActionId(paymentDialog.payment.id);
+    if (!paymentAction) return;
+    if (paymentAction.status === 'paid' && paymentReference.trim().length < 4) return toast.error('Informe a referência do pagamento.');
+    setActionId(paymentAction.payment.id);
     try {
-      const { error } = await supabase.rpc('gsa_admin_mark_ad_payment', {
-        p_payment_id: paymentDialog.payment.id,
-        p_status: paymentDialog.status,
-        p_provider_reference: reference || paymentDialog.payment.provider_reference || null,
-        p_payment_method: paymentDialog.status === 'paid' ? paymentMethod.trim() || 'manual' : paymentDialog.payment.payment_method,
-      });
-      if (error) throw error;
-      toast.success(`Pagamento atualizado para ${PAYMENT_LABELS[paymentDialog.status]}.`);
-      setPaymentDialog(null);
-      await load();
-    } catch (error) {
-      console.error('Falha ao atualizar pagamento:', error);
-      toast.error(messageFromError(error, 'Não foi possível atualizar o pagamento.'));
-    } finally {
-      setActionId(null);
-    }
+      await rpc('gsa_admin_mark_ad_payment', {
+        p_payment_id: paymentAction.payment.id,
+        p_status: paymentAction.status,
+        p_provider_reference: paymentReference.trim() || paymentAction.payment.provider_reference || null,
+        p_payment_method: paymentMethod.trim() || null,
+      }, `Pagamento atualizado para ${PAYMENT_LABELS[paymentAction.status]}.`);
+      setPaymentAction(null); setPaymentReference('');
+    } catch (error) { toast.error(message(error, 'Não foi possível atualizar o pagamento.')); }
+    finally { setActionId(null); }
   };
 
-  const openPaymentConfiguration = (payment: AdvertisingPayment) => {
-    setPaymentConfiguration(payment);
-    setConfigurationProvider(payment.provider || 'manual');
-    setConfigurationReference(payment.provider_reference || '');
-    setConfigurationCheckoutUrl(payment.checkout_url || '');
-    setConfigurationPixCode(payment.pix_code || '');
-    setConfigurationDueAt(toDateTimeLocal(payment.due_at));
+  const campaignAction = async (campaign: AdvertisingCampaign, status: 'paused' | 'active' | 'cancelled') => {
+    setActionId(campaign.id);
+    try { await rpc('gsa_admin_update_ad_campaign_status', { p_campaign_id: campaign.id, p_status: status }, `Campanha atualizada para ${CAMPAIGN_LABELS[status]}.`); }
+    catch (error) { toast.error(message(error, 'Não foi possível atualizar a campanha.')); }
+    finally { setActionId(null); }
   };
 
-  const configurePayment = async (event: FormEvent) => {
+  const openPlacement = (item: AdvertisingPlacement) => {
+    setPlacement(item); setCapacity(String(item.capacity)); setBasePrice(String(item.base_daily_price)); setPlacementActive(item.active); setPlacementExclusive(item.exclusive); setPlacementDevices(item.devices || []);
+  };
+
+  const submitPlacement = async (event: FormEvent) => {
     event.preventDefault();
-    if (!paymentConfiguration) return;
-    const provider = configurationProvider.trim().toLowerCase();
-    const reference = configurationReference.trim();
-    const checkoutUrl = configurationCheckoutUrl.trim();
-    const pixCode = configurationPixCode.trim();
-    if (!provider || !reference) {
-      toast.error('Informe o provedor e a referência da cobrança.');
-      return;
-    }
-    if (!checkoutUrl && !pixCode) {
-      toast.error('Informe uma URL de checkout HTTPS ou um código PIX.');
-      return;
-    }
-    if (checkoutUrl && !safeHttpsUrl(checkoutUrl)) {
-      toast.error('A URL de checkout deve ser HTTPS e válida.');
-      return;
-    }
-    const dueAt = new Date(configurationDueAt);
-    if (Number.isNaN(dueAt.getTime())) {
-      toast.error('Informe um vencimento válido.');
-      return;
-    }
-    setActionId(paymentConfiguration.id);
+    if (!placement) return;
+    const parsedCapacity = Number(capacity);
+    const parsedPrice = Number(basePrice.replace(',', '.'));
+    if (!Number.isInteger(parsedCapacity) || parsedCapacity < 1 || parsedCapacity > 100) return toast.error('A capacidade deve ficar entre 1 e 100.');
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) return toast.error('Informe um preço válido.');
+    if (!placementDevices.length) return toast.error('Selecione ao menos um dispositivo.');
+    setActionId(placement.id);
     try {
-      const { data, error } = await supabase.rpc('gsa_admin_configure_ad_payment', {
-        p_payment_id: paymentConfiguration.id,
-        p_provider: provider,
-        p_provider_reference: reference,
-        p_checkout_url: checkoutUrl || null,
-        p_pix_code: pixCode || null,
-        p_due_at: dueAt.toISOString(),
-      });
-      if (error || data?.success === false) throw error || new Error('A configuração foi recusada pelo servidor.');
-      toast.success('Cobrança configurada e pronta para conciliação.');
-      setPaymentConfiguration(null);
-      await load();
-    } catch (error) {
-      console.error('Falha ao configurar cobrança:', error);
-      toast.error(messageFromError(error, 'Não foi possível configurar a cobrança.'));
-    } finally {
-      setActionId(null);
-    }
+      await rpc('gsa_admin_update_ad_placement', { p_placement_id: placement.id, p_payload: { active: placementActive, capacity: parsedCapacity, exclusive: placementExclusive, base_daily_price: parsedPrice, devices: placementDevices } }, 'Posição publicitária atualizada.');
+      setPlacement(null);
+    } catch (error) { toast.error(message(error, 'Não foi possível atualizar a posição.')); }
+    finally { setActionId(null); }
   };
 
-  const openPlacement = (placement: AdvertisingPlacement) => {
-    setPlacementDialog(placement);
-    setPlacementActive(placement.active);
-    setPlacementCapacity(String(placement.capacity));
-    setPlacementExclusive(placement.exclusive);
-    setPlacementPrice(String(placement.base_daily_price));
-    setPlacementDevices(placement.devices || []);
-  };
+  const tabs: Array<{ id: Tab; label: string; icon: typeof Megaphone }> = [
+    { id: 'requests', label: 'Solicitações', icon: Megaphone }, { id: 'proposals', label: 'Propostas', icon: MessageSquareText },
+    { id: 'campaigns', label: 'Campanhas', icon: CalendarClock }, { id: 'creatives', label: 'Criativos', icon: FileImage },
+    { id: 'payments', label: 'Pagamentos', icon: WalletCards }, { id: 'inventory', label: 'Inventário', icon: BarChart3 },
+  ];
 
-  const updatePlacement = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!placementDialog) return;
-    const capacity = Number(placementCapacity);
-    const baseDailyPrice = Number(placementPrice);
-    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 1000) {
-      toast.error('A capacidade deve ser um número inteiro entre 1 e 1.000.');
-      return;
-    }
-    if (!Number.isFinite(baseDailyPrice) || baseDailyPrice < 0) {
-      toast.error('Informe um preço diário válido.');
-      return;
-    }
-    if (placementDevices.length === 0) {
-      toast.error('Selecione pelo menos um dispositivo.');
-      return;
-    }
-    setActionId(placementDialog.id);
-    try {
-      const { data, error } = await supabase.rpc('gsa_admin_update_ad_placement', {
-        p_placement_id: placementDialog.id,
-        p_payload: {
-          active: placementActive,
-          capacity,
-          exclusive: placementExclusive,
-          base_daily_price: baseDailyPrice,
-          devices: placementDevices,
-        },
-      });
-      if (error || data?.success === false) throw error || new Error('A configuração foi recusada pelo servidor.');
-      toast.success('Posição publicitária atualizada.');
-      setPlacementDialog(null);
-      await load();
-    } catch (error) {
-      console.error('Falha ao atualizar posição:', error);
-      toast.error(messageFromError(error, 'Não foi possível atualizar a posição.'));
-    } finally {
-      setActionId(null);
-    }
-  };
-
-  const updateProposalAction = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!proposalAction) return;
-    const message = proposalActionMessage.trim();
-    if (message.length < 3) {
-      toast.error('Registre uma justificativa com pelo menos 3 caracteres.');
-      return;
-    }
-    setActionId(proposalAction.proposal.id);
-    try {
-      const { data, error } = await supabase.rpc('gsa_admin_update_ad_proposal_status', {
-        p_proposal_id: proposalAction.proposal.id,
-        p_status: proposalAction.status,
-        p_message: message,
-      });
-      if (error || data?.success === false) throw error || new Error('A operação foi recusada pelo servidor.');
-      toast.success(`Proposta atualizada para ${PROPOSAL_LABELS[proposalAction.status]}.`);
-      setProposalAction(null);
-      setProposalActionMessage('');
-      await load();
-    } catch (error) {
-      console.error('Falha ao atualizar proposta:', error);
-      toast.error(messageFromError(error, 'Não foi possível atualizar a proposta.'));
-    } finally {
-      setActionId(null);
-    }
-  };
-
-  const updateCampaignAction = async () => {
-    if (!campaignAction) return;
-    setActionId(campaignAction.campaign.id);
-    try {
-      const { data, error } = await supabase.rpc('gsa_admin_update_ad_campaign_status', {
-        p_campaign_id: campaignAction.campaign.id,
-        p_status: campaignAction.status,
-      });
-      if (error || data?.success === false) throw error || new Error('A operação foi recusada pelo servidor.');
-      toast.success(`Campanha atualizada para ${CAMPAIGN_LABELS[campaignAction.status]}.`);
-      setCampaignAction(null);
-      await load();
-    } catch (error) {
-      console.error('Falha ao atualizar campanha:', error);
-      toast.error(messageFromError(error, 'Não foi possível atualizar a campanha.'));
-    } finally {
-      setActionId(null);
-    }
-  };
-
-  const creativeRows = overview.campaigns.flatMap((campaign) =>
-    (campaign.creatives || []).map((creative) => ({ campaign, creative })),
-  );
-  const paymentRows = overview.campaigns
-    .filter((campaign) => campaign.payment)
-    .map((campaign) => ({ campaign, payment: campaign.payment! }));
+  if (loading) return <div className="rounded-3xl border border-white/10 bg-white p-10 text-center text-sm font-bold text-neutral-500">Carregando GSA Anúncios...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-amber-600"><Megaphone className="h-4 w-4" /> GSA Anúncios</div>
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-neutral-950">Operação publicitária</h1>
-          <p className="mt-2 max-w-3xl text-sm text-neutral-500">Da solicitação à entrega: proposta, portal, pagamento, criativos, agenda e resultados.</p>
-        </div>
-        <button type="button" onClick={() => void load()} disabled={loading} aria-label="Atualizar operação publicitária" className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-bold text-neutral-700 shadow-sm hover:bg-neutral-50 disabled:opacity-50">
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar
-        </button>
+    <section className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><h1 className="text-2xl font-black text-neutral-950">GSA Anúncios</h1><p className="text-sm text-neutral-500">Operação conectada ao banco de dados em tempo real.</p></div>
+        <button type="button" onClick={() => void load()} className="flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold"><RefreshCw className="h-4 w-4" /> Atualizar</button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <SummaryCard icon={Megaphone} label="Solicitações" value={summary.requests} />
-        <SummaryCard icon={MessageSquareText} label="Propostas pendentes" value={summary.proposals} />
-        <SummaryCard icon={ShieldCheck} label="Campanhas ativas" value={summary.active} />
-        <SummaryCard icon={CircleDollarSign} label="Receita confirmada" value={currency(summary.revenue)} />
-        <SummaryCard icon={BarChart3} label="Entregas" value={summary.served} />
-      </div>
-
-      <div role="tablist" aria-label="Seções do módulo de anúncios" className="flex gap-2 overflow-x-auto rounded-2xl border border-neutral-200 bg-white p-2">
-        {TABS.map(({ id, label, icon: Icon }) => (
-          <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black ${tab === id ? 'bg-neutral-950 text-white' : 'text-neutral-500 hover:bg-neutral-50'}`}>
-            <Icon className="h-4 w-4" /> {label}
-          </button>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[['Solicitações', totals.requests], ['Propostas pendentes', totals.pending], ['Campanhas ativas', totals.active], ['Receita confirmada', money(totals.revenue)]].map(([label, value]) => (
+          <div key={String(label)} className="rounded-2xl border bg-white p-4"><p className="text-xs font-bold uppercase text-neutral-400">{label}</p><p className="mt-2 text-2xl font-black">{value}</p></div>
         ))}
       </div>
 
-      {loading ? (
-        <div className="rounded-3xl border border-neutral-200 bg-white p-16 text-center text-sm font-semibold text-neutral-500" role="status">Carregando operação...</div>
-      ) : (
-        <>
-          {tab === 'requests' && (
-            <div className="space-y-4">
-              <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 md:flex-row">
-                <label className="relative flex-1">
-                  <span className="sr-only">Buscar solicitações</span>
-                  <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-neutral-400" />
-                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar empresa, protocolo, contato ou segmento" className="w-full rounded-xl border border-neutral-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-amber-400" />
-                </label>
-                <label>
-                  <span className="sr-only">Filtrar por status</span>
-                  <select value={status} onChange={(event) => setStatus(event.target.value)} className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold">
-                    <option value="all">Todos os status</option>
-                    {Object.entries(REQUEST_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-                  </select>
-                </label>
-              </div>
-              {filteredRequests.length === 0 ? <Empty text="Nenhuma solicitação encontrada." /> : filteredRequests.slice(0, visibleCount).map((request) => {
-                const proposal = overview.proposals.find((item) => item.request_id === request.id);
-                return <RequestCard key={request.id} request={request} proposal={proposal} busy={actionId === request.id} onStatus={updateStatus} onProposal={openProposal} onInvite={inviteAdvertiser} />;
-              })}
-              <LoadMore shown={Math.min(visibleCount, filteredRequests.length)} total={filteredRequests.length} onMore={() => setVisibleCount((count) => count + PAGE_SIZE)} />
-            </div>
-          )}
-
-          {tab === 'proposals' && (overview.proposals.length === 0 ? <Empty text="Nenhuma proposta criada." /> : (
-            <div className="space-y-4">
-              {overview.proposals.slice(0, visibleCount).map((proposal) => (
-                <ProposalRow
-                  key={proposal.id}
-                  proposal={proposal}
-                  request={overview.requests.find((request) => request.id === proposal.request_id || request.protocol === proposal.request_id)}
-                  busy={actionId === proposal.id}
-                  onViewDetails={(prop) => setSelectedProposalDetailsModal(prop)}
-                />
-              ))}
-              <LoadMore shown={Math.min(visibleCount, overview.proposals.length)} total={overview.proposals.length} onMore={() => setVisibleCount((count) => count + PAGE_SIZE)} />
-            </div>
-          ))}
-
-          {tab === 'campaigns' && (overview.campaigns.length === 0 ? <Empty text="Nenhuma campanha criada." /> : (
-            <div className="grid gap-4 xl:grid-cols-2">
-              {overview.campaigns.slice(0, visibleCount).map((campaign) => <CampaignRow key={campaign.id} campaign={campaign} busy={actionId === campaign.id} onAction={(status) => setCampaignAction({ campaign, status })} />)}
-              <div className="xl:col-span-2"><LoadMore shown={Math.min(visibleCount, overview.campaigns.length)} total={overview.campaigns.length} onMore={() => setVisibleCount((count) => count + PAGE_SIZE)} /></div>
-            </div>
-          ))}
-
-          {tab === 'creatives' && (creativeRows.length === 0 ? <Empty text="Nenhum criativo enviado." /> : (
-            <div className="space-y-4">
-              {creativeRows.slice(0, visibleCount).map(({ campaign, creative }) => (
-                <CreativeReviewRow key={creative.id} campaign={campaign} creative={creative} busy={actionId === creative.id} onReview={(approved) => { setReviewDialog({ creative, approved }); setReviewReason(''); }} />
-              ))}
-              <LoadMore shown={Math.min(visibleCount, creativeRows.length)} total={creativeRows.length} onMore={() => setVisibleCount((count) => count + PAGE_SIZE)} />
-            </div>
-          ))}
-
-          {tab === 'payments' && (paymentRows.length === 0 ? <Empty text="Nenhuma cobrança criada." /> : (
-            <div className="space-y-4">
-              {paymentRows.slice(0, visibleCount).map(({ campaign, payment }) => <PaymentRow key={payment.id} campaign={campaign} payment={payment} busy={actionId === payment.id} onMark={(nextStatus) => openPaymentAction(payment, nextStatus)} onConfigure={() => openPaymentConfiguration(payment)} />)}
-              <LoadMore shown={Math.min(visibleCount, paymentRows.length)} total={paymentRows.length} onMore={() => setVisibleCount((count) => count + PAGE_SIZE)} />
-            </div>
-          ))}
-
-          {tab === 'inventory' && (
-            <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-400"><tr><th className="px-5 py-4">Código</th><th className="px-5 py-4">Posição</th><th className="px-5 py-4">Módulo</th><th className="px-5 py-4">Formato</th><th className="px-5 py-4">Capacidade</th><th className="px-5 py-4">Diária</th><th className="px-5 py-4">Status</th><th className="px-5 py-4"><span className="sr-only">Ações</span></th></tr></thead>
-                  <tbody className="divide-y divide-neutral-100">{overview.placements.map((placement) => <tr key={placement.id}><td className="px-5 py-4 font-black">{placement.code}</td><td className="px-5 py-4">{placement.name}</td><td className="px-5 py-4">{placement.module}</td><td className="px-5 py-4">{placement.format}</td><td className="px-5 py-4">{placement.capacity}{placement.exclusive ? ' (exclusiva)' : ''}</td><td className="px-5 py-4">{currency(placement.base_daily_price)}</td><td className="px-5 py-4">{placement.active ? 'Ativa' : 'Inativa'}</td><td className="px-5 py-4"><button type="button" disabled={actionId === placement.id} onClick={() => openPlacement(placement)} className="rounded-lg border border-neutral-200 px-3 py-2 text-xs font-black hover:bg-neutral-50">Gerenciar</button></td></tr>)}</tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {proposalRequest && (
-        <AccessibleModal title={`Proposta para ${proposalRequest.company_name}`} description={`Solicitação ${proposalRequest.protocol}`} onClose={() => setProposalRequest(null)}>
-          <form onSubmit={createProposal}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Valor">
-                <div className="flex rounded-xl border border-neutral-200 bg-white overflow-hidden focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/20 transition">
-                  <span className="flex items-center justify-center bg-neutral-100 px-3 text-xs font-black text-neutral-500 border-r border-neutral-200 select-none">
-                    R$
-                  </span>
-                  <input
-                    required
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="0,00"
-                    value={amount}
-                    onChange={(event) => {
-                      handleCurrencyInputChange(event.target.value, (numeric) => {
-                        setAmount(maskCurrency(numeric));
-                      });
-                    }}
-                    className="w-full bg-transparent px-3 py-2 text-sm font-normal text-neutral-900 outline-none"
-                  />
-                </div>
-              </Field>
-              <Field label="Válida até"><input required type="date" value={validUntil} onChange={(event) => setValidUntil(event.target.value)} className="form-control" /></Field>
-              <Field label="Início"><input required type="date" value={startsOn} onChange={(event) => setStartsOn(event.target.value)} className="form-control" /></Field>
-              <Field label="Término"><input required type="date" min={startsOn} value={endsOn} onChange={(event) => setEndsOn(event.target.value)} className="form-control" /></Field>
-              <Field label="Frequência" className={['interval_hours', 'daily_limit'].includes(frequencyModel) ? '' : 'sm:col-span-2'}>
-                <select value={frequencyModel} onChange={(event) => setFrequencyModel(event.target.value)} className="form-control">
-                  <option value="once_per_session">Uma vez por sessão</option>
-                  <option value="once_per_day">Uma vez por dia</option>
-                  <option value="interval_hours">Intervalo em horas</option>
-                  <option value="daily_limit">Limite diário por visitante</option>
-                  <option value="unlimited">Sem limite por visitante</option>
-                </select>
-              </Field>
-
-              {['interval_hours', 'daily_limit'].includes(frequencyModel) && (
-                <Field
-                  label={
-                    frequencyModel === 'interval_hours'
-                      ? 'Intervalo em horas (ex: 4)'
-                      : 'Limite de exibições/dia (ex: 3)'
-                  }
-                >
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={frequencyValue}
-                    onChange={(event) => setFrequencyValue(event.target.value)}
-                    className="form-control"
-                  />
-                  <span className="mt-1 block text-[11px] font-normal text-neutral-500">
-                    {frequencyModel === 'interval_hours' && 'O anúncio reaparecerá para o visitante a cada N horas.'}
-                    {frequencyModel === 'daily_limit' && 'Número máximo de vezes que o anúncio aparece por dia para o mesmo visitante.'}
-                  </span>
-                </Field>
-              )}
-              <Field label="Limite total de impressões" className="sm:col-span-2">
-                <input
-                  type="number"
-                  min="1"
-                  value={impressionLimit}
-                  onChange={(event) => setImpressionLimit(event.target.value)}
-                  placeholder="Ex: 50000 (deixe em branco para ilimitado)"
-                  className="form-control"
-                />
-                <span className="mt-1 block text-[11px] font-normal text-neutral-500">
-                  Teto máximo global de exibições do anúncio no sistema. Deixe vazio para veiculação contínua durante todo o período.
-                </span>
-              </Field>
-              {proposalRequest.needs_creative_service && (
-                <div className="sm:col-span-2 rounded-2xl border border-amber-200/80 bg-amber-50/60 p-4 space-y-3">
-                  <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
-                    <Palette className="h-4 w-4 text-amber-600" />
-                    Serviço de Criação de Arte pela GSA (Solicitado pelo Anunciante)
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Taxa Adicional de Criação (R$)">
-                      <div className="flex rounded-xl border border-neutral-200 bg-white overflow-hidden focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/20">
-                        <span className="flex items-center justify-center bg-neutral-100 px-3 text-xs font-black text-neutral-500 border-r border-neutral-200 select-none">
-                          R$
-                        </span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="0,00"
-                          value={creativeServiceFee}
-                          onChange={(e) => {
-                            handleCurrencyInputChange(e.target.value, (num) => setCreativeServiceFee(maskCurrency(num)));
-                          }}
-                          className="w-full bg-transparent px-3 py-2 text-sm font-normal text-neutral-900 outline-none"
-                        />
-                      </div>
-                      <span className="mt-1 block text-[11px] font-normal text-neutral-500">Deixe R$ 0,00 se a criação já estiver inclusa no valor total.</span>
-                    </Field>
-
-                    <Field label="Prazo de Produção da Arte (dias)">
-                      <input
-                        type="number"
-                        min="1"
-                        value={creativeProductionDays}
-                        onChange={(e) => setCreativeProductionDays(e.target.value)}
-                        placeholder="Ex: 2 dias úteis"
-                        className="form-control"
-                      />
-                      <span className="mt-1 block text-[11px] font-normal text-neutral-500">Prazo estimado para envio da prévia ao anunciante.</span>
-                    </Field>
-
-                    <Field label="Instruções da Produção da Arte" className="sm:col-span-2">
-                      <textarea
-                        rows={2}
-                        value={creativeBriefing}
-                        onChange={(e) => setCreativeBriefing(e.target.value)}
-                        placeholder="Instruções para o anunciante..."
-                        className="form-control"
-                      />
-                    </Field>
-                  </div>
-                </div>
-              )}
-
-              <Field label="Condição de Pagamento Proposta ao Anunciante" className="sm:col-span-2">
-                <select
-                  value={paymentCondition}
-                  onChange={(e) => setPaymentCondition(e.target.value)}
-                  className="form-control"
-                >
-                  <option value="PIX À Vista (Liberação Imediata)">PIX À Vista (Liberação Imediata)</option>
-                  <option value="Boleto Bancário À Vista (Vencimento em 3 dias)">Boleto Bancário À Vista (Vencimento em 3 dias)</option>
-                  <option value="Boleto Bancário Parcelado (2x sem juros)">Boleto Bancário Parcelado (2x sem juros)</option>
-                  <option value="Boleto Bancário 30 dias">Boleto Bancário 30 dias</option>
-                  <option value="Cartão de Crédito em até 3x sem juros">Cartão de Crédito em até 3x sem juros</option>
-                  <option value="Cartão de Crédito em até 12x">Cartão de Crédito em até 12x</option>
-                  <option value="Faturamento 50% Entrada + 50% na Conclusão">Faturamento 50% Entrada + 50% na Conclusão</option>
-                  <option value="outros">Outra condição personalizada...</option>
-                </select>
-              </Field>
-
-              {paymentCondition === 'outros' && (
-                <Field label="Descreva a Condição de Pagamento Personalizada" className="sm:col-span-2">
-                  <input
-                    type="text"
-                    required
-                    value={customPaymentCondition}
-                    onChange={(e) => setCustomPaymentCondition(e.target.value)}
-                    placeholder="Ex: 30% no aceite + saldo no vencimento da campanha"
-                    className="form-control"
-                  />
-                </Field>
-              )}
-
-              <Field label="Termos e Condições" className="sm:col-span-2"><textarea required minLength={10} rows={4} value={terms} onChange={(event) => setTerms(event.target.value)} className="form-control" /></Field>
-            </div>
-            {overview.proposals.find((item) => item.request_id === proposalRequest.id)?.status === 'negotiating' && (
-              <label className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">
-                <input type="checkbox" checked={finalOffer} onChange={(event) => setFinalOffer(event.target.checked)} className="mt-0.5 h-4 w-4" />
-                Marcar esta versão como oferta final. O anunciante ainda poderá aceitar ou recusar, mas não enviar outra contraproposta.
-              </label>
-            )}
-            <div className="mt-5 rounded-2xl bg-neutral-50 p-4 text-sm"><p className="font-black">Posições incluídas</p><p className="mt-1 break-words text-neutral-500">{proposalRequest.desired_pages.join(', ') || 'Nenhuma'}</p><p className="mt-3 font-black">Formatos</p><p className="mt-1 break-words text-neutral-500">{proposalRequest.desired_formats.join(', ') || 'Nenhum'}</p></div>
-            <ModalActions onCancel={() => setProposalRequest(null)} busy={actionId === proposalRequest.id} submitLabel={finalOffer ? 'Enviar oferta final' : 'Criar e enviar proposta'} busyLabel="Criando..." />
-          </form>
-        </AccessibleModal>
-      )}
-
-      {reviewDialog && (
-        <AccessibleModal title={reviewDialog.approved ? 'Aprovar criativo' : 'Solicitar correção'} description="Confira todo o material e o destino antes de concluir a revisão." onClose={() => setReviewDialog(null)}>
-          <form onSubmit={reviewCreative}>
-            <CreativePreview creative={reviewDialog.creative} />
-            {!reviewDialog.approved && <Field label="Motivo da reprovação" className="mt-5"><textarea autoFocus required minLength={5} maxLength={1000} rows={4} value={reviewReason} onChange={(event) => setReviewReason(event.target.value)} placeholder="Explique de forma objetiva o que precisa ser corrigido." className="form-control" /></Field>}
-            {reviewDialog.approved && <p className="mt-5 rounded-2xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">Ao aprovar, esta versão do arquivo e seus textos ficam liberados para veiculação.</p>}
-            <ModalActions onCancel={() => setReviewDialog(null)} busy={actionId === reviewDialog.creative.id} submitLabel={reviewDialog.approved ? 'Confirmar aprovação' : 'Devolver para correção'} busyLabel="Salvando..." destructive={!reviewDialog.approved} />
-          </form>
-        </AccessibleModal>
-      )}
-
-      {paymentDialog && (
-        <AccessibleModal title={`Atualizar pagamento para ${PAYMENT_LABELS[paymentDialog.status]}`} description={`${currency(paymentDialog.payment.amount)} · vencimento ${formatDate(paymentDialog.payment.due_at)}`} onClose={() => setPaymentDialog(null)}>
-          <form onSubmit={markPayment}>
-            {paymentDialog.status === 'paid' && <div className="grid gap-4 sm:grid-cols-2"><Field label="Referência ou comprovante"><input autoFocus required maxLength={200} value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} className="form-control" /></Field><Field label="Meio de pagamento"><input required maxLength={80} value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)} className="form-control" /></Field></div>}
-            {paymentDialog.status !== 'paid' && <p className="rounded-2xl bg-amber-50 p-4 text-sm font-semibold text-amber-900">Confirme somente se o novo estado corresponde à situação registrada no provedor financeiro.</p>}
-            <ModalActions onCancel={() => setPaymentDialog(null)} busy={actionId === paymentDialog.payment.id} submitLabel="Confirmar alteração" busyLabel="Salvando..." destructive={['failed', 'refunded', 'cancelled'].includes(paymentDialog.status)} />
-          </form>
-        </AccessibleModal>
-      )}
-
-      {paymentConfiguration && (
-        <AccessibleModal title="Configurar cobrança" description={`${currency(paymentConfiguration.amount)} · vincule uma referência conciliável pelo webhook`} onClose={() => setPaymentConfiguration(null)}>
-          <form onSubmit={configurePayment}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Provedor"><input autoFocus required maxLength={80} value={configurationProvider} onChange={(event) => setConfigurationProvider(event.target.value)} placeholder="asaas, mercadopago, manual..." className="form-control" /></Field>
-              <Field label="Referência no provedor"><input required maxLength={200} value={configurationReference} onChange={(event) => setConfigurationReference(event.target.value)} className="form-control" /></Field>
-              <Field label="Vencimento" className="sm:col-span-2"><input required type="datetime-local" value={configurationDueAt} onChange={(event) => setConfigurationDueAt(event.target.value)} className="form-control" /></Field>
-              <Field label="URL de checkout HTTPS" className="sm:col-span-2"><input type="url" inputMode="url" maxLength={2048} value={configurationCheckoutUrl} onChange={(event) => setConfigurationCheckoutUrl(event.target.value)} placeholder="https://..." className="form-control" /></Field>
-              <Field label="PIX copia e cola" className="sm:col-span-2"><textarea rows={4} maxLength={1000} value={configurationPixCode} onChange={(event) => setConfigurationPixCode(event.target.value)} className="form-control" /></Field>
-            </div>
-            <p className="mt-4 rounded-2xl bg-neutral-50 p-4 text-xs font-semibold text-neutral-600">Informe ao menos uma forma de pagamento: checkout HTTPS ou PIX. A referência deve ser exatamente a mesma enviada pelo provedor nos eventos financeiros.</p>
-            <ModalActions onCancel={() => setPaymentConfiguration(null)} busy={actionId === paymentConfiguration.id} submitLabel="Salvar configuração" busyLabel="Salvando..." />
-          </form>
-        </AccessibleModal>
-      )}
-
-      {placementDialog && (
-        <AccessibleModal title="Gerenciar posição publicitária" description={`${placementDialog.code} · ${placementDialog.name}`} onClose={() => setPlacementDialog(null)}>
-          <form onSubmit={updatePlacement}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Capacidade"><input autoFocus required type="number" min="1" max="1000" step="1" value={placementCapacity} onChange={(event) => setPlacementCapacity(event.target.value)} className="form-control" /></Field>
-              <Field label="Preço base diário"><input required type="number" min="0" step="0.01" value={placementPrice} onChange={(event) => setPlacementPrice(event.target.value)} className="form-control" /></Field>
-            </div>
-            <fieldset className="mt-5 rounded-2xl border border-neutral-200 p-4"><legend className="px-1 text-sm font-black">Dispositivos</legend><div className="mt-2 flex flex-wrap gap-4">{['desktop', 'tablet', 'mobile'].map((device) => <label key={device} className="inline-flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={placementDevices.includes(device)} onChange={(event) => setPlacementDevices((current) => event.target.checked ? [...new Set([...current, device])] : current.filter((item) => item !== device))} className="h-4 w-4" /> {device === 'desktop' ? 'Computador' : device === 'tablet' ? 'Tablet' : 'Celular'}</label>)}</div></fieldset>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2"><label className="flex items-start gap-3 rounded-2xl bg-neutral-50 p-4 text-sm font-bold"><input type="checkbox" checked={placementActive} onChange={(event) => setPlacementActive(event.target.checked)} className="mt-0.5 h-4 w-4" /><span>Posição ativa<span className="mt-1 block text-xs font-normal text-neutral-500">Pode ser incluída em novas propostas.</span></span></label><label className="flex items-start gap-3 rounded-2xl bg-neutral-50 p-4 text-sm font-bold"><input type="checkbox" checked={placementExclusive} onChange={(event) => setPlacementExclusive(event.target.checked)} className="mt-0.5 h-4 w-4" /><span>Inventário exclusivo<span className="mt-1 block text-xs font-normal text-neutral-500">Não permite campanhas concorrentes no mesmo período.</span></span></label></div>
-            <ModalActions onCancel={() => setPlacementDialog(null)} busy={actionId === placementDialog.id} submitLabel="Salvar posição" busyLabel="Salvando..." />
-          </form>
-        </AccessibleModal>
-      )}
-
-      {proposalAction && (
-        <AccessibleModal title={`${PROPOSAL_LABELS[proposalAction.status]} proposta`} description={`${proposalAction.proposal.company_name || 'Anunciante'} · versão ${proposalAction.proposal.current_version}`} onClose={() => setProposalAction(null)}>
-          <form onSubmit={updateProposalAction}>
-            <Field label={proposalAction.status === 'final_offer' ? 'Mensagem da oferta final' : 'Justificativa'}><textarea autoFocus required minLength={3} maxLength={1000} rows={4} value={proposalActionMessage} onChange={(event) => setProposalActionMessage(event.target.value)} className="form-control" /></Field>
-            <ModalActions onCancel={() => setProposalAction(null)} busy={actionId === proposalAction.proposal.id} submitLabel="Confirmar" busyLabel="Salvando..." destructive={proposalAction.status !== 'final_offer'} />
-          </form>
-        </AccessibleModal>
-      )}
-
-      {campaignAction && (
-        <AccessibleModal title={`${CAMPAIGN_LABELS[campaignAction.status]} campanha`} description={campaignAction.campaign.name} onClose={() => setCampaignAction(null)}>
-          <p className={`rounded-2xl p-4 text-sm font-semibold ${campaignAction.status === 'cancelled' ? 'bg-red-50 text-red-800' : 'bg-neutral-50 text-neutral-700'}`}>{campaignAction.status === 'cancelled' ? 'O cancelamento interrompe a veiculação e é uma ação terminal.' : 'A alteração será registrada no histórico operacional.'}</p>
-          <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setCampaignAction(null)} className="rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-bold">Voltar</button><button type="button" onClick={() => void updateCampaignAction()} disabled={actionId === campaignAction.campaign.id} className={`rounded-xl px-5 py-2.5 text-sm font-black text-white disabled:opacity-60 ${campaignAction.status === 'cancelled' ? 'bg-red-600' : 'bg-neutral-950'}`}>{actionId === campaignAction.campaign.id ? 'Salvando...' : 'Confirmar'}</button></div>
-        </AccessibleModal>
-      )}
-
-      {selectedProposalDetailsModal && (
-        <AdminProposalDetailsModal
-          proposal={selectedProposalDetailsModal}
-          request={overview.requests.find((r) => r.id === selectedProposalDetailsModal.request_id || r.protocol === selectedProposalDetailsModal.request_id)}
-          onClose={() => setSelectedProposalDetailsModal(null)}
-          onEdit={(req) => {
-            const r = req || overview.requests.find((item) => item.id === selectedProposalDetailsModal.request_id || item.protocol === selectedProposalDetailsModal.request_id);
-            setSelectedProposalDetailsModal(null);
-            if (r) openProposal(r);
-          }}
-          onInvite={() => {
-            const reqId = selectedProposalDetailsModal.request_id;
-            setSelectedProposalDetailsModal(null);
-            void inviteAdvertiser(reqId);
-          }}
-          onAction={(status) => {
-            const prop = selectedProposalDetailsModal;
-            setSelectedProposalDetailsModal(null);
-            setProposalAction({ proposal: prop, status });
-            setProposalActionMessage('');
-          }}
-          onConfigurePayment={(prop) => {
-            setSelectedProposalDetailsModal(null);
-            const camp = overview.campaigns.find((c) => c.proposal_id === prop.id || c.id === `camp-${prop.id}`);
-            if (camp?.payment) {
-              openPaymentConfiguration(camp.payment);
-            } else {
-              setTab('payments');
-            }
-          }}
-          onGoToTab={(t) => {
-            setSelectedProposalDetailsModal(null);
-            setTab(t);
-          }}
-          busy={actionId === selectedProposalDetailsModal.id}
-        />
-      )}
-    </div>
-  );
-}
-
-function AccessibleModal({
-  title,
-  description,
-  onClose,
-  maxWidthClass = 'max-w-2xl sm:max-w-3xl lg:max-w-4xl',
-  children,
-}: {
-  title: string;
-  description?: string;
-  onClose: () => void;
-  maxWidthClass?: string;
-  children: ReactNode;
-}) {
-  const titleId = useId();
-  const descriptionId = useId();
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const onCloseRef = useRef(onClose);
-  useEffect(() => { onCloseRef.current = onClose; });
-
-  useEffect(() => {
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const frame = window.requestAnimationFrame(() => {
-      const autoFocusEl = dialogRef.current?.querySelector<HTMLElement>('[autofocus]');
-      const firstEl = dialogRef.current?.querySelector<HTMLElement>('input:not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), a[href]');
-      (autoFocusEl || firstEl)?.focus();
-    });
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onCloseRef.current();
-        return;
-      }
-      if (event.key !== 'Tab' || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')) as HTMLElement[];
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = originalOverflow;
-      previous?.focus();
-    };
-  }, []);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6 backdrop-blur-xs transition-all" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={description ? descriptionId : undefined} className={`max-h-[92vh] w-full ${maxWidthClass} overflow-y-auto rounded-3xl bg-white p-5 sm:p-7 shadow-2xl transition-all border border-neutral-100`}>
-        <div className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-4 mb-4"><div><h2 id={titleId} className="text-xl sm:text-2xl font-black text-neutral-900">{title}</h2>{description && <p id={descriptionId} className="mt-1 text-xs sm:text-sm text-neutral-500 font-medium">{description}</p>}</div><button type="button" onClick={onClose} aria-label="Fechar diálogo" className="shrink-0 rounded-full p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900 transition"><X className="h-5 w-5" /></button></div>
-        <div>{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function SummaryCard({ icon: Icon, label, value }: { icon: typeof Megaphone; label: string; value: number | string }) {
-  return <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><Icon className="h-5 w-5 text-amber-600" /><p className="mt-4 text-xs font-bold uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-1 truncate text-xl font-black">{value}</p></div>;
-}
-
-function Empty({ text }: { text: string }) {
-  return <div className="rounded-3xl border border-dashed border-neutral-300 bg-white p-14 text-center text-sm font-semibold text-neutral-400">{text}</div>;
-}
-
-function LoadMore({ shown, total, onMore }: { shown: number; total: number; onMore: () => void }) {
-  if (total <= shown) return null;
-  return <div className="flex items-center justify-center gap-3 pt-2"><span className="text-xs font-semibold text-neutral-500">Exibindo {shown} de {total}</span><button type="button" onClick={onMore} className="rounded-xl border border-neutral-200 bg-white px-4 py-2 text-xs font-black hover:bg-neutral-50">Mostrar mais</button></div>;
-}
-
-function Field({ label, className = '', children }: { label: string; className?: string; children: ReactNode }) {
-  return (
-    <div className={`block ${className}`}>
-      <span className="block text-sm font-bold text-neutral-800 mb-1.5">{label}</span>
-      <div className="[&_.form-control]:w-full [&_.form-control]:rounded-xl [&_.form-control]:border [&_.form-control]:border-neutral-200 [&_.form-control]:px-4 [&_.form-control]:py-3 [&_.form-control]:text-sm [&_.form-control]:font-normal [&_.form-control]:text-neutral-900 [&_.form-control]:outline-none [&_.form-control]:focus:border-amber-400 [&_.form-control]:focus:ring-2 [&_.form-control]:focus:ring-amber-100/60 transition">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function ModalActions({ onCancel, busy, submitLabel, busyLabel, destructive = false }: { onCancel: () => void; busy: boolean; submitLabel: string; busyLabel: string; destructive?: boolean }) {
-  return <div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" onClick={onCancel} className="rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-bold">Cancelar</button><button type="submit" disabled={busy} className={`rounded-xl px-5 py-2.5 text-sm font-black text-white disabled:opacity-60 ${destructive ? 'bg-red-600 hover:bg-red-500' : 'bg-neutral-950 hover:bg-neutral-800'}`}>{busy ? busyLabel : submitLabel}</button></div>;
-}
-
-function RequestCard({ request, proposal, busy, onStatus, onProposal, onInvite }: { key?: string; request: AdvertisingRequest; proposal?: AdvertisingProposal; busy: boolean; onStatus: (id: string, status: AdvertisingRequestStatus) => Promise<void>; onProposal: (request: AdvertisingRequest) => void; onInvite: (id: string) => Promise<boolean> }) {
-  const requestClosed = ['accepted', 'rejected', 'cancelled'].includes(request.status);
-  const proposalClosed = proposal ? TERMINAL_PROPOSAL_STATUSES.includes(proposal.status) : false;
-  const canPropose = !requestClosed && !proposalClosed;
-  return (
-    <article className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-col justify-between gap-4 lg:flex-row"><div><div className="flex flex-wrap gap-2"><span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">{request.protocol}</span><span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-bold text-neutral-600">{REQUEST_LABELS[request.status]}</span></div><h2 className="mt-3 text-xl font-black">{request.company_name}</h2><p className="mt-1 break-words text-sm text-neutral-500">{request.segment} · {request.contact_name} · {request.contact_email}</p></div><div className="rounded-2xl bg-neutral-950 px-5 py-4 text-white"><p className="text-xs uppercase tracking-wider text-white/45">Orçamento pretendido</p><p className="mt-1 text-xl font-black text-amber-300">{currency(request.intended_budget)}</p></div></div>
-      <div className="mt-5 grid gap-3 md:grid-cols-3"><Info icon={BadgeDollarSign} label="Objetivo" value={request.objective} /><Info icon={CalendarClock} label="Período" value={`${formatDate(request.desired_start_date)} a ${formatDate(request.desired_end_date)}`} /><Info icon={CheckCircle2} label="Criativo" value={request.needs_creative_service ? 'Produção pela GSA' : 'Fornecido pelo anunciante'} /></div>
-      {request.creative_files && request.creative_files.length > 0 && (
-        <div className="mt-5 border-t border-neutral-100 pt-4">
-          <p className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-2">
-            Anexos do Anunciante ({request.creative_files.length} arquivo{request.creative_files.length > 1 ? 's' : ''})
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {request.creative_files.map((fileUrl, idx) => {
-              const isVideo = fileUrl.startsWith('data:video') || fileUrl.endsWith('.mp4');
-              return (
-                <div key={idx} className="group relative h-24 w-24 overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-950 shadow-sm">
-                  {isVideo ? (
-                    <video src={fileUrl} className="h-full w-full object-cover" />
-                  ) : (
-                    <img src={fileUrl} alt={`Anexo #${idx + 1}`} className="h-full w-full object-cover transition group-hover:scale-105" />
-                  )}
-                  <a
-                    href={fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition text-white font-bold text-xs"
-                  >
-                    Ver arte ↗
-                  </a>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-      <div className="mt-5 flex flex-wrap gap-2 border-t border-neutral-100 pt-5">
-        {canPropose && <button type="button" onClick={() => onProposal(request)} className="rounded-full bg-neutral-950 px-4 py-2 text-xs font-black text-white">{proposal ? 'Nova versão da proposta' : 'Criar proposta'}</button>}
-        {proposal && <button type="button" onClick={() => void onInvite(request.id)} className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 px-4 py-2 text-xs font-black text-amber-700"><MailPlus className="h-3.5 w-3.5" /> Liberar portal</button>}
-        {request.status === 'submitted' && <button type="button" disabled={busy} onClick={() => void onStatus(request.id, 'under_review')} className="rounded-full border border-neutral-200 px-4 py-2 text-xs font-black">Iniciar análise</button>}
-        {!requestClosed && <button type="button" disabled={busy} onClick={() => void onStatus(request.id, 'rejected')} className="rounded-full border border-red-200 px-4 py-2 text-xs font-black text-red-700">Recusar solicitação</button>}
-        {proposalClosed && <span className="self-center text-xs font-semibold text-neutral-500">Proposta encerrada: {PROPOSAL_LABELS[proposal!.status]}</span>}
-      </div>
-    </article>
-  );
-}
-
-function ProposalRow({
-  proposal,
-  request,
-  busy,
-  onViewDetails,
-}: {
-  key?: string;
-  proposal: AdvertisingProposal;
-  request?: AdvertisingRequest;
-  busy: boolean;
-  onViewDetails: (proposal: AdvertisingProposal) => void;
-}) {
-  const lastNegotiation = proposal.negotiations && proposal.negotiations.length > 0
-    ? proposal.negotiations[proposal.negotiations.length - 1]
-    : null;
-  const hasAdvertiserCounter = lastNegotiation && lastNegotiation.actor_type === 'advertiser';
-
-  return (
-    <article className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:border-neutral-300">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-700">
-              {PROPOSAL_LABELS[proposal.status]}
-            </span>
-            {hasAdvertiserCounter && (
-              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800 animate-pulse flex items-center gap-1">
-                <Clock3 className="h-3.5 w-3.5" /> Contraproposta do Anunciante
-              </span>
-            )}
-          </div>
-          <h2 className="mt-3 text-xl font-black">{proposal.company_name || request?.company_name || 'Anunciante'} · versão {proposal.current_version}</h2>
-          <p className="mt-1 text-sm text-neutral-500">Válida até {formatDate(proposal.valid_until)} · {proposal.version?.duration_days || 0} dias</p>
-        </div>
-        <div className="text-left sm:text-right">
-          <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Valor da Proposta</p>
-          <p className="text-2xl font-black text-amber-700">{currency(proposal.total_amount)}</p>
-        </div>
+      <div className="flex gap-2 overflow-x-auto rounded-2xl border bg-white p-2">
+        {tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setTab(id)} className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold ${tab === id ? 'bg-neutral-950 text-white' : 'text-neutral-600 hover:bg-neutral-100'}`}><Icon className="h-4 w-4" />{label}</button>)}
       </div>
 
-      {hasAdvertiserCounter && (
-        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-bold text-amber-900 flex items-center justify-between gap-3">
-          <div>
-            <p className="font-black text-sm">Contraproposta enviada pelo anunciante: {currency(lastNegotiation.proposed_amount || proposal.total_amount)}</p>
-            <p className="mt-0.5 text-amber-800 font-normal line-clamp-1">"{lastNegotiation.message}"</p>
+      {tab === 'requests' && <div className="space-y-3">
+        <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-neutral-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar protocolo, empresa ou contato" className="w-full rounded-xl border bg-white py-2.5 pl-10 pr-4" /></div>
+        {filteredRequests.map((request) => <article key={request.id} className="rounded-2xl border bg-white p-5">
+          <div className="flex flex-wrap justify-between gap-3"><div><p className="font-mono text-xs font-bold text-amber-700">{request.protocol}</p><h2 className="text-lg font-black">{request.company_name}</h2><p className="text-sm text-neutral-500">{request.contact_name} · {request.contact_email}</p></div><span className="h-fit rounded-full bg-neutral-100 px-3 py-1 text-xs font-black">{REQUEST_LABELS[request.status]}</span></div>
+          <p className="mt-3 text-sm text-neutral-600">{request.objective}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {request.status === 'submitted' && <button disabled={actionId === request.id} onClick={() => void updateRequest(request, 'under_review')} className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white">Iniciar análise</button>}
+            {!['accepted', 'rejected', 'cancelled'].includes(request.status) && <button disabled={actionId === request.id} onClick={() => openProposal(request)} className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black">Criar proposta</button>}
+            {request.advertiser_id && <button disabled={actionId === request.id} onClick={() => void invite(request)} className="flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"><MailPlus className="h-3.5 w-3.5" />Enviar acesso</button>}
+            {!['accepted', 'rejected', 'cancelled'].includes(request.status) && <button disabled={actionId === request.id} onClick={() => void updateRequest(request, 'cancelled')} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700">Cancelar</button>}
           </div>
-          <button
-            type="button"
-            onClick={() => onViewDetails(proposal)}
-            className="shrink-0 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-black text-neutral-950 hover:bg-amber-400 transition"
-          >
-            Analisar no Modal
-          </button>
-        </div>
-      )}
+        </article>)}
+        {!filteredRequests.length && <Empty text="Nenhuma solicitação encontrada no banco." />}
+      </div>}
 
-      <div className="mt-5 flex flex-wrap gap-2 border-t border-neutral-100 pt-5">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => onViewDetails(proposal)}
-          className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 px-5 py-3 text-xs font-black text-white hover:bg-neutral-800 transition shadow-sm"
-        >
-          <Eye className="h-4 w-4 text-amber-400" /> Ver Detalhes e Gerenciar Proposta
-        </button>
-      </div>
-    </article>
+      {tab === 'proposals' && <div className="space-y-3">{overview.proposals.map((proposal) => <article key={proposal.id} className="rounded-2xl border bg-white p-5"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{proposal.company_name || `Proposta ${proposal.id.slice(0, 8)}`}</h2><p className="text-sm text-neutral-500">Versão {proposal.current_version} · válida até {date(proposal.valid_until)}</p></div><div className="text-right"><p className="text-lg font-black">{money(proposal.total_amount)}</p><p className="text-xs font-bold uppercase text-neutral-500">{proposal.status}</p></div></div>{proposal.negotiations?.length ? <div className="mt-4 space-y-2 border-t pt-4">{proposal.negotiations.map((item) => <p key={item.id} className="rounded-xl bg-neutral-50 p-3 text-sm"><strong>{item.actor_type === 'admin' ? 'GSA' : 'Anunciante'}:</strong> {item.message}{item.proposed_amount ? ` — ${money(item.proposed_amount)}` : ''}</p>)}</div> : null}</article>)}{!overview.proposals.length && <Empty text="Nenhuma proposta gravada." />}</div>}
+
+      {tab === 'campaigns' && <div className="space-y-3">{overview.campaigns.map((campaign) => <article key={campaign.id} className="rounded-2xl border bg-white p-5"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{campaign.name}</h2><p className="text-sm text-neutral-500">{date(campaign.starts_at)} até {date(campaign.ends_at)}</p></div><span className="h-fit rounded-full bg-neutral-100 px-3 py-1 text-xs font-black">{CAMPAIGN_LABELS[campaign.status]}</span></div><div className="mt-4 flex gap-2">{campaign.status === 'active' && <button onClick={() => void campaignAction(campaign, 'paused')} className="flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"><Pause className="h-3.5 w-3.5" />Pausar</button>}{campaign.status === 'paused' && <button onClick={() => void campaignAction(campaign, 'active')} className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Play className="h-3.5 w-3.5" />Retomar</button>}{!['completed', 'cancelled'].includes(campaign.status) && <button onClick={() => void campaignAction(campaign, 'cancelled')} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700">Cancelar</button>}</div></article>)}{!overview.campaigns.length && <Empty text="Nenhuma campanha criada." />}</div>}
+
+      {tab === 'creatives' && <div className="space-y-3">{creatives.map((creative) => <article key={creative.id} className="rounded-2xl border bg-white p-5"><div className="flex justify-between gap-3"><div><h2 className="font-black">{creative.headline || `${creative.kind} ${creative.id.slice(0, 8)}`}</h2><p className="text-sm text-neutral-500">Status: {creative.status}</p>{creative.rejection_reason && <p className="mt-2 text-sm text-red-600">{creative.rejection_reason}</p>}</div>{creative.status === 'pending_review' && <div className="flex gap-2"><button onClick={() => { setReviewCreative(creative); setReviewApproved(true); }} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white">Aprovar</button><button onClick={() => { setReviewCreative(creative); setReviewApproved(false); }} className="rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white">Reprovar</button></div>}</div></article>)}{!creatives.length && <Empty text="Nenhum criativo enviado." />}</div>}
+
+      {tab === 'payments' && <div className="space-y-3">{payments.map((payment) => <article key={payment.id} className="rounded-2xl border bg-white p-5"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{money(payment.amount)}</h2><p className="text-sm text-neutral-500">Vencimento: {date(payment.due_at)} · Referência: {payment.provider_reference || 'não configurada'}</p></div><span className="h-fit rounded-full bg-neutral-100 px-3 py-1 text-xs font-black">{PAYMENT_LABELS[payment.status]}</span></div><div className="mt-4 flex flex-wrap gap-2">{!['paid', 'refunded', 'cancelled'].includes(payment.status) && <button onClick={() => { setPaymentAction({ payment, status: 'paid' }); setPaymentReference(payment.provider_reference || `MANUAL-${Date.now()}`); }} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white">Confirmar pagamento</button>}{payment.status === 'paid' && <button onClick={() => setPaymentAction({ payment, status: 'refunded' })} className="rounded-lg border px-3 py-2 text-xs font-bold">Registrar estorno</button>}</div></article>)}{!payments.length && <Empty text="Nenhuma cobrança criada." />}</div>}
+
+      {tab === 'inventory' && <div className="grid gap-3 lg:grid-cols-2">{overview.placements.map((item) => <article key={item.id} className="rounded-2xl border bg-white p-5"><div className="flex justify-between gap-3"><div><h2 className="font-black">{item.name}</h2><p className="font-mono text-xs text-neutral-500">{item.code}</p></div><span className={`h-fit rounded-full px-3 py-1 text-xs font-black ${item.active ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-100'}`}>{item.active ? 'Ativa' : 'Inativa'}</span></div><p className="mt-3 text-sm text-neutral-600">Capacidade: {item.capacity} · Preço diário: {money(item.base_daily_price)}</p><button onClick={() => openPlacement(item)} className="mt-4 flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"><Settings2 className="h-3.5 w-3.5" />Configurar</button></article>)}</div>}
+
+      {proposalRequest && <Modal title={`Proposta para ${proposalRequest.company_name}`} onClose={() => setProposalRequest(null)}><form onSubmit={submitProposal} className="space-y-4"><div className="grid gap-3 sm:grid-cols-2"><Input label="Valor" value={amount} onChange={setAmount} type="number" /><Input label="Validade" value={validUntil} onChange={setValidUntil} type="date" /><Input label="Início" value={startsOn} onChange={setStartsOn} type="date" /><Input label="Término" value={endsOn} onChange={setEndsOn} type="date" /></div><select value={frequencyModel} onChange={(e) => setFrequencyModel(e.target.value)} className="w-full rounded-xl border px-3 py-2"><option value="once_per_session">Uma vez por sessão</option><option value="once_per_day">Uma vez por dia</option><option value="interval_hours">Intervalo em horas</option><option value="daily_limit">Limite diário</option><option value="unlimited">Sem limite individual</option></select>{['interval_hours', 'daily_limit'].includes(frequencyModel) && <Input label="Valor da frequência" value={frequencyValue} onChange={setFrequencyValue} type="number" />}<Input label="Limite total de impressões (opcional)" value={impressionLimit} onChange={setImpressionLimit} type="number" /><textarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={4} className="w-full rounded-xl border px-3 py-2" /><Submit busy={actionId === proposalRequest.id} text="Gravar proposta e liberar portal" /></form></Modal>}
+      {reviewCreative && <Modal title={reviewApproved ? 'Aprovar criativo' : 'Solicitar correção'} onClose={() => setReviewCreative(null)}><form onSubmit={submitReview} className="space-y-4">{!reviewApproved && <textarea required value={reviewReason} onChange={(e) => setReviewReason(e.target.value)} placeholder="Explique o ajuste necessário" rows={4} className="w-full rounded-xl border px-3 py-2" />}<Submit busy={actionId === reviewCreative.id} text={reviewApproved ? 'Confirmar aprovação' : 'Devolver para correção'} /></form></Modal>}
+      {paymentAction && <Modal title={`Atualizar pagamento para ${PAYMENT_LABELS[paymentAction.status]}`} onClose={() => setPaymentAction(null)}><form onSubmit={submitPayment} className="space-y-4"><Input label="Referência" value={paymentReference} onChange={setPaymentReference} /><Input label="Método" value={paymentMethod} onChange={setPaymentMethod} /><Submit busy={actionId === paymentAction.payment.id} text="Confirmar atualização" /></form></Modal>}
+      {placement && <Modal title={`Configurar ${placement.name}`} onClose={() => setPlacement(null)}><form onSubmit={submitPlacement} className="space-y-4"><Input label="Capacidade" value={capacity} onChange={setCapacity} type="number" /><Input label="Preço diário" value={basePrice} onChange={setBasePrice} type="number" /><label className="flex gap-2"><input type="checkbox" checked={placementActive} onChange={(e) => setPlacementActive(e.target.checked)} />Posição ativa</label><label className="flex gap-2"><input type="checkbox" checked={placementExclusive} onChange={(e) => setPlacementExclusive(e.target.checked)} />Exclusiva</label><div className="flex gap-3">{['desktop', 'tablet', 'mobile'].map((device) => <label key={device} className="flex gap-1"><input type="checkbox" checked={placementDevices.includes(device)} onChange={() => setPlacementDevices((current) => current.includes(device) ? current.filter((item) => item !== device) : [...current, device])} />{device}</label>)}</div><Submit busy={actionId === placement.id} text="Salvar inventário" /></form></Modal>}
+    </section>
   );
 }
 
-function AdminProposalDetailsModal({
-  proposal,
-  request,
-  onClose,
-  onEdit,
-  onInvite,
-  onAction,
-  onConfigurePayment,
-  onGoToTab,
-  busy,
-}: {
-  proposal: AdvertisingProposal;
-  request?: AdvertisingRequest;
-  onClose: () => void;
-  onEdit: (request?: AdvertisingRequest) => void;
-  onInvite: () => void;
-  onAction: (status: ProposalActionStatus) => void;
-  onConfigurePayment: (proposal: AdvertisingProposal) => void;
-  onGoToTab: (tab: AdminTab) => void;
-  busy: boolean;
-}) {
-  const versionObj = (proposal.version && typeof proposal.version === 'object') ? proposal.version : null;
-  const lastNegotiation = proposal.negotiations && proposal.negotiations.length > 0
-    ? proposal.negotiations[proposal.negotiations.length - 1]
-    : null;
-  const hasAdvertiserCounter = lastNegotiation && lastNegotiation.actor_type === 'advertiser';
-  const editable = EDITABLE_PROPOSAL_STATUSES.includes(proposal.status);
-  const actionable = ['draft', 'sent', 'negotiating', 'final_offer'].includes(proposal.status);
-
-  return (
-    <AccessibleModal
-      title={`Proposta v${proposal.current_version} — ${proposal.company_name || request?.company_name || 'Anunciante'}`}
-      description={`Protocolo: ${request?.protocol || proposal.request_id}`}
-      onClose={onClose}
-      maxWidthClass="max-w-3xl"
-    >
-      <div className="space-y-6">
-        <div className="flex flex-col justify-between gap-4 rounded-2xl bg-neutral-950 p-5 text-white sm:flex-row sm:items-center">
-          <div>
-            <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-black text-amber-300">
-              {PROPOSAL_LABELS[proposal.status]}
-            </span>
-            <h3 className="mt-2 text-2xl font-black text-white">{proposal.company_name || request?.company_name || 'Anunciante'}</h3>
-            <p className="mt-1 text-xs text-neutral-400">Validade da oferta: {formatDate(proposal.valid_until)}</p>
-          </div>
-          <div className="text-left sm:text-right">
-            <p className="text-xs uppercase tracking-wider text-neutral-400">Valor Atual</p>
-            <p className="text-3xl font-black text-amber-400">{currency(proposal.total_amount)}</p>
-          </div>
-        </div>
-
-        {proposal.status === 'accepted' && (
-          <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-5 text-emerald-950 space-y-3 shadow-sm">
-            <div className="flex items-center gap-2 text-emerald-900 font-black text-sm">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-              <span>Proposta Formalmente Aceita pelo Anunciante!</span>
-            </div>
-            <p className="text-xs text-emerald-800 font-medium leading-relaxed">
-              A proposta foi aceita pelo cliente e a campanha foi gerada com cobrança no valor de <strong>{currency(proposal.total_amount)}</strong>. Clique no botão abaixo para disponibilizar o link de pagamento/PIX ao anunciante.
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onConfigurePayment(proposal);
-                }}
-                className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-md transition flex items-center gap-2"
-              >
-                <CircleDollarSign className="h-4 w-4" /> Configurar Cobrança / Gerar Fatura
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onGoToTab('payments');
-                }}
-                className="rounded-xl border border-emerald-300 bg-white px-4 py-2.5 text-xs font-bold text-emerald-900 hover:bg-emerald-100 transition"
-              >
-                Ver Aba Pagamentos
-              </button>
-            </div>
-          </div>
-        )}
-
-        {hasAdvertiserCounter && (
-          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950 space-y-2 shadow-sm">
-            <div className="flex items-center gap-2 text-amber-900 font-black text-sm">
-              <Clock3 className="h-5 w-5 text-amber-600 shrink-0 animate-pulse" />
-              <span>Contraproposta enviada pelo Anunciante</span>
-            </div>
-            <p className="text-sm font-black text-amber-900">
-              Valor proposto pelo cliente: <strong className="text-base text-amber-950">{currency(lastNegotiation.proposed_amount || proposal.total_amount)}</strong>
-            </p>
-            <div className="rounded-xl bg-white/80 p-3 text-xs text-amber-900 font-semibold border border-amber-200">
-              "{lastNegotiation.message}"
-            </div>
-            <p className="text-xs text-amber-700 font-bold">
-              Clique em <strong>"Responder Contraproposta"</strong> abaixo para gerar uma nova versão da oferta com o valor ajustado ou termos revisados.
-            </p>
-          </div>
-        )}
-
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200">
-            <p className="text-xs font-bold uppercase text-neutral-400">Duração</p>
-            <p className="mt-1 text-lg font-black text-neutral-900">{versionObj?.duration_days || 0} dias</p>
-          </div>
-          <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200">
-            <p className="text-xs font-bold uppercase text-neutral-400">Início</p>
-            <p className="mt-1 text-lg font-black text-neutral-900">{versionObj?.starts_on ? formatDate(versionObj.starts_on) : 'A definir'}</p>
-          </div>
-          <div className="rounded-2xl bg-neutral-50 p-4 border border-neutral-200">
-            <p className="text-xs font-bold uppercase text-neutral-400">Término</p>
-            <p className="mt-1 text-lg font-black text-neutral-900">{versionObj?.ends_on ? formatDate(versionObj.ends_on) : 'A definir'}</p>
-          </div>
-        </div>
-
-        {versionObj?.terms && (
-          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
-            <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-2">Termos e Condições da Proposta</h4>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-700 font-medium">{versionObj.terms}</p>
-          </div>
-        )}
-
-        {!!proposal.negotiations?.length && (
-          <div className="space-y-3 rounded-2xl border border-neutral-200 bg-white p-5">
-            <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400">Histórico Completo de Alterações e Contrapropostas</h4>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {proposal.negotiations.map((item) => (
-                <div key={item.id} className={`rounded-xl p-3 text-sm border ${item.actor_type === 'advertiser' ? 'bg-amber-50 border-amber-200' : 'bg-neutral-50 border-neutral-200'}`}>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-black text-neutral-900">
-                      {item.actor_type === 'advertiser' ? ' Anunciante (Cliente)' : ' Equipe GSA'}
-                      {item.proposed_amount ? ` · ${currency(item.proposed_amount)}` : ''}
-                    </p>
-                    <time className="text-xs text-neutral-400">{formatDateTime(item.created_at)}</time>
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap text-neutral-600 font-medium">{item.message}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-100 pt-5">
-          {proposal.status === 'accepted' && (
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onConfigurePayment(proposal);
-              }}
-              className="rounded-xl bg-emerald-600 px-5 py-3 text-xs font-black text-white hover:bg-emerald-500 transition flex items-center gap-2 shadow-sm"
-            >
-              <CircleDollarSign className="h-4 w-4" /> Configurar Cobrança / Fatura
-            </button>
-          )}
-          {editable && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => onEdit(request)}
-              className="rounded-xl bg-neutral-950 px-5 py-3 text-xs font-black text-white hover:bg-neutral-800 transition"
-            >
-              {proposal.status === 'negotiating' || hasAdvertiserCounter ? 'Responder Contraproposta' : 'Criar Nova Versão'}
-            </button>
-          )}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={onInvite}
-            className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs font-black text-amber-900 hover:bg-amber-100 transition"
-          >
-            Reenviar Acesso ao Portal
-          </button>
-          {['sent', 'negotiating'].includes(proposal.status) && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => onAction('final_offer')}
-              className="rounded-xl border border-amber-300 px-4 py-3 text-xs font-black text-amber-800 hover:bg-amber-50 transition"
-            >
-              Marcar Oferta Final
-            </button>
-          )}
-          {actionable && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => onAction('rejected')}
-              className="rounded-xl border border-red-200 px-4 py-3 text-xs font-black text-red-700 hover:bg-red-50 transition"
-            >
-              Recusar
-            </button>
-          )}
-          {actionable && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => onAction('cancelled')}
-              className="rounded-xl border border-neutral-300 px-4 py-3 text-xs font-black text-neutral-600 hover:bg-neutral-100 transition"
-            >
-              Cancelar
-            </button>
-          )}
-        </div>
-      </div>
-    </AccessibleModal>
-  );
-}
-
-function CampaignRow({ campaign, busy, onAction }: { key?: string; campaign: AdvertisingCampaign; busy: boolean; onAction: (status: AdvertisingCampaignStatus) => void }) {
-  const totals = (campaign.metrics || []).reduce((acc, row) => ({ served: acc.served + Number(row.served || 0), clicks: acc.clicks + Number(row.clicks || 0) }), { served: 0, clicks: 0 });
-  const terminal = ['completed', 'cancelled'].includes(campaign.status);
-  return (
-    <article className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-3"><div><span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-black text-neutral-700">{CAMPAIGN_LABELS[campaign.status]}</span><h2 className="mt-3 text-xl font-black">{campaign.name}</h2><p className="mt-1 text-sm text-neutral-500">{campaign.advertiser_name}</p></div><Megaphone className="h-6 w-6 text-amber-600" /></div>
-      <div className="mt-5 grid grid-cols-2 gap-3"><Mini label="Início" value={formatDate(campaign.starts_at)} /><Mini label="Término" value={formatDate(campaign.ends_at)} /><Mini label="Entregas" value={totals.served} /><Mini label="Cliques" value={totals.clicks} /></div>
-      {!terminal && <div className="mt-5 flex flex-wrap gap-2 border-t border-neutral-100 pt-5">{campaign.status === 'paused' ? <button type="button" disabled={busy} onClick={() => onAction('active')} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white"><Play className="h-3.5 w-3.5" /> Retomar</button> : <button type="button" disabled={busy} onClick={() => onAction('paused')} className="inline-flex items-center gap-2 rounded-xl border border-amber-300 px-4 py-2.5 text-xs font-black text-amber-800"><Pause className="h-3.5 w-3.5" /> Pausar</button>}<button type="button" disabled={busy} onClick={() => onAction('cancelled')} className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-xs font-black text-red-700"><XCircle className="h-3.5 w-3.5" /> Cancelar</button></div>}
-    </article>
-  );
-}
-
-function useCreativeAssetUrl(creative: AdvertisingCreative) {
-  const [assetUrl, setAssetUrl] = useState<string | null>(() => safeHttpsUrl(creative.asset_url));
-  const [assetError, setAssetError] = useState(false);
-  useEffect(() => {
-    let active = true;
-    setAssetError(false);
-    const supplied = safeHttpsUrl(creative.asset_url);
-    if (supplied) { setAssetUrl(supplied); return () => { active = false; }; }
-    if (!creative.storage_path || creative.kind === 'text') { setAssetUrl(null); return () => { active = false; }; }
-    void supabase.storage.from('gsa-ad-creatives').createSignedUrl(creative.storage_path, 600).then(({ data, error }) => {
-      if (!active) return;
-      if (error || !data?.signedUrl) { setAssetUrl(null); setAssetError(true); return; }
-      setAssetUrl(safeHttpsUrl(data.signedUrl));
-    });
-    return () => { active = false; };
-  }, [creative.asset_url, creative.kind, creative.storage_path]);
-  return { assetUrl, assetError };
-}
-
-function CreativePreview({ creative }: { creative: AdvertisingCreative }) {
-  const { assetUrl, assetError } = useCreativeAssetUrl(creative);
-  const targetUrl = safeHttpsUrl(creative.target_url);
-  return (
-    <div className="space-y-4">
-      <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-950">
-        {creative.kind === 'image' && assetUrl && <img src={assetUrl} alt={creative.alt_text || 'Prévia do criativo sem descrição fornecida'} className="max-h-[28rem] w-full object-contain" />}
-        {creative.kind === 'video' && assetUrl && <video src={assetUrl} controls preload="metadata" className="max-h-[28rem] w-full" aria-label={creative.alt_text || creative.headline || 'Prévia do criativo em vídeo'} />}
-        {creative.kind === 'text' && <div className="bg-white p-6"><p className="text-xl font-black">{creative.headline || 'Sem título'}</p><p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-neutral-600">{creative.body || 'Sem texto complementar'}</p></div>}
-        {creative.kind !== 'text' && !assetUrl && <div className="flex min-h-44 items-center justify-center p-6 text-center text-sm font-semibold text-white/60">{assetError ? 'Não foi possível abrir o arquivo. Não aprove sem verificar o material.' : 'Carregando prévia segura...'}</div>}
-      </div>
-      <dl className="grid gap-3 rounded-2xl bg-neutral-50 p-4 text-sm sm:grid-cols-2"><div><dt className="text-xs font-black uppercase tracking-wider text-neutral-400">Tipo e dimensões</dt><dd className="mt-1 font-semibold">{creative.kind}{creative.width && creative.height ? ` · ${creative.width}×${creative.height}px` : ''}{creative.duration_seconds ? ` · ${creative.duration_seconds}s` : ''}</dd></div><div><dt className="text-xs font-black uppercase tracking-wider text-neutral-400">Texto acessível</dt><dd className={`mt-1 ${creative.alt_text ? 'font-semibold' : 'font-bold text-red-600'}`}>{creative.alt_text || 'Não informado'}</dd></div>{creative.headline && <div className="sm:col-span-2"><dt className="text-xs font-black uppercase tracking-wider text-neutral-400">Título</dt><dd className="mt-1 font-semibold">{creative.headline}</dd></div>}{creative.body && <div className="sm:col-span-2"><dt className="text-xs font-black uppercase tracking-wider text-neutral-400">Texto</dt><dd className="mt-1 whitespace-pre-wrap text-neutral-700">{creative.body}</dd></div>}<div className="sm:col-span-2"><dt className="text-xs font-black uppercase tracking-wider text-neutral-400">URL de destino</dt><dd className="mt-1 break-all">{targetUrl ? <a href={targetUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-bold text-blue-700 underline decoration-blue-300 underline-offset-2">{targetUrl}<ExternalLink className="h-3.5 w-3.5 shrink-0" /></a> : <span className={creative.target_url ? 'font-bold text-red-600' : 'text-neutral-500'}>{creative.target_url ? 'URL bloqueada: apenas HTTPS é permitido' : 'Sem URL de destino'}</span>}</dd></div></dl>
-    </div>
-  );
-}
-
-function CreativeReviewRow({ campaign, creative, busy, onReview }: { key?: string; campaign: AdvertisingCampaign; creative: AdvertisingCreative; busy: boolean; onReview: (approved: boolean) => void }) {
-  return <article className="rounded-2xl border border-neutral-200 bg-white p-5"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">{campaign.name}</p><p className="mt-1 break-words font-black">{creative.headline || creative.storage_path || 'Criativo textual'}</p><p className="mt-1 text-sm text-neutral-500">{creative.kind} · {creative.status}</p>{creative.rejection_reason && <p className="mt-2 text-sm text-red-600">{creative.rejection_reason}</p>}</div>{creative.status === 'pending_review' && <div className="flex shrink-0 gap-2"><button type="button" disabled={busy} onClick={() => onReview(true)} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white disabled:opacity-60">Revisar e aprovar</button><button type="button" disabled={busy} onClick={() => onReview(false)} className="rounded-xl border border-red-200 px-4 py-2.5 text-xs font-black text-red-700 disabled:opacity-60">Revisar e reprovar</button></div>}</div><div className="mt-4"><CreativePreview creative={creative} /></div></article>;
-}
-
-function PaymentRow({ campaign, payment, busy, onMark, onConfigure }: { key?: string; campaign: AdvertisingCampaign; payment: AdvertisingPayment; busy: boolean; onMark: (status: AdvertisingPaymentStatus) => void; onConfigure: () => void }) {
-  return (
-    <article className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">{campaign.name}</p><h2 className="mt-2 text-2xl font-black">{currency(payment.amount)}</h2><p className="mt-1 text-sm text-neutral-500">{PAYMENT_LABELS[payment.status]} · vencimento {formatDate(payment.due_at)}</p>{payment.provider_reference && <p className="mt-1 break-all text-xs text-neutral-400">Referência: {payment.provider_reference}</p>}</div><CircleDollarSign className={`h-9 w-9 ${payment.status === 'paid' ? 'text-emerald-600' : payment.status === 'failed' ? 'text-red-600' : 'text-amber-600'}`} /></div>
-      <div className="mt-5 flex flex-wrap gap-2">{['pending', 'processing', 'failed'].includes(payment.status) && <button type="button" disabled={busy} onClick={onConfigure} className="rounded-xl bg-neutral-950 px-4 py-2.5 text-xs font-black text-white">Configurar cobrança</button>}{payment.status === 'pending' && <button type="button" disabled={busy} onClick={() => onMark('processing')} className="rounded-xl border border-amber-300 px-4 py-2.5 text-xs font-black text-amber-800">Marcar em processamento</button>}{['pending', 'processing', 'failed'].includes(payment.status) && <button type="button" disabled={busy} onClick={() => onMark('paid')} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white">Confirmar pagamento</button>}{payment.status === 'processing' && <button type="button" disabled={busy} onClick={() => onMark('failed')} className="rounded-xl border border-red-200 px-4 py-2.5 text-xs font-black text-red-700">Registrar falha</button>}{payment.status === 'failed' && <button type="button" disabled={busy} onClick={() => onMark('pending')} className="rounded-xl border border-neutral-200 px-4 py-2.5 text-xs font-black">Reabrir cobrança</button>}{['pending', 'processing', 'failed'].includes(payment.status) && <button type="button" disabled={busy} onClick={() => onMark('cancelled')} className="rounded-xl border border-neutral-300 px-4 py-2.5 text-xs font-black text-neutral-600">Cancelar cobrança</button>}{payment.status === 'paid' && <button type="button" disabled={busy} onClick={() => onMark('refunded')} className="rounded-xl border border-red-200 px-4 py-2.5 text-xs font-black text-red-700">Registrar estorno</button>}</div>
-    </article>
-  );
-}
-
-function Info({ icon: Icon, label, value }: { icon: typeof Megaphone; label: string; value: string }) {
-  return <div className="flex gap-3 rounded-2xl bg-neutral-50 p-4"><Icon className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" /><div className="min-w-0"><p className="text-xs font-black uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-1 break-words text-sm font-semibold text-neutral-700">{value}</p></div></div>;
-}
-
-function Mini({ label, value }: { label: string; value: number | string }) {
-  return <div className="rounded-2xl bg-neutral-50 p-4"><p className="text-xs font-bold uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-1 font-black">{value}</p></div>;
-}
+function Empty({ text }: { text: string }) { return <div className="rounded-2xl border border-dashed bg-white p-10 text-center text-sm font-bold text-neutral-400">{text}</div>; }
+function Input({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) { return <label className="block text-sm font-bold">{label}<input required={label !== 'Limite total de impressões (opcional)'} type={type} value={value} onChange={(e) => onChange(e.target.value)} className="mt-1 w-full rounded-xl border px-3 py-2 font-normal" /></label>; }
+function Submit({ busy, text }: { busy: boolean; text: string }) { return <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-4 py-3 font-black text-white disabled:opacity-50">{busy ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{text}</button>; }
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) { return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-2xl"><div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-black">{title}</h2><button type="button" onClick={onClose}><XCircle className="h-6 w-6" /></button></div>{children}</div></div>; }
