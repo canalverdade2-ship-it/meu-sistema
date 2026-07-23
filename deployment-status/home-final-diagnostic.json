@@ -1,10 +1,10 @@
 {
-  "generated_at_utc": "2026-07-23T20:54:12.448Z",
-  "validated_sha": "4d392644dbca3fd0afc6ddbf0c4c0a3f477c5a62",
+  "generated_at_utc": "2026-07-23T21:54:04.890Z",
+  "validated_sha": "82f3b6152a1e665bd9cde44a7025815475b838bf",
   "install_exit_code": 0,
   "test_exit_code": 1,
   "result": "failure",
-  "install_log_sha256": "3b2870311451f9a2d4e9a521481697b6af23736db64044656a78c31e372744e9",
+  "install_log_sha256": "bb9637ea90e6ecd00300ccb84e946344c4df86a7ce173b271d81b9ac4cd54b1d",
   "test_log_sha256": "4c4fc27dcfb08fd1de686fe521d475f7c30484acd47d9ef0cafe206367016148",
   "failed_markers": [
     "AssertionError [ERR_ASSERTION]: O novo serviço deve aparecer no hall principal",
