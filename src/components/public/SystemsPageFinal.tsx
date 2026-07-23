@@ -1,5 +1,21 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Code2, LogIn, MessageCircle, Palette } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  Code2,
+  Gauge,
+  Globe2,
+  Headphones,
+  Link2,
+  MessageCircle,
+  Rocket,
+  Search,
+  ShieldCheck,
+  ShoppingCart,
+  Smartphone,
+  Workflow,
+  type LucideIcon,
+} from 'lucide-react';
 import { LogoGSA } from '../ui/LogoGSA';
 import { navigate } from '../../routing/navigationService';
 import { PublicHeader } from './final/PublicHeader';
@@ -14,20 +30,94 @@ interface SystemsPageFinalProps {
   onLogin: () => void;
 }
 
-const solutions = [
-  ['Sites institucionais', 'Presença profissional, responsiva e preparada para apresentar sua empresa e gerar contatos.'],
-  ['Lojas virtuais', 'Catálogo, pedidos, pagamentos e gestão de vendas em uma experiência organizada.'],
-  ['Sistemas web', 'Soluções sob medida para centralizar informações, processos, equipes e indicadores.'],
-  ['Portais e aplicativos', 'Áreas seguras e experiências digitais adaptadas ao celular para clientes e equipes.'],
-  ['Automações', 'Redução de tarefas repetitivas com fluxos automáticos, notificações e integrações.'],
-  ['Integrações', 'Conexão segura entre APIs, plataformas de pagamento, atendimento e ferramentas de gestão.'],
+interface SolutionItem {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  fit: string;
+}
+
+const solutions: SolutionItem[] = [
+  {
+    icon: Globe2,
+    title: 'Sites institucionais',
+    text: 'Apresentação profissional de empresas, serviços, produtos e projetos, com navegação clara e adaptação para celular.',
+    fit: 'Presença digital, autoridade e geração de contatos.',
+  },
+  {
+    icon: ShoppingCart,
+    title: 'Lojas virtuais',
+    text: 'Estrutura organizada para catálogo, pedidos, pagamentos e acompanhamento da operação comercial.',
+    fit: 'Venda de produtos, serviços e assinaturas.',
+  },
+  {
+    icon: Code2,
+    title: 'Sistemas personalizados',
+    text: 'Ambientes digitais criados para centralizar informações, regras, processos, usuários e rotinas da empresa.',
+    fit: 'Gestão, operação e controle interno.',
+  },
+  {
+    icon: Smartphone,
+    title: 'Portais e aplicativos',
+    text: 'Experiências digitais para clientes, equipes, parceiros ou prestadores acessarem serviços e informações com segurança.',
+    fit: 'Atendimento, relacionamento e autosserviço.',
+  },
+  {
+    icon: Workflow,
+    title: 'Automações',
+    text: 'Fluxos que reduzem tarefas repetitivas, organizam etapas e ajudam a equipe a trabalhar com mais consistência.',
+    fit: 'Produtividade e padronização de processos.',
+  },
+  {
+    icon: Link2,
+    title: 'Integrações',
+    text: 'Conexão entre plataformas, meios de pagamento, canais de atendimento e ferramentas já utilizadas pela empresa.',
+    fit: 'Continuidade de dados e menos retrabalho.',
+  },
 ];
 
-const steps = [
-  ['01', 'Diagnóstico', 'Entendemos o objetivo, o público, o problema e o resultado esperado.'],
-  ['02', 'Planejamento', 'Organizamos escopo, módulos, prioridades, regras e etapas de entrega.'],
-  ['03', 'Desenvolvimento', 'Construímos a solução com atenção à segurança, desempenho e manutenção.'],
-  ['04', 'Testes e implantação', 'Validamos os fluxos principais antes da liberação para uso.'],
+const stages = [
+  {
+    number: '01',
+    icon: Search,
+    title: 'Diagnóstico e direção',
+    text: 'Entendemos a necessidade, o público, os processos atuais e o resultado que a solução precisa entregar.',
+  },
+  {
+    number: '02',
+    icon: Code2,
+    title: 'Desenvolvimento personalizado',
+    text: 'Organizamos o escopo e construímos a solução com interface clara, regras consistentes e foco no uso real.',
+  },
+  {
+    number: '03',
+    icon: Rocket,
+    title: 'Entrega e evolução',
+    text: 'Validamos os fluxos principais, implantamos o projeto e deixamos uma base preparada para melhorias futuras.',
+  },
+];
+
+const foundations = [
+  {
+    icon: ShieldCheck,
+    title: 'Estrutura segura e organizada',
+    text: 'Permissões, informações e fluxos planejados de acordo com a necessidade do projeto.',
+  },
+  {
+    icon: Gauge,
+    title: 'Experiência clara em qualquer tela',
+    text: 'Navegação responsiva, leitura objetiva e ações fáceis para clientes e equipes.',
+  },
+  {
+    icon: Workflow,
+    title: 'Processos pensados de ponta a ponta',
+    text: 'Cada etapa é construída para reduzir dúvidas, retrabalho e caminhos desnecessários.',
+  },
+  {
+    icon: Headphones,
+    title: 'Acompanhamento durante o projeto',
+    text: 'Comunicação organizada para definição do escopo, validações e evolução da solução.',
+  },
 ];
 
 export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
@@ -51,69 +141,230 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f1ea] text-neutral-950">
+    <div className="min-h-screen bg-[#f6f4ef] text-[#111820]">
       <PublicHeader currentPage="systems" onClientLogin={onLogin} />
 
       <main>
-        <section className="relative overflow-hidden bg-neutral-950 pt-24 text-white">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(214,178,94,0.17),transparent_34%),radial-gradient(circle_at_12%_70%,rgba(255,255,255,0.08),transparent_26%)]" />
-          <div className="relative mx-auto grid min-h-[calc(100svh-6rem)] max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d6b25e]">Criação de sites e sistemas</p>
-              <h1 className="mt-4 max-w-4xl text-4xl font-black leading-tight sm:text-6xl lg:text-7xl">Transformamos ideias em soluções digitais profissionais</h1>
-              <p className="mt-6 max-w-2xl text-base leading-8 text-white/70 sm:text-lg">Sites, lojas virtuais, aplicativos, sistemas e automações sob medida para empresas, MEIs, profissionais e novos projetos.</p>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <button type="button" onClick={() => setBudgetOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#d6b25e] px-7 py-4 font-black text-neutral-950 transition hover:bg-[#e1c374] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Solicitar orçamento <ArrowRight className="h-5 w-5" /></button>
-                <button type="button" onClick={openWhatsApp} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-7 py-4 font-black text-white transition hover:border-[#d6b25e]/70 hover:text-[#d6b25e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d6b25e]"><MessageCircle className="h-5 w-5" /> Falar com especialista</button>
+        <section className="border-b border-white/10 bg-[#07111d] pt-24 text-white">
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:px-8 lg:py-24">
+            <div className="max-w-3xl">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#d7b96e]">
+                Criação de sites e sistemas
+              </p>
+              <h1 className="mt-4 text-4xl font-black leading-[1.08] tracking-[-0.035em] sm:text-5xl lg:text-[3.5rem]">
+                Soluções digitais profissionais para apresentar, organizar e evoluir sua empresa.
+              </h1>
+              <p className="mt-6 max-w-2xl text-base leading-7 text-white/68 sm:text-lg sm:leading-8">
+                Desenvolvemos sites, lojas virtuais, portais, aplicativos, sistemas e automações sob medida para empresas, MEIs, profissionais e novos projetos.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setBudgetOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#d7b96e] px-6 py-3.5 text-sm font-black text-[#111820] transition hover:bg-[#e2c982] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
+                  Solicitar orçamento
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={openWhatsApp}
+                  className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-white/22 px-6 py-3.5 text-sm font-black text-white transition hover:border-[#d7b96e] hover:text-[#e3cb8d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7b96e]"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Falar com especialista
+                </button>
               </div>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-8 backdrop-blur-xl">
-              <Code2 className="h-14 w-14 text-[#d6b25e]" />
-              <h2 className="mt-6 text-2xl font-black">Projeto sob medida</h2>
-              <ul className="mt-6 space-y-4 text-white/75">
-                {['Layout responsivo', 'Controle de permissões', 'Banco de dados e indicadores', 'Integrações seguras', 'Suporte e evolução'].map((item) => <li key={item} className="flex gap-3"><CheckCircle2 className="h-5 w-5 shrink-0 text-[#d6b25e]" />{item}</li>)}
+
+            <aside className="rounded-[10px] border border-white/12 bg-[#0c1825] p-5 sm:p-6 lg:p-7">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-5">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#d7b96e]/12 text-[#d7b96e]">
+                  <Code2 className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#d7b96e]">Projeto sob medida</p>
+                  <h2 className="mt-1 text-lg font-black">Uma solução definida para sua realidade</h2>
+                </div>
+              </div>
+
+              <p className="mt-5 text-sm leading-6 text-white/62">
+                O projeto é planejado a partir do objetivo do negócio, sem obrigar sua empresa a se adaptar a uma estrutura genérica.
+              </p>
+
+              <ul className="mt-5 space-y-3" aria-label="Características do desenvolvimento sob medida">
+                {[
+                  'Escopo organizado antes do desenvolvimento',
+                  'Experiência adaptada para celular e computador',
+                  'Fluxos, acessos e informações definidos com clareza',
+                  'Base preparada para manutenção e evolução',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm font-semibold leading-5 text-white/80">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#d7b96e]/35 text-[#d7b96e]">
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                    </span>
+                    {item}
+                  </li>
+                ))}
               </ul>
+            </aside>
+          </div>
+        </section>
+
+        <section className="border-b border-[#dfd9cf] bg-white">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-7 gap-y-2 px-4 py-4 text-xs font-bold text-neutral-600 sm:px-6 lg:px-8">
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#80672c]">Projetos para</span>
+            <span>Empresas</span>
+            <span>MEIs</span>
+            <span>Profissionais</span>
+            <span>Novos negócios</span>
+            <span>Equipes e operações</span>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:gap-14">
+            <div className="lg:sticky lg:top-28 lg:self-start">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#80672c]">Soluções digitais</p>
+              <h2 className="mt-3 text-3xl font-black leading-tight tracking-[-0.025em] sm:text-4xl">
+                O que podemos desenvolver para o seu projeto
+              </h2>
+              <p className="mt-5 text-sm leading-7 text-neutral-600 sm:text-base">
+                Cada solução é construída para cumprir uma função clara: apresentar melhor, vender, atender, organizar processos ou conectar operações.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {solutions.map(({ icon: Icon, title, text, fit }) => (
+                <article key={title} className="rounded-[10px] border border-[#ddd8ce] bg-white p-5 transition hover:border-[#c8b06e] sm:p-6">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#0a1420] text-[#d7b96e]">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-5 text-lg font-black text-[#111820]">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-neutral-600">{text}</p>
+                  <p className="mt-4 border-t border-[#ebe7df] pt-4 text-xs font-bold leading-5 text-[#6d5727]">
+                    {fit}
+                  </p>
+                </article>
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#8a6e2f]">Soluções</p>
-          <h2 className="mt-3 text-4xl font-black">O que podemos desenvolver</h2>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {solutions.map(([title, text]) => <article key={title} className="rounded-2xl border border-neutral-200 bg-white p-6"><h3 className="text-xl font-black">{title}</h3><p className="mt-3 text-sm leading-6 text-neutral-600">{text}</p></article>)}
-          </div>
-        </section>
-
-        <section className="bg-white py-20">
+        <section className="border-y border-[#e1ddd4] bg-white py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#8a6e2f]">Processo</p>
-            <h2 className="mt-3 text-4xl font-black">Da ideia à implantação</h2>
-            <div className="mt-10 grid gap-5 md:grid-cols-4">
-              {steps.map(([number, title, text]) => <article key={number} className="rounded-2xl bg-neutral-50 p-6"><span className="text-sm font-black text-[#8a6e2f]">{number}</span><h3 className="mt-4 text-xl font-black">{title}</h3><p className="mt-3 text-sm leading-6 text-neutral-600">{text}</p></article>)}
+            <div className="max-w-3xl">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#80672c]">Nosso processo</p>
+              <h2 className="mt-3 text-3xl font-black leading-tight tracking-[-0.025em] sm:text-4xl">
+                Da necessidade à solução implantada
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-neutral-600 sm:text-base">
+                Um caminho objetivo para reduzir dúvidas, organizar decisões e construir o projeto com consistência.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {stages.map(({ number, icon: Icon, title, text }) => (
+                <article key={number} className="relative rounded-[10px] border border-[#ddd8ce] bg-[#f8f6f1] p-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black tracking-[0.16em] text-[#80672c]">{number}</span>
+                    <Icon className="h-5 w-5 text-[#80672c]" />
+                  </div>
+                  <h3 className="mt-8 text-xl font-black">{title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-neutral-600">{text}</p>
+                </article>
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="overflow-hidden bg-[#e4c777] py-16 text-neutral-950">
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:px-8">
-            <div>
-              <div className="flex items-center gap-3 text-[#6f5723]"><Palette className="h-7 w-7" /></div>
-              <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-neutral-700">Antes da tecnologia</p>
-              <h2 className="mt-3 max-w-4xl text-3xl font-black sm:text-5xl">Sua empresa ainda precisa de nome, logo, identidade e redes sociais?</h2>
-              <p className="mt-5 max-w-3xl text-base leading-7 text-neutral-800">Conheça a jornada Empresa do Zero ao Digital: uma solução integrada para construir marca, site, conteúdo, canais de atendimento e presença nas redes sociais.</p>
+        <section className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:px-8">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#80672c]">Qualidade do projeto</p>
+            <h2 className="mt-3 text-3xl font-black leading-tight tracking-[-0.025em] sm:text-4xl">
+              Uma entrega profissional também precisa funcionar bem no dia a dia
+            </h2>
+            <p className="mt-5 text-sm leading-7 text-neutral-600 sm:text-base">
+              O visual é importante, mas a solução também precisa ser clara, segura, organizada e preparada para acompanhar a evolução da empresa.
+            </p>
+          </div>
+
+          <div className="divide-y divide-[#e3ded5] border-y border-[#e3ded5]">
+            {foundations.map(({ icon: Icon, title, text }) => (
+              <article key={title} className="grid gap-3 py-5 sm:grid-cols-[44px_1fr] sm:gap-4 sm:py-6">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-[#d4c59d] bg-white text-[#80672c]">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-base font-black sm:text-lg">{title}</h3>
+                  <p className="mt-1.5 text-sm leading-6 text-neutral-600">{text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="px-4 pb-16 sm:px-6 sm:pb-20 lg:px-8">
+          <div className="mx-auto grid max-w-7xl items-center gap-8 rounded-[10px] bg-[#0a1420] px-5 py-8 text-white sm:px-8 sm:py-10 lg:grid-cols-[1fr_auto] lg:px-10">
+            <div className="max-w-3xl">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d7b96e]">Vamos conversar sobre o projeto</p>
+              <h2 className="mt-3 text-2xl font-black leading-tight tracking-[-0.02em] sm:text-3xl">
+                Transforme sua necessidade em uma solução digital clara e profissional.
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-white/62">
+                Conte o que sua empresa precisa. A partir disso, organizamos a análise inicial e o próximo passo do atendimento.
+              </p>
             </div>
-            <button type="button" onClick={() => navigate('/empresa-do-zero-ao-digital')} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-neutral-950 px-7 py-4 font-black text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-              Conhecer a jornada completa <ArrowRight className="h-5 w-5" />
+
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <button
+                type="button"
+                onClick={() => setBudgetOpen(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#d7b96e] px-6 py-3.5 text-sm font-black text-[#111820] transition hover:bg-[#e2c982] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                Solicitar orçamento
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={openWhatsApp}
+                className="inline-flex items-center justify-center gap-2 rounded-[10px] border border-white/20 px-6 py-3.5 text-sm font-black text-white transition hover:border-[#d7b96e] hover:text-[#e3cb8d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7b96e]"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Falar no WhatsApp
+              </button>
+            </div>
+          </div>
+
+          <div className="mx-auto mt-5 flex max-w-7xl flex-col gap-2 border-l-2 border-[#d7b96e] px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-neutral-600">
+              Sua empresa ainda precisa de nome, identidade visual e presença digital completa?
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/empresa-do-zero-ao-digital')}
+              className="inline-flex items-center gap-1.5 text-sm font-black text-[#6d5727] hover:text-[#3e3016]"
+            >
+              Conhecer a jornada Empresa do Zero ao Digital
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </section>
       </main>
 
-      <footer className="bg-neutral-950 py-10 text-white">
+      <footer className="border-t border-white/10 bg-[#07111d] py-9 text-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <div><LogoGSA size="md" variant="light" /><p className="mt-3 text-sm text-white/55">Soluções digitais sob medida.</p></div>
-          <div className="flex flex-wrap gap-5 text-sm font-bold text-white/75"><button type="button" onClick={onBack} className="hover:text-[#d8bd73]">Início</button><button type="button" onClick={() => navigate('/empresa-do-zero-ao-digital')} className="hover:text-[#d8bd73]">Marca e presença digital</button><button type="button" onClick={() => setPrivacyOpen(true)} className="hover:text-[#d8bd73]">Privacidade</button><button type="button" onClick={openWhatsApp} className="hover:text-[#d8bd73]">Contato</button></div>
+          <div>
+            <LogoGSA size="md" variant="light" />
+            <p className="mt-3 text-sm text-white/50">Sites, sistemas e soluções digitais sob medida.</p>
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold text-white/68">
+            <button type="button" onClick={onBack} className="hover:text-[#d7b96e]">Início</button>
+            <button type="button" onClick={() => navigate('/empresa-do-zero-ao-digital')} className="hover:text-[#d7b96e]">Empresa do Zero ao Digital</button>
+            <button type="button" onClick={() => setPrivacyOpen(true)} className="hover:text-[#d7b96e]">Privacidade</button>
+            <button type="button" onClick={openWhatsApp} className="hover:text-[#d7b96e]">Contato</button>
+          </div>
         </div>
       </footer>
 
