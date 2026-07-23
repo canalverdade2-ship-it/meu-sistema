@@ -1,0 +1,108 @@
+name: Diagnose Client Security Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/diagnose-client-security-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Run client security contracts
+        id: contracts
+        shell: bash
+        run: |
+          set +e
+          npm ci >/tmp/client-security-install.log 2>&1
+          install_exit=$?
+          test_exit=99
+          if [[ "$install_exit" -eq 0 ]]; then
+            npm run test:client-security >/tmp/client-security-test.log 2>&1
+            test_exit=$?
+          else
+            : >/tmp/client-security-test.log
+          fi
+          printf '%s' "$install_exit" >/tmp/client-security-install-exit
+          printf '%s' "$test_exit" >/tmp/client-security-test-exit
+          exit 0
+
+      - name: Build diagnostic evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          install_exit="$(cat /tmp/client-security-install-exit 2>/dev/null || echo 99)"
+          test_exit="$(cat /tmp/client-security-test-exit 2>/dev/null || echo 99)"
+          mkdir -p deployment-status
+
+          INSTALL_EXIT="$install_exit" TEST_EXIT="$test_exit" node --input-type=module <<'NODE'
+          import crypto from 'node:crypto';
+          import fs from 'node:fs/promises';
+
+          const read = async (file) => {
+            try { return await fs.readFile(file, 'utf8'); } catch { return ''; }
+          };
+          const installLog = await read('/tmp/client-security-install.log');
+          const testLog = await read('/tmp/client-security-test.log');
+          const lines = testLog.split(/\r?\n/).filter(Boolean);
+          const tail = lines.slice(-120);
+          const failedMarkers = lines.filter((line) => /fail|error|assert|missing|ausente|esperado|expected|not found|não encontrado/i.test(line)).slice(-80);
+
+          const evidence = {
+            generated_at_utc: new Date().toISOString(),
+            install_exit_code: Number(process.env.INSTALL_EXIT),
+            test_exit_code: Number(process.env.TEST_EXIT),
+            result: Number(process.env.INSTALL_EXIT) === 0 && Number(process.env.TEST_EXIT) === 0 ? 'success' : 'failure',
+            install_log_bytes: Buffer.byteLength(installLog),
+            install_log_sha256: crypto.createHash('sha256').update(installLog).digest('hex'),
+            test_log_bytes: Buffer.byteLength(testLog),
+            test_log_sha256: crypto.createHash('sha256').update(testLog).digest('hex'),
+            failed_markers: failedMarkers,
+            tail,
+          };
+
+          const serialized = `${JSON.stringify(evidence, null, 2)}\n`;
+          await fs.writeFile('/tmp/client-security-diagnostic.json', serialized);
+          await fs.writeFile('deployment-status/client-security-diagnostic.json', serialized);
+          NODE
+
+      - name: Publish diagnostic evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f /tmp/client-security-diagnostic.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          published=false
+          for attempt in $(seq 1 10); do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p deployment-status
+            cp /tmp/client-security-diagnostic.json deployment-status/client-security-diagnostic.json
+            git add deployment-status/client-security-diagnostic.json
+            git commit -m "Registrar diagnóstico dos contratos de segurança do cliente" || true
+            if git push origin HEAD:main; then
+              published=true
+              break
+            fi
+            sleep 5
+          done
+          test "$published" = true
