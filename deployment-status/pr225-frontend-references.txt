@@ -1,0 +1,99 @@
+generated_at_utc=2026-07-23T13:48:56Z
+--- direct Supabase references ---
+src/components/client/ClientGSAStore.tsx-295-      for (const pendingItem of pendingItems) {
+src/components/client/ClientGSAStore.tsx-296-        if (!pendingItem?.item_id || !pendingItem?.tipo) continue;
+src/components/client/ClientGSAStore.tsx-297-
+src/components/client/ClientGSAStore.tsx-298-        const { data: existing } = await supabase
+src/components/client/ClientGSAStore.tsx:299:          .from('loja_carrinhos')
+src/components/client/ClientGSAStore.tsx-300-          .select('id, quantidade')
+src/components/client/ClientGSAStore.tsx-301-          .eq('cliente_id', clientId)
+src/components/client/ClientGSAStore.tsx-302-          .eq('item_id', pendingItem.item_id)
+src/components/client/ClientGSAStore.tsx-303-          .eq('tipo', pendingItem.tipo)
+--
+src/components/client/ClientGSAStore.tsx-375-    }
+src/components/client/ClientGSAStore.tsx-376-
+src/components/client/ClientGSAStore.tsx-377-    const fetchAtivadas = async () => {
+src/components/client/ClientGSAStore.tsx-378-      try {
+src/components/client/ClientGSAStore.tsx:379:        const { data } = await supabase.from('promocoes_quantidade_ativadas').select('promocao_quantidade_id').eq('cliente_id', clientId);
+src/components/client/ClientGSAStore.tsx-380-        if (data) setPromosAtivadasIds(new Set(data.map(d => d.promocao_quantidade_id)));
+src/components/client/ClientGSAStore.tsx-381-      } catch (e) {
+src/components/client/ClientGSAStore.tsx-382-        console.error('Erro fetching promocoes_quantidade_ativadas', e);
+src/components/client/ClientGSAStore.tsx-383-      }
+--
+src/components/client/ClientGSAStore.tsx-522-
+src/components/client/ClientGSAStore.tsx-523-  const fetchCart = async () => {
+src/components/client/ClientGSAStore.tsx-524-    if (!clientId) return;
+src/components/client/ClientGSAStore.tsx-525-    try {
+src/components/client/ClientGSAStore.tsx:526:      const { data, error } = await supabase.from('loja_carrinhos').select('*').eq('cliente_id', clientId);
+src/components/client/ClientGSAStore.tsx-527-      if (error) {
+src/components/client/ClientGSAStore.tsx-528-        console.error('[GSAStore] Erro ao buscar carrinho:', error);
+src/components/client/ClientGSAStore.tsx-529-        return;
+src/components/client/ClientGSAStore.tsx-530-      }
+--
+src/components/client/ClientGSAStore.tsx-653-      return;
+src/components/client/ClientGSAStore.tsx-654-    }
+src/components/client/ClientGSAStore.tsx-655-    
+src/components/client/ClientGSAStore.tsx-656-    // Buscar o estado mais atual do banco para evitar race conditions
+src/components/client/ClientGSAStore.tsx:657:    const { data: currentCart } = await supabase.from('loja_carrinhos')
+src/components/client/ClientGSAStore.tsx-658-      .select('id')
+src/components/client/ClientGSAStore.tsx-659-      .eq('cliente_id', clientId)
+src/components/client/ClientGSAStore.tsx-660-      .eq('item_id', item.id)
+src/components/client/ClientGSAStore.tsx-661-      .maybeSingle();
+--
+src/components/client/ClientProdutos.tsx-127-        throw new Error('Este produto está sem estoque.');
+src/components/client/ClientProdutos.tsx-128-      }
+src/components/client/ClientProdutos.tsx-129-
+src/components/client/ClientProdutos.tsx-130-      // Check if item is already in cart
+src/components/client/ClientProdutos.tsx:131:      const { data: existingCart } = await supabase.from('loja_carrinhos')
+src/components/client/ClientProdutos.tsx-132-        .select('id, quantidade')
+src/components/client/ClientProdutos.tsx-133-        .eq('cliente_id', clientId)
+src/components/client/ClientProdutos.tsx-134-        .eq('item_id', produto.produto_id)
+src/components/client/ClientProdutos.tsx-135-        .maybeSingle();
+--
+src/components/client/StoreHub.tsx-265-
+src/components/client/StoreHub.tsx-266-      if (clientId) {
+src/components/client/StoreHub.tsx-267-        try {
+src/components/client/StoreHub.tsx-268-          const { data: ativadasData, error: ativadasError } = await supabase
+src/components/client/StoreHub.tsx:269:            .from('promocoes_quantidade_ativadas')
+src/components/client/StoreHub.tsx-270-            .select('promocao_quantidade_id')
+src/components/client/StoreHub.tsx-271-            .eq('cliente_id', clientId);
+src/components/client/StoreHub.tsx-272-            
+src/components/client/StoreHub.tsx-273-          if (!ativadasError && ativadasData) {
+--
+src/hooks/useStoreCart.ts-23-    }
+src/hooks/useStoreCart.ts-24-    
+src/hooks/useStoreCart.ts-25-    setIsLoadingCart(true);
+src/hooks/useStoreCart.ts-26-    try {
+src/hooks/useStoreCart.ts:27:      const { data, error } = await supabase.from('loja_carrinhos').select('*').eq('cliente_id', clientId);
+src/hooks/useStoreCart.ts-28-      if (error) {
+src/hooks/useStoreCart.ts-29-        console.error('[GSAStore] Erro ao buscar carrinho:', error);
+src/hooks/useStoreCart.ts-30-        return;
+src/hooks/useStoreCart.ts-31-      }
+--
+src/hooks/useStoreCart.ts-61-    // Atualização Otimista
+src/hooks/useStoreCart.ts-62-    setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantidade: qty } : item));
+src/hooks/useStoreCart.ts-63-    
+src/hooks/useStoreCart.ts-64-    try {
+src/hooks/useStoreCart.ts:65:      const { error } = await supabase.from('loja_carrinhos').update({ quantidade: qty, updated_at: new Date().toISOString() }).eq('id', id);
+src/hooks/useStoreCart.ts-66-      if (error) throw error;
+src/hooks/useStoreCart.ts-67-    } catch (err) {
+src/hooks/useStoreCart.ts-68-      console.error(err);
+src/hooks/useStoreCart.ts-69-      toast.error('Erro ao atualizar quantidade.');
+--
+src/hooks/useStoreCart.ts-77-    // Atualização Otimista
+src/hooks/useStoreCart.ts-78-    setCartItems(prev => prev.filter(item => item.id !== id));
+src/hooks/useStoreCart.ts-79-    
+src/hooks/useStoreCart.ts-80-    try {
+src/hooks/useStoreCart.ts:81:      const { error } = await supabase.from('loja_carrinhos').delete().eq('id', id);
+src/hooks/useStoreCart.ts-82-      if (error) throw error;
+src/hooks/useStoreCart.ts-83-      toast.success('Item removido do carrinho.');
+src/hooks/useStoreCart.ts-84-    } catch (err) {
+src/hooks/useStoreCart.ts-85-      console.error(err);
+--- operational RPC references ---
+src/lib/clientOperationalWrite.ts-24-  // o cliente exclusivamente da sessão GSA validada no servidor.
+src/lib/clientOperationalWrite.ts-25-  void clienteId;
+src/lib/clientOperationalWrite.ts-26-
+src/lib/clientOperationalWrite.ts:27:  const { data: result, error } = await supabase.rpc('gsa_client_operational_write', {
+src/lib/clientOperationalWrite.ts-28-    p_sessao_id: sessionData.sessaoId,
+src/lib/clientOperationalWrite.ts-29-    p_session_token: sessionData.sessionToken,
+src/lib/clientOperationalWrite.ts-30-    p_table: table,
