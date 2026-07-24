@@ -1,4 +1,4 @@
-name: Deploy Calculator Pro Fix
+name: Verify Calculator Pro Production Flows
 
 on:
   pull_request:
@@ -9,9 +9,9 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
@@ -19,54 +19,196 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: audit/calculadoras-pro-voucher-pagamento-20260724
-      - uses: supabase/setup-cli@v1
-        with:
-          version: 2.101.0
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-      - name: Validate Edge Functions
-        run: |
-          deno check supabase/functions/gsa-free-tools-pro/index.ts
-          deno check supabase/functions/gsa-free-tools-pro-webhook/index.ts
-      - name: Apply migrations and history
+
+      - name: Prepare production API access
         shell: bash
         run: |
           set -euo pipefail
-          for migration in \
-            supabase/migrations/20260724163000_harden_calculator_pro_voucher_payment.sql \
-            supabase/migrations/20260724163500_atomic_calculator_pro_voucher_redemption.sql \
-            supabase/migrations/20260724164000_calculator_pro_admin_voucher_errors.sql; do
-            jq -Rs '{query:.,read_only:false}' "$migration" > /tmp/migration.json
-            curl --fail-with-body --silent --show-error --request POST \
-              --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-              --header 'Content-Type: application/json' \
-              --data-binary @/tmp/migration.json \
-              "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/migration-result.json
-            echo "APPLIED=$(basename "$migration")"
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          curl --fail-with-body --silent --show-error \
+            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/api-keys" > /tmp/keys.json
+          jq -r '.[] | select(.name=="anon") | .api_key' /tmp/keys.json > /tmp/anon-key
+          test -s /tmp/anon-key
+
+      - name: Verify deployed schema, RLS, permissions and migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          query="SELECT
+            to_regclass('public.gsa_calculator_pro_runtime_config') IS NOT NULL AS runtime_config,
+            EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='gsa_calculator_pro_payments' AND column_name='duracao_acesso_minutos') AS duration_snapshot,
+            to_regprocedure('public.gsa_calculator_redeem_voucher_and_create_session_internal(text,text,text,uuid,text)') IS NOT NULL AS atomic_voucher,
+            to_regprocedure('public.gsa_admin_save_calculator_pro_runtime_config(uuid,text,text)') IS NOT NULL AS runtime_admin_rpc,
+            EXISTS(SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='idx_gsa_calculator_pro_transaction_unique') AS unique_transaction,
+            EXISTS(SELECT 1 FROM pg_class WHERE oid='public.gsa_calculator_pro_runtime_config'::regclass AND relrowsecurity) AS runtime_config_rls,
+            has_function_privilege('service_role','public.gsa_calculator_redeem_voucher_and_create_session_internal(text,text,text,uuid,text)','EXECUTE') AS service_can_redeem,
+            NOT has_function_privilege('anon','public.gsa_calculator_redeem_voucher_and_create_session_internal(text,text,text,uuid,text)','EXECUTE') AS anon_cannot_redeem_directly,
+            (SELECT count(*) FROM supabase_migrations.schema_migrations WHERE version IN ('20260724163000','20260724163500','20260724164000')) = 3 AS history_registered;"
+          jq -n --arg query "$query" '{query:$query,read_only:true}' > /tmp/schema.json
+          curl --fail-with-body --silent --show-error --request POST \
+            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data-binary @/tmp/schema.json \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/schema-result.json
+          jq -c . /tmp/schema-result.json
+          jq -e '.[0] | to_entries | all(.value == true)' /tmp/schema-result.json >/dev/null
+          echo 'PRODUCTION_SCHEMA_OK'
+
+      - name: Exercise voucher success, session and reuse protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          anon="$(cat /tmp/anon-key)"
+          marker="AUDIT_FINAL_VOUCHER_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          visitor="gsa_final_voucher_${GITHUB_RUN_ID}_12345678901234567890"
+          code="GSA-PRO-$(openssl rand -hex 10 | tr '[:lower:]' '[:upper:]')"
+          hash="$(printf '%s' "$code" | sha256sum | awk '{print $1}')"
+          hint="${code: -6}"
+          query="INSERT INTO public.gsa_calculator_pro_vouchers(code_hash,code_hint,tool_id,status,expires_at,observacoes) VALUES ('$hash','$hint','termination','active',now()+interval '1 hour','$marker') RETURNING id;"
+          jq -n --arg query "$query" '{query:$query,read_only:false}' > /tmp/voucher-insert.json
+          curl --fail-with-body --silent --show-error --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/voucher-insert.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/voucher-row.json
+          voucher_id="$(jq -r '.[0].id' /tmp/voucher-row.json)"
+          test -n "$voucher_id"
+          echo "$marker" > /tmp/voucher-marker
+
+          jq -n --arg code "$code" --arg visitor "$visitor" '{action:"redeem_voucher",payload:{tool_id:"termination",visitor_token:$visitor,code:$code}}' > /tmp/redeem.json
+          first_http="$(curl --silent --show-error --output /tmp/redeem-first.json --write-out '%{http_code}' --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/redeem.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro")"
+          echo "VOUCHER_FIRST_HTTP=$first_http"
+          jq -c . /tmp/redeem-first.json
+          test "$first_http" = '200'
+          jq -e '.success==true and .session.success==true and (.session.token|length)>20' /tmp/redeem-first.json >/dev/null
+          token="$(jq -r '.session.token' /tmp/redeem-first.json)"
+
+          jq -n --arg visitor "$visitor" --arg token "$token" '{action:"status",payload:{tool_id:"termination",visitor_token:$visitor,pro_session_token:$token}}' > /tmp/voucher-status.json
+          curl --fail-with-body --silent --show-error --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/voucher-status.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro" > /tmp/voucher-status-result.json
+          jq -c . /tmp/voucher-status-result.json
+          jq -e '.access==true and .source=="voucher"' /tmp/voucher-status-result.json >/dev/null
+
+          second_http="$(curl --silent --show-error --output /tmp/redeem-second.json --write-out '%{http_code}' --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/redeem.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro")"
+          echo "VOUCHER_SECOND_HTTP=$second_http"
+          jq -c . /tmp/redeem-second.json
+          test "$second_http" = '400'
+          jq -e '.error=="voucher_unavailable"' /tmp/redeem-second.json >/dev/null
+
+          query="SELECT v.status,g.max_uses,g.used_count,count(s.id)::integer AS sessions,round(extract(epoch from (g.valid_until-g.created_at))/60)::integer AS duration_minutes FROM public.gsa_calculator_pro_vouchers v JOIN public.gsa_calculator_pro_grants g ON g.reference_id=v.id AND g.source='voucher' LEFT JOIN public.gsa_calculator_pro_sessions s ON s.grant_id=g.id WHERE v.id='$voucher_id' GROUP BY v.status,g.max_uses,g.used_count,g.valid_until,g.created_at;"
+          jq -n --arg query "$query" '{query:$query,read_only:true}' > /tmp/voucher-check.json
+          curl --fail-with-body --silent --show-error --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/voucher-check.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/voucher-check-result.json
+          jq -c . /tmp/voucher-check-result.json
+          jq -e '.[0].status=="used" and .[0].max_uses==1 and .[0].used_count==1 and .[0].sessions==1 and .[0].duration_minutes>0' /tmp/voucher-check-result.json >/dev/null
+          echo 'VOUCHER_E2E_OK'
+
+      - name: Exercise voucher wrong-tool and concurrent redemption
+        shell: bash
+        run: |
+          set -euo pipefail
+          anon="$(cat /tmp/anon-key)"
+          marker="AUDIT_CONCURRENT_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          visitor="gsa_concurrent_${GITHUB_RUN_ID}_12345678901234567890"
+          code="GSA-PRO-$(openssl rand -hex 10 | tr '[:lower:]' '[:upper:]')"
+          hash="$(printf '%s' "$code" | sha256sum | awk '{print $1}')"
+          hint="${code: -6}"
+          query="INSERT INTO public.gsa_calculator_pro_vouchers(code_hash,code_hint,tool_id,status,expires_at,observacoes) VALUES ('$hash','$hint','termination','active',now()+interval '1 hour','$marker') RETURNING id;"
+          jq -n --arg query "$query" '{query:$query,read_only:false}' > /tmp/concurrent-insert.json
+          curl --fail-with-body --silent --show-error --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/concurrent-insert.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/concurrent-row.json
+          echo "$marker" > /tmp/concurrent-marker
+
+          jq -n --arg code "$code" --arg visitor "$visitor" '{action:"redeem_voucher",payload:{tool_id:"vacation",visitor_token:$visitor,code:$code}}' > /tmp/wrong-tool.json
+          wrong_http="$(curl --silent --show-error --output /tmp/wrong-tool-result.json --write-out '%{http_code}' --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/wrong-tool.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro")"
+          test "$wrong_http" = '400'
+          jq -e '.error=="voucher_wrong_tool"' /tmp/wrong-tool-result.json >/dev/null
+
+          query="SELECT status FROM public.gsa_calculator_pro_vouchers WHERE observacoes='$marker';"
+          jq -n --arg query "$query" '{query:$query,read_only:true}' > /tmp/wrong-check.json
+          curl --fail-with-body --silent --show-error --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/wrong-check.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/wrong-check-result.json
+          test "$(jq -r '.[0].status' /tmp/wrong-check-result.json)" = 'active'
+
+          jq -n --arg code "$code" --arg visitor "$visitor" '{action:"redeem_voucher",payload:{tool_id:"termination",visitor_token:$visitor,code:$code}}' > /tmp/concurrent.json
+          (curl --silent --show-error --output /tmp/concurrent-a.json --write-out '%{http_code}' --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/concurrent.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro" > /tmp/concurrent-a-status) & pid_a=$!
+          (curl --silent --show-error --output /tmp/concurrent-b.json --write-out '%{http_code}' --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/concurrent.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro" > /tmp/concurrent-b-status) & pid_b=$!
+          wait "$pid_a" "$pid_b"
+          a="$(cat /tmp/concurrent-a-status)"; b="$(cat /tmp/concurrent-b-status)"
+          echo "CONCURRENT_HTTP=$a,$b"
+          test "$a" = '200' -o "$b" = '200'
+          test "$a" = '400' -o "$b" = '400'
+          test "$a" != "$b"
+          echo 'VOUCHER_CONCURRENCY_OK'
+
+      - name: Exercise payment finalization, access and duplicate defense without charging
+        shell: bash
+        run: |
+          set -euo pipefail
+          anon="$(cat /tmp/anon-key)"
+          visitor="gsa_payment_audit_${GITHUB_RUN_ID}_12345678901234567890"
+          visitor_hash="$(printf '%s' "$visitor" | sha256sum | awk '{print $1}')"
+          order="$(cat /proc/sys/kernel/random/uuid)"
+          transaction="AUDIT-TXN-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          marker="AUDIT_PAYMENT_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          query="INSERT INTO public.gsa_calculator_pro_payments(order_nsu,tool_id,visitor_token_hash,valor_centavos,duracao_acesso_minutos,status,expires_at,raw_payload) VALUES ('$order','termination','$visitor_hash',1234,37,'pending',now()+interval '1 hour',jsonb_build_object('audit_marker','$marker')) RETURNING id; SELECT public.gsa_calculator_finalize_payment_internal('$order','$transaction','audit-slug',NULL,'audit',1234,jsonb_build_object('audit',true)) AS result;"
+          jq -n --arg query "$query" '{query:$query,read_only:false}' > /tmp/payment-finalize.json
+          curl --fail-with-body --silent --show-error --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/payment-finalize.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/payment-finalize-result.json
+          jq -c . /tmp/payment-finalize-result.json
+          echo "$marker" > /tmp/payment-marker
+
+          query="SELECT p.status,p.duracao_acesso_minutos,p.transaction_nsu,g.status AS grant_status,round(extract(epoch from (g.valid_until-p.paid_at))/60)::integer AS granted_minutes FROM public.gsa_calculator_pro_payments p JOIN public.gsa_calculator_pro_grants g ON g.reference_id=p.id AND g.source='payment' WHERE p.order_nsu='$order';"
+          jq -n --arg query "$query" '{query:$query,read_only:true}' > /tmp/payment-check.json
+          curl --fail-with-body --silent --show-error --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/payment-check.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/payment-check-result.json
+          jq -c . /tmp/payment-check-result.json
+          jq -e '.[0].status=="paid" and .[0].duracao_acesso_minutos==37 and .[0].grant_status=="active" and (.[0].granted_minutes>=36 and .[0].granted_minutes<=37)' /tmp/payment-check-result.json >/dev/null
+
+          jq -n --arg visitor "$visitor" '{action:"status",payload:{tool_id:"termination",visitor_token:$visitor}}' > /tmp/payment-status.json
+          curl --fail-with-body --silent --show-error --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/payment-status.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro" > /tmp/payment-status-result.json
+          jq -e '.access==true and .source=="payment"' /tmp/payment-status-result.json >/dev/null
+
+          jq -n --arg visitor "$visitor" '{action:"activate",payload:{tool_id:"termination",visitor_token:$visitor}}' > /tmp/payment-activate.json
+          curl --fail-with-body --silent --show-error --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/payment-activate.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro" > /tmp/payment-activate-result.json
+          jq -e '.success==true and (.token|length)>20' /tmp/payment-activate-result.json >/dev/null
+
+          order2="$(cat /proc/sys/kernel/random/uuid)"
+          marker2="AUDIT_DUPLICATE_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          query="INSERT INTO public.gsa_calculator_pro_payments(order_nsu,tool_id,visitor_token_hash,valor_centavos,duracao_acesso_minutos,status,expires_at,raw_payload) VALUES ('$order2','termination',encode(digest('duplicate','sha256'),'hex'),1234,37,'pending',now()+interval '1 hour',jsonb_build_object('audit_marker','$marker2')) RETURNING id; SELECT public.gsa_calculator_finalize_payment_internal('$order2','$transaction','audit-slug-2',NULL,'audit',1234,'{}'::jsonb) AS result;"
+          jq -n --arg query "$query" '{query:$query,read_only:false}' > /tmp/duplicate.json
+          curl --fail-with-body --silent --show-error --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/duplicate.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/duplicate-result.json
+          jq -c . /tmp/duplicate-result.json
+          echo "$marker2" > /tmp/duplicate-marker
+          jq -e '.[1].result.success==false and .[1].result.error=="transaction_already_used"' /tmp/duplicate-result.json >/dev/null
+          echo 'PAYMENT_FINALIZATION_AND_DUPLICATE_DEFENSE_OK'
+
+      - name: Verify webhook retry response and checkout readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          webhook_http="$(curl --silent --show-error --output /tmp/webhook-result.json --write-out '%{http_code}' --request POST --header 'Content-Type: application/json' --data '{"order_nsu":"unknown-audit","transaction_nsu":"unknown","slug":"unknown"}' "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro-webhook")"
+          echo "WEBHOOK_UNKNOWN_HTTP=$webhook_http"
+          jq -c . /tmp/webhook-result.json
+          test "$webhook_http" = '400'
+          jq -e '.success==false' /tmp/webhook-result.json >/dev/null
+
+          anon="$(cat /tmp/anon-key)"
+          visitor="gsa_checkout_status_${GITHUB_RUN_ID}_12345678901234567890"
+          jq -n --arg visitor "$visitor" '{action:"status",payload:{tool_id:"termination",visitor_token:$visitor}}' > /tmp/checkout-status.json
+          curl --fail-with-body --silent --show-error --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/checkout-status.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro" > /tmp/checkout-status-result.json
+          jq -c . /tmp/checkout-status-result.json
+          ready="$(jq -r '.checkout_available' /tmp/checkout-status-result.json)"
+          echo "CHECKOUT_AVAILABLE=$ready"
+          test "$ready" = 'false'
+          echo 'CHECKOUT_CORRECTLY_BLOCKED_UNTIL_INFINITETAG'
+
+      - name: Cleanup audit records
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          markers="$(cat /tmp/voucher-marker /tmp/concurrent-marker 2>/dev/null)"
+          payment_markers="$(cat /tmp/payment-marker /tmp/duplicate-marker 2>/dev/null)"
+          query=""
+          for marker in $markers; do
+            query="$query DELETE FROM public.gsa_calculator_pro_events WHERE grant_id IN (SELECT g.id FROM public.gsa_calculator_pro_grants g JOIN public.gsa_calculator_pro_vouchers v ON v.id=g.reference_id WHERE v.observacoes='$marker'); DELETE FROM public.gsa_calculator_pro_sessions WHERE grant_id IN (SELECT g.id FROM public.gsa_calculator_pro_grants g JOIN public.gsa_calculator_pro_vouchers v ON v.id=g.reference_id WHERE v.observacoes='$marker'); DELETE FROM public.gsa_calculator_pro_grants WHERE reference_id IN (SELECT id FROM public.gsa_calculator_pro_vouchers WHERE observacoes='$marker'); DELETE FROM public.gsa_calculator_pro_vouchers WHERE observacoes='$marker';"
           done
-          query="INSERT INTO supabase_migrations.schema_migrations(version,name,statements) VALUES ('20260724163000','harden_calculator_pro_voucher_payment',ARRAY[]::text[]),('20260724163500','atomic_calculator_pro_voucher_redemption',ARRAY[]::text[]),('20260724164000','calculator_pro_admin_voucher_errors',ARRAY[]::text[]) ON CONFLICT (version) DO UPDATE SET name=EXCLUDED.name;"
-          jq -n --arg query "$query" '{query:$query,read_only:false}' > /tmp/history.json
-          curl --fail-with-body --silent --show-error --request POST \
-            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            --header 'Content-Type: application/json' \
-            --data-binary @/tmp/history.json \
-            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/history-result.json
-      - name: Deploy functions
-        run: |
-          supabase functions deploy gsa-free-tools-pro --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
-          supabase functions deploy gsa-free-tools-pro-webhook --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
-      - name: Verify production schema
-        shell: bash
-        run: |
-          set -euo pipefail
-          query="SELECT to_regclass('public.gsa_calculator_pro_runtime_config') IS NOT NULL AS runtime_config, EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='gsa_calculator_pro_payments' AND column_name='duracao_acesso_minutos') AS duration_snapshot, to_regprocedure('public.gsa_calculator_redeem_voucher_and_create_session_internal(text,text,text,uuid,text)') IS NOT NULL AS atomic_voucher, EXISTS(SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='idx_gsa_calculator_pro_transaction_unique') AS unique_transaction; SELECT version FROM supabase_migrations.schema_migrations WHERE version IN ('20260724163000','20260724163500','20260724164000') ORDER BY version;"
-          jq -n --arg query "$query" '{query:$query,read_only:true}' > /tmp/verify.json
-          curl --fail-with-body --silent --show-error --request POST \
-            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            --header 'Content-Type: application/json' \
-            --data-binary @/tmp/verify.json \
-            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/verify-result.json
-          jq -c . /tmp/verify-result.json
-          jq -e '.[0] | all(. == true)' /tmp/verify-result.json >/dev/null
-          test "$(jq 'length' /tmp/verify-result.json)" -ge 4
+          for marker in $payment_markers; do
+            query="$query DELETE FROM public.gsa_calculator_pro_events WHERE payment_id IN (SELECT id FROM public.gsa_calculator_pro_payments WHERE raw_payload->>'audit_marker'='$marker') OR grant_id IN (SELECT g.id FROM public.gsa_calculator_pro_grants g JOIN public.gsa_calculator_pro_payments p ON p.id=g.reference_id WHERE p.raw_payload->>'audit_marker'='$marker'); DELETE FROM public.gsa_calculator_pro_sessions WHERE grant_id IN (SELECT g.id FROM public.gsa_calculator_pro_grants g JOIN public.gsa_calculator_pro_payments p ON p.id=g.reference_id WHERE p.raw_payload->>'audit_marker'='$marker'); DELETE FROM public.gsa_calculator_pro_grants WHERE reference_id IN (SELECT id FROM public.gsa_calculator_pro_payments WHERE raw_payload->>'audit_marker'='$marker'); DELETE FROM public.gsa_calculator_pro_payments WHERE raw_payload->>'audit_marker'='$marker';"
+          done
+          if [ -n "$query" ]; then
+            jq -n --arg query "$query" '{query:$query,read_only:false}' > /tmp/cleanup.json
+            curl --silent --show-error --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/cleanup.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" >/dev/null
+          fi
