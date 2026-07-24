@@ -89,7 +89,7 @@ function PartnerVisual({ partner, detail = false }: { partner: Partner; detail?:
   );
 }
 
-function HeroPartnerCard({ partner, position, onOpen }: { partner: Partner; position: number; onOpen: () => void }) {
+function HeroPartnerCard({ partner, position, onOpen }: { key?: string | number; partner: Partner; position: number; onOpen: () => void }) {
   const source = partner.cover_url || partner.logo_url;
 
   return (
