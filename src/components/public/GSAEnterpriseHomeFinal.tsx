@@ -4,7 +4,7 @@ import { LogoGSA } from '../ui/LogoGSA';
 import { AccessibleDialog } from '../ui/AccessibleDialog';
 import { PartnersPage } from './PartnersPage';
 import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
-import { FinalFreeToolsPalettePage } from './FinalFreeToolsPalettePage';
+import { FreeToolsExperiencePage } from './FreeToolsExperiencePage';
 import { PublicFooter } from './final/PublicFooter';
 import { PublicHomeLanding } from './final/PublicHomeLanding';
 import { PublicServicesPage } from './final/PublicServicesPage';
@@ -113,7 +113,7 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
 
       {props.publicPage === 'home' && <PublicHomeLanding reduceMotion={Boolean(reduceMotion)} setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} />}
       {props.publicPage === 'services' && <PublicServicesPage audience={props.publicAudience} setAudience={props.setPublicAudience} packages={filteredPackages} publicServices={props.publicServices} onBack={() => props.setPublicPage('home')} onSelect={(item) => { setSelectedPackage(item); props.onServiceDetailChange?.(getServicePackageSlug(item)); }} />}
-      {props.publicPage === 'free-tools' && <FinalFreeToolsPalettePage onBack={() => props.setPublicPage('home')} onServices={() => props.setPublicPage('services')} />}
+      {props.publicPage === 'free-tools' && <FreeToolsExperiencePage onBack={() => props.setPublicPage('home')} onServices={() => props.setPublicPage('services')} />}
       {props.publicPage === 'partners' && <PartnersPage selectedSlug={props.initialPartnerSlug} onSelectPartner={(slug) => props.onPartnerDetailChange?.(slug)} onBack={() => props.setPublicPage('home')} />}
 
       <PublicFooter setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} onAdminLogin={props.onAdminLogin} onPrivacy={() => setPrivacyOpen(true)} />
