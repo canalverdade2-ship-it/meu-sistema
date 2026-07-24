@@ -1,68 +1,61 @@
-name: Verify Calculator Pro Runtime
+name: Deploy and Verify Calculator Pro Runtime
 
 on:
   pull_request:
     branches: [main]
     paths:
       - '.github/workflows/diagnose-calculator-pro-runtime.yml'
+      - 'supabase/functions/gsa-free-tools-pro/**'
+      - 'supabase/functions/gsa-free-tools-pro-webhook/**'
 
 permissions:
   contents: read
 
 jobs:
-  verify:
+  deploy-and-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
-      GH_INFINITEPAY_HANDLE: ${{ secrets.INFINITEPAY_HANDLE }}
-      GH_PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
-      GH_ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
           version: 2.101.0
 
-      - name: Synchronize available checkout secrets
+      - name: Validate Calculator Pro functions
         shell: bash
         run: |
           set -euo pipefail
-          if [ -n "$GH_INFINITEPAY_HANDLE" ]; then
-            supabase secrets set INFINITEPAY_HANDLE="$GH_INFINITEPAY_HANDLE" --project-ref "$SUPABASE_PROJECT_REF"
-            echo 'GITHUB_INFINITEPAY_HANDLE=AVAILABLE_AND_SYNCED'
-          else
-            echo 'GITHUB_INFINITEPAY_HANDLE=MISSING'
+          deno check supabase/functions/gsa-free-tools-pro/index.ts
+          deno check supabase/functions/gsa-free-tools-pro-webhook/index.ts
+          grep -q 'MAX_PRODUCT_DURATION_MINUTES' supabase/functions/gsa-free-tools-pro/index.ts
+          grep -q 'CLIENT_REVALIDATION_MINUTES' supabase/functions/gsa-free-tools-pro/index.ts
+          if grep -q 'Math.min(productDuration, 120)' supabase/functions/gsa-free-tools-pro/index.ts; then
+            echo 'Old hidden 120-minute cap still present'
+            exit 1
           fi
 
-          if [ -n "$GH_PUBLIC_SITE_URL" ]; then
-            supabase secrets set PUBLIC_SITE_URL="$GH_PUBLIC_SITE_URL" --project-ref "$SUPABASE_PROJECT_REF"
-            echo 'GITHUB_PUBLIC_SITE_URL=AVAILABLE_AND_SYNCED'
-          else
-            echo 'GITHUB_PUBLIC_SITE_URL=MISSING'
-          fi
-
-          if [ -n "$GH_ALLOWED_ORIGINS" ]; then
-            supabase secrets set ALLOWED_ORIGINS="$GH_ALLOWED_ORIGINS" --project-ref "$SUPABASE_PROJECT_REF"
-            echo 'GITHUB_ALLOWED_ORIGINS=AVAILABLE_AND_SYNCED'
-          else
-            echo 'GITHUB_ALLOWED_ORIGINS=MISSING_OR_ALREADY_MANAGED_ONLY_IN_SUPABASE'
-          fi
-
-      - name: Report Supabase checkout secret status
+      - name: Deploy Calculator Pro functions
         shell: bash
         run: |
           set -euo pipefail
-          supabase secrets list --project-ref "$SUPABASE_PROJECT_REF" --output json > /tmp/secrets.json
-          jq -r '.[].name' /tmp/secrets.json | sort > /tmp/secret-names.txt
-          for name in INFINITEPAY_HANDLE PUBLIC_SITE_URL ALLOWED_ORIGINS; do
-            if grep -qx "$name" /tmp/secret-names.txt; then
-              echo "$name=CONFIGURED"
-            else
-              echo "$name=MISSING"
-            fi
-          done
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          supabase functions deploy gsa-free-tools-pro \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            --no-verify-jwt
+          supabase functions deploy gsa-free-tools-pro-webhook \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            --no-verify-jwt
 
       - name: Compare production database with public function
         shell: bash
