@@ -2,6 +2,7 @@
 @import './styles/partners/detail.css';
 @import './styles/partners/application.css';
 @import './styles/partners/responsive.css';
+@import './styles/partners/identity.css';
 
 body.gsa-public-partners {
   --partners-navy: #0c1724;
