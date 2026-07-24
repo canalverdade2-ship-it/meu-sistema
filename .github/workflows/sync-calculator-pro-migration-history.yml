@@ -1,5 +1,6 @@
 name: Sync Calculator Pro Migration History
 
+# Execução técnica observável para confirmar o histórico remoto.
 on:
   push:
     branches: [main]
