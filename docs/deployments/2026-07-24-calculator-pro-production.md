@@ -20,6 +20,20 @@ As migrações abaixo foram executadas na ordem indicada pela API de gerenciamen
 
 Execução de implantação: GitHub Actions `30093561473`.
 
+## Histórico remoto sincronizado
+
+As cinco versões também foram registradas em `supabase_migrations.schema_migrations`, evitando que um futuro `supabase db push` tente reaplicar alterações já existentes.
+
+Execução de sincronização e conferência: GitHub Actions `30094297755`.
+
+Versões confirmadas:
+
+- `20260723233000` — `free_tools_pro_access`;
+- `20260723233500` — `free_tools_pro_service_permissions`;
+- `20260723234000` — `free_tools_pro_hardening`;
+- `20260724113000` — `simplify_calculator_pro_eligibility_and_public_promotions`;
+- `20260724130000` — `repair_calculator_pro_products`.
+
 ## Produtos confirmados no banco
 
 | Ferramenta | Ativa | Preço inicial | Duração | Benefício automático de cliente |
@@ -41,6 +55,7 @@ Execução de implantação: GitHub Actions `30093561473`.
 Execuções de validação:
 
 - Estado dos produtos e objetos: `30093642937`;
-- Contrato de segurança, RLS e permissões: `30093723194`.
+- Contrato de segurança, RLS e permissões: `30093723194`;
+- Histórico remoto das migrações: `30094297755`.
 
-Resultado final: `CALCULATOR_PRO_PRODUCTION_READY` e `CALCULATOR_PRO_SECURITY_CONTRACT_READY`.
+Resultado final: `CALCULATOR_PRO_PRODUCTION_READY`, `CALCULATOR_PRO_SECURITY_CONTRACT_READY` e `CALCULATOR_PRO_MIGRATION_HISTORY_SYNCED`.
