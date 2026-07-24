@@ -11,6 +11,7 @@ import { PublicHomeLanding } from './final/PublicHomeLanding';
 import { PublicServicesPage } from './final/PublicServicesPage';
 import { RequestChannelDialog, ServiceDetailsDialog } from './final/PublicServiceDialogs';
 import { PublicHeader } from './final/PublicHeader';
+import './final/PublicHomePlan3.css';
 import {
   getServicePackageSlug,
   type Audience,
@@ -99,7 +100,7 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
   const isPartnerApplication = props.publicPage === 'partners' && props.initialPartnerSlug === 'solicitar';
 
   return (
-    <div className="min-h-screen bg-[#f4f1ea] text-neutral-950">
+    <div className="gsa-home-plan-3 min-h-screen bg-[#f4f1ea] text-neutral-950">
       <AccessibleDialog isOpen={showIntro} onClose={dismissIntro} ariaLabel="Introdução GSA" zIndexClassName="z-[100]" overlayClassName="items-center justify-center bg-[#050608] px-6 text-center md:hidden" panelClassName="max-w-lg bg-transparent text-center text-white shadow-none">
         <LogoGSA size="xl" variant="light" />
         <h1 className="mt-6 text-5xl font-serif tracking-[0.14em] text-[#d8bd73]">GSA HUB</h1>
