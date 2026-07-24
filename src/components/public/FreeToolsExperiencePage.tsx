@@ -3,6 +3,7 @@ import { FreeToolsPage } from './FreeToolsPage';
 interface FreeToolsExperiencePageProps {
   onBack: () => void;
   onServices: () => void;
+  onClientLogin: () => void;
 }
 
 const RESPONSIVE_STYLES = `
