@@ -30,7 +30,7 @@
     "test:affiliates": "tsx scripts/check-affiliate-contracts.ts",
     "test:realtime": "tsx scripts/check-realtime-contracts.ts",
     "test:careers": "tsx scripts/check-careers-contracts.ts",
-    "test:site-campaigns": "tsx scripts/check-site-campaign-contracts.ts",
+    "test:site-campaigns": "tsx scripts/check-site-campaign-contracts.ts && node scripts/check-site-campaign-migrations-runtime.cjs",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/1-public-smoke.spec.ts",
     "test:e2e:real": "ALLOW_REAL_DATA_STRESS_TEST=true playwright test tests/e2e/0-stress-real-data.spec.ts --workers=3",
