@@ -2,13 +2,15 @@ name: Free Tools Pro Quality
 
 on:
   push:
-    branches: [main, 'feat/**', 'fix/**']
+    branches: [main, 'feat/**', 'fix/**', 'audit/**']
     paths:
       - 'src/components/public/FreeTools*.tsx'
       - 'src/components/admin/CalculatorProAdminPanel.tsx'
+      - 'src/components/admin/CalculatorProPaymentConfiguration.tsx'
       - 'src/components/admin/ConfiguracoesModule.tsx'
       - 'src/lib/freeTools*.ts'
       - 'scripts/check-free-tools-contracts.ts'
+      - 'scripts/check-free-tools-pro-security-contracts.ts'
       - 'scripts/check-calculator-pro-panel-contracts.ts'
       - 'supabase/functions/gsa-free-tools-pro/**'
       - 'supabase/functions/gsa-free-tools-pro-webhook/**'
@@ -21,9 +23,11 @@ on:
     paths:
       - 'src/components/public/FreeTools*.tsx'
       - 'src/components/admin/CalculatorProAdminPanel.tsx'
+      - 'src/components/admin/CalculatorProPaymentConfiguration.tsx'
       - 'src/components/admin/ConfiguracoesModule.tsx'
       - 'src/lib/freeTools*.ts'
       - 'scripts/check-free-tools-contracts.ts'
+      - 'scripts/check-free-tools-pro-security-contracts.ts'
       - 'scripts/check-calculator-pro-panel-contracts.ts'
       - 'supabase/functions/gsa-free-tools-pro/**'
       - 'supabase/functions/gsa-free-tools-pro-webhook/**'
@@ -63,6 +67,9 @@ jobs:
 
       - name: Free and Pro contracts
         run: npm run test:free-tools
+
+      - name: Calculator Pro security contracts
+        run: npx tsx scripts/check-free-tools-pro-security-contracts.ts
 
       - name: Calculator Pro panel recovery contract
         run: npx tsx scripts/check-calculator-pro-panel-contracts.ts
