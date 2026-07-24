@@ -1,0 +1,201 @@
+name: Implement Remaining Calculators
+
+on:
+  push:
+    branches: ['feat/calculadoras-publicas-pendentes-20260724']
+    paths: ['.github/workflows/implement-remaining-calculators.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/calculadoras-publicas-pendentes-20260724
+      - name: Connect all six calculators
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace(path, old, new, count=None):
+              file = Path(path)
+              text = file.read_text()
+              if old not in text:
+                  raise SystemExit(f'Pattern not found in {path}: {old[:120]}')
+              text = text.replace(old, new, count if count is not None else -1)
+              file.write_text(text)
+
+          # Remove an unused formatter from the new calculator component.
+          replace(
+              'src/components/public/FreeToolsAdditionalCalculators.tsx',
+              "const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });\n",
+              '',
+              1,
+          )
+
+          # Make all six tools valid throughout the client return/payment flow.
+          replace(
+              'src/lib/freeToolsProAccess.ts',
+              "export type ProToolId = 'termination' | 'retirement' | 'vacation';",
+              "export type ProToolId = 'termination' | 'retirement' | 'vacation' | 'thirteenth' | 'benefits' | 'bpc';",
+              1,
+          )
+          replace(
+              'src/lib/freeToolsProAccess.ts',
+              "!['termination', 'retirement', 'vacation'].includes(tool)",
+              "!['termination', 'retirement', 'vacation', 'thirteenth', 'benefits', 'bpc'].includes(tool)",
+              1,
+          )
+
+          # Enable all tool identifiers in the public Edge Function.
+          replace(
+              'supabase/functions/gsa-free-tools-pro/index.ts',
+              "const TOOLS = new Set(['termination', 'retirement', 'vacation']);",
+              "const TOOLS = new Set(['termination', 'retirement', 'vacation', 'thirteenth', 'benefits', 'bpc']);",
+              1,
+          )
+
+          # Add presentation metadata to the tiered modal.
+          replace(
+              'src/components/public/FreeToolsTieredCalculatorDialog.tsx',
+              "  ArrowRight,\n  BriefcaseBusiness,\n  Calculator,",
+              "  ArrowRight,\n  Baby,\n  BriefcaseBusiness,\n  Calculator,\n  HandCoins,\n  HeartHandshake,",
+              1,
+          )
+          replace(
+              'src/components/public/FreeToolsTieredCalculatorDialog.tsx',
+              "  vacation: {\n    icon: Palmtree,\n    title: 'Calculadora de férias',\n  },\n};",
+              "  vacation: {\n    icon: Palmtree,\n    title: 'Calculadora de férias',\n  },\n  thirteenth: {\n    icon: HandCoins,\n    title: 'Calculadora de 13º salário',\n  },\n  benefits: {\n    icon: Baby,\n    title: 'Triagem de benefícios do INSS',\n  },\n  bpc: {\n    icon: HeartHandshake,\n    title: 'Triagem BPC / LOAS',\n  },\n};",
+              1,
+          )
+
+          tool_names_old = "  vacation: 'Cálculo de férias Pro',\n};"
+          tool_names_new = "  vacation: 'Cálculo de férias Pro',\n  thirteenth: '13º salário Pro',\n  benefits: 'Benefícios do INSS Pro',\n  bpc: 'BPC / LOAS Pro',\n};"
+          replace('src/components/public/FreeToolsProUnlockDialog.tsx', tool_names_old, tool_names_new, 1)
+          replace('src/components/public/FreeToolsProEligibilityDialog.tsx', tool_names_old, tool_names_new, 1)
+
+          # Convert the three preview cards into real interactive tools.
+          page = Path('src/components/public/FreeToolsPage.tsx')
+          text = page.read_text()
+          text = text.replace("  id: FreeToolId | 'thirteenth' | 'benefits' | 'bpc';", '  id: FreeToolId;', 1)
+          for tool_id in ('thirteenth', 'benefits', 'bpc'):
+              pattern = rf"(\{{ id: '{tool_id}'.*?available: )false( \}},)"
+              text, changed = re.subn(pattern, r'\1true\2', text, count=1)
+              if changed != 1:
+                  raise SystemExit(f'Could not activate {tool_id}')
+          text = text.replace("const FUTURE_TOOLS = TOOLS.filter((tool) => !tool.available);\n", '', 1)
+          future_pattern = re.compile(r'\n      <section className="border-y border-\[#d7d1c6\].*?</section>\n', re.S)
+          replacement = '''
+      <section className="border-y border-[#d7d1c6] bg-[#f8f5ef] py-12 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-6 rounded-2xl border border-[#d4cdc2] bg-white p-6 shadow-[0_14px_36px_rgba(24,32,40,0.06)] sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806128]">Área ampliada</p>
+              <h2 className="mt-3 text-2xl font-black tracking-[-0.03em] text-[#111820] sm:text-3xl">As seis ferramentas já estão disponíveis.</h2>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-[#667078]">13º salário, Benefícios do INSS e BPC / LOAS agora possuem consulta Free e análise Pro, juntamente com Rescisão, Aposentadoria e Férias.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-[0.1em] text-[#6d5727]">
+              {['13º', 'INSS', 'BPC'].map((label) => <span key={label} className="rounded-xl border border-[#d6c79e] bg-[#f7f0dc] px-4 py-3">{label}</span>)}
+            </div>
+          </div>
+        </div>
+      </section>
+'''
+          text, changed = future_pattern.subn(replacement, text, count=1)
+          if changed != 1:
+              raise SystemExit('Future tools section not found')
+          page.write_text(text)
+
+          # Add the three products to the administrative control panel.
+          admin = Path('src/components/admin/CalculatorProAdminPanel.tsx')
+          text = admin.read_text()
+          text = text.replace(
+              "  vacation: 'Cálculo de férias',\n};",
+              "  vacation: 'Cálculo de férias',\n  thirteenth: '13º salário',\n  benefits: 'Benefícios do INSS',\n  bpc: 'BPC / LOAS',\n};",
+              1,
+          )
+          text = text.replace(
+              "  vacation: 'FT-03',\n};",
+              "  vacation: 'FT-03',\n  thirteenth: 'FT-04',\n  benefits: 'FT-05',\n  bpc: 'FT-06',\n};",
+              1,
+          )
+          default_end = """  {
+    tool_id: 'vacation',
+    nome: 'Cálculo de férias Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+];"""
+          default_new = """  {
+    tool_id: 'vacation',
+    nome: 'Cálculo de férias Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+  {
+    tool_id: 'thirteenth',
+    nome: '13º salário Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+  {
+    tool_id: 'benefits',
+    nome: 'Benefícios do INSS Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+  {
+    tool_id: 'bpc',
+    nome: 'BPC / LOAS Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+];"""
+          if default_end not in text:
+              raise SystemExit('Admin default product block not found')
+          text = text.replace(default_end, default_new, 1)
+          replacements = {
+              "Number(result?.count || 0) < 3": "Number(result?.count || 0) < DEFAULT_PRODUCTS.length",
+              "as três configurações obrigatórias": "as seis configurações obrigatórias",
+              "às três calculadoras Pro": "às seis calculadoras Pro",
+              "das três calculadoras": "das seis calculadoras",
+              "As três calculadoras obrigatórias": "As seis calculadoras obrigatórias",
+              "de 3 configurações": "de ${DEFAULT_PRODUCTS.length} configurações",
+              "as três calculadoras Pro": "as seis calculadoras Pro",
+              "Aplicar às três": "Aplicar às seis",
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+          admin.write_text(text)
+
+          # Confirm no preview state remains for the new tools.
+          final_page = page.read_text()
+          if 'FUTURE_TOOLS' in final_page or "available: false" in final_page:
+              raise SystemExit('A future/inactive calculator remains on the public page')
+          PY
+
+          git config user.name 'GSA Calculators Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src/components/public src/components/admin/CalculatorProAdminPanel.tsx src/lib/freeToolsProAccess.ts supabase/functions/gsa-free-tools-pro/index.ts
+          git commit -m 'Disponibilizar seis calculadoras públicas e Pro'
+          git push origin HEAD:feat/calculadoras-publicas-pendentes-20260724
