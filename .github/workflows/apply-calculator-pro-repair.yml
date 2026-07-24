@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  diagnose-sql-api:
+  migrate:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -18,20 +18,29 @@ jobs:
       SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
 
     steps:
-      - name: Execute minimal SQL query
+      - name: Apply repair migration and print database response
         shell: bash
         run: |
           set -euo pipefail
           test -n "$SUPABASE_ACCESS_TOKEN"
-          payload='{"query":"select 1 as connection_ok","read_only":true}'
+
+          curl --fail --silent --show-error \
+            https://raw.githubusercontent.com/canalverdade2-ship-it/meu-sistema/main/supabase/migrations/20260724130000_repair_calculator_pro_products.sql \
+            --output /tmp/migration.sql
+
+          jq -n --rawfile query /tmp/migration.sql \
+            '{query: $query, read_only: false}' > /tmp/payload.json
+
           status="$(curl --silent --show-error \
             --output /tmp/response.json \
             --write-out '%{http_code}' \
             --request POST \
             --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
             --header 'Content-Type: application/json' \
-            --data "$payload" \
+            --data-binary @/tmp/payload.json \
             "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
+
           echo "HTTP_STATUS=$status"
           cat /tmp/response.json | jq . || cat /tmp/response.json
           test "$status" = '201'
+          echo 'MIGRATION_APPLIED'
