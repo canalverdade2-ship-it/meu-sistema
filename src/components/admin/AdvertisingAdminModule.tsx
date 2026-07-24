@@ -355,7 +355,7 @@ export function AdvertisingAdminModule() {
   );
 }
 
-function ProposalCard({ proposal }: { proposal: AdvertisingProposal }) {
+function ProposalCard({ proposal }: { proposal: AdvertisingProposal; key?: string }) {
   return <article className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{proposal.company_name || `Proposta ${proposal.id.slice(0, 8)}`}</h2><p className="text-sm text-neutral-500">Versão {proposal.current_version} · válida até {date(proposal.valid_until)}</p></div><div className="text-right"><p className="text-lg font-black">{money(proposal.total_amount)}</p><p className="text-xs font-bold uppercase text-neutral-500">{proposal.status}</p></div></div>{proposal.negotiations?.length ? <div className="mt-4 space-y-2 border-t pt-4">{proposal.negotiations.map((item) => <p key={item.id} className="rounded-xl bg-neutral-50 p-3 text-sm"><strong>{item.actor_type === 'admin' ? 'GSA' : 'Anunciante'}:</strong> {item.message}{item.proposed_amount ? ` — ${money(item.proposed_amount)}` : ''}</p>)}</div> : null}</article>;
 }
 function Empty({ text }: { text: string }) { return <div className="rounded-2xl border border-dashed border-neutral-200 bg-white p-10 text-center text-sm font-bold text-neutral-400">{text}</div>; }
