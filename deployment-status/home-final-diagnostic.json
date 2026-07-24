@@ -1,10 +1,10 @@
 {
-  "generated_at_utc": "2026-07-24T02:02:02.478Z",
-  "validated_sha": "d7c40ab3ca334075be4fdc810171dfbfeaeae47a",
+  "generated_at_utc": "2026-07-24T02:02:29.460Z",
+  "validated_sha": "42cbc36b6abe89c203e824b21d25f07f139f2092",
   "install_exit_code": 0,
   "test_exit_code": 1,
   "result": "failure",
-  "install_log_sha256": "bb9637ea90e6ecd00300ccb84e946344c4df86a7ce173b271d81b9ac4cd54b1d",
+  "install_log_sha256": "3b2870311451f9a2d4e9a521481697b6af23736db64044656a78c31e372744e9",
   "test_log_sha256": "51362ba2dac4568d98ad958eedbe3a5c8da4ea303c6b06952d76c8c083ca7020",
   "failed_markers": [
     "AssertionError [ERR_ASSERTION]: A coleta de metadados deve ser informada ao usuário",
