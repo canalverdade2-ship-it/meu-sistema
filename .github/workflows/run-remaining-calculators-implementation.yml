@@ -1,0 +1,33 @@
+name: Run Remaining Calculators Implementation
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/run-remaining-calculators-implementation.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/calculadoras-publicas-pendentes-20260724
+      - name: Run the isolated implementation patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk '
+            /python - <<.PY./ { capture=1; next }
+            capture && /^          PY$/ { capture=0; exit }
+            capture { sub(/^          /, ""); print }
+          ' .github/workflows/implement-remaining-calculators.yml > /tmp/implement.py
+          test -s /tmp/implement.py
+          python /tmp/implement.py
+          git config user.name 'GSA Calculators Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src/components/public src/components/admin/CalculatorProAdminPanel.tsx src/lib/freeToolsProAccess.ts supabase/functions/gsa-free-tools-pro/index.ts
+          git commit -m 'Disponibilizar seis calculadoras públicas e Pro'
+          git push origin HEAD:feat/calculadoras-publicas-pendentes-20260724
