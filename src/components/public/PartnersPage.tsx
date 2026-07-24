@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { getPublicPartner, listPublicPartners } from '../../features/partners/service';
 import { PARTNER_MODE_LABELS, type Partner } from '../../features/partners/types';
+import { LogoGSA } from '../ui/LogoGSA';
 import { PartnerApplicationModal } from './PartnerApplicationModal';
 import '../../partners.css';
 
@@ -81,10 +82,39 @@ function PartnerVisual({ partner, detail = false }: { partner: Partner; detail?:
       {partner.featured && (
         <span className="partner-featured-label">
           <ShieldCheck aria-hidden="true" />
-          Destaque da rede
+          Seleção GSA
         </span>
       )}
     </div>
+  );
+}
+
+function HeroPartnerCard({ partner, position, onOpen }: { key?: string | number; partner: Partner; position: number; onOpen: () => void }) {
+  const source = partner.cover_url || partner.logo_url;
+
+  return (
+    <button type="button" onClick={onOpen} className="partners-hero-card">
+      <span className="partners-hero-card__number">{String(position).padStart(2, '0')}</span>
+      <span className="partners-hero-card__visual">
+        {source ? (
+          <img
+            src={source}
+            alt=""
+            className={partner.cover_url ? 'is-cover' : 'is-logo'}
+            loading={position === 1 ? 'eager' : 'lazy'}
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <span className="partners-hero-card__fallback" aria-hidden="true">{partner.name.slice(0, 2).toUpperCase()}</span>
+        )}
+      </span>
+      <span className="partners-hero-card__copy">
+        <small>{partner.category}</small>
+        <strong>{partner.name}</strong>
+        <span>{locationLabel(partner) || PARTNER_MODE_LABELS[partner.service_mode]}</span>
+      </span>
+      <ArrowRight aria-hidden="true" />
+    </button>
   );
 }
 
@@ -170,9 +200,11 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
 
   const featuredPartners = useMemo(() => filtered.filter((partner) => partner.featured), [filtered]);
   const regularPartners = useMemo(() => filtered.filter((partner) => !partner.featured), [filtered]);
-  const regionCount = useMemo(() => new Set(
-    partners.flatMap((partner) => partner.service_regions || []).map((region) => region.trim().toLocaleLowerCase('pt-BR')).filter(Boolean),
-  ).size, [partners]);
+  const heroPartners = useMemo(() => {
+    const featured = partners.filter((partner) => partner.featured);
+    const remaining = partners.filter((partner) => !partner.featured);
+    return [...featured, ...remaining].slice(0, 3);
+  }, [partners]);
 
   if (selectedSlug) {
     if (loading) return <PartnersLoading detail />;
@@ -210,110 +242,194 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
 
   return (
     <>
-      <main className="partners-page">
-        <section className="partners-hero">
-          <div className="partners-hero__grid" aria-hidden="true" />
-          <div className="partners-container partners-hero__content">
-            <button type="button" onClick={onBack} className="partner-back-link">
+      <main className="partners-page partners-listing-page">
+        <header className="partners-topbar">
+          <div className="partners-container partners-topbar__inner">
+            <button type="button" onClick={onBack} className="partners-topbar__back">
               <ArrowLeft aria-hidden="true" />
-              Voltar à página inicial
+              Voltar ao site
             </button>
+            <LogoGSA size="sm" variant="dark" showText />
+            <button type="button" onClick={() => setApplicationOpen(true)} className="partners-topbar__action">
+              Apresentar empresa
+              <ArrowRight aria-hidden="true" />
+            </button>
+          </div>
+        </header>
 
-            <div className="partners-hero__layout">
-              <div className="partners-hero__copy">
-                <p className="partners-kicker">Rede institucional GSA HUB</p>
-                <h1>Parcerias que ampliam capacidade, confiança e alcance.</h1>
-                <p className="partners-hero__lead">
-                  Um diretório selecionado de empresas, profissionais e organizações que complementam o ecossistema GSA com atuação responsável, especialidades reais e canais públicos de atendimento.
-                </p>
+        <section className="partners-hero" aria-labelledby="partners-hero-title">
+          <div className="partners-container partners-hero__layout">
+            <div className="partners-hero__copy">
+              <p className="partners-kicker">Rede de parceiros GSA HUB</p>
+              <h1 id="partners-hero-title">Capacidade empresarial conectada a uma rede de confiança.</h1>
+              <p className="partners-hero__lead">
+                Reunimos empresas, profissionais e organizações com atuação comprovável para ampliar o acesso dos clientes GSA a especialidades, soluções e canais de atendimento qualificados.
+              </p>
+
+              <div className="partners-hero__actions">
+                <a href="#diretorio-parceiros" className="partner-primary-button">
+                  Explorar o diretório
+                  <ArrowRight aria-hidden="true" />
+                </a>
+                <button type="button" onClick={() => setApplicationOpen(true)} className="partner-secondary-button">
+                  Solicitar parceria
+                </button>
               </div>
 
-              <aside className="partners-hero__statement" aria-label="Princípios da rede de parceiros">
-                <p>Uma parceria só entra nesta vitrine após análise administrativa.</p>
-                <div><span>01</span><strong>Identificação</strong></div>
-                <div><span>02</span><strong>Análise</strong></div>
-                <div><span>03</span><strong>Publicação</strong></div>
-              </aside>
+              <div className="partners-hero__assurance" aria-label="Compromissos da rede">
+                <span><ShieldCheck aria-hidden="true" />Curadoria administrativa</span>
+                <span><Check aria-hidden="true" />Informações publicadas após análise</span>
+                <span><Users aria-hidden="true" />Contato direto com cada parceiro</span>
+              </div>
             </div>
 
-            <dl className="partners-hero__metrics">
-              <div><dt>Rede ativa</dt><dd>{loading ? '—' : String(partners.length).padStart(2, '0')}</dd></div>
-              <div><dt>Áreas representadas</dt><dd>{loading ? '—' : String(Math.max(categories.length - 1, 0)).padStart(2, '0')}</dd></div>
-              <div><dt>Regiões declaradas</dt><dd>{loading ? '—' : String(regionCount).padStart(2, '0')}</dd></div>
-            </dl>
+            <aside className="partners-hero-showcase" aria-label="Parceiros em evidência">
+              <div className="partners-hero-showcase__heading">
+                <span>Seleção da rede</span>
+                <strong>Empresas em evidência</strong>
+              </div>
+
+              {loading ? (
+                <div className="partners-hero-showcase__loading" role="status">
+                  <span /><span /><span />
+                  <span className="sr-only">Carregando parceiros em evidência</span>
+                </div>
+              ) : heroPartners.length > 0 ? (
+                <div className="partners-hero-showcase__list">
+                  {heroPartners.map((partner, index) => (
+                    <HeroPartnerCard
+                      key={partner.id}
+                      partner={partner}
+                      position={index + 1}
+                      onOpen={() => onSelectPartner(partner.slug)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="partners-hero-showcase__empty">
+                  <Building2 aria-hidden="true" />
+                  <strong>Rede em atualização</strong>
+                  <p>Os perfis aprovados serão apresentados aqui.</p>
+                </div>
+              )}
+
+              <div className="partners-hero-showcase__footer">
+                <span>Diretório público institucional</span>
+                <a href="#diretorio-parceiros">Ver rede completa</a>
+              </div>
+            </aside>
           </div>
         </section>
 
-        <section className="partners-directory" aria-labelledby="partners-directory-title">
+        <section className="partners-manifesto" aria-label="Princípios da Rede de Parceiros">
+          <div className="partners-container partners-manifesto__layout">
+            <p className="partners-manifesto__statement">
+              Uma rede de alto padrão não é construída por volume. É construída por aderência, clareza e responsabilidade.
+            </p>
+            <div className="partners-manifesto__principles">
+              <article><span>01</span><div><strong>Atuação identificada</strong><p>Empresa, responsável e canais públicos apresentados de forma verificável.</p></div></article>
+              <article><span>02</span><div><strong>Especialidade declarada</strong><p>Serviços, produtos e regiões descritos com objetividade.</p></div></article>
+              <article><span>03</span><div><strong>Publicação controlada</strong><p>O perfil só integra a página após avaliação administrativa.</p></div></article>
+            </div>
+          </div>
+        </section>
+
+        <section id="diretorio-parceiros" className="partners-directory" aria-labelledby="partners-directory-title">
           <div className="partners-container">
             <header className="partners-section-heading">
               <div>
-                <p className="partners-kicker partners-kicker--dark">Diretório público</p>
-                <h2 id="partners-directory-title">Encontre a parceria certa para a sua necessidade.</h2>
+                <p className="partners-kicker partners-kicker--dark">Diretório institucional</p>
+                <h2 id="partners-directory-title">Encontre capacidade complementar para a sua necessidade.</h2>
               </div>
-              <p>Consulte por nome, área de atuação, serviço, produto ou localidade. Cada perfil apresenta informações fornecidas e aprovadas para publicação.</p>
+              <p>Pesquise por empresa, especialidade, produto ou localidade. Cada perfil reúne somente as informações autorizadas para publicação na rede GSA HUB.</p>
             </header>
 
-            <div className="partners-toolbar">
-              <label className="partners-search">
-                <Search aria-hidden="true" />
-                <span className="sr-only">Pesquisar parceiros</span>
-                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar por empresa, serviço ou cidade" />
-                {search && <button type="button" onClick={() => setSearch('')} aria-label="Limpar pesquisa"><X aria-hidden="true" /></button>}
-              </label>
+            <div className="partners-directory-shell">
+              <aside className="partners-filter-panel" aria-label="Filtros do diretório">
+                <div className="partners-filter-panel__heading">
+                  <span>Consulta da rede</span>
+                  <strong>Refine sua busca</strong>
+                </div>
 
-              <label className="partners-category-select">
-                <span>Área de atuação</span>
-                <select value={category} onChange={(event) => setCategory(event.target.value)}>
-                  {categories.map((item) => <option key={item} value={item}>{item}</option>)}
-                </select>
-              </label>
-            </div>
+                <label className="partners-search">
+                  <span>O que você procura?</span>
+                  <div>
+                    <Search aria-hidden="true" />
+                    <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Empresa, serviço ou cidade" />
+                    {search && <button type="button" onClick={() => setSearch('')} aria-label="Limpar pesquisa"><X aria-hidden="true" /></button>}
+                  </div>
+                </label>
 
-            <div className="partners-category-tabs" role="group" aria-label="Filtrar por categoria">
-              {categories.map((item) => (
-                <button key={item} type="button" onClick={() => setCategory(item)} aria-pressed={category === item} className={category === item ? 'is-active' : ''}>{item}</button>
-              ))}
-            </div>
+                <label className="partners-category-select">
+                  <span>Área de atuação</span>
+                  <select value={category} onChange={(event) => setCategory(event.target.value)}>
+                    {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+                  </select>
+                </label>
 
-            <div className="partners-results-line">
-              <span>{loading ? 'Atualizando diretório' : `${filtered.length} ${filtered.length === 1 ? 'parceiro disponível' : 'parceiros disponíveis'}`}</span>
-              {(search || category !== 'Todas') && <button type="button" onClick={() => { setSearch(''); setCategory('Todas'); }}>Limpar filtros</button>}
-            </div>
+                <div className="partners-category-tabs" role="group" aria-label="Filtrar por categoria">
+                  {categories.map((item) => (
+                    <button key={item} type="button" onClick={() => setCategory(item)} aria-pressed={category === item} className={category === item ? 'is-active' : ''}>
+                      <span>{item}</span>
+                      <ArrowRight aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
 
-            {loading ? (
-              <PartnersLoading compact />
-            ) : loadError ? (
-              <PartnersFailure title="O diretório não pôde ser carregado" description="Não foi possível consultar os parceiros neste momento. Nenhum dado foi substituído por conteúdo de exemplo." onRetry={() => setReloadKey((current) => current + 1)} />
-            ) : filtered.length === 0 ? (
-              <div className="partners-empty-state">
-                <Search aria-hidden="true" />
-                <h3>Nenhum parceiro corresponde aos filtros</h3>
-                <p>Revise o termo pesquisado ou consulte todas as áreas de atuação.</p>
-                <button type="button" onClick={() => { setSearch(''); setCategory('Todas'); }} className="partner-secondary-button">Mostrar todo o diretório</button>
+                <div className="partners-filter-panel__note">
+                  <ShieldCheck aria-hidden="true" />
+                  <p>Os dados exibidos pertencem a perfis aprovados para publicação.</p>
+                </div>
+              </aside>
+
+              <div className="partners-directory-content">
+                <div className="partners-results-line">
+                  <span>{loading ? 'Atualizando diretório' : `${filtered.length} ${filtered.length === 1 ? 'parceiro disponível' : 'parceiros disponíveis'}`}</span>
+                  {(search || category !== 'Todas') && <button type="button" onClick={() => { setSearch(''); setCategory('Todas'); }}>Limpar filtros</button>}
+                </div>
+
+                {loading ? (
+                  <PartnersLoading compact />
+                ) : loadError ? (
+                  <PartnersFailure title="O diretório não pôde ser carregado" description="Não foi possível consultar os parceiros neste momento. Nenhum dado foi substituído por conteúdo de exemplo." onRetry={() => setReloadKey((current) => current + 1)} />
+                ) : filtered.length === 0 ? (
+                  <div className="partners-empty-state">
+                    <Search aria-hidden="true" />
+                    <h3>Nenhum parceiro corresponde aos filtros</h3>
+                    <p>Revise o termo pesquisado ou consulte todas as áreas de atuação.</p>
+                    <button type="button" onClick={() => { setSearch(''); setCategory('Todas'); }} className="partner-secondary-button">Mostrar todo o diretório</button>
+                  </div>
+                ) : (
+                  <div className="partners-list">
+                    {featuredPartners.map((partner, index) => <PartnerDirectoryItem key={partner.id} partner={partner} index={index + 1} featured onOpen={() => onSelectPartner(partner.slug)} />)}
+                    {regularPartners.map((partner, index) => <PartnerDirectoryItem key={partner.id} partner={partner} index={featuredPartners.length + index + 1} onOpen={() => onSelectPartner(partner.slug)} />)}
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="partners-list">
-                {featuredPartners.map((partner, index) => <PartnerDirectoryItem key={partner.id} partner={partner} index={index + 1} featured onOpen={() => onSelectPartner(partner.slug)} />)}
-                {regularPartners.map((partner, index) => <PartnerDirectoryItem key={partner.id} partner={partner} index={featuredPartners.length + index + 1} onOpen={() => onSelectPartner(partner.slug)} />)}
-              </div>
-            )}
+            </div>
           </div>
         </section>
 
         <section className="partners-application" aria-labelledby="partners-application-title">
-          <div className="partners-container partners-application__layout">
-            <div className="partners-application__copy">
-              <p className="partners-kicker">Parcerias institucionais</p>
-              <h2 id="partners-application-title">Sua empresa pode integrar esta rede.</h2>
-              <p>Apresente sua atuação, estrutura e canais de atendimento. A solicitação é enviada diretamente ao painel administrativo para análise e só se torna pública após aprovação.</p>
-              <button type="button" onClick={() => setApplicationOpen(true)} className="partner-gold-button">Seja nosso parceiro<ArrowRight aria-hidden="true" /></button>
+          <div className="partners-container partners-application__executive">
+            <div className="partners-application__eyebrow">
+              <span>Expansão da rede</span>
+              <strong>GSA HUB · Parcerias institucionais</strong>
             </div>
 
-            <ol className="partners-application__process">
-              <li><span>01</span><div><strong>Cadastre a empresa</strong><p>Dados cadastrais, responsável, contatos e endereço.</p></div></li>
-              <li><span>02</span><div><strong>Apresente a atuação</strong><p>Serviços, produtos, regiões atendidas e materiais visuais.</p></div></li>
-              <li><span>03</span><div><strong>Acompanhe pelo protocolo</strong><p>O envio recebe identificação oficial e permanece com status Em análise.</p></div></li>
+            <div className="partners-application__copy">
+              <h2 id="partners-application-title">Sua empresa tem estrutura para complementar esta rede?</h2>
+              <p>Apresente sua atuação, seus canais e sua capacidade de atendimento. A solicitação segue diretamente para análise administrativa e recebe protocolo oficial.</p>
+              <button type="button" onClick={() => setApplicationOpen(true)} className="partner-gold-button">
+                Apresentar minha empresa
+                <ArrowRight aria-hidden="true" />
+              </button>
+            </div>
+
+            <ol className="partners-application__criteria">
+              <li><span>01</span><div><strong>Identificação empresarial</strong><p>Dados cadastrais, responsável e contatos oficiais.</p></div></li>
+              <li><span>02</span><div><strong>Capacidade apresentada</strong><p>Serviços, produtos, regiões e materiais institucionais.</p></div></li>
+              <li><span>03</span><div><strong>Análise registrada</strong><p>Protocolo, status Em análise e publicação somente após aprovação.</p></div></li>
             </ol>
           </div>
         </section>
@@ -327,8 +443,10 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
 function PartnerDirectoryItem({ partner, index, featured = false, onOpen }: { key?: string | number; partner: Partner; index: number; featured?: boolean; onOpen: () => void }) {
   return (
     <article className={`partner-directory-item ${featured ? 'partner-directory-item--featured' : ''}`}>
-      <div className="partner-directory-item__index">{String(index).padStart(2, '0')}</div>
-      <PartnerVisual partner={partner} />
+      <div className="partner-directory-item__visual">
+        <PartnerVisual partner={partner} />
+        <span className="partner-directory-item__index">{String(index).padStart(2, '0')}</span>
+      </div>
       <div className="partner-directory-item__content">
         <div className="partner-directory-item__meta">
           <span>{partner.category}</span>
@@ -339,7 +457,7 @@ function PartnerDirectoryItem({ partner, index, featured = false, onOpen }: { ke
         <div className="partner-directory-item__services">{(partner.services || []).slice(0, 4).map((service) => <span key={service}><Check aria-hidden="true" />{service}</span>)}</div>
         <div className="partner-directory-item__footer">
           <span>{PARTNER_MODE_LABELS[partner.service_mode]}</span>
-          <button type="button" onClick={onOpen}>Conhecer parceiro<ArrowRight aria-hidden="true" /></button>
+          <button type="button" onClick={onOpen}>Ver perfil completo<ArrowRight aria-hidden="true" /></button>
         </div>
       </div>
     </article>
