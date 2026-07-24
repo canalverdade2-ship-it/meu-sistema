@@ -1,4 +1,4 @@
-name: Validar Central de Avisos
+name: Corrigir e validar Central de Avisos
 
 on:
   push:
@@ -10,15 +10,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  actions: read
+  contents: write
 
 concurrency:
-  group: validate-site-campaigns-once
-  cancel-in-progress: true
+  group: fix-site-campaigns-once
+  cancel-in-progress: false
 
 jobs:
-  validate:
+  fix-and-validate:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -27,50 +26,39 @@ jobs:
         with:
           ref: feature/central-avisos-campanhas
           fetch-depth: 0
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - name: Corrigir contratos de propriedades JSX
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/components/admin/SiteCampaignAdminModule.tsx')
+          content = path.read_text()
+          old_box = "function Box({ children, className = '' }: { children: ReactNode; className?: string })"
+          new_box = "function Box({ children, className = '' }: { children: ReactNode; className?: string; key?: string | number })"
+          old_field = "function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string })"
+          new_field = "function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string; key?: string | number })"
+          if old_box not in content or old_field not in content:
+              raise SystemExit('Assinaturas esperadas não encontradas para correção segura.')
+          path.write_text(content.replace(old_box, new_box).replace(old_field, new_field))
+          PY
       - name: Instalar dependências
         run: npm ci
-      - name: Executar validações e registrar diagnóstico
-        shell: bash
+      - name: Validar contratos da Central
+        run: npm run test:site-campaigns
+      - name: Validar TypeScript
+        run: npx tsc --noEmit
+      - name: Gerar build de produção
+        run: npm run build
+      - name: Remover workflow temporário
+        run: rm -f .github/workflows/validate-site-campaigns-once.yml
+      - name: Publicar correção validada
         run: |
-          mkdir -p .gsa-validation
-          set +e
-          {
-            echo "=== CONTRATOS DA CENTRAL ==="
-            npm run test:site-campaigns
-            CONTRACT_STATUS=$?
-            echo
-            echo "=== TYPESCRIPT ==="
-            npx tsc --noEmit
-            TSC_STATUS=$?
-            echo
-            echo "=== BUILD ==="
-            npm run build
-            BUILD_STATUS=$?
-            echo
-            echo "CONTRACT_STATUS=$CONTRACT_STATUS"
-            echo "TSC_STATUS=$TSC_STATUS"
-            echo "BUILD_STATUS=$BUILD_STATUS"
-          } > .gsa-validation/site-campaigns.log 2>&1
-          exit 0
-      - name: Publicar artefato de diagnóstico
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-campaign-diagnostic
-          path: .gsa-validation/site-campaigns.log
-          if-no-files-found: error
-          retention-days: 1
-
-  report:
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Baixar diagnóstico
-        uses: actions/download-artifact@v4
-        with:
-          name: site-campaign-diagnostic
-      - name: Exibir diagnóstico completo
-        run: cat site-campaigns.log
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/admin/SiteCampaignAdminModule.tsx .github/workflows/validate-site-campaigns-once.yml
+          git commit -m "Corrigir tipagem e validar Central de Avisos"
+          git push origin HEAD:feature/central-avisos-campanhas
