@@ -312,7 +312,7 @@ export function BrandExamplesDialog({ category, onClose, onRequestBudget }: Bran
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <div className="p-4 sm:p-6 lg:p-8">
-              <PortfolioPreview key={`${category}-${selectedIndex}`} category={category} modelIndex={selectedIndex} signature={model.signature} />
+              <PortfolioPreview category={category} modelIndex={selectedIndex} signature={model.signature} />
 
               <div className="mt-6 grid gap-6 border-t border-[#c7b9a6] pt-6 lg:grid-cols-[1fr_0.8fr]">
                 <div>
