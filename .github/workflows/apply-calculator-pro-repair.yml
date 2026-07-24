@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apply-calculator-pro-repair.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-calculator-pro-repair.yml'
 
 permissions:
   contents: write
@@ -84,6 +88,7 @@ jobs:
           " > audit/calculator-pro-production.csv
 
       - name: Record successful production deployment
+        if: github.event_name == 'push'
         shell: bash
         run: |
           set -euo pipefail
@@ -116,4 +121,5 @@ jobs:
           path: |
             audit/calculator-pro-production.csv
             docs/deployments/calculator-pro-repair-production.md
+          if-no-files-found: ignore
           retention-days: 30
