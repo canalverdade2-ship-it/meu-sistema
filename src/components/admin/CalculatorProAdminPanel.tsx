@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ComponentType } from 'react';
 import {
+  AlertTriangle,
   BadgeCheck,
   Calculator,
   CalendarDays,
@@ -8,6 +9,7 @@ import {
   Copy,
   CreditCard,
   Crown,
+  Database,
   KeyRound,
   Loader2,
   Megaphone,
@@ -16,6 +18,7 @@ import {
   ShieldCheck,
   Ticket,
   Trash2,
+  Wrench,
   XCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -25,6 +28,12 @@ const TOOL_LABELS: Record<string, string> = {
   termination: 'Rescisão trabalhista',
   retirement: 'Aposentadoria INSS',
   vacation: 'Cálculo de férias',
+};
+
+const TOOL_CODES: Record<string, string> = {
+  termination: 'FT-01',
+  retirement: 'FT-02',
+  vacation: 'FT-03',
 };
 
 type Product = {
@@ -37,13 +46,62 @@ type Product = {
   gratuito_fim?: string | null;
 };
 
+type Voucher = {
+  id: string;
+  code_hint?: string | null;
+  tool_id?: string | null;
+  status: string;
+  expires_at?: string | null;
+};
+
+type Payment = {
+  id: string;
+  order_nsu: string;
+  tool_id: string;
+  cliente_nome?: string | null;
+  valor_centavos: number;
+  status: string;
+  paid_at?: string | null;
+  created_at?: string | null;
+};
+
 type Snapshot = {
   products: Product[];
-  vouchers: any[];
-  payments: any[];
+  vouchers: Voucher[];
+  payments: Payment[];
 };
 
 type TabId = 'products' | 'promotions' | 'vouchers' | 'payments';
+
+const DEFAULT_PRODUCTS: Product[] = [
+  {
+    tool_id: 'termination',
+    nome: 'Rescisão trabalhista Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+  {
+    tool_id: 'retirement',
+    nome: 'Aposentadoria INSS Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+  {
+    tool_id: 'vacation',
+    nome: 'Cálculo de férias Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+];
 
 const TABS: Array<{ id: TabId; label: string; icon: ComponentType<{ className?: string }> }> = [
   { id: 'products', label: 'Configuração', icon: Calculator },
@@ -51,6 +109,13 @@ const TABS: Array<{ id: TabId; label: string; icon: ComponentType<{ className?: 
   { id: 'vouchers', label: 'Vouchers', icon: Ticket },
   { id: 'payments', label: 'Pagamentos', icon: CreditCard },
 ];
+
+function mergeProducts(products: Product[]) {
+  return DEFAULT_PRODUCTS.map((fallback) => {
+    const persisted = products.find((product) => product.tool_id === fallback.tool_id);
+    return persisted ? { ...fallback, ...persisted } : { ...fallback };
+  });
+}
 
 function localInput(value?: string | null) {
   if (!value) return '';
@@ -65,15 +130,27 @@ function isoOrNull(value: string) {
 }
 
 function money(cents: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(cents || 0) / 100);
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(Number(cents || 0) / 100);
 }
 
 function dateTime(value?: string | null) {
   return value ? new Date(value).toLocaleString('pt-BR') : '—';
 }
 
+function durationLabel(minutes: number) {
+  const value = Number(minutes || 0);
+  if (value >= 1440 && value % 1440 === 0) return `${value / 1440} dia(s)`;
+  if (value >= 60 && value % 60 === 0) return `${value / 60} hora(s)`;
+  return `${value} minuto(s)`;
+}
+
 function promotionState(product: Product) {
-  if (!product.gratuito_inicio || !product.gratuito_fim) return { label: 'Não configurada', className: 'bg-neutral-100 text-neutral-600' };
+  if (!product.gratuito_inicio || !product.gratuito_fim) {
+    return { label: 'Não configurada', className: 'bg-neutral-100 text-neutral-600' };
+  }
   const now = Date.now();
   const start = new Date(product.gratuito_inicio).getTime();
   const end = new Date(product.gratuito_fim).getTime();
@@ -84,27 +161,46 @@ function promotionState(product: Product) {
 
 export function CalculatorProAdminPanel() {
   const [snapshot, setSnapshot] = useState<Snapshot>({ products: [], vouchers: [], payments: [] });
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(DEFAULT_PRODUCTS.map((item) => ({ ...item })));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>('products');
+  const [databaseProductCount, setDatabaseProductCount] = useState(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [voucherForm, setVoucherForm] = useState({ tool_id: 'termination', expires_at: '', observacoes: '' });
   const [issuedVoucher, setIssuedVoucher] = useState('');
   const [campaign, setCampaign] = useState({ start: '', end: '' });
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
+
     try {
-      const data = await callAdminRpc<any>('gsa_admin_calculator_pro_snapshot');
+      try {
+        await callAdminRpc('gsa_admin_ensure_calculator_pro_products');
+      } catch {
+        // A leitura abaixo ainda pode funcionar em instalações que possuem as linhas,
+        // mas ainda não receberam a migração de autorreparo.
+      }
+
+      const data = await callAdminRpc<Partial<Snapshot>>('gsa_admin_calculator_pro_snapshot');
+      const persistedProducts = Array.isArray(data?.products) ? data.products : [];
       const normalized: Snapshot = {
-        products: Array.isArray(data?.products) ? data.products : [],
+        products: persistedProducts,
         vouchers: Array.isArray(data?.vouchers) ? data.vouchers : [],
         payments: Array.isArray(data?.payments) ? data.payments : [],
       };
+
       setSnapshot(normalized);
-      setProducts(normalized.products.map((item) => ({ ...item })));
-    } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível carregar as calculadoras Pro.');
+      setDatabaseProductCount(persistedProducts.filter((product) => TOOL_LABELS[product.tool_id]).length);
+      setProducts(mergeProducts(persistedProducts));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Não foi possível consultar as configurações no banco de dados.';
+      setLoadError(message);
+      setDatabaseProductCount(0);
+      setSnapshot({ products: [], vouchers: [], payments: [] });
+      setProducts(DEFAULT_PRODUCTS.map((item) => ({ ...item })));
+      toast.error('As configurações Pro não foram sincronizadas com o banco.');
     } finally {
       setLoading(false);
     }
@@ -115,7 +211,9 @@ export function CalculatorProAdminPanel() {
   }, [load]);
 
   const updateProduct = (toolId: string, patch: Partial<Product>) => {
-    setProducts((current) => current.map((product) => product.tool_id === toolId ? { ...product, ...patch } : product));
+    setProducts((current) => current.map((product) => (
+      product.tool_id === toolId ? { ...product, ...patch } : product
+    )));
   };
 
   const saveProduct = async (product: Product, successMessage?: string) => {
@@ -133,13 +231,31 @@ export function CalculatorProAdminPanel() {
     if (successMessage) toast.success(successMessage);
   };
 
+  const repairConfigurations = async () => {
+    setSaving('repair');
+    try {
+      const result = await callAdminRpc<{ success?: boolean; count?: number }>('gsa_admin_ensure_calculator_pro_products');
+      if (!result?.success && Number(result?.count || 0) < 3) {
+        throw new Error('O banco não confirmou as três configurações obrigatórias.');
+      }
+      toast.success('Configurações das Calculadoras Pro inicializadas.');
+      await load();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Não foi possível inicializar as configurações.';
+      toast.error(message);
+      setLoadError(message);
+    } finally {
+      setSaving(null);
+    }
+  };
+
   const saveProductConfiguration = async (product: Product) => {
     setSaving(product.tool_id);
     try {
       await saveProduct(product, `${TOOL_LABELS[product.tool_id]} atualizada.`);
       await load();
-    } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível salvar a calculadora.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar a calculadora.');
     } finally {
       setSaving(null);
     }
@@ -154,12 +270,13 @@ export function CalculatorProAdminPanel() {
       toast.error('O término precisa ser posterior ao início.');
       return;
     }
+
     setSaving(`promotion-${product.tool_id}`);
     try {
       await saveProduct(product, `Promoção de ${TOOL_LABELS[product.tool_id]} salva.`);
       await load();
-    } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível salvar a promoção.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar a promoção.');
     } finally {
       setSaving(null);
     }
@@ -170,8 +287,8 @@ export function CalculatorProAdminPanel() {
     try {
       await saveProduct({ ...product, gratuito_inicio: null, gratuito_fim: null }, 'Promoção removida.');
       await load();
-    } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível remover a promoção.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível remover a promoção.');
     } finally {
       setSaving(null);
     }
@@ -182,12 +299,14 @@ export function CalculatorProAdminPanel() {
       toast.error('Informe o início e o término da promoção.');
       return;
     }
+
     const start = isoOrNull(campaign.start);
     const end = isoOrNull(campaign.end);
     if (!start || !end || new Date(end) <= new Date(start)) {
       toast.error('O término precisa ser posterior ao início.');
       return;
     }
+
     setSaving('campaign-all');
     try {
       for (const product of products) {
@@ -196,8 +315,8 @@ export function CalculatorProAdminPanel() {
       toast.success('Promoção aplicada às três calculadoras Pro.');
       setCampaign({ start: '', end: '' });
       await load();
-    } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível aplicar a promoção.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível aplicar a promoção.');
     } finally {
       setSaving(null);
     }
@@ -212,8 +331,8 @@ export function CalculatorProAdminPanel() {
       }
       toast.success('Todas as promoções foram removidas.');
       await load();
-    } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível remover as promoções.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível remover as promoções.');
     } finally {
       setSaving(null);
     }
@@ -231,28 +350,35 @@ export function CalculatorProAdminPanel() {
       setVoucherForm({ tool_id: 'termination', expires_at: '', observacoes: '' });
       toast.success('Voucher de uso único criado.');
       await load();
-    } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível criar o voucher.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível criar o voucher.');
     } finally {
       setSaving(null);
     }
   };
 
-  const toggleVoucher = async (voucher: any) => {
+  const toggleVoucher = async (voucher: Voucher) => {
     try {
       await callAdminRpc('gsa_admin_set_calculator_pro_voucher_status', {
         p_voucher_id: voucher.id,
         p_status: voucher.status === 'active' ? 'cancelled' : 'active',
       });
       await load();
-    } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível alterar o voucher.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível alterar o voucher.');
     }
   };
 
   if (loading) {
-    return <div className="flex min-h-[420px] items-center justify-center"><RefreshCw className="h-8 w-8 animate-spin text-indigo-600" /></div>;
+    return (
+      <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 rounded-2xl border border-neutral-200 bg-white">
+        <RefreshCw className="h-8 w-8 animate-spin text-indigo-600" />
+        <p className="text-sm font-bold text-neutral-500">Carregando configurações das Calculadoras Pro...</p>
+      </div>
+    );
   }
+
+  const synchronized = databaseProductCount === DEFAULT_PRODUCTS.length && !loadError;
 
   return (
     <div className="space-y-5">
@@ -266,6 +392,30 @@ export function CalculatorProAdminPanel() {
           <button type="button" onClick={() => void load()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-black text-neutral-900"><RefreshCw className="h-4 w-4" />Atualizar</button>
         </div>
       </div>
+
+      <section className={`rounded-2xl border p-4 sm:p-5 ${synchronized ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            {synchronized ? <Database className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" /> : <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />}
+            <div>
+              <p className={`text-sm font-black ${synchronized ? 'text-emerald-950' : 'text-amber-950'}`}>
+                {synchronized ? 'Configurações sincronizadas com o banco' : 'Configurações locais exibidas — sincronização necessária'}
+              </p>
+              <p className={`mt-1 text-xs leading-5 ${synchronized ? 'text-emerald-800' : 'text-amber-800'}`}>
+                {synchronized
+                  ? 'As três calculadoras obrigatórias foram localizadas e podem ser gerenciadas normalmente.'
+                  : `O banco retornou ${databaseProductCount} de 3 configurações. Os valores padrão foram exibidos para a tela não permanecer em branco.`}
+              </p>
+              {loadError && <p className="mt-2 text-xs font-bold text-red-700">Detalhe: {loadError}</p>}
+            </div>
+          </div>
+          {!synchronized && (
+            <button type="button" onClick={() => void repairConfigurations()} disabled={saving === 'repair'} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-800 px-4 text-sm font-black text-white disabled:opacity-60">
+              {saving === 'repair' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wrench className="h-4 w-4" />}Inicializar configurações
+            </button>
+          )}
+        </div>
+      </section>
 
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5">
         <div className="flex items-start gap-3">
@@ -288,33 +438,36 @@ export function CalculatorProAdminPanel() {
       {tab === 'products' && (
         <div className="grid gap-5 xl:grid-cols-3">
           {products.map((product) => (
-            <article key={product.tool_id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[.15em] text-indigo-500">{product.tool_id}</p>
-                  <h3 className="mt-2 text-lg font-black text-neutral-900">{TOOL_LABELS[product.tool_id]}</h3>
+            <article key={product.tool_id} className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+              <div className="h-1 bg-[linear-gradient(90deg,#312e81,#6366f1,#c7d2fe)]" />
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[.15em] text-indigo-500">{TOOL_CODES[product.tool_id]} · {product.tool_id}</p>
+                    <h3 className="mt-2 text-lg font-black text-neutral-900">{TOOL_LABELS[product.tool_id]}</h3>
+                    <p className="mt-1 text-xs text-neutral-500">{product.nome}</p>
+                  </div>
+                  <button type="button" onClick={() => updateProduct(product.tool_id, { ativo: !product.ativo })} aria-label={product.ativo ? 'Desativar calculadora' : 'Ativar calculadora'} className={`relative h-7 w-12 rounded-full ${product.ativo ? 'bg-emerald-500' : 'bg-neutral-300'}`}>
+                    <span className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white transition-transform ${product.ativo ? 'translate-x-5' : ''}`} />
+                  </button>
                 </div>
-                <button type="button" onClick={() => updateProduct(product.tool_id, { ativo: !product.ativo })} aria-label={product.ativo ? 'Desativar calculadora' : 'Ativar calculadora'} className={`relative h-7 w-12 rounded-full ${product.ativo ? 'bg-emerald-500' : 'bg-neutral-300'}`}>
-                  <span className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white transition-transform ${product.ativo ? 'translate-x-5' : ''}`} />
+
+                <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                  <label className="text-xs font-black text-neutral-600">Preço do acesso (R$)
+                    <input type="number" min={0} step="0.01" value={(product.preco_centavos / 100).toFixed(2)} onChange={(event) => updateProduct(product.tool_id, { preco_centavos: Math.round(Number(event.target.value || 0) * 100) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
+                  </label>
+                  <label className="text-xs font-black text-neutral-600">Duração após compra
+                    <input type="number" min={15} value={product.duracao_acesso_minutos} onChange={(event) => updateProduct(product.tool_id, { duracao_acesso_minutos: Number(event.target.value) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
+                    <span className="mt-1 block text-[10px] font-medium text-neutral-400">{durationLabel(product.duracao_acesso_minutos)}</span>
+                  </label>
+                </div>
+
+                <div className="mt-4 rounded-xl bg-neutral-50 p-3 text-xs leading-5 text-neutral-600">A elegibilidade de clientes é automática e não pode ser desligada por calculadora.</div>
+
+                <button type="button" onClick={() => void saveProductConfiguration(product)} disabled={saving === product.tool_id} className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-4 text-sm font-black text-white disabled:opacity-50">
+                  {saving === product.tool_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}Salvar configuração
                 </button>
               </div>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                <label className="text-xs font-black text-neutral-600">Preço do acesso (R$)
-                  <input type="number" min={0} step="0.01" value={(product.preco_centavos / 100).toFixed(2)} onChange={(event) => updateProduct(product.tool_id, { preco_centavos: Math.round(Number(event.target.value || 0) * 100) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm" />
-                </label>
-                <label className="text-xs font-black text-neutral-600">Duração após compra (minutos)
-                  <input type="number" min={15} value={product.duracao_acesso_minutos} onChange={(event) => updateProduct(product.tool_id, { duracao_acesso_minutos: Number(event.target.value) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm" />
-                </label>
-              </div>
-
-              <div className="mt-4 rounded-xl bg-neutral-50 p-3 text-xs leading-5 text-neutral-600">
-                A elegibilidade de clientes é automática e não pode ser desligada por calculadora.
-              </div>
-
-              <button type="button" onClick={() => void saveProductConfiguration(product)} disabled={saving === product.tool_id} className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-4 text-sm font-black text-white disabled:opacity-50">
-                {saving === product.tool_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}Salvar configuração
-              </button>
             </article>
           ))}
         </div>
@@ -361,7 +514,6 @@ export function CalculatorProAdminPanel() {
                     </div>
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${state.className}`}>{state.label}</span>
                   </div>
-
                   <div className="mt-5 space-y-4">
                     <label className="block text-xs font-black text-neutral-600">Início
                       <input type="datetime-local" value={localInput(product.gratuito_inicio)} onChange={(event) => updateProduct(product.tool_id, { gratuito_inicio: isoOrNull(event.target.value) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm" />
@@ -370,7 +522,6 @@ export function CalculatorProAdminPanel() {
                       <input type="datetime-local" value={localInput(product.gratuito_fim)} onChange={(event) => updateProduct(product.tool_id, { gratuito_fim: isoOrNull(event.target.value) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm" />
                     </label>
                   </div>
-
                   <div className="mt-5 grid grid-cols-2 gap-2">
                     <button type="button" onClick={() => void clearPromotion(product)} disabled={isSaving} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-neutral-200 px-3 text-xs font-black text-neutral-600 disabled:opacity-50"><Trash2 className="h-4 w-4" />Remover</button>
                     <button type="button" onClick={() => void savePromotion(product)} disabled={isSaving} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 text-xs font-black text-white disabled:opacity-50">{isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}Salvar</button>
