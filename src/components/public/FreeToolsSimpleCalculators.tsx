@@ -6,7 +6,7 @@ import {
   evaluateRetirement2026,
   type TerminationReason,
 } from '../../lib/freeToolsCalculations';
-import type { FreeToolId } from './FreeToolsCalculatorDialog';
+import type { ProToolId } from '../../lib/freeToolsProAccess';
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -50,7 +50,7 @@ function VacationFree() {
   return <FreeLayout title="Estimativa simples de 30 dias de férias" description="Informe apenas o salário mensal para visualizar a remuneração e o adicional constitucional de um terço." form={<Field label="Salário bruto mensal" value={salary} onChange={setSalary} prefix="R$" />} result={<><Palmtree className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.total)}</p><div className="mt-5 space-y-2 text-sm text-white/62"><p>Remuneração: {currency.format(result.remuneration)}</p><p>Adicional de 1/3: {currency.format(result.constitutionalThird)}</p></div></>} proItems={['médias de horas extras e adicionais', 'composição detalhada do total', 'cenários e condições consideradas', 'resultado avançado para conferência']} />;
 }
 
-export function FreeToolsSimpleCalculator({ tool }: { tool: FreeToolId }) {
+export function FreeToolsSimpleCalculator({ tool }: { tool: ProToolId }) {
   if (tool === 'termination') return <TerminationFree />;
   if (tool === 'retirement') return <RetirementFree />;
   return <VacationFree />;
