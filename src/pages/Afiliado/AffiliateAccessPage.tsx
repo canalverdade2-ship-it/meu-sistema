@@ -1,13 +1,16 @@
 import { useState, type FormEvent } from 'react';
 import {
   ArrowLeft,
+  ArrowRight,
+  BadgeCheck,
   BadgeDollarSign,
-  CheckCircle2,
+  Check,
   ChevronRight,
+  KeyRound,
   Link2,
   LockKeyhole,
   ShieldCheck,
-  Wallet,
+  WalletCards,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { LogoGSA } from '../../components/ui/LogoGSA';
@@ -17,6 +20,7 @@ import { logService } from '../../lib/logService';
 import { sessionService } from '../../lib/sessionService';
 import { maskCNPJ, maskCPF, maskPhone } from '../../lib/utils';
 import { validarCNPJ, validarCPF, validarEmail } from '../../utils/cpfValidator';
+import '../../affiliates.css';
 
 type AccessMode = 'login' | 'register';
 type LoginStage = 'document' | 'pin';
@@ -29,19 +33,21 @@ interface AffiliateAccessPageProps {
 }
 
 const EMPTY_REGISTRATION = {
-  nome: '',
   documento: '',
   nome_divulgacao: '',
-  email: '',
-  telefone: '',
   pix_tipo: 'cpf' as PixType,
   pix_chave: '',
   pin: '',
   termos_aceitos: false,
 };
 
-const INPUT_CLASS = 'mt-2 w-full rounded-xl border border-neutral-300 bg-neutral-50/50 px-4 py-3.5 font-medium text-neutral-900 outline-none transition focus:border-[#7a5a1b] focus:bg-white focus:ring-2 focus:ring-[#7a5a1b]/15';
-const PRIMARY_CLASS = 'w-full rounded-xl bg-[#111318] px-5 py-3.5 font-black text-white shadow-lg transition hover:bg-[#7a5a1b] disabled:cursor-not-allowed disabled:opacity-50';
+const PIX_LABELS: Record<PixType, string> = {
+  cpf: 'CPF',
+  cnpj: 'CNPJ',
+  email: 'E-mail',
+  telefone: 'Telefone',
+  aleatoria: 'Chave aleatória',
+};
 
 function formatTaxDocument(value: string): string {
   const digits = value.replace(/\D/g, '');
@@ -51,6 +57,22 @@ function formatTaxDocument(value: string): string {
 function validateDocument(value: string) {
   const digits = value.replace(/\D/g, '');
   return digits.length === 11 ? validarCPF(digits) : digits.length === 14 && validarCNPJ(digits);
+}
+
+function formatPixKey(type: PixType, value: string) {
+  if (type === 'cpf') return maskCPF(value.replace(/\D/g, '').slice(0, 11));
+  if (type === 'cnpj') return maskCNPJ(value.replace(/\D/g, '').slice(0, 14));
+  if (type === 'telefone') return maskPhone(value);
+  return value;
+}
+
+function validatePixKey(type: PixType, value: string) {
+  const clean = value.trim();
+  if (type === 'cpf') return validarCPF(clean.replace(/\D/g, ''));
+  if (type === 'cnpj') return validarCNPJ(clean.replace(/\D/g, ''));
+  if (type === 'email') return validarEmail(clean);
+  if (type === 'telefone') return clean.replace(/\D/g, '').length >= 10;
+  return clean.length >= 20;
 }
 
 export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: AffiliateAccessPageProps) {
@@ -101,7 +123,7 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
         acao: 'LOGIN_AFILIADO',
         detalhes: 'Acesso efetuado pelo Portal do Afiliado',
       });
-      toast.success('Bem-vindo ao Portal do Afiliado GSA!');
+      toast.success('Acesso confirmado. Bem-vindo ao Portal do Afiliado.');
       onLogin(data.id);
     } catch (error: any) {
       setPin('');
@@ -113,11 +135,9 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
 
   const register = async (event: FormEvent) => {
     event.preventDefault();
-    if (!validateDocument(form.documento)) return toast.error('Informe um CPF ou CNPJ válido.');
-    if (!validarEmail(form.email)) return toast.error('Informe um e-mail válido.');
-    if (form.nome.trim().length < 3 || form.nome_divulgacao.trim().length < 3) return toast.error('Preencha seu nome e o nome de divulgação.');
-    if (form.telefone.replace(/\D/g, '').length < 10) return toast.error('Informe um telefone válido.');
-    if (form.pix_chave.trim().length < 3) return toast.error('Informe sua chave PIX.');
+    if (!validateDocument(form.documento)) return toast.error('Informe o CPF ou CNPJ válido da sua conta GSA.');
+    if (form.nome_divulgacao.trim().length < 3) return toast.error('Informe um nome de divulgação com pelo menos 3 caracteres.');
+    if (!validatePixKey(form.pix_tipo, form.pix_chave)) return toast.error(`Informe uma chave PIX do tipo ${PIX_LABELS[form.pix_tipo]} válida.`);
     if (!/^\d{4}$/.test(form.pin)) return toast.error('Informe o PIN de 4 dígitos da sua conta GSA.');
     if (!form.termos_aceitos) return toast.error('É necessário concordar com os termos do programa.');
 
@@ -137,7 +157,7 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
         acao: 'ATIVAR_AFILIADO',
         detalhes: 'Perfil ativado após autenticação pelo Portal do Afiliado',
       });
-      toast.success('Perfil de afiliado ativado com segurança!');
+      toast.success('Perfil de afiliado ativado com segurança.');
       onLogin(data.id);
     } catch (error: any) {
       await sessionService.endSession().catch(() => undefined);
@@ -148,66 +168,285 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f5f0] text-neutral-900">
-      <header className="border-b border-neutral-200/80 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <LogoGSA size="md" variant="dark" />
-          <button type="button" onClick={onBack} className="inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-4 py-2 text-xs font-bold text-neutral-700 transition hover:border-[#7a5a1b] hover:text-[#7a5a1b]">
-            <ArrowLeft className="h-4 w-4" /> Voltar para o programa
+    <main className="affiliate-page min-h-screen bg-[#f2efe7] text-[#142033]">
+      <header className="border-b border-white/10 bg-[#0b1522] text-white">
+        <div className="mx-auto flex h-[78px] max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
+          <LogoGSA size="sm" variant="light" showText />
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-white/65 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ddc28d] focus-visible:ring-offset-4 focus-visible:ring-offset-[#0b1522]"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Voltar ao programa</span>
+            <span className="sm:hidden">Voltar</span>
           </button>
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 sm:py-16 lg:grid-cols-[1.15fr_0.85fr] lg:px-8">
-        <section className="rounded-[2rem] border border-[#d8bd73]/40 bg-white p-6 shadow-[0_16px_50px_rgba(0,0,0,0.05)] sm:p-8">
-          <div className="flex items-center justify-between border-b border-neutral-100 pb-6">
-            <div><p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#7a5a1b]">Portal Exclusivo</p><h1 className="mt-1 font-serif text-2xl font-black text-neutral-950 sm:text-3xl">Área do Afiliado GSA</h1></div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5eece] text-[#7a5a1b]"><BadgeDollarSign className="h-7 w-7" /></div>
-          </div>
-
-          <div className="mt-6 flex rounded-2xl bg-neutral-100 p-1.5 ring-1 ring-neutral-200/60">
-            <button type="button" onClick={() => switchMode('login')} className={`flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-wider transition ${mode === 'login' ? 'bg-[#7a5a1b] text-white shadow-md' : 'text-neutral-600 hover:text-neutral-900'}`}>Entrar no Portal</button>
-            <button type="button" onClick={() => switchMode('register')} className={`flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-wider transition ${mode === 'register' ? 'bg-[#7a5a1b] text-white shadow-md' : 'text-neutral-600 hover:text-neutral-900'}`}>Ativar Perfil</button>
-          </div>
-
-          {mode === 'login' && <div className="mt-8">{stage === 'document' ? (
-            <form onSubmit={continueLogin} className="space-y-6">
-              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700">CPF ou CNPJ da conta GSA<input required value={documentInput} onChange={(event) => setDocumentInput(formatTaxDocument(event.target.value))} placeholder="000.000.000-00" className={INPUT_CLASS} /></label>
-              <button type="submit" className={PRIMARY_CLASS}>Continuar <ChevronRight className="ml-1 inline h-4 w-4" /></button>
-            </form>
-          ) : (
-            <div className="space-y-6 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f5eece] text-[#7a5a1b]"><LockKeyhole className="h-7 w-7" /></div>
-              <div><h2 className="text-lg font-black text-neutral-900">Informe seu PIN de 4 dígitos</h2><p className="mt-1 text-xs text-neutral-500">Acesso para: <strong className="text-neutral-900">{documentInput}</strong></p></div>
-              <div className="flex justify-center"><PinInput value={pin} onChange={setPin} disabled={loading} onComplete={login} /></div>
-              <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-between"><button type="button" onClick={() => setStage('document')} className="text-xs font-bold text-neutral-500 underline hover:text-neutral-900">Alterar documento</button><button type="button" onClick={login} disabled={pin.length !== 4 || loading} className="rounded-xl bg-[#7a5a1b] px-6 py-2.5 text-xs font-black text-white shadow-md disabled:opacity-50">{loading ? 'Entrando...' : 'Confirmar acesso'}</button></div>
-            </div>
-          )}</div>}
-
-          {mode === 'register' && (
-            <form onSubmit={register} className="mt-8 space-y-5">
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs leading-5 text-blue-800">Por segurança, a ativação confirma o CPF/CNPJ e o PIN da sua conta GSA antes de cadastrar a chave PIX.</div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700">Nome completo<input required value={form.nome} onChange={(event) => updateForm('nome', event.target.value)} className={INPUT_CLASS} /></label>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700">Nome de divulgação<input required value={form.nome_divulgacao} onChange={(event) => updateForm('nome_divulgacao', event.target.value)} className={INPUT_CLASS} /></label>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700">CPF ou CNPJ<input required value={form.documento} onChange={(event) => updateForm('documento', formatTaxDocument(event.target.value))} className={INPUT_CLASS} /></label>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700">PIN da conta<input required inputMode="numeric" maxLength={4} value={form.pin} onChange={(event) => updateForm('pin', event.target.value.replace(/\D/g, '').slice(0, 4))} className={INPUT_CLASS} /></label>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700">E-mail da conta<input required type="email" value={form.email} onChange={(event) => updateForm('email', event.target.value)} className={INPUT_CLASS} /></label>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700">Telefone<input required value={form.telefone} onChange={(event) => updateForm('telefone', maskPhone(event.target.value))} className={INPUT_CLASS} /></label>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700">Tipo de chave PIX<select value={form.pix_tipo} onChange={(event) => updateForm('pix_tipo', event.target.value as PixType)} className={INPUT_CLASS}><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="email">E-mail</option><option value="telefone">Telefone</option><option value="aleatoria">Aleatória</option></select></label>
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700">Chave PIX<input required value={form.pix_chave} onChange={(event) => updateForm('pix_chave', event.target.value)} className={INPUT_CLASS} /></label>
+      <div className="mx-auto grid min-h-[calc(100vh-78px)] max-w-[1440px] lg:grid-cols-[0.82fr_1.18fr]">
+        <aside className="relative isolate overflow-hidden bg-[#0e1b2a] px-5 py-12 text-white sm:px-8 sm:py-16 lg:px-12 lg:py-20">
+          <div className="affiliate-grid-bg absolute inset-0 opacity-55" aria-hidden="true" />
+          <div className="relative flex h-full flex-col justify-between gap-14">
+            <div>
+              <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-[#ddc28d]">
+                <span className="h-px w-9 bg-[#ddc28d]" aria-hidden="true" />
+                Portal do Afiliado
               </div>
-              <label className="flex items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700"><input type="checkbox" checked={form.termos_aceitos} onChange={(event) => updateForm('termos_aceitos', event.target.checked)} className="mt-1 h-4 w-4" /><span>Concordo com as regras de atribuição, carência, estorno e pagamento das comissões.</span></label>
-              <button type="submit" disabled={loading} className={PRIMARY_CLASS}>{loading ? 'Autenticando e ativando...' : 'Autenticar e ativar perfil'}</button>
-            </form>
-          )}
-        </section>
+              <h1 className="mt-7 max-w-xl text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl">
+                Um acesso único para links, comissões e recebimentos.
+              </h1>
+              <p className="mt-6 max-w-xl text-sm leading-7 text-white/62 sm:text-base">
+                Entre com os mesmos dados da sua conta GSA. A ativação do perfil não cria uma conta paralela e não solicita senha adicional.
+              </p>
+            </div>
 
-        <aside className="space-y-4">{[
-          { icon: Link2, title: 'Links validados', text: 'Cada link possui código próprio e destino permitido pelo programa.' },
-          { icon: Wallet, title: 'Comissões protegidas', text: 'Percentual, base de cálculo e carência ficam registrados na venda.' },
-          { icon: ShieldCheck, title: 'Saques seguros', text: 'Solicitações PIX são idempotentes e passam por decisão administrativa.' },
-        ].map(({ icon: Icon, title, text }) => <div key={title} className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm"><Icon className="h-7 w-7 text-[#7a5a1b]" /><h2 className="mt-4 text-lg font-black">{title}</h2><p className="mt-2 text-sm leading-6 text-neutral-600">{text}</p></div>)}</aside>
+            <div className="border-t border-white/18">
+              {[
+                { icon: Link2, title: 'Links oficiais', text: 'Códigos exclusivos e destinos validados pela operação.' },
+                { icon: BadgeDollarSign, title: 'Comissões registradas', text: 'Base, percentual, carência e status disponíveis no painel.' },
+                { icon: WalletCards, title: 'Recebimento por PIX', text: 'Solicitações com valor, chave protegida e histórico de decisão.' },
+              ].map(({ icon: Icon, title, text }) => (
+                <div key={title} className="grid grid-cols-[44px_1fr] gap-4 border-b border-white/14 py-5">
+                  <span className="flex h-10 w-10 items-center justify-center border border-[#ddc28d]/45 text-[#ddc28d]">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h2 className="text-sm font-semibold">{title}</h2>
+                    <p className="mt-1 text-xs leading-5 text-white/50">{text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-start gap-3 text-xs leading-5 text-white/45">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#ddc28d]" aria-hidden="true" />
+              O sistema registra autenticação, ativação e operações financeiras para proteção do afiliado e da GSA.
+            </div>
+          </div>
+        </aside>
+
+        <section className="flex items-start justify-center px-5 py-10 sm:px-8 sm:py-14 lg:px-12 lg:py-16">
+          <div className="w-full max-w-3xl">
+            <div className="border-b border-[#c9c2b6] pb-7">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8d6829]">Acesso seguro</p>
+              <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                  <h2 className="text-3xl font-semibold tracking-[-0.04em] text-[#0b1522] sm:text-4xl">
+                    {mode === 'login' ? 'Entrar no Portal do Afiliado' : 'Ativar perfil de afiliado'}
+                  </h2>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-[#626a74]">
+                    {mode === 'login'
+                      ? 'Confirme seu documento e o PIN de acesso da conta GSA.'
+                      : 'Autentique sua conta, defina o nome de divulgação e cadastre a chave PIX de recebimento.'}
+                  </p>
+                </div>
+                <BadgeCheck className="hidden h-10 w-10 shrink-0 text-[#8d6829] sm:block" aria-hidden="true" />
+              </div>
+            </div>
+
+            <div className="mt-7 grid grid-cols-2 border border-[#bcb4a8] bg-[#e8e1d5] p-1">
+              <button
+                type="button"
+                onClick={() => switchMode('login')}
+                className={`min-h-12 px-4 text-sm font-bold transition-colors ${mode === 'login' ? 'bg-[#0b1522] text-white' : 'text-[#59616c] hover:bg-white/60 hover:text-[#0b1522]'}`}
+              >
+                Já sou afiliado
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode('register')}
+                className={`min-h-12 px-4 text-sm font-bold transition-colors ${mode === 'register' ? 'bg-[#0b1522] text-white' : 'text-[#59616c] hover:bg-white/60 hover:text-[#0b1522]'}`}
+              >
+                Ativar meu perfil
+              </button>
+            </div>
+
+            {mode === 'login' && (
+              <div className="mt-8 border-t-4 border-[#c59a4a] bg-white p-6 shadow-[0_18px_50px_rgba(11,21,34,0.08)] sm:p-8">
+                {stage === 'document' ? (
+                  <form onSubmit={continueLogin} className="space-y-6">
+                    <div className="flex items-start gap-4 border-b border-[#e0dacf] pb-6">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#0b1522] text-[#ddc28d]"><KeyRound className="h-5 w-5" /></span>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Etapa 1 de 2</p>
+                        <h3 className="mt-1 text-xl font-semibold text-[#0b1522]">Identifique sua conta</h3>
+                      </div>
+                    </div>
+
+                    <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                      CPF ou CNPJ cadastrado na GSA
+                      <input
+                        required
+                        autoComplete="username"
+                        inputMode="numeric"
+                        value={documentInput}
+                        onChange={(event) => setDocumentInput(formatTaxDocument(event.target.value))}
+                        placeholder="000.000.000-00"
+                        className="affiliate-input mt-2"
+                      />
+                    </label>
+
+                    <p className="text-xs leading-5 text-[#777f89]">Use o mesmo documento utilizado para acessar sua conta de cliente GSA.</p>
+
+                    <button type="submit" className="inline-flex min-h-13 w-full items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white transition-colors hover:bg-[#24364b]">
+                      Continuar para o PIN <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </form>
+                ) : (
+                  <div className="space-y-7">
+                    <div className="flex items-start gap-4 border-b border-[#e0dacf] pb-6">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#0b1522] text-[#ddc28d]"><LockKeyhole className="h-5 w-5" /></span>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Etapa 2 de 2</p>
+                        <h3 className="mt-1 text-xl font-semibold text-[#0b1522]">Confirme o PIN de acesso</h3>
+                        <p className="mt-2 text-sm text-[#626a74]">Documento: <strong className="text-[#0b1522]">{documentInput}</strong></p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="mb-4 text-center text-sm font-semibold text-[#4f5864]">Informe seu PIN de 4 dígitos</p>
+                      <div className="flex justify-center"><PinInput value={pin} onChange={setPin} disabled={loading} onComplete={login} /></div>
+                    </div>
+
+                    <div className="flex flex-col-reverse gap-3 border-t border-[#e0dacf] pt-6 sm:flex-row sm:items-center sm:justify-between">
+                      <button type="button" onClick={() => { setStage('document'); setPin(''); }} className="text-sm font-semibold text-[#626a74] underline underline-offset-4 hover:text-[#0b1522]">
+                        Alterar documento
+                      </button>
+                      <button
+                        type="button"
+                        onClick={login}
+                        disabled={pin.length !== 4 || loading}
+                        className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#0b1522] px-6 text-sm font-bold text-white transition-colors hover:bg-[#24364b] disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        {loading ? 'Confirmando acesso...' : 'Entrar no portal'} <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {mode === 'register' && (
+              <form onSubmit={register} className="mt-8 border-t-4 border-[#c59a4a] bg-white p-6 shadow-[0_18px_50px_rgba(11,21,34,0.08)] sm:p-8">
+                <div className="flex items-start gap-4 border-b border-[#e0dacf] pb-6">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#0b1522] text-[#ddc28d]"><BadgeDollarSign className="h-5 w-5" /></span>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Ativação vinculada à conta</p>
+                    <h3 className="mt-1 text-xl font-semibold text-[#0b1522]">Dados essenciais do perfil</h3>
+                    <p className="mt-2 text-sm leading-6 text-[#626a74]">Seus dados pessoais e de contato permanecem os mesmos da conta GSA. Aqui você informa apenas o necessário para operar como afiliado.</p>
+                  </div>
+                </div>
+
+                <div className="mt-7 grid gap-5 sm:grid-cols-2">
+                  <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                    CPF ou CNPJ da conta GSA
+                    <input
+                      required
+                      autoComplete="username"
+                      inputMode="numeric"
+                      value={form.documento}
+                      onChange={(event) => updateForm('documento', formatTaxDocument(event.target.value))}
+                      placeholder="000.000.000-00"
+                      className="affiliate-input mt-2"
+                    />
+                  </label>
+
+                  <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                    PIN de 4 dígitos da sua conta GSA
+                    <input
+                      required
+                      type="password"
+                      autoComplete="current-password"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={form.pin}
+                      onChange={(event) => updateForm('pin', event.target.value.replace(/\D/g, '').slice(0, 4))}
+                      placeholder="••••"
+                      className="affiliate-input mt-2 tracking-[0.35em]"
+                    />
+                  </label>
+
+                  <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864] sm:col-span-2">
+                    Nome de divulgação
+                    <input
+                      required
+                      value={form.nome_divulgacao}
+                      onChange={(event) => updateForm('nome_divulgacao', event.target.value)}
+                      placeholder="Nome que será exibido no seu portal"
+                      className="affiliate-input mt-2"
+                    />
+                    <span className="mt-2 block text-[11px] normal-case tracking-normal text-[#777f89]">Pode ser seu nome, marca ou nome profissional.</span>
+                  </label>
+                </div>
+
+                <div className="mt-8 border-t border-[#e0dacf] pt-7">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs font-bold text-[#8d6829]">02</span>
+                    <h4 className="text-sm font-bold uppercase tracking-[0.12em] text-[#0b1522]">Recebimento das comissões</h4>
+                  </div>
+
+                  <div className="mt-5 grid gap-5 sm:grid-cols-[0.8fr_1.2fr]">
+                    <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                      Tipo de chave PIX
+                      <select
+                        value={form.pix_tipo}
+                        onChange={(event) => {
+                          updateForm('pix_tipo', event.target.value as PixType);
+                          updateForm('pix_chave', '');
+                        }}
+                        className="affiliate-input mt-2"
+                      >
+                        <option value="cpf">CPF</option>
+                        <option value="cnpj">CNPJ</option>
+                        <option value="email">E-mail</option>
+                        <option value="telefone">Telefone</option>
+                        <option value="aleatoria">Aleatória</option>
+                      </select>
+                    </label>
+
+                    <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                      Chave PIX
+                      <input
+                        required
+                        value={form.pix_chave}
+                        onChange={(event) => updateForm('pix_chave', formatPixKey(form.pix_tipo, event.target.value))}
+                        placeholder={`Informe ${PIX_LABELS[form.pix_tipo].toLowerCase()}`}
+                        className="affiliate-input mt-2"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-5 flex gap-3 border border-[#d8c9aa] bg-[#f8f3e8] p-4 text-xs leading-5 text-[#66583e]">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#8d6829]" aria-hidden="true" />
+                    A chave PIX pode ser atualizada depois no portal. Para sua segurança, ela aparece mascarada nos históricos de saque.
+                  </div>
+                </div>
+
+                <label className="mt-7 flex cursor-pointer items-start gap-3 border border-[#d4cec3] bg-[#f5f2ec] p-4 text-sm leading-6 text-[#525b66]">
+                  <input
+                    type="checkbox"
+                    checked={form.termos_aceitos}
+                    onChange={(event) => updateForm('termos_aceitos', event.target.checked)}
+                    className="affiliate-checkbox mt-1"
+                  />
+                  <span>Li e concordo com as regras de atribuição, janela de conversão, carência, estorno, saldo mínimo e pagamento das comissões.</span>
+                </label>
+
+                <div className="mt-7 flex flex-col gap-3 border-t border-[#e0dacf] pt-6 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="flex items-start gap-2 text-xs leading-5 text-[#777f89]"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#8d6829]" /> A ativação será concluída somente após a autenticação da conta.</p>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex min-h-13 shrink-0 items-center justify-center gap-2 bg-[#0b1522] px-7 text-sm font-bold text-white transition-colors hover:bg-[#24364b] disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    {loading ? 'Autenticando e ativando...' : 'Autenticar e ativar perfil'} <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </section>
       </div>
     </main>
   );
