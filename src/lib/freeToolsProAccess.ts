@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-export type ProToolId = 'termination' | 'retirement' | 'vacation';
+export type ProToolId = 'termination' | 'retirement' | 'vacation' | 'thirteenth' | 'benefits' | 'bpc';
 
 export interface ProProductInfo {
   tool_id: ProToolId;
@@ -134,7 +134,7 @@ export function readInfinitePayReturn() {
   const orderNsu = params.get('order_nsu') || params.get('pro_payment') || '';
   const transactionNsu = params.get('transaction_nsu') || '';
   const slug = params.get('slug') || '';
-  if (!tool || !['termination', 'retirement', 'vacation'].includes(tool) || !orderNsu) return null;
+  if (!tool || !['termination', 'retirement', 'vacation', 'thirteenth', 'benefits', 'bpc'].includes(tool) || !orderNsu) return null;
   return { tool, orderNsu, transactionNsu, slug };
 }
 

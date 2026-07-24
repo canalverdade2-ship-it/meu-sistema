@@ -28,12 +28,18 @@ const TOOL_LABELS: Record<string, string> = {
   termination: 'Rescisão trabalhista',
   retirement: 'Aposentadoria INSS',
   vacation: 'Cálculo de férias',
+  thirteenth: '13º salário',
+  benefits: 'Benefícios do INSS',
+  bpc: 'BPC / LOAS',
 };
 
 const TOOL_CODES: Record<string, string> = {
   termination: 'FT-01',
   retirement: 'FT-02',
   vacation: 'FT-03',
+  thirteenth: 'FT-04',
+  benefits: 'FT-05',
+  bpc: 'FT-06',
 };
 
 type Product = {
@@ -95,6 +101,33 @@ const DEFAULT_PRODUCTS: Product[] = [
   {
     tool_id: 'vacation',
     nome: 'Cálculo de férias Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+  {
+    tool_id: 'thirteenth',
+    nome: '13º salário Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+  {
+    tool_id: 'benefits',
+    nome: 'Benefícios do INSS Pro',
+    ativo: true,
+    preco_centavos: 990,
+    duracao_acesso_minutos: 1440,
+    gratuito_inicio: null,
+    gratuito_fim: null,
+  },
+  {
+    tool_id: 'bpc',
+    nome: 'BPC / LOAS Pro',
     ativo: true,
     preco_centavos: 990,
     duracao_acesso_minutos: 1440,
@@ -235,8 +268,8 @@ export function CalculatorProAdminPanel() {
     setSaving('repair');
     try {
       const result = await callAdminRpc<{ success?: boolean; count?: number }>('gsa_admin_ensure_calculator_pro_products');
-      if (!result?.success && Number(result?.count || 0) < 3) {
-        throw new Error('O banco não confirmou as três configurações obrigatórias.');
+      if (!result?.success && Number(result?.count || 0) < DEFAULT_PRODUCTS.length) {
+        throw new Error('O banco não confirmou as seis configurações obrigatórias.');
       }
       toast.success('Configurações das Calculadoras Pro inicializadas.');
       await load();
@@ -312,7 +345,7 @@ export function CalculatorProAdminPanel() {
       for (const product of products) {
         await saveProduct({ ...product, gratuito_inicio: start, gratuito_fim: end });
       }
-      toast.success('Promoção aplicada às três calculadoras Pro.');
+      toast.success('Promoção aplicada às seis calculadoras Pro.');
       setCampaign({ start: '', end: '' });
       await load();
     } catch (error: unknown) {
@@ -323,7 +356,7 @@ export function CalculatorProAdminPanel() {
   };
 
   const clearAllPromotions = async () => {
-    if (!window.confirm('Encerrar e remover as promoções das três calculadoras?')) return;
+    if (!window.confirm('Encerrar e remover as promoções das seis calculadoras?')) return;
     setSaving('campaign-clear');
     try {
       for (const product of products) {
@@ -403,8 +436,8 @@ export function CalculatorProAdminPanel() {
               </p>
               <p className={`mt-1 text-xs leading-5 ${synchronized ? 'text-emerald-800' : 'text-amber-800'}`}>
                 {synchronized
-                  ? 'As três calculadoras obrigatórias foram localizadas e podem ser gerenciadas normalmente.'
-                  : `O banco retornou ${databaseProductCount} de 3 configurações. Os valores padrão foram exibidos para a tela não permanecer em branco.`}
+                  ? 'As seis calculadoras obrigatórias foram localizadas e podem ser gerenciadas normalmente.'
+                  : `O banco retornou ${databaseProductCount} de ${DEFAULT_PRODUCTS.length} configurações. Os valores padrão foram exibidos para a tela não permanecer em branco.`}
               </p>
               {loadError && <p className="mt-2 text-xs font-bold text-red-700">Detalhe: {loadError}</p>}
             </div>
@@ -480,7 +513,7 @@ export function CalculatorProAdminPanel() {
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[.18em] text-amber-700">Promoção pública</p>
                 <h3 className="mt-2 flex items-center gap-2 text-xl font-black text-amber-950"><Megaphone className="h-5 w-5" />Liberar o Pro gratuitamente para qualquer pessoa</h3>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-amber-800">Durante o período programado, visitantes e clientes poderão usar as três calculadoras Pro sem login, pagamento ou voucher.</p>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-amber-800">Durante o período programado, visitantes e clientes poderão usar as seis calculadoras Pro sem login, pagamento ou voucher.</p>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <label className="text-xs font-black text-amber-900">Início da promoção
                     <input type="datetime-local" value={campaign.start} onChange={(event) => setCampaign({ ...campaign, start: event.target.value })} className="mt-2 min-h-11 w-full rounded-xl border border-amber-200 bg-white px-3 text-sm" />
@@ -492,7 +525,7 @@ export function CalculatorProAdminPanel() {
               </div>
               <div className="flex flex-col gap-2">
                 <button type="button" onClick={() => void applyCampaignToAll()} disabled={saving === 'campaign-all'} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-800 px-5 text-sm font-black text-white disabled:opacity-50">
-                  {saving === 'campaign-all' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarDays className="h-4 w-4" />}Aplicar às três
+                  {saving === 'campaign-all' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarDays className="h-4 w-4" />}Aplicar às seis
                 </button>
                 <button type="button" onClick={() => void clearAllPromotions()} disabled={saving === 'campaign-clear'} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white px-5 text-sm font-black text-amber-900 disabled:opacity-50">
                   <Trash2 className="h-4 w-4" />Remover todas

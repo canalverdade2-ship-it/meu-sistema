@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const MAX_BODY_BYTES = 16_384;
-const TOOLS = new Set(['termination', 'retirement', 'vacation']);
+const TOOLS = new Set(['termination', 'retirement', 'vacation', 'thirteenth', 'benefits', 'bpc']);
 const CHECKOUT_ENDPOINT = 'https://api.checkout.infinitepay.io/links';
 const PAYMENT_CHECK_ENDPOINT = 'https://api.checkout.infinitepay.io/payment_check';
 const VISITOR_TOKEN_PATTERN = /^[a-zA-Z0-9_-]{20,160}$/;

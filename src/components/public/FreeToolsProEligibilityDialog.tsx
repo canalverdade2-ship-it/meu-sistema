@@ -31,6 +31,9 @@ const TOOL_NAMES: Record<ProToolId, string> = {
   termination: 'Rescisão trabalhista Pro',
   retirement: 'Aposentadoria INSS Pro',
   vacation: 'Cálculo de férias Pro',
+  thirteenth: '13º salário Pro',
+  benefits: 'Benefícios do INSS Pro',
+  bpc: 'BPC / LOAS Pro',
 };
 
 const SOURCE_LABELS: Record<string, string> = {
