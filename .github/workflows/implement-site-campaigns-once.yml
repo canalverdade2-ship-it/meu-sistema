@@ -1,0 +1,69 @@
+name: Implementar Central de Avisos e Campanhas
+
+on:
+  push:
+    branches:
+      - feature/central-avisos-campanhas
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: implement-site-campaigns-once
+  cancel-in-progress: false
+
+jobs:
+  implement-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Baixar branch isolada
+        uses: actions/checkout@v4
+        with:
+          ref: feature/central-avisos-campanhas
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Materializar implementação auditada
+        run: cat .gsa_payload/site-campaigns-*.b64 | base64 --decode | tar -xz
+
+      - name: Instalar dependências bloqueadas
+        run: npm ci
+
+      - name: Integrar o módulo à aplicação existente
+        run: python3 scripts/apply-site-campaign-patches.py
+
+      - name: Validar contratos do módulo
+        run: npm run test:site-campaigns
+
+      - name: Validar TypeScript
+        run: npx tsc --noEmit
+
+      - name: Gerar build de produção
+        run: npm run build
+
+      - name: Remover mecanismo temporário de implantação
+        run: |
+          rm -rf .gsa_payload
+          rm -f scripts/apply-site-campaign-patches.py
+          rm -f .github/workflows/implement-site-campaigns-once.yml
+
+      - name: Publicar implementação na branch isolada
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração pendente para commit."
+            exit 0
+          fi
+          git commit -m "Implantar Central de Avisos e Campanhas"
+          git push origin HEAD:feature/central-avisos-campanhas
