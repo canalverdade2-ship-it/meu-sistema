@@ -10,127 +10,39 @@ permissions:
   contents: read
 
 jobs:
-  migrate-and-verify:
+  verify-production:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
-      RAW_MIGRATIONS_URL: https://raw.githubusercontent.com/canalverdade2-ship-it/meu-sistema/main/supabase/migrations
 
     steps:
-      - name: Apply Calculator Pro migrations in order
+      - name: Query final Calculator Pro state
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$SUPABASE_ACCESS_TOKEN"
-
-          migrations=(
-            20260723233000_free_tools_pro_access.sql
-            20260723233500_free_tools_pro_service_permissions.sql
-            20260723234000_free_tools_pro_hardening.sql
-            20260724113000_simplify_calculator_pro_eligibility_and_public_promotions.sql
-            20260724130000_repair_calculator_pro_products.sql
-          )
-
-          for migration in "${migrations[@]}"; do
-            echo "APPLYING=$migration"
-            curl --fail --silent --show-error \
-              "$RAW_MIGRATIONS_URL/$migration" \
-              --output "/tmp/$migration"
-
-            jq -n --rawfile query "/tmp/$migration" \
-              '{query: $query, read_only: false}' > /tmp/payload.json
-
-            status="$(curl --silent --show-error \
-              --output /tmp/response.json \
-              --write-out '%{http_code}' \
-              --request POST \
-              --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-              --header 'Content-Type: application/json' \
-              --data-binary @/tmp/payload.json \
-              "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
-
-            if [ "$status" != '201' ]; then
-              echo "FAILED_MIGRATION=$migration"
-              echo "HTTP_STATUS=$status"
-              cat /tmp/response.json | jq . || cat /tmp/response.json
-              exit 1
-            fi
-            echo "APPLIED=$migration"
-          done
-
-      - name: Verify Calculator Pro production objects
-        shell: bash
-        run: |
-          set -euo pipefail
-          query=$(cat <<'SQL'
-          SELECT jsonb_build_object(
-            'product_count', (
-              SELECT count(*)
-              FROM public.gsa_calculator_pro_products
-              WHERE tool_id IN ('termination', 'retirement', 'vacation')
-            ),
-            'table_count', (
-              SELECT count(*)
-              FROM information_schema.tables
-              WHERE table_schema = 'public'
-                AND table_name IN (
-                  'gsa_calculator_pro_products',
-                  'gsa_calculator_pro_payments',
-                  'gsa_calculator_pro_vouchers',
-                  'gsa_calculator_pro_grants',
-                  'gsa_calculator_pro_sessions',
-                  'gsa_calculator_pro_events'
-                )
-            ),
-            'ensure_function', to_regprocedure('public.gsa_admin_ensure_calculator_pro_products(uuid,text)') IS NOT NULL,
-            'snapshot_function', to_regprocedure('public.gsa_admin_calculator_pro_snapshot(uuid,text)') IS NOT NULL,
-            'save_function', to_regprocedure('public.gsa_admin_save_calculator_pro_product(uuid,text,text,jsonb)') IS NOT NULL,
-            'voucher_function', to_regprocedure('public.gsa_admin_create_calculator_pro_voucher(uuid,text,text,timestamptz,text)') IS NOT NULL,
-            'products', (
-              SELECT jsonb_agg(
-                jsonb_build_object(
-                  'tool_id', tool_id,
-                  'nome', nome,
-                  'ativo', ativo,
-                  'preco_centavos', preco_centavos,
-                  'duracao_acesso_minutos', duracao_acesso_minutos,
-                  'beneficio_cliente', liberar_cliente_com_fatura_paga
-                ) ORDER BY tool_id
-              )
-              FROM public.gsa_calculator_pro_products
-              WHERE tool_id IN ('termination', 'retirement', 'vacation')
-            )
-          ) AS validation;
-          SQL
-          )
-
-          jq -n --arg query "$query" '{query: $query, read_only: true}' > /tmp/verify-payload.json
-          status="$(curl --silent --show-error \
-            --output /tmp/verify-response.json \
-            --write-out '%{http_code}' \
-            --request POST \
-            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            --header 'Content-Type: application/json' \
-            --data-binary @/tmp/verify-payload.json \
-            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
-
-          echo "VERIFY_HTTP_STATUS=$status"
-          cat /tmp/verify-response.json | jq . || cat /tmp/verify-response.json
+          query="SELECT tool_id, nome, ativo, preco_centavos, duracao_acesso_minutos, liberar_cliente_com_fatura_paga FROM public.gsa_calculator_pro_products ORDER BY tool_id;"
+          jq -n --arg query "$query" '{query: $query, read_only: true}' > /tmp/payload.json
+          status="$(curl --silent --show-error --output /tmp/products.json --write-out '%{http_code}' --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/payload.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
+          echo "HTTP_STATUS=$status"
+          jq -c . /tmp/products.json
           test "$status" = '201'
+          test "$(jq 'length' /tmp/products.json)" = '3'
 
-          count="$(jq -r '.[0].validation.product_count' /tmp/verify-response.json)"
-          tables="$(jq -r '.[0].validation.table_count' /tmp/verify-response.json)"
-          ensure="$(jq -r '.[0].validation.ensure_function' /tmp/verify-response.json)"
-          snapshot="$(jq -r '.[0].validation.snapshot_function' /tmp/verify-response.json)"
-          save="$(jq -r '.[0].validation.save_function' /tmp/verify-response.json)"
-          voucher="$(jq -r '.[0].validation.voucher_function' /tmp/verify-response.json)"
-
-          test "$count" = '3'
-          test "$tables" = '6'
-          test "$ensure" = 'true'
-          test "$snapshot" = 'true'
-          test "$save" = 'true'
-          test "$voucher" = 'true'
+      - name: Query required database objects
+        shell: bash
+        run: |
+          set -euo pipefail
+          query="SELECT (SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('gsa_calculator_pro_products','gsa_calculator_pro_payments','gsa_calculator_pro_vouchers','gsa_calculator_pro_grants','gsa_calculator_pro_sessions','gsa_calculator_pro_events')) AS tables, to_regprocedure('public.gsa_admin_ensure_calculator_pro_products(uuid,text)') IS NOT NULL AS ensure_rpc, to_regprocedure('public.gsa_admin_calculator_pro_snapshot(uuid,text)') IS NOT NULL AS snapshot_rpc, to_regprocedure('public.gsa_admin_save_calculator_pro_product(uuid,text,text,jsonb)') IS NOT NULL AS save_rpc, to_regprocedure('public.gsa_admin_create_calculator_pro_voucher(uuid,text,text,timestamptz,text)') IS NOT NULL AS voucher_rpc;"
+          jq -n --arg query "$query" '{query: $query, read_only: true}' > /tmp/payload.json
+          status="$(curl --silent --show-error --output /tmp/objects.json --write-out '%{http_code}' --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/payload.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
+          echo "HTTP_STATUS=$status"
+          jq -c . /tmp/objects.json
+          test "$status" = '201'
+          test "$(jq -r '.[0].tables' /tmp/objects.json)" = '6'
+          test "$(jq -r '.[0].ensure_rpc' /tmp/objects.json)" = 'true'
+          test "$(jq -r '.[0].snapshot_rpc' /tmp/objects.json)" = 'true'
+          test "$(jq -r '.[0].save_rpc' /tmp/objects.json)" = 'true'
+          test "$(jq -r '.[0].voucher_rpc' /tmp/objects.json)" = 'true'
           echo 'CALCULATOR_PRO_PRODUCTION_READY'
