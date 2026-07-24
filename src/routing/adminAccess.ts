@@ -8,6 +8,7 @@ export type AdminModule =
   | 'parceiros'
   | 'trabalhe-conosco'
   | 'careers'
+  | 'avisos-campanhas'
   | 'anuncios'
   | 'catalogo'
   | 'operacoes'
@@ -40,6 +41,7 @@ const VALID_MODULES = new Set<AdminModule>([
   'parceiros',
   'trabalhe-conosco',
   'careers',
+  'avisos-campanhas',
   'anuncios',
   'catalogo',
   'operacoes',
@@ -78,6 +80,7 @@ export function normalizeAdminModule(module?: string | null): AdminModule {
   if (value === 'fornecedores') return 'fornecedores';
   if (value === 'parceiros') return 'parceiros';
   if (['trabalhe-conosco', 'trabalhe_conosco', 'careers'].includes(value)) return 'trabalhe-conosco';
+  if (['avisos-campanhas', 'avisos_campanhas', 'avisos', 'campanhas'].includes(value)) return 'avisos-campanhas';
   if (value === 'catalogo') return 'loja';
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (['vendas', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'os'].includes(value)) return 'operacoes';
@@ -96,6 +99,7 @@ function normalizeGrantedModule(module: string): AdminModule | null {
   if (value === 'fornecedores') return 'fornecedores';
   if (value === 'parceiros') return 'parceiros';
   if (['trabalhe-conosco', 'trabalhe_conosco', 'careers'].includes(value)) return 'trabalhe-conosco';
+  if (['avisos-campanhas', 'avisos_campanhas', 'avisos', 'campanhas'].includes(value)) return 'avisos-campanhas';
   if (value === 'catalogo') return 'loja';
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (value === 'vendas') return 'operacoes';
@@ -154,6 +158,7 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
   if (original === 'credito_loja') return parts('admin', 'financeiro', 'credito', itemId);
   if (original === 'afiliados') return parts('admin', 'financeiro', 'afiliados', itemId);
   if (['trabalhe-conosco', 'trabalhe_conosco', 'careers'].includes(original)) return parts('admin', 'trabalhe-conosco', tab, itemId);
+  if (['avisos-campanhas', 'avisos_campanhas', 'avisos', 'campanhas'].includes(original)) return parts('admin', 'avisos-campanhas', tab, itemId);
 
   switch (normalized) {
     case 'dashboard': return '/admin/dashboard';
@@ -163,6 +168,7 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     case 'parceiros': return parts('admin', 'parceiros', tab, itemId);
     case 'trabalhe-conosco':
     case 'careers': return parts('admin', 'trabalhe-conosco', tab, itemId);
+    case 'avisos-campanhas': return parts('admin', 'avisos-campanhas', tab, itemId);
     case 'anuncios': return parts('admin', 'anuncios', tab, itemId);
     case 'catalogo': return parts('admin', 'loja', tab || 'produtos', itemId);
     case 'operacoes': return parts('admin', 'operacoes', tab || 'orcamentos', itemId);
