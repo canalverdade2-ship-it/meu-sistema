@@ -4,13 +4,11 @@ on:
   push:
     branches:
       - feature/central-avisos-campanhas
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  actions: read
 
 concurrency:
   group: validate-site-campaigns-once
@@ -26,7 +24,6 @@ jobs:
         with:
           ref: feature/central-avisos-campanhas
           fetch-depth: 0
-          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -55,12 +52,22 @@ jobs:
             echo "TSC_STATUS=$TSC_STATUS"
             echo "BUILD_STATUS=$BUILD_STATUS"
           } > .gsa-validation/site-campaigns.log 2>&1
-          cat .gsa-validation/site-campaigns.log
           exit 0
-      - name: Publicar diagnóstico na branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .gsa-validation/site-campaigns.log
-          git commit -m "Registrar diagnóstico da Central de Avisos" || exit 0
-          git push origin HEAD:feature/central-avisos-campanhas
+      - name: Publicar artefato de diagnóstico
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-campaign-diagnostic
+          path: .gsa-validation/site-campaigns.log
+          if-no-files-found: error
+          retention-days: 1
+
+  report:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar diagnóstico
+        uses: actions/download-artifact@v4
+        with:
+          name: site-campaign-diagnostic
+      - name: Exibir diagnóstico completo
+        run: cat site-campaigns.log
