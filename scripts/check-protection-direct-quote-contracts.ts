@@ -11,98 +11,106 @@ async function read(path: string) {
 }
 
 const marketplaceRouter = await read('src/components/client/marketplace/protection/ProtectionMarketplace.tsx');
-const insuranceMarketplace = await read('src/components/client/marketplace/protection/InsuranceDirectQuoteMarketplace.tsx');
-const healthMarketplace = await read('src/components/client/marketplace/protection/ProtectionMarketplaceLegacy.tsx');
+const directMarketplace = await read('src/components/client/marketplace/protection/InsuranceDirectQuoteMarketplace.tsx');
 const adminRouter = await read('src/components/admin/ProtectionAdminModule.tsx');
-const insuranceAdmin = await read('src/components/admin/InsuranceProtectionAdminModule.tsx');
-const healthAdmin = await read('src/components/admin/ProtectionAdminModuleLegacy.tsx');
-const migration = await read('supabase/migrations/20260724200000_protection_direct_quote_cleanup.sql');
+const directAdmin = await read('src/components/admin/InsuranceProtectionAdminModule.tsx');
+const insuranceMigration = await read('supabase/migrations/20260724200000_protection_direct_quote_cleanup.sql');
+const healthMigration = await read('supabase/migrations/20260724213000_saude_direct_quote_cleanup.sql');
 
 for (const marker of [
-  "props.domain === 'seguros'",
-  '<InsuranceDirectQuoteMarketplace',
-  '<LegacyProtectionMarketplace',
-  'domain="saude"',
+  "from './InsuranceDirectQuoteMarketplace'",
+  '<DirectQuoteMarketplace {...props}',
 ]) {
-  assert.ok(marketplaceRouter.includes(marker), `Roteador público sem isolamento de domínio: ${marker}`);
+  assert.ok(marketplaceRouter.includes(marker), `Roteador público sem cotação direta unificada: ${marker}`);
+}
+
+for (const forbidden of ['LegacyProtectionMarketplace', 'ProtectionMarketplaceLegacy']) {
+  assert.ok(!marketplaceRouter.includes(forbidden), `Roteador público ainda referencia catálogo legado: ${forbidden}`);
 }
 
 for (const marker of [
+  "label: 'GSA Saúde'",
+  "label: 'GSA Seguros'",
   'actionLabel="Solicitar cotação"',
   'initialCategory={legacyCategoryKey}',
+  'Tipo de plano selecionado',
   'Modalidade selecionada',
   "origem: 'marketplace_categoria'",
   'Escolher outra categoria',
+  "normalizedSubmodule.startsWith('planos-')",
+  "normalizedSubmodule.startsWith('modalidade-')",
 ]) {
-  assert.ok(insuranceMarketplace.includes(marker), `GSA Seguros sem o contrato de cotação direta: ${marker}`);
+  assert.ok(directMarketplace.includes(marker), `Fluxo público direto incompleto: ${marker}`);
 }
 
 for (const obsolete of [
+  'gsa_public_listar_planos_saude',
+  'saude_planos_publicos',
   'seguros_ofertas_publicas',
   "params.get('oferta')",
   'oferta_slug',
+  'OfferCard',
+  'OfferDetail',
 ]) {
-  assert.ok(!insuranceMarketplace.includes(obsolete), `Referência obsoleta ainda presente no novo GSA Seguros: ${obsolete}`);
+  assert.ok(!directMarketplace.includes(obsolete), `Referência de catálogo ainda presente no marketplace direto: ${obsolete}`);
 }
 
 for (const marker of [
-  'gsa_public_listar_planos_saude',
-  'saude_planos_publicos',
-  'actionLabel="Ver opções"',
-  "submodule.startsWith('planos-')",
-  '<Catalog domain={domain}',
+  "from './InsuranceProtectionAdminModule'",
+  '<DirectQuoteProtectionAdminModule {...props}',
 ]) {
-  assert.ok(healthMarketplace.includes(marker), `Catálogo original do GSA Saúde não foi preservado: ${marker}`);
+  assert.ok(adminRouter.includes(marker), `Roteador administrativo sem fluxo unificado: ${marker}`);
 }
 
-for (const marker of [
-  "props.domain === 'seguros'",
-  '<InsuranceProtectionAdminModule',
-  '<LegacyProtectionAdminModule',
-  'domain="saude"',
-]) {
-  assert.ok(adminRouter.includes(marker), `Roteador administrativo sem isolamento de domínio: ${marker}`);
+for (const forbidden of ['LegacyProtectionAdminModule', 'ProtectionAdminModuleLegacy']) {
+  assert.ok(!adminRouter.includes(forbidden), `Roteador administrativo ainda referencia painel legado: ${forbidden}`);
 }
 
-assert.ok(healthAdmin.includes("| 'produtos'"), 'O cadastro de produtos do GSA Saúde deixou de existir.');
-assert.ok(healthAdmin.includes("tab: 'produtos'"), 'A aba de produtos do GSA Saúde não foi preservada.');
-assert.ok(healthAdmin.includes("label: 'Produtos'"), 'O painel de produtos do GSA Saúde não foi preservado.');
-assert.ok(!insuranceAdmin.includes("| 'produtos'"), 'O tipo de aba do GSA Seguros ainda inclui produtos.');
-assert.ok(!insuranceAdmin.includes("tab: 'produtos'"), 'O GSA Seguros ainda renderiza cartão de produtos.');
-assert.ok(!insuranceAdmin.includes("label: 'Produtos'"), 'O GSA Seguros ainda expõe o catálogo.');
-assert.ok(!insuranceAdmin.includes('produto_id'), 'A proposta de Seguros ainda depende de produto cadastrado.');
-assert.ok(insuranceAdmin.includes("p_kind: 'parceiro'"), 'A manutenção de parceiros de Seguros deve continuar ativa.');
+assert.ok(directAdmin.includes("label: 'GSA Saúde'"), 'Painel direto não contempla GSA Saúde.');
+assert.ok(directAdmin.includes("label: 'GSA Seguros'"), 'Painel direto não contempla GSA Seguros.');
+assert.ok(!directAdmin.includes("| 'produtos'"), 'O tipo de aba administrativa ainda inclui produtos.');
+assert.ok(!directAdmin.includes("tab: 'produtos'"), 'O painel ainda renderiza cartão de produtos.');
+assert.ok(!directAdmin.includes("label: 'Produtos'"), 'O painel ainda expõe catálogo.');
+assert.ok(!directAdmin.includes('produto_id'), 'A criação de proposta ainda depende de produto cadastrado.');
+assert.ok(directAdmin.includes("p_kind: 'parceiro'"), 'A manutenção de parceiros deve continuar ativa.');
 
 for (const marker of [
-  'Somente o GSA Seguros deixa de funcionar como catálogo interno.',
   'DROP VIEW IF EXISTS public.seguros_ofertas_publicas CASCADE',
   'ALTER TABLE IF EXISTS public.seguros_propostas DROP COLUMN IF EXISTS produto_id',
-  "WHEN 'saude_produtos'",
-  "WHEN 'seguros_cotacoes'",
-  "v_kind = 'produto' AND v_domain = 'saude'",
-  "v_kind = 'produto' AND v_domain = 'seguros'",
   'gsa_client_seguros_criar_cotacao',
 ]) {
-  assert.ok(migration.includes(marker), `Migração sem o contrato: ${marker}`);
+  assert.ok(insuranceMigration.includes(marker), `Migração de Seguros sem o contrato: ${marker}`);
 }
 
-for (const forbidden of [
+for (const marker of [
+  'O GSA Saúde passa a operar exclusivamente por solicitação de cotação.',
+  'O GSA Viagens permanece integralmente com cadastro e catálogo de pacotes.',
+  'gsa_client_saude_criar_cotacao',
   'DROP VIEW IF EXISTS public.saude_planos_publicos CASCADE',
-  'ALTER TABLE IF EXISTS public.saude_propostas DROP COLUMN IF EXISTS produto_id',
-  'ALTER TABLE IF EXISTS public.saude_contratos DROP COLUMN IF EXISTS produto_id',
-  "p.proname = 'gsa_client_saude_criar_cotacao'",
-  "'saude_produtos',\n    'saude_planos'",
+  'ALTER TABLE IF EXISTS public.saude_propostas DROP COLUMN IF EXISTS produto_id CASCADE',
+  "v_kind <> 'parceiro'",
+  'gsa_catalogo_legado_arquivo',
+  "'saude_produtos'",
+  "p_payload - ARRAY['request_id', 'consentimento']",
 ]) {
-  assert.ok(!migration.includes(forbidden), `A migration ainda altera destrutivamente o GSA Saúde: ${forbidden}`);
+  assert.ok(healthMigration.includes(marker), `Migração de Saúde sem o contrato: ${marker}`);
 }
 
-assert.ok(!migration.includes("WHEN 'seguros_produtos'"), 'A API administrativa ainda permite listar produtos de Seguros.');
+assert.ok(!healthMigration.includes("WHEN 'saude_produtos'"), 'A API administrativa ainda permite listar produtos de Saúde.');
+assert.ok(!healthMigration.includes('viagens_pacotes'), 'A migration de Saúde não pode alterar pacotes de Viagens.');
+assert.ok(!healthMigration.includes('gsa_admin_travel_create_package'), 'A migration de Saúde não pode alterar RPCs de Viagens.');
 
-const healthRoute = matchRoute(routes.marketplace.saude.odontologico(), '', '');
-assert.equal(healthRoute.area, 'marketplace');
-assert.equal(healthRoute.module, 'saude');
-assert.equal(healthRoute.submodule, 'planos-odontologico');
-assert.equal(healthRoute.itemId, undefined);
+const healthDirectRoute = matchRoute(`${routes.marketplace.saude.cotacao()}/odontologico`, '', '');
+assert.equal(healthDirectRoute.area, 'marketplace');
+assert.equal(healthDirectRoute.module, 'saude');
+assert.equal(healthDirectRoute.submodule, 'cotacao');
+assert.equal(healthDirectRoute.itemId, 'odontologico');
+
+const healthLegacyRoute = matchRoute(routes.marketplace.saude.odontologico(), '', '');
+assert.equal(healthLegacyRoute.area, 'marketplace');
+assert.equal(healthLegacyRoute.module, 'saude');
+assert.equal(healthLegacyRoute.submodule, 'planos-odontologico');
+assert.equal(healthLegacyRoute.itemId, undefined);
 
 const insuranceRoute = matchRoute(`${routes.marketplace.seguros.cotacao()}/residencial`, '', '');
 assert.equal(insuranceRoute.area, 'marketplace');
@@ -116,4 +124,4 @@ assert.equal(travelRoute.module, 'pacotes-viagem');
 assert.equal(travelRoute.submodule, 'ofertas-nacionais');
 assert.ok(routes.marketplace.travelPackages.pacote('recife').endsWith('/ofertas/recife'));
 
-console.log('GSA Seguros em cotação direta; catálogos de Saúde e Viagens preservados.');
+console.log('GSA Saúde e Seguros em cotação direta; catálogo de GSA Viagens preservado.');
