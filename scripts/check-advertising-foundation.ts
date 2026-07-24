@@ -42,15 +42,22 @@ assert.doesNotMatch(gatewayTest, /from\s+['"]https?:\/\//, 'Testes Deno não dev
 
 assert.match(publicPage, /Quero anunciar/, 'Página pública deve possuir CTA comercial');
 assert.match(publicPage, /gsa-public-advertising/, 'Formulário deve usar a Edge Function');
-assert.match(publicPage, /AdvertisingSlot/, 'Vitrine deve renderizar o componente central de entrega elegível');
-assert.match(advertisingSlot, /gsa-ad-delivery/, 'Componente de vitrine deve usar o gateway de entrega auditado');
-assert.match(advertisingSlot, /action:\s*'serve'/, 'Vitrine deve solicitar apenas campanhas elegíveis pelo gateway');
+assert.match(publicPage, /PreviewModal/, 'Página deve oferecer modais de prévia para formatos e posições');
+assert.match(publicPage, /FormatPreview/, 'Formatos devem possuir simulação visual');
+assert.match(publicPage, /PlacementPreview/, 'Posições devem possuir simulação visual');
+assert.match(publicPage, /CreativePreview/, 'Serviço criativo deve oferecer referências selecionáveis');
+assert.match(publicPage, /Referência de material criativo escolhida/, 'Referência escolhida deve ser persistida junto à solicitação');
+assert.doesNotMatch(publicPage, /Vitrine de campanhas ativas/, 'A vitrine pública removida não deve reaparecer');
+assert.doesNotMatch(publicPage, /AdvertisingSlot/, 'A página de captação não deve renderizar campanhas ativas');
 assert.match(publicPage, /Proposta antes do pagamento/, 'Fluxo comercial deve estar explicado');
 assert.match(publicPage, /fechamento imediato/, 'Lightbox não pode bloquear o fechamento');
 assert.doesNotMatch(publicPage, /\.rpc\('gsa_public_submit_advertising_request'/, 'Navegador não pode chamar a RPC interna diretamente');
 
+assert.match(advertisingSlot, /gsa-ad-delivery/, 'Componente de entrega deve usar o gateway auditado');
+assert.match(advertisingSlot, /action:\s*'serve'/, 'Componente de entrega deve solicitar apenas campanhas elegíveis pelo gateway');
 assert.match(adminModule, /gsa_admin_(?:list_ad_requests|advertising_overview)/, 'Administrativo deve usar dados reais da operação');
 assert.match(adminModule, /gsa_admin_update_ad_request_status/, 'Administrativo deve atualizar o fluxo por RPC segura');
+assert.match(adminModule, /Referência criativa e observações/, 'Administrativo deve exibir a referência registrada pelo cliente');
 assert.match(adminAccess, /\| 'anuncios'/, 'Anúncios deve ser uma permissão administrativa independente');
 assert.match(adminPanel, /AdvertisingAdminModule/, 'Painel administrativo deve renderizar o módulo');
 assert.match(routeCatalog, /ads: \(\) => '\/anuncios'/, 'Rota pública de anúncios deve existir');
