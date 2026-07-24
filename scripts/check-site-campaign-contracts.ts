@@ -125,6 +125,12 @@ requireTokens('supabase/migrations/20260724223600_site_campaigns_permission_visi
   'gsa_admin_site_campaign_my_permissions',
   "NOT ('metrics' = ANY",
 ]);
+requireTokens('supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql', [
+  "v_actor_id !~*",
+  "gsa_site_campaign_has_action('create')",
+  "gsa_site_campaign_has_action('edit')",
+  "gsa_site_campaign_has_action('delete')",
+]);
 
 const migrations = [
   'supabase/migrations/20260724223000_site_campaigns_schema.sql',
@@ -134,6 +140,7 @@ const migrations = [
   'supabase/migrations/20260724223400_site_campaigns_delete_api.sql',
   'supabase/migrations/20260724223500_site_campaigns_action_permissions.sql',
   'supabase/migrations/20260724223600_site_campaigns_permission_visibility.sql',
+  'supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql',
 ].map(read).join('\n').toLowerCase();
 
 for (const unsafe of ["'javascript:", "'data:text/html"]) {
