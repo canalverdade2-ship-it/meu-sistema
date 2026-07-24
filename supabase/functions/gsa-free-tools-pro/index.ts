@@ -108,6 +108,7 @@ async function hasPaidInvoice(admin: any, clientId: string) {
 async function findGrant(admin: any, toolId: string, visitorHash: string, clientId: string | null) {
   const now = new Date().toISOString();
   const candidates: any[] = [];
+  const allowedSources = ['payment', 'voucher'];
 
   if (clientId) {
     const { data } = await admin
@@ -115,6 +116,7 @@ async function findGrant(admin: any, toolId: string, visitorHash: string, client
       .select('*')
       .eq('tool_id', toolId)
       .eq('cliente_id', clientId)
+      .in('source', allowedSources)
       .eq('status', 'active')
       .lte('valid_from', now)
       .order('created_at', { ascending: false })
@@ -128,6 +130,7 @@ async function findGrant(admin: any, toolId: string, visitorHash: string, client
       .select('*')
       .eq('tool_id', toolId)
       .eq('visitor_token_hash', visitorHash)
+      .in('source', allowedSources)
       .eq('status', 'active')
       .lte('valid_from', now)
       .order('created_at', { ascending: false })
@@ -155,36 +158,54 @@ async function findSession(admin: any, toolId: string, visitorHash: string, clie
   if (!data) return null;
   if (data.cliente_id && data.cliente_id !== clientId) return null;
   if (data.visitor_token_hash && data.visitor_token_hash !== visitorHash) return null;
+  if (data.source === 'manual') return null;
   return data;
 }
 
 async function accessState(admin: any, request: Request, toolId: string, visitorHash: string, proSessionToken = '') {
   const product = await loadProduct(admin, toolId);
-  if (!product) return { available: false, access: false, reason: 'product_not_found' };
+  if (!product) return { available: false, access: false, reason: 'product_not_found', clientHasPaidInvoice: false };
 
   const client = await authenticatedClient(admin, request);
   const clientId = client?.id || null;
+  const clientHasPaidInvoice = clientId ? await hasPaidInvoice(admin, clientId) : false;
   const session = await findSession(admin, toolId, visitorHash, clientId, proSessionToken);
+
   if (session) {
-    return { available: Boolean(product.ativo), access: true, source: 'session', session, product, client };
+    return {
+      available: Boolean(product.ativo),
+      access: true,
+      source: session.source || 'session',
+      session,
+      product,
+      client,
+      clientHasPaidInvoice,
+    };
   }
 
-  if (!product.ativo) return { available: false, access: false, reason: 'product_disabled', product, client };
+  if (!product.ativo) {
+    return { available: false, access: false, reason: 'product_disabled', product, client, clientHasPaidInvoice };
+  }
 
   const now = Date.now();
   const freeStart = product.gratuito_inicio ? new Date(product.gratuito_inicio).getTime() : null;
   const freeEnd = product.gratuito_fim ? new Date(product.gratuito_fim).getTime() : null;
   const freePeriod = freeStart != null && freeEnd != null && freeStart <= now && freeEnd > now;
-  if (freePeriod) return { available: true, access: true, source: 'free_period', product, client };
 
-  if (clientId && client.status === 'ativo' && product.liberar_cliente_com_fatura_paga && await hasPaidInvoice(admin, clientId)) {
-    return { available: true, access: true, source: 'client_paid_invoice', product, client };
+  if (freePeriod) {
+    return { available: true, access: true, source: 'free_period', product, client, clientHasPaidInvoice };
+  }
+
+  if (clientId && client.status === 'ativo' && clientHasPaidInvoice) {
+    return { available: true, access: true, source: 'client_paid_invoice', product, client, clientHasPaidInvoice };
   }
 
   const grant = await findGrant(admin, toolId, visitorHash, clientId);
-  if (grant) return { available: true, access: true, source: grant.source, grant, product, client };
+  if (grant) {
+    return { available: true, access: true, source: grant.source, grant, product, client, clientHasPaidInvoice };
+  }
 
-  return { available: true, access: false, source: null, product, client };
+  return { available: true, access: false, source: null, product, client, clientHasPaidInvoice };
 }
 
 async function createProSession(admin: any, request: Request, toolId: string, visitorHash: string, access: any) {
@@ -201,8 +222,9 @@ async function createProSession(admin: any, request: Request, toolId: string, vi
   if (access.grant?.valid_until) {
     expiresAt = new Date(Math.min(expiresAt.getTime(), new Date(access.grant.valid_until).getTime()));
   }
+
   if (access.source === 'free_period' && access.product?.gratuito_fim) {
-    expiresAt = new Date(Math.min(expiresAt.getTime(), new Date(access.product.gratuito_fim).getTime()));
+    expiresAt = new Date(access.product.gratuito_fim);
   }
 
   const { data, error } = await admin.rpc('gsa_calculator_create_session_internal', {
@@ -292,6 +314,7 @@ export async function handleRequest(request: Request) {
         source: state.source || null,
         logged_in: Boolean(state.client),
         client_active: state.client?.status === 'ativo',
+        client_has_paid_invoice: Boolean(state.clientHasPaidInvoice),
         product: state.product ? {
           tool_id: state.product.tool_id,
           nome: state.product.nome,
