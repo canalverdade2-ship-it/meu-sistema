@@ -1,0 +1,56 @@
+name: GSA Store Experience
+
+on:
+  pull_request:
+    paths:
+      - 'src/components/client/ClientGSAStore.tsx'
+      - 'src/components/client/StoreHub.tsx'
+      - 'src/components/client/store/**'
+      - 'src/gsa-store.css'
+      - 'src/main.tsx'
+      - 'scripts/check-gsa-store-experience.ts'
+      - 'scripts/check-products-subscriptions-contracts.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/gsa-store-experience.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/components/client/ClientGSAStore.tsx'
+      - 'src/components/client/StoreHub.tsx'
+      - 'src/components/client/store/**'
+      - 'src/gsa-store.css'
+      - 'src/main.tsx'
+      - 'scripts/check-gsa-store-experience.ts'
+      - 'scripts/check-products-subscriptions-contracts.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/gsa-store-experience.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-store:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Store contracts
+        run: npm run test:gsa-store
+
+      - name: Production build
+        run: npm run build
