@@ -3,12 +3,10 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   Calculator,
-  FileCheck2,
   Landmark,
   Loader2,
   LockKeyhole,
   Palmtree,
-  ShieldCheck,
   Sparkles,
   X,
 } from 'lucide-react';
@@ -38,51 +36,30 @@ interface FreeToolsTieredCalculatorDialogProps {
   onClientLogin: () => void;
 }
 
-const TOOL_ORDER: FreeToolId[] = ['termination', 'retirement', 'vacation'];
-
 const TOOLS: Record<FreeToolId, {
   icon: ComponentType<{ className?: string }>;
-  code: string;
-  shortTitle: string;
-  category: string;
   title: string;
-  description: string;
 }> = {
   termination: {
     icon: BriefcaseBusiness,
-    code: 'FT-01',
-    shortTitle: 'Rescisão',
-    category: 'Ferramenta trabalhista',
-    title: 'Cálculo de rescisão CLT',
-    description: 'Comece com uma estimativa simples ou desbloqueie a memória avançada das verbas rescisórias.',
+    title: 'Calculadora de rescisão CLT',
   },
   retirement: {
     icon: Landmark,
-    code: 'FT-02',
-    shortTitle: 'Aposentadoria',
-    category: 'Ferramenta previdenciária · 2026',
-    title: 'Panorama de aposentadoria INSS',
-    description: 'Consulte a regra geral gratuitamente ou compare regras de transição no modo Pro.',
+    title: 'Calculadora aposentadoria INSS',
   },
   vacation: {
     icon: Palmtree,
-    code: 'FT-03',
-    shortTitle: 'Férias',
-    category: 'Ferramenta trabalhista',
-    title: 'Cálculo de férias',
-    description: 'Calcule salário e adicional de um terço no Free ou inclua médias e composição detalhada no Pro.',
+    title: 'Calculadora de férias',
   },
 };
 
 const STYLES = `
   [role="dialog"][aria-label^="Calculadora GSA"] { isolation: isolate; }
-  .gsa-tier-tool-nav { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-  .gsa-tier-tool-nav::-webkit-scrollbar { display: none; }
   @media (max-width: 767px) {
     [role="dialog"][aria-label^="Calculadora GSA"] { width:100vw!important;max-width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;border:0!important;border-radius:0!important; }
     [role="dialog"][aria-label^="Calculadora GSA"] > div { height:100dvh!important;max-height:100dvh!important; }
     [role="dialog"][aria-label^="Calculadora GSA"] footer { padding-bottom:max(.75rem,env(safe-area-inset-bottom))!important; }
-    .gsa-tier-tool-nav > button { min-width:148px;scroll-snap-align:start; }
   }
 `;
 
@@ -100,7 +77,6 @@ function sourceLabel(source?: string | null) {
 export function FreeToolsTieredCalculatorDialog({
   tool,
   onClose,
-  onToolChange,
   onServices,
   onClientLogin,
 }: FreeToolsTieredCalculatorDialogProps) {
@@ -284,102 +260,58 @@ export function FreeToolsTieredCalculatorDialog({
         zIndexClassName="z-[130]"
       >
         <div className="flex max-h-[calc(100dvh-.75rem)] min-h-0 flex-col sm:max-h-[calc(100dvh-2.5rem)]">
-          <div className="flex min-h-9 items-center justify-between gap-4 bg-[#111e2a] px-4 py-2 text-white sm:px-6">
-            <div className="flex items-center gap-3">
-              <strong className="text-[10px] font-black tracking-[.18em] text-[#d8bd73]">GSA HUB</strong>
-              <span className="h-3 w-px bg-white/20" />
-              <span className="text-[9px] font-bold uppercase tracking-[.14em] text-white/50">Centro de ferramentas públicas</span>
-            </div>
-            <span className="hidden items-center gap-2 text-[9px] font-black uppercase tracking-[.12em] text-white/45 sm:inline-flex">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-              Free + Pro
-            </span>
+          <div className="flex min-h-9 items-center bg-[#111e2a] px-4 py-2 text-white sm:px-6">
+            <strong className="text-[10px] font-black tracking-[.18em] text-[#d8bd73]">GSA HUB</strong>
+            <span className="mx-3 h-3 w-px bg-white/20" />
+            <span className="text-[9px] font-bold uppercase tracking-[.14em] text-white/50">Centro de ferramentas públicas</span>
           </div>
 
-          <header className="sticky top-0 z-30 flex items-start justify-between gap-4 border-b border-[#d6cec2] bg-[#faf7f0]/97 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
-            <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#172433] text-[#d8bd73]">
+          <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-[#d6cec2] bg-[#faf7f0]/97 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#172433] text-[#d8bd73] sm:h-12 sm:w-12">
                 <Icon className="h-5 w-5" />
               </span>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#806128]">{presentation?.category}</p>
-                  <span className="text-[9px] font-black tracking-[.16em] text-[#989084]">{presentation?.code}</span>
-                </div>
-                <h2 className="mt-1 text-xl font-black leading-tight tracking-[-.025em] text-[#111820] sm:text-2xl">{presentation?.title}</h2>
-              </div>
+              <h2 className="min-w-0 text-xl font-black leading-tight tracking-[-.025em] text-[#111820] sm:text-2xl">{presentation?.title}</h2>
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="Fechar calculadora"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d1c9bd] bg-white text-[#5c6670] hover:border-[#9d7c34]"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d1c9bd] bg-white text-[#5c6670] transition hover:border-[#9d7c34] hover:text-[#111820]"
             >
               <X className="h-5 w-5" />
             </button>
           </header>
 
-          <nav className="gsa-tier-tool-nav flex shrink-0 snap-x gap-2 overflow-x-auto border-b border-[#d9d2c7] bg-[#f2ede4] px-3 py-3 sm:px-6" aria-label="Escolher calculadora">
-            {TOOL_ORDER.map((toolId) => {
-              const item = TOOLS[toolId];
-              const ItemIcon = item.icon;
-              const selected = tool === toolId;
-              return (
-                <button
-                  key={toolId}
-                  type="button"
-                  onClick={() => onToolChange(toolId)}
-                  className={`flex min-h-12 snap-start items-center gap-3 rounded-lg border px-4 py-2 text-left ${selected ? 'border-[#172433] bg-[#172433] text-white' : 'border-[#d5cec2] bg-white/70 text-[#4d5962]'}`}
-                >
-                  <ItemIcon className={`h-4 w-4 ${selected ? 'text-[#d8bd73]' : 'text-[#8a6e2f]'}`} />
-                  <span>
-                    <strong className="block text-xs">{item.shortTitle}</strong>
-                    <span className={`mt-.5 block text-[9px] font-bold ${selected ? 'text-white/45' : 'text-[#969089]'}`}>{item.code}</span>
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <section className="border-b border-[#ddd6cb] bg-[#eee8dd] px-4 py-5 sm:px-6">
-              <div className="grid gap-5 xl:grid-cols-[1fr_auto] xl:items-center">
-                <div>
-                  <p className="max-w-3xl text-sm leading-6 text-[#59646d] sm:text-base">{presentation?.description}</p>
-                  <p className="mt-3 flex gap-2 text-xs leading-5 text-[#756a58]">
-                    <FileCheck2 className="mt-.5 h-4 w-4 shrink-0 text-[#8a6e2f]" />
-                    <span>Escolha o nível de profundidade adequado para sua consulta.</span>
-                  </p>
-                </div>
+            <section className="border-b border-[#ddd6cb] bg-[#eee8dd] px-4 py-3 sm:px-6 sm:py-4">
+              <div className="mx-auto grid max-w-xl grid-cols-2 overflow-hidden rounded-xl border border-[#cec5b8] bg-white p-1">
+                <button
+                  type="button"
+                  onClick={() => setMode('free')}
+                  className={`min-h-12 rounded-lg px-4 text-sm font-black transition ${mode === 'free' ? 'bg-[#172433] text-white shadow-sm' : 'text-[#59646d] hover:bg-[#f5f2ec]'}`}
+                >
+                  <span className="inline-flex items-center gap-2"><Calculator className="h-4 w-4" />Free</span>
+                  <small className={`mt-0.5 block text-[9px] font-bold ${mode === 'free' ? 'text-white/50' : 'text-[#8b9297]'}`}>Cálculo simples</small>
+                </button>
 
-                <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-[#cec5b8] bg-white p-1">
-                  <button
-                    type="button"
-                    onClick={() => setMode('free')}
-                    className={`min-h-12 rounded-lg px-5 text-sm font-black ${mode === 'free' ? 'bg-[#172433] text-white shadow-sm' : 'text-[#59646d]'}`}
-                  >
-                    <span className="inline-flex items-center gap-2"><Calculator className="h-4 w-4" />Free</span>
-                    <small className={`mt-0.5 block text-[9px] font-bold ${mode === 'free' ? 'text-white/50' : 'text-[#8b9297]'}`}>Cálculo simples</small>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => void selectPro()}
-                    className={`min-h-12 rounded-lg px-5 text-sm font-black ${mode === 'pro' ? 'bg-[linear-gradient(135deg,#735721,#b58c37)] text-white shadow-sm' : 'text-[#725921]'}`}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : status?.access ? <Sparkles className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
-                      Pro
-                    </span>
-                    <small className={`mt-0.5 block text-[9px] font-bold ${mode === 'pro' ? 'text-white/60' : 'text-[#9a8558]'}`}>
-                      {status?.access ? sourceLabel(status.source) : price ? `Avançado · ${price}` : 'Cálculo avançado'}
-                    </small>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => void selectPro()}
+                  className={`min-h-12 rounded-lg px-4 text-sm font-black transition ${mode === 'pro' ? 'bg-[linear-gradient(135deg,#735721,#b58c37)] text-white shadow-sm' : 'text-[#725921] hover:bg-[#faf4e6]'}`}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : status?.access ? <Sparkles className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
+                    Pro
+                  </span>
+                  <small className={`mt-0.5 block text-[9px] font-bold ${mode === 'pro' ? 'text-white/60' : 'text-[#9a8558]'}`}>
+                    {status?.access ? sourceLabel(status.source) : price ? `Avançado · ${price}` : 'Cálculo avançado'}
+                  </small>
+                </button>
               </div>
 
               {notice && (
-                <div className="mt-4 rounded-lg border border-[#d2c4a3] bg-[#faf3df] px-4 py-3 text-xs font-bold text-[#685326]">{notice}</div>
+                <div className="mx-auto mt-3 max-w-xl rounded-lg border border-[#d2c4a3] bg-[#faf3df] px-4 py-3 text-xs font-bold text-[#685326]">{notice}</div>
               )}
             </section>
 
