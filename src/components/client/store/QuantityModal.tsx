@@ -1,116 +1,130 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Search, Package, Scissors, Calendar, Trash2, X, Plus, Minus, Tag, Check, AlertCircle, Loader2, ChevronLeft, ChevronRight, Filter, SlidersHorizontal, Briefcase, ArrowRight, Ticket, Coins, Sparkles, CreditCard, CheckCircle, Clock, CheckCircle2, Wallet, Gift } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
-import { formatCurrency, generateCode, formatDate } from '../../../lib/utils';
-import { toast } from 'react-hot-toast';
+import React, { useEffect, useState } from 'react';
+import { Minus, Package, Plus, ShoppingBag } from 'lucide-react';
+import { formatCurrency } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
-import { hasActiveProductDiscount, getProductEffectivePrice, getProductQuantityPriceBreakdown, getProductRemainingQuantityText } from '../../../lib/productPricing';
+import {
+  getProductEffectivePrice,
+  getProductQuantityPriceBreakdown,
+  getProductRemainingQuantityText,
+  hasActiveProductDiscount,
+} from '../../../lib/productPricing';
 
-export default function QuantityModal({ isOpen, onClose, item, onConfirm, initialQty = 1 }: any) {
-  const [qty, setQty] = useState(initialQty);
+interface QuantityModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  item: any;
+  onConfirm: (quantity: number) => void;
+  initialQty?: number;
+}
+
+export default function QuantityModal({ isOpen, onClose, item, onConfirm, initialQty = 1 }: QuantityModalProps) {
+  const [quantity, setQuantity] = useState(initialQty);
 
   useEffect(() => {
-    if (isOpen) setQty(initialQty);
+    if (isOpen) setQuantity(Math.max(1, initialQty));
   }, [isOpen, initialQty]);
 
   if (!isOpen || !item) return null;
 
-  const max = item.controle_estoque ? item.estoque_disponivel : 99;
+  const maxQuantity = item.controle_estoque ? Math.max(1, Number(item.estoque_disponivel || 0)) : 99;
+  const breakdown = getProductQuantityPriceBreakdown(item, quantity);
+  const hasDiscount = hasActiveProductDiscount(item);
+  const mixedPrice = breakdown.quantidadeComDesconto > 0 && breakdown.quantidadeSemDesconto > 0;
+  const promotionAvailability = getProductRemainingQuantityText(item);
+  const total = hasDiscount ? breakdown.subtotalFinal : Number(item.valor || 0) * quantity;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Selecionar Quantidade" size="sm">
-      <div className="p-6 text-center">
-        <div className="w-28 h-28 bg-gradient-to-br from-neutral-50 to-neutral-100 rounded-[2rem] mx-auto mb-6 flex items-center justify-center overflow-hidden border border-neutral-200/50 shadow-inner">
-          {item.imagem_url ? (
-            <img src={item.imagem_url} alt="" className="w-full h-full object-contain p-2" />
-          ) : (
-            <Package className="w-12 h-12 text-neutral-300" />
-          )}
+    <Modal isOpen={isOpen} onClose={onClose} title="Escolha a quantidade" size="sm">
+      <div className="space-y-5">
+        <div className="flex items-center gap-4 rounded-[16px] border border-slate-200 bg-slate-50 p-3.5">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
+            {item.imagem_url ? (
+              <img src={item.imagem_url} alt={item.nome} className="h-full w-full object-contain" />
+            ) : (
+              <Package className="h-8 w-8 text-slate-300" aria-hidden="true" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <h3 className="line-clamp-2 text-base font-extrabold leading-5 text-slate-950">{item.nome}</h3>
+            <p className="mt-1 text-sm font-black text-[#17345f]">
+              {formatCurrency(hasDiscount ? getProductEffectivePrice(item) : Number(item.valor || 0))}
+              <span className="ml-1 text-xs font-semibold text-slate-500">por unidade</span>
+            </p>
+          </div>
         </div>
-        <h3 className="text-xl font-black text-neutral-900 mb-1">{item.nome}</h3>
-        {hasActiveProductDiscount(item) ? (() => {
-          const bd = getProductQuantityPriceBreakdown(item, qty);
-          const hasMix = bd.quantidadeComDesconto > 0 && bd.quantidadeSemDesconto > 0;
-          const textoRestante = getProductRemainingQuantityText(item);
-          return (
-            <div className="mb-8">
-              <span className="text-[10px] text-neutral-400 line-through font-bold block mb-1">De {formatCurrency(item.valor)} por</span>
-              {hasMix ? (
-                <div className="space-y-1.5">
-                  <div className="bg-indigo-50 rounded-xl px-3 py-2 text-xs">
-                    <div className="flex justify-between font-bold text-indigo-700">
-                      <span>{bd.quantidadeComDesconto}× com desconto</span>
-                      <span>{formatCurrency(bd.subtotalComDesconto)}</span>
-                    </div>
-                    <div className="flex justify-between text-neutral-500 mt-1">
-                      <span>{bd.quantidadeSemDesconto}× preço normal</span>
-                      <span>{formatCurrency(bd.subtotalSemDesconto)}</span>
-                    </div>
-                  </div>
-                  <p className="text-sm font-black text-indigo-600 leading-none">
-                    Total: {formatCurrency(bd.subtotalFinal)}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-xl font-black text-indigo-600 leading-none">
-                    {formatCurrency(getProductEffectivePrice(item))} <span className="text-xs text-neutral-400 font-bold">/ unidade</span>
-                  </p>
-                  <p className="text-xs font-bold text-emerald-600 mt-2">
-                    Total: {formatCurrency(bd.subtotalFinal)}
-                  </p>
-                </>
-              )}
-              {textoRestante && (
-                <p className={`text-[10px] font-bold mt-2 ${textoRestante.includes('ltima') ? 'text-orange-600' : textoRestante.includes('esgotada') ? 'text-red-600' : 'text-emerald-600'}`}>
-                  {textoRestante}
-                </p>
-              )}
+
+        <section className="rounded-[16px] border border-slate-200 bg-white p-5" aria-labelledby="quantity-title">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h4 id="quantity-title" className="text-sm font-extrabold text-slate-950">Quantidade</h4>
+              <p className="mt-1 text-xs text-slate-500">Selecione quantas unidades deseja comprar.</p>
             </div>
-          );
-        })() : (
-          <div className="mb-8">
-            <p className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-              {formatCurrency(item.valor)} / unidade
-            </p>
-            <p className="text-xs font-bold text-neutral-400 mt-2">
-              Total: {formatCurrency(item.valor * qty)}
-            </p>
+            {item.controle_estoque && (
+              <span className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-600">
+                {item.estoque_disponivel} disponíveis
+              </span>
+            )}
+          </div>
+
+          <div className="mt-5 grid grid-cols-[48px_1fr_48px] items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setQuantity((current) => Math.max(1, current - 1))}
+              disabled={quantity <= 1}
+              className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Diminuir quantidade"
+            >
+              <Minus className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <div className="flex h-14 items-center justify-center rounded-xl bg-[#f5f6f8] text-3xl font-black tabular-nums text-slate-950" aria-live="polite">
+              {quantity}
+            </div>
+            <button
+              type="button"
+              onClick={() => setQuantity((current) => Math.min(maxQuantity, current + 1))}
+              disabled={quantity >= maxQuantity}
+              className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Aumentar quantidade"
+            >
+              <Plus className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        </section>
+
+        {hasDiscount && mixedPrice && (
+          <div className="rounded-[16px] border border-[#dfd1b4] bg-[#faf7f0] p-4 text-xs">
+            <div className="flex justify-between gap-4 font-bold text-[#17345f]">
+              <span>{breakdown.quantidadeComDesconto} com preço promocional</span>
+              <span>{formatCurrency(breakdown.subtotalComDesconto)}</span>
+            </div>
+            <div className="mt-2 flex justify-between gap-4 text-slate-600">
+              <span>{breakdown.quantidadeSemDesconto} com preço normal</span>
+              <span>{formatCurrency(breakdown.subtotalSemDesconto)}</span>
+            </div>
           </div>
         )}
 
-        <div className="bg-neutral-50/80 backdrop-blur-sm rounded-[2rem] p-8 mb-8 border border-neutral-100 shadow-sm">
-          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mb-6">Quantidade</p>
-          <div className="flex items-center justify-center gap-10">
-            <button 
-              onClick={() => setQty(Math.max(1, qty - 1))}
-              className="w-16 h-16 bg-white border border-neutral-200 rounded-2xl flex items-center justify-center text-neutral-600 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-all shadow-sm active:scale-90"
-            >
-              <Minus className="w-7 h-7" />
-            </button>
-            <span className="text-5xl font-black text-neutral-900 w-20 tabular-nums">{qty}</span>
-            <button 
-              onClick={() => setQty(Math.min(max, qty + 1))}
-              className="w-16 h-16 bg-white border border-neutral-200 rounded-2xl flex items-center justify-center text-neutral-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-500 transition-all shadow-sm active:scale-90"
-            >
-              <Plus className="w-7 h-7" />
-            </button>
+        {promotionAvailability && (
+          <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-800">
+            {promotionAvailability}
+          </p>
+        )}
+
+        <div className="flex items-end justify-between border-t border-slate-100 pt-4">
+          <div>
+            <p className="text-xs font-semibold text-slate-500">Total</p>
+            <p className="mt-1 text-[28px] font-black leading-none tracking-[-0.04em] text-[#17345f]">{formatCurrency(total)}</p>
           </div>
-          {item.controle_estoque && (
-            <div className="mt-6 inline-flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-full border border-amber-100">
-              <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-              <p className="text-[10px] font-black text-amber-700 uppercase">Estoque: {item.estoque_disponivel} un</p>
-            </div>
-          )}
+          <p className="max-w-[145px] text-right text-[11px] leading-4 text-slate-400">Preço e estoque serão confirmados no checkout.</p>
         </div>
 
-        <button 
-          onClick={() => onConfirm(qty)}
-          className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-[length:200%_auto] hover:bg-right text-white py-5 rounded-[1.5rem] font-black text-sm shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all duration-500 flex items-center justify-center gap-3 group"
+        <button
+          type="button"
+          onClick={() => onConfirm(quantity)}
+          className="inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-xl bg-[#17345f] px-5 py-4 text-sm font-extrabold text-white transition hover:bg-[#102746]"
         >
-          <ShoppingCart className="w-5 h-5 group-hover:animate-bounce" />
-          Adicionar ao Carrinho
+          <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+          Adicionar {quantity} {quantity === 1 ? 'unidade' : 'unidades'}
         </button>
       </div>
     </Modal>
