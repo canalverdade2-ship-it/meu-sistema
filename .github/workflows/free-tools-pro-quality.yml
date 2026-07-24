@@ -68,3 +68,5 @@ jobs:
 
       - name: Build
         run: npm run build
+
+# Validação técnica do retorno automático da calculadora Pro após login.
