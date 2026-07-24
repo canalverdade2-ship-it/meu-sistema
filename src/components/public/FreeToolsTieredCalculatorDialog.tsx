@@ -79,13 +79,14 @@ export function FreeToolsTieredCalculatorDialog({ tool, onClose, onToolChange, o
     if (!tool) return;
     const paymentReturn = readInfinitePayReturn();
     if (!paymentReturn || paymentReturn.tool !== tool) return;
+    const isClientLoginReturn = paymentReturn.orderNsu === 'client-login';
     let active = true;
     const verify = async () => {
       setChecking(true);
-      setNotice('Confirmando o pagamento com a InfinitePay...');
+      setNotice(isClientLoginReturn ? 'Login concluído. Verificando o benefício Pro desta conta...' : 'Confirmando o pagamento com a InfinitePay...');
       try {
         let unlocked = false;
-        if (paymentReturn.transactionNsu && paymentReturn.slug) {
+        if (!isClientLoginReturn && paymentReturn.transactionNsu && paymentReturn.slug) {
           const result = await freeToolsProAccess.verifyPayment(tool, paymentReturn);
           unlocked = Boolean(result.paid && result.session?.success);
         } else {
@@ -100,14 +101,20 @@ export function FreeToolsTieredCalculatorDialog({ tool, onClose, onToolChange, o
           const activation = await freeToolsProAccess.activate(tool);
           if (activation.success) {
             setMode('pro');
-            setNotice('Pagamento confirmado. O modo Pro foi desbloqueado.');
+            setNotice(isClientLoginReturn ? 'Cliente identificado. A calculadora Pro foi desbloqueada automaticamente.' : 'Pagamento confirmado. O modo Pro foi desbloqueado.');
             await refreshStatus(tool);
           }
+        } else if (isClientLoginReturn) {
+          setNotice('Login realizado, mas esta conta ainda não atende às condições de liberação automática do Pro.');
+          setUnlockOpen(true);
         } else {
           setNotice('O pagamento ainda está em processamento. A confirmação será atualizada automaticamente.');
         }
       } catch {
-        if (active) setNotice('Não foi possível confirmar o pagamento agora. Abra o modo Pro novamente para consultar o status.');
+        if (active) {
+          setNotice(isClientLoginReturn ? 'O login foi concluído, mas não foi possível verificar o benefício Pro agora.' : 'Não foi possível confirmar o pagamento agora. Abra o modo Pro novamente para consultar o status.');
+          if (isClientLoginReturn) setUnlockOpen(true);
+        }
       } finally {
         if (active) { setChecking(false); clearInfinitePayReturnFromUrl(); }
       }
