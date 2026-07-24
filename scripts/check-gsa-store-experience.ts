@@ -25,6 +25,16 @@ function assertNotContains(relativePath: string, markers: string[]): void {
   }
 }
 
+function assertAppearsBefore(relativePath: string, firstMarker: string, secondMarker: string): void {
+  const content = read(relativePath);
+  const firstIndex = content.indexOf(firstMarker);
+  const secondIndex = content.indexOf(secondMarker);
+
+  if (firstIndex === -1 || secondIndex === -1 || firstIndex >= secondIndex) {
+    throw new Error(`${relativePath}: ${firstMarker} precisa aparecer antes de ${secondMarker}`);
+  }
+}
+
 assertContains('src/main.tsx', ["import './gsa-store.css';"]);
 
 assertContains('src/gsa-store.css', [
@@ -53,7 +63,15 @@ assertContains('src/components/client/store/ProductDetailsModal.tsx', [
   'aria-label="Imagem anterior"',
   'Produto temporariamente esgotado',
   "tipo === 'assinatura' ? 'Escolher período'",
+  'data-store-stock-status',
+  'data-store-trust-section',
+  'md:sticky md:bottom-0',
 ]);
+assertAppearsBefore(
+  'src/components/client/store/ProductDetailsModal.tsx',
+  'data-store-stock-status',
+  'data-store-trust-section',
+);
 
 assertContains('src/components/client/store/QuantityModal.tsx', [
   'Preço e estoque serão confirmados no checkout.',
