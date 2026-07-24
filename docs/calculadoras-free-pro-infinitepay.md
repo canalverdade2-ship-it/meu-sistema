@@ -24,8 +24,10 @@ Aplicar em ordem:
 1. `supabase/migrations/20260723233000_free_tools_pro_access.sql`
 2. `supabase/migrations/20260723233500_free_tools_pro_service_permissions.sql`
 3. `supabase/migrations/20260723234000_free_tools_pro_hardening.sql`
+4. `supabase/migrations/20260723234500_fix_calculator_pro_client_search.sql`
+5. `supabase/migrations/20260723235000_secure_calculator_pro_admin_module.sql`
 
-As migrações criam produtos, pagamentos, vouchers, liberações, sessões, eventos, RPCs administrativas, bloqueio global e limite de tentativas de checkout.
+As migrações criam produtos, pagamentos, vouchers, liberações, sessões, eventos, RPCs administrativas, bloqueio global, limite de tentativas de checkout e proteção por permissão do módulo Configurações.
 
 ## Edge Functions
 
@@ -89,6 +91,8 @@ O administrador pode:
 - acompanhar pagamentos InfinitePay.
 
 Ao desativar uma calculadora, as sessões Pro abertas são revogadas automaticamente.
+
+Ações administrativas exigem sessão válida e permissão explícita no módulo `configuracoes`.
 
 ## Validação
 
