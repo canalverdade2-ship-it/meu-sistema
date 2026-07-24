@@ -5,6 +5,8 @@ const TOOLS = new Set(['termination', 'retirement', 'vacation']);
 const CHECKOUT_ENDPOINT = 'https://api.checkout.infinitepay.io/links';
 const PAYMENT_CHECK_ENDPOINT = 'https://api.checkout.infinitepay.io/payment_check';
 const VISITOR_TOKEN_PATTERN = /^[a-zA-Z0-9_-]{20,160}$/;
+const MAX_PRODUCT_DURATION_MINUTES = 525_600;
+const CLIENT_REVALIDATION_MINUTES = 120;
 
 const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:3000',
@@ -216,8 +218,14 @@ async function createProSession(admin: any, request: Request, toolId: string, vi
   const clientId = access.client?.id || null;
   const rawToken = randomToken();
   const tokenHash = await sha256(rawToken);
-  const productDuration = Math.max(15, Number(access.product?.duracao_acesso_minutos || 120));
-  let expiresAt = new Date(Date.now() + Math.min(productDuration, 120) * 60_000);
+  const configuredDuration = Math.min(
+    MAX_PRODUCT_DURATION_MINUTES,
+    Math.max(15, Number(access.product?.duracao_acesso_minutos || 120)),
+  );
+  const sessionDuration = access.source === 'client_paid_invoice'
+    ? Math.min(configuredDuration, CLIENT_REVALIDATION_MINUTES)
+    : configuredDuration;
+  let expiresAt = new Date(Date.now() + sessionDuration * 60_000);
 
   if (access.grant?.valid_until) {
     expiresAt = new Date(Math.min(expiresAt.getTime(), new Date(access.grant.valid_until).getTime()));
