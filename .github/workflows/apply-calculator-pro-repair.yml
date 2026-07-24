@@ -7,7 +7,7 @@ on:
       - '.github/workflows/apply-calculator-pro-repair.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: apply-calculator-pro-repair-production
@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Require production database credential
         shell: bash
@@ -65,15 +67,53 @@ jobs:
             END IF;
           END
           $$;
-
-          SELECT
-            tool_id,
-            nome,
-            ativo,
-            preco_centavos,
-            duracao_acesso_minutos,
-            liberar_cliente_com_fatura_paga
-          FROM public.gsa_calculator_pro_products
-          WHERE tool_id IN ('termination', 'retirement', 'vacation')
-          ORDER BY tool_id;
           SQL
+
+          mkdir -p audit
+          psql "$SUPABASE_DB_URL" --set=ON_ERROR_STOP=1 --csv -c "
+            SELECT
+              tool_id,
+              nome,
+              ativo,
+              preco_centavos,
+              duracao_acesso_minutos,
+              liberar_cliente_com_fatura_paga
+            FROM public.gsa_calculator_pro_products
+            WHERE tool_id IN ('termination', 'retirement', 'vacation')
+            ORDER BY tool_id;
+          " > audit/calculator-pro-production.csv
+
+      - name: Record successful production deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/deployments
+          {
+            echo '# Migração das Calculadoras Pro aplicada em produção'
+            echo
+            echo "- Executada em UTC: $(date -u '+%Y-%m-%d %H:%M:%S')"
+            echo "- Workflow: $GITHUB_WORKFLOW"
+            echo "- Execução: $GITHUB_RUN_ID"
+            echo "- Commit implantado: $GITHUB_SHA"
+            echo '- Resultado: migração aplicada e três configurações validadas no Supabase.'
+            echo
+            echo '```csv'
+            cat audit/calculator-pro-production.csv
+            echo '```'
+          } > docs/deployments/calculator-pro-repair-production.md
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/deployments/calculator-pro-repair-production.md
+          git commit -m 'Confirma migração das Calculadoras Pro em produção'
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Upload production evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculator-pro-production-${{ github.run_id }}
+          path: |
+            audit/calculator-pro-production.csv
+            docs/deployments/calculator-pro-repair-production.md
+          retention-days: 30
