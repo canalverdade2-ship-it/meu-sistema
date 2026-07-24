@@ -5,6 +5,13 @@ import {
   calculateVacationEstimate,
   evaluateRetirement2026,
 } from '../src/lib/freeToolsCalculations';
+import {
+  BPC_INCOME_LIMIT_2026,
+  MINIMUM_WAGE_2026,
+  calculateThirteenthSalary,
+  evaluateBpcScreening,
+  evaluateInssBenefitScreening,
+} from '../src/lib/freeToolsAdditionalCalculations';
 import { matchRoute } from '../src/routing/routeMatcher';
 
 const closeTo = (actual: number, expected: number) => assert.ok(Math.abs(actual - expected) < 0.001, `${actual} deve ser aproximadamente ${expected}`);
@@ -54,6 +61,73 @@ closeTo(vacation.remuneration, 3300);
 closeTo(vacation.constitutionalThird, 1100);
 closeTo(vacation.total, 4400);
 
+const thirteenth = calculateThirteenthSalary({ salary: 3600, eligibleMonths: 6 });
+closeTo(thirteenth.grossValue, 1800);
+closeTo(thirteenth.referenceFirstInstallment, 900);
+closeTo(thirteenth.secondInstallmentBeforeDeductions, 900);
+
+const thirteenthWithDeductions = calculateThirteenthSalary({
+  salary: 3000,
+  variableAverage: 600,
+  eligibleMonths: 12,
+  firstInstallmentPaid: 1800,
+  inssDeduction: 300,
+  incomeTaxDeduction: 100,
+});
+closeTo(thirteenthWithDeductions.grossValue, 3600);
+closeTo(thirteenthWithDeductions.secondInstallmentNet, 1400);
+
+assert.equal(MINIMUM_WAGE_2026, 1621);
+closeTo(BPC_INCOME_LIMIT_2026, 405.25);
+const bpc = evaluateBpcScreening({
+  applicantType: 'elderly',
+  age: 67,
+  familyGrossIncome: 1200,
+  familyMembers: 4,
+  cadUnicoUpdated: true,
+  allFamilyCpfRegistered: true,
+  receivesIncompatibleBenefit: false,
+  biometricRegistered: true,
+});
+closeTo(bpc.incomePerPerson, 300);
+assert.equal(bpc.incomeWithinObjectiveLimit, true);
+assert.equal(bpc.allObjectiveCriteriaMet, true);
+
+const incapacity = evaluateInssBenefitScreening({
+  benefitType: 'temporary_incapacity',
+  hasInsuredStatus: true,
+  contributionMonths: 12,
+  incapacityDays: 20,
+  hasMedicalEvidence: true,
+});
+assert.equal(incapacity.allMet, true);
+
+const maternity = evaluateInssBenefitScreening({
+  benefitType: 'maternity',
+  hasInsuredStatus: true,
+  maternityEventDocumented: true,
+});
+assert.equal(maternity.allMet, true);
+assert.match(maternity.requirements[2].detail, /carência está dispensada/i);
+
+const pension = evaluateInssBenefitScreening({
+  benefitType: 'death_pension',
+  hasInsuredStatus: false,
+  deceasedHadCoverage: true,
+  isEligibleDependent: true,
+  hasDependencyEvidence: true,
+});
+assert.equal(pension.allMet, true);
+
+const accidentAssistance = evaluateInssBenefitScreening({
+  benefitType: 'accident_assistance',
+  hasInsuredStatus: true,
+  accidentCategoryEligible: true,
+  hasPermanentSequela: true,
+  capacityReduced: true,
+});
+assert.equal(accidentAssistance.allMet, true);
+
 const route = matchRoute('/servicos-gratuitos', '', '');
 assert.equal(route.area, 'public');
 assert.equal(route.module, 'free-tools');
@@ -63,6 +137,10 @@ contains('src/components/public/FreeToolsPage.tsx', [
   /Free simples · Pro avançado/i,
   /pagamento e voucher Pro também podem ser usados sem cadastro/i,
   /não são armazenados pela GSA/i,
+  /As seis ferramentas já estão disponíveis/i,
+  /id: 'thirteenth'.*available: true/,
+  /id: 'benefits'.*available: true/,
+  /id: 'bpc'.*available: true/,
 ]);
 
 contains('src/components/public/FreeToolsTieredCalculatorDialog.tsx', [
@@ -74,18 +152,43 @@ contains('src/components/public/FreeToolsTieredCalculatorDialog.tsx', [
   /readInfinitePayReturn/,
   /result: 'promotion'/,
   /Não foi possível consultar agora o preço/,
+  /Calculadora de 13º salário/,
+  /Triagem de benefícios do INSS/,
+  /Triagem BPC \/ LOAS/,
 ]);
 
 contains('src/components/public/FreeToolsSimpleCalculators.tsx', [
   /Modo Free · consulta básica/i,
   /Regra geral/i,
   /Saldo de salário estimado/i,
+  /ThirteenthFree/,
+  /BenefitsFree/,
+  /BpcFree/,
 ]);
 
 contains('src/components/public/FreeToolsAdvancedCalculators.tsx', [
   /Modo Pro · cálculo avançado/i,
   /Conferir no Meu INSS/i,
   /Memória avançada da rescisão/i,
+  /ThirteenthPro/,
+  /BenefitsPro/,
+  /BpcPro/,
+]);
+
+contains('src/components/public/FreeToolsAdditionalCalculators.tsx', [
+  /Estimativa proporcional do 13º salário/,
+  /Triagem detalhada de benefícios do INSS/,
+  /Triagem completa do BPC \/ LOAS/,
+  /Os dados são processados somente no navegador/,
+  /A carência está dispensada para todas as categorias/,
+]);
+
+contains('src/lib/freeToolsAdditionalCalculations.ts', [
+  /MINIMUM_WAGE_2026 = 1621/,
+  /BPC_INCOME_LIMIT_2026/,
+  /calculateThirteenthSalary/,
+  /evaluateInssBenefitScreening/,
+  /evaluateBpcScreening/,
 ]);
 
 contains('src/components/public/FreeToolsProUnlockDialog.tsx', [
@@ -94,6 +197,9 @@ contains('src/components/public/FreeToolsProUnlockDialog.tsx', [
   /não exige cadastro/i,
   /cadastro ativo e pelo menos uma fatura paga/i,
   /Pagamento online indisponível/i,
+  /13º salário Pro/,
+  /Benefícios do INSS Pro/,
+  /BPC \/ LOAS Pro/,
 ]);
 
 contains('src/components/public/FreeToolsProEligibilityDialog.tsx', [
@@ -101,6 +207,7 @@ contains('src/components/public/FreeToolsProEligibilityDialog.tsx', [
   /Cadastro ativo/i,
   /Pelo menos uma fatura paga/i,
   /qualquer pessoa pode utilizar/i,
+  /13º salário Pro/,
 ]);
 
 contains('src/lib/freeToolsProAccess.ts', [
@@ -109,6 +216,7 @@ contains('src/lib/freeToolsProAccess.ts', [
   /client_has_paid_invoice/,
   /checkout_available/,
   /verify_payment/,
+  /'thirteenth'.*'benefits'.*'bpc'/,
 ]);
 
 contains('supabase/functions/gsa-free-tools-pro/index.ts', [
@@ -121,6 +229,7 @@ contains('supabase/functions/gsa-free-tools-pro/index.ts', [
   /gsa_calculator_redeem_voucher_and_create_session_internal/,
   /create_checkout/,
   /verify_payment/,
+  /'thirteenth'.*'benefits'.*'bpc'/,
 ]);
 
 contains('supabase/functions/gsa-free-tools-pro-webhook/index.ts', [
@@ -161,6 +270,14 @@ contains('supabase/migrations/20260724163500_atomic_calculator_pro_voucher_redem
   /used_count/,
 ]);
 
+contains('supabase/migrations/20260724193000_enable_remaining_free_tools.sql', [
+  /'thirteenth', '13º salário Pro'/,
+  /'benefits', 'Benefícios do INSS Pro'/,
+  /'bpc', 'BPC \/ LOAS Pro'/,
+  /gsa_admin_ensure_calculator_pro_products/,
+  /gsa_calculator_redeem_voucher_and_create_session_internal/,
+]);
+
 contains('src/components/admin/CalculatorProAdminPanel.tsx', [
   /Calculadoras Pro/,
   /Preço do acesso/,
@@ -168,6 +285,10 @@ contains('src/components/admin/CalculatorProAdminPanel.tsx', [
   /Promoções/,
   /Não existe liberação individual pelo administrador/i,
   /Pagamentos InfinitePay/,
+  /FT-04/,
+  /FT-05/,
+  /FT-06/,
+  /seis configurações obrigatórias/,
 ]);
 
 contains('src/components/admin/CalculatorProPaymentConfiguration.tsx', [
@@ -176,4 +297,4 @@ contains('src/components/admin/CalculatorProPaymentConfiguration.tsx', [
   /Checkout habilitado/,
 ]);
 
-console.log('Contratos Free, Pro, promoções, vouchers, elegibilidade automática e InfinitePay validados com sucesso.');
+console.log('Contratos das seis Calculadoras Free e Pro, vouchers, elegibilidade e InfinitePay validados com sucesso.');
