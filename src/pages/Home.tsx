@@ -3,7 +3,7 @@ import { BriefcaseBusiness, ShieldAlert } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { GSAEnterpriseHomeFinal } from '../components/public/GSAEnterpriseHomeFinal';
 import { LoginHub } from '../components/public/LoginHub';
-import { ClientAccessModal, type ClientAccessMode } from '../components/auth/ClientAccessModal';
+import { ClientAccessModalWithReturn as ClientAccessModal, type ClientAccessMode } from '../components/auth/ClientAccessModalWithReturn';
 import { RestrictedAccessModal, type RestrictedTab } from '../components/auth/RestrictedAccessModal';
 import {
   getServicePackageSlug,
