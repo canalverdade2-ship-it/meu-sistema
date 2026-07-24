@@ -49,7 +49,7 @@ includesAll('src/pages/AdvertiserPortal.tsx', [
   "from('gsa-ad-creatives').upload",
   'gsa_advertiser_save_creative',
   'gsa_advertiser_submit_creative',
-  'Relatórios',
+  'Resultados',
 ]);
 
 includesAll('src/components/admin/AdvertisingAdminModule.tsx', [
