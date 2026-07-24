@@ -12,7 +12,7 @@ const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: '
 const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
 
 function numeric(value: string) {
-  const parsed = Number(value.replace(/\./g, '').replace(',', '.'));
+  const parsed = Number(value.trim().replace(',', '.'));
   return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
 }
 
