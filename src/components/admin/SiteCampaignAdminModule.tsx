@@ -67,8 +67,8 @@ function formFrom(c: SiteCampaign): SiteCampaignPayload {
   };
 }
 
-function Box({ children, className = '' }: { children: ReactNode; className?: string }) { return <div className={`rounded-2xl border border-neutral-200 bg-white shadow-sm ${className}`}>{children}</div>; }
-function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) { return <label className="block"><span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-neutral-500">{label}</span>{children}{hint && <span className="mt-1 block text-xs text-neutral-400">{hint}</span>}</label>; }
+function Box({ children, className = '' }: { children: ReactNode; className?: string; key?: string | number }) { return <div className={`rounded-2xl border border-neutral-200 bg-white shadow-sm ${className}`}>{children}</div>; }
+function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string; key?: string | number }) { return <label className="block"><span className="mb-1.5 block text-xs font-black uppercase tracking-wide text-neutral-500">{label}</span>{children}{hint && <span className="mt-1 block text-xs text-neutral-400">{hint}</span>}</label>; }
 function Metric({ icon: Icon, label, value }: { icon: typeof BarChart3; label: string; value: string | number }) { return <Box className="p-4"><div className="flex items-center gap-2 text-neutral-400"><Icon className="h-4 w-4"/><span className="text-xs font-black uppercase">{label}</span></div><p className="mt-3 text-2xl font-black text-neutral-950">{value}</p></Box>; }
 function Badge({ status }: { status: SiteCampaignStatus }) {
   const style: Record<SiteCampaignStatus, string> = { draft: 'bg-neutral-100 text-neutral-700', scheduled: 'bg-blue-100 text-blue-700', active: 'bg-emerald-100 text-emerald-700', paused: 'bg-amber-100 text-amber-800', ended: 'bg-slate-200 text-slate-700', archived: 'bg-stone-200 text-stone-600' };
