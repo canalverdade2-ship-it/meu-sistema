@@ -1,8 +1,15 @@
-import React from 'react';
-import { motion } from 'framer-motion';
 import {
-  ArrowLeft, Building2, CheckCircle2,
-  PackageCheck, ShieldCheck, Truck, LockKeyhole
+  ArrowLeft,
+  ArrowRight,
+  BadgeCheck,
+  Building2,
+  FileCheck2,
+  LockKeyhole,
+  PackageSearch,
+  ReceiptText,
+  ShieldCheck,
+  Truck,
+  WalletCards,
 } from 'lucide-react';
 import { LogoGSA } from '../../components/ui/LogoGSA';
 
@@ -11,113 +18,216 @@ interface FornecedorLandingPageProps {
   onBackToSite: () => void;
 }
 
+const FLOW = [
+  {
+    title: 'Credenciamento e análise',
+    description: 'Os dados cadastrais e comerciais são enviados para conferência antes da liberação do acesso.',
+  },
+  {
+    title: 'Homologação de produtos',
+    description: 'O fornecedor informa condições, custos, prazos e disponibilidade para avaliação da equipe GSA.',
+  },
+  {
+    title: 'Pedidos e entregas',
+    description: 'Cada pedido de compra possui itens, quantidades, previsão e acompanhamento operacional próprio.',
+  },
+  {
+    title: 'Conferência e pagamento',
+    description: 'Notas fiscais, entregas e valores permanecem vinculados até a conclusão do processo financeiro.',
+  },
+];
+
+const OPERATIONS = [
+  {
+    icon: PackageSearch,
+    title: 'Produtos e condições comerciais',
+    description: 'Solicite a inclusão de produtos, acompanhe análises e responda ajustes sem perder o histórico da negociação.',
+  },
+  {
+    icon: Truck,
+    title: 'Pedidos, saldos e entregas',
+    description: 'Visualize o que foi solicitado, o saldo ainda pendente e os dados necessários para informar cada entrega.',
+  },
+  {
+    icon: ReceiptText,
+    title: 'Notas fiscais e documentos',
+    description: 'Envie XML ou PDF da nota fiscal no próprio pedido, com registro de data, valor e itens entregues.',
+  },
+  {
+    icon: WalletCards,
+    title: 'Financeiro e recebimentos',
+    description: 'Consulte valores previstos, pendências, pagamentos concluídos e os dados bancários cadastrados.',
+  },
+];
+
+const STANDARDS = [
+  {
+    number: '01',
+    title: 'Informação verificável',
+    description: 'Produtos, documentos, quantidades, custos e dados bancários precisam permanecer atualizados e consistentes.',
+  },
+  {
+    number: '02',
+    title: 'Rastreabilidade operacional',
+    description: 'Pedidos, entregas, análises e pagamentos são tratados dentro do portal para preservar o histórico da operação.',
+  },
+  {
+    number: '03',
+    title: 'Relacionamento responsável',
+    description: 'A parceria depende do cumprimento dos prazos, da qualidade acordada e da regularidade dos documentos enviados.',
+  },
+];
+
 export function FornecedorLandingPage({ onAccessLogin, onBackToSite }: FornecedorLandingPageProps) {
   return (
-    <div className="min-h-screen bg-[#060e0a] text-white flex flex-col justify-between selection:bg-emerald-500 selection:text-neutral-950">
-      {/* ─── NAVBAR ─────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-emerald-950/60 bg-[#060e0a]/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBackToSite}
-              className="flex items-center gap-2 text-sm font-semibold text-neutral-400 transition-colors hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Voltar ao site</span>
-            </button>
-            <div className="h-5 w-px bg-white/10" />
-            <LogoGSA size="sm" variant="light" />
+    <div className="supplier-public">
+      <header className="supplier-public__topbar">
+        <div className="supplier-public__topbar-inner">
+          <div className="supplier-public__brand">
+            <LogoGSA size="sm" variant="dark" />
+            <span className="supplier-public__brand-divider" aria-hidden="true" />
+            <div className="supplier-public__brand-copy">
+              <strong>Portal do Fornecedor</strong>
+              <span>Central de suprimentos GSA</span>
+            </div>
           </div>
 
-          <button
-            onClick={onAccessLogin}
-            className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-neutral-950 transition-all duration-300 hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-900/30"
-          >
-            <LockKeyhole className="h-3.5 w-3.5" />
-            <span>LOGIN FORNECEDOR</span>
-          </button>
+          <div className="supplier-public__actions">
+            <button type="button" onClick={onBackToSite} className="supplier-public__back">
+              <ArrowLeft size={17} />
+              <span>Voltar ao site</span>
+            </button>
+            <button type="button" onClick={onAccessLogin} className="supplier-public__access">
+              <LockKeyhole size={16} />
+              Acessar portal
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* ─── MAIN HERO ──────────────────────────────── */}
-      <main className="relative flex-1 flex flex-col justify-center overflow-hidden py-12 sm:py-20">
-        {/* Glow ambient background */}
-        <div className="pointer-events-none absolute -left-20 top-1/4 h-96 w-96 rounded-full bg-emerald-600/10 blur-[120px]" />
-        <div className="pointer-events-none absolute right-0 bottom-1/4 h-96 w-96 rounded-full bg-emerald-500/10 blur-[140px]" />
+      <main>
+        <section className="supplier-public__hero" aria-labelledby="supplier-title">
+          <div className="supplier-public__hero-inner">
+            <div>
+              <p className="supplier-public__eyebrow">Relacionamento comercial GSA HUB</p>
+              <h1 id="supplier-title" className="supplier-public__title">
+                Uma operação clara entre a GSA e seus
+                <span>fornecedores.</span>
+              </h1>
+              <p className="supplier-public__lead">
+                O portal concentra credenciamento, produtos, pedidos de compra, entregas, notas fiscais e pagamentos em uma jornada única, organizada e rastreável.
+              </p>
 
-        <div className="relative mx-auto max-w-4xl px-5 w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {/* Logo Marca no Hero */}
-            <div className="mb-6">
-              <LogoGSA size="xl" variant="light" />
-            </div>
-
-            {/* Eyebrow */}
-            <p className="mb-3 text-xs font-black uppercase tracking-[0.3em] text-emerald-400">
-              GSA PRODUTOS
-            </p>
-
-            {/* Main Title */}
-            <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl leading-[1.05]">
-              Portal exclusivo para<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500">
-                fornecedores
-              </span>
-            </h1>
-
-            {/* Description */}
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-neutral-300 sm:text-lg">
-              Receba pedidos de compra, informe produtos entregues, envie notas fiscais e acompanhe a liberação dos pagamentos.
-            </p>
-
-            {/* 4 Feature Pills Grid */}
-            <div className="mt-10 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-              <div className="flex items-center gap-3.5 rounded-2xl border border-emerald-900/50 bg-[#0d1f16]/90 p-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/40 hover:bg-[#11271c]">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
-                  <PackageCheck className="h-5 w-5" />
-                </div>
-                <span className="text-sm font-bold text-neutral-100">Produtos aprovados pela GSA</span>
+              <div className="supplier-public__cta-row">
+                <button type="button" onClick={onAccessLogin} className="supplier-public__primary">
+                  Entrar ou solicitar cadastro
+                  <ArrowRight size={17} />
+                </button>
+                <a href="#operacao" className="supplier-public__secondary">
+                  Conhecer a operação
+                </a>
               </div>
 
-              <div className="flex items-center gap-3.5 rounded-2xl border border-emerald-900/50 bg-[#0d1f16]/90 p-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/40 hover:bg-[#11271c]">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
-                  <Truck className="h-5 w-5" />
+              <div className="supplier-public__assurance" aria-label="Compromissos do portal">
+                <div className="supplier-public__assurance-item">
+                  <strong>Cadastro analisado</strong>
+                  <span>Acesso liberado somente após conferência da equipe GSA.</span>
                 </div>
-                <span className="text-sm font-bold text-neutral-100">Pedidos e entregas rastreados</span>
-              </div>
-
-              <div className="flex items-center gap-3.5 rounded-2xl border border-emerald-900/50 bg-[#0d1f16]/90 p-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/40 hover:bg-[#11271c]">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
-                  <ShieldCheck className="h-5 w-5" />
+                <div className="supplier-public__assurance-item">
+                  <strong>Pedidos formalizados</strong>
+                  <span>Itens, quantidades e previsões vinculados à operação.</span>
                 </div>
-                <span className="text-sm font-bold text-neutral-100">Notas fiscais em ambiente seguro</span>
-              </div>
-
-              <div className="flex items-center gap-3.5 rounded-2xl border border-emerald-900/50 bg-[#0d1f16]/90 p-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:border-emerald-500/40 hover:bg-[#11271c]">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
-                  <CheckCircle2 className="h-5 w-5" />
+                <div className="supplier-public__assurance-item">
+                  <strong>Pagamentos rastreáveis</strong>
+                  <span>Valores e comprovantes associados às entregas aprovadas.</span>
                 </div>
-                <span className="text-sm font-bold text-neutral-100">Estoque liberado após conferência</span>
               </div>
             </div>
 
+            <aside className="supplier-public__workflow" aria-label="Fluxo comercial do fornecedor">
+              <h2>Da análise ao recebimento</h2>
+              <p>Cada etapa possui registro próprio e depende da conclusão da etapa anterior.</p>
+              {FLOW.map((item, index) => (
+                <div className="supplier-public__step" key={item.title}>
+                  <span className="supplier-public__step-number">{String(index + 1).padStart(2, '0')}</span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.description}</p>
+                  </div>
+                </div>
+              ))}
+            </aside>
+          </div>
+        </section>
 
-          </motion.div>
-        </div>
+        <section id="operacao" className="supplier-public__operations" aria-labelledby="operation-title">
+          <div className="supplier-public__section-heading">
+            <div>
+              <p className="supplier-public__section-kicker">Central operacional</p>
+              <h2 id="operation-title">Tudo o que sustenta a relação de fornecimento.</h2>
+            </div>
+            <p>
+              O portal foi estruturado para reduzir conversas dispersas, documentos sem vínculo e dúvidas sobre o andamento de cada pedido. O fornecedor acompanha o processo no mesmo ambiente em que executa suas ações.
+            </p>
+          </div>
+
+          <div className="supplier-public__operation-list">
+            {OPERATIONS.map(({ icon: Icon, title, description }) => (
+              <article className="supplier-public__operation" key={title}>
+                <Icon size={24} strokeWidth={1.7} />
+                <strong>{title}</strong>
+                <p>{description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="supplier-public__standards-wrap" aria-labelledby="standards-title">
+          <div className="supplier-public__standards">
+            <div className="supplier-public__section-heading">
+              <div>
+                <p className="supplier-public__section-kicker">Padrão de relacionamento</p>
+                <h2 id="standards-title">Parcerias comerciais exigem precisão.</h2>
+              </div>
+              <p>
+                A GSA trabalha com informações conferidas, histórico preservado e responsabilidades claras. O portal apoia essa relação desde o primeiro cadastro até o pagamento final.
+              </p>
+            </div>
+
+            <div className="supplier-public__standard-grid">
+              {STANDARDS.map((item) => (
+                <article className="supplier-public__standard" key={item.number}>
+                  <span>{item.number}</span>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="supplier-public__closing">
+              <p>
+                Fornecedores já homologados podem acessar o painel com CPF ou CNPJ e o PIN liberado pela GSA. Novos interessados podem iniciar o credenciamento na mesma área de acesso.
+              </p>
+              <button type="button" onClick={onAccessLogin} className="supplier-public__primary">
+                <BadgeCheck size={17} />
+                Iniciar acesso
+              </button>
+            </div>
+          </div>
+        </section>
       </main>
 
-      {/* ─── FOOTER ─────────────────────────────────── */}
-      <footer className="border-t border-emerald-950/60 bg-[#040907] py-8 text-xs font-semibold text-neutral-500">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-emerald-500" />
-            <span className="text-neutral-400">GSA HUB · Portal de Fornecedores</span>
+      <footer className="supplier-public__footer">
+        <div className="supplier-public__footer-inner">
+          <div className="supplier-public__brand">
+            <Building2 size={16} />
+            <strong>GSA HUB · Central de Suprimentos</strong>
           </div>
-          <p>© {new Date().getFullYear()} Grupo GSA. Todos os direitos reservados.</p>
+          <div className="supplier-public__brand">
+            <ShieldCheck size={16} />
+            <span>Ambiente institucional para fornecedores credenciados</span>
+          </div>
+          <span>© {new Date().getFullYear()} Grupo GSA</span>
         </div>
       </footer>
     </div>
