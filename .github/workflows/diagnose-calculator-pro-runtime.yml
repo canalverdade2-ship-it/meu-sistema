@@ -1,4 +1,4 @@
-name: Diagnose Calculator Pro Runtime
+name: Deploy and Verify Calculator Pro Runtime
 
 on:
   pull_request:
@@ -10,13 +10,58 @@ permissions:
   contents: read
 
 jobs:
-  diagnose:
+  deploy-and-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.101.0
+
+      - name: Publish Calculator Pro functions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          supabase functions deploy gsa-free-tools-pro \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            --no-verify-jwt
+          supabase functions deploy gsa-free-tools-pro-webhook \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            --no-verify-jwt
+
+      - name: Verify deployed function names
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase functions list --project-ref "$SUPABASE_PROJECT_REF" --output json > /tmp/functions.json
+          jq -c '[.[] | {name,status,verify_jwt}]' /tmp/functions.json
+          jq -e '.[] | select(.name == "gsa-free-tools-pro")' /tmp/functions.json > /dev/null
+          jq -e '.[] | select(.name == "gsa-free-tools-pro-webhook")' /tmp/functions.json > /dev/null
+
+      - name: Report required runtime secret names
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase secrets list --project-ref "$SUPABASE_PROJECT_REF" --output json > /tmp/secrets.json
+          jq -r '.[].name' /tmp/secrets.json | sort > /tmp/secret-names.txt
+          echo 'CONFIGURED_SECRET_NAMES:'
+          cat /tmp/secret-names.txt
+          for name in INFINITEPAY_HANDLE PUBLIC_SITE_URL ALLOWED_ORIGINS; do
+            if grep -qx "$name" /tmp/secret-names.txt; then
+              echo "$name=CONFIGURED"
+            else
+              echo "$name=MISSING"
+            fi
+          done
+
       - name: Query production product configuration
         shell: bash
         run: |
