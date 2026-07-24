@@ -72,7 +72,7 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
       onClick={onClick}
       onKeyDown={handleCardKeyDown}
       aria-label={`Ver detalhes de ${item.nome}`}
-      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[20px] border border-slate-200 bg-white text-left shadow-[0_10px_28px_rgba(15,23,42,0.06)] outline-none transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.11)] focus-visible:ring-2 focus-visible:ring-[#17345f] focus-visible:ring-offset-2"
+      className="group flex w-full self-start cursor-pointer flex-col overflow-hidden rounded-[20px] border border-slate-200 bg-white text-left shadow-[0_10px_28px_rgba(15,23,42,0.06)] outline-none transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.11)] focus-visible:ring-2 focus-visible:ring-[#17345f] focus-visible:ring-offset-2"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[#f4f6f8]">
         {item.imagem_url ? (
@@ -110,7 +110,7 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4 sm:pt-3.5">
+      <div className="flex flex-col px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4 sm:pt-3.5">
         <div className="mb-2 flex min-w-0 items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em]">
           <span className="text-[#17345f]">{getTypeLabel(tipo)}</span>
           {categoryLabel && (
@@ -137,26 +137,26 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
           </p>
         )}
 
-        <div className="mt-auto pt-4">
+        <div className="mt-3">
           {item.ocultar_valor ? (
             <div className="text-sm font-bold text-slate-700">Valor sob consulta</div>
           ) : (
-            <div className="min-h-[48px]">
+            <div>
               {hasDiscount && (
-                <div className="flex items-center gap-2 text-xs">
+                <div className="mb-1 flex flex-col gap-0.5 text-xs sm:flex-row sm:items-center sm:gap-2">
                   <span className="text-slate-400 line-through">{formatCurrency(item.valor)}</span>
                   <span className="font-semibold text-emerald-700">
                     Economize {formatCurrency(getProductDiscountAmount(item))}
                   </span>
                 </div>
               )}
-              <div className="mt-0.5 text-[22px] font-black leading-none tracking-[-0.03em] text-[#17345f] sm:text-2xl">
+              <div className="text-[22px] font-black leading-none tracking-[-0.03em] text-[#17345f] sm:text-2xl">
                 {formatCurrency(currentPrice)}
               </div>
             </div>
           )}
 
-          <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
+          <div className="mt-2.5 flex items-center gap-2 border-t border-slate-100 pt-2.5">
             {isProduct ? (
               <button
                 type="button"
