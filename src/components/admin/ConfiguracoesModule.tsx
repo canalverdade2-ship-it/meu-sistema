@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import type React from 'react';
-import { Building2, CreditCard, Layout, LockKeyhole, MessageSquare, Plus, RefreshCw, Save, Settings, Users, Wallet, X } from 'lucide-react';
+import { Building2, Calculator, CreditCard, Layout, LockKeyhole, MessageSquare, Plus, RefreshCw, Save, Settings, Users, Wallet, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
+import { CalculatorProAdminPanel } from './CalculatorProAdminPanel';
 
-type Tab = 'empresa' | 'financeiro' | 'indicacao' | 'whatsapp' | 'portal' | 'seguranca';
+type Tab = 'empresa' | 'financeiro' | 'calculadoras' | 'indicacao' | 'whatsapp' | 'portal' | 'seguranca';
 
 type SettingsSnapshot = {
   company?: any | null;
@@ -47,9 +48,7 @@ export function ConfiguracoesModule() {
   const saveSettings = async (keys: string[], successMessage: string) => {
     setSaving(true);
     try {
-      await callAdminRpc('gsa_admin_update_settings_secure', {
-        p_settings: keys.map((key) => ({ key, value: value(key) })),
-      });
+      await callAdminRpc('gsa_admin_update_settings_secure', { p_settings: keys.map((key) => ({ key, value: value(key) })) });
       toast.success(successMessage);
       await load();
     } catch (error: any) {
@@ -76,10 +75,7 @@ export function ConfiguracoesModule() {
     if (!methodForm?.nome?.trim()) return toast.error('Informe o nome da forma de pagamento.');
     setSaving(true);
     try {
-      await callAdminRpc('gsa_admin_save_payment_method', {
-        p_id: methodForm.id || null,
-        p_payload: methodForm,
-      });
+      await callAdminRpc('gsa_admin_save_payment_method', { p_id: methodForm.id || null, p_payload: methodForm });
       toast.success('Forma de pagamento salva e auditada.');
       setMethodForm(null);
       await load();
@@ -92,10 +88,7 @@ export function ConfiguracoesModule() {
 
   const toggleMethod = async (method: any) => {
     try {
-      await callAdminRpc('gsa_admin_save_payment_method', {
-        p_id: method.id,
-        p_payload: { ...method, ativo: !method.ativo },
-      });
+      await callAdminRpc('gsa_admin_save_payment_method', { p_id: method.id, p_payload: { ...method, ativo: !method.ativo } });
       await load();
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível alterar a forma de pagamento.');
@@ -105,6 +98,7 @@ export function ConfiguracoesModule() {
   const tabs: Array<{ id: Tab; label: string; icon: React.ElementType }> = [
     { id: 'empresa', label: 'Empresa', icon: Building2 },
     { id: 'financeiro', label: 'Financeiro', icon: Wallet },
+    { id: 'calculadoras', label: 'Calculadoras Pro', icon: Calculator },
     { id: 'indicacao', label: 'Indicação', icon: Users },
     { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
     { id: 'portal', label: 'Portal', icon: Layout },
@@ -114,13 +108,15 @@ export function ConfiguracoesModule() {
   if (loading) return <div className="flex min-h-[420px] items-center justify-center"><RefreshCw className="h-9 w-9 animate-spin text-indigo-600" /></div>;
 
   return <div className="space-y-6 pb-10">
-    <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Allowlist administrativa</p><h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><Settings className="h-6 w-6 text-indigo-400" /> Configurações Globais</h1><p className="mt-2 text-sm text-white/55">Somente chaves conhecidas podem ser lidas ou alteradas por este painel.</p></div><button type="button" onClick={() => void load()} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900"><RefreshCw className="h-4 w-4" /> Atualizar</button></div></header>
+    <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Allowlist administrativa</p><h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><Settings className="h-6 w-6 text-indigo-400" /> Configurações Globais</h1><p className="mt-2 text-sm text-white/55">Somente chaves e produtos conhecidos podem ser lidos ou alterados por este painel.</p></div><button type="button" onClick={() => void load()} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900"><RefreshCw className="h-4 w-4" /> Atualizar</button></div></header>
 
-    <div className="grid grid-cols-2 gap-2 rounded-2xl border border-neutral-200 bg-white p-2 sm:grid-cols-3 lg:grid-cols-6">{tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setActiveTab(id)} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold ${activeTab === id ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-neutral-500 hover:bg-neutral-50'}`}><Icon className="h-4 w-4" />{label}</button>)}</div>
+    <div className="grid grid-cols-2 gap-2 rounded-2xl border border-neutral-200 bg-white p-2 sm:grid-cols-3 lg:grid-cols-7">{tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setActiveTab(id)} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold ${activeTab === id ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-neutral-500 hover:bg-neutral-50'}`}><Icon className="h-4 w-4" />{label}</button>)}</div>
 
     {activeTab === 'empresa' && <section className="space-y-6"><Card title="Dados da empresa" icon={Building2}><div className="grid gap-4 sm:grid-cols-2"><TextField label="Razão social" value={company.razao_social || ''} onChange={(next) => setCompany({ ...company, razao_social: next })} /><TextField label="CNPJ" value={company.cnpj || ''} onChange={(next) => setCompany({ ...company, cnpj: next })} /><TextField label="Telefone" value={company.telefone || ''} onChange={(next) => setCompany({ ...company, telefone: next })} /><TextField label="Responsável" value={company.responsavel || ''} onChange={(next) => setCompany({ ...company, responsavel: next })} /></div><SaveButton saving={saving} onClick={() => void saveCompany()} label="Salvar dados da empresa" /></Card><Card title="Cadastro padrão" icon={Users}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><SelectField label="Status do código" value={value('codigo_cadastro_padrao_ativo', 'false')} onChange={(next) => setValue('codigo_cadastro_padrao_ativo', next)} options={[['true', 'Ativo'], ['false', 'Desativado']]} /><TextField label="Código" value={value('codigo_cadastro_padrao', 'BEMVINDO')} onChange={(next) => setValue('codigo_cadastro_padrao', next.toUpperCase())} /><SelectField label="Tipo de bônus" value={value('bonus_cadastro_tipo', 'pontos')} onChange={(next) => setValue('bonus_cadastro_tipo', next)} options={[['pontos', 'Pontos'], ['carteira', 'Carteira']]} /><NumberField label="Valor do bônus" value={value('bonus_cadastro_valor', '100')} onChange={(next) => setValue('bonus_cadastro_valor', next)} /></div><SaveButton saving={saving} onClick={() => void saveSettings(['codigo_cadastro_padrao_ativo', 'codigo_cadastro_padrao', 'bonus_cadastro_tipo', 'bonus_cadastro_valor'], 'Configurações de cadastro salvas.')} /></Card></section>}
 
     {activeTab === 'financeiro' && <section className="space-y-6"><Card title="Parâmetros financeiros" icon={Wallet}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><NumberField label="Valor mínimo para saque" value={value('valor_minimo_saque', '50')} onChange={(next) => setValue('valor_minimo_saque', next)} /><NumberField label="Vencimento de serviços" value={value('vencimento_padrao_servicos', '10')} onChange={(next) => setValue('vencimento_padrao_servicos', next)} /><NumberField label="Vencimento de produtos" value={value('vencimento_padrao_produtos', '10')} onChange={(next) => setValue('vencimento_padrao_produtos', next)} /><NumberField label="Taxa de entrega" value={value('loja_taxa_entrega_padrao', '0')} onChange={(next) => setValue('loja_taxa_entrega_padrao', next)} /></div><SaveButton saving={saving} onClick={() => void saveSettings(['valor_minimo_saque', 'vencimento_padrao_servicos', 'vencimento_padrao_produtos', 'loja_taxa_entrega_padrao'], 'Parâmetros financeiros salvos.')} /></Card><Card title="Formas de pagamento" icon={CreditCard}><div className="flex justify-end"><button type="button" onClick={() => setMethodForm({ nome: '', slug: '', tipo: 'manual', instrucoes: '', ativo: true })} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white"><Plus className="h-4 w-4" /> Nova forma</button></div><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{methods.map((method) => <article key={method.id} className="rounded-2xl border border-neutral-200 p-4"><div className="flex items-start justify-between"><div><h3 className="font-black">{method.nome}</h3><p className="mt-1 text-xs uppercase text-neutral-400">{method.tipo}</p></div><button type="button" onClick={() => void toggleMethod(method)} className={`relative h-6 w-11 rounded-full ${method.ativo ? 'bg-indigo-600' : 'bg-neutral-300'}`}><span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${method.ativo ? 'translate-x-5' : ''}`} /></button></div><p className="mt-3 line-clamp-3 text-sm text-neutral-500">{method.instrucoes || 'Sem instruções.'}</p><button type="button" onClick={() => setMethodForm({ ...method })} className="mt-4 w-full rounded-xl border border-neutral-200 px-3 py-2 text-xs font-black">Editar</button></article>)}</div></Card></section>}
+
+    {activeTab === 'calculadoras' && <CalculatorProAdminPanel />}
 
     {activeTab === 'indicacao' && <Card title="Programa de indicação" icon={Users}><div className="grid gap-4 sm:grid-cols-2"><SelectField label="Recompensa do indicador" value={value('indicador_recompensa_tipo', 'carteira')} onChange={(next) => setValue('indicador_recompensa_tipo', next)} options={[['carteira', 'Carteira'], ['pontos', 'Pontos'], ['ambos', 'Ambos']]} /><SelectField label="Recompensa do indicado" value={value('indicado_recompensa_tipo', 'desconto')} onChange={(next) => setValue('indicado_recompensa_tipo', next)} options={[['desconto', 'Desconto'], ['pontos', 'Pontos'], ['ambos', 'Ambos']]} /><NumberField label="Limite na carteira" value={value('indicador_limite_carteira', value('bonus_indicador', '20'))} onChange={(next) => { setValue('indicador_limite_carteira', next); setValue('bonus_indicador', next); }} /><NumberField label="Pontos do indicador" value={value('indicador_valor_pontos', '50')} onChange={(next) => setValue('indicador_valor_pontos', next)} /><NumberField label="Desconto do indicado (%)" value={value('indicado_desconto_porcentagem', value('desconto_indicado_porcentagem', '10'))} onChange={(next) => { setValue('indicado_desconto_porcentagem', next); setValue('desconto_indicado_porcentagem', next); }} /><NumberField label="Pontos do indicado" value={value('indicado_valor_pontos', '50')} onChange={(next) => setValue('indicado_valor_pontos', next)} /><label className="block text-sm font-bold sm:col-span-2">Mensagem de indicação<textarea rows={5} value={value('template_mensagem_indicacao', '')} onChange={(event) => setValue('template_mensagem_indicacao', event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></div><SaveButton saving={saving} onClick={() => void saveSettings(['indicador_recompensa_tipo', 'indicador_limite_carteira', 'indicador_valor_pontos', 'indicado_recompensa_tipo', 'indicado_desconto_porcentagem', 'indicado_valor_pontos', 'template_mensagem_indicacao', 'bonus_indicador', 'desconto_indicado_porcentagem'], 'Programa de indicação salvo.')} /></Card>}
 
