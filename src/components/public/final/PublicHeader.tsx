@@ -73,6 +73,44 @@ const PUBLIC_MOBILE_STYLES = `
     -webkit-tap-highlight-color: transparent;
   }
 
+  body.gsa-public-systems main > section:first-of-type {
+    background: #f2efe7 !important;
+    border-bottom-color: #d7d0c4 !important;
+    color: #17202a !important;
+  }
+
+  body.gsa-public-systems main > section:first-of-type > div > div:first-child h1 {
+    color: #111820 !important;
+  }
+
+  body.gsa-public-systems main > section:first-of-type > div > div:first-child > p:nth-of-type(2) {
+    color: #59636d !important;
+  }
+
+  body.gsa-public-systems main > section:first-of-type > div > div:first-child > div[class*="flex-col"] > button:nth-child(2) {
+    border-color: #9ca3aa !important;
+    background: rgba(255, 255, 255, 0.52) !important;
+    color: #17202a !important;
+  }
+
+  body.gsa-public-systems main > section:first-of-type > div > div:first-child > div[class*="flex-col"] > button:nth-child(2):hover {
+    border-color: #8a6b2f !important;
+    color: #6f5427 !important;
+  }
+
+  body.gsa-public-systems main > section:first-of-type > div > div:first-child > ul {
+    border-top-color: #d7d0c4 !important;
+  }
+
+  body.gsa-public-systems main > section:first-of-type > div > div:first-child > ul li {
+    color: #606a74 !important;
+  }
+
+  body.gsa-public-systems main > section:first-of-type > div > aside {
+    color: #ffffff !important;
+    box-shadow: 0 28px 65px rgba(18, 27, 36, 0.18);
+  }
+
   @media (max-width: 767px) {
     body.gsa-public-systems main h1,
     body.gsa-public-brand main h1 {
