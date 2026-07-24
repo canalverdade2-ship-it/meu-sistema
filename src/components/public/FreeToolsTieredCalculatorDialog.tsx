@@ -83,6 +83,7 @@ export function FreeToolsTieredCalculatorDialog({
   const [mode, setMode] = useState<'free' | 'pro'>('free');
   const [status, setStatus] = useState<ProAccessStatus | null>(null);
   const [checking, setChecking] = useState(false);
+  const [statusError, setStatusError] = useState(false);
   const [unlockOpen, setUnlockOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [eligibility, setEligibility] = useState<{
@@ -96,21 +97,35 @@ export function FreeToolsTieredCalculatorDialog({
   const refreshStatus = useCallback(async (selectedTool: FreeToolId) => {
     try {
       const next = await freeToolsProAccess.status(selectedTool);
+      if (!next?.success || !next.product) throw new Error('invalid_product_status');
       setStatus(next);
+      setStatusError(false);
       return next;
     } catch {
       setStatus(null);
+      setStatusError(true);
       return null;
     }
   }, []);
 
   useEffect(() => {
     if (!tool) return;
+    let active = true;
     setMode('free');
     setNotice(null);
     setUnlockOpen(false);
     setEligibility(null);
-    void refreshStatus(tool);
+    setStatus(null);
+    setStatusError(false);
+    setChecking(true);
+
+    void refreshStatus(tool).finally(() => {
+      if (active) setChecking(false);
+    });
+
+    return () => {
+      active = false;
+    };
   }, [tool, refreshStatus]);
 
   useEffect(() => {
@@ -203,14 +218,22 @@ export function FreeToolsTieredCalculatorDialog({
 
     try {
       const next = await refreshStatus(tool);
-      if (!next?.access) {
+      if (!next?.product) {
+        setNotice('Não foi possível consultar agora o preço, a duração e o acesso Pro. Tente novamente em instantes.');
+        return;
+      }
+      if (!next.available) {
+        setNotice('O modo Pro desta calculadora está temporariamente indisponível.');
+        return;
+      }
+      if (!next.access) {
         setUnlockOpen(true);
         return;
       }
 
       const activation = await freeToolsProAccess.activate(tool);
       if (!activation.success) {
-        setUnlockOpen(true);
+        setNotice('Não foi possível iniciar a sessão Pro. Tente novamente.');
         return;
       }
 
@@ -222,7 +245,7 @@ export function FreeToolsTieredCalculatorDialog({
         setEligibility({ result: 'promotion', source: 'free_period' });
       }
     } catch {
-      setUnlockOpen(true);
+      setNotice('Não foi possível consultar o acesso Pro. Verifique sua conexão e tente novamente.');
     } finally {
       setChecking(false);
     }
@@ -237,6 +260,10 @@ export function FreeToolsTieredCalculatorDialog({
 
   const openUnlockOptions = () => {
     setEligibility(null);
+    if (!status?.product) {
+      setNotice('Não foi possível carregar as formas de desbloqueio. Toque novamente em Pro para atualizar.');
+      return;
+    }
     setUnlockOpen(true);
   };
 
@@ -246,6 +273,16 @@ export function FreeToolsTieredCalculatorDialog({
         currency: 'BRL',
       }).format(status.product.preco_centavos / 100)
     : null;
+
+  const proSubtitle = checking && !status
+    ? 'Consultando configuração...'
+    : status?.access
+      ? sourceLabel(status.source)
+      : price
+        ? `Avançado · ${price}`
+        : statusError
+          ? 'Toque para tentar novamente'
+          : 'Cálculo avançado';
 
   return (
     <>
@@ -305,7 +342,7 @@ export function FreeToolsTieredCalculatorDialog({
                     Pro
                   </span>
                   <small className={`mt-0.5 block text-[9px] font-bold ${mode === 'pro' ? 'text-white/60' : 'text-[#9a8558]'}`}>
-                    {status?.access ? sourceLabel(status.source) : price ? `Avançado · ${price}` : 'Cálculo avançado'}
+                    {proSubtitle}
                   </small>
                 </button>
               </div>
@@ -347,7 +384,7 @@ export function FreeToolsTieredCalculatorDialog({
         </div>
       </AccessibleDialog>
 
-      {tool && (
+      {tool && status?.product && (
         <FreeToolsProUnlockDialog
           isOpen={unlockOpen}
           tool={tool}
