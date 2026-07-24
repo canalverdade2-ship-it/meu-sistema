@@ -16,28 +16,53 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
+      GH_INFINITEPAY_HANDLE: ${{ secrets.INFINITEPAY_HANDLE }}
+      GH_PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
+      GH_ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
     steps:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
           version: 2.101.0
 
-      - name: Report checkout runtime secret status
+      - name: Synchronize available checkout secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "$GH_INFINITEPAY_HANDLE" ]; then
+            supabase secrets set INFINITEPAY_HANDLE="$GH_INFINITEPAY_HANDLE" --project-ref "$SUPABASE_PROJECT_REF"
+            echo 'GITHUB_INFINITEPAY_HANDLE=AVAILABLE_AND_SYNCED'
+          else
+            echo 'GITHUB_INFINITEPAY_HANDLE=MISSING'
+          fi
+
+          if [ -n "$GH_PUBLIC_SITE_URL" ]; then
+            supabase secrets set PUBLIC_SITE_URL="$GH_PUBLIC_SITE_URL" --project-ref "$SUPABASE_PROJECT_REF"
+            echo 'GITHUB_PUBLIC_SITE_URL=AVAILABLE_AND_SYNCED'
+          else
+            echo 'GITHUB_PUBLIC_SITE_URL=MISSING'
+          fi
+
+          if [ -n "$GH_ALLOWED_ORIGINS" ]; then
+            supabase secrets set ALLOWED_ORIGINS="$GH_ALLOWED_ORIGINS" --project-ref "$SUPABASE_PROJECT_REF"
+            echo 'GITHUB_ALLOWED_ORIGINS=AVAILABLE_AND_SYNCED'
+          else
+            echo 'GITHUB_ALLOWED_ORIGINS=MISSING_OR_ALREADY_MANAGED_ONLY_IN_SUPABASE'
+          fi
+
+      - name: Report Supabase checkout secret status
         shell: bash
         run: |
           set -euo pipefail
           supabase secrets list --project-ref "$SUPABASE_PROJECT_REF" --output json > /tmp/secrets.json
           jq -r '.[].name' /tmp/secrets.json | sort > /tmp/secret-names.txt
-          missing=0
           for name in INFINITEPAY_HANDLE PUBLIC_SITE_URL ALLOWED_ORIGINS; do
             if grep -qx "$name" /tmp/secret-names.txt; then
               echo "$name=CONFIGURED"
             else
               echo "$name=MISSING"
-              missing=$((missing+1))
             fi
           done
-          echo "MISSING_SECRET_COUNT=$missing"
 
       - name: Compare production database with public function
         shell: bash
