@@ -90,9 +90,8 @@ function sourceLabel(source?: string | null) {
   const labels: Record<string, string> = {
     payment: 'Pagamento confirmado',
     voucher: 'Voucher ativado',
-    manual: 'Liberado pelo administrador',
-    client_paid_invoice: 'Benefício de cliente',
-    free_period: 'Período gratuito',
+    client_paid_invoice: 'Benefício automático de cliente',
+    free_period: 'Promoção gratuita ativa',
     session: 'Sessão Pro ativa',
   };
   return source ? labels[source] || 'Acesso Pro ativo' : 'Acesso Pro bloqueado';
@@ -149,7 +148,7 @@ export function FreeToolsTieredCalculatorDialog({
     const verify = async () => {
       setChecking(true);
       setNotice(isClientLoginReturn
-        ? 'Login concluído. Verificando o benefício Pro desta conta...'
+        ? 'Login concluído. Verificando os critérios automáticos desta conta...'
         : 'Confirmando o pagamento com a InfinitePay...');
 
       try {
@@ -176,15 +175,14 @@ export function FreeToolsTieredCalculatorDialog({
           const activation = await freeToolsProAccess.activate(tool);
           if (activation.success) {
             setMode('pro');
-            setNotice(isClientLoginReturn
-              ? null
-              : 'Pagamento confirmado. O modo Pro foi desbloqueado.');
+            setNotice(isClientLoginReturn ? null : 'Pagamento confirmado. O modo Pro foi desbloqueado.');
             const refreshed = await refreshStatus(tool);
+            const effectiveSource = refreshed?.source || latestStatus?.source || activation.source || null;
 
             if (isClientLoginReturn) {
               setEligibility({
-                result: 'eligible',
-                source: refreshed?.source || latestStatus?.source || activation.source || 'client_paid_invoice',
+                result: effectiveSource === 'free_period' ? 'promotion' : 'eligible',
+                source: effectiveSource || 'client_paid_invoice',
               });
             }
             return;
@@ -241,7 +239,12 @@ export function FreeToolsTieredCalculatorDialog({
       }
 
       setMode('pro');
-      await refreshStatus(tool);
+      const refreshed = await refreshStatus(tool);
+      const effectiveSource = refreshed?.source || next.source || activation.source || null;
+
+      if (effectiveSource === 'free_period') {
+        setEligibility({ result: 'promotion', source: 'free_period' });
+      }
     } catch {
       setUnlockOpen(true);
     } finally {
