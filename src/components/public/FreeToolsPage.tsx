@@ -282,7 +282,15 @@ export function FreeToolsPage({ onBack, onServices }: FreeToolsPageProps) {
         </div>
       </section>
 
-      <FreeToolsCalculatorDialog tool={activeTool} onClose={() => setActiveTool(null)} />
+      <FreeToolsCalculatorDialog
+        tool={activeTool}
+        onClose={() => setActiveTool(null)}
+        onToolChange={setActiveTool}
+        onServices={() => {
+          setActiveTool(null);
+          onServices();
+        }}
+      />
     </main>
   );
 }
