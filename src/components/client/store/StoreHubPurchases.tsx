@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState } from 'react';
+import {
+  AlertCircle,
+  CalendarDays,
+  Clock3,
+  CreditCard,
+  Eye,
+  Package,
+  RotateCcw,
+  ShoppingBag,
+  Trash2,
+  Truck,
+} from 'lucide-react';
 import { Modal } from '../../ui/Modal';
 import { formatCurrency, formatDate } from '../../../lib/utils';
-import { toast } from 'react-hot-toast';
-import { supabase } from '../../../lib/supabase';
-// ADD ICONS AS NEEDED
-import { Package, History, Clock, Trash2, DollarSign, CreditCard, RefreshCcw, ShoppingBag } from 'lucide-react';
-
 
 export interface StoreHubPurchasesProps {
   isPurchasesModalOpen: boolean;
@@ -24,6 +30,109 @@ export interface StoreHubPurchasesProps {
   onNavigate?: (path: string) => void;
 }
 
+type PurchaseTab = 'pendentes' | 'pagos' | 'cancelados';
+
+type OrderPresentation = {
+  status: string;
+  label: string;
+  tone: string;
+  dot: string;
+  isCredit: boolean;
+  isSubscription: boolean;
+  isPaid: boolean;
+  isAwaiting: boolean;
+  isExpired: boolean;
+  canPay: boolean;
+  canCancelPending: boolean;
+  canRequestCancellation: boolean;
+  hoursLeft: number;
+  minutesLeft: number;
+};
+
+function getOrderStatus(order: any): string {
+  let status = order.ordens_items?.[0]?.status || order.status || 'em_analise';
+  const isSubscription = order.ordens_items?.[0]?.tipo === 'assinatura';
+  if (isSubscription && order.ordens_items?.[0]?.faturas?.some((invoice: any) => invoice.status === 'pago')) {
+    status = 'pago';
+  }
+  return status;
+}
+
+function getPresentation(order: any): OrderPresentation {
+  const status = getOrderStatus(order);
+  const isCredit = Boolean(order.descricao_adicional?.includes('Crédito GSA'));
+  const isSubscription = order.ordens_items?.[0]?.tipo === 'assinatura';
+  const createdAt = new Date(order.data_criacao);
+  const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+  const remainingMs = expiresAt.getTime() - Date.now();
+  const hoursLeft = Math.max(0, Math.floor(remainingMs / (1000 * 60 * 60)));
+  const minutesLeft = Math.max(0, Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60)));
+  const expiredPending = !isCredit
+    && remainingMs <= 0
+    && ['aberto', 'em_analise'].includes(status);
+  const isCancelled = status === 'cancelado';
+  const isExpired = isCancelled || expiredPending;
+  const isPaid = ['pago', 'em_expedicao', 'em_transporte', 'concluido'].includes(status) || isCredit;
+  const isAwaiting = ['aberto', 'aprovado', 'em_analise'].includes(status) && !isCredit && !isExpired;
+
+  let label = 'Em análise';
+  let tone = 'border-amber-200 bg-amber-50 text-amber-800';
+  let dot = 'bg-amber-500';
+
+  if (isExpired) {
+    label = 'Cancelado';
+    tone = 'border-red-200 bg-red-50 text-red-700';
+    dot = 'bg-red-500';
+  } else if (status === 'concluido') {
+    label = 'Entregue';
+    tone = 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    dot = 'bg-emerald-500';
+  } else if (status === 'em_transporte') {
+    label = 'Em transporte';
+    tone = 'border-blue-200 bg-blue-50 text-blue-800';
+    dot = 'bg-blue-500';
+  } else if (status === 'em_expedicao') {
+    label = 'Em preparação';
+    tone = 'border-sky-200 bg-sky-50 text-sky-800';
+    dot = 'bg-sky-500';
+  } else if (isPaid) {
+    label = isSubscription ? 'Assinatura ativa' : 'Pagamento aprovado';
+    tone = 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    dot = 'bg-emerald-500';
+  } else if (isAwaiting) {
+    label = 'Aguardando pagamento';
+  }
+
+  return {
+    status,
+    label,
+    tone,
+    dot,
+    isCredit,
+    isSubscription,
+    isPaid,
+    isAwaiting,
+    isExpired,
+    canPay: isAwaiting && Number(order.total || 0) > 0,
+    canCancelPending: isAwaiting && Number(order.total || 0) > 0,
+    canRequestCancellation: isPaid && ['aprovado', 'pago'].includes(status),
+    hoursLeft,
+    minutesLeft,
+  };
+}
+
+function orderMatchesTab(order: any, tab: PurchaseTab): boolean {
+  const presentation = getPresentation(order);
+  if (tab === 'pendentes') return presentation.isAwaiting;
+  if (tab === 'pagos') return presentation.isPaid && !presentation.isExpired;
+  return presentation.isExpired;
+}
+
+function getOrderImage(order: any): string | undefined {
+  return order.ordens_items?.[0]?.produtos?.imagem_url
+    || order.ordens_items?.[0]?.assinaturas?.imagem_url;
+}
+
 export default function StoreHubPurchases({
   isPurchasesModalOpen,
   setIsPurchasesModalOpen,
@@ -37,312 +146,238 @@ export default function StoreHubPurchases({
   setSelectedOrderDetail,
   setCancelRequestOrder,
   setSelectedOrderTimeline,
-  onNavigate
 }: StoreHubPurchasesProps) {
-  const [purchasesTab, setPurchasesTab] = useState<'pendentes' | 'pagos' | 'cancelados'>('pendentes');
+  const [purchasesTab, setPurchasesTab] = useState<PurchaseTab>('pendentes');
+
+  const grouped = useMemo(() => groupedPurchases(allPurchases), [allPurchases, groupedPurchases]);
+  const filtered = useMemo(
+    () => grouped.filter((order) => orderMatchesTab(order, purchasesTab)),
+    [grouped, purchasesTab],
+  );
+  const counts = useMemo(() => ({
+    pendentes: grouped.filter((order) => orderMatchesTab(order, 'pendentes')).length,
+    pagos: grouped.filter((order) => orderMatchesTab(order, 'pagos')).length,
+    cancelados: grouped.filter((order) => orderMatchesTab(order, 'cancelados')).length,
+  }), [grouped]);
+
+  const close = () => {
+    setIsPurchasesModalOpen(false);
+    setSelectedOrderId(null);
+  };
 
   return (
-    <Modal isOpen={isPurchasesModalOpen} onClose={() => { setIsPurchasesModalOpen(false); setSelectedOrderId(null); }} title="Minhas Compras" size="wide">
-            <div className="space-y-6">
-              {loading ? (
-                <div className="flex justify-center py-20">
-                  <div className="h-10 w-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : allPurchases.length > 0 ? (
-                <div className="space-y-6">
-                  {/* Tab Navigation */}
-                  <div className="flex p-1 bg-neutral-100 rounded-2xl gap-1">
-                    {(['pendentes', 'pagos', 'cancelados'] as const).map((tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => setPurchasesTab(tab)}
-                        className={`flex-1 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${
-                          purchasesTab === tab 
-                            ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-black/5' 
-                            : 'text-neutral-400 hover:text-neutral-600'
-                        }`}
-                      >
-                        {tab}
-                      </button>
-                    ))}
-                  </div>
-    
-                  <div className="grid grid-cols-1 gap-4 max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
-                    {groupedPurchases(allPurchases)
-                      .filter(order => {
-                        const orderStatus = order.ordens_items?.[0]?.status || order.status;
-                        const isCancelled = orderStatus === 'cancelado';
-                        const isCredit = order.descricao_adicional?.includes('Crédito GSA');
-                        const isExpiredPending = !isCredit && new Date(order.data_criacao).getTime() + 24 * 60 * 60 * 1000 <= Date.now() && (orderStatus === 'aberto' || orderStatus === 'em_analise');
-                        if (purchasesTab === 'pendentes') return (orderStatus === 'aberto' || orderStatus === 'aprovado' || orderStatus === 'em_analise') && !isExpiredPending && !isCancelled && !isCredit;
-                        if (purchasesTab === 'pagos') return (['pago', 'em_expedicao', 'em_transporte', 'concluido'].includes(orderStatus) || isCredit) && !isCancelled;
-                        if (purchasesTab === 'cancelados') return isCancelled || isExpiredPending;
-                        return true;
-                      })
-                      .map((order) => {
-                        const createdDate = new Date(order.data_criacao);
-                        const expiryDate = new Date(createdDate.getTime() + 24 * 60 * 60 * 1000);
-                        const now = new Date();
-                        const timeLeftMs = expiryDate.getTime() - now.getTime();
-                        const hoursLeft = Math.floor(timeLeftMs / (1000 * 60 * 60));
-                        const minsLeft = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
-                        
-                        let orderStatus = order.ordens_items?.[0]?.status || order.status;
-                        const isCredit = order.descricao_adicional?.includes('Crédito GSA');
-                        const isAssinatura = order.ordens_items?.[0]?.tipo === 'assinatura';
-                        
-                        // Se for assinatura e já tiver alguma fatura paga, consideramos a assinatura ativa/paga
-                        if (isAssinatura && order.ordens_items[0].faturas?.some((f: any) => f.status === 'pago')) {
-                          orderStatus = 'pago'; // Força visualização de pago
-                        }
-                        
-                        const isPaid = ['pago', 'em_expedicao', 'em_transporte', 'concluido'].includes(orderStatus) || isCredit;
-                        const isCancelled = orderStatus === 'cancelado';
-                        const isExpiredPending = !isCredit && timeLeftMs <= 0 && (orderStatus === 'aberto' || orderStatus === 'em_analise');
-                        const isExpired = isCancelled || isExpiredPending;
-                        const isAwaiting = (orderStatus === 'aberto' || orderStatus === 'aprovado' || orderStatus === 'em_analise') && !isCredit;
-    
-                        return (
-                          <div 
-                            key={order.codigo_orcamento} 
-                            className="relative group overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-orange-50/50 to-amber-50/50 border-2 border-orange-100/50 hover:border-orange-300 transition-all duration-500 shadow-sm hover:shadow-xl"
-                          >
-                            <div className={`absolute top-0 left-0 right-0 h-1 transition-colors duration-500 ${
-                              isExpired ? 'bg-red-500' :
-                              orderStatus === 'concluido' ? 'bg-purple-500' :
-                              orderStatus === 'em_transporte' ? 'bg-amber-500' :
-                              orderStatus === 'em_expedicao' ? 'bg-blue-500' :
-                              orderStatus === 'pago' ? 'bg-emerald-500' :
-                              'bg-orange-500'
-                            }`} />
-    
-                            <div className="p-4 md:p-6 relative z-10">
-                              <div className="flex flex-col gap-6">
-                                <div className="flex flex-wrap items-center gap-4">
-                                  <div className="relative h-16 w-16 md:h-20 md:w-20 flex-shrink-0 rounded-full bg-white border-2 border-orange-100 flex items-center justify-center overflow-hidden shadow-sm">
-                                    {(order.ordens_items?.[0]?.produtos?.imagem_url || order.ordens_items?.[0]?.assinaturas?.imagem_url) ? (
-                                      <img src={order.ordens_items[0].produtos?.imagem_url || order.ordens_items[0].assinaturas?.imagem_url} alt="" className="h-full w-full object-cover" />
-                                    ) : (
-                                      <Package className="w-8 h-8 text-neutral-200" />
-                                    )}
-                                  </div>
-    
-                                  {(() => {
-                                    let wrapperClass = '';
-                                    let dotClass = '';
-                                    let labelText = '';
-    
-                                    if (isExpired) {
-                                      wrapperClass = 'bg-red-50 border-red-100 text-red-700';
-                                      dotClass = 'bg-red-500';
-                                      labelText = 'Cancelado';
-                                    } else if (orderStatus === 'concluido') {
-                                      wrapperClass = 'bg-purple-50 border-purple-100 text-purple-700';
-                                      dotClass = 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]';
-                                      labelText = 'Concluído';
-                                    } else if (orderStatus === 'em_transporte') {
-                                      wrapperClass = 'bg-amber-50 border-amber-100 text-amber-700';
-                                      dotClass = 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]';
-                                      labelText = 'Em Transporte';
-                                    } else if (orderStatus === 'em_expedicao') {
-                                      wrapperClass = 'bg-blue-50 border-blue-100 text-blue-700';
-                                      dotClass = 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]';
-                                      labelText = 'Em Expedição';
-                                    } else if (orderStatus === 'pago' || isPaid) {
-                                      wrapperClass = 'bg-emerald-50 border-emerald-100 text-emerald-700';
-                                      dotClass = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
-                                      labelText = 'Pago';
-                                    } else if (isAwaiting) {
-                                      wrapperClass = 'bg-white border-orange-200 text-orange-700 animate-pulse ring-4 ring-orange-500/10';
-                                      dotClass = 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.8)]';
-                                      labelText = 'Aguardando Pagamento';
-                                    } else {
-                                      wrapperClass = 'bg-neutral-50 border-neutral-100 text-neutral-700';
-                                      dotClass = 'bg-neutral-500';
-                                      labelText = 'Status Indeterminado';
-                                    }
-    
-                                    return (
-                                      <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full shadow-sm border transition-all ${wrapperClass}`}>
-                                        <div className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
-                                        <span className="text-[10px] font-black uppercase tracking-wider">
-                                          {labelText}
-                                        </span>
-                                      </div>
-                                    );
-                                  })()}
-                                </div>
-    
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="text-2xl md:text-3xl font-black text-[#1a1a1a] tracking-tighter mb-2 group-hover:text-orange-600 transition-colors">
-                                      {order.codigo_orcamento?.startsWith('#') ? order.codigo_orcamento : `#${order.codigo_orcamento}`}
-                                    </h4>
-                                    <div className="space-y-1">
-                                      <div className="flex items-center gap-2">
-                                        <History className="w-3.5 h-3.5 text-orange-600/40" />
-                                        <p className="text-xs text-neutral-600 font-bold uppercase tracking-wide">
-                                          Comprado em {formatDate(order.data_criacao)}
-                                        </p>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <Package className="w-3.5 h-3.5 text-orange-600/40" />
-                                        <p className="text-[10px] text-neutral-400 font-bold uppercase">
-                                          {order.ordens_items?.length || order.quantidade || 1} {(order.ordens_items?.length || order.quantidade || 1) === 1 ? 'item' : 'itens'} no pedido
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-    
-                                  <div className="flex flex-row md:flex-col md:items-end justify-between md:justify-center border-t md:border-t-0 md:border-l border-orange-200/50 pt-5 md:pt-0 md:pl-8 gap-3 bg-gradient-to-br from-orange-100/40 via-orange-50/30 to-amber-100/40 md:bg-none -mx-4 -mb-4 md:m-0 p-5 md:p-2 rounded-b-[1.5rem] md:rounded-none shadow-inner md:shadow-none">
-                                    <div className="text-left md:text-right">
-                                      <span className="text-[10px] font-black text-orange-900/40 uppercase tracking-[0.2em] block mb-1">Valor Total</span>
-                                      <span className="text-2xl md:text-3xl font-black text-[#1a1a1a] tracking-tighter tabular-nums leading-none">
-                                        {formatCurrency(order.total)}
-                                      </span>
-                                    </div>
-                                    
-                                    {isAwaiting && !isExpired && (
-                                      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 backdrop-blur-sm rounded-xl border border-orange-200 shadow-sm transition-transform hover:scale-105">
-                                        <Clock className="w-3.5 h-3.5 text-orange-600" />
-                                        <span className="text-[10px] font-black text-orange-700 uppercase tracking-wide">
-                                          Expira em {hoursLeft}h {minsLeft}m
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-    
-                              <div className="mt-5 pt-5 border-t-2 border-orange-100/50 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
-                                {isAwaiting && !isExpired && !order.descricao_adicional?.includes('Crédito GSA') && order.total > 0 && (
-                                  <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    disabled={isProcessingPayment}
-                                    onClick={() => {
-                                      setIsPurchasesModalOpen(false);
-                                      handlePayOrder(order);
-                                    }}
-                                    className="px-5 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl transition-all w-full sm:w-auto flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 border border-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                                    title="Realizar Pagamento"
-                                  >
-                                    <CreditCard className="w-4 h-4" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">
-                                      {isProcessingPayment ? 'Gerando Fatura...' : 'Realizar Pagamento'}
-                                    </span>
-                                  </motion.button>
-                                )}
+    <Modal isOpen={isPurchasesModalOpen} onClose={close} title="Meus pedidos" size="wide">
+      <div className="space-y-5">
+        <div className="grid grid-cols-3 gap-2 rounded-[16px] border border-slate-200 bg-slate-50 p-1.5">
+          {([
+            { id: 'pendentes', label: 'Pendentes' },
+            { id: 'pagos', label: 'Em andamento' },
+            { id: 'cancelados', label: 'Cancelados' },
+          ] as const).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setPurchasesTab(tab.id)}
+              aria-pressed={purchasesTab === tab.id}
+              className={`min-h-11 rounded-xl px-2 text-xs font-extrabold transition ${
+                purchasesTab === tab.id
+                  ? 'bg-white text-[#17345f] shadow-sm ring-1 ring-slate-200'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className="block sm:inline">{tab.label}</span>
+              <span className={`ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
+                purchasesTab === tab.id ? 'bg-[#edf2f7] text-[#17345f]' : 'bg-slate-200 text-slate-600'
+              }`}>
+                {counts[tab.id]}
+              </span>
+            </button>
+          ))}
+        </div>
 
-                                {isAwaiting && !isExpired && !order.descricao_adicional?.includes('Crédito GSA') && order.total > 0 && (
-                                  <motion.button 
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    disabled={loading}
-                                    onClick={() => handleCancelOrder(order)}
-                                    className="px-4 py-2.5 bg-amber-400 text-amber-950 hover:bg-amber-500 rounded-xl transition-all w-full sm:w-auto flex items-center justify-center gap-2 shadow-sm border border-amber-500"
-                                    title="Cancelar Pedido"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Cancelar Pedido</span>
-                                  </motion.button>
-                                )}
-                                
-                                <motion.button 
-                                  whileHover={{ scale: 1.05, backgroundColor: '#f1f5f9' }}
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={() => setSelectedOrderDetail(order)}
-                                  className="w-full sm:w-auto px-5 py-2.5 bg-white text-neutral-600 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border border-neutral-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                                >
-                                  Detalhes
-                                </motion.button>
-    
-                                {isPaid && ['aprovado', 'pago'].includes(orderStatus) && (
-                                  <motion.button 
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => setCancelRequestOrder(order)}
-                                    className="px-5 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl transition-all w-full sm:w-auto flex items-center justify-center gap-2 shadow-lg shadow-red-200 border border-red-700"
-                                    title="Cancelar Compra"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Cancelar Compra</span>
-                                  </motion.button>
-                                )}
-    
-                                {isPaid && (
-                                  <motion.button 
-                                    whileHover={{ scale: 1.05, y: -2 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => setSelectedOrderTimeline(order)}
-                                    className="w-full sm:w-auto px-5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border border-indigo-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
-                                  >
-                                    <Clock className="w-3.5 h-3.5" />
-                                    Acompanhar Pedido
-                                  </motion.button>
-                                )}
-    
-                                {isAssinatura && isPaid && (
-                                  <motion.button 
-                                    whileHover={{ scale: 1.05, y: -2 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => {
-                                      if (onNavigate) {
-                                        setIsPurchasesModalOpen(false);
-                                        handlePayOrder(order);
-                                      }
-                                    }}
-                                    className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:shadow-xl hover:shadow-indigo-200 transition-all flex items-center justify-center gap-2 relative overflow-hidden group/pay"
-                                  >
-                                    <CreditCard className="w-3.5 h-3.5" />
-                                    PRÓXIMAS MENSALIDADES
-                                  </motion.button>
-                                )}
-    
+        {loading ? (
+          <div className="space-y-3" role="status" aria-label="Carregando pedidos">
+            {[0, 1, 2].map((index) => (
+              <div key={index} className="h-40 animate-pulse rounded-[18px] border border-slate-200 bg-slate-100" />
+            ))}
+          </div>
+        ) : allPurchases.length === 0 ? (
+          <div className="flex min-h-[360px] flex-col items-center justify-center rounded-[18px] border border-slate-200 bg-slate-50 px-6 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-[18px] border border-slate-200 bg-white">
+              <ShoppingBag className="h-7 w-7 text-slate-300" aria-hidden="true" />
+            </div>
+            <h3 className="mt-5 text-base font-extrabold text-slate-950">Você ainda não realizou compras</h3>
+            <p className="mt-2 max-w-[320px] text-sm leading-6 text-slate-500">
+              Seus pedidos, pagamentos e atualizações de entrega aparecerão neste espaço.
+            </p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[18px] border border-dashed border-slate-300 bg-slate-50 px-6 text-center">
+            <Package className="h-8 w-8 text-slate-300" aria-hidden="true" />
+            <h3 className="mt-4 text-sm font-extrabold text-slate-800">Nenhum pedido nesta situação</h3>
+            <p className="mt-1 text-xs text-slate-500">Escolha outra aba para consultar seu histórico.</p>
+          </div>
+        ) : (
+          <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1 custom-scrollbar">
+            {filtered.map((order) => {
+              const presentation = getPresentation(order);
+              const image = getOrderImage(order);
+              const itemCount = order.ordens_items?.length || order.quantidade || 1;
+              const code = order.codigo_orcamento?.startsWith('#')
+                ? order.codigo_orcamento
+                : `#${order.codigo_orcamento || order.codigo_ordem || 'PEDIDO'}`;
 
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    
-                    {groupedPurchases(allPurchases).filter(order => {
-                      let orderStatus = order.ordens_items?.[0]?.status || order.status;
-                      const isAssinatura = order.ordens_items?.[0]?.tipo === 'assinatura';
-                      if (isAssinatura && order.ordens_items[0].faturas?.some((f: any) => f.status === 'pago')) {
-                        orderStatus = 'pago';
-                      }
-                      
-                      const isCancelled = orderStatus === 'cancelado';
-                      const isCredit = order.descricao_adicional?.includes('Crédito GSA');
-                      const isExpiredPending = !isCredit && new Date(order.data_criacao).getTime() + 24 * 60 * 60 * 1000 <= Date.now() && (orderStatus === 'aberto' || orderStatus === 'em_analise');
-                      if (purchasesTab === 'pendentes') return (orderStatus === 'aberto' || orderStatus === 'aprovado' || orderStatus === 'em_analise') && !isExpiredPending && !isCancelled && !isCredit;
-                      if (purchasesTab === 'pagos') return (['pago', 'em_expedicao', 'em_transporte', 'concluido'].includes(orderStatus) || isCredit) && !isCancelled;
-                      if (purchasesTab === 'cancelados') return isCancelled || isExpiredPending;
-                      return true;
-                    }).length === 0 && (
-                      <div className="py-12 text-center bg-neutral-50 rounded-[2rem] border-2 border-dashed border-neutral-200">
-                        <ShoppingBag className="w-8 h-8 text-neutral-300 mx-auto mb-2" />
-                        <p className="text-neutral-400 font-bold text-xs uppercase tracking-widest">Nenhum pedido nesta categoria</p>
+              return (
+                <article key={code} className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_8px_26px_rgba(15,23,42,0.05)]">
+                  <div className="p-4 sm:p-5">
+                    <div className="flex items-start gap-3.5 sm:gap-4">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 sm:h-20 sm:w-20">
+                        {image ? (
+                          <img src={image} alt="" className="h-full w-full object-contain" />
+                        ) : (
+                          <Package className="h-7 w-7 text-slate-300" aria-hidden="true" />
+                        )}
                       </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-400">Pedido</p>
+                            <h3 className="mt-0.5 text-lg font-black tracking-[-0.025em] text-slate-950">{code}</h3>
+                          </div>
+                          <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.06em] ${presentation.tone}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${presentation.dot}`} aria-hidden="true" />
+                            {presentation.label}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-500">
+                          <span className="inline-flex items-center gap-1.5">
+                            <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+                            {formatDate(order.data_criacao)}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <Package className="h-3.5 w-3.5" aria-hidden="true" />
+                            {itemCount} {itemCount === 1 ? 'item' : 'itens'}
+                          </span>
+                          {presentation.isAwaiting && (
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-amber-700">
+                              <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+                              Expira em {presentation.hoursLeft}h {presentation.minutesLeft}min
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-end justify-between gap-4 border-t border-slate-100 pt-4">
+                      <div>
+                        <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-400">Total</p>
+                        <p className="mt-1 text-2xl font-black leading-none tracking-[-0.04em] text-[#17345f]">{formatCurrency(order.total || 0)}</p>
+                      </div>
+
+                      {presentation.status === 'em_transporte' && (
+                        <div className="hidden items-center gap-2 text-xs font-bold text-blue-700 sm:flex">
+                          <Truck className="h-4 w-4" aria-hidden="true" />
+                          A caminho
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap justify-end gap-2 border-t border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOrderDetail(order)}
+                      className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-extrabold text-slate-700 transition hover:bg-slate-100 sm:flex-none"
+                    >
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                      Detalhes
+                    </button>
+
+                    {presentation.isPaid && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrderTimeline(order)}
+                        className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[#cdd8e6] bg-[#edf2f7] px-3 text-xs font-extrabold text-[#17345f] transition hover:bg-[#e4ebf3] sm:flex-none"
+                      >
+                        <Truck className="h-4 w-4" aria-hidden="true" />
+                        Acompanhar
+                      </button>
+                    )}
+
+                    {presentation.canPay && (
+                      <button
+                        type="button"
+                        disabled={isProcessingPayment}
+                        onClick={() => {
+                          setIsPurchasesModalOpen(false);
+                          handlePayOrder(order);
+                        }}
+                        className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#17345f] px-3 text-xs font-extrabold text-white transition hover:bg-[#102746] disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
+                      >
+                        <CreditCard className="h-4 w-4" aria-hidden="true" />
+                        {isProcessingPayment ? 'Preparando...' : 'Pagar agora'}
+                      </button>
+                    )}
+
+                    {presentation.isSubscription && presentation.isPaid && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPurchasesModalOpen(false);
+                          handlePayOrder(order);
+                        }}
+                        className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#17345f] px-3 text-xs font-extrabold text-white transition hover:bg-[#102746] sm:flex-none"
+                      >
+                        <CreditCard className="h-4 w-4" aria-hidden="true" />
+                        Mensalidades
+                      </button>
+                    )}
+
+                    {presentation.canCancelPending && (
+                      <button
+                        type="button"
+                        onClick={() => handleCancelOrder(order)}
+                        className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 text-xs font-extrabold text-red-700 transition hover:bg-red-50 sm:flex-none"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        Cancelar
+                      </button>
+                    )}
+
+                    {presentation.canRequestCancellation && (
+                      <button
+                        type="button"
+                        onClick={() => setCancelRequestOrder(order)}
+                        className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 text-xs font-extrabold text-red-700 transition hover:bg-red-50 sm:flex-none"
+                      >
+                        <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                        Solicitar cancelamento
+                      </button>
                     )}
                   </div>
-                </div>
-              ) : (
-                <div className="text-center py-20">
-                  <div className="mx-auto w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
-                    <ShoppingBag className="w-8 h-8 text-neutral-300" />
-                  </div>
-                  <p className="text-neutral-500 font-medium">Você ainda não realizou nenhuma compra.</p>
-                </div>
-              )}
-              <button 
-                onClick={() => { setIsPurchasesModalOpen(false); setSelectedOrderId(null); }}
-                className="w-full mt-6 py-4 bg-neutral-100 text-neutral-600 font-bold rounded-2xl hover:bg-neutral-200 transition-all"
-              >
-                Fechar
-              </button>
-            </div>
-          </Modal>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {purchasesTab === 'cancelados' && filtered.length > 0 && (
+          <div className="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs leading-5 text-slate-600">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+            Pedidos cancelados permanecem disponíveis para consulta e histórico.
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={close}
+          className="min-h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-extrabold text-slate-700 transition hover:bg-slate-50"
+        >
+          Fechar pedidos
+        </button>
+      </div>
+    </Modal>
   );
 }
