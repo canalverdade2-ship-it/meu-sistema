@@ -91,6 +91,27 @@ assertContains('src/components/client/ClientAssinaturas.tsx', [
   'Cobranças futuras não pagas serão canceladas',
 ]);
 
+assertContains('src/components/client/store/StoreItemCard.tsx', [
+  'role="link"',
+  'bg-[#17345f]',
+  'Últimas {item.estoque_disponivel} unidades',
+  "{isOutOfStock ? 'Indisponível' : 'Adicionar'}",
+  'loading="lazy"',
+]);
+assertNotContains('src/components/client/store/StoreItemCard.tsx', [
+  'animate-bounce',
+  'animate-pulse',
+  'from-indigo-600 to-purple-700',
+]);
+
+assertContains('src/components/client/store/FilterModal.tsx', [
+  'Encontre com mais facilidade',
+  'aria-pressed={selected}',
+  'aria-invalid={hasInvalidRange}',
+  'Aplicar filtros',
+  'O preço máximo precisa ser igual ou maior que o preço mínimo.',
+]);
+
 assertContains('src/components/client/store/CheckoutModal.tsx', [
   'visivel_na_loja',
   'estoque_disponivel',
