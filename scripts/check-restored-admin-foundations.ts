@@ -28,16 +28,16 @@ await includes('supabase/migrations/20260721194600_restore_admin_dashboard_found
 
 await includes('supabase/migrations/20260721194700_harden_restored_gsa_seguros.sql', [
   'gsa_collaborator_module_',
-  "public.gsa_admin_restrict_collaborator_to_module(%L)",
+  'public.gsa_admin_restrict_collaborator_to_module(%L)',
   'seguros_ofertas_publicas',
-  "GRANT SELECT ON public.seguros_ofertas_publicas TO anon, authenticated",
+  'GRANT SELECT ON public.seguros_ofertas_publicas TO anon, authenticated',
 ]);
 
 await includes('supabase/migrations/20260721194800_restore_admin_search_clients.sql', [
   'gsa_admin_search_clients',
   "public.gsa_admin_assert_module('viagens')",
   'LIMIT LEAST(GREATEST(COALESCE(p_limit, 10), 1), 25)',
-  "GRANT EXECUTE ON FUNCTION public.gsa_admin_search_clients(uuid, text, text, integer) TO authenticated, service_role",
+  'GRANT EXECUTE ON FUNCTION public.gsa_admin_search_clients(uuid, text, text, integer) TO authenticated, service_role',
 ]);
 
 await includes('supabase/migrations/20260721194900_restore_admin_travel_rpcs.sql', [
@@ -47,7 +47,18 @@ await includes('supabase/migrations/20260721194900_restore_admin_travel_rpcs.sql
   'gsa_admin_travel_create_proposal',
   'gsa_admin_travel_create_package',
   "IF to_regprocedure('public.gsa_admin_travel_create_package(uuid,text,jsonb)') IS NULL",
-  "GRANT EXECUTE ON FUNCTION public.gsa_admin_travel_create_package(uuid, text, jsonb) TO authenticated, service_role",
+  'GRANT EXECUTE ON FUNCTION public.gsa_admin_travel_create_package(uuid, text, jsonb) TO authenticated, service_role',
+]);
+
+await includes('supabase/migrations/20260724200000_protection_direct_quote_cleanup.sql', [
+  'Somente o GSA Seguros deixa de funcionar como catálogo interno.',
+  'GSA Saúde e GSA Viagens permanecem com seus catálogos atuais.',
+  'gsa_client_seguros_criar_cotacao',
+  'O cadastro de produtos e ofertas de seguros foi descontinuado.',
+  'DROP VIEW IF EXISTS public.seguros_ofertas_publicas CASCADE',
+  "WHEN 'saude_produtos'",
+  'public.gsa_admin_resource_config(p_resource text)',
+  "p_payload - ARRAY['request_id', 'consentimento']",
 ]);
 
 await includes('scripts/verify-restored-admin-foundations.sql', [
@@ -56,9 +67,12 @@ await includes('scripts/verify-restored-admin-foundations.sql', [
   '20260720183000',
   '20260721194800',
   '20260721194900',
+  '20260724200000',
   'gsa_admin_get_pendency_counts_secure(uuid,text)',
   'gsa_admin_search_clients(uuid,text,text,integer)',
   'gsa_admin_travel_create_package(uuid,text,jsonb)',
+  'Catálogo do GSA Saúde não foi preservado',
+  'Estruturas obsoletas do catálogo de Seguros ainda existem',
 ]);
 
-console.log('Contratos das fundações administrativas restauradas validados.');
+console.log('Fundações administrativas, Viagens e isolamento da cotação direta de Seguros validados.');
