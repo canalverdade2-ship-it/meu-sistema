@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
-  BadgeDollarSign,
   Building2,
   Check,
   CheckCircle2,
@@ -53,6 +52,22 @@ const programIcons: Record<string, typeof Store> = {
   saude: Stethoscope,
   seguros: ShieldCheck,
 };
+
+const HERO_TRUST_ITEMS = [
+  'Ativação sem mensalidade',
+  'Conta vinculada ao ecossistema GSA',
+  'Links oficiais e rastreáveis',
+  'Recebimento por PIX',
+] as const;
+
+const PARTICIPATION_STEPS = [
+  'Faça login com sua conta GSA',
+  'Ative seu perfil de afiliado',
+  'Cadastre ou confirme sua chave PIX',
+  'Escolha um programa e gere seu link oficial',
+  'Acompanhe acessos, conversões e comissões',
+  'Solicite o saque quando houver saldo disponível',
+] as const;
 
 const PROCESS_STEPS = [
   {
@@ -289,11 +304,6 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
     [remotePrograms],
   );
 
-  const highestPercentage = useMemo(
-    () => Math.max(...programs.map((program) => program.percentage)),
-    [programs],
-  );
-
   return (
     <div className="affiliate-page min-h-screen bg-[#f2efe7] text-[#142033] selection:bg-[#c59a4a] selection:text-[#0b1522]">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b1522]/95 text-white backdrop-blur-md">
@@ -324,106 +334,105 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
       </header>
 
       <main>
-        <section className="relative isolate overflow-hidden bg-[#0b1522] text-white">
-          <div className="affiliate-grid-bg absolute inset-0 opacity-60" aria-hidden="true" />
-          <div className="affiliate-outline-word absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2" aria-hidden="true">GSA</div>
-
-          <div className="relative mx-auto grid min-h-[720px] max-w-[1440px] items-center gap-16 px-5 py-20 sm:px-8 sm:py-24 lg:grid-cols-[1.2fr_0.8fr] lg:px-12 lg:py-28">
-            <div className="max-w-4xl">
-              <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.22em] text-[#ddc28d]">
-                <span className="h-px w-10 bg-[#ddc28d]" aria-hidden="true" />
+        <section className="border-b border-white/10 bg-[#0b1522] text-white" aria-labelledby="affiliate-hero-title">
+          <div className="mx-auto grid max-w-[1440px] gap-12 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20 lg:px-12 lg:py-24 xl:gap-24">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#ddc28d] sm:text-xs">
+                <span className="h-px w-8 bg-[#c59a4a]" aria-hidden="true" />
                 Programa de Afiliados GSA HUB
               </div>
-              <h1 className="mt-8 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-[5.5rem]">
-                Indicações com regra clara, acompanhamento real e comissão registrada.
+
+              <h1 id="affiliate-hero-title" className="mt-7 text-4xl font-semibold leading-[1.06] tracking-[-0.04em] text-white sm:text-5xl lg:text-[4rem]">
+                Ative seu perfil, gere links oficiais e acompanhe suas comissões em um portal próprio.
               </h1>
-              <p className="mt-8 max-w-2xl text-base leading-8 text-white/68 sm:text-lg">
-                Uma operação estruturada para clientes GSA que desejam recomendar soluções do ecossistema, gerar links oficiais e acompanhar cada etapa até o pagamento.
+
+              <p className="mt-7 max-w-2xl text-base leading-8 text-[#c8d0da] sm:text-lg">
+                Uma operação estruturada para clientes GSA que desejam divulgar produtos, serviços e soluções do ecossistema com rastreamento, acompanhamento de resultados e solicitação de recebimento por PIX.
               </p>
 
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
                   onClick={onRegister}
                   className="inline-flex min-h-14 items-center justify-center gap-3 bg-[#c59a4a] px-7 text-sm font-bold text-[#0b1522] transition-colors hover:bg-[#ddc28d] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#0b1522]"
                 >
-                  Ativar meu perfil <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  Solicitar ativação <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onLogin}
+                  className="inline-flex min-h-14 items-center justify-center border border-white/45 px-7 text-sm font-bold text-white transition-colors hover:border-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ddc28d] focus-visible:ring-offset-4 focus-visible:ring-offset-[#0b1522]"
+                >
+                  Acessar portal
                 </button>
                 <a
                   href="#como-funciona"
-                  className="inline-flex min-h-14 items-center justify-center border border-white/25 px-7 text-sm font-semibold text-white transition-colors hover:border-white/60 hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ddc28d]"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className="inline-flex min-h-14 items-center justify-center gap-2 px-2 text-sm font-semibold text-[#e4cf9e] underline decoration-[#c59a4a]/60 underline-offset-4 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ddc28d]"
                 >
-                  Conhecer a operação
+                  Entender como funciona <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </a>
               </div>
 
-              <div className="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/15 pt-6 text-xs font-semibold text-white/58">
-                <span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-[#ddc28d]" /> Ativação sem mensalidade</span>
-                <span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-[#ddc28d]" /> Acesso vinculado à conta GSA</span>
-                <span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-[#ddc28d]" /> Pagamento por PIX</span>
-              </div>
+              <ul className="mt-10 grid gap-x-8 gap-y-4 border-t border-white/15 pt-7 text-sm font-semibold text-[#d6dce3] sm:grid-cols-2" aria-label="Condições principais do programa">
+                {HERO_TRUST_ITEMS.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border border-[#c59a4a] text-[#ddc28d]">
+                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <aside className="affiliate-panel-shadow border border-white/15 bg-[#101d2c] p-6 sm:p-8" aria-label="Resumo do programa">
-              <div className="flex items-start justify-between gap-5 border-b border-white/15 pb-6">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#ddc28d]">Operação vigente</p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.025em]">Visão objetiva do programa</h2>
-                </div>
-                <BadgeDollarSign className="h-9 w-9 shrink-0 text-[#ddc28d]" aria-hidden="true" />
+            <aside className="border border-[#c9c2b6] bg-[#f4f0e8] text-[#142033]" aria-labelledby="participation-title">
+              <div className="border-b border-[#c9c2b6] px-6 py-6 sm:px-8">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8d6829]">Guia de participação</p>
+                <h2 id="participation-title" className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-[#0b1522]">Como participar</h2>
+                <p className="mt-4 text-sm leading-7 text-[#56606d]">
+                  O acesso é vinculado à conta GSA e todo o acompanhamento é realizado dentro do Portal do Afiliado.
+                </p>
               </div>
 
-              <dl className="grid grid-cols-2 border-b border-white/15">
-                <div className="border-r border-white/15 py-6 pr-5">
-                  <dt className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">Programas ativos</dt>
-                  <dd className="mt-2 text-4xl font-semibold tracking-[-0.04em]">{programs.length}</dd>
-                </div>
-                <div className="py-6 pl-5">
-                  <dt className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">Comissão máxima</dt>
-                  <dd className="mt-2 text-4xl font-semibold tracking-[-0.04em]">{formatPercentage(highestPercentage)}%</dd>
-                </div>
-              </dl>
-
-              <div className="space-y-0">
-                {[
-                  ['Rastreamento', 'Links exclusivos por programa'],
-                  ['Transparência', 'Cliques, vendas e saldos no painel'],
-                  ['Recebimento', 'Solicitação PIX com histórico'],
-                ].map(([label, value]) => (
-                  <div key={label} className="grid grid-cols-[0.85fr_1.15fr] gap-4 border-b border-white/10 py-4 last:border-b-0">
-                    <span className="text-xs font-bold uppercase tracking-[0.12em] text-white/40">{label}</span>
-                    <span className="text-sm font-semibold text-white/82">{value}</span>
-                  </div>
+              <ol className="px-6 sm:px-8">
+                {PARTICIPATION_STEPS.map((step, index) => (
+                  <li key={step} className="grid grid-cols-[36px_1fr] gap-4 border-b border-[#d1c9bc] py-4 last:border-b-0">
+                    <span className="font-mono text-xs font-bold text-[#8d6829]">{String(index + 1).padStart(2, '0')}</span>
+                    <p className="text-sm font-semibold leading-6 text-[#273548]">{step}</p>
+                  </li>
                 ))}
-              </div>
+              </ol>
 
-              <button
-                type="button"
-                onClick={onLogin}
-                className="mt-6 inline-flex w-full items-center justify-between border border-[#c59a4a]/70 px-5 py-4 text-sm font-bold text-[#f0ddb5] transition-colors hover:bg-[#c59a4a] hover:text-[#0b1522]"
-              >
-                Já sou afiliado <ArrowRight className="h-4 w-4" />
-              </button>
+              <div className="flex gap-4 border-t border-[#c9c2b6] bg-white px-6 py-5 sm:px-8">
+                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#8d6829]" aria-hidden="true" />
+                <p className="text-sm leading-6 text-[#56606d]">
+                  O portal mantém o histórico de links, cliques, conversões, saldos e solicitações de pagamento.
+                </p>
+              </div>
             </aside>
           </div>
         </section>
 
-        <section className="border-b border-[#c9c2b6] bg-[#e8e1d5]">
-          <div className="mx-auto grid max-w-[1440px] divide-y divide-[#c9c2b6] px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0 lg:px-12">
+        <section className="border-b border-[#c9c2b6] bg-[#e9e4da]" aria-label="Garantias operacionais do Programa de Afiliados">
+          <dl className="mx-auto grid max-w-[1440px] divide-y divide-[#c9c2b6] px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0 lg:px-12">
             {[
               { icon: ShieldCheck, title: 'Acesso protegido', text: 'Autenticação pela conta GSA antes da ativação.' },
-              { icon: Clock3, title: 'Regras preservadas', text: 'Percentual, janela e carência ficam registrados.' },
-              { icon: BadgeCheck, title: 'Histórico operacional', text: 'Comissões e saques permanecem disponíveis no portal.' },
+              { icon: Clock3, title: 'Regras registradas', text: 'Percentual, janela e carência permanecem vinculados à operação.' },
+              { icon: BadgeCheck, title: 'Histórico operacional', text: 'Links, comissões e saques ficam disponíveis no portal.' },
             ].map(({ icon: Icon, title, text }) => (
-              <article key={title} className="flex gap-4 py-7 md:px-7 first:md:pl-0 last:md:pr-0">
-                <Icon className="mt-0.5 h-6 w-6 shrink-0 text-[#8d6829]" aria-hidden="true" />
+              <div key={title} className="flex items-start gap-4 py-6 md:px-7 first:md:pl-0 last:md:pr-0">
+                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#8d6829]" aria-hidden="true" />
                 <div>
-                  <h2 className="text-sm font-bold text-[#0b1522]">{title}</h2>
-                  <p className="mt-1 text-sm leading-6 text-[#59616c]">{text}</p>
+                  <dt className="text-sm font-bold text-[#0b1522]">{title}</dt>
+                  <dd className="mt-1 text-sm leading-6 text-[#59616c]">{text}</dd>
                 </div>
-              </article>
+              </div>
             ))}
-          </div>
+          </dl>
         </section>
 
         <section id="como-funciona" className="scroll-mt-24 border-b border-[#c9c2b6] bg-[#f2efe7]">
