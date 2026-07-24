@@ -10,23 +10,10 @@ async function read(path: string) {
   return readFile(resolve(root, path), 'utf8');
 }
 
-const marketplaceRouter = await read('src/components/client/marketplace/protection/ProtectionMarketplace.tsx');
-const directMarketplace = await read('src/components/client/marketplace/protection/InsuranceDirectQuoteMarketplace.tsx');
-const adminRouter = await read('src/components/admin/ProtectionAdminModule.tsx');
-const directAdmin = await read('src/components/admin/InsuranceProtectionAdminModule.tsx');
+const marketplace = await read('src/components/client/marketplace/protection/ProtectionMarketplace.tsx');
+const admin = await read('src/components/admin/ProtectionAdminModule.tsx');
 const insuranceMigration = await read('supabase/migrations/20260724200000_protection_direct_quote_cleanup.sql');
 const healthMigration = await read('supabase/migrations/20260724213000_saude_direct_quote_cleanup.sql');
-
-for (const marker of [
-  "from './InsuranceDirectQuoteMarketplace'",
-  '<DirectQuoteMarketplace {...props}',
-]) {
-  assert.ok(marketplaceRouter.includes(marker), `Roteador público sem cotação direta unificada: ${marker}`);
-}
-
-for (const forbidden of ['LegacyProtectionMarketplace', 'ProtectionMarketplaceLegacy']) {
-  assert.ok(!marketplaceRouter.includes(forbidden), `Roteador público ainda referencia catálogo legado: ${forbidden}`);
-}
 
 for (const marker of [
   "label: 'GSA Saúde'",
@@ -40,10 +27,12 @@ for (const marker of [
   "normalizedSubmodule.startsWith('planos-')",
   "normalizedSubmodule.startsWith('modalidade-')",
 ]) {
-  assert.ok(directMarketplace.includes(marker), `Fluxo público direto incompleto: ${marker}`);
+  assert.ok(marketplace.includes(marker), `Fluxo público direto incompleto: ${marker}`);
 }
 
 for (const obsolete of [
+  'ProtectionMarketplaceLegacy',
+  'InsuranceDirectQuoteMarketplace',
   'gsa_public_listar_planos_saude',
   'saude_planos_publicos',
   'seguros_ofertas_publicas',
@@ -52,27 +41,19 @@ for (const obsolete of [
   'OfferCard',
   'OfferDetail',
 ]) {
-  assert.ok(!directMarketplace.includes(obsolete), `Referência de catálogo ainda presente no marketplace direto: ${obsolete}`);
+  assert.ok(!marketplace.includes(obsolete), `Referência de catálogo ainda presente no marketplace: ${obsolete}`);
 }
 
-for (const marker of [
-  "from './InsuranceProtectionAdminModule'",
-  '<DirectQuoteProtectionAdminModule {...props}',
-]) {
-  assert.ok(adminRouter.includes(marker), `Roteador administrativo sem fluxo unificado: ${marker}`);
-}
-
-for (const forbidden of ['LegacyProtectionAdminModule', 'ProtectionAdminModuleLegacy']) {
-  assert.ok(!adminRouter.includes(forbidden), `Roteador administrativo ainda referencia painel legado: ${forbidden}`);
-}
-
-assert.ok(directAdmin.includes("label: 'GSA Saúde'"), 'Painel direto não contempla GSA Saúde.');
-assert.ok(directAdmin.includes("label: 'GSA Seguros'"), 'Painel direto não contempla GSA Seguros.');
-assert.ok(!directAdmin.includes("| 'produtos'"), 'O tipo de aba administrativa ainda inclui produtos.');
-assert.ok(!directAdmin.includes("tab: 'produtos'"), 'O painel ainda renderiza cartão de produtos.');
-assert.ok(!directAdmin.includes("label: 'Produtos'"), 'O painel ainda expõe catálogo.');
-assert.ok(!directAdmin.includes('produto_id'), 'A criação de proposta ainda depende de produto cadastrado.');
-assert.ok(directAdmin.includes("p_kind: 'parceiro'"), 'A manutenção de parceiros deve continuar ativa.');
+assert.ok(admin.includes("label: 'GSA Saúde'"), 'Painel direto não contempla GSA Saúde.');
+assert.ok(admin.includes("label: 'GSA Seguros'"), 'Painel direto não contempla GSA Seguros.');
+assert.ok(admin.includes('gsa_admin_list_resource'), 'O painel não lista os recursos operacionais.');
+assert.ok(admin.includes('gsa_admin_save_protection_entity'), 'O painel não mantém parceiros.');
+assert.ok(admin.includes('gsa_admin_create_protection_proposal'), 'O painel não cria propostas.');
+assert.ok(!admin.includes("| 'produtos'"), 'O tipo de aba administrativa ainda inclui produtos.');
+assert.ok(!admin.includes("tab: 'produtos'"), 'O painel ainda renderiza cartão de produtos.');
+assert.ok(!admin.includes("label: 'Produtos'"), 'O painel ainda expõe catálogo.');
+assert.ok(!admin.includes('produto_id'), 'A criação de proposta ainda depende de produto cadastrado.');
+assert.ok(admin.includes("p_kind: 'parceiro'"), 'A manutenção de parceiros deve continuar ativa.');
 
 for (const marker of [
   'DROP VIEW IF EXISTS public.seguros_ofertas_publicas CASCADE',
