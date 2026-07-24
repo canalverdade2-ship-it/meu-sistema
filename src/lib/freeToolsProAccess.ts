@@ -18,6 +18,7 @@ export interface ProAccessStatus {
   source?: string | null;
   logged_in?: boolean;
   client_active?: boolean;
+  client_has_paid_invoice?: boolean;
   product?: ProProductInfo | null;
   session_expires_at?: string | null;
 }
