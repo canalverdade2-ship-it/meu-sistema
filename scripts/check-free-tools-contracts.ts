@@ -69,8 +69,10 @@ contains('src/components/public/FreeToolsTieredCalculatorDialog.tsx', [
   /FreeToolsSimpleCalculator/,
   /FreeToolsAdvancedCalculator/,
   /FreeToolsProUnlockDialog/,
+  /FreeToolsProEligibilityDialog/,
   /freeToolsProAccess\.activate/,
   /readInfinitePayReturn/,
+  /result: 'promotion'/,
 ]);
 
 contains('src/components/public/FreeToolsSimpleCalculators.tsx', [
@@ -89,12 +91,20 @@ contains('src/components/public/FreeToolsProUnlockDialog.tsx', [
   /Pagar e desbloquear agora/i,
   /Voucher de uso único/i,
   /não exige cadastro/i,
-  /cliente ativo, logado e com pelo menos uma fatura paga/i,
+  /cadastro ativo e pelo menos uma fatura paga/i,
+]);
+
+contains('src/components/public/FreeToolsProEligibilityDialog.tsx', [
+  /Promoção de acesso gratuito/i,
+  /Cadastro ativo/i,
+  /Pelo menos uma fatura paga/i,
+  /qualquer pessoa pode utilizar/i,
 ]);
 
 contains('src/lib/freeToolsProAccess.ts', [
   /gsa-free-tools-pro/,
   /gsa_free_tools_visitor_token/,
+  /client_has_paid_invoice/,
   /verify_payment/,
 ]);
 
@@ -102,6 +112,9 @@ contains('supabase/functions/gsa-free-tools-pro/index.ts', [
   /https:\/\/api\.checkout\.infinitepay\.io\/links/,
   /https:\/\/api\.checkout\.infinitepay\.io\/payment_check/,
   /client_paid_invoice/,
+  /client_has_paid_invoice/,
+  /free_period/,
+  /allowedSources = \['payment', 'voucher'\]/,
   /redeem_voucher/,
   /create_checkout/,
   /verify_payment/,
@@ -121,16 +134,23 @@ contains('supabase/migrations/20260723233000_free_tools_pro_access.sql', [
   /gsa_calculator_pro_sessions/,
   /gsa_admin_calculator_pro_snapshot/,
   /gsa_admin_create_calculator_pro_voucher/,
-  /gsa_admin_grant_calculator_pro/,
   /gsa_calculator_finalize_payment_internal/,
+]);
+
+contains('supabase/migrations/20260724113000_simplify_calculator_pro_eligibility_and_public_promotions.sql', [
+  /cadastro ativo \+ pelo menos uma fatura paga/i,
+  /DELETE FROM public\.gsa_calculator_pro_grants[\s\S]*source = 'manual'/,
+  /DROP FUNCTION IF EXISTS public\.gsa_admin_grant_calculator_pro/,
+  /liberar_cliente_com_fatura_paga = true/,
 ]);
 
 contains('src/components/admin/CalculatorProAdminPanel.tsx', [
   /Calculadoras Pro/,
   /Preço do acesso/,
   /Gerar voucher/,
-  /Liberação manual para cliente/,
+  /Promoções/,
+  /Não existe liberação individual pelo administrador/i,
   /Pagamentos InfinitePay/,
 ]);
 
-console.log('Contratos Free, Pro, vouchers, gestão e InfinitePay validados com sucesso.');
+console.log('Contratos Free, Pro, promoções, vouchers, elegibilidade automática e InfinitePay validados com sucesso.');
