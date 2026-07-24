@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import type { PublicPage, ServicePackage } from '../data/publicServiceCatalog';
 
-const DEFAULT_TITLE = 'GSA HUB - Soluções Digitais';
-const DEFAULT_DESCRIPTION = 'Serviços, assinaturas, marketplace e tecnologia reunidos no GSA HUB.';
+const DEFAULT_TITLE = 'GSA HUB | Ecossistema de Soluções para Pessoas e Empresas';
+const DEFAULT_DESCRIPTION = 'Tecnologia, serviços, saúde, seguros e comércio conectados em um ecossistema criado para pessoas e empresas avançarem.';
 
 function ensureMeta(selector: string, attribute: 'name' | 'property', key: string) {
   let element = document.head.querySelector<HTMLMetaElement>(selector);
