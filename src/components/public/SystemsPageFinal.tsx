@@ -33,6 +33,13 @@ import {
   SystemsExamplesDialog,
   type SystemExampleCategory,
 } from './SystemsExamplesDialog';
+import {
+  SystemsInsightDialog,
+  type FoundationInsightId,
+  type GoalInsightId,
+  type StageInsightId,
+  type SystemsInsightSelection,
+} from './SystemsInsightDialog';
 
 const WHATSAPP_NUMBER = '5511920857756';
 
@@ -115,27 +122,44 @@ const solutions: SolutionItem[] = [
   },
 ];
 
-const goals = [
-  { icon: Globe2, title: 'Apresentar melhor', text: 'Site, landing page ou catálogo para fortalecer a presença da empresa.', target: 'sites' as SystemExampleCategory },
-  { icon: ShoppingCart, title: 'Vender no digital', text: 'Loja, assinatura ou fluxo comercial para receber pedidos.', target: 'stores' as SystemExampleCategory },
-  { icon: BarChart3, title: 'Organizar a operação', text: 'Sistema, painel ou portal para centralizar processos e informações.', target: 'systems' as SystemExampleCategory },
-  { icon: Sparkles, title: 'Ganhar produtividade', text: 'Automação e integração para reduzir tarefas manuais e retrabalho.', target: 'automations' as SystemExampleCategory },
+const goals: Array<{
+  id: GoalInsightId;
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  target: SystemExampleCategory;
+}> = [
+  { id: 'present', icon: Globe2, title: 'Apresentar melhor', text: 'Site, landing page ou catálogo para fortalecer a presença da empresa.', target: 'sites' },
+  { id: 'sell', icon: ShoppingCart, title: 'Vender no digital', text: 'Loja, assinatura ou fluxo comercial para receber pedidos.', target: 'stores' },
+  { id: 'organize', icon: BarChart3, title: 'Organizar a operação', text: 'Sistema, painel ou portal para centralizar processos e informações.', target: 'systems' },
+  { id: 'productivity', icon: Sparkles, title: 'Ganhar produtividade', text: 'Automação e integração para reduzir tarefas manuais e retrabalho.', target: 'automations' },
 ];
 
-const deliveryStages = [
-  { number: '01', icon: Search, title: 'Mapear', text: 'Entendemos o problema, os usuários, as regras e o resultado esperado.' },
-  { number: '02', icon: Layers3, title: 'Arquitetar', text: 'Organizamos módulos, fluxos, dados, prioridades e experiência de uso.' },
-  { number: '03', icon: Code2, title: 'Construir', text: 'Desenvolvemos a solução e validamos cada fluxo importante do projeto.' },
-  { number: '04', icon: Rocket, title: 'Implantar', text: 'Preparamos a entrada em uso e uma base segura para evolução contínua.' },
+const deliveryStages: Array<{
+  id: StageInsightId;
+  number: string;
+  icon: LucideIcon;
+  title: string;
+  text: string;
+}> = [
+  { id: 'map', number: '01', icon: Search, title: 'Mapear', text: 'Entendemos o problema, os usuários, as regras e o resultado esperado.' },
+  { id: 'architect', number: '02', icon: Layers3, title: 'Arquitetar', text: 'Organizamos módulos, fluxos, dados, prioridades e experiência de uso.' },
+  { id: 'build', number: '03', icon: Code2, title: 'Construir', text: 'Desenvolvemos a solução e validamos cada fluxo importante do projeto.' },
+  { id: 'launch', number: '04', icon: Rocket, title: 'Implantar', text: 'Preparamos a entrada em uso e uma base segura para evolução contínua.' },
 ];
 
-const engineering = [
-  { icon: ShieldCheck, title: 'Acessos e segurança', text: 'Permissões, perfis e informações organizados conforme cada tipo de usuário.' },
-  { icon: MonitorSmartphone, title: 'Experiência responsiva', text: 'Interface pensada para funcionar com clareza no celular e no computador.' },
-  { icon: Database, title: 'Dados estruturados', text: 'Informações centralizadas para consulta, acompanhamento e geração de relatórios.' },
-  { icon: Gauge, title: 'Desempenho e evolução', text: 'Base preparada para manutenção, novos módulos e mudanças futuras.' },
-  { icon: Headphones, title: 'Acompanhamento do projeto', text: 'Validações organizadas para manter escopo, decisões e entregas alinhados.' },
-  { icon: Boxes, title: 'Solução conectada', text: 'Módulos e integrações desenhados como partes de uma única experiência.' },
+const engineering: Array<{
+  id: FoundationInsightId;
+  icon: LucideIcon;
+  title: string;
+  text: string;
+}> = [
+  { id: 'security', icon: ShieldCheck, title: 'Acessos e segurança', text: 'Permissões, perfis e informações organizados conforme cada tipo de usuário.' },
+  { id: 'responsive', icon: MonitorSmartphone, title: 'Experiência responsiva', text: 'Interface pensada para funcionar com clareza no celular e no computador.' },
+  { id: 'data', icon: Database, title: 'Dados estruturados', text: 'Informações centralizadas para consulta, acompanhamento e geração de relatórios.' },
+  { id: 'performance', icon: Gauge, title: 'Desempenho e evolução', text: 'Base preparada para manutenção, novos módulos e mudanças futuras.' },
+  { id: 'support', icon: Headphones, title: 'Acompanhamento do projeto', text: 'Validações organizadas para manter escopo, decisões e entregas alinhados.' },
+  { id: 'connected', icon: Boxes, title: 'Solução conectada', text: 'Módulos e integrações desenhados como partes de uma única experiência.' },
 ];
 
 export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
@@ -143,6 +167,7 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [activeSolution, setActiveSolution] = useState<SystemExampleCategory>('systems');
   const [selectedExample, setSelectedExample] = useState<SystemExampleCategory | null>(null);
+  const [insightSelection, setInsightSelection] = useState<SystemsInsightSelection | null>(null);
   const isBrandJourney = window.location.pathname.replace(/\/+$/, '') === '/empresa-do-zero-ao-digital';
 
   if (isBrandJourney) {
@@ -166,6 +191,16 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
   const exploreSolution = (category: SystemExampleCategory) => {
     setActiveSolution(category);
     document.getElementById('solution-lab')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const openExamples = (category: SystemExampleCategory) => {
+    setInsightSelection(null);
+    setSelectedExample(category);
+  };
+
+  const openBudget = () => {
+    setInsightSelection(null);
+    setBudgetOpen(true);
   };
 
   return (
@@ -233,8 +268,8 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
                   <button
                     key={id}
                     type="button"
-                    onClick={() => exploreSolution(id)}
-                    className="group flex items-center gap-3 border-b border-white/8 py-4 text-left transition hover:text-[#e3cb8d] sm:odd:pr-4 sm:even:border-l sm:even:pl-4"
+                    onClick={() => openExamples(id)}
+                    className="group flex items-center gap-3 border-b border-white/8 py-4 text-left transition hover:bg-white/[0.025] hover:text-[#e3cb8d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7b96e] sm:odd:pr-4 sm:even:border-l sm:even:pl-4"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-white/12 text-[#d7b96e] transition group-hover:border-[#d7b96e]/50">
                       <Icon className="h-4 w-4" />
@@ -247,11 +282,16 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
               <div className="mt-6">
                 <p className="text-[9px] font-black uppercase tracking-[0.17em] text-slate-500">Como o projeto avança</p>
                 <div className="mt-3 grid grid-cols-4 border border-white/10">
-                  {['Diagnóstico', 'Arquitetura', 'Desenvolvimento', 'Implantação'].map((step, index) => (
-                    <div key={step} className="border-r border-white/10 px-2 py-3 text-center last:border-r-0">
-                      <span className="block text-[9px] font-black text-[#d7b96e]">0{index + 1}</span>
-                      <span className="mt-1 block text-[8px] font-bold text-slate-500 sm:text-[9px]">{step}</span>
-                    </div>
+                  {deliveryStages.map((stage) => (
+                    <button
+                      key={stage.id}
+                      type="button"
+                      onClick={() => setInsightSelection({ kind: 'stage', id: stage.id })}
+                      className="border-r border-white/10 px-2 py-3 text-center transition last:border-r-0 hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d7b96e]"
+                    >
+                      <span className="block text-[9px] font-black text-[#d7b96e]">{stage.number}</span>
+                      <span className="mt-1 block text-[8px] font-bold text-slate-500 sm:text-[9px]">{stage.title}</span>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -266,14 +306,19 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">Comece pelo objetivo</p>
                 <h2 className="mt-3 text-2xl font-black tracking-[-0.025em] sm:text-3xl">O que sua empresa precisa resolver agora?</h2>
               </div>
-              <p className="max-w-md text-sm leading-6 text-slate-400">Escolha o resultado mais próximo da sua necessidade para chegar à solução indicada.</p>
+              <p className="max-w-md text-sm leading-6 text-slate-400">Escolha o resultado mais próximo da sua necessidade para receber uma recomendação inicial.</p>
             </div>
 
             <div className="mt-8 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              {goals.map(({ icon: Icon, title, text, target }) => (
-                <button key={title} type="button" onClick={() => exploreSolution(target)} className="group flex items-start gap-4 rounded-xl border border-white/8 bg-white/[0.025] p-5 text-left transition hover:-translate-y-0.5 hover:border-cyan-300/35 hover:bg-cyan-300/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+              {goals.map(({ id, icon: Icon, title, text }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setInsightSelection({ kind: 'goal', id })}
+                  className="group flex items-start gap-4 rounded-xl border border-white/8 bg-white/[0.025] p-5 text-left transition hover:-translate-y-0.5 hover:border-cyan-300/35 hover:bg-cyan-300/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyan-300/10 text-cyan-300"><Icon className="h-5 w-5" /></span>
-                  <span className="min-w-0"><strong className="block text-sm text-white">{title}</strong><span className="mt-2 block text-xs leading-5 text-slate-400">{text}</span><span className="mt-3 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-cyan-300">Ver caminho <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" /></span></span>
+                  <span className="min-w-0"><strong className="block text-sm text-white">{title}</strong><span className="mt-2 block text-xs leading-5 text-slate-400">{text}</span><span className="mt-3 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-cyan-300">Iniciar diagnóstico <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" /></span></span>
                 </button>
               ))}
             </div>
@@ -285,7 +330,7 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
             <div className="max-w-3xl">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#08788e]">Laboratório de soluções</p>
               <h2 className="mt-3 text-3xl font-black leading-tight tracking-[-0.035em] sm:text-5xl">Explore o tipo de produto digital mais adequado ao seu projeto.</h2>
-              <p className="mt-5 text-sm leading-7 text-slate-600 sm:text-base">Troque entre as categorias e veja como cada solução pode atuar dentro da empresa.</p>
+              <p className="mt-5 text-sm leading-7 text-slate-600 sm:text-base">Troque entre as categorias e toque nos módulos, resultados e demonstrações para aprofundar a análise.</p>
             </div>
 
             <div className="mt-10 overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-[0_24px_70px_rgba(15,35,50,0.12)] lg:grid lg:grid-cols-[250px_minmax(0,1fr)]">
@@ -311,15 +356,21 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
 
                   <div className="mt-8 grid gap-3 sm:grid-cols-2">
                     {selectedSolution.modules.map((module, index) => (
-                      <div key={module} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                      <button
+                        key={module}
+                        type="button"
+                        onClick={() => setInsightSelection({ kind: 'module', solution: activeSolution, module })}
+                        className="group flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:border-[#08788e] hover:bg-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#08788e]"
+                      >
                         <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#0b1623] text-[9px] font-black text-cyan-300">0{index + 1}</span>
-                        <span className="text-xs font-bold text-slate-700">{module}</span>
-                      </div>
+                        <span className="flex-1 text-xs font-bold text-slate-700">{module}</span>
+                        <ChevronRight className="h-3.5 w-3.5 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-[#08788e]" />
+                      </button>
                     ))}
                   </div>
 
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <button type="button" onClick={() => setSelectedExample(activeSolution)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b1623] px-5 py-3.5 text-sm font-black text-white transition hover:bg-[#13263a]">
+                    <button type="button" onClick={() => openExamples(activeSolution)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b1623] px-5 py-3.5 text-sm font-black text-white transition hover:bg-[#13263a]">
                       Abrir demonstrações
                       <MonitorSmartphone className="h-4 w-4" />
                     </button>
@@ -331,11 +382,25 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
                 </div>
 
                 <aside className="border-t border-slate-200 bg-[#f4f8fa] p-5 lg:border-l lg:border-t-0 lg:p-7">
-                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#08788e]">Resultado esperado</p>
-                  <p className="mt-3 text-lg font-black leading-7 text-[#0b1623]">{selectedSolution.outcome}</p>
-                  <SolutionMiniPreview category={activeSolution} />
+                  <button
+                    type="button"
+                    onClick={() => setInsightSelection({ kind: 'outcome', solution: activeSolution })}
+                    className="group w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#08788e]"
+                  >
+                    <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#08788e]">Resultado esperado</p>
+                    <p className="mt-3 text-lg font-black leading-7 text-[#0b1623]">{selectedSolution.outcome}</p>
+                    <span className="mt-3 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-[#08788e]">Comparar antes e depois <ChevronRight className="h-3 w-3 transition group-hover:translate-x-0.5" /></span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openExamples(activeSolution)}
+                    className="mt-1 block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#08788e]"
+                    aria-label={`Abrir demonstrações de ${selectedSolution.title}`}
+                  >
+                    <SolutionMiniPreview category={activeSolution} />
+                  </button>
                   <div className="mt-6 border-t border-slate-200 pt-5">
-                    <p className="text-xs leading-5 text-slate-500">A demonstração apresenta referências conceituais. Estrutura, visual, regras e módulos são definidos para cada negócio.</p>
+                    <p className="text-xs leading-5 text-slate-500">Toque na prévia para abrir o laboratório visual da categoria selecionada.</p>
                   </div>
                 </aside>
               </div>
@@ -349,21 +414,26 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">Construção do projeto</p>
                 <h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.035em] sm:text-5xl">Do problema real à solução em uso.</h2>
-                <p className="mt-5 text-sm leading-7 text-slate-400 sm:text-base">O desenvolvimento avança como uma sequência conectada, com decisões claras antes de cada etapa.</p>
+                <p className="mt-5 text-sm leading-7 text-slate-400 sm:text-base">Selecione uma etapa para entender o trabalho da GSA, a participação do cliente e as entregas geradas.</p>
               </div>
 
               <div className="relative border-l border-cyan-300/20 pl-7 sm:pl-10">
-                {deliveryStages.map(({ number, icon: Icon, title, text }, index) => (
-                  <article key={number} className="relative pb-9 last:pb-0">
-                    <span className="absolute -left-[37px] top-0 flex h-5 w-5 items-center justify-center rounded-full border border-cyan-300/40 bg-[#07101b] sm:-left-[49px]"><span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /></span>
-                    <div className="grid gap-4 sm:grid-cols-[64px_48px_0.75fr_1fr] sm:items-start">
+                {deliveryStages.map(({ id, number, icon: Icon, title, text }, index) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setInsightSelection({ kind: 'stage', id })}
+                    className="group relative block w-full pb-9 text-left last:pb-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                  >
+                    <span className="absolute -left-[37px] top-0 flex h-5 w-5 items-center justify-center rounded-full border border-cyan-300/40 bg-[#07101b] transition group-hover:border-cyan-300 sm:-left-[49px]"><span className="h-1.5 w-1.5 rounded-full bg-cyan-300" /></span>
+                    <div className="grid gap-4 transition group-hover:translate-x-1 sm:grid-cols-[64px_48px_0.75fr_1fr] sm:items-start">
                       <span className="text-xs font-black tracking-[0.16em] text-cyan-300">{number}</span>
                       <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-cyan-300"><Icon className="h-5 w-5" /></span>
                       <h3 className="text-xl font-black">{title}</h3>
                       <p className="text-sm leading-6 text-slate-400">{text}</p>
                     </div>
                     {index < deliveryStages.length - 1 && <div className="mt-8 border-b border-white/8" />}
-                  </article>
+                  </button>
                 ))}
               </div>
             </div>
@@ -377,16 +447,22 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#08788e]">Fundamentos da experiência</p>
                 <h2 className="mt-3 text-3xl font-black leading-tight tracking-[-0.035em] sm:text-5xl">Um produto profissional precisa ser agradável para usar e seguro para operar.</h2>
               </div>
-              <p className="max-w-md text-sm leading-7 text-slate-500">O visual é apenas uma parte. A experiência também depende de clareza, estrutura, dados e continuidade.</p>
+              <p className="max-w-md text-sm leading-7 text-slate-500">Selecione cada fundamento para ver como ele aparece na prática e qual benefício gera no dia a dia.</p>
             </div>
 
             <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 sm:grid-cols-2 lg:grid-cols-3">
-              {engineering.map(({ icon: Icon, title, text }) => (
-                <article key={title} className="bg-white p-6 sm:p-7">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50 text-[#08788e]"><Icon className="h-5 w-5" /></span>
+              {engineering.map(({ id, icon: Icon, title, text }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setInsightSelection({ kind: 'foundation', id })}
+                  className="group bg-white p-6 text-left transition hover:bg-[#f4fafb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#08788e] sm:p-7"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50 text-[#08788e] transition group-hover:bg-[#0b1623] group-hover:text-cyan-300"><Icon className="h-5 w-5" /></span>
                   <h3 className="mt-5 text-lg font-black">{title}</h3>
                   <p className="mt-3 text-sm leading-6 text-slate-600">{text}</p>
-                </article>
+                  <span className="mt-5 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-[#08788e]">Entender na prática <ChevronRight className="h-3 w-3 transition group-hover:translate-x-0.5" /></span>
+                </button>
               ))}
             </div>
           </div>
@@ -426,6 +502,12 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
         </div>
       </footer>
 
+      <SystemsInsightDialog
+        selection={insightSelection}
+        onClose={() => setInsightSelection(null)}
+        onOpenExamples={openExamples}
+        onRequestBudget={openBudget}
+      />
       <SystemsExamplesDialog category={selectedExample} onClose={() => setSelectedExample(null)} onRequestBudget={() => setBudgetOpen(true)} />
       <SystemsBudgetModal isOpen={budgetOpen} onClose={() => setBudgetOpen(false)} />
       <PrivacyPolicyDialog isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
@@ -444,7 +526,7 @@ function SolutionMiniPreview({ category }: { category: SystemExampleCategory }) 
   };
 
   return (
-    <div className="mt-7 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+    <div className="mt-7 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm transition hover:border-[#08788e] hover:shadow-md">
       <div className="flex h-8 items-center gap-1.5 border-b border-slate-200 bg-slate-100 px-3"><span className="h-1.5 w-1.5 rounded-full bg-slate-300" /><span className="h-1.5 w-1.5 rounded-full bg-slate-300" /><span className="h-1.5 w-1.5 rounded-full bg-slate-300" /></div>
       <div className="grid min-h-[190px] grid-cols-[46px_1fr]">
         <div className="bg-[#0b1623] p-2"><span className="block h-7 rounded-md bg-cyan-300" />{[0, 1, 2].map((item) => <span key={item} className="mt-2 block h-6 rounded-md bg-white/6" />)}</div>
