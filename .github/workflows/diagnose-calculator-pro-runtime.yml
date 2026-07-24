@@ -22,16 +22,22 @@ jobs:
         with:
           version: 2.101.0
 
-      - name: Verify checkout runtime secrets
+      - name: Report checkout runtime secret status
         shell: bash
         run: |
           set -euo pipefail
           supabase secrets list --project-ref "$SUPABASE_PROJECT_REF" --output json > /tmp/secrets.json
           jq -r '.[].name' /tmp/secrets.json | sort > /tmp/secret-names.txt
+          missing=0
           for name in INFINITEPAY_HANDLE PUBLIC_SITE_URL ALLOWED_ORIGINS; do
-            grep -qx "$name" /tmp/secret-names.txt
-            echo "$name=CONFIGURED"
+            if grep -qx "$name" /tmp/secret-names.txt; then
+              echo "$name=CONFIGURED"
+            else
+              echo "$name=MISSING"
+              missing=$((missing+1))
+            fi
           done
+          echo "MISSING_SECRET_COUNT=$missing"
 
       - name: Compare production database with public function
         shell: bash
