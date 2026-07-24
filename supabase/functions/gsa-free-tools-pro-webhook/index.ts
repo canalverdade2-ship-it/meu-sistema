@@ -8,7 +8,7 @@ function json(status: number, body: unknown) {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-store',
+      'Cache-Control': 'no-store, max-age=0',
       'X-Content-Type-Options': 'nosniff',
     },
   });
@@ -18,11 +18,23 @@ function text(value: unknown, maxLength = 500) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 }
 
+async function loadCheckoutHandle(admin: any) {
+  const environmentHandle = text(Deno.env.get('INFINITEPAY_HANDLE'), 100).replace(/^\$/, '');
+  if (environmentHandle) return environmentHandle;
+
+  const { data, error } = await admin
+    .from('gsa_calculator_pro_runtime_config')
+    .select('infinitepay_handle')
+    .eq('config_key', 'default')
+    .maybeSingle();
+  if (error) throw error;
+  return text(data?.infinitepay_handle, 100).replace(/^\$/, '');
+}
+
 async function verifyAndFinalize(payload: Record<string, unknown>) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const handle = text(Deno.env.get('INFINITEPAY_HANDLE'), 100).replace(/^\$/, '');
-  if (!supabaseUrl || !serviceRoleKey || !handle) throw new Error('server_not_configured');
+  if (!supabaseUrl || !serviceRoleKey) throw new Error('server_not_configured');
 
   const orderNsu = text(payload.order_nsu, 200);
   const transactionNsu = text(payload.transaction_nsu, 200);
@@ -32,13 +44,18 @@ async function verifyAndFinalize(payload: Record<string, unknown>) {
   const admin = createClient<any>(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+  const handle = await loadCheckoutHandle(admin);
+  if (!handle) throw new Error('infinitepay_not_configured');
+
   const { data: payment, error: paymentError } = await admin
     .from('gsa_calculator_pro_payments')
     .select('*')
     .eq('order_nsu', orderNsu)
     .maybeSingle();
-  if (paymentError || !payment) throw new Error('payment_not_found');
-  if (payment.status === 'paid') return;
+  if (paymentError) throw paymentError;
+  if (!payment) throw new Error('payment_not_found');
+  if (payment.status === 'paid') return { duplicate: true };
+  if (['cancelled', 'refunded'].includes(payment.status)) throw new Error('payment_unavailable');
 
   const response = await fetch(PAYMENT_CHECK_ENDPOINT, {
     method: 'POST',
@@ -51,9 +68,12 @@ async function verifyAndFinalize(payload: Record<string, unknown>) {
     }),
   });
   if (!response.ok) throw new Error('payment_check_failed');
+
   const verification = await response.json();
   if (!verification?.success || !verification?.paid) throw new Error('payment_not_confirmed');
-  if (Number(verification.amount || 0) < Number(payment.valor_centavos || 0)) throw new Error('amount_mismatch');
+  if (Number(verification.amount || 0) !== Number(payment.valor_centavos || 0)) {
+    throw new Error('amount_mismatch');
+  }
 
   const { data, error } = await admin.rpc('gsa_calculator_finalize_payment_internal', {
     p_order_nsu: orderNsu,
@@ -61,35 +81,48 @@ async function verifyAndFinalize(payload: Record<string, unknown>) {
     p_invoice_slug: invoiceSlug,
     p_receipt_url: text(payload.receipt_url || verification.receipt_url, 2000) || null,
     p_capture_method: text(payload.capture_method || verification.capture_method, 50) || null,
-    p_paid_amount_centavos: Number(verification.paid_amount || verification.amount || payload.paid_amount || payload.amount || 0),
+    p_paid_amount_centavos: Number(
+      verification.paid_amount
+      || verification.amount
+      || payload.paid_amount
+      || payload.amount
+      || 0,
+    ),
     p_payload: { webhook: payload, verification },
   });
-  if (error || !data?.success) throw error || new Error(data?.error || 'payment_finalization_failed');
+  if (error) throw error;
+  if (!data?.success) throw new Error(data?.error || 'payment_finalization_failed');
+  return { duplicate: false, grant_id: data.grant_id };
 }
 
 export async function handleRequest(request: Request) {
-  if (request.method !== 'POST') return json(405, { success: false, message: 'Método não permitido' });
+  if (request.method !== 'POST') {
+    return json(405, { success: false, message: 'Método não permitido' });
+  }
+
   const declaredLength = Number(request.headers.get('content-length') || 0);
-  if (declaredLength > MAX_BODY_BYTES) return json(413, { success: false, message: 'Payload muito grande' });
+  if (declaredLength > MAX_BODY_BYTES) {
+    return json(413, { success: false, message: 'Payload muito grande' });
+  }
 
   try {
     const raw = await request.text();
-    if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) return json(413, { success: false, message: 'Payload muito grande' });
+    if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) {
+      return json(413, { success: false, message: 'Payload muito grande' });
+    }
     const payload = JSON.parse(raw || '{}') as Record<string, unknown>;
-    if (!text(payload.order_nsu, 200)) return json(400, { success: false, message: 'Pedido não informado' });
+    if (!text(payload.order_nsu, 200)) {
+      return json(400, { success: false, message: 'Pedido não informado' });
+    }
 
-    const task = verifyAndFinalize(payload).catch((error) => {
-      console.error('InfinitePay calculator webhook verification failed', error);
-    });
-
-    const runtime = (globalThis as any).EdgeRuntime;
-    if (runtime?.waitUntil) runtime.waitUntil(task);
-    else await task;
-
+    await verifyAndFinalize(payload);
     return json(200, { success: true, message: null });
   } catch (error) {
-    console.error('Invalid InfinitePay calculator webhook', error);
-    return json(400, { success: false, message: 'Evento inválido' });
+    console.error('InfinitePay calculator webhook verification failed', error);
+    return json(400, {
+      success: false,
+      message: 'Não foi possível confirmar este pagamento agora',
+    });
   }
 }
 

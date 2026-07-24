@@ -73,6 +73,7 @@ contains('src/components/public/FreeToolsTieredCalculatorDialog.tsx', [
   /freeToolsProAccess\.activate/,
   /readInfinitePayReturn/,
   /result: 'promotion'/,
+  /Não foi possível consultar agora o preço/,
 ]);
 
 contains('src/components/public/FreeToolsSimpleCalculators.tsx', [
@@ -92,6 +93,7 @@ contains('src/components/public/FreeToolsProUnlockDialog.tsx', [
   /Voucher de uso único/i,
   /não exige cadastro/i,
   /cadastro ativo e pelo menos uma fatura paga/i,
+  /Pagamento online indisponível/i,
 ]);
 
 contains('src/components/public/FreeToolsProEligibilityDialog.tsx', [
@@ -105,6 +107,7 @@ contains('src/lib/freeToolsProAccess.ts', [
   /gsa-free-tools-pro/,
   /gsa_free_tools_visitor_token/,
   /client_has_paid_invoice/,
+  /checkout_available/,
   /verify_payment/,
 ]);
 
@@ -115,7 +118,7 @@ contains('supabase/functions/gsa-free-tools-pro/index.ts', [
   /client_has_paid_invoice/,
   /free_period/,
   /allowedSources = \['payment', 'voucher'\]/,
-  /redeem_voucher/,
+  /gsa_calculator_redeem_voucher_and_create_session_internal/,
   /create_checkout/,
   /verify_payment/,
 ]);
@@ -123,7 +126,8 @@ contains('supabase/functions/gsa-free-tools-pro/index.ts', [
 contains('supabase/functions/gsa-free-tools-pro-webhook/index.ts', [
   /payment_check/,
   /gsa_calculator_finalize_payment_internal/,
-  /EdgeRuntime/,
+  /await verifyAndFinalize/,
+  /return json\(400/,
 ]);
 
 contains('supabase/migrations/20260723233000_free_tools_pro_access.sql', [
@@ -144,6 +148,19 @@ contains('supabase/migrations/20260724113000_simplify_calculator_pro_eligibility
   /liberar_cliente_com_fatura_paga = true/,
 ]);
 
+contains('supabase/migrations/20260724163000_harden_calculator_pro_voucher_payment.sql', [
+  /gsa_calculator_pro_runtime_config/,
+  /duracao_acesso_minutos/,
+  /idx_gsa_calculator_pro_transaction_unique/,
+  /gsa_admin_save_calculator_pro_runtime_config/,
+]);
+
+contains('supabase/migrations/20260724163500_atomic_calculator_pro_voucher_redemption.sql', [
+  /gsa_calculator_redeem_voucher_and_create_session_internal/,
+  /INSERT INTO public\.gsa_calculator_pro_sessions/,
+  /used_count/,
+]);
+
 contains('src/components/admin/CalculatorProAdminPanel.tsx', [
   /Calculadoras Pro/,
   /Preço do acesso/,
@@ -151,6 +168,12 @@ contains('src/components/admin/CalculatorProAdminPanel.tsx', [
   /Promoções/,
   /Não existe liberação individual pelo administrador/i,
   /Pagamentos InfinitePay/,
+]);
+
+contains('src/components/admin/CalculatorProPaymentConfiguration.tsx', [
+  /InfiniteTag da conta/,
+  /gsa_admin_save_calculator_pro_runtime_config/,
+  /Checkout habilitado/,
 ]);
 
 console.log('Contratos Free, Pro, promoções, vouchers, elegibilidade automática e InfinitePay validados com sucesso.');

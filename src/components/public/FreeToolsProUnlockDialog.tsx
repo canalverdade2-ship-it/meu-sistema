@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BadgeCheck, Check, CreditCard, Crown, Loader2, LockKeyhole, LogIn, ShieldCheck, Ticket, X } from 'lucide-react';
+import { AlertTriangle, BadgeCheck, Check, CreditCard, Crown, Loader2, LockKeyhole, LogIn, ShieldCheck, Ticket, X } from 'lucide-react';
 import { AccessibleDialog } from '../ui/AccessibleDialog';
 import { freeToolsProAccess, type ProAccessStatus, type ProToolId } from '../../lib/freeToolsProAccess';
 import { rememberFreeToolsProLoginReturn } from '../../lib/freeToolsProLoginReturn';
@@ -15,9 +15,14 @@ const ERROR_MESSAGES: Record<string, string> = {
   voucher_unavailable: 'Este voucher já foi utilizado ou foi cancelado.',
   voucher_expired: 'Este voucher expirou.',
   voucher_wrong_tool: 'Este voucher não é válido para esta calculadora.',
+  voucher_rate_limited: 'Foram realizadas muitas tentativas de voucher. Aguarde alguns minutos e tente novamente.',
+  checkout_rate_limited: 'Foram iniciados muitos checkouts neste dispositivo. Aguarde alguns minutos e tente novamente.',
   checkout_creation_failed: 'Não foi possível gerar o checkout neste momento.',
-  infinitepay_not_configured: 'O checkout InfinitePay ainda não está configurado no servidor.',
+  infinitepay_not_configured: 'O pagamento online desta calculadora ainda não está configurado.',
+  public_site_url_not_configured: 'O endereço de retorno do pagamento ainda não está configurado.',
   product_unavailable: 'O modo Pro desta calculadora está temporariamente indisponível.',
+  invalid_product_price: 'O preço desta calculadora ainda não foi configurado corretamente.',
+  payment_unavailable: 'Este pagamento não está mais disponível para confirmação.',
 };
 
 interface FreeToolsProUnlockDialogProps {
@@ -41,8 +46,12 @@ export function FreeToolsProUnlockDialog({ isOpen, tool, status, onClose, onUnlo
     setLoading(null);
   }, [isOpen, tool]);
 
-  const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((status?.product?.preco_centavos || 0) / 100);
-  const durationMinutes = Number(status?.product?.duracao_acesso_minutos || 0);
+  const productReady = Boolean(status?.success && status.product && status.available);
+  const checkoutAvailable = Boolean(productReady && status?.checkout_available);
+  const price = productReady && status?.product
+    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(status.product.preco_centavos / 100)
+    : null;
+  const durationMinutes = productReady ? Number(status?.product?.duracao_acesso_minutos || 0) : 0;
   const durationText = durationMinutes >= 1440 && durationMinutes % 1440 === 0
     ? `${durationMinutes / 1440} dia(s)`
     : durationMinutes >= 60 && durationMinutes % 60 === 0
@@ -50,6 +59,11 @@ export function FreeToolsProUnlockDialog({ isOpen, tool, status, onClose, onUnlo
       : `${durationMinutes} minuto(s)`;
 
   const pay = async () => {
+    if (!checkoutAvailable) {
+      setMessage({ type: 'error', text: 'O pagamento online ainda não está disponível. Utilize um voucher ou entre como cliente elegível.' });
+      return;
+    }
+
     setLoading('payment');
     setMessage(null);
     try {
@@ -105,12 +119,14 @@ export function FreeToolsProUnlockDialog({ isOpen, tool, status, onClose, onUnlo
       <div className="grid lg:grid-cols-[1.04fr_0.96fr]">
         <section className="p-5 sm:p-7">
           <div className="rounded-2xl border border-[#d5cdc1] bg-white p-5 sm:p-6">
-            <div className="flex items-start justify-between gap-5"><div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#806128]">Compra avulsa</p><p className="mt-2 text-3xl font-black tracking-[-0.04em] text-[#111820]">{price}</p><p className="mt-1 text-xs text-[#6a737a]">Acesso por {durationText} após a confirmação.</p></div><CreditCard className="h-6 w-6 text-[#8a6e2f]" /></div>
+            <div className="flex items-start justify-between gap-5"><div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#806128]">Compra avulsa</p>{price ? <><p className="mt-2 text-3xl font-black tracking-[-0.04em] text-[#111820]">{price}</p><p className="mt-1 text-xs text-[#6a737a]">Acesso por {durationText} após a confirmação.</p></> : <><p className="mt-2 text-lg font-black text-[#111820]">Configuração indisponível</p><p className="mt-1 text-xs leading-5 text-[#6a737a]">Preço e duração ainda não puderam ser confirmados pelo servidor.</p></>}</div><CreditCard className="h-6 w-6 text-[#8a6e2f]" /></div>
             <ul className="mt-6 grid gap-3 text-sm text-[#4e5962] sm:grid-cols-2">{['Pagamento por Pix ou cartão', 'Liberação automática', 'Não exige cadastro', 'Checkout seguro InfinitePay'].map((item) => <li key={item} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{item}</li>)}</ul>
 
-            <div className="mt-6 border-t border-[#e3ddd4] pt-5"><p className="text-xs font-black text-[#333e47]">Dados opcionais para facilitar o checkout</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><input value={customer.name} onChange={(event) => setCustomer({ ...customer, name: event.target.value })} placeholder="Nome" className="min-h-11 rounded-lg border border-[#d6cfc4] px-3 text-sm outline-none focus:border-[#91722f]" /><input type="email" value={customer.email} onChange={(event) => setCustomer({ ...customer, email: event.target.value })} placeholder="E-mail" className="min-h-11 rounded-lg border border-[#d6cfc4] px-3 text-sm outline-none focus:border-[#91722f]" /><input value={customer.phone} onChange={(event) => setCustomer({ ...customer, phone: event.target.value })} placeholder="Telefone" className="min-h-11 rounded-lg border border-[#d6cfc4] px-3 text-sm outline-none focus:border-[#91722f] sm:col-span-2" /></div></div>
+            {!checkoutAvailable && <div className="mt-5 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><span><strong className="block">Pagamento online indisponível neste momento.</strong>O voucher e o benefício automático para clientes continuam disponíveis normalmente.</span></div>}
 
-            <button type="button" onClick={() => void pay()} disabled={loading !== null} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#172433] px-5 py-3 text-sm font-black text-white transition hover:bg-[#22364a] disabled:opacity-60">{loading === 'payment' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}Pagar e desbloquear agora</button>
+            <div className="mt-6 border-t border-[#e3ddd4] pt-5"><p className="text-xs font-black text-[#333e47]">Dados opcionais para facilitar o checkout</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><input value={customer.name} onChange={(event) => setCustomer({ ...customer, name: event.target.value })} placeholder="Nome" disabled={!checkoutAvailable} className="min-h-11 rounded-lg border border-[#d6cfc4] px-3 text-sm outline-none focus:border-[#91722f] disabled:bg-neutral-100 disabled:text-neutral-400" /><input type="email" value={customer.email} onChange={(event) => setCustomer({ ...customer, email: event.target.value })} placeholder="E-mail" disabled={!checkoutAvailable} className="min-h-11 rounded-lg border border-[#d6cfc4] px-3 text-sm outline-none focus:border-[#91722f] disabled:bg-neutral-100 disabled:text-neutral-400" /><input value={customer.phone} onChange={(event) => setCustomer({ ...customer, phone: event.target.value })} placeholder="Telefone" disabled={!checkoutAvailable} className="min-h-11 rounded-lg border border-[#d6cfc4] px-3 font-mono text-sm outline-none focus:border-[#91722f] disabled:bg-neutral-100 disabled:text-neutral-400 sm:col-span-2" /></div></div>
+
+            <button type="button" onClick={() => void pay()} disabled={loading !== null || !checkoutAvailable} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#172433] px-5 py-3 text-sm font-black text-white transition hover:bg-[#22364a] disabled:cursor-not-allowed disabled:bg-[#9aa1a7] disabled:opacity-80">{loading === 'payment' ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}{checkoutAvailable ? 'Pagar e desbloquear agora' : 'Pagamento indisponível'}</button>
           </div>
         </section>
 
@@ -118,11 +134,12 @@ export function FreeToolsProUnlockDialog({ isOpen, tool, status, onClose, onUnlo
           <div className="rounded-2xl border border-[#d1c8ba] bg-[#faf7f0] p-5">
             <div className="flex items-center gap-3"><Ticket className="h-5 w-5 text-[#8a6e2f]" /><div><p className="text-sm font-black text-[#202a32]">Voucher de uso único</p><p className="mt-0.5 text-xs text-[#6b747b]">Pode ser utilizado mesmo sem login.</p></div></div>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row"><input value={voucher} onChange={(event) => setVoucher(event.target.value.toUpperCase())} placeholder="GSA-PRO-XXXXXXXXXX" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[#d1c9bd] bg-white px-3 font-mono text-sm uppercase outline-none focus:border-[#91722f]" /><button type="button" onClick={() => void redeem()} disabled={loading !== null} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[#9d7c34] bg-[#f4ead0] px-4 text-sm font-black text-[#654f20] disabled:opacity-60">{loading === 'voucher' ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}Validar</button></div>
+            {durationMinutes > 0 && <p className="mt-3 text-[11px] leading-5 text-[#6b747b]">Após a validação, o voucher libera uma única sessão Pro com duração de até {durationText}.</p>}
           </div>
 
           <div className="mt-4 rounded-2xl border border-[#b9c9c0] bg-[#edf4f0] p-5"><div className="flex items-start gap-3"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#35705a]" /><div><p className="text-sm font-black text-[#163e31]">Benefício automático para clientes GSA</p><p className="mt-2 text-xs leading-5 text-[#426558]">Todo cliente logado recebe acesso Pro automaticamente quando cumpre os dois critérios: cadastro ativo e pelo menos uma fatura paga.</p>{status?.logged_in ? <p className="mt-3 flex items-center gap-2 text-xs font-black text-[#315d4c]"><LockKeyhole className="h-4 w-4" />Sessão identificada. O sistema verificará os dois critérios.</p> : <button type="button" onClick={loginAsClient} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#315d4c] px-4 text-sm font-black text-white"><LogIn className="h-4 w-4" />Entrar como cliente</button>}</div></div></div>
 
-          <div className="mt-4 flex gap-3 rounded-xl border border-[#d5cec2] bg-white/65 p-4 text-xs leading-5 text-[#626c74]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#8a6e2f]" />O pagamento e os critérios do cliente são conferidos no servidor antes da liberação.</div>
+          <div className="mt-4 flex gap-3 rounded-xl border border-[#d5cec2] bg-white/65 p-4 text-xs leading-5 text-[#626c74]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#8a6e2f]" />Pagamento, voucher e critérios do cliente são conferidos no servidor antes da liberação.</div>
         </aside>
       </div>
 

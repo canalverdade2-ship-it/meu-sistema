@@ -5,8 +5,13 @@ const TOOLS = new Set(['termination', 'retirement', 'vacation']);
 const CHECKOUT_ENDPOINT = 'https://api.checkout.infinitepay.io/links';
 const PAYMENT_CHECK_ENDPOINT = 'https://api.checkout.infinitepay.io/payment_check';
 const VISITOR_TOKEN_PATTERN = /^[a-zA-Z0-9_-]{20,160}$/;
+const VOUCHER_CODE_PATTERN = /^GSA-PRO-[A-Z0-9]{8,20}$/;
 const MAX_PRODUCT_DURATION_MINUTES = 525_600;
 const CLIENT_REVALIDATION_MINUTES = 120;
+const CHECKOUT_RATE_LIMIT_WINDOW_MINUTES = 10;
+const CHECKOUT_RATE_LIMIT_MAX = 5;
+const VOUCHER_RATE_LIMIT_WINDOW_MINUTES = 10;
+const VOUCHER_RATE_LIMIT_MAX = 12;
 
 const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:3000',
@@ -29,10 +34,10 @@ function responseHeaders(origin: string | null) {
   const headers: Record<string, string> = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Cache-Control': 'no-store',
+    'Cache-Control': 'no-store, max-age=0',
     'Content-Type': 'application/json; charset=utf-8',
     'X-Content-Type-Options': 'nosniff',
-    'Vary': 'Origin',
+    Vary: 'Origin',
   };
   if (origin) headers['Access-Control-Allow-Origin'] = origin;
   return headers;
@@ -48,6 +53,10 @@ function text(value: unknown, maxLength = 200) {
 
 function digits(value: unknown, maxLength = 20) {
   return text(value, maxLength + 8).replace(/\D/g, '').slice(0, maxLength);
+}
+
+function validEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 async function sha256(value: string) {
@@ -97,14 +106,73 @@ async function loadProduct(admin: any, toolId: string) {
   return data;
 }
 
+async function loadCheckoutHandle(admin: any) {
+  const environmentHandle = text(Deno.env.get('INFINITEPAY_HANDLE'), 100).replace(/^\$/, '');
+  if (environmentHandle) return environmentHandle;
+
+  const { data, error } = await admin
+    .from('gsa_calculator_pro_runtime_config')
+    .select('infinitepay_handle')
+    .eq('config_key', 'default')
+    .maybeSingle();
+
+  if (error) {
+    console.error('Calculator Pro runtime configuration could not be loaded', error);
+    return '';
+  }
+  return text(data?.infinitepay_handle, 100).replace(/^\$/, '');
+}
+
 async function hasPaidInvoice(admin: any, clientId: string) {
-  const { data } = await admin
+  const { data, error } = await admin
     .from('faturas')
     .select('id')
     .eq('cliente_id', clientId)
     .eq('status', 'pago')
     .limit(1);
+  if (error) throw error;
   return Boolean(data?.length);
+}
+
+async function recordEvent(
+  admin: any,
+  eventType: string,
+  toolId: string,
+  visitorHash: string,
+  details: Record<string, unknown> = {},
+) {
+  const { error } = await admin.from('gsa_calculator_pro_events').insert({
+    event_type: eventType,
+    tool_id: toolId,
+    visitor_token_hash: visitorHash || null,
+    details,
+  });
+  if (error) console.error(`Could not record ${eventType}`, error);
+}
+
+async function checkoutRateLimited(admin: any, toolId: string, visitorHash: string) {
+  const since = new Date(Date.now() - CHECKOUT_RATE_LIMIT_WINDOW_MINUTES * 60_000).toISOString();
+  const { count, error } = await admin
+    .from('gsa_calculator_pro_payments')
+    .select('id', { count: 'exact', head: true })
+    .eq('tool_id', toolId)
+    .eq('visitor_token_hash', visitorHash)
+    .gte('created_at', since);
+  if (error) throw error;
+  return Number(count || 0) >= CHECKOUT_RATE_LIMIT_MAX;
+}
+
+async function voucherRateLimited(admin: any, toolId: string, visitorHash: string) {
+  const since = new Date(Date.now() - VOUCHER_RATE_LIMIT_WINDOW_MINUTES * 60_000).toISOString();
+  const { count, error } = await admin
+    .from('gsa_calculator_pro_events')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_type', 'voucher_redeem_failed')
+    .eq('tool_id', toolId)
+    .eq('visitor_token_hash', visitorHash)
+    .gte('created_at', since);
+  if (error) throw error;
+  return Number(count || 0) >= VOUCHER_RATE_LIMIT_MAX;
 }
 
 async function findGrant(admin: any, toolId: string, visitorHash: string, clientId: string | null) {
@@ -113,7 +181,7 @@ async function findGrant(admin: any, toolId: string, visitorHash: string, client
   const allowedSources = ['payment', 'voucher'];
 
   if (clientId) {
-    const { data } = await admin
+    const { data, error } = await admin
       .from('gsa_calculator_pro_grants')
       .select('*')
       .eq('tool_id', toolId)
@@ -123,11 +191,12 @@ async function findGrant(admin: any, toolId: string, visitorHash: string, client
       .lte('valid_from', now)
       .order('created_at', { ascending: false })
       .limit(20);
+    if (error) throw error;
     if (data) candidates.push(...data);
   }
 
   if (visitorHash) {
-    const { data } = await admin
+    const { data, error } = await admin
       .from('gsa_calculator_pro_grants')
       .select('*')
       .eq('tool_id', toolId)
@@ -137,6 +206,7 @@ async function findGrant(admin: any, toolId: string, visitorHash: string, client
       .lte('valid_from', now)
       .order('created_at', { ascending: false })
       .limit(20);
+    if (error) throw error;
     if (data) candidates.push(...data);
   }
 
@@ -146,10 +216,16 @@ async function findGrant(admin: any, toolId: string, visitorHash: string, client
     .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())[0] || null;
 }
 
-async function findSession(admin: any, toolId: string, visitorHash: string, clientId: string | null, rawToken: string) {
+async function findSession(
+  admin: any,
+  toolId: string,
+  visitorHash: string,
+  clientId: string | null,
+  rawToken: string,
+) {
   if (!rawToken) return null;
   const tokenHash = await sha256(rawToken);
-  const { data } = await admin
+  const { data, error } = await admin
     .from('gsa_calculator_pro_sessions')
     .select('*')
     .eq('token_hash', tokenHash)
@@ -157,6 +233,7 @@ async function findSession(admin: any, toolId: string, visitorHash: string, clie
     .is('revoked_at', null)
     .gt('expires_at', new Date().toISOString())
     .maybeSingle();
+  if (error) throw error;
   if (!data) return null;
   if (data.cliente_id && data.cliente_id !== clientId) return null;
   if (data.visitor_token_hash && data.visitor_token_hash !== visitorHash) return null;
@@ -164,9 +241,24 @@ async function findSession(admin: any, toolId: string, visitorHash: string, clie
   return data;
 }
 
-async function accessState(admin: any, request: Request, toolId: string, visitorHash: string, proSessionToken = '') {
+async function accessState(
+  admin: any,
+  request: Request,
+  toolId: string,
+  visitorHash: string,
+  proSessionToken = '',
+) {
   const product = await loadProduct(admin, toolId);
-  if (!product) return { available: false, access: false, reason: 'product_not_found', clientHasPaidInvoice: false };
+  if (!product) {
+    return {
+      available: false,
+      access: false,
+      reason: 'product_not_found',
+      clientHasPaidInvoice: false,
+      product: null,
+      client: null,
+    };
+  }
 
   const client = await authenticatedClient(admin, request);
   const clientId = client?.id || null;
@@ -186,7 +278,14 @@ async function accessState(admin: any, request: Request, toolId: string, visitor
   }
 
   if (!product.ativo) {
-    return { available: false, access: false, reason: 'product_disabled', product, client, clientHasPaidInvoice };
+    return {
+      available: false,
+      access: false,
+      reason: 'product_disabled',
+      product,
+      client,
+      clientHasPaidInvoice,
+    };
   }
 
   const now = Date.now();
@@ -210,9 +309,19 @@ async function accessState(admin: any, request: Request, toolId: string, visitor
   return { available: true, access: false, source: null, product, client, clientHasPaidInvoice };
 }
 
-async function createProSession(admin: any, request: Request, toolId: string, visitorHash: string, access: any) {
+async function createProSession(
+  admin: any,
+  toolId: string,
+  visitorHash: string,
+  access: any,
+) {
   if (access.session) {
-    return { success: true, source: access.session.source, expires_at: access.session.expires_at, existing: true };
+    return {
+      success: true,
+      source: access.session.source,
+      expires_at: access.session.expires_at,
+      existing: true,
+    };
   }
 
   const clientId = access.client?.id || null;
@@ -230,14 +339,13 @@ async function createProSession(admin: any, request: Request, toolId: string, vi
   if (access.grant?.valid_until) {
     expiresAt = new Date(Math.min(expiresAt.getTime(), new Date(access.grant.valid_until).getTime()));
   }
-
   if (access.source === 'free_period' && access.product?.gratuito_fim) {
     expiresAt = new Date(access.product.gratuito_fim);
   }
 
   const { data, error } = await admin.rpc('gsa_calculator_create_session_internal', {
     p_tool_id: toolId,
-    p_visitor_hash: visitorHash,
+    p_visitor_hash: clientId ? null : visitorHash,
     p_cliente_id: clientId,
     p_source: access.source,
     p_grant_id: access.grant?.id || null,
@@ -246,13 +354,25 @@ async function createProSession(admin: any, request: Request, toolId: string, vi
   });
   if (error) throw error;
   if (!data?.success) return data;
-  return { success: true, token: rawToken, source: access.source, expires_at: data.expires_at };
+  return {
+    success: true,
+    token: rawToken,
+    source: access.source,
+    expires_at: data.expires_at,
+  };
 }
 
-async function verifyInfinitePay(admin: any, payment: any, transactionNsu: string, invoiceSlug: string) {
-  const handle = text(Deno.env.get('INFINITEPAY_HANDLE'), 100).replace(/^\$/, '');
+async function verifyInfinitePay(
+  admin: any,
+  handle: string,
+  payment: any,
+  transactionNsu: string,
+  invoiceSlug: string,
+) {
   if (!handle) throw new Error('infinitepay_not_configured');
-  if (!transactionNsu || !invoiceSlug) return { success: false, paid: false, error: 'payment_identifiers_missing' };
+  if (!transactionNsu || !invoiceSlug) {
+    return { success: false, paid: false, error: 'payment_identifiers_missing' };
+  }
 
   const response = await fetch(PAYMENT_CHECK_ENDPOINT, {
     method: 'POST',
@@ -265,10 +385,11 @@ async function verifyInfinitePay(admin: any, payment: any, transactionNsu: strin
     }),
   });
   if (!response.ok) throw new Error('payment_check_failed');
+
   const result = await response.json();
   if (!result?.success || !result?.paid) return { success: true, paid: false, result };
-  if (Number(result.amount || 0) < Number(payment.valor_centavos || 0)) {
-    return { success: false, paid: false, error: 'amount_mismatch' };
+  if (Number(result.amount || 0) !== Number(payment.valor_centavos || 0)) {
+    return { success: false, paid: false, error: 'amount_mismatch', result };
   }
 
   const { data, error } = await admin.rpc('gsa_calculator_finalize_payment_internal', {
@@ -281,21 +402,28 @@ async function verifyInfinitePay(admin: any, payment: any, transactionNsu: strin
     p_payload: result,
   });
   if (error) throw error;
-  return { success: Boolean(data?.success), paid: Boolean(data?.success), result, finalization: data };
+  if (!data?.success) {
+    return { success: false, paid: false, error: data?.error || 'payment_finalization_failed', result };
+  }
+  return { success: true, paid: true, result, finalization: data };
 }
 
 export async function handleRequest(request: Request) {
   const requestOrigin = request.headers.get('origin')?.replace(/\/$/, '') || null;
   const allowedOrigin = requestOrigin && configuredOrigins().has(requestOrigin) ? requestOrigin : null;
   if (requestOrigin && !allowedOrigin) return json({ error: 'origin_not_allowed' }, 403);
-  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: responseHeaders(allowedOrigin) });
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: responseHeaders(allowedOrigin) });
+  }
   if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405, allowedOrigin);
 
   try {
     const declaredLength = Number(request.headers.get('content-length') || 0);
     if (declaredLength > MAX_BODY_BYTES) return json({ error: 'payload_too_large' }, 413, allowedOrigin);
     const rawBody = await request.text();
-    if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) return json({ error: 'payload_too_large' }, 413, allowedOrigin);
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
+      return json({ error: 'payload_too_large' }, 413, allowedOrigin);
+    }
 
     const body = JSON.parse(rawBody || '{}') as { action?: string; payload?: Record<string, unknown> };
     const action = text(body.action, 40);
@@ -306,7 +434,9 @@ export async function handleRequest(request: Request) {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !serviceRoleKey) return json({ error: 'server_not_configured' }, 503, allowedOrigin);
-    const admin = createClient<any>(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const admin = createClient<any>(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
     const visitorToken = text(payload.visitor_token, 180);
     if (!VISITOR_TOKEN_PATTERN.test(visitorToken)) return json({ error: 'invalid_visitor_token' }, 400, allowedOrigin);
@@ -314,7 +444,10 @@ export async function handleRequest(request: Request) {
     const proSessionToken = text(payload.pro_session_token, 180);
 
     if (action === 'status') {
-      const state = await accessState(admin, request, toolId, visitorHash, proSessionToken);
+      const [state, checkoutHandle] = await Promise.all([
+        accessState(admin, request, toolId, visitorHash, proSessionToken),
+        loadCheckoutHandle(admin),
+      ]);
       return json({
         success: true,
         available: state.available,
@@ -323,6 +456,7 @@ export async function handleRequest(request: Request) {
         logged_in: Boolean(state.client),
         client_active: state.client?.status === 'ativo',
         client_has_paid_invoice: Boolean(state.clientHasPaidInvoice),
+        checkout_available: Boolean(checkoutHandle && state.product?.ativo),
         product: state.product ? {
           tool_id: state.product.tool_id,
           nome: state.product.nome,
@@ -337,45 +471,84 @@ export async function handleRequest(request: Request) {
 
     if (action === 'activate') {
       const state = await accessState(admin, request, toolId, visitorHash, proSessionToken);
-      if (!state.access) return json({ success: false, error: 'pro_access_required', product: state.product }, 403, allowedOrigin);
-      const session = await createProSession(admin, request, toolId, visitorHash, state);
+      if (!state.access) {
+        return json({ success: false, error: 'pro_access_required', product: state.product }, 403, allowedOrigin);
+      }
+      const session = await createProSession(admin, toolId, visitorHash, state);
       return json(session, session?.success ? 200 : 409, allowedOrigin);
     }
 
     if (action === 'redeem_voucher') {
+      if (await voucherRateLimited(admin, toolId, visitorHash)) {
+        return json({ success: false, error: 'voucher_rate_limited' }, 429, allowedOrigin);
+      }
+
+      const product = await loadProduct(admin, toolId);
+      if (!product?.ativo) return json({ success: false, error: 'product_unavailable' }, 409, allowedOrigin);
+
       const code = text(payload.code, 80).toUpperCase().replace(/\s+/g, '');
-      if (!/^GSA-PRO-[A-Z0-9]{8,20}$/.test(code)) return json({ success: false, error: 'invalid_voucher' }, 400, allowedOrigin);
+      if (!VOUCHER_CODE_PATTERN.test(code)) {
+        await recordEvent(admin, 'voucher_redeem_failed', toolId, visitorHash, { error: 'invalid_voucher' });
+        return json({ success: false, error: 'invalid_voucher' }, 400, allowedOrigin);
+      }
+
       const client = await authenticatedClient(admin, request);
-      const { data, error } = await admin.rpc('gsa_calculator_redeem_voucher_internal', {
+      const rawToken = randomToken();
+      const { data, error } = await admin.rpc('gsa_calculator_redeem_voucher_and_create_session_internal', {
         p_code_hash: await sha256(code),
         p_tool_id: toolId,
         p_visitor_hash: visitorHash,
         p_cliente_id: client?.id || null,
+        p_token_hash: await sha256(rawToken),
       });
       if (error) throw error;
-      if (!data?.success) return json(data, 400, allowedOrigin);
-      const state = await accessState(admin, request, toolId, visitorHash);
-      const session = await createProSession(admin, request, toolId, visitorHash, state);
-      return json({ ...data, session }, session?.success ? 200 : 409, allowedOrigin);
+      if (!data?.success) {
+        await recordEvent(admin, 'voucher_redeem_failed', toolId, visitorHash, { error: data?.error || 'voucher_unavailable' });
+        const responseStatus = data?.error === 'product_unavailable' ? 409 : 400;
+        return json(data, responseStatus, allowedOrigin);
+      }
+
+      return json({
+        success: true,
+        grant_id: data.grant_id,
+        session: {
+          success: true,
+          token: rawToken,
+          source: 'voucher',
+          expires_at: data.expires_at,
+        },
+      }, 200, allowedOrigin);
     }
 
     if (action === 'create_checkout') {
       const product = await loadProduct(admin, toolId);
       if (!product?.ativo) return json({ success: false, error: 'product_unavailable' }, 409, allowedOrigin);
-      if (Number(product.preco_centavos || 0) <= 0) return json({ success: false, error: 'invalid_product_price' }, 409, allowedOrigin);
+      if (Number(product.preco_centavos || 0) <= 0) {
+        return json({ success: false, error: 'invalid_product_price' }, 409, allowedOrigin);
+      }
+      if (await checkoutRateLimited(admin, toolId, visitorHash)) {
+        return json({ success: false, error: 'checkout_rate_limited' }, 429, allowedOrigin);
+      }
 
-      const handle = text(Deno.env.get('INFINITEPAY_HANDLE'), 100).replace(/^\$/, '');
+      const handle = await loadCheckoutHandle(admin);
       if (!handle) return json({ success: false, error: 'infinitepay_not_configured' }, 503, allowedOrigin);
+
       const client = await authenticatedClient(admin, request);
       const orderNsu = crypto.randomUUID();
-      const publicSiteUrl = text(Deno.env.get('PUBLIC_SITE_URL'), 500).replace(/\/$/, '') || allowedOrigin;
+      const configuredSiteUrl = text(Deno.env.get('PUBLIC_SITE_URL'), 500).replace(/\/$/, '');
+      const publicSiteUrl = allowedOrigin || configuredSiteUrl;
       if (!publicSiteUrl) return json({ success: false, error: 'public_site_url_not_configured' }, 503, allowedOrigin);
 
       const redirectUrl = `${publicSiteUrl}/servicos-gratuitos?calculator=${encodeURIComponent(toolId)}&pro_payment=${encodeURIComponent(orderNsu)}`;
       const webhookUrl = `${supabaseUrl}/functions/v1/gsa-free-tools-pro-webhook`;
       const customerName = text(payload.customer_name, 120) || text(client?.nome, 120);
-      const customerEmail = text(payload.customer_email, 254).toLowerCase() || text(client?.email, 254).toLowerCase();
+      const rawEmail = text(payload.customer_email, 254).toLowerCase() || text(client?.email, 254).toLowerCase();
+      const customerEmail = validEmail(rawEmail) ? rawEmail : '';
       const customerPhone = digits(payload.customer_phone, 13) || digits(client?.telefone, 13);
+      const durationMinutes = Math.min(
+        MAX_PRODUCT_DURATION_MINUTES,
+        Math.max(15, Number(product.duracao_acesso_minutos || 1440)),
+      );
 
       const { data: inserted, error: insertError } = await admin
         .from('gsa_calculator_pro_payments')
@@ -383,8 +556,9 @@ export async function handleRequest(request: Request) {
           order_nsu: orderNsu,
           tool_id: toolId,
           cliente_id: client?.id || null,
-          visitor_token_hash: visitorHash,
+          visitor_token_hash: client?.id ? null : visitorHash,
           valor_centavos: Number(product.preco_centavos),
+          duracao_acesso_minutos: durationMinutes,
           status: 'processing',
           expires_at: new Date(Date.now() + 60 * 60_000).toISOString(),
         })
@@ -397,13 +571,19 @@ export async function handleRequest(request: Request) {
         redirect_url: redirectUrl,
         webhook_url: webhookUrl,
         order_nsu: orderNsu,
-        items: [{ quantity: 1, price: Number(product.preco_centavos), description: product.nome }],
+        items: [{
+          quantity: 1,
+          price: Number(product.preco_centavos),
+          description: product.nome,
+        }],
       };
       if (customerName || customerEmail || customerPhone) {
         checkoutPayload.customer = {
           ...(customerName ? { name: customerName } : {}),
           ...(customerEmail ? { email: customerEmail } : {}),
-          ...(customerPhone ? { phone_number: customerPhone.startsWith('55') ? `+${customerPhone}` : `+55${customerPhone}` } : {}),
+          ...(customerPhone ? {
+            phone_number: customerPhone.startsWith('55') ? `+${customerPhone}` : `+55${customerPhone}`,
+          } : {}),
         };
       }
 
@@ -415,12 +595,32 @@ export async function handleRequest(request: Request) {
       const checkoutResult = await checkoutResponse.json().catch(() => ({}));
       const checkoutUrl = text(checkoutResult?.url, 2000);
       if (!checkoutResponse.ok || !checkoutUrl.startsWith('https://')) {
-        await admin.from('gsa_calculator_pro_payments').update({ status: 'failed', raw_payload: checkoutResult }).eq('id', inserted.id);
+        await admin
+          .from('gsa_calculator_pro_payments')
+          .update({ status: 'failed', raw_payload: checkoutResult })
+          .eq('id', inserted.id);
+        await recordEvent(admin, 'checkout_creation_failed', toolId, visitorHash, {
+          payment_id: inserted.id,
+          http_status: checkoutResponse.status,
+        });
         return json({ success: false, error: 'checkout_creation_failed' }, 502, allowedOrigin);
       }
 
-      await admin.from('gsa_calculator_pro_payments').update({ status: 'pending', checkout_url: checkoutUrl, raw_payload: checkoutResult }).eq('id', inserted.id);
-      return json({ success: true, order_nsu: orderNsu, checkout_url: checkoutUrl }, 200, allowedOrigin);
+      await admin
+        .from('gsa_calculator_pro_payments')
+        .update({ status: 'pending', checkout_url: checkoutUrl, raw_payload: checkoutResult })
+        .eq('id', inserted.id);
+      await recordEvent(admin, 'checkout_created', toolId, visitorHash, {
+        payment_id: inserted.id,
+        order_nsu: orderNsu,
+        duration_minutes: durationMinutes,
+      });
+
+      return json({
+        success: true,
+        order_nsu: orderNsu,
+        checkout_url: checkoutUrl,
+      }, 200, allowedOrigin);
     }
 
     if (action === 'verify_payment') {
@@ -428,24 +628,46 @@ export async function handleRequest(request: Request) {
       const transactionNsu = text(payload.transaction_nsu, 200);
       const invoiceSlug = text(payload.slug, 200);
       const client = await authenticatedClient(admin, request);
-      const { data: payment } = await admin
+      const { data: payment, error: paymentError } = await admin
         .from('gsa_calculator_pro_payments')
         .select('*')
         .eq('order_nsu', orderNsu)
         .eq('tool_id', toolId)
         .maybeSingle();
+      if (paymentError) throw paymentError;
       if (!payment) return json({ success: false, error: 'payment_not_found' }, 404, allowedOrigin);
-      if (payment.cliente_id && payment.cliente_id !== client?.id) return json({ success: false, error: 'payment_identity_mismatch' }, 403, allowedOrigin);
-      if (payment.visitor_token_hash && payment.visitor_token_hash !== visitorHash) return json({ success: false, error: 'payment_identity_mismatch' }, 403, allowedOrigin);
+      if (payment.cliente_id && payment.cliente_id !== client?.id) {
+        return json({ success: false, error: 'payment_identity_mismatch' }, 403, allowedOrigin);
+      }
+      if (!payment.cliente_id && payment.visitor_token_hash && payment.visitor_token_hash !== visitorHash) {
+        return json({ success: false, error: 'payment_identity_mismatch' }, 403, allowedOrigin);
+      }
+      if (['cancelled', 'refunded'].includes(payment.status)) {
+        return json({ success: false, error: 'payment_unavailable', status: payment.status }, 409, allowedOrigin);
+      }
 
       if (payment.status !== 'paid') {
-        const verification = await verifyInfinitePay(admin, payment, transactionNsu || payment.transaction_nsu, invoiceSlug || payment.invoice_slug);
-        if (!verification.paid) return json({ success: true, paid: false, status: payment.status }, 200, allowedOrigin);
+        const handle = await loadCheckoutHandle(admin);
+        const verification = await verifyInfinitePay(
+          admin,
+          handle,
+          payment,
+          transactionNsu || payment.transaction_nsu,
+          invoiceSlug || payment.invoice_slug,
+        );
+        if (!verification.success && verification.error) {
+          return json({ success: false, paid: false, error: verification.error }, 409, allowedOrigin);
+        }
+        if (!verification.paid) {
+          return json({ success: true, paid: false, status: payment.status }, 200, allowedOrigin);
+        }
       }
 
       const state = await accessState(admin, request, toolId, visitorHash);
-      if (!state.access) return json({ success: false, error: 'grant_not_available_after_payment' }, 409, allowedOrigin);
-      const session = await createProSession(admin, request, toolId, visitorHash, state);
+      if (!state.access) {
+        return json({ success: false, error: 'grant_not_available_after_payment' }, 409, allowedOrigin);
+      }
+      const session = await createProSession(admin, toolId, visitorHash, state);
       return json({ success: true, paid: true, session }, session?.success ? 200 : 409, allowedOrigin);
     }
 
