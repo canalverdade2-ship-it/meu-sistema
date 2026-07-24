@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-24T00:39:18.431Z",
+  "generated_at": "2026-07-24T00:41:44.650Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
   "scanned_files": 336,
   "blocker_count": 0,
-  "review_count": 23,
+  "review_count": 32,
   "blockers": [],
   "review": [
     {
@@ -183,6 +183,78 @@
       "description": "Referência a demonstração em código executável",
       "file": "src/components/public/SystemsExamplesOrderedDialog.tsx",
       "line": 53,
+      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > section:nth-child(2) {"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/ui/AccessibleDialog.tsx",
+      "line": 31,
+      "excerpt": "const isSystemsDemo = ariaLabel?.startsWith('Laboratório de demonstração') ?? false;"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/ui/AccessibleDialog.tsx",
+      "line": 41,
+      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) {"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/ui/AccessibleDialog.tsx",
+      "line": 47,
+      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > aside:first-child {"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/ui/AccessibleDialog.tsx",
+      "line": 51,
+      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > aside:nth-child(3) {"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/ui/AccessibleDialog.tsx",
+      "line": 56,
+      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > section:nth-child(2) {"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/ui/AccessibleDialog.tsx",
+      "line": 62,
+      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) {"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/ui/AccessibleDialog.tsx",
+      "line": 68,
+      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > aside:first-child {"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/ui/AccessibleDialog.tsx",
+      "line": 74,
+      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > aside:nth-child(3) {"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/ui/AccessibleDialog.tsx",
+      "line": 82,
       "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > section:nth-child(2) {"
     },
     {

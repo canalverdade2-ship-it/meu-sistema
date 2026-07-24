@@ -1,12 +1,12 @@
 # Auditoria de operação real
 
-Gerada em: 2026-07-24T00:39:18.431Z
+Gerada em: 2026-07-24T00:41:44.650Z
 
 Arquivos executáveis examinados: **336**
 
 Bloqueadores explícitos: **0**
 
-Ocorrências para revisão humana: **23**
+Ocorrências para revisão humana: **32**
 
 ## Bloqueadores
 
@@ -36,4 +36,13 @@ Nenhum bloqueador explícito encontrado.
 - `src/components/public/SystemsExamplesOrderedDialog.tsx:39` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {`
 - `src/components/public/SystemsExamplesOrderedDialog.tsx:45` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {`
 - `src/components/public/SystemsExamplesOrderedDialog.tsx:53` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {`
+- `src/components/ui/AccessibleDialog.tsx:31` — Referência a demonstração em código executável — `const isSystemsDemo = ariaLabel?.startsWith('Laboratório de demonstração') ?? false;`
+- `src/components/ui/AccessibleDialog.tsx:41` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {`
+- `src/components/ui/AccessibleDialog.tsx:47` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {`
+- `src/components/ui/AccessibleDialog.tsx:51` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {`
+- `src/components/ui/AccessibleDialog.tsx:56` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {`
+- `src/components/ui/AccessibleDialog.tsx:62` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {`
+- `src/components/ui/AccessibleDialog.tsx:68` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {`
+- `src/components/ui/AccessibleDialog.tsx:74` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {`
+- `src/components/ui/AccessibleDialog.tsx:82` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {`
 - `src/lib/deleteRequest.ts:42` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = window.prompt('Exclusão restrita: qual o motivo para solicitar a exclusão deste registro? Sua solicitação será enviada para aprovação administrativa.');`
