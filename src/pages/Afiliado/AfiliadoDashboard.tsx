@@ -19,7 +19,6 @@ import {
   Menu,
   RefreshCw,
   Save,
-  Share2,
   ShieldCheck,
   Star,
   User,
@@ -51,6 +50,8 @@ interface AfiliadoDashboardProps {
 }
 
 type TabType = 'dashboard' | 'links' | 'comissoes' | 'saques' | 'perfil' | 'pontos';
+
+type KeyedProps = { key?: string };
 
 const EMPTY_SNAPSHOT: AffiliateSnapshot = {
   affiliate: null,
@@ -86,6 +87,7 @@ const TAB_ITEMS: Array<{ id: TabType; label: string; shortLabel: string; icon: L
 const STATUS_LABELS: Record<string, string> = {
   ativo: 'Ativo',
   suspenso: 'Suspenso',
+  encerrado: 'Encerrado',
   bloqueado: 'Bloqueado',
   pendente: 'Em carência',
   disponivel: 'Disponível',
@@ -95,6 +97,7 @@ const STATUS_LABELS: Record<string, string> = {
   paga: 'Paga',
   rejeitado: 'Rejeitado',
   cancelado: 'Cancelado',
+  estornada: 'Estornada',
   revertida: 'Revertida',
 };
 
@@ -126,12 +129,19 @@ function currencyInputToNumber(value: string) {
 function formatCurrencyInput(value: string) {
   const digits = value.replace(/\D/g, '');
   if (!digits) return '';
-  return (Number(digits) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (Number(digits) / 100).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function statusTone(value: string) {
-  if (['pago', 'paga', 'disponivel', 'ativo', 'aprovado'].includes(value)) return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-  if (['rejeitado', 'cancelado', 'revertida', 'bloqueado', 'suspenso'].includes(value)) return 'border-red-200 bg-red-50 text-red-700';
+  if (['pago', 'paga', 'disponivel', 'ativo', 'aprovado'].includes(value)) {
+    return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  }
+  if (['rejeitado', 'cancelado', 'estornada', 'revertida', 'bloqueado', 'suspenso', 'encerrado'].includes(value)) {
+    return 'border-red-200 bg-red-50 text-red-700';
+  }
   return 'border-amber-200 bg-amber-50 text-amber-700';
 }
 
@@ -241,7 +251,10 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       toast.error('O valor solicitado não pode superar o saldo disponível.');
       return;
     }
-    const success = await runAction(() => requestAffiliatePayout(value, crypto.randomUUID()), 'Solicitação de saque enviada.');
+    const success = await runAction(
+      () => requestAffiliatePayout(value, crypto.randomUUID()),
+      'Solicitação de saque enviada.',
+    );
     if (success) setPayoutValue('');
   };
 
@@ -256,7 +269,10 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       toast.error('A quantidade informada supera seu saldo de pontos.');
       return;
     }
-    const success = await runAction(() => redeemAffiliatePoints(points, crypto.randomUUID()), 'Pontos convertidos para a carteira.');
+    const success = await runAction(
+      () => redeemAffiliatePoints(points, crypto.randomUUID()),
+      'Pontos convertidos para a carteira.',
+    );
     if (success) setPointsValue('');
   };
 
@@ -293,13 +309,23 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
         <div className="affiliate-panel-shadow mx-auto max-w-2xl border-t-4 border-[#c59a4a] bg-white p-7 sm:p-10">
           <LogoGSA size="md" variant="dark" showText />
           <p className="mt-10 text-xs font-bold uppercase tracking-[0.2em] text-[#8d6829]">Ativação necessária</p>
-          <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#0b1522] sm:text-4xl">Sua conta está ativa, mas o perfil de afiliado ainda não foi configurado.</h1>
-          <p className="mt-4 text-sm leading-7 text-[#626a74]">Informe o nome de divulgação e a chave PIX para concluir a ativação vinculada à sua sessão de cliente.</p>
+          <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-[#0b1522] sm:text-4xl">
+            Sua conta está ativa, mas o perfil de afiliado ainda não foi configurado.
+          </h1>
+          <p className="mt-4 text-sm leading-7 text-[#626a74]">
+            Informe o nome de divulgação e a chave PIX para concluir a ativação vinculada à sua sessão de cliente.
+          </p>
 
           <form onSubmit={activateProfile} className="mt-8 space-y-5 border-t border-[#d8d1c6] pt-7">
             <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
               Nome de divulgação
-              <input required minLength={3} value={joinName} onChange={(event) => setJoinName(event.target.value)} className="affiliate-input mt-2" />
+              <input
+                required
+                minLength={3}
+                value={joinName}
+                onChange={(event) => setJoinName(event.target.value)}
+                className="affiliate-input mt-2"
+              />
             </label>
             <div className="grid gap-5 sm:grid-cols-[0.8fr_1.2fr]">
               <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
@@ -318,10 +344,12 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
               </label>
             </div>
             <div className="flex flex-col gap-3 border-t border-[#d8d1c6] pt-6 sm:flex-row">
-              <button disabled={working} className="inline-flex min-h-13 flex-1 items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:opacity-45">
+              <button disabled={working} className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:opacity-45">
                 {working ? 'Ativando perfil...' : 'Ativar perfil de afiliado'} <ArrowRight className="h-4 w-4" />
               </button>
-              <button type="button" onClick={onLogout} className="min-h-13 border border-[#bcb4a8] px-6 text-sm font-bold text-[#59616c] hover:border-[#0b1522] hover:text-[#0b1522]">Sair da conta</button>
+              <button type="button" onClick={onLogout} className="min-h-[52px] border border-[#bcb4a8] px-6 text-sm font-bold text-[#59616c] hover:border-[#0b1522] hover:text-[#0b1522]">
+                Sair da conta
+              </button>
             </div>
           </form>
         </div>
@@ -337,12 +365,16 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1522] text-white">
         <div className="flex h-[72px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3 sm:gap-5">
-            <button type="button" onClick={() => setSidebarOpen(true)} className="p-2 text-white/70 hover:text-white lg:hidden" aria-label="Abrir menu do afiliado"><Menu className="h-5 w-5" /></button>
+            <button type="button" onClick={() => setSidebarOpen(true)} className="p-2 text-white/70 hover:text-white lg:hidden" aria-label="Abrir menu do afiliado">
+              <Menu className="h-5 w-5" />
+            </button>
             <LogoGSA size="sm" variant="light" showText />
             <span className="hidden h-7 w-px bg-white/20 sm:block" aria-hidden="true" />
             <div className="hidden min-w-0 sm:block">
               <p className="truncate text-sm font-semibold">Portal do Afiliado</p>
-              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-[#ddc28d]">Referência {affiliate.codigoPublico}</p>
+              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-[#ddc28d]">
+                Referência {affiliate.codigoPublico}
+              </p>
             </div>
           </div>
 
@@ -399,7 +431,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Portal do Afiliado</p>
                   <p className="mt-1 max-w-[210px] truncate text-sm font-semibold text-[#0b1522]">{affiliate.nomeDivulgacao}</p>
                 </div>
-                <button type="button" onClick={() => setSidebarOpen(false)} className="p-2 text-[#59616c]" aria-label="Fechar menu"><X className="h-5 w-5" /></button>
+                <button type="button" onClick={() => setSidebarOpen(false)} className="p-2 text-[#59616c]" aria-label="Fechar menu">
+                  <X className="h-5 w-5" />
+                </button>
               </div>
               <SidebarNav activeTab={activeTab} onSelect={(tab) => { setSidebarOpen(false); navigateToTab(tab); }} />
             </aside>
@@ -427,7 +461,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#ddc28d]">Resumo da operação</p>
                       <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Olá, {affiliate.nomeDivulgacao}.</h2>
-                      <p className="mt-3 max-w-2xl text-sm leading-6 text-white/58">Acompanhe o desempenho dos links, o estágio das comissões e o saldo disponível para novas solicitações.</p>
+                      <p className="mt-3 max-w-2xl text-sm leading-6 text-white/58">
+                        Acompanhe o desempenho dos links, o estágio das comissões e o saldo disponível para novas solicitações.
+                      </p>
                     </div>
                     <button type="button" onClick={() => navigateToTab('links')} className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#c59a4a] px-5 text-sm font-bold text-[#0b1522] hover:bg-[#ddc28d]">
                       Criar novo link <ArrowRight className="h-4 w-4" />
@@ -449,11 +485,21 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                         <h2 className="text-base font-semibold text-[#0b1522]">Links em operação</h2>
                         <p className="mt-1 text-xs text-[#727a84]">Desempenho dos links criados no portal.</p>
                       </div>
-                      <button type="button" onClick={() => navigateToTab('links')} className="inline-flex items-center gap-1 text-xs font-bold text-[#8d6829] hover:text-[#0b1522]">Ver todos <ChevronRight className="h-4 w-4" /></button>
+                      <button type="button" onClick={() => navigateToTab('links')} className="inline-flex items-center gap-1 text-xs font-bold text-[#8d6829] hover:text-[#0b1522]">
+                        Ver todos <ChevronRight className="h-4 w-4" />
+                      </button>
                     </div>
                     <div className="divide-y divide-[#ebe6de]">
                       {snapshot.links.slice(0, 4).map((link) => <CompactLinkRow key={link.id} link={link} />)}
-                      {snapshot.links.length === 0 && <EmptyState icon={Link2} title="Nenhum link criado" text="Crie seu primeiro link para iniciar o rastreamento das indicações." actionLabel="Criar link" onAction={() => navigateToTab('links')} />}
+                      {snapshot.links.length === 0 && (
+                        <EmptyState
+                          icon={Link2}
+                          title="Nenhum link criado"
+                          text="Crie seu primeiro link para iniciar o rastreamento das indicações."
+                          actionLabel="Criar link"
+                          onAction={() => navigateToTab('links')}
+                        />
+                      )}
                     </div>
                   </section>
 
@@ -475,7 +521,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                           </div>
                         </div>
                       ))}
-                      {recentCommissions.length === 0 && <EmptyState icon={BadgeDollarSign} title="Sem comissões registradas" text="As conversões elegíveis aparecerão aqui quando forem confirmadas." />}
+                      {recentCommissions.length === 0 && (
+                        <EmptyState icon={BadgeDollarSign} title="Sem comissões registradas" text="As conversões elegíveis aparecerão aqui quando forem confirmadas." />
+                      )}
                     </div>
                   </section>
                 </div>
@@ -488,7 +536,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                   <section className="border-t-4 border-[#c59a4a] bg-white p-5 shadow-[0_14px_40px_rgba(11,21,34,0.06)] sm:p-7">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Novo link</p>
                     <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[#0b1522]">Gerar link rastreável</h2>
-                    <p className="mt-2 text-sm leading-6 text-[#69717c]">O destino é validado pelo backend e o código é vinculado ao seu perfil e ao programa escolhido.</p>
+                    <p className="mt-2 text-sm leading-6 text-[#69717c]">
+                      O destino é validado pelo backend e o código é vinculado ao seu perfil e ao programa escolhido.
+                    </p>
 
                     <form onSubmit={createLink} className="mt-7 grid gap-5 sm:grid-cols-2">
                       <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
@@ -503,7 +553,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                           }}
                           className="affiliate-input mt-2"
                         >
-                          {snapshot.programs.map((program) => <option key={program.id} value={program.codigo}>{program.nome} · {program.percentual}%</option>)}
+                          {snapshot.programs.map((program) => (
+                            <option key={program.id} value={program.codigo}>{program.nome} · {program.percentual}%</option>
+                          ))}
                         </select>
                       </label>
 
@@ -515,7 +567,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                       <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864] sm:col-span-2">
                         Destino permitido
                         <input required value={destination} onChange={(event) => setDestination(event.target.value)} className="affiliate-input mt-2 font-mono text-sm" />
-                        <span className="mt-2 block text-[11px] normal-case tracking-normal text-[#7a828c]">Utilize páginas e rotas relacionadas ao programa selecionado.</span>
+                        <span className="mt-2 block text-[11px] normal-case tracking-normal text-[#7a828c]">
+                          Utilize páginas e rotas relacionadas ao programa selecionado.
+                        </span>
                       </label>
 
                       <div className="flex items-center gap-3 border border-[#d8c9aa] bg-[#f8f3e8] p-4 text-xs leading-5 text-[#66583e] sm:col-span-2">
@@ -523,7 +577,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                         Links fora dos destinos autorizados são recusados para proteger a atribuição da comissão.
                       </div>
 
-                      <button disabled={working || !programCode} className="inline-flex min-h-13 items-center justify-center gap-2 bg-[#0b1522] px-6 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45 sm:col-span-2">
+                      <button disabled={working || !programCode} className="inline-flex min-h-[52px] items-center justify-center gap-2 bg-[#0b1522] px-6 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45 sm:col-span-2">
                         {working ? 'Criando link...' : 'Criar link exclusivo'} <ArrowRight className="h-4 w-4" />
                       </button>
                     </form>
@@ -557,7 +611,11 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                   </div>
                   <div className="grid gap-4 lg:grid-cols-2">
                     {snapshot.links.map((link) => <LinkCard key={link.id} link={link} />)}
-                    {snapshot.links.length === 0 && <div className="lg:col-span-2"><EmptyState icon={Link2} title="Nenhum link criado" text="Use o formulário acima para gerar seu primeiro link oficial." /></div>}
+                    {snapshot.links.length === 0 && (
+                      <div className="lg:col-span-2">
+                        <EmptyState icon={Link2} title="Nenhum link criado" text="Use o formulário acima para gerar seu primeiro link oficial." />
+                      </div>
+                    )}
                   </div>
                 </section>
               </div>
@@ -602,7 +660,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                         ))}
                       </tbody>
                     </table>
-                    {snapshot.commissions.length === 0 && <EmptyState icon={BadgeDollarSign} title="Nenhuma comissão registrada" text="As comissões elegíveis serão exibidas aqui após a confirmação das conversões." />}
+                    {snapshot.commissions.length === 0 && (
+                      <EmptyState icon={BadgeDollarSign} title="Nenhuma comissão registrada" text="As comissões elegíveis serão exibidas aqui após a confirmação das conversões." />
+                    )}
                   </div>
                 </section>
               </div>
@@ -626,7 +686,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                   <section className="border-t-4 border-[#c59a4a] bg-white p-5 shadow-[0_14px_40px_rgba(11,21,34,0.06)] sm:p-7">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Nova solicitação</p>
                     <h2 className="mt-3 text-2xl font-semibold text-[#0b1522]">Solicitar pagamento PIX</h2>
-                    <p className="mt-2 text-sm leading-6 text-[#69717c]">O valor é reservado quando a solicitação é registrada e retorna ao saldo se houver cancelamento permitido.</p>
+                    <p className="mt-2 text-sm leading-6 text-[#69717c]">
+                      O valor é reservado quando a solicitação é registrada e retorna ao saldo se houver cancelamento permitido.
+                    </p>
                     <form onSubmit={requestPayout} className="mt-6 space-y-5">
                       <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
                         Valor do saque
@@ -636,7 +698,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                         <div><p className="text-[#7a828c]">Mínimo</p><p className="mt-1 font-bold text-[#0b1522]">{formatCurrency(snapshot.summary.saqueMinimo)}</p></div>
                         <div><p className="text-[#7a828c]">Disponível</p><p className="mt-1 font-bold text-[#0b1522]">{formatCurrency(snapshot.summary.totalDisponivel)}</p></div>
                       </div>
-                      <button disabled={working || snapshot.summary.totalDisponivel < snapshot.summary.saqueMinimo} className="inline-flex min-h-13 w-full items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45">
+                      <button disabled={working || snapshot.summary.totalDisponivel < snapshot.summary.saqueMinimo} className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45">
                         {working ? 'Registrando solicitação...' : 'Solicitar PIX'} <ArrowRight className="h-4 w-4" />
                       </button>
                     </form>
@@ -652,7 +714,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                         <article key={payout.id} className="grid gap-4 px-5 py-5 sm:grid-cols-[1fr_auto] sm:items-center sm:px-6">
                           <div>
                             <p className="text-xl font-semibold tracking-[-0.025em] text-[#0b1522]">{formatCurrency(payout.valor)}</p>
-                            <p className="mt-1 text-xs leading-5 text-[#727a84]">{payout.solicitadoEm ? formatDateTime(payout.solicitadoEm) : 'Data não informada'} · {payout.pixChaveMascarada || 'PIX protegido'}</p>
+                            <p className="mt-1 text-xs leading-5 text-[#727a84]">
+                              {payout.solicitadoEm ? formatDateTime(payout.solicitadoEm) : 'Data não informada'} · {payout.pixChaveMascarada || 'PIX protegido'}
+                            </p>
                             {payout.motivo && <p className="mt-2 text-xs leading-5 text-[#8a4c45]">{payout.motivo}</p>}
                           </div>
                           <div className="flex items-center gap-2 sm:justify-end">
@@ -670,7 +734,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                           </div>
                         </article>
                       ))}
-                      {snapshot.payouts.length === 0 && <EmptyState icon={Banknote} title="Nenhuma solicitação de saque" text="Quando houver saldo disponível, você poderá solicitar o pagamento por esta página." />}
+                      {snapshot.payouts.length === 0 && (
+                        <EmptyState icon={Banknote} title="Nenhuma solicitação de saque" text="Quando houver saldo disponível, você poderá solicitar o pagamento por esta página." />
+                      )}
                     </div>
                   </section>
                 </div>
@@ -701,17 +767,27 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                 <section className="border-t-4 border-[#c59a4a] bg-white p-5 shadow-[0_14px_40px_rgba(11,21,34,0.06)] sm:p-7">
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Conversão para carteira</p>
                   <h2 className="mt-3 text-2xl font-semibold text-[#0b1522]">Resgatar pontos</h2>
-                  <p className="mt-2 text-sm leading-6 text-[#69717c]">O crédito convertido é registrado na carteira conforme a taxa vigente no momento da operação.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#69717c]">
+                    O crédito convertido é registrado na carteira conforme a taxa vigente no momento da operação.
+                  </p>
                   <form onSubmit={redeemPoints} className="mt-7 space-y-5">
                     <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
                       Quantidade de pontos
-                      <input required type="number" min={snapshot.summary.pontosMinimo} max={snapshot.summary.pontos} value={pointsValue} onChange={(event) => setPointsValue(event.target.value)} className="affiliate-input mt-2 font-mono text-base" />
+                      <input
+                        required
+                        type="number"
+                        min={snapshot.summary.pontosMinimo}
+                        max={snapshot.summary.pontos}
+                        value={pointsValue}
+                        onChange={(event) => setPointsValue(event.target.value)}
+                        className="affiliate-input mt-2 font-mono text-base"
+                      />
                     </label>
                     <div className="grid grid-cols-2 gap-3 bg-[#f4f1ea] p-4 text-xs">
                       <div><p className="text-[#7a828c]">Mínimo</p><p className="mt-1 font-bold text-[#0b1522]">{snapshot.summary.pontosMinimo.toLocaleString('pt-BR')} pts</p></div>
                       <div><p className="text-[#7a828c]">Crédito previsto</p><p className="mt-1 font-bold text-emerald-700">{formatCurrency(pointsCredit)}</p></div>
                     </div>
-                    <button disabled={working || !snapshot.summary.pontosAtivo || snapshot.summary.pontos < snapshot.summary.pontosMinimo} className="inline-flex min-h-13 w-full items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45">
+                    <button disabled={working || !snapshot.summary.pontosAtivo || snapshot.summary.pontos < snapshot.summary.pontosMinimo} className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45">
                       {working ? 'Convertendo pontos...' : 'Converter para carteira'} <Coins className="h-4 w-4" />
                     </button>
                   </form>
@@ -724,7 +800,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                 <section className="border-t-4 border-[#c59a4a] bg-white p-5 shadow-[0_14px_40px_rgba(11,21,34,0.06)] sm:p-7">
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Dados operacionais</p>
                   <h2 className="mt-3 text-2xl font-semibold text-[#0b1522]">Perfil e recebimento</h2>
-                  <p className="mt-2 text-sm leading-6 text-[#69717c]">Atualize o nome exibido no portal e a chave utilizada para novas solicitações PIX.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#69717c]">
+                    Atualize o nome exibido no portal e a chave utilizada para novas solicitações PIX.
+                  </p>
                   <form onSubmit={saveProfile} className="mt-7 space-y-5">
                     <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
                       Nome de divulgação
@@ -750,7 +828,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                       <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#8d6829]" />
                       A alteração afeta novas solicitações. Saques anteriores preservam a chave mascarada registrada na operação.
                     </div>
-                    <button disabled={working} className="inline-flex min-h-13 w-full items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45">
+                    <button disabled={working} className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45">
                       <Save className="h-4 w-4" /> {working ? 'Salvando perfil...' : 'Salvar alterações'}
                     </button>
                   </form>
@@ -765,12 +843,16 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                   <div className="border border-[#c9c2b6] bg-white p-5 sm:p-6">
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7a828c]">Termos aceitos</p>
                     <p className="mt-3 text-sm font-semibold text-[#0b1522]">Versão {affiliate.termosVersao || 'vigente'}</p>
-                    <p className="mt-2 text-xs leading-5 text-[#727a84]">{affiliate.termosAceitosEm ? `Aceite registrado em ${formatDateTime(affiliate.termosAceitosEm)}.` : 'Aceite registrado na ativação do perfil.'}</p>
+                    <p className="mt-2 text-xs leading-5 text-[#727a84]">
+                      {affiliate.termosAceitosEm ? `Aceite registrado em ${formatDateTime(affiliate.termosAceitosEm)}.` : 'Aceite registrado na ativação do perfil.'}
+                    </p>
                   </div>
                   <div className="bg-[#0e1b2a] p-5 text-white sm:p-6">
                     <ShieldCheck className="h-6 w-6 text-[#ddc28d]" />
                     <h3 className="mt-4 text-base font-semibold">Proteção dos dados</h3>
-                    <p className="mt-2 text-xs leading-6 text-white/55">A chave PIX completa é utilizada somente nas operações autorizadas. Históricos exibem dados protegidos sempre que aplicável.</p>
+                    <p className="mt-2 text-xs leading-6 text-white/55">
+                      A chave PIX completa é utilizada somente nas operações autorizadas. Históricos exibem dados protegidos sempre que aplicável.
+                    </p>
                   </div>
                 </aside>
               </div>
@@ -800,7 +882,7 @@ function SidebarNav({ activeTab, onSelect }: { activeTab: TabType; onSelect: (ta
               key={id}
               type="button"
               onClick={() => onSelect(id)}
-              className={`flex min-h-11 w-full items-center gap-3 border-l-3 px-3 py-2 text-left text-sm font-semibold transition-colors ${selected ? 'border-[#c59a4a] bg-[#0b1522] text-white' : 'border-transparent text-[#5f6873] hover:bg-[#e9e3d8] hover:text-[#0b1522]'}`}
+              className={`flex min-h-11 w-full items-center gap-3 border-l-[3px] px-3 py-2 text-left text-sm font-semibold transition-colors ${selected ? 'border-[#c59a4a] bg-[#0b1522] text-white' : 'border-transparent text-[#5f6873] hover:bg-[#e9e3d8] hover:text-[#0b1522]'}`}
             >
               <Icon className={`h-4 w-4 ${selected ? 'text-[#ddc28d]' : 'text-[#848c96]'}`} />
               <span className="flex-1">{label}</span>
@@ -813,7 +895,7 @@ function SidebarNav({ activeTab, onSelect }: { activeTab: TabType; onSelect: (ta
   );
 }
 
-function MobileNavItem({ icon: Icon, label, active, onClick }: { icon: LucideIcon; label: string; active: boolean; onClick: () => void }) {
+function MobileNavItem({ icon: Icon, label, active, onClick }: KeyedProps & { icon: LucideIcon; label: string; active: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} className={`flex min-w-[72px] flex-1 flex-col items-center justify-center gap-1 px-2 py-1 text-[10px] transition-colors ${active ? 'font-bold text-[#0b1522]' : 'font-semibold text-[#858c95]'}`}>
       <span className={`flex h-7 w-8 items-center justify-center ${active ? 'bg-[#0b1522] text-[#ddc28d]' : ''}`}><Icon className="h-4 w-4" /></span>
@@ -836,7 +918,7 @@ function MetricCard({ label, value, icon: Icon, detail }: { label: string; value
   );
 }
 
-function LinkCard({ link }: { key?: string; link: AffiliateSnapshot['links'][number] }) {
+function LinkCard({ link }: KeyedProps & { link: AffiliateSnapshot['links'][number] }) {
   const url = affiliateUrl(link);
 
   const copy = async () => {
@@ -849,15 +931,23 @@ function LinkCard({ link }: { key?: string; link: AffiliateSnapshot['links'][num
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="truncate text-base font-semibold text-[#0b1522]">{link.titulo}</p>
-          <p className="mt-1 text-xs text-[#727a84]">{link.programaNome} · código <span className="font-mono font-bold text-[#8d6829]">{link.codigo}</span></p>
+          <p className="mt-1 text-xs text-[#727a84]">
+            {link.programaNome} · código <span className="font-mono font-bold text-[#8d6829]">{link.codigo}</span>
+          </p>
         </div>
-        <span className={`border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${link.ativo ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>{link.ativo ? 'Ativo' : 'Inativo'}</span>
+        <span className={`border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] ${link.ativo ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
+          {link.ativo ? 'Ativo' : 'Inativo'}
+        </span>
       </div>
 
       <div className="mt-4 flex border border-[#d8d1c6] bg-[#f5f2ec]">
         <input readOnly value={url} aria-label={`Link ${link.titulo}`} className="min-w-0 flex-1 bg-transparent px-3 py-3 font-mono text-[11px] text-[#5e6671] outline-none" />
-        <button type="button" onClick={() => void copy()} className="flex w-11 shrink-0 items-center justify-center border-l border-[#d8d1c6] bg-white text-[#0b1522] hover:bg-[#0b1522] hover:text-white" title="Copiar link"><Copy className="h-4 w-4" /></button>
-        <a href={url} target="_blank" rel="noreferrer" className="flex w-11 shrink-0 items-center justify-center border-l border-[#d8d1c6] bg-white text-[#0b1522] hover:bg-[#0b1522] hover:text-white" title="Abrir link"><ExternalLink className="h-4 w-4" /></a>
+        <button type="button" onClick={() => void copy()} className="flex w-11 shrink-0 items-center justify-center border-l border-[#d8d1c6] bg-white text-[#0b1522] hover:bg-[#0b1522] hover:text-white" title="Copiar link">
+          <Copy className="h-4 w-4" />
+        </button>
+        <a href={url} target="_blank" rel="noreferrer" className="flex w-11 shrink-0 items-center justify-center border-l border-[#d8d1c6] bg-white text-[#0b1522] hover:bg-[#0b1522] hover:text-white" title="Abrir link">
+          <ExternalLink className="h-4 w-4" />
+        </a>
       </div>
 
       <dl className="mt-4 grid grid-cols-3 divide-x divide-[#d8d1c6] border-t border-[#d8d1c6] pt-4 text-center">
@@ -869,7 +959,7 @@ function LinkCard({ link }: { key?: string; link: AffiliateSnapshot['links'][num
   );
 }
 
-function CompactLinkRow({ link }: { link: AffiliateSnapshot['links'][number] }) {
+function CompactLinkRow({ link }: KeyedProps & { link: AffiliateSnapshot['links'][number] }) {
   const url = affiliateUrl(link);
   const copy = async () => {
     await copyToClipboard(url);
@@ -880,9 +970,13 @@ function CompactLinkRow({ link }: { link: AffiliateSnapshot['links'][number] }) 
     <div className="grid grid-cols-[1fr_auto] gap-4 px-5 py-4 sm:px-6">
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-[#0b1522]">{link.titulo}</p>
-        <p className="mt-1 text-xs text-[#7a828c]">{link.cliques.toLocaleString('pt-BR')} cliques · {link.conversoes.toLocaleString('pt-BR')} conversões · {formatCurrency(link.comissaoTotal)}</p>
+        <p className="mt-1 text-xs text-[#7a828c]">
+          {link.cliques.toLocaleString('pt-BR')} cliques · {link.conversoes.toLocaleString('pt-BR')} conversões · {formatCurrency(link.comissaoTotal)}
+        </p>
       </div>
-      <button type="button" onClick={() => void copy()} className="flex h-9 w-9 items-center justify-center border border-[#d8d1c6] text-[#0b1522] hover:bg-[#0b1522] hover:text-white" aria-label={`Copiar ${link.titulo}`}><Copy className="h-4 w-4" /></button>
+      <button type="button" onClick={() => void copy()} className="flex h-9 w-9 items-center justify-center border border-[#d8d1c6] text-[#0b1522] hover:bg-[#0b1522] hover:text-white" aria-label={`Copiar ${link.titulo}`}>
+        <Copy className="h-4 w-4" />
+      </button>
     </div>
   );
 }
@@ -901,7 +995,11 @@ function EmptyState({ icon: Icon, title, text, actionLabel, onAction }: { icon: 
       <span className="flex h-11 w-11 items-center justify-center border border-[#c9c2b6] bg-[#f4f1ea] text-[#8d6829]"><Icon className="h-5 w-5" /></span>
       <h3 className="mt-4 text-sm font-semibold text-[#0b1522]">{title}</h3>
       <p className="mt-2 max-w-sm text-xs leading-5 text-[#7a828c]">{text}</p>
-      {actionLabel && onAction && <button type="button" onClick={onAction} className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-[#8d6829] hover:text-[#0b1522]">{actionLabel} <ChevronRight className="h-4 w-4" /></button>}
+      {actionLabel && onAction && (
+        <button type="button" onClick={onAction} className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-[#8d6829] hover:text-[#0b1522]">
+          {actionLabel} <ChevronRight className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }
