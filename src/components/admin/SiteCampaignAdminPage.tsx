@@ -10,7 +10,7 @@ export function SiteCampaignAdminPage() {
     <div className="space-y-6">
       <SiteCampaignAdminModule />
       {isAdmin && <SiteCampaignPermissionMatrix />}
-      {isAdmin && <SiteCampaignDeletionPanel />}
+      <SiteCampaignDeletionPanel />
     </div>
   );
 }
