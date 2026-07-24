@@ -1,6 +1,15 @@
 name: Audit Calculator Pro Voucher and Payment
 
 on:
+  push:
+    branches: ['audit/calculadoras-pro-voucher-pagamento-20260724']
+    paths:
+      - '.github/workflows/audit-calculator-pro-flows.yml'
+      - 'supabase/functions/gsa-free-tools-pro/**'
+      - 'supabase/functions/gsa-free-tools-pro-webhook/**'
+      - 'supabase/migrations/*calculator_pro*.sql'
+      - 'src/components/public/FreeToolsPro*.tsx'
+      - 'src/lib/freeToolsProAccess.ts'
   pull_request:
     branches: [main]
     paths:
