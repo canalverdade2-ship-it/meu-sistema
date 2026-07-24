@@ -2,6 +2,7 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { SiteCampaignBootstrap } from './components/campaigns/SiteCampaignBootstrap';
 import './lib/clientFacingMessageGuard';
 import './index.css';
 import './careers.css';
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <App />
+      <SiteCampaignBootstrap />
     </ErrorBoundary>
   </StrictMode>,
 );
