@@ -26,6 +26,7 @@ on:
       - 'supabase/functions/gsa-free-tools-pro-webhook/**'
       - 'supabase/migrations/*free_tools_pro*.sql'
       - 'supabase/config.toml'
+      - '.github/workflows/free-tools-pro-quality.yml'
 
 concurrency:
   group: free-tools-pro-${{ github.ref }}
