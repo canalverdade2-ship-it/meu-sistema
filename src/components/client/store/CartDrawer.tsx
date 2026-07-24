@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
   ArrowRight,
-  CheckCircle2,
   Gift,
   Minus,
   Package,
@@ -132,7 +131,7 @@ export default function CartDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-end justify-center bg-[#07111f]/72 backdrop-blur-md md:items-stretch md:justify-end"
+      className="fixed inset-0 z-[120] flex items-end justify-center bg-slate-950/60 backdrop-blur-sm md:items-stretch md:justify-end"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -142,69 +141,48 @@ export default function CartDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="gsa-cart-title"
-        className="flex h-[95dvh] w-full flex-col overflow-hidden rounded-t-[24px] border border-slate-200 bg-[#f6f7f9] shadow-[0_-28px_80px_rgba(7,17,31,0.34)] md:h-full md:max-w-[500px] md:rounded-none md:border-y-0 md:border-r-0"
+        className="flex h-[94dvh] w-full flex-col overflow-hidden rounded-t-[22px] border border-slate-200 bg-white shadow-[0_-24px_70px_rgba(15,23,42,0.25)] md:h-full md:max-w-[470px] md:rounded-none md:border-y-0 md:border-r-0"
       >
-        <header className="relative overflow-hidden bg-[#0e2746] px-5 pb-5 pt-4 text-white sm:px-6">
-          <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full border border-white/10" aria-hidden="true" />
-          <div className="pointer-events-none absolute -right-4 -top-10 h-32 w-32 rounded-full bg-[#9b742f]/20 blur-2xl" aria-hidden="true" />
-
-          <div className="relative flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-[#ddc28d] shadow-inner">
-                <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#ddc28d]">GSA Store</p>
-                <h2 id="gsa-cart-title" className="mt-0.5 text-xl font-black tracking-[-0.03em] text-white">Seu carrinho</h2>
-                <p className="mt-0.5 text-xs text-white/60">{cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}</p>
-              </div>
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#17345f] text-white">
+              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white/75 transition hover:bg-white/15 hover:text-white"
-              aria-label="Fechar carrinho"
-            >
-              <X className="h-5 w-5" aria-hidden="true" />
-            </button>
+            <div className="min-w-0">
+              <h2 id="gsa-cart-title" className="text-lg font-black tracking-[-0.025em] text-slate-950">Seu carrinho</h2>
+              <p className="text-xs text-slate-500">{cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}</p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
+            aria-label="Fechar carrinho"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
 
-          <div className="relative mt-4 grid grid-cols-3 gap-2 rounded-[14px] border border-white/10 bg-white/[0.06] p-2.5">
-            {[
-              'Itens revisados',
-              'Valores claros',
-              'Compra protegida',
-            ].map((label) => (
-              <div key={label} className="flex items-center justify-center gap-1.5 text-center text-[9px] font-bold leading-4 text-white/70">
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#ddc28d]" aria-hidden="true" />
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
+        <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           {cartItems.length === 0 ? (
-            <div className="flex min-h-[430px] flex-col items-center justify-center rounded-[22px] border border-slate-200 bg-white px-6 text-center shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
-              <div className="flex h-20 w-20 items-center justify-center rounded-[20px] border border-[#e2d5bc] bg-[#fbf8f2] text-[#9b742f]">
-                <ShoppingBag className="h-9 w-9" aria-hidden="true" />
+            <div className="flex min-h-[430px] flex-col items-center justify-center text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-[20px] border border-slate-200 bg-slate-50">
+                <ShoppingBag className="h-9 w-9 text-slate-300" aria-hidden="true" />
               </div>
-              <p className="mt-5 text-[10px] font-black uppercase tracking-[0.16em] text-[#8b6729]">Sua seleção</p>
-              <h3 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Seu carrinho está vazio</h3>
-              <p className="mt-2 max-w-[290px] text-sm leading-6 text-slate-500">
+              <h3 className="mt-5 text-lg font-extrabold text-slate-950">Seu carrinho está vazio</h3>
+              <p className="mt-2 max-w-[280px] text-sm leading-6 text-slate-500">
                 Continue navegando e escolha os produtos ou planos ideais para você.
               </p>
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#17345f] px-5 text-sm font-black text-white shadow-[0_10px_24px_rgba(23,52,95,0.18)]"
+                className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#17345f] px-5 text-sm font-extrabold text-white"
               >
-                Explorar a loja
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Continuar comprando
               </button>
             </div>
           ) : (
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               {cartItems.map((item) => {
                 const isProduct = item.tipo === 'produto';
                 const outOfStock = isProduct
@@ -217,13 +195,10 @@ export default function CartDrawer({
                 return (
                   <article
                     key={item.id}
-                    className={`relative overflow-hidden rounded-[18px] border bg-white p-3.5 shadow-[0_10px_28px_rgba(15,23,42,0.055)] ${
-                      outOfStock ? 'border-red-200' : 'border-slate-200'
-                    }`}
+                    className={`relative rounded-[16px] border p-3.5 ${outOfStock ? 'border-red-200 bg-red-50/40' : 'border-slate-200 bg-white'}`}
                   >
-                    <div className={`absolute inset-y-0 left-0 w-1 ${outOfStock ? 'bg-red-400' : 'bg-[#9b742f]'}`} aria-hidden="true" />
-                    <div className="flex gap-3.5 pl-1.5">
-                      <div className="flex h-22 w-22 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-slate-200 bg-[#f5f6f8] p-1.5">
+                    <div className="flex gap-3.5">
+                      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
                         {item.item_detalhes?.imagem_url ? (
                           <img
                             src={item.item_detalhes.imagem_url}
@@ -236,14 +211,10 @@ export default function CartDrawer({
                       </div>
 
                       <div className="min-w-0 flex-1 pr-8">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <p className="text-[9px] font-black uppercase tracking-[0.13em] text-[#8b6729]">
-                            {itemTypeLabel(item.tipo)}
-                          </p>
-                          <span className="h-1 w-1 rounded-full bg-slate-300" aria-hidden="true" />
-                          <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-slate-400">GSA Store</span>
-                        </div>
-                        <h3 className="mt-1.5 line-clamp-2 text-sm font-black leading-5 tracking-[-0.015em] text-slate-950">
+                        <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#17345f]">
+                          {itemTypeLabel(item.tipo)}
+                        </p>
+                        <h3 className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-slate-950">
                           {item.item_detalhes?.nome || 'Item da GSA Store'}
                         </h3>
                         {item.prazo_meses && (
@@ -253,7 +224,7 @@ export default function CartDrawer({
                         )}
 
                         {outOfStock ? (
-                          <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-700">
+                          <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-red-700">
                             <AlertCircle className="h-4 w-4" aria-hidden="true" />
                             Item indisponível
                           </div>
@@ -263,24 +234,24 @@ export default function CartDrawer({
                               {hasDiscount && (
                                 <p className="text-[11px] text-slate-400 line-through">{formatCurrency(originalSubtotal)}</p>
                               )}
-                              <p className="text-lg font-black tracking-[-0.03em] text-[#17345f]">{formatCurrency(subtotalForItem)}</p>
+                              <p className="text-base font-black text-[#17345f]">{formatCurrency(subtotalForItem)}</p>
                             </div>
 
                             {isProduct && (
-                              <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-inner">
+                              <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
                                 <button
                                   type="button"
                                   onClick={() => item.quantidade === 1 ? onRemove(item.id) : onUpdateQuantity(item.id, item.quantidade - 1, item.item_detalhes)}
-                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white hover:shadow-sm"
+                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white"
                                   aria-label={item.quantidade === 1 ? 'Remover item' : 'Diminuir quantidade'}
                                 >
                                   {item.quantidade === 1 ? <Trash2 className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
                                 </button>
-                                <span className="w-8 text-center text-xs font-black tabular-nums text-slate-900">{item.quantidade}</span>
+                                <span className="w-8 text-center text-xs font-extrabold tabular-nums text-slate-900">{item.quantidade}</span>
                                 <button
                                   type="button"
                                   onClick={() => onUpdateQuantity(item.id, item.quantidade + 1, item.item_detalhes)}
-                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white hover:shadow-sm"
+                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white"
                                   aria-label="Aumentar quantidade"
                                 >
                                   <Plus className="h-3.5 w-3.5" />
@@ -305,49 +276,47 @@ export default function CartDrawer({
               })}
 
               {activeGifts.map((promotion: PromoResult, index: number) => (
-                <div key={`${promotion.promocao_id}-${index}`} className="flex items-center gap-3 rounded-[18px] border border-[#dfd1b4] bg-[#fbf8f2] p-4 shadow-[0_8px_22px_rgba(155,116,47,0.07)]">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#e7dcc4] bg-white text-[#9b742f]">
+                <div key={`${promotion.promocao_id}-${index}`} className="flex items-center gap-3 rounded-[16px] border border-[#dfd1b4] bg-[#faf7f0] p-3.5">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[#9b742f]">
                     <Gift className="h-5 w-5" aria-hidden="true" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#8b6729]">Benefício incluído</p>
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#8b6729]">Brinde incluído</p>
                     <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{promotion.item_brinde?.produto_nome}</p>
                   </div>
-                  <span className="rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-black text-emerald-700">Grátis</span>
+                  <span className="text-xs font-black text-emerald-700">Grátis</span>
                 </div>
               ))}
 
               {isGuest && (
-                <section className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-[0_8px_22px_rgba(15,23,42,0.04)]">
+                <section className="rounded-[16px] border border-slate-200 bg-slate-50 p-4">
                   <button
                     type="button"
                     onClick={() => setShowCoupons((current) => !current)}
                     className="flex w-full items-center justify-between text-left"
                     aria-expanded={showCoupons}
                   >
-                    <span className="flex items-center gap-2.5 text-sm font-black text-slate-900">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#fbf8f2] text-[#9b742f]">
-                        <Tag className="h-4 w-4" aria-hidden="true" />
-                      </span>
+                    <span className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
+                      <Tag className="h-4 w-4 text-[#9b742f]" aria-hidden="true" />
                       Cupons e benefícios
                     </span>
-                    <span className="rounded-lg bg-[#edf2f7] px-2.5 py-1.5 text-xs font-black text-[#17345f]">{showCoupons ? 'Ocultar' : 'Adicionar'}</span>
+                    <span className="text-xs font-bold text-[#17345f]">{showCoupons ? 'Ocultar' : 'Adicionar'}</span>
                   </button>
 
                   {showCoupons && (
-                    <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
+                    <div className="mt-4 space-y-3">
                       <div className="flex gap-2">
                         <input
                           type="text"
                           value={cupomDescInput}
                           onChange={(event) => onCupomDescInputChange?.(event.target.value.toUpperCase())}
                           placeholder="Cupom de desconto"
-                          className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold uppercase outline-none transition focus:border-[#17345f] focus:bg-white focus:ring-4 focus:ring-[#17345f]/10"
+                          className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold uppercase outline-none focus:border-[#17345f]"
                         />
                         <button
                           type="button"
                           onClick={() => onApplyCoupon?.(cupomDescInput, 'desconto')}
-                          className="rounded-xl bg-[#17345f] px-3 text-xs font-black text-white transition hover:bg-[#102746]"
+                          className="rounded-xl bg-[#17345f] px-3 text-xs font-extrabold text-white"
                         >
                           Aplicar
                         </button>
@@ -358,12 +327,12 @@ export default function CartDrawer({
                           value={cupomEntInput}
                           onChange={(event) => onCupomEntInputChange?.(event.target.value.toUpperCase())}
                           placeholder="Benefício de entrega"
-                          className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold uppercase outline-none transition focus:border-[#17345f] focus:bg-white focus:ring-4 focus:ring-[#17345f]/10"
+                          className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold uppercase outline-none focus:border-[#17345f]"
                         />
                         <button
                           type="button"
                           onClick={() => onApplyCoupon?.(cupomEntInput, 'entrega')}
-                          className="rounded-xl border border-[#17345f] bg-white px-3 text-xs font-black text-[#17345f] transition hover:bg-[#edf2f7]"
+                          className="rounded-xl border border-[#17345f] bg-white px-3 text-xs font-extrabold text-[#17345f]"
                         >
                           Aplicar
                         </button>
@@ -373,19 +342,13 @@ export default function CartDrawer({
                         <div className="space-y-2">
                           {cupomDesconto && (
                             <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs">
-                              <span className="inline-flex items-center gap-1.5 font-bold text-emerald-800">
-                                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                {cupomDesconto.codigo_cupom}
-                              </span>
+                              <span className="font-bold text-emerald-800">{cupomDesconto.codigo_cupom}</span>
                               <button type="button" onClick={() => onRemoveCoupon?.('desconto')} className="font-bold text-emerald-700">Remover</button>
                             </div>
                           )}
                           {cupomEntrega && (
                             <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs">
-                              <span className="inline-flex items-center gap-1.5 font-bold text-emerald-800">
-                                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                                {cupomEntrega.codigo_cupom}
-                              </span>
+                              <span className="font-bold text-emerald-800">{cupomEntrega.codigo_cupom}</span>
                               <button type="button" onClick={() => onRemoveCoupon?.('entrega')} className="font-bold text-emerald-700">Remover</button>
                             </div>
                           )}
@@ -400,26 +363,24 @@ export default function CartDrawer({
         </div>
 
         {cartItems.length > 0 && (
-          <footer className="border-t border-slate-200 bg-white px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-14px_36px_rgba(15,23,42,0.08)] sm:px-6">
-            <div className="rounded-[18px] border border-[#dfd1b4] bg-[#fbf8f2] p-4 shadow-[inset_4px_0_0_#9b742f]">
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>Subtotal</span>
-                  <span className="font-bold text-slate-900">{formatCurrency(subtotal)}</span>
+          <div className="border-t border-slate-200 bg-white px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-6">
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between text-slate-600">
+                <span>Subtotal</span>
+                <span className="font-bold text-slate-900">{formatCurrency(subtotal)}</span>
+              </div>
+              {totalDiscount > 0 && (
+                <div className="flex items-center justify-between text-emerald-700">
+                  <span>Descontos</span>
+                  <span className="font-bold">− {formatCurrency(totalDiscount)}</span>
                 </div>
-                {totalDiscount > 0 && (
-                  <div className="flex items-center justify-between text-emerald-700">
-                    <span>Descontos aplicados</span>
-                    <span className="font-black">− {formatCurrency(totalDiscount)}</span>
-                  </div>
-                )}
-                <div className="flex items-end justify-between border-t border-[#e7dcc4] pt-3">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[#8b6729]">Total dos itens</p>
-                    <p className="mt-1 text-[30px] font-black leading-none tracking-[-0.05em] text-[#17345f]">{formatCurrency(total)}</p>
-                  </div>
-                  <span className="max-w-[130px] text-right text-[10px] leading-4 text-slate-500">Frete e condições finais no checkout</span>
+              )}
+              <div className="flex items-end justify-between border-t border-slate-100 pt-3">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500">Total dos itens</p>
+                  <p className="mt-0.5 text-[26px] font-black leading-none tracking-[-0.04em] text-[#17345f]">{formatCurrency(total)}</p>
                 </div>
+                <span className="text-[11px] text-slate-400">Frete calculado no checkout</span>
               </div>
             </div>
 
@@ -434,7 +395,7 @@ export default function CartDrawer({
               type="button"
               onClick={onCheckout}
               disabled={hasOutOfStockItems}
-              className="mt-4 inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-[#17345f] px-5 py-4 text-sm font-black text-white shadow-[0_14px_30px_rgba(23,52,95,0.22)] transition hover:bg-[#102746] hover:shadow-[0_18px_38px_rgba(23,52,95,0.3)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+              className="mt-4 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-[#17345f] px-5 py-4 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(23,52,95,0.18)] transition hover:bg-[#102746] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
             >
               Ir para o checkout
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -444,7 +405,7 @@ export default function CartDrawer({
               <ShieldCheck className="h-4 w-4 text-[#9b742f]" aria-hidden="true" />
               Preços e estoque serão validados antes da confirmação.
             </div>
-          </footer>
+          </div>
         )}
       </aside>
     </div>
