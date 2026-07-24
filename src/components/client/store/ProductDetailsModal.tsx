@@ -208,7 +208,26 @@ export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd
             </p>
           </div>
 
-          <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
+          {isProduct && item.controle_estoque && (
+            <div className={`mt-6 flex items-center gap-2 rounded-xl border px-3.5 py-3 text-xs font-bold ${
+              outOfStock
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : lowStock
+                  ? 'border-amber-200 bg-amber-50 text-amber-800'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+            }`}>
+              {outOfStock ? <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" /> : <Check className="h-4 w-4 shrink-0" aria-hidden="true" />}
+              <span>
+                {outOfStock
+                  ? 'Produto temporariamente esgotado'
+                  : lowStock
+                    ? `Restam ${item.estoque_disponivel} unidades`
+                    : `${item.estoque_disponivel} unidades disponíveis`}
+              </span>
+            </div>
+          )}
+
+          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
             <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#9b742f]" aria-hidden="true" />
               <div>
@@ -225,24 +244,7 @@ export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd
             </div>
           </div>
 
-          {isProduct && item.controle_estoque && (
-            <div className={`mt-5 flex items-center gap-2 rounded-xl border px-3.5 py-3 text-xs font-bold ${
-              outOfStock
-                ? 'border-red-200 bg-red-50 text-red-700'
-                : lowStock
-                  ? 'border-amber-200 bg-amber-50 text-amber-800'
-                  : 'border-emerald-200 bg-emerald-50 text-emerald-800'
-            }`}>
-              {outOfStock ? <AlertCircle className="h-4 w-4" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
-              {outOfStock
-                ? 'Produto temporariamente esgotado'
-                : lowStock
-                  ? `Restam ${item.estoque_disponivel} unidades`
-                  : `${item.estoque_disponivel} unidades disponíveis`}
-            </div>
-          )}
-
-          <div className="sticky bottom-0 mt-auto bg-white pt-6">
+          <div className="mt-6 bg-white pt-2 md:sticky md:bottom-0 md:mt-auto md:pt-6">
             <button
               type="button"
               disabled={outOfStock}
