@@ -1,17 +1,12 @@
 import type { ComponentProps } from 'react';
-import { ProtectionMarketplace as LegacyProtectionMarketplace } from './ProtectionMarketplaceLegacy';
-import { ProtectionMarketplace as InsuranceDirectQuoteMarketplace } from './InsuranceDirectQuoteMarketplace';
+import { ProtectionMarketplace as DirectQuoteMarketplace } from './InsuranceDirectQuoteMarketplace';
 
 export type ProtectionDomain = 'saude' | 'seguros';
 
-type ProtectionMarketplaceProps = ComponentProps<typeof LegacyProtectionMarketplace>;
+type ProtectionMarketplaceProps = ComponentProps<typeof DirectQuoteMarketplace>;
 
 export function ProtectionMarketplace(props: ProtectionMarketplaceProps) {
-  if (props.domain === 'seguros') {
-    return <InsuranceDirectQuoteMarketplace {...props} domain="seguros" />;
-  }
-
-  return <LegacyProtectionMarketplace {...props} domain="saude" />;
+  return <DirectQuoteMarketplace {...props} />;
 }
 
 export default ProtectionMarketplace;
