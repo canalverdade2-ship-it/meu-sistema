@@ -46,13 +46,42 @@ async function main() {
     'fornecedorId',
     'handleLoginFornecedor',
     "import('./pages/Fornecedor/FornecedorAccessPage')",
+    "import('./pages/Fornecedor/FornecedorLandingPage')",
   ]);
+
+  await contains('src/main.tsx', ["import './supplier-portal.css'"]);
+
+  await contains('src/pages/Fornecedor/FornecedorLandingPage.tsx', [
+    'Central de suprimentos GSA',
+    'Uma operação clara entre a GSA e seus',
+    'Da análise ao recebimento',
+    'Tudo o que sustenta a relação de fornecimento',
+    'supplier-public__workflow',
+  ]);
+  await excludes('src/pages/Fornecedor/FornecedorLandingPage.tsx', [
+    'framer-motion',
+    'bg-gradient-to-r',
+    'blur-[120px]',
+  ]);
+
   await contains('src/pages/Fornecedor/FornecedorAccessPage.tsx', [
-    'Portal exclusivo para fornecedores',
-    "loginWithPin(document.replace(/\\D/g, ''), pin, 'fornecedor')",
+    'Acesso reservado à cadeia de fornecimento GSA',
+    "loginWithPin(documentValue.replace(/\\D/g, ''), pin, 'fornecedor')",
     'gsa_public_register_supplier',
-    'Acesso independente',
+    'Dossiê cadastral',
+    'Solicitação de credenciamento',
+    'consultarCEP',
+    'Confirme a veracidade dos dados antes de enviar',
   ]);
+
+  await contains('src/supplier-portal.css', [
+    '.supplier-public__hero',
+    '.supplier-access__panel',
+    '.min-h-screen.bg-\\[\\#f5f5f2\\].text-neutral-900',
+    '--supplier-copper',
+    '@media (prefers-reduced-motion: reduce)',
+  ]);
+
   await excludes('src/components/auth/RestrictedAccessModal.tsx', ["'fornecedor'", 'gsa_public_register_supplier']);
   await contains('src/components/public/LoginHub.tsx', ['onSupplierAccess', 'Portal do Fornecedor']);
 
