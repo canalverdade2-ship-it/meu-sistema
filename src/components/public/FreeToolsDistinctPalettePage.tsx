@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { FreeToolsExperiencePage } from './FreeToolsExperiencePage';
 
 interface FreeToolsDistinctPalettePageProps {
@@ -6,6 +7,28 @@ interface FreeToolsDistinctPalettePageProps {
 }
 
 const FREE_TOOLS_DISTINCT_PALETTE = `
+  body.gsa-public-free-tools header {
+    border-bottom-color: rgba(168, 188, 169, 0.18) !important;
+    background: rgba(16, 35, 29, 0.96) !important;
+  }
+
+  body.gsa-public-free-tools header [class*="text-[#d8bd73]"],
+  body.gsa-public-free-tools header [class*="text-[#d7b96e]"] {
+    color: #a8bca9 !important;
+  }
+
+  body.gsa-public-free-tools header [class*="border-[#d8bd73]"] {
+    border-color: rgba(168, 188, 169, 0.5) !important;
+  }
+
+  body.gsa-public-free-tools header [class*="bg-[#d8bd73]/"] {
+    background-color: rgba(168, 188, 169, 0.14) !important;
+  }
+
+  body.gsa-public-free-tools header [class*="ring-[#d8bd73]"] {
+    --tw-ring-color: #a8bca9 !important;
+  }
+
   .gsa-free-tools-experience [class*="text-[#d8bd73]"],
   .gsa-free-tools-experience [class*="text-[#efd991]"],
   .gsa-free-tools-experience [class*="text-[#94762f]"],
@@ -93,6 +116,11 @@ const FREE_TOOLS_DISTINCT_PALETTE = `
 `;
 
 export function FreeToolsDistinctPalettePage(props: FreeToolsDistinctPalettePageProps) {
+  useEffect(() => {
+    document.body.classList.add('gsa-public-free-tools');
+    return () => document.body.classList.remove('gsa-public-free-tools');
+  }, []);
+
   return (
     <>
       <FreeToolsExperiencePage {...props} />
