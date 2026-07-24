@@ -1,12 +1,12 @@
 # Auditoria de operação real
 
-Gerada em: 2026-07-24T00:41:44.650Z
+Gerada em: 2026-07-24T00:41:56.069Z
 
-Arquivos executáveis examinados: **336**
+Arquivos executáveis examinados: **335**
 
 Bloqueadores explícitos: **0**
 
-Ocorrências para revisão humana: **32**
+Ocorrências para revisão humana: **24**
 
 ## Bloqueadores
 
@@ -28,14 +28,6 @@ Nenhum bloqueador explícito encontrado.
 - `src/components/public/SystemsExamplesDialog.tsx:335` — Referência a demonstração em código executável — `<div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-300" /><span className="text-[8px] font-black uppercase tracking-wider text-emerald-300">Demonstração ativa</span></div>`
 - `src/components/public/SystemsExamplesDialog.tsx:343` — Referência a demonstração em código executável — `<button type="button" onClick={() => changeModel(selectedIndex - 1)} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition hover:border-cyan-300/35 hover:text-cyan-300" aria-label="Demonstração anterior"><ArrowLeft className="h-4 w-4`
 - `src/components/public/SystemsExamplesDialog.tsx:345` — Referência a demonstração em código executável — `<button type="button" onClick={() => changeModel(selectedIndex + 1)} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition hover:border-cyan-300/35 hover:text-cyan-300" aria-label="Próxima demonstração"><ArrowRight className="h-4 w-4`
-- `src/components/public/SystemsExamplesOrderedDialog.tsx:12` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {`
-- `src/components/public/SystemsExamplesOrderedDialog.tsx:18` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {`
-- `src/components/public/SystemsExamplesOrderedDialog.tsx:22` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {`
-- `src/components/public/SystemsExamplesOrderedDialog.tsx:27` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {`
-- `src/components/public/SystemsExamplesOrderedDialog.tsx:33` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {`
-- `src/components/public/SystemsExamplesOrderedDialog.tsx:39` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {`
-- `src/components/public/SystemsExamplesOrderedDialog.tsx:45` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {`
-- `src/components/public/SystemsExamplesOrderedDialog.tsx:53` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {`
 - `src/components/ui/AccessibleDialog.tsx:31` — Referência a demonstração em código executável — `const isSystemsDemo = ariaLabel?.startsWith('Laboratório de demonstração') ?? false;`
 - `src/components/ui/AccessibleDialog.tsx:41` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {`
 - `src/components/ui/AccessibleDialog.tsx:47` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {`

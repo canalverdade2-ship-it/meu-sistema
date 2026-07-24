@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-24T00:41:44.650Z",
+  "generated_at": "2026-07-24T00:41:56.069Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
-  "scanned_files": 336,
+  "scanned_files": 335,
   "blocker_count": 0,
-  "review_count": 32,
+  "review_count": 24,
   "blockers": [],
   "review": [
     {
@@ -120,70 +120,6 @@
       "file": "src/components/public/SystemsExamplesDialog.tsx",
       "line": 345,
       "excerpt": "<button type=\"button\" onClick={() => changeModel(selectedIndex + 1)} className=\"inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition hover:border-cyan-300/35 hover:text-cyan-300\" aria-label=\"Próxima demonstração\"><ArrowRight className=\"h-4 w-4"
-    },
-    {
-      "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/components/public/SystemsExamplesOrderedDialog.tsx",
-      "line": 12,
-      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) {"
-    },
-    {
-      "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/components/public/SystemsExamplesOrderedDialog.tsx",
-      "line": 18,
-      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > aside:first-child {"
-    },
-    {
-      "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/components/public/SystemsExamplesOrderedDialog.tsx",
-      "line": 22,
-      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > aside:nth-child(3) {"
-    },
-    {
-      "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/components/public/SystemsExamplesOrderedDialog.tsx",
-      "line": 27,
-      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > section:nth-child(2) {"
-    },
-    {
-      "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/components/public/SystemsExamplesOrderedDialog.tsx",
-      "line": 33,
-      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) {"
-    },
-    {
-      "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/components/public/SystemsExamplesOrderedDialog.tsx",
-      "line": 39,
-      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > aside:first-child {"
-    },
-    {
-      "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/components/public/SystemsExamplesOrderedDialog.tsx",
-      "line": 45,
-      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > aside:nth-child(3) {"
-    },
-    {
-      "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/components/public/SystemsExamplesOrderedDialog.tsx",
-      "line": 53,
-      "excerpt": "[role=\"dialog\"][aria-label^=\"Laboratório de demonstração\"] > div > div:nth-child(2) > section:nth-child(2) {"
     },
     {
       "severity": "review",
