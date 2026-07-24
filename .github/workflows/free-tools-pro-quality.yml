@@ -68,3 +68,5 @@ jobs:
 
       - name: Build
         run: npm run build
+
+# Validação técnica: elegibilidade automática de clientes e promoções públicas do Pro.
