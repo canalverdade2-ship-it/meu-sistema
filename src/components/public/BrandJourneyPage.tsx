@@ -26,6 +26,13 @@ import {
   BrandExamplesDialog,
   type BrandExampleCategory,
 } from './BrandExamplesDialog';
+import {
+  BrandInsightDialog,
+  type BrandInsightSelection,
+  type BrandJourneyInsightId,
+  type BrandStartingPointId,
+  type BrandStudioTopic,
+} from './BrandInsightDialog';
 
 const WHATSAPP_NUMBER = '5511920857756';
 const PAGE_TITLE = 'Empresa do Zero ao Digital | Marca, Site e Redes Sociais | GSA HUB';
@@ -96,8 +103,16 @@ const services: BrandService[] = [
   },
 ];
 
-const journey = [
+const journey: Array<{
+  id: BrandJourneyInsightId;
+  number: string;
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+  text: string;
+}> = [
   {
+    id: 'discover',
     number: '01',
     icon: Compass,
     title: 'Descobrir',
@@ -105,6 +120,7 @@ const journey = [
     text: 'Entendemos o negócio, o público, o contexto e a percepção que a empresa precisa construir.',
   },
   {
+    id: 'define',
     number: '02',
     icon: PenTool,
     title: 'Definir',
@@ -112,6 +128,7 @@ const journey = [
     text: 'Organizamos posicionamento, personalidade, mensagem e critérios para orientar todas as decisões.',
   },
   {
+    id: 'express',
     number: '03',
     icon: Sparkles,
     title: 'Expressar',
@@ -119,6 +136,7 @@ const journey = [
     text: 'Transformamos a direção estratégica em nome, logo, cores, tipografia e linguagem visual.',
   },
   {
+    id: 'apply',
     number: '04',
     icon: Rocket,
     title: 'Aplicar',
@@ -127,20 +145,29 @@ const journey = [
   },
 ];
 
-const startingPoints = [
+const startingPoints: Array<{
+  id: BrandStartingPointId;
+  label: string;
+  title: string;
+  description: string;
+  includes: string[];
+}> = [
   {
+    id: 'idea',
     label: 'Tenho apenas uma ideia',
     title: 'Começar pela essência da marca',
     description: 'Diagnóstico, posicionamento, nome e identidade visual para dar forma profissional ao negócio.',
     includes: ['Direção estratégica', 'Nome ou posicionamento', 'Logo e sistema visual'],
   },
   {
+    id: 'existing',
     label: 'Já tenho uma marca',
     title: 'Organizar e profissionalizar a apresentação',
     description: 'Ajuste da identidade, materiais comerciais e padronização dos principais pontos de contato.',
     includes: ['Refinamento visual', 'Materiais institucionais', 'Organização dos canais'],
   },
   {
+    id: 'digital',
     label: 'Quero entrar no digital',
     title: 'Conectar marca, conteúdo e tecnologia',
     description: 'Construção integrada da identidade aos canais digitais, atendimento e lançamento da empresa.',
@@ -193,12 +220,23 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [selectedExample, setSelectedExample] = useState<BrandExampleCategory | null>(null);
+  const [insightSelection, setInsightSelection] = useState<BrandInsightSelection | null>(null);
 
   useEffect(() => applyBrandMetadata(), []);
 
   const openWhatsApp = () => {
     const message = 'Olá! Gostaria de conversar sobre a construção profissional da minha marca e presença digital.';
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const openExamples = (category: BrandExampleCategory) => {
+    setInsightSelection(null);
+    setSelectedExample(category);
+  };
+
+  const openBudget = () => {
+    setInsightSelection(null);
+    setBudgetOpen(true);
   };
 
   return (
@@ -240,7 +278,7 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
               </div>
             </div>
 
-            <BrandStudioBoard />
+            <BrandStudioBoard onOpen={(topic) => setInsightSelection({ kind: 'studio', topic })} />
           </div>
         </section>
 
@@ -273,7 +311,7 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
                   <button
                     key={service.id}
                     type="button"
-                    onClick={() => setSelectedExample(service.id)}
+                    onClick={() => openExamples(service.id)}
                     className={`group relative overflow-hidden border p-6 text-left transition duration-300 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7b5d31] focus-visible:ring-offset-2 ${service.wide ? 'sm:col-span-2' : ''} ${service.dark ? 'border-[#211a14] bg-[#211a14] text-white' : 'border-[#cfc4b5] bg-[#f8f4ed] text-[#211a14]'}`}
                   >
                     <div className="flex items-start justify-between gap-5">
@@ -307,13 +345,19 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
               <h2 className="mt-4 font-serif text-4xl font-semibold leading-tight tracking-[-0.035em] sm:text-5xl">
                 Uma marca profissional nasce de decisões conectadas.
               </h2>
+              <p className="mt-5 text-sm leading-7 text-[#574b3d]">Selecione uma etapa para entender o trabalho realizado, a participação do cliente e as entregas geradas.</p>
             </div>
 
             <div className="mt-12 border-t border-[#9f8865]">
-              {journey.map(({ number, icon: Icon, title, subtitle, text }) => (
-                <article key={number} className="grid gap-4 border-b border-[#9f8865] py-7 sm:grid-cols-[70px_52px_0.65fr_1fr] sm:items-start sm:gap-6 sm:py-8">
+              {journey.map(({ id, number, icon: Icon, title, subtitle, text }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setInsightSelection({ kind: 'journey', id })}
+                  className="group grid w-full gap-4 border-b border-[#9f8865] py-7 text-left transition hover:bg-[#cfba96]/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#5f4523] sm:grid-cols-[70px_52px_0.65fr_1fr_24px] sm:items-start sm:gap-6 sm:px-3 sm:py-8"
+                >
                   <span className="font-serif text-4xl text-[#71552d]">{number}</span>
-                  <span className="flex h-11 w-11 items-center justify-center border border-[#80663f] text-[#5f4523]">
+                  <span className="flex h-11 w-11 items-center justify-center border border-[#80663f] text-[#5f4523] transition group-hover:bg-[#211a14] group-hover:text-[#d8bb7a]">
                     <Icon className="h-5 w-5" />
                   </span>
                   <div>
@@ -321,7 +365,8 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
                     <p className="mt-1 text-[10px] font-black uppercase tracking-[0.15em] text-[#70542c]">{subtitle}</p>
                   </div>
                   <p className="text-sm leading-7 text-[#574b3d]">{text}</p>
-                </article>
+                  <ArrowRight className="hidden h-4 w-4 text-[#71552d] transition-transform group-hover:translate-x-1 sm:block" />
+                </button>
               ))}
             </div>
           </div>
@@ -335,11 +380,17 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
                 <h2 className="mt-4 font-serif text-4xl font-semibold leading-tight tracking-[-0.035em] sm:text-5xl">
                   O ponto de partida muda. A direção profissional permanece.
                 </h2>
+                <p className="mt-5 text-sm leading-7 text-[#675d52]">Escolha o cenário mais próximo da sua realidade para receber uma rota inicial de construção.</p>
               </div>
 
               <div className="border-t border-[#cfc4b5]">
                 {startingPoints.map((item, index) => (
-                  <article key={item.title} className="grid gap-5 border-b border-[#cfc4b5] py-7 sm:grid-cols-[44px_1fr] sm:py-8">
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setInsightSelection({ kind: 'starting', id: item.id })}
+                    className="group grid w-full gap-5 border-b border-[#cfc4b5] py-7 text-left transition hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7b5d31] sm:grid-cols-[44px_1fr_28px] sm:px-3 sm:py-8"
+                  >
                     <span className="font-serif text-3xl text-[#8b7047]">0{index + 1}</span>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#7b5d31]">{item.label}</p>
@@ -353,12 +404,13 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
                           </span>
                         ))}
                       </div>
-                      <button type="button" onClick={() => setBudgetOpen(true)} className="mt-5 inline-flex items-center gap-2 text-sm font-black text-[#211a14] hover:text-[#7b5d31]">
-                        Solicitar uma análise
+                      <span className="mt-5 inline-flex items-center gap-2 text-sm font-black text-[#211a14] group-hover:text-[#7b5d31]">
+                        Ver rota recomendada
                         <ArrowRight className="h-4 w-4" />
-                      </button>
+                      </span>
                     </div>
-                  </article>
+                    <ArrowRight className="mt-1 hidden h-4 w-4 text-[#8b7047] transition-transform group-hover:translate-x-1 sm:block" />
+                  </button>
                 ))}
               </div>
             </div>
@@ -441,6 +493,12 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
         </div>
       </footer>
 
+      <BrandInsightDialog
+        selection={insightSelection}
+        onClose={() => setInsightSelection(null)}
+        onOpenExamples={openExamples}
+        onRequestBudget={openBudget}
+      />
       <BrandExamplesDialog
         category={selectedExample}
         onClose={() => setSelectedExample(null)}
@@ -452,7 +510,7 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
   );
 }
 
-function BrandStudioBoard() {
+function BrandStudioBoard({ onOpen }: { onOpen: (topic: BrandStudioTopic) => void }) {
   return (
     <div className="relative mx-auto w-full max-w-2xl py-5 sm:py-10">
       <div className="absolute left-3 top-0 h-24 w-24 border border-[#c8b89e] bg-[#e8dece]" />
@@ -460,49 +518,72 @@ function BrandStudioBoard() {
       <div className="relative ml-auto w-[92%] border border-[#bcae9b] bg-[#fbf8f2] p-4 shadow-[0_30px_70px_rgba(64,44,24,0.15)] sm:p-6">
         <div className="flex items-center justify-between border-b border-[#d7cec1] pb-3">
           <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#7b5d31]">Painel de direção visual</p>
-          <span className="text-[9px] font-bold text-[#9c8c78]">Conceito demonstrativo</span>
+          <span className="text-[9px] font-bold text-[#9c8c78]">Toque para explorar</span>
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-[1.2fr_0.8fr]">
-          <div className="flex min-h-[260px] flex-col justify-between bg-[#211a14] p-6 text-white">
+          <button
+            type="button"
+            onClick={() => onOpen('positioning')}
+            className="group flex min-h-[260px] flex-col justify-between bg-[#211a14] p-6 text-left text-white transition hover:bg-[#30251d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8a96c]"
+          >
             <div>
               <span className="block h-1 w-12 bg-[#c8a96c]" />
               <p className="mt-5 font-serif text-5xl leading-none">ATELIÊ</p>
               <p className="mt-2 text-[10px] font-black uppercase tracking-[0.25em] text-[#d6bb80]">Forma & essência</p>
             </div>
-            <p className="max-w-xs text-xs leading-5 text-white/50">Uma marca com direção, personalidade e linguagem própria.</p>
-          </div>
+            <div>
+              <p className="max-w-xs text-xs leading-5 text-white/50">Uma marca com direção, personalidade e linguagem própria.</p>
+              <span className="mt-4 inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.16em] text-[#d8bb7a]">Explorar posicionamento <ArrowRight className="h-3 w-3 transition group-hover:translate-x-1" /></span>
+            </div>
+          </button>
 
           <div className="grid gap-4">
-            <div className="border border-[#d7cec1] p-4">
-              <p className="text-[8px] font-black uppercase tracking-[0.18em] text-[#8b765d]">Paleta</p>
+            <button
+              type="button"
+              onClick={() => onOpen('visual')}
+              className="group border border-[#d7cec1] p-4 text-left transition hover:border-[#8e6e3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8e6e3d]"
+            >
+              <p className="text-[8px] font-black uppercase tracking-[0.18em] text-[#8b765d]">Paleta e sistema visual</p>
               <div className="mt-3 grid grid-cols-4 gap-2">
                 <span className="aspect-square bg-[#211a14]" />
                 <span className="aspect-square bg-[#8f6749]" />
                 <span className="aspect-square bg-[#c8a96c]" />
                 <span className="aspect-square border border-[#ddd3c5] bg-[#efe8dc]" />
               </div>
-            </div>
+              <span className="mt-3 inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-[#7b5d31]">Entender as escolhas <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" /></span>
+            </button>
+
             <div className="grid grid-cols-2 gap-3">
-              <div className="aspect-[4/5] bg-[#cdb790] p-3">
-                <span className="text-[8px] font-black uppercase tracking-wider">Manifesto</span>
+              <button
+                type="button"
+                onClick={() => onOpen('audience')}
+                className="group aspect-[4/5] bg-[#cdb790] p-3 text-left transition hover:bg-[#c3ab80] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8e6e3d]"
+              >
+                <span className="text-[8px] font-black uppercase tracking-wider">Mensagem e público</span>
                 <p className="mt-6 font-serif text-lg leading-tight">Menos ruído. Mais significado.</p>
-              </div>
-              <div className="aspect-[4/5] border border-[#d7cec1] bg-white p-3">
+                <span className="mt-5 inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider">Explorar <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" /></span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpen('application')}
+                className="group aspect-[4/5] border border-[#d7cec1] bg-white p-3 text-left transition hover:border-[#8e6e3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8e6e3d]"
+              >
                 <div className="h-16 bg-[#211a14]" />
                 <span className="mt-3 block h-2 w-4/5 bg-[#d5ccbf]" />
                 <span className="mt-2 block h-1.5 w-full bg-[#e5dfd6]" />
                 <span className="mt-1.5 block h-1.5 w-3/4 bg-[#e5dfd6]" />
-              </div>
+                <span className="mt-4 inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider text-[#7b5d31]">Ver aplicações <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" /></span>
+              </button>
             </div>
           </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#d7cec1] pt-4">
-          <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] text-[#766854]">
-            <Target className="h-3.5 w-3.5" /> Posicionamento
-            <Users className="ml-2 h-3.5 w-3.5" /> Público
-            <Globe2 className="ml-2 h-3.5 w-3.5" /> Aplicação
+          <div className="flex flex-wrap items-center gap-3 text-[9px] font-bold uppercase tracking-[0.14em] text-[#766854]">
+            <button type="button" onClick={() => onOpen('positioning')} className="inline-flex items-center gap-1 hover:text-[#211a14]"><Target className="h-3.5 w-3.5" /> Posicionamento</button>
+            <button type="button" onClick={() => onOpen('audience')} className="inline-flex items-center gap-1 hover:text-[#211a14]"><Users className="h-3.5 w-3.5" /> Público</button>
+            <button type="button" onClick={() => onOpen('application')} className="inline-flex items-center gap-1 hover:text-[#211a14]"><Globe2 className="h-3.5 w-3.5" /> Aplicação</button>
           </div>
           <span className="font-serif text-sm italic text-[#7b5d31]">Do conceito ao contato.</span>
         </div>
