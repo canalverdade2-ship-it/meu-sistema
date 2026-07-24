@@ -15,6 +15,147 @@ interface AccessibleDialogProps {
   closeOnBackdrop?: boolean;
 }
 
+const DIALOG_MOBILE_STYLES = `
+  @media (max-width: 767px) {
+    [role="dialog"] {
+      width: calc(100vw - 0.5rem) !important;
+      max-width: calc(100vw - 0.5rem) !important;
+      max-height: calc(100dvh - 0.5rem) !important;
+      margin: 0.25rem !important;
+      border-radius: 0.75rem !important;
+    }
+
+    [role="dialog"] > div {
+      max-height: calc(100dvh - 0.5rem) !important;
+      min-height: 0 !important;
+    }
+
+    [role="dialog"] header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    [role="dialog"] footer {
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom)) !important;
+    }
+
+    [role="dialog"] button {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    [role="dialog"] h1,
+    [role="dialog"] h2,
+    [role="dialog"] h3,
+    [role="dialog"] p,
+    [role="dialog"] span {
+      overflow-wrap: anywhere;
+    }
+  }
+`;
+
+const SYSTEMS_DEMO_STYLES = `
+  [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    overflow-y: auto !important;
+  }
+
+  [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {
+    order: 1;
+  }
+
+  [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {
+    order: 2;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {
+    order: 3;
+    border-top: 0 !important;
+  }
+
+  @media (max-width: 767px) {
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > header {
+      padding: 0.75rem !important;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {
+      padding: 0.85rem !important;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child > div[class*="overflow-x-auto"] {
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child > div[class*="overflow-x-auto"]::-webkit-scrollbar {
+      display: none;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child > div[class*="overflow-x-auto"] > button {
+      min-width: min(74vw, 220px) !important;
+      min-height: 44px;
+      scroll-snap-align: start;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {
+      padding: 1rem !important;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) h3 {
+      font-size: 1.65rem !important;
+      line-height: 1.12 !important;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {
+      min-height: auto !important;
+      padding: 0.75rem !important;
+      overflow: visible !important;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) > div:nth-child(2) {
+      min-height: 280px !important;
+      padding: 0.6rem !important;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) button {
+      min-width: 42px;
+      min-height: 42px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {
+      grid-template-columns: 250px minmax(0, 1fr) !important;
+      grid-template-rows: auto minmax(430px, 1fr) !important;
+      align-items: stretch;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      order: 1;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {
+      grid-column: 2;
+      grid-row: 1;
+      order: 2;
+      border-left-width: 0 !important;
+      border-top-width: 0 !important;
+    }
+
+    [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {
+      grid-column: 2;
+      grid-row: 2;
+      order: 3;
+    }
+  }
+`;
+
 export function AccessibleDialog({
   isOpen,
   onClose,
@@ -36,57 +177,8 @@ export function AccessibleDialog({
 
   return createPortal(
     <>
-      {isSystemsDemo && (
-        <style>{`
-          [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {
-            display: grid !important;
-            grid-template-columns: minmax(0, 1fr) !important;
-            overflow-y: auto !important;
-          }
-
-          [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {
-            order: 1;
-          }
-
-          [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {
-            order: 2;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          }
-
-          [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {
-            order: 3;
-            border-top: 0 !important;
-          }
-
-          @media (min-width: 1024px) {
-            [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {
-              grid-template-columns: 250px minmax(0, 1fr) !important;
-              grid-template-rows: auto minmax(430px, 1fr) !important;
-              align-items: stretch;
-            }
-
-            [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {
-              grid-column: 1;
-              grid-row: 1 / span 2;
-              order: 1;
-            }
-
-            [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {
-              grid-column: 2;
-              grid-row: 1;
-              order: 2;
-              border-left-width: 0 !important;
-              border-top-width: 0 !important;
-            }
-
-            [role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {
-              grid-column: 2;
-              grid-row: 2;
-              order: 3;
-            }
-          }
-        `}</style>
-      )}
+      <style>{DIALOG_MOBILE_STYLES}</style>
+      {isSystemsDemo && <style>{SYSTEMS_DEMO_STYLES}</style>}
 
       <AnimatePresence>
         {isOpen && (
