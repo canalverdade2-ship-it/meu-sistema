@@ -1,0 +1,69 @@
+name: Sync Calculator Pro Migration History
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-calculator-pro-migration-history.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-calculator-pro-migration-history
+  cancel-in-progress: false
+
+jobs:
+  repair-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.101.0
+
+      - name: Link production project
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          supabase link \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Mark Calculator Pro migrations as applied
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration repair \
+            20260723233000 \
+            20260723233500 \
+            20260723234000 \
+            20260724113000 \
+            20260724130000 \
+            --status applied \
+            --linked \
+            --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Verify remote migration history
+        shell: bash
+        run: |
+          set -euo pipefail
+          query="SELECT version, name FROM supabase_migrations.schema_migrations WHERE version IN ('20260723233000','20260723233500','20260723234000','20260724113000','20260724130000') ORDER BY version;"
+          jq -n --arg query "$query" '{query: $query, read_only: true}' > /tmp/payload.json
+          status="$(curl --silent --show-error --output /tmp/result.json --write-out '%{http_code}' --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/payload.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
+          echo "HTTP_STATUS=$status"
+          jq -c . /tmp/result.json
+          test "$status" = '201'
+          test "$(jq 'length' /tmp/result.json)" = '5'
+          echo 'CALCULATOR_PRO_MIGRATION_HISTORY_SYNCED'
