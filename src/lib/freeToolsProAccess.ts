@@ -19,6 +19,7 @@ export interface ProAccessStatus {
   logged_in?: boolean;
   client_active?: boolean;
   client_has_paid_invoice?: boolean;
+  checkout_available?: boolean;
   product?: ProProductInfo | null;
   session_expires_at?: string | null;
 }
@@ -97,7 +98,7 @@ export const freeToolsProAccess = {
     const result = await invoke<{
       success: boolean;
       error?: string;
-      session?: { success?: boolean; token?: string; expires_at?: string; error?: string };
+      session?: { success?: boolean; token?: string; source?: string; expires_at?: string; error?: string };
     }>('redeem_voucher', tool, { code });
     if (result.session?.token) storeProSession(tool, result.session.token);
     return result;
