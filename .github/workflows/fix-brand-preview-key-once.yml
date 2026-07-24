@@ -1,0 +1,44 @@
+name: Fix Brand Preview Key Once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-brand-preview-key-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Remove unsupported key property
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/components/public/BrandPortfolioInteractiveDialog.tsx')
+          content = path.read_text(encoding='utf-8')
+          old = '<PortfolioPreview key={`${category}-${selectedIndex}`} category={category} modelIndex={selectedIndex} signature={model.signature} />'
+          new = '<PortfolioPreview category={category} modelIndex={selectedIndex} signature={model.signature} />'
+          if old not in content:
+              raise SystemExit('Trecho esperado não encontrado; nenhuma alteração aplicada.')
+          path.write_text(content.replace(old, new, 1), encoding='utf-8')
+          Path('.github/workflows/fix-brand-preview-key-once.yml').unlink()
+          PY
+
+      - name: Commit correction
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/public/BrandPortfolioInteractiveDialog.tsx .github/workflows/fix-brand-preview-key-once.yml
+          git commit -m 'Corrige tipagem da prévia de marca'
+          git push origin HEAD:main
