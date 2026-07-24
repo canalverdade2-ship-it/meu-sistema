@@ -7,6 +7,7 @@ import {
   type TerminationReason,
 } from '../../lib/freeToolsCalculations';
 import type { ProToolId } from '../../lib/freeToolsProAccess';
+import { BenefitsFree, BpcFree, ThirteenthFree } from './FreeToolsAdditionalCalculators';
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -53,5 +54,8 @@ function VacationFree() {
 export function FreeToolsSimpleCalculator({ tool }: { tool: ProToolId }) {
   if (tool === 'termination') return <TerminationFree />;
   if (tool === 'retirement') return <RetirementFree />;
-  return <VacationFree />;
+  if (tool === 'vacation') return <VacationFree />;
+  if (tool === 'thirteenth') return <ThirteenthFree />;
+  if (tool === 'benefits') return <BenefitsFree />;
+  return <BpcFree />;
 }
