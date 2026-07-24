@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  inspect-history:
+  register-and-verify-history:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -18,13 +18,27 @@ jobs:
       SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
 
     steps:
-      - name: Inspect migration history table
+      - name: Register Calculator Pro migrations in remote history
         shell: bash
         run: |
           set -euo pipefail
-          query="SELECT jsonb_build_object('columns',(SELECT jsonb_agg(jsonb_build_object('name',column_name,'type',data_type,'nullable',is_nullable) ORDER BY ordinal_position) FROM information_schema.columns WHERE table_schema='supabase_migrations' AND table_name='schema_migrations'),'calculator_versions',(SELECT COALESCE(jsonb_agg(to_jsonb(m) ORDER BY version),'[]'::jsonb) FROM supabase_migrations.schema_migrations m WHERE version IN ('20260723233000','20260723233500','20260723234000','20260724113000','20260724130000'))) AS history;"
+          query="INSERT INTO supabase_migrations.schema_migrations (version, statements, name, created_by) VALUES ('20260723233000', ARRAY[]::text[], 'free_tools_pro_access', 'github-actions'), ('20260723233500', ARRAY[]::text[], 'free_tools_pro_service_permissions', 'github-actions'), ('20260723234000', ARRAY[]::text[], 'free_tools_pro_hardening', 'github-actions'), ('20260724113000', ARRAY[]::text[], 'simplify_calculator_pro_eligibility_and_public_promotions', 'github-actions'), ('20260724130000', ARRAY[]::text[], 'repair_calculator_pro_products', 'github-actions') ON CONFLICT (version) DO UPDATE SET name = EXCLUDED.name, created_by = EXCLUDED.created_by;"
+          jq -n --arg query "$query" '{query: $query, read_only: false}' > /tmp/payload.json
+          status="$(curl --silent --show-error --output /tmp/write-result.json --write-out '%{http_code}' --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/payload.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
+          echo "WRITE_HTTP_STATUS=$status"
+          jq -c . /tmp/write-result.json || cat /tmp/write-result.json
+          test "$status" = '201'
+
+      - name: Verify five migration history entries
+        shell: bash
+        run: |
+          set -euo pipefail
+          query="SELECT version, name, created_by FROM supabase_migrations.schema_migrations WHERE version IN ('20260723233000','20260723233500','20260723234000','20260724113000','20260724130000') ORDER BY version;"
           jq -n --arg query "$query" '{query: $query, read_only: true}' > /tmp/payload.json
           status="$(curl --silent --show-error --output /tmp/result.json --write-out '%{http_code}' --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/payload.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
-          echo "HTTP_STATUS=$status"
+          echo "READ_HTTP_STATUS=$status"
           jq -c . /tmp/result.json
           test "$status" = '201'
+          test "$(jq 'length' /tmp/result.json)" = '5'
+          test "$(jq -r 'map(.version) | join(",")' /tmp/result.json)" = '20260723233000,20260723233500,20260723234000,20260724113000,20260724130000'
+          echo 'CALCULATOR_PRO_MIGRATION_HISTORY_SYNCED'
