@@ -16,4 +16,8 @@ assert.match(panel, /Inicializar configurações/);
 assert.match(migration, /ON CONFLICT \(tool_id\) DO NOTHING/);
 assert.match(migration, /gsa_admin_save_calculator_pro_product/);
 
+// Este contrato impede que uma resposta vazia do banco volte a produzir uma aba sem conteúdo.
+assert.match(panel, /mergeProducts/);
+assert.match(panel, /DEFAULT_PRODUCTS/);
+
 console.log('Contrato de inicialização e recuperação das Calculadoras Pro validado.');
