@@ -34,15 +34,35 @@ const EMPTY: AdvertisingAdminOverview = { requests: [], proposals: [], campaigns
 type Tab = 'requests' | 'proposals' | 'campaigns' | 'creatives' | 'payments' | 'inventory';
 
 const REQUEST_LABELS: Record<AdvertisingRequestStatus, string> = {
-  draft: 'Rascunho', submitted: 'Recebida', under_review: 'Em análise', awaiting_information: 'Aguardando informações',
-  proposal_sent: 'Proposta enviada', negotiation_requested: 'Em negociação', accepted: 'Aceita', rejected: 'Recusada', cancelled: 'Cancelada',
+  draft: 'Rascunho',
+  submitted: 'Recebida',
+  under_review: 'Em análise',
+  awaiting_information: 'Aguardando informações',
+  proposal_sent: 'Proposta enviada',
+  negotiation_requested: 'Em negociação',
+  accepted: 'Aceita',
+  rejected: 'Recusada',
+  cancelled: 'Cancelada',
 };
 const CAMPAIGN_LABELS: Record<AdvertisingCampaignStatus, string> = {
-  draft: 'Rascunho', payment_pending: 'Aguardando pagamento', payment_overdue: 'Pagamento vencido', creative_review: 'Criativo em análise',
-  scheduled: 'Agendada', active: 'Ativa', paused: 'Pausada', completed: 'Concluída', cancelled: 'Cancelada',
+  draft: 'Rascunho',
+  payment_pending: 'Aguardando pagamento',
+  payment_overdue: 'Pagamento vencido',
+  creative_review: 'Criativo em análise',
+  scheduled: 'Agendada',
+  active: 'Ativa',
+  paused: 'Pausada',
+  completed: 'Concluída',
+  cancelled: 'Cancelada',
 };
 const PAYMENT_LABELS: Record<AdvertisingPaymentStatus, string> = {
-  pending: 'Pendente', processing: 'Em processamento', paid: 'Pago', failed: 'Falhou', overdue: 'Vencido', refunded: 'Estornado', cancelled: 'Cancelado',
+  pending: 'Pendente',
+  processing: 'Em processamento',
+  paid: 'Pago',
+  failed: 'Falhou',
+  overdue: 'Vencido',
+  refunded: 'Estornado',
+  cancelled: 'Cancelado',
 };
 
 function money(value: unknown) {
@@ -96,7 +116,12 @@ export function AdvertisingAdminModule() {
       const { data, error } = await supabase.rpc('gsa_admin_advertising_overview');
       if (error) throw error;
       const result = (data || EMPTY) as AdvertisingAdminOverview;
-      setOverview({ requests: result.requests || [], proposals: result.proposals || [], campaigns: result.campaigns || [], placements: result.placements || [] });
+      setOverview({
+        requests: result.requests || [],
+        proposals: result.proposals || [],
+        campaigns: result.campaigns || [],
+        placements: result.placements || [],
+      });
     } catch (error) {
       console.error('Falha ao carregar GSA Anúncios:', error);
       setOverview(EMPTY);
@@ -204,7 +229,8 @@ export function AdvertisingAdminModule() {
     setActionId(reviewCreative.id);
     try {
       await rpc('gsa_admin_review_ad_creative', { p_creative_id: reviewCreative.id, p_approved: reviewApproved, p_reason: reviewApproved ? null : reviewReason.trim() }, reviewApproved ? 'Criativo aprovado.' : 'Criativo devolvido para correção.');
-      setReviewCreative(null); setReviewReason('');
+      setReviewCreative(null);
+      setReviewReason('');
     } catch (error) { toast.error(message(error, 'Não foi possível analisar o criativo.')); }
     finally { setActionId(null); }
   };
@@ -221,7 +247,8 @@ export function AdvertisingAdminModule() {
         p_provider_reference: paymentReference.trim() || paymentAction.payment.provider_reference || null,
         p_payment_method: paymentMethod.trim() || null,
       }, `Pagamento atualizado para ${PAYMENT_LABELS[paymentAction.status]}.`);
-      setPaymentAction(null); setPaymentReference('');
+      setPaymentAction(null);
+      setPaymentReference('');
     } catch (error) { toast.error(message(error, 'Não foi possível atualizar o pagamento.')); }
     finally { setActionId(null); }
   };
@@ -234,7 +261,12 @@ export function AdvertisingAdminModule() {
   };
 
   const openPlacement = (item: AdvertisingPlacement) => {
-    setPlacement(item); setCapacity(String(item.capacity)); setBasePrice(String(item.base_daily_price)); setPlacementActive(item.active); setPlacementExclusive(item.exclusive); setPlacementDevices(item.devices || []);
+    setPlacement(item);
+    setCapacity(String(item.capacity));
+    setBasePrice(String(item.base_daily_price));
+    setPlacementActive(item.active);
+    setPlacementExclusive(item.exclusive);
+    setPlacementDevices(item.devices || []);
   };
 
   const submitPlacement = async (event: FormEvent) => {
@@ -254,9 +286,12 @@ export function AdvertisingAdminModule() {
   };
 
   const tabs: Array<{ id: Tab; label: string; icon: typeof Megaphone }> = [
-    { id: 'requests', label: 'Solicitações', icon: Megaphone }, { id: 'proposals', label: 'Propostas', icon: MessageSquareText },
-    { id: 'campaigns', label: 'Campanhas', icon: CalendarClock }, { id: 'creatives', label: 'Criativos', icon: FileImage },
-    { id: 'payments', label: 'Pagamentos', icon: WalletCards }, { id: 'inventory', label: 'Inventário', icon: BarChart3 },
+    { id: 'requests', label: 'Solicitações', icon: Megaphone },
+    { id: 'proposals', label: 'Propostas', icon: MessageSquareText },
+    { id: 'campaigns', label: 'Campanhas', icon: CalendarClock },
+    { id: 'creatives', label: 'Criativos', icon: FileImage },
+    { id: 'payments', label: 'Pagamentos', icon: WalletCards },
+    { id: 'inventory', label: 'Inventário', icon: BarChart3 },
   ];
 
   if (loading) return <div className="rounded-3xl border border-neutral-200 bg-white p-10 text-center text-sm font-bold text-neutral-500">Carregando GSA Anúncios...</div>;
@@ -278,22 +313,31 @@ export function AdvertisingAdminModule() {
         {tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setTab(id)} className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold ${tab === id ? 'bg-neutral-950 text-white' : 'text-neutral-600 hover:bg-neutral-100'}`}><Icon className="h-4 w-4" />{label}</button>)}
       </div>
 
-      {tab === 'requests' && <div className="space-y-3">
-        <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-neutral-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar protocolo, empresa ou contato" className="w-full rounded-xl border border-neutral-200 bg-white py-2.5 pl-10 pr-4" /></div>
-        {filteredRequests.map((request) => <article key={request.id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap justify-between gap-3"><div><p className="font-mono text-xs font-bold text-amber-700">{request.protocol}</p><h2 className="text-lg font-black">{request.company_name}</h2><p className="text-sm text-neutral-500">{request.contact_name} · {request.contact_email}</p></div><span className="h-fit rounded-full bg-neutral-100 px-3 py-1 text-xs font-black">{REQUEST_LABELS[request.status]}</span></div>
-          <p className="mt-3 text-sm text-neutral-600">{request.objective}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {request.status === 'submitted' && <button disabled={actionId === request.id} onClick={() => void updateRequest(request, 'under_review')} className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white">Iniciar análise</button>}
-            {!['accepted', 'rejected', 'cancelled'].includes(request.status) && <button disabled={actionId === request.id} onClick={() => openProposal(request)} className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black">Criar proposta</button>}
-            {request.advertiser_id && <button disabled={actionId === request.id} onClick={() => void invite(request)} className="flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"><MailPlus className="h-3.5 w-3.5" />Enviar acesso</button>}
-            {!['accepted', 'rejected', 'cancelled'].includes(request.status) && <button disabled={actionId === request.id} onClick={() => void updateRequest(request, 'cancelled')} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700">Cancelar</button>}
-          </div>
-        </article>)}
-        {!filteredRequests.length && <Empty text="Nenhuma solicitação encontrada no banco." />}
-      </div>}
+      {tab === 'requests' && (
+        <div className="space-y-3">
+          <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-neutral-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar protocolo, empresa ou contato" className="w-full rounded-xl border border-neutral-200 bg-white py-2.5 pl-10 pr-4" /></div>
+          {filteredRequests.map((request) => (
+            <article key={request.id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-wrap justify-between gap-3"><div><p className="font-mono text-xs font-bold text-amber-700">{request.protocol}</p><h2 className="text-lg font-black">{request.company_name}</h2><p className="text-sm text-neutral-500">{request.contact_name} · {request.contact_email}</p></div><span className="h-fit rounded-full bg-neutral-100 px-3 py-1 text-xs font-black">{REQUEST_LABELS[request.status]}</span></div>
+              <p className="mt-3 text-sm text-neutral-600">{request.objective}</p>
+              <div className="mt-4 grid gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm sm:grid-cols-2">
+                <div><p className="text-xs font-bold uppercase tracking-wide text-neutral-400">Criação pela GSA</p><p className="mt-1 font-bold text-neutral-700">{request.needs_creative_service ? 'Solicitada' : 'Não solicitada'}</p></div>
+                <div><p className="text-xs font-bold uppercase tracking-wide text-neutral-400">Investimento estimado</p><p className="mt-1 font-bold text-neutral-700">{money(request.intended_budget)}</p></div>
+                {request.notes && <div className="sm:col-span-2"><p className="text-xs font-bold uppercase tracking-wide text-neutral-400">Referência criativa e observações</p><p className="mt-2 whitespace-pre-line leading-6 text-neutral-700">{request.notes}</p></div>}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {request.status === 'submitted' && <button disabled={actionId === request.id} onClick={() => void updateRequest(request, 'under_review')} className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white">Iniciar análise</button>}
+                {!['accepted', 'rejected', 'cancelled'].includes(request.status) && <button disabled={actionId === request.id} onClick={() => openProposal(request)} className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black">Criar proposta</button>}
+                {request.advertiser_id && <button disabled={actionId === request.id} onClick={() => void invite(request)} className="flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"><MailPlus className="h-3.5 w-3.5" />Enviar acesso</button>}
+                {!['accepted', 'rejected', 'cancelled'].includes(request.status) && <button disabled={actionId === request.id} onClick={() => void updateRequest(request, 'cancelled')} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700">Cancelar</button>}
+              </div>
+            </article>
+          ))}
+          {!filteredRequests.length && <Empty text="Nenhuma solicitação encontrada no banco." />}
+        </div>
+      )}
 
-      {tab === 'proposals' && <div className="space-y-3">{overview.proposals.map((proposal) => <article key={proposal.id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{proposal.company_name || `Proposta ${proposal.id.slice(0, 8)}`}</h2><p className="text-sm text-neutral-500">Versão {proposal.current_version} · válida até {date(proposal.valid_until)}</p></div><div className="text-right"><p className="text-lg font-black">{money(proposal.total_amount)}</p><p className="text-xs font-bold uppercase text-neutral-500">{proposal.status}</p></div></div>{proposal.negotiations?.length ? <div className="mt-4 space-y-2 border-t pt-4">{proposal.negotiations.map((item) => <p key={item.id} className="rounded-xl bg-neutral-50 p-3 text-sm"><strong>{item.actor_type === 'admin' ? 'GSA' : 'Anunciante'}:</strong> {item.message}{item.proposed_amount ? ` — ${money(item.proposed_amount)}` : ''}</p>)}</div> : null}</article>)}{!overview.proposals.length && <Empty text="Nenhuma proposta gravada." />}</div>}
+      {tab === 'proposals' && <div className="space-y-3">{overview.proposals.map((proposal) => <ProposalCard key={proposal.id} proposal={proposal} />)}{!overview.proposals.length && <Empty text="Nenhuma proposta gravada." />}</div>}
 
       {tab === 'campaigns' && <div className="space-y-3">{overview.campaigns.map((campaign) => <article key={campaign.id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{campaign.name}</h2><p className="text-sm text-neutral-500">{date(campaign.starts_at)} até {date(campaign.ends_at)}</p></div><span className="h-fit rounded-full bg-neutral-100 px-3 py-1 text-xs font-black">{CAMPAIGN_LABELS[campaign.status]}</span></div><div className="mt-4 flex gap-2">{campaign.status === 'active' && <button onClick={() => void campaignAction(campaign, 'paused')} className="flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"><Pause className="h-3.5 w-3.5" />Pausar</button>}{campaign.status === 'paused' && <button onClick={() => void campaignAction(campaign, 'active')} className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Play className="h-3.5 w-3.5" />Retomar</button>}{!['completed', 'cancelled'].includes(campaign.status) && <button onClick={() => void campaignAction(campaign, 'cancelled')} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-700">Cancelar</button>}</div></article>)}{!overview.campaigns.length && <Empty text="Nenhuma campanha criada." />}</div>}
 
@@ -303,15 +347,18 @@ export function AdvertisingAdminModule() {
 
       {tab === 'inventory' && <div className="grid gap-3 lg:grid-cols-2">{overview.placements.map((item) => <article key={item.id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><div className="flex justify-between gap-3"><div><h2 className="font-black">{item.name}</h2><p className="font-mono text-xs text-neutral-500">{item.code}</p></div><span className={`h-fit rounded-full px-3 py-1 text-xs font-black ${item.active ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-100'}`}>{item.active ? 'Ativa' : 'Inativa'}</span></div><p className="mt-3 text-sm text-neutral-600">Capacidade: {item.capacity} · Preço diário: {money(item.base_daily_price)}</p><button onClick={() => openPlacement(item)} className="mt-4 flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"><Settings2 className="h-3.5 w-3.5" />Configurar</button></article>)}</div>}
 
-      {proposalRequest && <Modal title={`Proposta para ${proposalRequest.company_name}`} onClose={() => setProposalRequest(null)}><form onSubmit={submitProposal} className="space-y-4"><div className="grid gap-3 sm:grid-cols-2"><Input label="Valor" value={amount} onChange={setAmount} type="number" /><Input label="Validade" value={validUntil} onChange={setValidUntil} type="date" /><Input label="Início" value={startsOn} onChange={setStartsOn} type="date" /><Input label="Término" value={endsOn} onChange={setEndsOn} type="date" /></div><select value={frequencyModel} onChange={(e) => setFrequencyModel(e.target.value)} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400"><option value="once_per_session">Uma vez por sessão</option><option value="once_per_day">Uma vez por dia</option><option value="interval_hours">Intervalo em horas</option><option value="daily_limit">Limite diário</option><option value="unlimited">Sem limite individual</option></select>{['interval_hours', 'daily_limit'].includes(frequencyModel) && <Input label="Valor da frequência" value={frequencyValue} onChange={setFrequencyValue} type="number" />}<Input label="Limite total de impressões (opcional)" value={impressionLimit} onChange={setImpressionLimit} type="number" /><textarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={4} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400" /><Submit busy={actionId === proposalRequest.id} text="Gravar proposta e liberar portal" /></form></Modal>}
-      {reviewCreative && <Modal title={reviewApproved ? 'Aprovar criativo' : 'Solicitar correção'} onClose={() => setReviewCreative(null)}><form onSubmit={submitReview} className="space-y-4">{!reviewApproved && <textarea required value={reviewReason} onChange={(e) => setReviewReason(e.target.value)} placeholder="Explique o ajuste necessário" rows={4} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400" />}<Submit busy={actionId === reviewCreative.id} text={reviewApproved ? 'Confirmar aprovação' : 'Devolver para correção'} /></form></Modal>}
+      {proposalRequest && <Modal title={`Proposta para ${proposalRequest.company_name}`} onClose={() => setProposalRequest(null)}><form onSubmit={submitProposal} className="space-y-4"><div className="grid gap-3 sm:grid-cols-2"><Input label="Valor" value={amount} onChange={setAmount} type="number" /><Input label="Validade" value={validUntil} onChange={setValidUntil} type="date" /><Input label="Início" value={startsOn} onChange={setStartsOn} type="date" /><Input label="Término" value={endsOn} onChange={setEndsOn} type="date" /></div><select value={frequencyModel} onChange={(event) => setFrequencyModel(event.target.value)} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400"><option value="once_per_session">Uma vez por sessão</option><option value="once_per_day">Uma vez por dia</option><option value="interval_hours">Intervalo em horas</option><option value="daily_limit">Limite diário</option><option value="unlimited">Sem limite individual</option></select>{['interval_hours', 'daily_limit'].includes(frequencyModel) && <Input label="Valor da frequência" value={frequencyValue} onChange={setFrequencyValue} type="number" />}<Input label="Limite total de impressões (opcional)" value={impressionLimit} onChange={setImpressionLimit} type="number" /><textarea value={terms} onChange={(event) => setTerms(event.target.value)} rows={4} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400" /><Submit busy={actionId === proposalRequest.id} text="Gravar proposta e liberar portal" /></form></Modal>}
+      {reviewCreative && <Modal title={reviewApproved ? 'Aprovar criativo' : 'Solicitar correção'} onClose={() => setReviewCreative(null)}><form onSubmit={submitReview} className="space-y-4">{!reviewApproved && <textarea required value={reviewReason} onChange={(event) => setReviewReason(event.target.value)} placeholder="Explique o ajuste necessário" rows={4} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400" />}<Submit busy={actionId === reviewCreative.id} text={reviewApproved ? 'Confirmar aprovação' : 'Devolver para correção'} /></form></Modal>}
       {paymentAction && <Modal title={`Atualizar pagamento para ${PAYMENT_LABELS[paymentAction.status]}`} onClose={() => setPaymentAction(null)}><form onSubmit={submitPayment} className="space-y-4"><Input label="Referência" value={paymentReference} onChange={setPaymentReference} /><Input label="Método" value={paymentMethod} onChange={setPaymentMethod} /><Submit busy={actionId === paymentAction.payment.id} text="Confirmar atualização" /></form></Modal>}
-      {placement && <Modal title={`Configurar ${placement.name}`} onClose={() => setPlacement(null)}><form onSubmit={submitPlacement} className="space-y-4"><Input label="Capacidade" value={capacity} onChange={setCapacity} type="number" /><Input label="Preço diário" value={basePrice} onChange={setBasePrice} type="number" /><label className="flex gap-2"><input type="checkbox" checked={placementActive} onChange={(e) => setPlacementActive(e.target.checked)} />Posição ativa</label><label className="flex gap-2"><input type="checkbox" checked={placementExclusive} onChange={(e) => setPlacementExclusive(e.target.checked)} />Exclusiva</label><div className="flex gap-3">{['desktop', 'tablet', 'mobile'].map((device) => <label key={device} className="flex gap-1"><input type="checkbox" checked={placementDevices.includes(device)} onChange={() => setPlacementDevices((current) => current.includes(device) ? current.filter((item) => item !== device) : [...current, device])} />{device}</label>)}</div><Submit busy={actionId === placement.id} text="Salvar inventário" /></form></Modal>}
+      {placement && <Modal title={`Configurar ${placement.name}`} onClose={() => setPlacement(null)}><form onSubmit={submitPlacement} className="space-y-4"><Input label="Capacidade" value={capacity} onChange={setCapacity} type="number" /><Input label="Preço diário" value={basePrice} onChange={setBasePrice} type="number" /><label className="flex gap-2"><input type="checkbox" checked={placementActive} onChange={(event) => setPlacementActive(event.target.checked)} />Posição ativa</label><label className="flex gap-2"><input type="checkbox" checked={placementExclusive} onChange={(event) => setPlacementExclusive(event.target.checked)} />Exclusiva</label><div className="flex gap-3">{['desktop', 'tablet', 'mobile'].map((device) => <label key={device} className="flex gap-1"><input type="checkbox" checked={placementDevices.includes(device)} onChange={() => setPlacementDevices((current) => current.includes(device) ? current.filter((item) => item !== device) : [...current, device])} />{device}</label>)}</div><Submit busy={actionId === placement.id} text="Salvar inventário" /></form></Modal>}
     </section>
   );
 }
 
+function ProposalCard({ proposal }: { proposal: AdvertisingProposal; key?: string }) {
+  return <article className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{proposal.company_name || `Proposta ${proposal.id.slice(0, 8)}`}</h2><p className="text-sm text-neutral-500">Versão {proposal.current_version} · válida até {date(proposal.valid_until)}</p></div><div className="text-right"><p className="text-lg font-black">{money(proposal.total_amount)}</p><p className="text-xs font-bold uppercase text-neutral-500">{proposal.status}</p></div></div>{proposal.negotiations?.length ? <div className="mt-4 space-y-2 border-t pt-4">{proposal.negotiations.map((item) => <p key={item.id} className="rounded-xl bg-neutral-50 p-3 text-sm"><strong>{item.actor_type === 'admin' ? 'GSA' : 'Anunciante'}:</strong> {item.message}{item.proposed_amount ? ` — ${money(item.proposed_amount)}` : ''}</p>)}</div> : null}</article>;
+}
 function Empty({ text }: { text: string }) { return <div className="rounded-2xl border border-dashed border-neutral-200 bg-white p-10 text-center text-sm font-bold text-neutral-400">{text}</div>; }
-function Input({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) { return <label className="block text-sm font-bold">{label}<input required={label !== 'Limite total de impressões (opcional)'} type={type} value={value} onChange={(e) => onChange(e.target.value)} className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400 font-normal" /></label>; }
+function Input({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) { return <label className="block text-sm font-bold">{label}<input required={label !== 'Limite total de impressões (opcional)'} type={type} value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 font-normal outline-none focus:border-amber-400" /></label>; }
 function Submit({ busy, text }: { busy: boolean; text: string }) { return <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-4 py-3 font-black text-white disabled:opacity-50">{busy ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{text}</button>; }
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) { return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-2xl"><div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-black">{title}</h2><button type="button" onClick={onClose}><XCircle className="h-6 w-6" /></button></div>{children}</div></div>; }
