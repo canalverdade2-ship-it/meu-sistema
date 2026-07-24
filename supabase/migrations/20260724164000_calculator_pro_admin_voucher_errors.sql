@@ -35,7 +35,7 @@ BEGIN
     UPDATE public.gsa_calculator_pro_vouchers
        SET status = 'expired'
      WHERE id = v_voucher.id;
-    RAISE EXCEPTION 'Voucher expirado não pode ser reativado' USING ERRCODE = '22023';
+    RETURN jsonb_build_object('success', false, 'error', 'voucher_expired', 'status', 'expired');
   END IF;
 
   UPDATE public.gsa_calculator_pro_vouchers
