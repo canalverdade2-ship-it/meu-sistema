@@ -52,12 +52,19 @@ await includes('supabase/migrations/20260721194900_restore_admin_travel_rpcs.sql
 
 await includes('supabase/migrations/20260724200000_protection_direct_quote_cleanup.sql', [
   'Somente o GSA Seguros deixa de funcionar como catálogo interno.',
-  'GSA Saúde e GSA Viagens permanecem com seus catálogos atuais.',
   'gsa_client_seguros_criar_cotacao',
-  'O cadastro de produtos e ofertas de seguros foi descontinuado.',
   'DROP VIEW IF EXISTS public.seguros_ofertas_publicas CASCADE',
-  "WHEN 'saude_produtos'",
   'public.gsa_admin_resource_config(p_resource text)',
+  "p_payload - ARRAY['request_id', 'consentimento']",
+]);
+
+await includes('supabase/migrations/20260724213000_saude_direct_quote_cleanup.sql', [
+  'O GSA Saúde passa a operar exclusivamente por solicitação de cotação.',
+  'O GSA Viagens permanece integralmente com cadastro e catálogo de pacotes.',
+  'gsa_client_saude_criar_cotacao',
+  'gsa_catalogo_legado_arquivo',
+  'DROP VIEW IF EXISTS public.saude_planos_publicos CASCADE',
+  'O cadastro de produtos, planos e seguros foi descontinuado.',
   "p_payload - ARRAY['request_id', 'consentimento']",
 ]);
 
@@ -68,11 +75,12 @@ await includes('scripts/verify-restored-admin-foundations.sql', [
   '20260721194800',
   '20260721194900',
   '20260724200000',
+  '20260724213000',
   'gsa_admin_get_pendency_counts_secure(uuid,text)',
   'gsa_admin_search_clients(uuid,text,text,integer)',
   'gsa_admin_travel_create_package(uuid,text,jsonb)',
-  'Catálogo do GSA Saúde não foi preservado',
-  'Estruturas obsoletas do catálogo de Seguros ainda existem',
+  'Estruturas obsoletas dos catálogos de Saúde ou Seguros ainda existem',
+  'Arquivo histórico do catálogo legado ausente',
 ]);
 
-console.log('Fundações administrativas, Viagens e isolamento da cotação direta de Seguros validados.');
+console.log('Fundações administrativas, Viagens e cotações diretas de Saúde e Seguros validadas.');

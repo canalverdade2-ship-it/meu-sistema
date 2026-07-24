@@ -15,11 +15,12 @@ BEGIN
      '20260721194700',
      '20260721194800',
      '20260721194900',
-     '20260724200000'
+     '20260724200000',
+     '20260724213000'
    );
 
-  IF v_required <> 8 THEN
-    RAISE EXCEPTION 'Histórico das fundações e da limpeza de Seguros incompleto: % de 8 migrations', v_required;
+  IF v_required <> 9 THEN
+    RAISE EXCEPTION 'Histórico das fundações e das cotações diretas incompleto: % de 9 migrations', v_required;
   END IF;
 
   IF to_regprocedure('public.gsa_admin_get_pendency_counts_secure(uuid,text)') IS NULL THEN
@@ -56,54 +57,64 @@ BEGIN
      OR to_regclass('public.seguros_cotacoes') IS NULL
      OR to_regclass('public.seguros_propostas') IS NULL
      OR to_regclass('public.saude_parceiros') IS NULL
-     OR to_regclass('public.saude_produtos') IS NULL
      OR to_regclass('public.saude_cotacoes') IS NULL
-     OR to_regclass('public.saude_propostas') IS NULL
-     OR to_regclass('public.saude_planos_publicos') IS NULL THEN
-    RAISE EXCEPTION 'Catálogo do GSA Saúde não foi preservado ou estruturas operacionais estão incompletas';
+     OR to_regclass('public.saude_propostas') IS NULL THEN
+    RAISE EXCEPTION 'Estruturas operacionais de Saúde ou Seguros incompletas';
   END IF;
 
   IF to_regclass('public.seguros_produtos') IS NOT NULL
      OR to_regclass('public.seguros_ofertas') IS NOT NULL
-     OR to_regclass('public.seguros_ofertas_publicas') IS NOT NULL THEN
-    RAISE EXCEPTION 'Estruturas obsoletas do catálogo de Seguros ainda existem';
+     OR to_regclass('public.seguros_ofertas_publicas') IS NOT NULL
+     OR to_regclass('public.saude_produtos') IS NOT NULL
+     OR to_regclass('public.saude_planos') IS NOT NULL
+     OR to_regclass('public.saude_planos_publicos') IS NOT NULL
+     OR to_regclass('public.saude_operadoras') IS NOT NULL
+     OR to_regclass('public.saude_regioes') IS NOT NULL THEN
+    RAISE EXCEPTION 'Estruturas obsoletas dos catálogos de Saúde ou Seguros ainda existem';
   END IF;
 
-  v_signature := 'public.gsa_client_seguros_criar_cotacao(uuid,text,jsonb,uuid)';
-  IF to_regprocedure(v_signature) IS NULL THEN
-    RAISE EXCEPTION 'RPC de cotação direta de Seguros ausente';
-  END IF;
-  IF has_function_privilege('anon', v_signature, 'EXECUTE')
-     OR NOT has_function_privilege('authenticated', v_signature, 'EXECUTE') THEN
-    RAISE EXCEPTION 'Privilégios incorretos na RPC de cotação direta de Seguros';
-  END IF;
+  FOREACH v_signature IN ARRAY ARRAY[
+    'public.gsa_client_saude_criar_cotacao(uuid,text,jsonb,uuid)',
+    'public.gsa_client_seguros_criar_cotacao(uuid,text,jsonb,uuid)'
+  ] LOOP
+    IF to_regprocedure(v_signature) IS NULL THEN
+      RAISE EXCEPTION 'RPC de cotação direta ausente: %', v_signature;
+    END IF;
+    IF has_function_privilege('anon', v_signature, 'EXECUTE')
+       OR NOT has_function_privilege('authenticated', v_signature, 'EXECUTE') THEN
+      RAISE EXCEPTION 'Privilégios incorretos na RPC de cotação direta: %', v_signature;
+    END IF;
+  END LOOP;
 
-  IF public.gsa_admin_resource_config('saude_produtos') IS NULL THEN
-    RAISE EXCEPTION 'Cadastro de produtos do GSA Saúde deixou de ser permitido';
-  END IF;
-
-  IF public.gsa_admin_resource_config('seguros_produtos') IS NOT NULL THEN
-    RAISE EXCEPTION 'Catálogo de Seguros ainda exposto pela API administrativa';
+  IF public.gsa_admin_resource_config('saude_produtos') IS NOT NULL
+     OR public.gsa_admin_resource_config('seguros_produtos') IS NOT NULL THEN
+    RAISE EXCEPTION 'Catálogo obsoleto ainda exposto pela API administrativa';
   END IF;
 
   IF EXISTS (
     SELECT 1
       FROM information_schema.columns
      WHERE table_schema = 'public'
-       AND table_name IN ('seguros_cotacoes', 'seguros_propostas', 'seguros_apolices')
-       AND column_name IN ('produto_id', 'oferta_id')
+       AND table_name IN (
+         'saude_cotacoes',
+         'saude_propostas',
+         'saude_contratos',
+         'seguros_cotacoes',
+         'seguros_propostas',
+         'seguros_apolices'
+       )
+       AND column_name IN ('produto_id', 'plano_id', 'oferta_id')
   ) THEN
-    RAISE EXCEPTION 'Referências obsoletas ao catálogo de Seguros ainda existem nas tabelas operacionais';
+    RAISE EXCEPTION 'Referências obsoletas aos catálogos ainda existem nas tabelas operacionais';
   END IF;
 
-  IF NOT EXISTS (
-    SELECT 1
-      FROM information_schema.columns
-     WHERE table_schema = 'public'
-       AND table_name = 'saude_propostas'
-       AND column_name = 'produto_id'
-  ) THEN
-    RAISE EXCEPTION 'Vínculo de produto das propostas do GSA Saúde não foi preservado';
+  IF to_regclass('public.gsa_catalogo_legado_arquivo') IS NULL THEN
+    RAISE EXCEPTION 'Arquivo histórico do catálogo legado ausente';
+  END IF;
+
+  IF has_table_privilege('anon', 'public.gsa_catalogo_legado_arquivo', 'SELECT')
+     OR has_table_privilege('authenticated', 'public.gsa_catalogo_legado_arquivo', 'SELECT') THEN
+    RAISE EXCEPTION 'Arquivo histórico do catálogo legado exposto a usuários comuns';
   END IF;
 
   IF has_function_privilege('anon', 'public.gsa_admin_get_pendency_counts_secure(uuid,text)', 'EXECUTE')
@@ -130,8 +141,14 @@ BEGIN
      WHERE table_schema = 'public'
        AND table_name = 'seguros_cotacoes'
        AND column_name = 'idempotency_key'
+  ) OR NOT EXISTS (
+    SELECT 1
+      FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'saude_cotacoes'
+       AND column_name = 'idempotency_key'
   ) THEN
-    RAISE EXCEPTION 'Cotação direta de Seguros sem proteção de idempotência';
+    RAISE EXCEPTION 'Cotações diretas sem proteção de idempotência';
   END IF;
 END $$;
 
