@@ -18,7 +18,8 @@ assert.match(api, /CHECKOUT_RATE_LIMIT_MAX/);
 assert.match(api, /VOUCHER_RATE_LIMIT_MAX/);
 assert.match(api, /Number\(result\.amount \|\| 0\) !== Number\(payment\.valor_centavos \|\| 0\)/);
 assert.match(api, /duracao_acesso_minutos: durationMinutes/);
-assert.match(api, /CASE WHEN|clientId \? null : visitorHash/);
+assert.match(api, /visitor_token_hash: client\?\.id \? null : visitorHash/);
+assert.match(api, /!payment\.cliente_id && payment\.visitor_token_hash/);
 
 assert.match(webhook, /await verifyAndFinalize\(payload\)/);
 assert.match(webhook, /return json\(400/);
