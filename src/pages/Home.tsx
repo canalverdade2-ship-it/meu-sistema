@@ -15,7 +15,7 @@ import {
 import { usePublicPageMetadata } from '../hooks/usePublicPageMetadata';
 import { fetchPublicServiceCatalog } from '../lib/serviceCatalog';
 
-const DistinctSystemsBrandPage = lazy(() => import('../components/public/DistinctSystemsBrandPage').then((module) => ({ default: module.DistinctSystemsBrandPage })));
+const FinalDistinctSystemsBrandPage = lazy(() => import('../components/public/FinalDistinctSystemsBrandPage').then((module) => ({ default: module.FinalDistinctSystemsBrandPage })));
 const AdvertisingPage = lazy(() => import('../components/public/AdvertisingPage').then((module) => ({ default: module.AdvertisingPage })));
 
 interface HomeProps {
@@ -169,7 +169,7 @@ export function Home({
         />
       ) : publicPage === 'systems' ? (
         <Suspense fallback={<PublicPageLoading />}>
-          <DistinctSystemsBrandPage onBack={() => changePublicPage('home')} onLogin={handlePublicLogin} />
+          <FinalDistinctSystemsBrandPage onBack={() => changePublicPage('home')} onLogin={handlePublicLogin} />
         </Suspense>
       ) : publicPage === 'ads' || publicPage === 'advertise' ? (
         <Suspense fallback={<PublicPageLoading />}>
