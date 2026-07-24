@@ -29,6 +29,11 @@ assertContains('src/main.tsx', ["import './gsa-store.css';"]);
 
 assertContains('src/gsa-store.css', [
   '--gsa-store-navy: #17345f',
+  '--gsa-store-gold-strong: #b68a3b',
+  'GSA STORE',
+  'Uma experiência de compra clara, segura e acompanhada',
+  'COMPRA PROTEGIDA',
+  'SELEÇÃO GSA STORE',
   'body:has(#storeSearchInput)',
   '[role="dialog"]',
   '@media (max-width: 767px)',
@@ -40,6 +45,9 @@ assertContains('src/components/client/store/StoreItemCard.tsx', [
   'loading="lazy"',
   "{isOutOfStock ? 'Indisponível' : 'Adicionar'}",
   'aria-label={`Ver detalhes de ${item.nome}`}',
+  'Pedido acompanhado pelo portal GSA',
+  'GSA Store',
+  'Destaque',
 ]);
 assertNotContains('src/components/client/store/StoreItemCard.tsx', [
   'animate-bounce',
@@ -48,7 +56,11 @@ assertNotContains('src/components/client/store/StoreItemCard.tsx', [
 ]);
 
 assertContains('src/components/client/store/ProductDetailsModal.tsx', [
+  'Experiência GSA Store',
+  'Seleção GSA Store',
+  'Ambiente institucional',
   'Compra protegida',
+  'Atendimento GSA',
   'Entrega acompanhada',
   'aria-label="Imagem anterior"',
   'Produto temporariamente esgotado',
@@ -88,7 +100,10 @@ assertNotContains('src/components/client/store/AvailableCouponsModal.tsx', [
 
 assertContains('src/components/client/store/CartDrawer.tsx', [
   'Seu carrinho',
-  'Frete calculado no checkout',
+  'Itens revisados',
+  'Valores claros',
+  'Compra protegida',
+  'Frete e condições finais no checkout',
   'Preços e estoque serão validados antes da confirmação.',
   'Remova os itens indisponíveis para continuar.',
   'aria-labelledby="gsa-cart-title"',
@@ -111,4 +126,4 @@ assertContains('src/components/client/store/StoreHubPurchases.tsx', [
   'Pedidos cancelados permanecem disponíveis para consulta e histórico.',
 ]);
 
-console.log('Experiência completa da GSA Store validada.');
+console.log('Experiência premium completa da GSA Store validada.');
