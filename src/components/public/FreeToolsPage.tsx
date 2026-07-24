@@ -28,7 +28,7 @@ interface FreeToolsPageProps {
 }
 
 interface ToolCard {
-  id: FreeToolId | 'thirteenth' | 'benefits' | 'bpc';
+  id: FreeToolId;
   icon: ComponentType<{ className?: string }>;
   number: string;
   title: string;
@@ -43,13 +43,12 @@ const TOOLS: ToolCard[] = [
   { id: 'termination', icon: BriefcaseBusiness, number: '01', title: 'Rescisão trabalhista', description: 'Estimativa das principais verbas de encerramento de um vínculo CLT.', category: 'Trabalhista', useCase: 'Para compreender a composição aproximada da rescisão antes da conferência oficial.', includes: ['Saldo de salário', 'Aviso-prévio', '13º e férias', 'Multa estimada do FGTS'], available: true },
   { id: 'retirement', icon: Landmark, number: '02', title: 'Aposentadoria pelo INSS', description: 'Panorama inicial da regra geral e de duas regras de transição consideradas em 2026.', category: 'Previdenciário', useCase: 'Para comparar idade e contribuição com critérios previdenciários básicos.', includes: ['Regra geral', 'Regra dos pontos', 'Idade progressiva', 'Pendências por requisito'], available: true },
   { id: 'vacation', icon: Palmtree, number: '03', title: 'Cálculo de férias', description: 'Estimativa bruta da remuneração de férias e do adicional constitucional de um terço.', category: 'Trabalhista', useCase: 'Para visualizar o valor bruto antes dos descontos e das condições específicas do vínculo.', includes: ['Salário mensal', 'Médias variáveis', 'Adicional de 1/3', 'Total bruto estimado'], available: true },
-  { id: 'thirteenth', icon: HandCoins, number: '04', title: '13º salário', description: 'Simulação das parcelas e do valor proporcional aos meses trabalhados.', category: 'Trabalhista', useCase: 'Para visualizar a formação aproximada do décimo terceiro salário.', includes: ['Meses trabalhados', 'Primeira parcela', 'Segunda parcela', 'Valor proporcional'], available: false },
-  { id: 'benefits', icon: Baby, number: '05', title: 'Benefícios do INSS', description: 'Orientação inicial sobre incapacidade, salário-maternidade, pensão e outros benefícios.', category: 'Previdenciário', useCase: 'Para identificar as informações necessárias antes de uma análise completa.', includes: ['Tipo de benefício', 'Qualidade de segurado', 'Carência', 'Documentação inicial'], available: false },
-  { id: 'bpc', icon: HeartHandshake, number: '06', title: 'BPC / LOAS', description: 'Triagem educativa dos critérios básicos do benefício assistencial.', category: 'Assistencial', useCase: 'Para compreender os pontos normalmente avaliados em um pedido.', includes: ['Renda familiar', 'Grupo familiar', 'Impedimento de longo prazo', 'Cadastro social'], available: false },
+  { id: 'thirteenth', icon: HandCoins, number: '04', title: '13º salário', description: 'Simulação das parcelas e do valor proporcional aos meses trabalhados.', category: 'Trabalhista', useCase: 'Para visualizar a formação aproximada do décimo terceiro salário.', includes: ['Meses trabalhados', 'Primeira parcela', 'Segunda parcela', 'Valor proporcional'], available: true },
+  { id: 'benefits', icon: Baby, number: '05', title: 'Benefícios do INSS', description: 'Orientação inicial sobre incapacidade, salário-maternidade, pensão e outros benefícios.', category: 'Previdenciário', useCase: 'Para identificar as informações necessárias antes de uma análise completa.', includes: ['Tipo de benefício', 'Qualidade de segurado', 'Carência', 'Documentação inicial'], available: true },
+  { id: 'bpc', icon: HeartHandshake, number: '06', title: 'BPC / LOAS', description: 'Triagem educativa dos critérios básicos do benefício assistencial.', category: 'Assistencial', useCase: 'Para compreender os pontos normalmente avaliados em um pedido.', includes: ['Renda familiar', 'Grupo familiar', 'Impedimento de longo prazo', 'Cadastro social'], available: true },
 ];
 
 const AVAILABLE_TOOLS = TOOLS.filter((tool) => tool.available);
-const FUTURE_TOOLS = TOOLS.filter((tool) => !tool.available);
 
 export function FreeToolsPage({ onBack, onServices, onClientLogin }: FreeToolsPageProps) {
   const [activeTool, setActiveTool] = useState<FreeToolId | null>(null);
@@ -103,7 +102,20 @@ export function FreeToolsPage({ onBack, onServices, onClientLogin }: FreeToolsPa
         </div>
       </section>
 
-      <section className="border-y border-[#d7d1c6] bg-[#f8f5ef] py-12 sm:py-16"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806128]">Próximas ferramentas</p><h2 className="mt-3 text-2xl font-black tracking-[-0.03em] text-[#111820] sm:text-3xl">Novas consultas em desenvolvimento.</h2></div><p className="max-w-lg text-sm leading-6 text-[#667078]">Essas opções aparecem somente como previsão da evolução da área e ainda não recebem dados do usuário.</p></div><div className="mt-8 grid gap-4 md:grid-cols-3">{FUTURE_TOOLS.map(({ id, icon: Icon, number, title, description, category }) => <article key={id} className="rounded-2xl border border-[#d7d1c6] bg-white/55 p-5 sm:p-6"><div className="flex items-start justify-between gap-4"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6e1d8] text-[#737b80]"><Icon className="h-5 w-5" /></span><span className="text-[10px] font-black tracking-[0.18em] text-[#9a8a68]">{number}</span></div><p className="mt-5 text-[9px] font-black uppercase tracking-[0.15em] text-[#887a5d]">{category}</p><h3 className="mt-2 text-lg font-black text-[#222b32]">{title}</h3><p className="mt-3 text-xs leading-5 text-[#6c747a]">{description}</p><span className="mt-5 inline-flex rounded-full border border-[#d5cec3] bg-[#f2eee7] px-3 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#7c8388]">Em desenvolvimento</span></article>)}</div></div></section>
+      <section className="border-y border-[#d7d1c6] bg-[#f8f5ef] py-12 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div className="grid gap-6 rounded-2xl border border-[#d4cdc2] bg-white p-6 shadow-[0_14px_36px_rgba(24,32,40,0.06)] sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+  <div>
+    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806128]">Área ampliada</p>
+    <h2 className="mt-3 text-2xl font-black tracking-[-0.03em] text-[#111820] sm:text-3xl">As seis ferramentas já estão disponíveis.</h2>
+    <p className="mt-3 max-w-3xl text-sm leading-6 text-[#667078]">13º salário, Benefícios do INSS e BPC / LOAS agora possuem consulta Free e análise Pro, juntamente com Rescisão, Aposentadoria e Férias.</p>
+  </div>
+  <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-[0.1em] text-[#6d5727]">
+    {['13º', 'INSS', 'BPC'].map((label) => <span key={label} className="rounded-xl border border-[#d6c79e] bg-[#f7f0dc] px-4 py-3">{label}</span>)}
+  </div>
+</div>
+        </div>
+      </section>
 
       <section className="border-b border-white/10 bg-[#111d29] py-14 text-white sm:py-16"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:gap-14"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d8bd73]">Compromisso da plataforma</p><h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.03em] sm:text-4xl">Clareza antes de qualquer conclusão.</h2><p className="mt-4 text-sm leading-7 text-white/55">A área foi estruturada para informar sem esconder limites, condições ou situações que exigem análise individual.</p></div><div className="grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-3">{[{ icon: ShieldCheck, title: 'Privacidade preservada', text: 'Os valores digitados permanecem no dispositivo e não são armazenados pela GSA.' },{ icon: Calculator, title: 'Cálculo explicado', text: 'O resultado apresenta a composição utilizada, não apenas um número isolado.' },{ icon: Info, title: 'Limites visíveis', text: 'Cada ferramenta informa o que não foi considerado e quando buscar confirmação.' }].map(({ icon: Icon, title, text }) => <article key={title} className="bg-[#172433] p-6"><Icon className="h-6 w-6 text-[#d8bd73]" /><h3 className="mt-5 font-black">{title}</h3><p className="mt-3 text-xs leading-5 text-white/55">{text}</p></article>)}</div></div></div></section>
 

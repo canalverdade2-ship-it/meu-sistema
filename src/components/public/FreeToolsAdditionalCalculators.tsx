@@ -29,7 +29,6 @@ import {
 } from '../../lib/freeToolsAdditionalCalculations';
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 
 function numeric(value: string) {
   const parsed = Number(value.trim().replace(',', '.'));

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState, type ComponentType } from 'react';
 import {
   ArrowRight,
+  Baby,
   BriefcaseBusiness,
   Calculator,
+  HandCoins,
+  HeartHandshake,
   Landmark,
   Loader2,
   LockKeyhole,
@@ -51,6 +54,18 @@ const TOOLS: Record<FreeToolId, {
   vacation: {
     icon: Palmtree,
     title: 'Calculadora de férias',
+  },
+  thirteenth: {
+    icon: HandCoins,
+    title: 'Calculadora de 13º salário',
+  },
+  benefits: {
+    icon: Baby,
+    title: 'Triagem de benefícios do INSS',
+  },
+  bpc: {
+    icon: HeartHandshake,
+    title: 'Triagem BPC / LOAS',
   },
 };
 
