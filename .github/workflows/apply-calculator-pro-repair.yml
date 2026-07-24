@@ -1,0 +1,79 @@
+name: Apply Calculator Pro Repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-calculator-pro-repair.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apply-calculator-pro-repair-production
+  cancel-in-progress: false
+
+jobs:
+  migrate-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require production database credential
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL"
+
+      - name: Apply Calculator Pro repair migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql "$SUPABASE_DB_URL" \
+            --set=ON_ERROR_STOP=1 \
+            --file=supabase/migrations/20260724130000_repair_calculator_pro_products.sql
+
+      - name: Verify production database state
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql "$SUPABASE_DB_URL" --set=ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          DECLARE
+            v_count integer;
+          BEGIN
+            SELECT count(*)
+              INTO v_count
+              FROM public.gsa_calculator_pro_products
+             WHERE tool_id IN ('termination', 'retirement', 'vacation');
+
+            IF v_count <> 3 THEN
+              RAISE EXCEPTION 'Esperadas 3 configurações Pro; encontradas %', v_count;
+            END IF;
+
+            IF to_regprocedure('public.gsa_admin_ensure_calculator_pro_products(uuid,text)') IS NULL THEN
+              RAISE EXCEPTION 'Função gsa_admin_ensure_calculator_pro_products não encontrada';
+            END IF;
+
+            IF to_regprocedure('public.gsa_admin_save_calculator_pro_product(uuid,text,text,jsonb)') IS NULL THEN
+              RAISE EXCEPTION 'Função gsa_admin_save_calculator_pro_product não encontrada';
+            END IF;
+          END
+          $$;
+
+          SELECT
+            tool_id,
+            nome,
+            ativo,
+            preco_centavos,
+            duracao_acesso_minutos,
+            liberar_cliente_com_fatura_paga
+          FROM public.gsa_calculator_pro_products
+          WHERE tool_id IN ('termination', 'retirement', 'vacation')
+          ORDER BY tool_id;
+          SQL
