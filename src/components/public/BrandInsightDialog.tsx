@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   Check,
@@ -205,17 +204,13 @@ function getDialogHeader(selection: BrandInsightSelection | null) {
     const data = startingPointData[selection.id];
     return { eyebrow: data.label, title: data.title, icon: Compass };
   }
-  return { eyebrow: 'Painel de direção da marca', title: 'A anatomia de uma marca profissional', icon: PenTool };
+  const data = studioTopics[selection.topic || 'positioning'];
+  return { eyebrow: 'Painel de direção visual', title: data.title, icon: data.icon };
 }
 
 export function BrandInsightDialog({ selection, onClose, onOpenExamples, onRequestBudget }: BrandInsightDialogProps) {
-  const [studioTopic, setStudioTopic] = useState<BrandStudioTopic>('positioning');
-  const header = useMemo(() => getDialogHeader(selection), [selection]);
+  const header = getDialogHeader(selection);
   const HeaderIcon = header?.icon;
-
-  useEffect(() => {
-    if (selection?.kind === 'studio') setStudioTopic(selection.topic || 'positioning');
-  }, [selection]);
 
   return (
     <AccessibleDialog
@@ -261,8 +256,7 @@ export function BrandInsightDialog({ selection, onClose, onOpenExamples, onReque
             )}
             {selection.kind === 'studio' && (
               <StudioExperience
-                topic={studioTopic}
-                onSelectTopic={setStudioTopic}
+                topic={selection.topic || 'positioning'}
                 onOpenExamples={onOpenExamples}
                 onRequestBudget={onRequestBudget}
               />
@@ -278,13 +272,11 @@ function JourneyExperience({ data, onRequestBudget }: { data: JourneyData; onReq
   return (
     <div>
       <p className="max-w-3xl font-serif text-2xl leading-snug text-[#3a2d22]">{data.purpose}</p>
-
       <div className="mt-7 grid gap-4 lg:grid-cols-3">
         <EditorialList title="O que acontece" items={data.happens} icon={PenTool} />
         <EditorialList title="Participação do cliente" items={data.client} icon={Users} />
         <EditorialList title="Entregas da etapa" items={data.deliverables} icon={FileCheck2} />
       </div>
-
       <div className="mt-5 grid gap-5 border border-[#bba98f] bg-[#d8c7aa] p-5 sm:grid-cols-[1fr_auto] sm:items-center">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#644925]">Como a jornada continua</p>
@@ -299,15 +291,7 @@ function JourneyExperience({ data, onRequestBudget }: { data: JourneyData; onReq
   );
 }
 
-function StartingPointExperience({
-  data,
-  onOpenExamples,
-  onRequestBudget,
-}: {
-  data: StartingPointData;
-  onOpenExamples: (category: BrandExampleCategory) => void;
-  onRequestBudget: () => void;
-}) {
+function StartingPointExperience({ data, onOpenExamples, onRequestBudget }: { data: StartingPointData; onOpenExamples: (category: BrandExampleCategory) => void; onRequestBudget: () => void }) {
   return (
     <div className="grid gap-7 lg:grid-cols-[0.9fr_1.1fr]">
       <section>
@@ -316,7 +300,6 @@ function StartingPointExperience({
           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#7b5d31]">Primeiro movimento recomendado</p>
           <p className="mt-3 font-serif text-xl leading-snug text-[#2d241c]">{data.firstMove}</p>
         </div>
-
         <div className="mt-5">
           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#7b5d31]">Pontos de atenção</p>
           <ul className="mt-3 space-y-2">
@@ -329,11 +312,9 @@ function StartingPointExperience({
           </ul>
         </div>
       </section>
-
       <aside className="border border-[#bba98f] bg-[#211a14] p-5 text-white sm:p-6">
         <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#d8bb7a]">Rota recomendada</p>
         <h3 className="mt-3 font-serif text-3xl font-semibold leading-tight">{data.recommendationLabel}</h3>
-
         <div className="mt-6 border-t border-white/12">
           {data.roadmap.map((step, index) => (
             <div key={step.title} className="grid grid-cols-[40px_1fr] gap-3 border-b border-white/12 py-4">
@@ -345,7 +326,6 @@ function StartingPointExperience({
             </div>
           ))}
         </div>
-
         <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:flex-col">
           <button type="button" onClick={() => onOpenExamples(data.recommendation)} className="inline-flex items-center justify-center gap-2 bg-[#d8bb7a] px-5 py-3.5 text-sm font-black text-[#211a14]">
             Ver referências indicadas
@@ -360,69 +340,36 @@ function StartingPointExperience({
   );
 }
 
-function StudioExperience({
-  topic,
-  onSelectTopic,
-  onOpenExamples,
-  onRequestBudget,
-}: {
-  topic: BrandStudioTopic;
-  onSelectTopic: (topic: BrandStudioTopic) => void;
-  onOpenExamples: (category: BrandExampleCategory) => void;
-  onRequestBudget: () => void;
-}) {
+function StudioExperience({ topic, onOpenExamples, onRequestBudget }: { topic: BrandStudioTopic; onOpenExamples: (category: BrandExampleCategory) => void; onRequestBudget: () => void }) {
   const data = studioTopics[topic];
   const TopicIcon = data.icon;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[230px_1fr]">
-      <nav className="border border-[#c8b89e] bg-[#e8dece] p-3" aria-label="Elementos da direção de marca">
-        {(Object.keys(studioTopics) as BrandStudioTopic[]).map((key) => {
-          const item = studioTopics[key];
-          const Icon = item.icon;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onSelectTopic(key)}
-              className={`flex w-full items-center gap-3 border-b border-[#c8b89e] px-3 py-3 text-left transition last:border-b-0 ${topic === key ? 'bg-[#211a14] text-white' : 'text-[#493d31] hover:bg-white/50'}`}
-            >
-              <Icon className={`h-4 w-4 ${topic === key ? 'text-[#d8bb7a]' : 'text-[#7b5d31]'}`} />
-              <span className="text-xs font-black">{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-
-      <section className="border border-[#c8b89e] bg-white p-5 sm:p-7">
-        <div className="flex items-start gap-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-[#bba98f] text-[#7b5d31]">
-            <TopicIcon className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#7b5d31]">{data.label}</p>
-            <h3 className="mt-2 font-serif text-3xl font-semibold leading-tight">{data.title}</h3>
-          </div>
+    <section className="border border-[#c8b89e] bg-white p-5 sm:p-7">
+      <div className="flex items-start gap-4">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-[#bba98f] text-[#7b5d31]">
+          <TopicIcon className="h-5 w-5" />
+        </span>
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#7b5d31]">{data.label}</p>
+          <h3 className="mt-2 font-serif text-3xl font-semibold leading-tight">{data.title}</h3>
         </div>
-
-        <p className="mt-5 max-w-3xl text-sm leading-7 text-[#675d52]">{data.description}</p>
-
-        <div className="mt-7 grid gap-4 md:grid-cols-2">
-          <EditorialList title="Perguntas que orientam" items={data.questions} icon={Compass} />
-          <EditorialList title="O que esta análise produz" items={data.outputs} icon={Layers3} />
-        </div>
-
-        <div className="mt-6 flex flex-col gap-3 border-t border-[#d7cec1] pt-5 sm:flex-row sm:justify-end">
-          <button type="button" onClick={() => onOpenExamples(data.category)} className="inline-flex items-center justify-center gap-2 border border-[#bba98f] px-5 py-3.5 text-sm font-black text-[#211a14]">
-            Ver referências relacionadas
-          </button>
-          <button type="button" onClick={onRequestBudget} className="inline-flex items-center justify-center gap-2 bg-[#211a14] px-5 py-3.5 text-sm font-black text-white">
-            Solicitar análise da marca
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
-      </section>
-    </div>
+      </div>
+      <p className="mt-5 max-w-3xl text-sm leading-7 text-[#675d52]">{data.description}</p>
+      <div className="mt-7 grid gap-4 md:grid-cols-2">
+        <EditorialList title="Perguntas que orientam" items={data.questions} icon={Compass} />
+        <EditorialList title="O que esta análise produz" items={data.outputs} icon={Layers3} />
+      </div>
+      <div className="mt-6 flex flex-col gap-3 border-t border-[#d7cec1] pt-5 sm:flex-row sm:justify-end">
+        <button type="button" onClick={() => onOpenExamples(data.category)} className="inline-flex items-center justify-center gap-2 border border-[#bba98f] px-5 py-3.5 text-sm font-black text-[#211a14]">
+          Ver referências relacionadas
+        </button>
+        <button type="button" onClick={onRequestBudget} className="inline-flex items-center justify-center gap-2 bg-[#211a14] px-5 py-3.5 text-sm font-black text-white">
+          Solicitar análise da marca
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </section>
   );
 }
 
