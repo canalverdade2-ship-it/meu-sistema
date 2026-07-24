@@ -41,6 +41,7 @@ export function defaultAdminPath(adminType: AdminType | undefined, modules: stri
     'fornecedores',
     'parceiros',
     'trabalhe-conosco',
+    'avisos-campanhas',
     'anuncios',
     'operacoes',
     'financeiro',
