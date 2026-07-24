@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  ArrowLeft,
   ArrowRight,
+  BadgeCheck,
   BadgeDollarSign,
+  Building2,
+  Check,
   CheckCircle2,
+  Clock3,
   Link2,
+  LockKeyhole,
   Plane,
   Share2,
   ShieldCheck,
@@ -11,10 +17,12 @@ import {
   Stethoscope,
   Store,
   Tags,
+  UserRoundCheck,
   WalletCards,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { LogoGSA } from '../ui/LogoGSA';
+import '../../affiliates.css';
 
 interface PublicAffiliateProgram {
   code: string;
@@ -30,20 +38,73 @@ interface AffiliatePublicPageProps {
 }
 
 const FALLBACK_PROGRAMS: PublicAffiliateProgram[] = [
-  { code: 'loja', name: 'Loja GSA', description: 'Produtos, serviços e assinaturas do marketplace GSA.', percentage: 5 },
-  { code: 'viagens', name: 'GSA Viagens', description: 'Pacotes e experiências de viagem.', percentage: 3 },
-  { code: 'classificados', name: 'GSA Classificados', description: 'Imóveis, veículos e oportunidades anunciadas no hub.', percentage: 2 },
-  { code: 'servicos', name: 'Serviços GSA', description: 'Soluções e serviços contratados na plataforma.', percentage: 5 },
+  { code: 'loja', name: 'Loja GSA', description: 'Produtos, serviços e assinaturas comercializados no marketplace GSA.', percentage: 5 },
+  { code: 'viagens', name: 'GSA Viagens', description: 'Pacotes, hospedagens e experiências de viagem elegíveis ao programa.', percentage: 3 },
+  { code: 'classificados', name: 'GSA Classificados', description: 'Oportunidades publicadas dentro das categorias habilitadas pela operação.', percentage: 2 },
+  { code: 'servicos', name: 'Serviços GSA', description: 'Soluções digitais e serviços empresariais contratados pela plataforma.', percentage: 5 },
 ];
 
 const programIcons: Record<string, typeof Store> = {
   loja: ShoppingBag,
   viagens: Plane,
   classificados: Tags,
-  servicos: Store,
+  servicos: Building2,
   saude: Stethoscope,
   seguros: ShieldCheck,
 };
+
+const PROCESS_STEPS = [
+  {
+    number: '01',
+    title: 'Ative o perfil',
+    description: 'A ativação é vinculada à sua conta GSA e confirmada com CPF ou CNPJ e PIN de acesso.',
+    icon: UserRoundCheck,
+  },
+  {
+    number: '02',
+    title: 'Gere links oficiais',
+    description: 'Escolha o programa, defina o destino permitido e crie um link exclusivo dentro do portal.',
+    icon: Link2,
+  },
+  {
+    number: '03',
+    title: 'Compartilhe com contexto',
+    description: 'Apresente a solução ao seu público e utilize somente os links validados pelo sistema.',
+    icon: Share2,
+  },
+  {
+    number: '04',
+    title: 'Acompanhe e receba',
+    description: 'Cliques, conversões, carência, saldo e solicitações PIX ficam registrados no painel.',
+    icon: WalletCards,
+  },
+] as const;
+
+const GOVERNANCE_ITEMS = [
+  'Atribuição registrada por código exclusivo',
+  'Percentual e base de cálculo preservados na venda',
+  'Carência e estornos tratados pela regra do programa',
+  'Solicitação de saque vinculada à chave PIX cadastrada',
+] as const;
+
+const FAQ_ITEMS = [
+  {
+    question: 'Quem pode participar?',
+    answer: 'Clientes com conta GSA ativa podem autenticar o acesso e solicitar a ativação do perfil de afiliado. A disponibilidade depende das regras vigentes do programa.',
+  },
+  {
+    question: 'Quando a comissão fica disponível?',
+    answer: 'Cada programa possui percentual, janela de atribuição e período de carência próprios. O painel informa o que está pendente, disponível, solicitado e pago.',
+  },
+  {
+    question: 'Como funciona o pagamento?',
+    answer: 'O afiliado solicita o saque pelo portal quando possui saldo disponível acima do mínimo vigente. A solicitação segue para análise e pagamento na chave PIX cadastrada.',
+  },
+  {
+    question: 'Posso criar links para qualquer endereço?',
+    answer: 'Não. O sistema valida os destinos permitidos para cada programa. Essa regra protege o rastreamento, o cliente e a integridade da comissão.',
+  },
+] as const;
 
 function normalizePrograms(value: unknown): PublicAffiliateProgram[] {
   const payload = value && typeof value === 'object' && !Array.isArray(value)
@@ -76,7 +137,7 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = 'Programa de Afiliados | GSA';
+    document.title = 'Programa de Afiliados | GSA HUB';
     let active = true;
 
     void (async () => {
@@ -85,7 +146,7 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
         if (!active || error) return;
         setRemotePrograms(normalizePrograms(data));
       } catch {
-        // A apresentação mantém o catálogo de contingência se a conexão estiver indisponível.
+        // O catálogo institucional permanece disponível em contingência.
       }
     })();
 
@@ -100,106 +161,205 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
     [remotePrograms],
   );
 
+  const highestPercentage = useMemo(
+    () => Math.max(...programs.map((program) => program.percentage)),
+    [programs],
+  );
+
   return (
-    <div className="min-h-screen bg-[#f5f2eb] text-neutral-950">
-      <header className="border-b border-white/10 bg-[#080c12] text-white">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Navegação do programa de afiliados">
-          <button type="button" onClick={onBack} aria-label="Voltar para a página inicial" className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]">
-            <LogoGSA size="md" variant="light" />
-          </button>
-          <button type="button" onClick={onLogin} className="rounded-xl border border-[#d8bd73]/50 px-4 py-2 text-sm font-bold text-[#e6ce8b] transition hover:bg-[#d8bd73]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]">
-            LOGIN AFILIADO
+    <div className="affiliate-page min-h-screen bg-[#f2efe7] text-[#142033] selection:bg-[#c59a4a] selection:text-[#0b1522]">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b1522]/95 text-white backdrop-blur-md">
+        <nav className="mx-auto flex h-[78px] max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12" aria-label="Navegação do Programa de Afiliados">
+          <div className="flex min-w-0 items-center gap-5 sm:gap-7">
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-white/65 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ddc28d] focus-visible:ring-offset-4 focus-visible:ring-offset-[#0b1522]"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Voltar ao site</span>
+            </button>
+            <span className="hidden h-7 w-px bg-white/20 sm:block" aria-hidden="true" />
+            <LogoGSA size="sm" variant="light" showText className="min-w-0" />
+          </div>
+
+          <button
+            type="button"
+            onClick={onLogin}
+            className="inline-flex items-center gap-2 border border-[#ddc28d] px-4 py-2.5 text-sm font-semibold text-[#f0ddb5] transition-colors hover:bg-[#ddc28d] hover:text-[#0b1522] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#0b1522] sm:px-5"
+          >
+            <LockKeyhole className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Portal do Afiliado</span>
+            <span className="sm:hidden">Entrar</span>
           </button>
         </nav>
       </header>
 
       <main>
-        <section className="relative overflow-hidden bg-[#080c12] px-4 pb-20 pt-16 text-white sm:px-6 sm:pb-28 sm:pt-24 lg:px-8">
-          <div className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-[#d8bd73]/10 blur-3xl" aria-hidden="true" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#d8bd73]/30 bg-[#d8bd73]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-[#e6ce8b]">
-                <BadgeDollarSign className="h-4 w-4" /> Programa de Afiliados GSA
+        <section className="relative isolate overflow-hidden bg-[#0b1522] text-white">
+          <div className="affiliate-grid-bg absolute inset-0 opacity-60" aria-hidden="true" />
+          <div className="affiliate-outline-word absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2" aria-hidden="true">GSA</div>
+
+          <div className="relative mx-auto grid min-h-[720px] max-w-[1440px] items-center gap-16 px-5 py-20 sm:px-8 sm:py-24 lg:grid-cols-[1.2fr_0.8fr] lg:px-12 lg:py-28">
+            <div className="max-w-4xl">
+              <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.22em] text-[#ddc28d]">
+                <span className="h-px w-10 bg-[#ddc28d]" aria-hidden="true" />
+                Programa de Afiliados GSA HUB
               </div>
-              <h1 className="mt-7 max-w-4xl font-serif text-4xl leading-tight sm:text-5xl lg:text-6xl">
-                Indique soluções GSA e ganhe por vendas concluídas pelo seu link.
+              <h1 className="mt-8 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-[5.5rem]">
+                Indicações com regra clara, acompanhamento real e comissão registrada.
               </h1>
-              <p className="mt-6 max-w-2xl text-base leading-7 text-white/70 sm:text-lg">
-                Clientes GSA podem ativar gratuitamente o perfil de afiliado, criar links exclusivos e acompanhar cada comissão até o pagamento.
+              <p className="mt-8 max-w-2xl text-base leading-8 text-white/68 sm:text-lg">
+                Uma operação estruturada para clientes GSA que desejam recomendar soluções do ecossistema, gerar links oficiais e acompanhar cada etapa até o pagamento.
               </p>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <button type="button" onClick={onRegister} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#d8bd73] px-6 py-3 text-sm font-black text-[#111318] transition hover:bg-[#e6ce8b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-                  Quero ser afiliado <ArrowRight className="h-4 w-4" />
+
+              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={onRegister}
+                  className="inline-flex min-h-14 items-center justify-center gap-3 bg-[#c59a4a] px-7 text-sm font-bold text-[#0b1522] transition-colors hover:bg-[#ddc28d] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#0b1522]"
+                >
+                  Ativar meu perfil <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </button>
-                <a href="#como-funciona" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/20 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]">
-                  Entenda como funciona
+                <a
+                  href="#como-funciona"
+                  className="inline-flex min-h-14 items-center justify-center border border-white/25 px-7 text-sm font-semibold text-white transition-colors hover:border-white/60 hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ddc28d]"
+                >
+                  Conhecer a operação
                 </a>
               </div>
-              <p className="mt-4 text-xs leading-5 text-white/45">Percentuais, carência e valor mínimo de saque ficam registrados na operação.</p>
+
+              <div className="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t border-white/15 pt-6 text-xs font-semibold text-white/58">
+                <span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-[#ddc28d]" /> Ativação sem mensalidade</span>
+                <span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-[#ddc28d]" /> Acesso vinculado à conta GSA</span>
+                <span className="inline-flex items-center gap-2"><Check className="h-4 w-4 text-[#ddc28d]" /> Pagamento por PIX</span>
+              </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-2xl backdrop-blur sm:p-7">
-              <div className="flex items-center justify-between border-b border-white/10 pb-5">
+            <aside className="affiliate-panel-shadow border border-white/15 bg-[#101d2c] p-6 sm:p-8" aria-label="Resumo do programa">
+              <div className="flex items-start justify-between gap-5 border-b border-white/15 pb-6">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-widest text-white/45">Seu painel</p>
-                  <p className="mt-1 text-xl font-bold">Divulgue. Venda. Receba.</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#ddc28d]">Operação vigente</p>
+                  <h2 className="mt-3 text-2xl font-semibold tracking-[-0.025em]">Visão objetiva do programa</h2>
                 </div>
-                <WalletCards className="h-9 w-9 text-[#d8bd73]" aria-hidden="true" />
+                <BadgeDollarSign className="h-9 w-9 shrink-0 text-[#ddc28d]" aria-hidden="true" />
               </div>
-              <div className="mt-5 grid gap-3">
-                {['Links validados para cada solução', 'Cliques, vendas e comissões rastreados', 'Saques PIX com acompanhamento de status'].map((item) => (
-                  <div key={item} className="flex items-start gap-3 rounded-2xl bg-black/20 p-4 text-sm font-semibold text-white/80">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#d8bd73]" aria-hidden="true" /> {item}
+
+              <dl className="grid grid-cols-2 border-b border-white/15">
+                <div className="border-r border-white/15 py-6 pr-5">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">Programas ativos</dt>
+                  <dd className="mt-2 text-4xl font-semibold tracking-[-0.04em]">{programs.length}</dd>
+                </div>
+                <div className="py-6 pl-5">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">Comissão máxima</dt>
+                  <dd className="mt-2 text-4xl font-semibold tracking-[-0.04em]">{formatPercentage(highestPercentage)}%</dd>
+                </div>
+              </dl>
+
+              <div className="space-y-0">
+                {[
+                  ['Rastreamento', 'Links exclusivos por programa'],
+                  ['Transparência', 'Cliques, vendas e saldos no painel'],
+                  ['Recebimento', 'Solicitação PIX com histórico'],
+                ].map(([label, value]) => (
+                  <div key={label} className="grid grid-cols-[0.85fr_1.15fr] gap-4 border-b border-white/10 py-4 last:border-b-0">
+                    <span className="text-xs font-bold uppercase tracking-[0.12em] text-white/40">{label}</span>
+                    <span className="text-sm font-semibold text-white/82">{value}</span>
                   </div>
                 ))}
               </div>
-            </div>
+
+              <button
+                type="button"
+                onClick={onLogin}
+                className="mt-6 inline-flex w-full items-center justify-between border border-[#c59a4a]/70 px-5 py-4 text-sm font-bold text-[#f0ddb5] transition-colors hover:bg-[#c59a4a] hover:text-[#0b1522]"
+              >
+                Já sou afiliado <ArrowRight className="h-4 w-4" />
+              </button>
+            </aside>
           </div>
         </section>
 
-        <section id="como-funciona" className="scroll-mt-6 px-4 py-16 sm:px-6 sm:py-20 lg:px-8" aria-labelledby="how-title">
-          <div className="mx-auto max-w-7xl">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#947624]">Fluxo completo</p>
-            <h2 id="how-title" className="mt-3 max-w-2xl font-serif text-3xl sm:text-4xl">Três passos para transformar indicações em comissão</h2>
-            <ol className="mt-10 grid gap-5 md:grid-cols-3">
-              {[
-                { icon: CheckCircle2, title: 'Ative seu perfil', text: 'Entre com sua conta GSA, aceite os termos e cadastre a chave PIX.' },
-                { icon: Link2, title: 'Crie e compartilhe', text: 'Gere links validados por programa, categoria ou item específico.' },
-                { icon: BadgeDollarSign, title: 'Acompanhe e receba', text: 'Veja atribuições, carência, saldo disponível e andamento dos saques.' },
-              ].map((step, index) => (
-                <li key={step.title} className="rounded-3xl border border-black/5 bg-white p-6 shadow-sm sm:p-7">
-                  <div className="flex items-center justify-between">
-                    <step.icon className="h-8 w-8 text-[#947624]" aria-hidden="true" />
-                    <span className="text-4xl font-black text-neutral-100" aria-hidden="true">0{index + 1}</span>
-                  </div>
-                  <h3 className="mt-6 text-xl font-black">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-neutral-600">{step.text}</p>
-                </li>
-              ))}
-            </ol>
+        <section className="border-b border-[#c9c2b6] bg-[#e8e1d5]">
+          <div className="mx-auto grid max-w-[1440px] divide-y divide-[#c9c2b6] px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0 lg:px-12">
+            {[
+              { icon: ShieldCheck, title: 'Acesso protegido', text: 'Autenticação pela conta GSA antes da ativação.' },
+              { icon: Clock3, title: 'Regras preservadas', text: 'Percentual, janela e carência ficam registrados.' },
+              { icon: BadgeCheck, title: 'Histórico operacional', text: 'Comissões e saques permanecem disponíveis no portal.' },
+            ].map(({ icon: Icon, title, text }) => (
+              <article key={title} className="flex gap-4 py-7 md:px-7 first:md:pl-0 last:md:pr-0">
+                <Icon className="mt-0.5 h-6 w-6 shrink-0 text-[#8d6829]" aria-hidden="true" />
+                <div>
+                  <h2 className="text-sm font-bold text-[#0b1522]">{title}</h2>
+                  <p className="mt-1 text-sm leading-6 text-[#59616c]">{text}</p>
+                </div>
+              </article>
+            ))}
           </div>
         </section>
 
-        <section className="bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8" aria-labelledby="programs-title">
-          <div className="mx-auto max-w-7xl">
-            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <section id="como-funciona" className="scroll-mt-24 border-b border-[#c9c2b6] bg-[#f2efe7]">
+          <div className="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+            <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-20">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#947624]">Programas ativos</p>
-                <h2 id="programs-title" className="mt-3 font-serif text-3xl sm:text-4xl">Escolha o que quer divulgar</h2>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8d6829]">Como funciona</p>
+                <h2 className="mt-5 text-4xl font-semibold leading-[1.05] tracking-[-0.045em] text-[#0b1522] sm:text-5xl">
+                  Um fluxo simples para o afiliado. Uma operação controlada para a GSA.
+                </h2>
+                <p className="mt-6 max-w-xl text-base leading-7 text-[#5c6470]">
+                  Cada etapa foi organizada para reduzir dúvidas, proteger a atribuição e permitir acompanhamento sem depender de controles paralelos.
+                </p>
               </div>
-              <p className="max-w-lg text-sm leading-6 text-neutral-500">Os percentuais abaixo são carregados das regras administrativas vigentes.</p>
+
+              <ol className="border-t border-[#bcb4a8]">
+                {PROCESS_STEPS.map(({ number, title, description, icon: Icon }) => (
+                  <li key={number} className="group grid gap-4 border-b border-[#bcb4a8] py-7 sm:grid-cols-[80px_1fr_auto] sm:items-start sm:gap-7">
+                    <span className="font-mono text-sm font-bold text-[#8d6829]">{number}</span>
+                    <div>
+                      <h3 className="text-xl font-semibold tracking-[-0.02em] text-[#0b1522]">{title}</h3>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5c6470]">{description}</p>
+                    </div>
+                    <span className="flex h-11 w-11 items-center justify-center border border-[#bcb4a8] text-[#8d6829] transition-colors group-hover:border-[#0b1522] group-hover:bg-[#0b1522] group-hover:text-[#ddc28d]">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                  </li>
+                ))}
+              </ol>
             </div>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {programs.map((program) => {
+          </div>
+        </section>
+
+        <section className="border-b border-[#c9c2b6] bg-white" aria-labelledby="programs-title">
+          <div className="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+            <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8d6829]">Programas disponíveis</p>
+                <h2 id="programs-title" className="mt-5 text-4xl font-semibold tracking-[-0.045em] text-[#0b1522] sm:text-5xl">Escolha o que faz sentido para o seu público.</h2>
+              </div>
+              <p className="max-w-xl text-sm leading-7 text-[#5c6470]">
+                Os percentuais exibidos são carregados das regras administrativas vigentes e podem variar conforme programa, categoria ou campanha.
+              </p>
+            </div>
+
+            <div className="mt-12 border-t border-[#bcb4a8]">
+              {programs.map((program, index) => {
                 const Icon = programIcons[program.code] || Share2;
                 return (
-                  <article key={program.code} className="rounded-3xl border border-neutral-200 bg-[#faf9f6] p-6 transition hover:-translate-y-1 hover:border-[#d8bd73] hover:shadow-lg">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="rounded-2xl bg-[#11151b] p-3 text-[#d8bd73]"><Icon className="h-6 w-6" /></span>
-                      <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-black text-emerald-700">até {formatPercentage(program.percentage)}%</span>
+                  <article key={program.code} className="group grid gap-5 border-b border-[#bcb4a8] py-7 sm:grid-cols-[64px_1fr_auto] sm:items-center sm:gap-7">
+                    <span className="flex h-14 w-14 items-center justify-center bg-[#0b1522] text-[#ddc28d]">
+                      <Icon className="h-6 w-6" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="font-mono text-xs font-bold text-[#9a8f7d]">{String(index + 1).padStart(2, '0')}</span>
+                        <h3 className="text-xl font-semibold tracking-[-0.02em] text-[#0b1522]">{program.name}</h3>
+                      </div>
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5c6470]">{program.description}</p>
                     </div>
-                    <h3 className="mt-6 text-xl font-black">{program.name}</h3>
-                    <p className="mt-3 text-sm leading-6 text-neutral-600">{program.description}</p>
+                    <div className="sm:text-right">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7b838d]">Comissão vigente</p>
+                      <p className="mt-1 text-3xl font-semibold tracking-[-0.04em] text-[#8d6829]">até {formatPercentage(program.percentage)}%</p>
+                    </div>
                   </article>
                 );
               })}
@@ -207,17 +367,74 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
           </div>
         </section>
 
-        <section className="px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-          <div className="mx-auto flex max-w-5xl flex-col items-center rounded-[2rem] bg-[#11151b] px-6 py-12 text-center text-white shadow-xl sm:px-10 sm:py-16">
-            <ShieldCheck className="h-10 w-10 text-[#d8bd73]" />
-            <h2 className="mt-5 max-w-2xl font-serif text-3xl sm:text-4xl">Seu próximo compartilhamento pode gerar uma nova renda.</h2>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-white/65">Ative seu perfil e use somente os links gerados dentro do portal.</p>
-            <button type="button" onClick={onRegister} className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#d8bd73] px-7 py-3 text-sm font-black text-[#111318] transition hover:bg-[#e6ce8b]">
-              Ativar perfil <ArrowRight className="h-4 w-4" />
-            </button>
+        <section className="bg-[#0e1b2a] text-white">
+          <div className="mx-auto grid max-w-[1440px] gap-14 px-5 py-20 sm:px-8 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:px-12 lg:py-28">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#ddc28d]">Governança da comissão</p>
+              <h2 className="mt-5 text-4xl font-semibold leading-[1.05] tracking-[-0.045em] sm:text-5xl">Transparência não é um detalhe do programa. É parte da operação.</h2>
+              <p className="mt-6 max-w-xl text-base leading-7 text-white/62">
+                O afiliado acompanha o que aconteceu com cada valor, enquanto a GSA mantém critérios consistentes para atribuição, carência, estorno e pagamento.
+              </p>
+            </div>
+
+            <div className="border-t border-white/20">
+              {GOVERNANCE_ITEMS.map((item, index) => (
+                <div key={item} className="grid grid-cols-[52px_1fr] gap-4 border-b border-white/15 py-6">
+                  <span className="font-mono text-xs font-bold text-[#ddc28d]">G{index + 1}</span>
+                  <p className="text-base font-semibold text-white/84">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[#c9c2b6] bg-[#e8e1d5]">
+          <div className="mx-auto grid max-w-[1440px] gap-12 px-5 py-20 sm:px-8 sm:py-24 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8d6829]">Perguntas frequentes</p>
+              <h2 className="mt-5 text-4xl font-semibold tracking-[-0.04em] text-[#0b1522]">Antes de ativar, entenda as regras essenciais.</h2>
+            </div>
+            <div className="border-t border-[#bcb4a8]">
+              {FAQ_ITEMS.map((item) => (
+                <details key={item.question} className="group border-b border-[#bcb4a8] py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-base font-semibold text-[#0b1522] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c59a4a]">
+                    {item.question}
+                    <span className="text-2xl font-light text-[#8d6829] transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+                  </summary>
+                  <p className="max-w-3xl pt-4 text-sm leading-7 text-[#5c6470]">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[#f2efe7]">
+          <div className="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 sm:py-24 lg:px-12">
+            <div className="affiliate-panel-shadow grid gap-10 border-t-4 border-[#c59a4a] bg-white p-7 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center lg:p-12">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8d6829]">Próximo passo</p>
+                <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-[1.08] tracking-[-0.04em] text-[#0b1522]">Transforme boas indicações em uma relação comercial organizada.</h2>
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-[#5c6470]">A ativação confirma sua conta GSA, registra os termos vigentes e prepara o portal para gerar seus primeiros links.</p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+                <button type="button" onClick={onRegister} className="inline-flex min-h-14 items-center justify-center gap-3 bg-[#0b1522] px-7 text-sm font-bold text-white transition-colors hover:bg-[#24364b]">
+                  Ativar perfil <ArrowRight className="h-4 w-4" />
+                </button>
+                <button type="button" onClick={onLogin} className="inline-flex min-h-14 items-center justify-center border border-[#0b1522] px-7 text-sm font-bold text-[#0b1522] transition-colors hover:bg-[#f2efe7]">
+                  Acessar portal
+                </button>
+              </div>
+            </div>
           </div>
         </section>
       </main>
+
+      <footer className="border-t border-white/10 bg-[#07101c] text-white">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-5 px-5 py-9 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-12">
+          <LogoGSA size="sm" variant="light" showText />
+          <p className="text-sm text-white/50">© {new Date().getFullYear()} GSA HUB — Programa de Afiliados.</p>
+        </div>
+      </footer>
     </div>
   );
 }
