@@ -1,0 +1,68 @@
+name: Diagnose Calculator Pro Runtime
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/diagnose-calculator-pro-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
+    steps:
+      - name: Query production product configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          query="SELECT tool_id, nome, ativo, preco_centavos, duracao_acesso_minutos, updated_at FROM public.gsa_calculator_pro_products WHERE tool_id='termination';"
+          jq -n --arg query "$query" '{query: $query, read_only: true}' > /tmp/db-payload.json
+          status="$(curl --silent --show-error --output /tmp/db.json --write-out '%{http_code}' --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/db-payload.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
+          echo "DB_HTTP_STATUS=$status"
+          jq -c . /tmp/db.json
+          test "$status" = '201'
+          test "$(jq 'length' /tmp/db.json)" = '1'
+
+      - name: Read public API key
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(curl --silent --show-error --output /tmp/keys.json --write-out '%{http_code}' --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/api-keys")"
+          echo "KEYS_HTTP_STATUS=$status"
+          test "$status" = '200'
+          jq -r '.[] | select(.name == "anon") | .api_key' /tmp/keys.json > /tmp/anon-key
+          test -s /tmp/anon-key
+
+      - name: Invoke deployed public Calculator Pro function
+        shell: bash
+        run: |
+          set -euo pipefail
+          anon="$(cat /tmp/anon-key)"
+          visitor="gsa_runtime_diagnostic_12345678901234567890"
+          jq -n --arg visitor "$visitor" '{action:"status",payload:{tool_id:"termination",visitor_token:$visitor}}' > /tmp/function-payload.json
+          status="$(curl --silent --show-error --output /tmp/function.json --write-out '%{http_code}' --request POST --header "apikey: $anon" --header "Authorization: Bearer $anon" --header 'Content-Type: application/json' --header 'Origin: http://localhost:3000' --data-binary @/tmp/function-payload.json "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/gsa-free-tools-pro")"
+          echo "FUNCTION_HTTP_STATUS=$status"
+          jq -c . /tmp/function.json
+          test "$status" = '200'
+
+      - name: Compare database and public response
+        shell: bash
+        run: |
+          set -euo pipefail
+          db_price="$(jq -r '.[0].preco_centavos' /tmp/db.json)"
+          db_duration="$(jq -r '.[0].duracao_acesso_minutos' /tmp/db.json)"
+          api_price="$(jq -r '.product.preco_centavos' /tmp/function.json)"
+          api_duration="$(jq -r '.product.duracao_acesso_minutos' /tmp/function.json)"
+          echo "DB_PRICE=$db_price"
+          echo "API_PRICE=$api_price"
+          echo "DB_DURATION=$db_duration"
+          echo "API_DURATION=$api_duration"
+          test "$db_price" = "$api_price"
+          test "$db_duration" = "$api_duration"
+          echo 'CALCULATOR_PRO_RUNTIME_SYNCHRONIZED'
