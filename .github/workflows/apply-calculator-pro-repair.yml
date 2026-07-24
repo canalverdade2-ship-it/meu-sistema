@@ -10,19 +10,85 @@ permissions:
   contents: read
 
 jobs:
-  identify-project:
+  migrate-and-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
 
     steps:
-      - name: List Supabase project names and references
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply repair migration through Supabase Management API
         shell: bash
         run: |
           set -euo pipefail
           test -n "$SUPABASE_ACCESS_TOKEN"
-          curl --fail --silent --show-error \
+          jq -n --rawfile query supabase/migrations/20260724130000_repair_calculator_pro_products.sql \
+            '{query: $query, read_only: false}' > /tmp/migration-payload.json
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
             --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            https://api.supabase.com/v1/projects \
-            | jq -r '.[] | "PROJECT name=\(.name) ref=\(.id) status=\(.status) region=\(.region)"'
+            --header 'Content-Type: application/json' \
+            --data-binary @/tmp/migration-payload.json \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" \
+            > /tmp/migration-result.json
+
+          echo 'MIGRATION_APPLIED'
+
+      - name: Verify products and administrative functions in production
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/verify.sql <<'SQL'
+          SELECT jsonb_build_object(
+            'product_count', (
+              SELECT count(*)
+              FROM public.gsa_calculator_pro_products
+              WHERE tool_id IN ('termination', 'retirement', 'vacation')
+            ),
+            'products', (
+              SELECT jsonb_agg(
+                jsonb_build_object(
+                  'tool_id', tool_id,
+                  'nome', nome,
+                  'ativo', ativo,
+                  'preco_centavos', preco_centavos,
+                  'duracao_acesso_minutos', duracao_acesso_minutos,
+                  'cliente_beneficio_automatico', liberar_cliente_com_fatura_paga
+                ) ORDER BY tool_id
+              )
+              FROM public.gsa_calculator_pro_products
+              WHERE tool_id IN ('termination', 'retirement', 'vacation')
+            ),
+            'ensure_function', to_regprocedure('public.gsa_admin_ensure_calculator_pro_products(uuid,text)') IS NOT NULL,
+            'save_function', to_regprocedure('public.gsa_admin_save_calculator_pro_product(uuid,text,text,jsonb)') IS NOT NULL
+          ) AS validation;
+          SQL
+
+          jq -n --rawfile query /tmp/verify.sql \
+            '{query: $query, read_only: true}' > /tmp/verify-payload.json
+
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data-binary @/tmp/verify-payload.json \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" \
+            > /tmp/verify-result.json
+
+          cat /tmp/verify-result.json | jq .
+
+          compact="$(jq -c '.[0].validation // .[0].validation.json // .[0]' /tmp/verify-result.json)"
+          count="$(jq -r '.[0].validation.product_count // .[0].product_count // empty' /tmp/verify-result.json)"
+          ensure="$(jq -r '.[0].validation.ensure_function // .[0].ensure_function // empty' /tmp/verify-result.json)"
+          save="$(jq -r '.[0].validation.save_function // .[0].save_function // empty' /tmp/verify-result.json)"
+
+          echo "VALIDATION=$compact"
+          test "$count" = '3'
+          test "$ensure" = 'true'
+          test "$save" = 'true'
+          echo 'PRODUCTION_DATABASE_VERIFIED'
