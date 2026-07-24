@@ -34,6 +34,18 @@ export type SiteCampaignTemplate =
 export type SiteCampaignAudience = 'all' | 'guests' | 'authenticated' | 'clients';
 export type SiteCampaignViewerAudience = Exclude<SiteCampaignAudience, 'all'>;
 export type SiteCampaignDevice = 'desktop' | 'tablet' | 'mobile';
+export type SiteCampaignAction =
+  | 'view'
+  | 'create'
+  | 'edit'
+  | 'duplicate'
+  | 'publish'
+  | 'pause'
+  | 'resume'
+  | 'end'
+  | 'archive'
+  | 'delete'
+  | 'metrics';
 
 export type SiteCampaignFrequency =
   | 'every_visit'
@@ -115,6 +127,7 @@ export interface SiteCampaignAnalyticsRow {
 export interface SiteCampaignAdminOverview {
   campaigns: SiteCampaign[];
   history: SiteCampaignHistoryEntry[];
+  current_permissions?: SiteCampaignAction[];
   analytics: {
     by_device: SiteCampaignAnalyticsRow[];
     by_page: SiteCampaignAnalyticsRow[];
