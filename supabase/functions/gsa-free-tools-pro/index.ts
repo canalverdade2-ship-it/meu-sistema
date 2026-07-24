@@ -556,7 +556,7 @@ export async function handleRequest(request: Request) {
           order_nsu: orderNsu,
           tool_id: toolId,
           cliente_id: client?.id || null,
-          visitor_token_hash: visitorHash,
+          visitor_token_hash: client?.id ? null : visitorHash,
           valor_centavos: Number(product.preco_centavos),
           duracao_acesso_minutos: durationMinutes,
           status: 'processing',
@@ -639,7 +639,7 @@ export async function handleRequest(request: Request) {
       if (payment.cliente_id && payment.cliente_id !== client?.id) {
         return json({ success: false, error: 'payment_identity_mismatch' }, 403, allowedOrigin);
       }
-      if (payment.visitor_token_hash && payment.visitor_token_hash !== visitorHash) {
+      if (!payment.cliente_id && payment.visitor_token_hash && payment.visitor_token_hash !== visitorHash) {
         return json({ success: false, error: 'payment_identity_mismatch' }, 403, allowedOrigin);
       }
       if (['cancelled', 'refunded'].includes(payment.status)) {
