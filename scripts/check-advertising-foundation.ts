@@ -47,6 +47,14 @@ assert.match(publicPage, /FormatPreview/, 'Formatos devem possuir simulação vi
 assert.match(publicPage, /PlacementPreview/, 'Posições devem possuir simulação visual');
 assert.match(publicPage, /CreativePreview/, 'Serviço criativo deve oferecer referências selecionáveis');
 assert.match(publicPage, /Referência de material criativo escolhida/, 'Referência escolhida deve ser persistida junto à solicitação');
+assert.match(publicPage, /Confirmar direção visual/, 'Referência criativa deve exigir confirmação explícita');
+assert.match(publicPage, /Direção visual escolhida com sucesso/, 'Confirmação criativa deve retornar sucesso ao cliente');
+assert.match(publicPage, /pendingCreativeReference/, 'Escolha criativa temporária não pode ser gravada antes da confirmação');
+assert.match(publicPage, /toggle\('desired_formats', item\.id\)/, 'Formato deve permitir selecionar e remover sem abrir modal');
+assert.doesNotMatch(publicPage, /selectFormatAndPreview/, 'Seleção de formato não pode continuar acoplada à prévia');
+assert.match(publicPage, /selectionMode:\s*'confirm'/, 'Primeira seleção de área deve exigir confirmação na prévia');
+assert.match(publicPage, /Confirmar esta área/, 'Modal de posição deve oferecer confirmação explícita');
+assert.match(publicPage, /Área de interesse removida/, 'Área selecionada deve permitir remoção sem reabrir o modal');
 assert.doesNotMatch(publicPage, /Vitrine de campanhas ativas/, 'A vitrine pública removida não deve reaparecer');
 assert.doesNotMatch(publicPage, /AdvertisingSlot/, 'A página de captação não deve renderizar campanhas ativas');
 assert.match(publicPage, /Proposta antes do pagamento/, 'Fluxo comercial deve estar explicado');
