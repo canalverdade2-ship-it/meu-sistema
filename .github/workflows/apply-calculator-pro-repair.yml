@@ -1,6 +1,6 @@
 name: Apply Calculator Pro Repair
 
-# Execução técnica observável para confirmar a aplicação no Supabase de produção.
+# Diagnóstico seguro: informa apenas presença ou ausência, nunca os valores.
 on:
   push:
     branches: [main]
@@ -12,11 +12,7 @@ on:
       - '.github/workflows/apply-calculator-pro-repair.yml'
 
 permissions:
-  contents: write
-
-concurrency:
-  group: apply-calculator-pro-repair-production
-  cancel-in-progress: false
+  contents: read
 
 jobs:
   migrate-and-verify:
@@ -24,103 +20,46 @@ jobs:
     timeout-minutes: 15
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || vars.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Require production database credential
+      - name: Report credential availability safely
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$SUPABASE_DB_URL"
+          for name in \
+            SUPABASE_DB_URL \
+            SUPABASE_ACCESS_TOKEN \
+            SUPABASE_PROJECT_REF \
+            SUPABASE_DB_PASSWORD \
+            SUPABASE_SERVICE_ROLE_KEY \
+            VITE_SUPABASE_URL \
+            VITE_SUPABASE_ANON_KEY
+          do
+            if [ -n "${!name:-}" ]; then
+              echo "$name=PRESENT"
+            else
+              echo "$name=MISSING"
+            fi
+          done
 
-      - name: Apply Calculator Pro repair migration
+      - name: Require a supported production connection
         shell: bash
         run: |
           set -euo pipefail
-          psql "$SUPABASE_DB_URL" \
-            --set=ON_ERROR_STOP=1 \
-            --file=supabase/migrations/20260724130000_repair_calculator_pro_products.sql
-
-      - name: Verify production database state
-        shell: bash
-        run: |
-          set -euo pipefail
-          psql "$SUPABASE_DB_URL" --set=ON_ERROR_STOP=1 <<'SQL'
-          DO $$
-          DECLARE
-            v_count integer;
-          BEGIN
-            SELECT count(*)
-              INTO v_count
-              FROM public.gsa_calculator_pro_products
-             WHERE tool_id IN ('termination', 'retirement', 'vacation');
-
-            IF v_count <> 3 THEN
-              RAISE EXCEPTION 'Esperadas 3 configurações Pro; encontradas %', v_count;
-            END IF;
-
-            IF to_regprocedure('public.gsa_admin_ensure_calculator_pro_products(uuid,text)') IS NULL THEN
-              RAISE EXCEPTION 'Função gsa_admin_ensure_calculator_pro_products não encontrada';
-            END IF;
-
-            IF to_regprocedure('public.gsa_admin_save_calculator_pro_product(uuid,text,text,jsonb)') IS NULL THEN
-              RAISE EXCEPTION 'Função gsa_admin_save_calculator_pro_product não encontrada';
-            END IF;
-          END
-          $$;
-          SQL
-
-          mkdir -p audit
-          psql "$SUPABASE_DB_URL" --set=ON_ERROR_STOP=1 --csv -c "
-            SELECT
-              tool_id,
-              nome,
-              ativo,
-              preco_centavos,
-              duracao_acesso_minutos,
-              liberar_cliente_com_fatura_paga
-            FROM public.gsa_calculator_pro_products
-            WHERE tool_id IN ('termination', 'retirement', 'vacation')
-            ORDER BY tool_id;
-          " > audit/calculator-pro-production.csv
-
-      - name: Record successful production deployment
-        if: github.event_name == 'push'
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p docs/deployments
-          {
-            echo '# Migração das Calculadoras Pro aplicada em produção'
-            echo
-            echo "- Executada em UTC: $(date -u '+%Y-%m-%d %H:%M:%S')"
-            echo "- Workflow: $GITHUB_WORKFLOW"
-            echo "- Execução: $GITHUB_RUN_ID"
-            echo "- Commit implantado: $GITHUB_SHA"
-            echo '- Resultado: migração aplicada e três configurações validadas no Supabase.'
-            echo
-            echo '```csv'
-            cat audit/calculator-pro-production.csv
-            echo '```'
-          } > docs/deployments/calculator-pro-repair-production.md
-
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/deployments/calculator-pro-repair-production.md
-          git commit -m 'Confirma migração das Calculadoras Pro em produção'
-          git pull --rebase origin main
-          git push origin HEAD:main
-
-      - name: Upload production evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: calculator-pro-production-${{ github.run_id }}
-          path: |
-            audit/calculator-pro-production.csv
-            docs/deployments/calculator-pro-repair-production.md
-          if-no-files-found: ignore
-          retention-days: 30
+          if [ -n "$SUPABASE_DB_URL" ]; then
+            exit 0
+          fi
+          if [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_PROJECT_REF" ] && [ -n "$SUPABASE_DB_PASSWORD" ]; then
+            exit 0
+          fi
+          echo 'Nenhum conjunto completo de credenciais para migração está configurado.' >&2
+          exit 1
