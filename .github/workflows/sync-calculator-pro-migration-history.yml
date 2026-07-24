@@ -5,12 +5,16 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/sync-calculator-pro-migration-history.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-calculator-pro-migration-history.yml'
 
 permissions:
   contents: read
 
 concurrency:
-  group: sync-calculator-pro-migration-history
+  group: sync-calculator-pro-migration-history-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -41,19 +45,46 @@ jobs:
             --project-ref "$SUPABASE_PROJECT_REF" \
             --password "$SUPABASE_DB_PASSWORD"
 
-      - name: Mark Calculator Pro migrations as applied
+      - name: Repair only missing migration history entries
         shell: bash
         run: |
           set -euo pipefail
-          supabase migration repair \
-            20260723233000 \
-            20260723233500 \
-            20260723234000 \
-            20260724113000 \
-            20260724130000 \
-            --status applied \
-            --linked \
-            --password "$SUPABASE_DB_PASSWORD"
+          desired=(
+            20260723233000
+            20260723233500
+            20260723234000
+            20260724113000
+            20260724130000
+          )
+
+          query="SELECT version FROM supabase_migrations.schema_migrations WHERE version IN ('20260723233000','20260723233500','20260723234000','20260724113000','20260724130000') ORDER BY version;"
+          jq -n --arg query "$query" '{query: $query, read_only: true}' > /tmp/history-payload.json
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data-binary @/tmp/history-payload.json \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" \
+            > /tmp/history-before.json
+
+          mapfile -t applied < <(jq -r '.[].version' /tmp/history-before.json)
+          missing=()
+          for version in "${desired[@]}"; do
+            if ! printf '%s\n' "${applied[@]}" | grep -qx "$version"; then
+              missing+=("$version")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "MISSING_VERSIONS=${missing[*]}"
+            supabase migration repair \
+              "${missing[@]}" \
+              --status applied \
+              --linked \
+              --password "$SUPABASE_DB_PASSWORD"
+          else
+            echo 'MIGRATION_HISTORY_ALREADY_SYNCED'
+          fi
 
       - name: Verify remote migration history
         shell: bash
