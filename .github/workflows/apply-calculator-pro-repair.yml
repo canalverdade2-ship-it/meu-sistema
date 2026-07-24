@@ -1,5 +1,6 @@
 name: Apply Calculator Pro Repair
 
+# Execução técnica observável para confirmar a aplicação no Supabase de produção.
 on:
   push:
     branches: [main]
