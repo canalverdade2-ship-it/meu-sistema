@@ -1,11 +1,6 @@
 name: Apply Calculator Pro Repair
 
-# Diagnóstico seguro: informa apenas presença ou ausência, nunca os valores.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/apply-calculator-pro-repair.yml'
   pull_request:
     branches: [main]
     paths:
@@ -15,51 +10,26 @@ permissions:
   contents: read
 
 jobs:
-  migrate-and-verify:
+  identify-project:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     env:
-      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || vars.SUPABASE_PROJECT_REF }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || vars.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Report credential availability safely
-        shell: bash
-        run: |
-          set -euo pipefail
-          for name in \
-            SUPABASE_DB_URL \
-            SUPABASE_ACCESS_TOKEN \
-            SUPABASE_PROJECT_REF \
-            SUPABASE_DB_PASSWORD \
-            SUPABASE_SERVICE_ROLE_KEY \
-            VITE_SUPABASE_URL \
-            VITE_SUPABASE_ANON_KEY
-          do
-            if [ -n "${!name:-}" ]; then
-              echo "$name=PRESENT"
-            else
-              echo "$name=MISSING"
-            fi
-          done
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.101.0
 
-      - name: Require a supported production connection
+      - name: List accessible Supabase projects
         shell: bash
         run: |
           set -euo pipefail
-          if [ -n "$SUPABASE_DB_URL" ]; then
-            exit 0
-          fi
-          if [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_PROJECT_REF" ] && [ -n "$SUPABASE_DB_PASSWORD" ]; then
-            exit 0
-          fi
-          echo 'Nenhum conjunto completo de credenciais para migração está configurado.' >&2
-          exit 1
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          supabase projects list --output json
