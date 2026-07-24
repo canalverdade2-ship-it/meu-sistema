@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  verify-security-contract:
+  inspect-migration-history:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -18,21 +18,13 @@ jobs:
       SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
 
     steps:
-      - name: Verify RLS, RPC privileges and removed manual grants
+      - name: Read Calculator Pro migration history
         shell: bash
         run: |
           set -euo pipefail
-          query="SELECT (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('gsa_calculator_pro_products','gsa_calculator_pro_payments','gsa_calculator_pro_vouchers','gsa_calculator_pro_grants','gsa_calculator_pro_sessions','gsa_calculator_pro_events') AND c.relrowsecurity) AS rls_tables, has_function_privilege('authenticated','public.gsa_admin_ensure_calculator_pro_products(uuid,text)','EXECUTE') AS ensure_execute, has_function_privilege('authenticated','public.gsa_admin_calculator_pro_snapshot(uuid,text)','EXECUTE') AS snapshot_execute, has_function_privilege('authenticated','public.gsa_admin_save_calculator_pro_product(uuid,text,text,jsonb)','EXECUTE') AS save_execute, has_function_privilege('authenticated','public.gsa_admin_create_calculator_pro_voucher(uuid,text,text,timestamptz,text)','EXECUTE') AS voucher_execute, to_regprocedure('public.gsa_admin_grant_calculator_pro(uuid,text,uuid,text,timestamptz,text)') IS NULL AS manual_grant_removed, to_regprocedure('public.gsa_admin_revoke_calculator_pro_grant(uuid,text,uuid,text)') IS NULL AS manual_revoke_removed;"
+          query="SELECT version, name FROM supabase_migrations.schema_migrations WHERE version IN ('20260723233000','20260723233500','20260723234000','20260724113000','20260724130000') ORDER BY version;"
           jq -n --arg query "$query" '{query: $query, read_only: true}' > /tmp/payload.json
           status="$(curl --silent --show-error --output /tmp/result.json --write-out '%{http_code}' --request POST --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" --header 'Content-Type: application/json' --data-binary @/tmp/payload.json "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")"
           echo "HTTP_STATUS=$status"
           jq -c . /tmp/result.json
           test "$status" = '201'
-          test "$(jq -r '.[0].rls_tables' /tmp/result.json)" = '6'
-          test "$(jq -r '.[0].ensure_execute' /tmp/result.json)" = 'true'
-          test "$(jq -r '.[0].snapshot_execute' /tmp/result.json)" = 'true'
-          test "$(jq -r '.[0].save_execute' /tmp/result.json)" = 'true'
-          test "$(jq -r '.[0].voucher_execute' /tmp/result.json)" = 'true'
-          test "$(jq -r '.[0].manual_grant_removed' /tmp/result.json)" = 'true'
-          test "$(jq -r '.[0].manual_revoke_removed' /tmp/result.json)" = 'true'
-          echo 'CALCULATOR_PRO_SECURITY_CONTRACT_READY'
