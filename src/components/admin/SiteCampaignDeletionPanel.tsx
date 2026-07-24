@@ -2,21 +2,31 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Archive, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
-import type { SiteCampaign, SiteCampaignAdminOverview } from '../../types/siteCampaigns';
+import type { SiteCampaign, SiteCampaignAction, SiteCampaignAdminOverview } from '../../types/siteCampaigns';
+
+type MyPermissions = { allowed_actions?: SiteCampaignAction[] };
 
 export function SiteCampaignDeletionPanel() {
   const [campaigns, setCampaigns] = useState<SiteCampaign[]>([]);
+  const [canDelete, setCanDelete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      const permissions = await callAdminRpc<MyPermissions>('gsa_admin_site_campaign_my_permissions');
+      const allowed = Array.isArray(permissions?.allowed_actions) && permissions.allowed_actions.includes('delete');
+      setCanDelete(allowed);
+      if (!allowed) {
+        setCampaigns([]);
+        return;
+      }
       const data = await callAdminRpc<SiteCampaignAdminOverview>('gsa_admin_site_campaigns_overview');
       setCampaigns(Array.isArray(data?.campaigns) ? data.campaigns : []);
     } catch (error) {
       console.error(error);
-      toast.error('Não foi possível carregar os itens disponíveis para exclusão.');
+      setCanDelete(false);
     } finally {
       setLoading(false);
     }
@@ -47,6 +57,8 @@ export function SiteCampaignDeletionPanel() {
       setDeletingId(null);
     }
   };
+
+  if (!loading && !canDelete) return null;
 
   return (
     <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
