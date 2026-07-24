@@ -1,0 +1,72 @@
+name: Deploy Calculator Pro Fix
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/deploy-calculator-pro-fix.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ocgajvagxagutfvgxwsy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/calculadoras-pro-voucher-pagamento-20260724
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.101.0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Validate Edge Functions
+        run: |
+          deno check supabase/functions/gsa-free-tools-pro/index.ts
+          deno check supabase/functions/gsa-free-tools-pro-webhook/index.ts
+      - name: Apply migrations and history
+        shell: bash
+        run: |
+          set -euo pipefail
+          for migration in \
+            supabase/migrations/20260724163000_harden_calculator_pro_voucher_payment.sql \
+            supabase/migrations/20260724163500_atomic_calculator_pro_voucher_redemption.sql \
+            supabase/migrations/20260724164000_calculator_pro_admin_voucher_errors.sql; do
+            jq -Rs '{query:.,read_only:false}' "$migration" > /tmp/migration.json
+            curl --fail-with-body --silent --show-error --request POST \
+              --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              --header 'Content-Type: application/json' \
+              --data-binary @/tmp/migration.json \
+              "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/migration-result.json
+            echo "APPLIED=$(basename "$migration")"
+          done
+          query="INSERT INTO supabase_migrations.schema_migrations(version,name,statements) VALUES ('20260724163000','harden_calculator_pro_voucher_payment',ARRAY[]::text[]),('20260724163500','atomic_calculator_pro_voucher_redemption',ARRAY[]::text[]),('20260724164000','calculator_pro_admin_voucher_errors',ARRAY[]::text[]) ON CONFLICT (version) DO UPDATE SET name=EXCLUDED.name;"
+          jq -n --arg query "$query" '{query:$query,read_only:false}' > /tmp/history.json
+          curl --fail-with-body --silent --show-error --request POST \
+            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data-binary @/tmp/history.json \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/history-result.json
+      - name: Deploy functions
+        run: |
+          supabase functions deploy gsa-free-tools-pro --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+          supabase functions deploy gsa-free-tools-pro-webhook --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+      - name: Verify production schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          query="SELECT to_regclass('public.gsa_calculator_pro_runtime_config') IS NOT NULL AS runtime_config, EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='gsa_calculator_pro_payments' AND column_name='duracao_acesso_minutos') AS duration_snapshot, to_regprocedure('public.gsa_calculator_redeem_voucher_and_create_session_internal(text,text,text,uuid,text)') IS NOT NULL AS atomic_voucher, EXISTS(SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='idx_gsa_calculator_pro_transaction_unique') AS unique_transaction; SELECT version FROM supabase_migrations.schema_migrations WHERE version IN ('20260724163000','20260724163500','20260724164000') ORDER BY version;"
+          jq -n --arg query "$query" '{query:$query,read_only:true}' > /tmp/verify.json
+          curl --fail-with-body --silent --show-error --request POST \
+            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data-binary @/tmp/verify.json \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query" > /tmp/verify-result.json
+          jq -c . /tmp/verify-result.json
+          jq -e '.[0] | all(. == true)' /tmp/verify-result.json >/dev/null
+          test "$(jq 'length' /tmp/verify-result.json)" -ge 4
