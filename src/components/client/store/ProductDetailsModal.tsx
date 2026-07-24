@@ -1,247 +1,259 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Search, Package, Scissors, Calendar, Trash2, X, Plus, Minus, Tag, Check, AlertCircle, Loader2, ChevronLeft, ChevronRight, Filter, SlidersHorizontal, Briefcase, ArrowRight, Ticket, Coins, Sparkles, CreditCard, CheckCircle, Clock, CheckCircle2, Wallet, Gift, Zap, Flame } from 'lucide-react';
-import { getProductDisplayCodeLabel, getProductDisplayCode } from '../../../lib/productIdentification';
-import { supabase } from '../../../lib/supabase';
-import { formatCurrency, generateCode, formatDate } from '../../../lib/utils';
-import { toast } from 'react-hot-toast';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  AlertCircle,
+  Calendar,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Package,
+  Scissors,
+  ShieldCheck,
+  ShoppingBag,
+  Truck,
+} from 'lucide-react';
+import { getProductDisplayCode } from '../../../lib/productIdentification';
+import { formatCurrency } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
 import { mapColumnsToGallery } from '../ClientGSAStore';
-import { hasActiveProductDiscount, getProductEffectivePrice, formatProductDiscountPercentage, getProductDiscountAmount, getProductRemainingDaysText, getProductRemainingQuantityText } from '../../../lib/productPricing';
+import {
+  formatProductDiscountPercentage,
+  getProductDiscountAmount,
+  getProductEffectivePrice,
+  getProductRemainingDaysText,
+  getProductRemainingQuantityText,
+  hasActiveProductDiscount,
+} from '../../../lib/productPricing';
 
-export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd }: any) {
+type ItemType = 'produto' | 'servico' | 'assinatura';
+
+interface ProductDetailsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  item: any;
+  tipo: ItemType;
+  onAdd: () => void;
+}
+
+function getTypeLabel(tipo: ItemType) {
+  if (tipo === 'assinatura') return 'Plano e assinatura';
+  if (tipo === 'servico') return 'Serviço';
+  return 'Produto';
+}
+
+function getCategoryLabel(item: any): string {
+  if (typeof item?.categoria === 'string') return item.categoria;
+  if (typeof item?.categorias?.nome === 'string') return item.categorias.nome;
+  if (typeof item?.categoria_nome === 'string') return item.categoria_nome;
+  return '';
+}
+
+function Placeholder({ tipo }: { tipo: ItemType }) {
+  const className = 'h-20 w-20 text-slate-300';
+  if (tipo === 'assinatura') return <Calendar className={className} aria-hidden="true" />;
+  if (tipo === 'servico') return <Scissors className={className} aria-hidden="true" />;
+  return <Package className={className} aria-hidden="true" />;
+}
+
+export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd }: ProductDetailsModalProps) {
   const [activeImageIdx, setActiveImageIdx] = useState(0);
-
-  const allImages = useMemo(() => mapColumnsToGallery(item), [item]);
+  const images = useMemo(() => mapColumnsToGallery(item), [item]);
 
   useEffect(() => {
     setActiveImageIdx(0);
-  }, [item]);
+  }, [item?.id]);
 
   if (!isOpen || !item) return null;
 
+  const category = getCategoryLabel(item);
+  const isProduct = tipo === 'produto';
+  const outOfStock = isProduct && item.controle_estoque && Number(item.estoque_disponivel || 0) <= 0;
+  const lowStock = isProduct && item.controle_estoque && Number(item.estoque_disponivel || 0) > 0 && Number(item.estoque_disponivel || 0) <= 5;
+  const discount = isProduct && hasActiveProductDiscount(item);
+  const currentPrice = discount ? getProductEffectivePrice(item) : Number(item.valor || 0);
+  const remainingDays = discount ? getProductRemainingDaysText(item) : null;
+  const remainingQuantity = discount ? getProductRemainingQuantityText(item) : null;
+  const reference = tipo === 'produto'
+    ? getProductDisplayCode(item)
+    : tipo === 'servico'
+      ? item.codigo_servico
+      : item.codigo_assinatura;
+
+  const goToPreviousImage = () => {
+    setActiveImageIdx((current) => (current > 0 ? current - 1 : images.length - 1));
+  };
+
+  const goToNextImage = () => {
+    setActiveImageIdx((current) => (current < images.length - 1 ? current + 1 : 0));
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Detalhes do Item" size="wide">
-      <div className="flex flex-col md:flex-row gap-6 lg:gap-8 p-0 md:p-2">
-        {/* Image Section */}
-        <div className="w-full md:w-1/2">
-          <div className="space-y-4">
-            {/* Main Carousel Container */}
-            <div className="relative group aspect-square md:aspect-auto md:h-[400px] xl:h-[450px] bg-neutral-50 rounded-3xl overflow-hidden border border-neutral-100 flex items-center justify-center">
-              {allImages.length > 0 ? (
-                <div 
-                  className="flex w-full h-full transition-transform duration-500 ease-out"
-                  style={{ transform: `translateX(-${activeImageIdx * 100}%)` }}
+    <Modal isOpen={isOpen} onClose={onClose} title="Detalhes" size="wide">
+      <div className="grid gap-7 md:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] md:gap-9">
+        <section aria-label="Galeria do item" className="min-w-0">
+          <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[20px] border border-slate-200 bg-[#f5f6f8] md:aspect-[4/3]">
+            {images.length > 0 ? (
+              <img
+                src={images[activeImageIdx]}
+                alt={`${item.nome} — imagem ${activeImageIdx + 1} de ${images.length}`}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <Placeholder tipo={tipo} />
+            )}
+
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={goToPreviousImage}
+                  className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:bg-white"
+                  aria-label="Imagem anterior"
                 >
-                  {allImages.map((url, idx) => (
-                    <div key={idx} className="w-full h-full flex-shrink-0 flex items-center justify-center bg-neutral-50 p-4">
-                       <img src={url} alt={item.nome} className="max-w-full max-h-full object-contain animate-in fade-in zoom-in-95 duration-300" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  {tipo === 'produto' ? <Package className="w-32 h-32 text-neutral-200" /> : 
-                   tipo === 'servico' ? <Scissors className="w-32 h-32 text-neutral-200" /> : 
-                   <Calendar className="w-32 h-32 text-neutral-200" />
-                  }
-                </div>
-              )}
-
-              {/* Navigation Arrows */}
-              {allImages.length > 1 && (
-                <>
-                  <button 
-                    onClick={() => setActiveImageIdx(prev => (prev > 0 ? prev - 1 : allImages.length - 1))}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 backdrop-blur rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button 
-                    onClick={() => setActiveImageIdx(prev => (prev < allImages.length - 1 ? prev + 1 : 0))}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 backdrop-blur rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                  
-                  {/* Indicators */}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                    {allImages.map((_, idx) => (
-                      <div 
-                        key={idx} 
-                        className={`h-1.5 rounded-full transition-all duration-300 ${activeImageIdx === idx ? 'w-6 bg-indigo-600' : 'w-1.5 bg-neutral-300'}`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Thumbnails */}
-            {allImages.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                {allImages.map((url, idx) => (
-                  <button 
-                    key={idx}
-                    onClick={() => setActiveImageIdx(idx)}
-                    className={`relative w-20 h-20 md:w-16 md:h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 bg-white flex items-center justify-center ${activeImageIdx === idx ? 'border-indigo-600 ring-2 ring-indigo-600/20' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                  >
-                    <img src={url} alt="" className="w-full h-full object-contain" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Info Section */}
-        <div className="w-full md:w-1/2 flex flex-col justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <span className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-md shadow-sm">
-                {tipo}
-              </span>
-              <span className="text-[10px] sm:text-xs font-mono font-bold text-neutral-500 border border-neutral-200 px-3 py-1.5 rounded-md bg-white shadow-sm">
-                REF: {tipo === 'produto' ? getProductDisplayCode(item) : tipo === 'servico' ? item.codigo_servico : item.codigo_assinatura}
-              </span>
-              {item.categoria && (
-                <span className="text-[10px] sm:text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 uppercase tracking-widest px-3 py-1.5 rounded-md">
-                  {item.categoria}
+                  <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goToNextImage}
+                  className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:bg-white"
+                  aria-label="Próxima imagem"
+                >
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </button>
+                <span className="absolute bottom-3 right-3 rounded-lg bg-slate-950/75 px-2.5 py-1 text-xs font-bold text-white">
+                  {activeImageIdx + 1}/{images.length}
                 </span>
-              )}
-              {tipo === 'produto' && hasActiveProductDiscount(item) && (
-                <div className="flex items-center gap-1.5 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-500 bg-[length:200%_auto] animate-gradient-x px-3 py-1.5 rounded-md shadow-[0_0_15px_rgba(244,63,94,0.4)] text-white">
-                  <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
-                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest">
-                    {formatProductDiscountPercentage(item)}
-                  </span>
-                </div>
-              )}
-              {tipo === 'produto' && hasActiveProductDiscount(item) && item.desconto_prazo_tipo === 'determinado' && item.desconto_fim_em && (() => {
-                const texto = getProductRemainingDaysText(item);
-                if (!texto) return null;
-                const isHoje = texto.toLowerCase().includes('hoje');
-                return (
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-sm border ${
-                    isHoje ? 'bg-orange-500 border-orange-400 text-white shadow-orange-500/20' : 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                  }`}>
-                    <Clock className={`w-3.5 h-3.5 ${isHoje ? 'text-white animate-pulse' : 'text-indigo-500'}`} />
-                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest">
-                      {texto}
-                    </span>
-                  </div>
-                );
-              })()}
-              {tipo === 'produto' && hasActiveProductDiscount(item) && item.desconto_limite_quantidade_ativo && (() => {
-                const texto = getProductRemainingQuantityText(item);
-                if (!texto) return null;
-                const isUltima = texto.toLowerCase().includes('ltima');
-                const esgotada = texto.toLowerCase().includes('esgotada');
-                
-                let bgClass = 'bg-emerald-50 border-emerald-200 text-emerald-700';
-                let iconClass = 'text-emerald-500';
-                if (esgotada) {
-                  bgClass = 'bg-red-600 border-red-500 text-white shadow-red-600/20';
-                  iconClass = 'text-white';
-                } else if (isUltima) {
-                  bgClass = 'bg-orange-500 border-orange-400 text-white shadow-orange-500/20';
-                  iconClass = 'text-white animate-pulse';
-                }
+              </>
+            )}
+          </div>
 
-                return (
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md shadow-sm border ${bgClass}`}>
-                    <Zap className={`w-3.5 h-3.5 fill-current ${iconClass}`} />
-                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest">
-                      {texto}
-                    </span>
-                  </div>
-                );
-              })()}
+          {images.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {images.map((url: string, index: number) => (
+                <button
+                  key={`${url}-${index}`}
+                  type="button"
+                  onClick={() => setActiveImageIdx(index)}
+                  aria-label={`Exibir imagem ${index + 1}`}
+                  aria-pressed={activeImageIdx === index}
+                  className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white transition ${
+                    activeImageIdx === index
+                      ? 'border-[#17345f] ring-2 ring-[#17345f]/10'
+                      : 'border-slate-200 opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img src={url} alt="" className="h-full w-full object-contain" />
+                </button>
+              ))}
             </div>
+          )}
+        </section>
 
-            <h2 className="text-2xl md:text-3xl xl:text-4xl font-black text-neutral-950 leading-tight mb-2 tracking-tight">{item.nome}</h2>
-            
-            <div className="mb-4 xl:mb-6">
-              {item.ocultar_valor ? (
-                <div className="inline-flex items-center justify-center bg-neutral-100 px-4 py-2 rounded-xl mt-2">
-                  <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest">Preço Sob Consulta</span>
-                </div>
-              ) : tipo === 'produto' && hasActiveProductDiscount(item) ? (
-                <div className="flex flex-col mt-2">
-                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mb-1">De <span className="line-through">{formatCurrency(item.valor)}</span> por</span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl md:text-4xl xl:text-5xl font-black text-indigo-600 tracking-tighter">{formatCurrency(getProductEffectivePrice(item))}</span>
+        <section className="flex min-w-0 flex-col">
+          <div className="flex flex-wrap items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.1em]">
+            <span className="rounded-md bg-[#edf2f7] px-2.5 py-1.5 text-[#17345f]">{getTypeLabel(tipo)}</span>
+            {category && <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-slate-500">{category}</span>}
+            {reference && <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-slate-500">Ref. {reference}</span>}
+            {discount && !outOfStock && (
+              <span className="rounded-md bg-[#9b742f] px-2.5 py-1.5 text-white">{formatProductDiscountPercentage(item)} off</span>
+            )}
+          </div>
+
+          <h1 className="mt-4 text-2xl font-black leading-tight tracking-[-0.035em] text-slate-950 sm:text-3xl lg:text-[38px]">
+            {item.nome}
+          </h1>
+
+          <div className="mt-5 border-y border-slate-100 py-5">
+            {item.ocultar_valor ? (
+              <p className="text-lg font-extrabold text-slate-700">Valor sob consulta</p>
+            ) : (
+              <>
+                {discount && (
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2 text-sm">
+                    <span className="text-slate-400 line-through">{formatCurrency(item.valor)}</span>
+                    <span className="font-bold text-emerald-700">Economia de {formatCurrency(getProductDiscountAmount(item))}</span>
                   </div>
-                  <span className="text-xs text-emerald-600 font-bold mt-2">
-                    Você economiza: {formatCurrency(getProductDiscountAmount(item))}
+                )}
+                <div className="flex flex-wrap items-end gap-2">
+                  <span className="text-[34px] font-black leading-none tracking-[-0.045em] text-[#17345f] sm:text-[42px]">
+                    {formatCurrency(currentPrice)}
                   </span>
-                  {item.desconto_prazo_tipo === 'determinado' && item.desconto_fim_em && (() => {
-                    const texto = getProductRemainingDaysText(item);
-                    if (!texto) return null;
-                    const isHoje = texto.toLowerCase().includes('hoje');
-                    return (
-                      <span className={`mt-1 inline-flex items-center gap-1 text-xs font-bold ${
-                        isHoje ? 'text-orange-600' : 'text-indigo-500'
-                      }`}>
-                        <Clock className="w-3 h-3" />
-                        {texto}
-                      </span>
-                    );
-                  })()}
-                  {item.desconto_limite_quantidade_ativo && (() => {
-                    const texto = getProductRemainingQuantityText(item);
-                    if (!texto) return null;
-                    const esgotada = texto.toLowerCase().includes('esgotada');
-                    return (
-                      <span className={`mt-1 inline-flex items-center gap-1 text-xs font-bold ${
-                        esgotada ? 'text-red-600' : 'text-emerald-600'
-                      }`}>
-                        <Package className="w-3 h-3" />
-                        {texto}
-                      </span>
-                    );
-                  })()}
+                  {tipo === 'assinatura' && <span className="pb-1 text-sm font-semibold text-slate-500">por mês</span>}
                 </div>
-              ) : (
-                <div className="flex flex-col mt-2">
-                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mb-1">Por apenas</span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl md:text-4xl xl:text-5xl font-black text-indigo-600 tracking-tighter">{formatCurrency(item.valor)}</span>
-                    {tipo === 'assinatura' && <span className="text-base md:text-lg text-neutral-400 font-bold">/ mês</span>}
-                  </div>
-                </div>
-              )}
-            </div>
+              </>
+            )}
 
-            <div className="bg-gradient-to-br from-white to-neutral-50 rounded-2xl p-4 md:p-5 border border-neutral-200/60 shadow-sm mb-4 xl:mb-6 overflow-y-auto max-h-[120px] md:max-h-[150px] xl:max-h-[220px] custom-scrollbar relative group">
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-l-2xl opacity-70 group-hover:opacity-100 transition-opacity"></div>
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-[11px] md:text-xs font-black text-neutral-900 uppercase tracking-[0.2em]">Descrição Detalhada</h3>
+            {(remainingDays || remainingQuantity) && (
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                {remainingDays && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-amber-800">
+                    <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                    {remainingDays}
+                  </span>
+                )}
+                {remainingQuantity && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-emerald-800">
+                    <Package className="h-3.5 w-3.5" aria-hidden="true" />
+                    {remainingQuantity}
+                  </span>
+                )}
               </div>
-              <div className="text-neutral-600 leading-relaxed whitespace-pre-wrap text-xs md:text-sm font-medium">
-                {item.descricao || 'Nenhuma descrição detalhada disponível para este item.'}
+            )}
+          </div>
+
+          <div className="mt-5">
+            <h2 className="text-sm font-extrabold text-slate-950">Sobre este item</h2>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+              {item.descricao || 'As informações detalhadas deste item serão disponibilizadas pela equipe GSA.'}
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
+            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5">
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#9b742f]" aria-hidden="true" />
+              <div>
+                <p className="text-xs font-extrabold text-slate-900">Compra protegida</p>
+                <p className="mt-0.5 text-xs leading-5 text-slate-500">Pedido registrado e acompanhado no portal.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5">
+              {isProduct ? <Truck className="mt-0.5 h-5 w-5 shrink-0 text-[#9b742f]" aria-hidden="true" /> : <Check className="mt-0.5 h-5 w-5 shrink-0 text-[#9b742f]" aria-hidden="true" />}
+              <div>
+                <p className="text-xs font-extrabold text-slate-900">{isProduct ? 'Entrega acompanhada' : 'Ativação acompanhada'}</p>
+                <p className="mt-0.5 text-xs leading-5 text-slate-500">Você recebe atualizações em cada etapa.</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3 mt-auto">
-            {tipo === 'produto' && item.controle_estoque && (
-              <div className={`flex items-center gap-2 text-xs md:text-sm font-bold ${item.estoque_disponivel > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${item.estoque_disponivel > 0 ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-                {item.estoque_disponivel > 0 ? `Disponibilidade imediata: ${item.estoque_disponivel} un` : 'Produto temporariamente esgotado'}
-              </div>
-            )}
+          {isProduct && item.controle_estoque && (
+            <div className={`mt-5 flex items-center gap-2 rounded-xl border px-3.5 py-3 text-xs font-bold ${
+              outOfStock
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : lowStock
+                  ? 'border-amber-200 bg-amber-50 text-amber-800'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+            }`}>
+              {outOfStock ? <AlertCircle className="h-4 w-4" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
+              {outOfStock
+                ? 'Produto temporariamente esgotado'
+                : lowStock
+                  ? `Restam ${item.estoque_disponivel} unidades`
+                  : `${item.estoque_disponivel} unidades disponíveis`}
+            </div>
+          )}
 
-            <button 
-              disabled={tipo === 'produto' && item.controle_estoque && item.estoque_disponivel <= 0}
+          <div className="sticky bottom-0 mt-auto bg-white pt-6">
+            <button
+              type="button"
+              disabled={outOfStock}
               onClick={onAdd}
-              className="w-full bg-[#1a1a1a] text-white py-3.5 md:py-4 xl:py-5 rounded-2xl font-black text-sm md:text-base hover:bg-indigo-600 shadow-xl hover:shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98] group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-xl bg-[#17345f] px-5 py-4 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(23,52,95,0.18)] transition hover:bg-[#102746] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
             >
-              <ShoppingCart className="w-5 h-5 group-hover:animate-bounce" />
-              Adicionar ao Carrinho
+              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+              {outOfStock ? 'Produto indisponível' : tipo === 'assinatura' ? 'Escolher período' : 'Adicionar ao carrinho'}
             </button>
           </div>
-        </div>
+        </section>
       </div>
     </Modal>
   );
