@@ -119,7 +119,8 @@ jobs:
             '20260724223500:supabase/migrations/20260724223500_site_campaigns_action_permissions.sql' \
             '20260724223600:supabase/migrations/20260724223600_site_campaigns_permission_visibility.sql' \
             '20260724223700:supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql' \
-            '20260725192000:supabase/migrations/20260725192000_harden_site_campaign_admin_rpc_privileges.sql'; do
+            '20260725192000:supabase/migrations/20260725192000_harden_site_campaign_admin_rpc_privileges.sql' \
+            '20260725194000:supabase/migrations/20260725194000_site_campaigns_pgcrypto_search_path.sql'; do
               version="${spec%%:*}"
               file="${spec#*:}"
 
@@ -147,7 +148,8 @@ jobs:
             20260724223500 \
             20260724223600 \
             20260724223700 \
-            20260725192000; do
+            20260725192000 \
+            20260725194000; do
               if ! awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/,"",remote); if(remote==wanted) found=1 } END{exit found?0:1}' site-campaign-migrations-pre-repair.log; then
                 supabase migration repair --linked --status applied "$version" 2>&1 | tee -a site-campaign-migrations-apply.log
               fi
