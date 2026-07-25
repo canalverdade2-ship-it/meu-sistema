@@ -255,17 +255,24 @@ jobs:
             END IF;
           END $$;
 
-          SELECT public.gsa_public_site_campaigns(
-            '/', 'desktop', 'guests',
-            'production-deploy-viewer', 'production-deploy-session', NULL
-          ) IS NOT NULL AS public_rpc_ok;
+          DO $$
+          DECLARE
+            v_public_result jsonb;
+          BEGIN
+            v_public_result := public.gsa_public_site_campaigns(
+              '/', 'desktop', 'guests',
+              'production-deploy-viewer', 'production-deploy-session', NULL
+            );
+            IF v_public_result IS NULL THEN
+              RAISE EXCEPTION 'RPC pública da Central retornou NULL';
+            END IF;
+          END $$;
 
           SELECT 'SITE_CAMPAIGNS_PRODUCTION_VERIFIED' AS result;
           SQL
 
           supabase db query --linked --file /tmp/verify-site-campaigns.sql 2>&1 | tee site-campaign-production-verification.log
           grep -q 'SITE_CAMPAIGNS_PRODUCTION_VERIFIED' site-campaign-production-verification.log
-          grep -q 'public_rpc_ok' site-campaign-production-verification.log
 
       - name: Guardar evidências da implantação
         if: always()
