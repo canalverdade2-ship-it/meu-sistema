@@ -131,6 +131,18 @@ requireTokens('supabase/migrations/20260724223700_site_campaigns_permission_hard
   "gsa_site_campaign_has_action('edit')",
   "gsa_site_campaign_has_action('delete')",
 ]);
+requireTokens('supabase/migrations/20260725192000_harden_site_campaign_admin_rpc_privileges.sql', [
+  'REVOKE ALL ON FUNCTION public.gsa_admin_site_campaigns_overview(uuid,text) FROM PUBLIC, anon',
+  'REVOKE ALL ON FUNCTION public.gsa_admin_upsert_site_campaign(uuid,jsonb,uuid,text) FROM PUBLIC, anon',
+  'REVOKE ALL ON FUNCTION public.gsa_admin_set_site_campaign_status(uuid,text,uuid,text) FROM PUBLIC, anon',
+  'REVOKE ALL ON FUNCTION public.gsa_admin_duplicate_site_campaign(uuid,uuid,text) FROM PUBLIC, anon',
+  'REVOKE ALL ON FUNCTION public.gsa_admin_delete_site_campaign(uuid,uuid,text) FROM PUBLIC, anon',
+  'REVOKE ALL ON FUNCTION public.gsa_admin_site_campaign_permission_overview(uuid,text) FROM PUBLIC, anon',
+  'REVOKE ALL ON FUNCTION public.gsa_admin_set_site_campaign_permissions(uuid,boolean,text[],uuid,text) FROM PUBLIC, anon',
+  'REVOKE ALL ON FUNCTION public.gsa_admin_site_campaign_my_permissions(uuid,text) FROM PUBLIC, anon',
+  'FROM PUBLIC, anon, authenticated',
+  'TO authenticated, service_role',
+]);
 
 const migrations = [
   'supabase/migrations/20260724223000_site_campaigns_schema.sql',
@@ -141,6 +153,7 @@ const migrations = [
   'supabase/migrations/20260724223500_site_campaigns_action_permissions.sql',
   'supabase/migrations/20260724223600_site_campaigns_permission_visibility.sql',
   'supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql',
+  'supabase/migrations/20260725192000_harden_site_campaign_admin_rpc_privileges.sql',
 ].map(read).join('\n').toLowerCase();
 
 for (const unsafe of ["'javascript:", "'data:text/html"]) {
