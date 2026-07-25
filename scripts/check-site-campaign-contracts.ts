@@ -143,6 +143,11 @@ requireTokens('supabase/migrations/20260725192000_harden_site_campaign_admin_rpc
   'FROM PUBLIC, anon, authenticated',
   'TO authenticated, service_role',
 ]);
+requireTokens('supabase/migrations/20260725194000_site_campaigns_pgcrypto_search_path.sql', [
+  'ALTER FUNCTION public.gsa_public_site_campaigns(text,text,text,text,text,text)',
+  'ALTER FUNCTION public.gsa_public_site_campaign_event(uuid,text,text,text,text,text,text,text,jsonb)',
+  'SET search_path = public, extensions, pg_temp',
+]);
 
 const migrations = [
   'supabase/migrations/20260724223000_site_campaigns_schema.sql',
@@ -154,6 +159,7 @@ const migrations = [
   'supabase/migrations/20260724223600_site_campaigns_permission_visibility.sql',
   'supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql',
   'supabase/migrations/20260725192000_harden_site_campaign_admin_rpc_privileges.sql',
+  'supabase/migrations/20260725194000_site_campaigns_pgcrypto_search_path.sql',
 ].map(read).join('\n').toLowerCase();
 
 for (const unsafe of ["'javascript:", "'data:text/html"]) {
