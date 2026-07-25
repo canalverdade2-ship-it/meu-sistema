@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   BarChart3,
+  BellRing,
   Briefcase,
   ChevronRight,
   ClipboardList,
@@ -62,6 +63,7 @@ import { PartnersAdminModule } from '../components/admin/PartnersAdminModule';
 import { AdvertisingAdminModule } from '../components/admin/AdvertisingAdminModule';
 import { FornecedoresModule } from '../components/admin/FornecedoresModule';
 import { CareersAdminModule } from '../components/admin/CareersAdminModule';
+import { SiteCampaignAdminPage } from '../components/admin/SiteCampaignAdminPage';
 import {
   adminPathFor,
   hasAdminModuleAccess,
@@ -109,6 +111,9 @@ const MENU_GROUPS: MenuGroup[] = [
     { id: 'promocoes', label: 'Promoções por Quantidade', icon: Tags },
     { id: 'area_vip', label: 'Área VIP', icon: Gift },
     { id: 'atendimento', label: 'Atendimento', icon: MessageSquare },
+  ]},
+  { label: 'Comunicação', items: [
+    { id: 'avisos-campanhas', label: 'Avisos e Campanhas', icon: BellRing },
   ]},
   { label: 'Gestão', items: [
     { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
@@ -233,6 +238,7 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
         {normalizedActive === 'classificados' && <ErrorBoundary><ClassifiedsModule initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
         {normalizedActive === 'anuncios' && <ErrorBoundary><AdvertisingAdminModule /></ErrorBoundary>}
         {['trabalhe-conosco', 'careers'].includes(normalizedActive) && <ErrorBoundary><CareersAdminModule /></ErrorBoundary>}
+        {normalizedActive === 'avisos-campanhas' && <ErrorBoundary><SiteCampaignAdminPage /></ErrorBoundary>}
         {normalizedActive === 'viagens' && <ErrorBoundary><TravelAdminModule /></ErrorBoundary>}
         {normalizedActive === 'afiliados' && <ErrorBoundary><AffiliateAdminModule /></ErrorBoundary>}
         {normalizedActive === 'saude' && <ErrorBoundary><ProtectionAdminModule domain="saude" initialTab={activeTab} initialItemId={activeItemId} /></ErrorBoundary>}

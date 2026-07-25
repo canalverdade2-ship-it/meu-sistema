@@ -1,0 +1,201 @@
+name: Deploy Central de Avisos e Campanhas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-site-campaigns.yml'
+      - 'src/components/admin/SiteCampaignAdminModule.tsx'
+      - 'src/components/admin/SiteCampaignAdminPage.tsx'
+      - 'src/components/admin/SiteCampaignDeletionPanel.tsx'
+      - 'src/components/admin/SiteCampaignPermissionMatrix.tsx'
+      - 'src/components/campaigns/**'
+      - 'src/lib/siteCampaigns.ts'
+      - 'src/types/siteCampaigns.ts'
+      - 'supabase/migrations/20260724223000_site_campaigns_schema.sql'
+      - 'supabase/migrations/20260724223100_site_campaigns_public_api.sql'
+      - 'supabase/migrations/20260724223200_site_campaigns_admin_api.sql'
+      - 'supabase/migrations/20260724223300_site_campaigns_security.sql'
+      - 'supabase/migrations/20260724223400_site_campaigns_delete_api.sql'
+      - 'supabase/migrations/20260724223500_site_campaigns_action_permissions.sql'
+      - 'supabase/migrations/20260724223600_site_campaigns_permission_visibility.sql'
+      - 'supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql'
+      - 'scripts/check-site-campaign-contracts.ts'
+      - 'scripts/check-site-campaign-migrations-runtime.cjs'
+      - 'package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-site-campaigns-production
+  cancel-in-progress: false
+
+env:
+  EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
+  SUPABASE_CLI_VERSION: 2.101.0
+
+jobs:
+  deploy:
+    name: Validar e aplicar a Central no Supabase de produção
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - name: Baixar main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar frontend e contratos da Central
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test:site-campaigns 2>&1 | tee site-campaign-contracts.log
+          npx tsc --noEmit 2>&1 | tee site-campaign-typescript.log
+          npm run build 2>&1 | tee site-campaign-build.log
+
+      - name: Validar configuração de produção
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+
+      - name: Preparar Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Vincular projeto oficial
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Ler histórico remoto antes da implantação
+        run: supabase migration list --linked 2>&1 | tee site-campaign-migrations-before.log
+
+      - name: Aplicar somente as migrations da Central
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > site-campaign-migrations-apply.log
+          for spec in \
+            '20260724223000:supabase/migrations/20260724223000_site_campaigns_schema.sql' \
+            '20260724223100:supabase/migrations/20260724223100_site_campaigns_public_api.sql' \
+            '20260724223200:supabase/migrations/20260724223200_site_campaigns_admin_api.sql' \
+            '20260724223300:supabase/migrations/20260724223300_site_campaigns_security.sql' \
+            '20260724223400:supabase/migrations/20260724223400_site_campaigns_delete_api.sql' \
+            '20260724223500:supabase/migrations/20260724223500_site_campaigns_action_permissions.sql' \
+            '20260724223600:supabase/migrations/20260724223600_site_campaigns_permission_visibility.sql' \
+            '20260724223700:supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql'; do
+              version="${spec%%:*}"
+              file="${spec#*:}"
+              echo "Aplicando ${version} (${file})" | tee -a site-campaign-migrations-apply.log
+              supabase db query --linked --file "$file" 2>&1 | tee -a site-campaign-migrations-apply.log
+          done
+
+      - name: Reconciliar histórico das migrations aplicadas
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --linked 2>&1 | tee site-campaign-migrations-pre-repair.log
+          for version in \
+            20260724223000 \
+            20260724223100 \
+            20260724223200 \
+            20260724223300 \
+            20260724223400 \
+            20260724223500 \
+            20260724223600 \
+            20260724223700; do
+              if ! awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/,"",remote); if(remote==wanted) found=1 } END{exit found?0:1}' site-campaign-migrations-pre-repair.log; then
+                supabase migration repair --linked --status applied "$version" 2>&1 | tee -a site-campaign-migrations-apply.log
+              fi
+          done
+          supabase migration list --linked 2>&1 | tee site-campaign-migrations-after.log
+
+      - name: Verificar banco de produção
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/verify-site-campaigns.sql <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regclass('public.gsa_site_campaigns') IS NULL
+               OR to_regclass('public.gsa_site_campaign_events') IS NULL
+               OR to_regclass('public.gsa_site_campaign_history') IS NULL
+               OR to_regclass('public.gsa_site_campaign_permissions') IS NULL THEN
+              RAISE EXCEPTION 'Tabelas obrigatórias da Central ausentes';
+            END IF;
+
+            IF to_regprocedure('public.gsa_public_site_campaigns(text,text,text,text,text,text)') IS NULL
+               OR to_regprocedure('public.gsa_public_site_campaign_event(uuid,text,text,text,text,text,text,text,jsonb)') IS NULL
+               OR to_regproc('public.gsa_admin_site_campaigns_overview') IS NULL
+               OR to_regproc('public.gsa_admin_upsert_site_campaign') IS NULL
+               OR to_regproc('public.gsa_admin_set_site_campaign_status') IS NULL
+               OR to_regproc('public.gsa_admin_set_site_campaign_permissions') IS NULL
+               OR to_regproc('public.gsa_admin_delete_site_campaign') IS NULL THEN
+              RAISE EXCEPTION 'RPCs obrigatórias da Central ausentes';
+            END IF;
+
+            IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'gsa-site-campaigns') THEN
+              RAISE EXCEPTION 'Bucket de imagens da Central ausente';
+            END IF;
+
+            IF EXISTS (
+              SELECT 1
+              FROM pg_class c
+              JOIN pg_namespace n ON n.oid = c.relnamespace
+              WHERE n.nspname = 'public'
+                AND c.relname IN ('gsa_site_campaigns','gsa_site_campaign_events','gsa_site_campaign_history','gsa_site_campaign_permissions')
+                AND NOT c.relrowsecurity
+            ) THEN
+              RAISE EXCEPTION 'RLS não está habilitado em todas as tabelas da Central';
+            END IF;
+
+            IF NOT has_function_privilege('anon', 'public.gsa_public_site_campaigns(text,text,text,text,text,text)', 'EXECUTE')
+               OR NOT has_function_privilege('anon', 'public.gsa_public_site_campaign_event(uuid,text,text,text,text,text,text,text,jsonb)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'RPCs públicas da Central não estão disponíveis ao papel anon';
+            END IF;
+
+            IF has_function_privilege('anon', 'public.gsa_admin_site_campaigns_overview(uuid,text)', 'EXECUTE') THEN
+              RAISE EXCEPTION 'RPC administrativa da Central foi exposta ao papel anon';
+            END IF;
+          END $$;
+
+          SELECT public.gsa_public_site_campaigns(
+            '/', 'desktop', 'guests',
+            'production-deploy-viewer', 'production-deploy-session', NULL
+          ) IS NOT NULL AS public_rpc_ok;
+
+          SELECT 'SITE_CAMPAIGNS_PRODUCTION_VERIFIED' AS result;
+          SQL
+
+          supabase db query --linked --file /tmp/verify-site-campaigns.sql 2>&1 | tee site-campaign-production-verification.log
+          grep -q 'SITE_CAMPAIGNS_PRODUCTION_VERIFIED' site-campaign-production-verification.log
+          grep -q 'public_rpc_ok' site-campaign-production-verification.log
+
+      - name: Guardar evidências da implantação
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-campaigns-production-evidence-${{ github.run_id }}
+          path: |
+            site-campaign-*.log
+          if-no-files-found: ignore
+          retention-days: 30

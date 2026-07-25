@@ -1,0 +1,85 @@
+name: Central de Avisos e Campanhas
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/components/admin/SiteCampaign*.tsx'
+      - 'src/components/campaigns/**'
+      - 'src/lib/siteCampaigns.ts'
+      - 'src/types/siteCampaigns.ts'
+      - 'src/pages/AdminPanel.tsx'
+      - 'src/main.tsx'
+      - 'src/routing/adminAccess.ts'
+      - 'src/security/collaboratorAccess.ts'
+      - 'supabase/migrations/*site_campaigns*.sql'
+      - 'scripts/check-site-campaign*.ts'
+      - 'scripts/check-site-campaign*.cjs'
+      - 'package.json'
+      - '.github/workflows/site-campaigns.yml'
+  push:
+    branches:
+      - feature/central-avisos-campanhas
+    paths:
+      - 'src/components/admin/SiteCampaign*.tsx'
+      - 'src/components/campaigns/**'
+      - 'src/lib/siteCampaigns.ts'
+      - 'src/types/siteCampaigns.ts'
+      - 'src/pages/AdminPanel.tsx'
+      - 'src/main.tsx'
+      - 'src/routing/adminAccess.ts'
+      - 'src/security/collaboratorAccess.ts'
+      - 'supabase/migrations/*site_campaigns*.sql'
+      - 'scripts/check-site-campaign*.ts'
+      - 'scripts/check-site-campaign*.cjs'
+      - 'package.json'
+      - '.github/workflows/site-campaigns.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-campaigns-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Baixar branch
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Validar contratos e migrations runtime
+        run: npm run test:site-campaigns
+      - name: Validar TypeScript
+        run: npx tsc --noEmit
+      - name: Gerar build de produção
+        run: npm run build
