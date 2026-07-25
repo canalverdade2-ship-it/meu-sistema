@@ -5,22 +5,11 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/deploy-site-campaigns.yml'
-      - 'src/components/admin/SiteCampaignAdminModule.tsx'
-      - 'src/components/admin/SiteCampaignAdminPage.tsx'
-      - 'src/components/admin/SiteCampaignDeletionPanel.tsx'
-      - 'src/components/admin/SiteCampaignPermissionMatrix.tsx'
+      - 'src/components/admin/SiteCampaign*.tsx'
       - 'src/components/campaigns/**'
       - 'src/lib/siteCampaigns.ts'
       - 'src/types/siteCampaigns.ts'
-      - 'supabase/migrations/20260724223000_site_campaigns_schema.sql'
-      - 'supabase/migrations/20260724223100_site_campaigns_public_api.sql'
-      - 'supabase/migrations/20260724223200_site_campaigns_admin_api.sql'
-      - 'supabase/migrations/20260724223300_site_campaigns_security.sql'
-      - 'supabase/migrations/20260724223400_site_campaigns_delete_api.sql'
-      - 'supabase/migrations/20260724223500_site_campaigns_action_permissions.sql'
-      - 'supabase/migrations/20260724223600_site_campaigns_permission_visibility.sql'
-      - 'supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql'
-      - 'supabase/migrations/20260725192000_harden_site_campaign_admin_rpc_privileges.sql'
+      - 'supabase/migrations/*site_campaign*.sql'
       - 'scripts/check-site-campaign-contracts.ts'
       - 'scripts/check-site-campaign-migrations-runtime.cjs'
       - 'package.json'
@@ -104,11 +93,23 @@ jobs:
       - name: Ler histórico remoto antes da implantação
         run: supabase migration list --linked 2>&1 | tee site-campaign-migrations-before.log
 
-      - name: Aplicar somente as migrations da Central
+      - name: Aplicar somente migrations pendentes da Central
         shell: bash
         run: |
           set -euo pipefail
           : > site-campaign-migrations-apply.log
+
+          remote_has_version() {
+            awk -F'|' -v wanted="$1" '
+              {
+                remote=$2;
+                gsub(/[^0-9]/,"",remote);
+                if (remote == wanted) found=1;
+              }
+              END { exit found ? 0 : 1 }
+            ' site-campaign-migrations-before.log
+          }
+
           for spec in \
             '20260724223000:supabase/migrations/20260724223000_site_campaigns_schema.sql' \
             '20260724223100:supabase/migrations/20260724223100_site_campaigns_public_api.sql' \
@@ -121,6 +122,12 @@ jobs:
             '20260725192000:supabase/migrations/20260725192000_harden_site_campaign_admin_rpc_privileges.sql'; do
               version="${spec%%:*}"
               file="${spec#*:}"
+
+              if remote_has_version "$version"; then
+                echo "Ignorando ${version}: já registrada no banco remoto." | tee -a site-campaign-migrations-apply.log
+                continue
+              fi
+
               echo "Aplicando ${version} (${file})" | tee -a site-campaign-migrations-apply.log
               supabase db query --linked --file "$file" 2>&1 | tee -a site-campaign-migrations-apply.log
           done
@@ -130,6 +137,7 @@ jobs:
         run: |
           set -euo pipefail
           supabase migration list --linked 2>&1 | tee site-campaign-migrations-pre-repair.log
+
           for version in \
             20260724223000 \
             20260724223100 \
@@ -144,6 +152,7 @@ jobs:
                 supabase migration repair --linked --status applied "$version" 2>&1 | tee -a site-campaign-migrations-apply.log
               fi
           done
+
           supabase migration list --linked 2>&1 | tee site-campaign-migrations-after.log
 
       - name: Verificar banco de produção
