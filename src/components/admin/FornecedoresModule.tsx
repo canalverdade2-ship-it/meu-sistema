@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Building2,
+  CheckCircle2,
   FileText,
   FileUp,
+  Mail,
+  MapPin,
   PackageCheck,
+  Phone,
   Plus,
   RefreshCw,
   Search,
@@ -14,7 +18,16 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
-import { formatCurrency, formatDate, formatDateTime, generateUUID } from '../../lib/utils';
+import {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  generateUUID,
+  maskCEP,
+  maskCNPJ,
+  maskCPF,
+  maskPhone,
+} from '../../lib/utils';
 import {
   createAdminSupplierOrder,
   getAdminSupplierSnapshot,
