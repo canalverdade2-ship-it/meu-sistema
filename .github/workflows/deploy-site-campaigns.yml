@@ -20,6 +20,7 @@ on:
       - 'supabase/migrations/20260724223500_site_campaigns_action_permissions.sql'
       - 'supabase/migrations/20260724223600_site_campaigns_permission_visibility.sql'
       - 'supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql'
+      - 'supabase/migrations/20260725192000_harden_site_campaign_admin_rpc_privileges.sql'
       - 'scripts/check-site-campaign-contracts.ts'
       - 'scripts/check-site-campaign-migrations-runtime.cjs'
       - 'package.json'
@@ -116,7 +117,8 @@ jobs:
             '20260724223400:supabase/migrations/20260724223400_site_campaigns_delete_api.sql' \
             '20260724223500:supabase/migrations/20260724223500_site_campaigns_action_permissions.sql' \
             '20260724223600:supabase/migrations/20260724223600_site_campaigns_permission_visibility.sql' \
-            '20260724223700:supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql'; do
+            '20260724223700:supabase/migrations/20260724223700_site_campaigns_permission_hardening.sql' \
+            '20260725192000:supabase/migrations/20260725192000_harden_site_campaign_admin_rpc_privileges.sql'; do
               version="${spec%%:*}"
               file="${spec#*:}"
               echo "Aplicando ${version} (${file})" | tee -a site-campaign-migrations-apply.log
@@ -136,7 +138,8 @@ jobs:
             20260724223400 \
             20260724223500 \
             20260724223600 \
-            20260724223700; do
+            20260724223700 \
+            20260725192000; do
               if ! awk -F'|' -v wanted="$version" '{ remote=$2; gsub(/[^0-9]/,"",remote); if(remote==wanted) found=1 } END{exit found?0:1}' site-campaign-migrations-pre-repair.log; then
                 supabase migration repair --linked --status applied "$version" 2>&1 | tee -a site-campaign-migrations-apply.log
               fi
@@ -159,11 +162,14 @@ jobs:
 
             IF to_regprocedure('public.gsa_public_site_campaigns(text,text,text,text,text,text)') IS NULL
                OR to_regprocedure('public.gsa_public_site_campaign_event(uuid,text,text,text,text,text,text,text,jsonb)') IS NULL
-               OR to_regproc('public.gsa_admin_site_campaigns_overview') IS NULL
-               OR to_regproc('public.gsa_admin_upsert_site_campaign') IS NULL
-               OR to_regproc('public.gsa_admin_set_site_campaign_status') IS NULL
-               OR to_regproc('public.gsa_admin_set_site_campaign_permissions') IS NULL
-               OR to_regproc('public.gsa_admin_delete_site_campaign') IS NULL THEN
+               OR to_regprocedure('public.gsa_admin_site_campaigns_overview(uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_upsert_site_campaign(uuid,jsonb,uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_set_site_campaign_status(uuid,text,uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_duplicate_site_campaign(uuid,uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_delete_site_campaign(uuid,uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_site_campaign_permission_overview(uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_set_site_campaign_permissions(uuid,boolean,text[],uuid,text)') IS NULL
+               OR to_regprocedure('public.gsa_admin_site_campaign_my_permissions(uuid,text)') IS NULL THEN
               RAISE EXCEPTION 'RPCs obrigatórias da Central ausentes';
             END IF;
 
@@ -187,8 +193,54 @@ jobs:
               RAISE EXCEPTION 'RPCs públicas da Central não estão disponíveis ao papel anon';
             END IF;
 
-            IF has_function_privilege('anon', 'public.gsa_admin_site_campaigns_overview(uuid,text)', 'EXECUTE') THEN
-              RAISE EXCEPTION 'RPC administrativa da Central foi exposta ao papel anon';
+            IF EXISTS (
+              SELECT 1 FROM unnest(ARRAY[
+                'public.gsa_admin_site_campaigns_overview(uuid,text)',
+                'public.gsa_admin_upsert_site_campaign(uuid,jsonb,uuid,text)',
+                'public.gsa_admin_set_site_campaign_status(uuid,text,uuid,text)',
+                'public.gsa_admin_duplicate_site_campaign(uuid,uuid,text)',
+                'public.gsa_admin_delete_site_campaign(uuid,uuid,text)',
+                'public.gsa_admin_site_campaign_permission_overview(uuid,text)',
+                'public.gsa_admin_set_site_campaign_permissions(uuid,boolean,text[],uuid,text)',
+                'public.gsa_admin_site_campaign_my_permissions(uuid,text)',
+                'public.gsa_admin_site_campaigns_overview_internal(uuid,text)',
+                'public.gsa_admin_upsert_site_campaign_internal(uuid,jsonb,uuid,text)',
+                'public.gsa_admin_set_site_campaign_status_internal(uuid,text,uuid,text)',
+                'public.gsa_admin_duplicate_site_campaign_internal(uuid,uuid,text)',
+                'public.gsa_admin_delete_site_campaign_internal(uuid,uuid,text)'
+              ]::text[]) AS signature
+              WHERE has_function_privilege('anon', signature, 'EXECUTE')
+            ) THEN
+              RAISE EXCEPTION 'Existe RPC administrativa da Central exposta ao papel anon';
+            END IF;
+
+            IF EXISTS (
+              SELECT 1 FROM unnest(ARRAY[
+                'public.gsa_admin_site_campaigns_overview_internal(uuid,text)',
+                'public.gsa_admin_upsert_site_campaign_internal(uuid,jsonb,uuid,text)',
+                'public.gsa_admin_set_site_campaign_status_internal(uuid,text,uuid,text)',
+                'public.gsa_admin_duplicate_site_campaign_internal(uuid,uuid,text)',
+                'public.gsa_admin_delete_site_campaign_internal(uuid,uuid,text)'
+              ]::text[]) AS signature
+              WHERE has_function_privilege('authenticated', signature, 'EXECUTE')
+            ) THEN
+              RAISE EXCEPTION 'Existe RPC interna da Central exposta ao papel authenticated';
+            END IF;
+
+            IF EXISTS (
+              SELECT 1 FROM unnest(ARRAY[
+                'public.gsa_admin_site_campaigns_overview(uuid,text)',
+                'public.gsa_admin_upsert_site_campaign(uuid,jsonb,uuid,text)',
+                'public.gsa_admin_set_site_campaign_status(uuid,text,uuid,text)',
+                'public.gsa_admin_duplicate_site_campaign(uuid,uuid,text)',
+                'public.gsa_admin_delete_site_campaign(uuid,uuid,text)',
+                'public.gsa_admin_site_campaign_permission_overview(uuid,text)',
+                'public.gsa_admin_set_site_campaign_permissions(uuid,boolean,text[],uuid,text)',
+                'public.gsa_admin_site_campaign_my_permissions(uuid,text)'
+              ]::text[]) AS signature
+              WHERE NOT has_function_privilege('authenticated', signature, 'EXECUTE')
+            ) THEN
+              RAISE EXCEPTION 'Existe wrapper administrativo sem permissão authenticated';
             END IF;
           END $$;
 
@@ -228,11 +280,15 @@ jobs:
             const success = result === 'success';
             const icon = success ? '✅' : '❌';
             const status = success ? 'concluída com sucesso' : `finalizada com resultado ${result}`;
+            const details = success
+              ? `- Supabase: projeto oficial validado\n` +
+                `- Migrations: aplicação e reconciliação concluídas\n` +
+                `- Banco: tabelas, RPCs, RLS, Storage e fronteiras públicas verificadas\n`
+              : `- O workflow foi interrompido em uma etapa de validação ou implantação.\n` +
+                `- Etapas posteriores ao ponto de falha não devem ser consideradas concluídas.\n`;
             const body = `${icon} **Implantação produtiva da Central de Avisos e Campanhas ${status}.**\n\n` +
               `- Commit: \`${context.sha}\`\n` +
-              `- Supabase: projeto oficial validado\n` +
-              `- Migrations: aplicação e reconciliação executadas\n` +
-              `- Banco: tabelas, RPCs, RLS, Storage e fronteiras públicas verificadas\n` +
+              details +
               `- Evidências: disponíveis no workflow run ${context.runId}\n\n` +
               `[Abrir execução](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
             await github.rest.issues.createComment({
