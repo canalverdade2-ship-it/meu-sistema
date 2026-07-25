@@ -1,6 +1,7 @@
--- Allow supplier onboarding and registration actions in client notification guard function.
--- Problem: When a user logged in with a client JWT submits a supplier pre-registration form (gsa_public_register_supplier),
--- the notification trigger raised "Ação de notificação administrativa não permitida." because 'cadastro_fornecedor' and 'cadastro_fornecedor_reenviado' were missing from v_allowed_admin_actions.
+-- Allow supplier onboarding and public registration actions in client notification guard function.
+-- Problem: When submitting a supplier pre-registration form (gsa_public_register_supplier),
+-- the notification trigger raised "Ação de notificação administrativa não permitida." or "Sessão de cliente inválida para criar notificação."
+-- because supplier onboarding actions were checked against client session constraints.
 
 CREATE OR REPLACE FUNCTION public.gsa_guard_client_notification_insert()
 RETURNS TRIGGER
@@ -25,6 +26,18 @@ DECLARE
     'cadastro_fornecedor_reenviado', 'perfil_fornecedor_atualizado'
   ];
 BEGIN
+  -- Permite notificações do sistema/onboarding para administradores geradas por fluxos públicos e RPCs
+  IF NEW.destinatario_tipo = 'admin' AND COALESCE(NEW.acao_origem, '') IN (
+    'cadastro_fornecedor', 'cadastro_fornecedor_reenviado', 'cadastro_prestador',
+    'cadastro_cliente', 'orcamento_criado', 'perfil_fornecedor_atualizado'
+  ) THEN
+    NEW.prioridade := CASE WHEN NEW.prioridade = 'alta' THEN 'alta' ELSE 'normal' END;
+    NEW.tipo := COALESCE(NULLIF(NEW.tipo, ''), 'sistema');
+    NEW.lida := false;
+    NEW.data_criacao := COALESCE(NEW.data_criacao, NOW());
+    RETURN NEW;
+  END IF;
+
   v_actor_type := public.gsa_jwt_actor_type();
   v_actor_id := public.gsa_jwt_actor_id();
   IF v_actor_type <> 'cliente' THEN RETURN NEW; END IF;
