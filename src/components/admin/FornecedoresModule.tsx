@@ -444,20 +444,265 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
         </ListEmpty>
       )}
 
-      <Modal isOpen={Boolean(approval)} onClose={() => { if (!saving) { setApproval(null); navigate('/admin/fornecedores/cadastros'); } }} title="Analisar fornecedor" size="sm">
-        {approval && (
-          <div className="space-y-4">
-            <div className="rounded-xl bg-neutral-50 p-4"><p className="font-black">{approval.nome_fantasia || approval.razao_social}</p><p className="text-sm text-neutral-500">{approval.documento} · {approval.email}</p></div>
-            <label className="block text-sm font-bold">Motivo ou observação<textarea rows={3} value={reason} onChange={(event) => setReason(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 p-3" /></label>
-            <label className="block text-sm font-bold">PIN inicial para aprovação<input inputMode="numeric" maxLength={4} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 4))} className="mt-2 w-full rounded-xl border border-neutral-200 p-3 text-center text-xl tracking-[0.5em]" placeholder="0000" /></label>
-            <p className="rounded-xl bg-blue-50 p-3 text-xs font-semibold text-blue-800">Após aprovar, comunique este PIN ao fornecedor por um canal seguro. O sistema armazena somente o hash.</p>
-            <div className="grid grid-cols-3 gap-2">
-              <button type="button" disabled={saving} onClick={() => void changeSupplierStatus('reprovado')} className="rounded-xl bg-red-50 py-3 text-xs font-black text-red-700">Reprovar</button>
-              <button type="button" disabled={saving} onClick={() => void changeSupplierStatus(approval.status === 'ativo' ? 'suspenso' : 'ajuste_solicitado')} className="rounded-xl bg-amber-50 py-3 text-xs font-black text-amber-700">{approval.status === 'ativo' ? 'Suspender' : 'Pedir ajuste'}</button>
-              <button type="button" disabled={saving} onClick={() => void changeSupplierStatus('ativo')} className="rounded-xl bg-emerald-600 py-3 text-xs font-black text-white">Aprovar</button>
+      <Modal isOpen={Boolean(approval)} onClose={() => { if (!saving) { setApproval(null); navigate('/admin/fornecedores/cadastros'); } }} title="Analisar cadastro do fornecedor" size="2xl">
+        {approval && (() => {
+          const isPj = approval.tipo_pessoa === 'pj';
+          const formattedDoc = isPj ? maskCNPJ(approval.documento) : maskCPF(approval.documento);
+          const bank = approval.dados_bancarios || {};
+
+          const statusBadge = {
+            pendente: { bg: 'bg-amber-100 text-amber-900 border-amber-300', label: 'Pendente de Análise' },
+            em_analise: { bg: 'bg-blue-100 text-blue-900 border-blue-300', label: 'Em Análise' },
+            ajuste_solicitado: { bg: 'bg-orange-100 text-orange-900 border-orange-300', label: 'Ajuste Solicitado' },
+            ativo: { bg: 'bg-emerald-100 text-emerald-900 border-emerald-300', label: 'Ativo / Aprovado' },
+            suspenso: { bg: 'bg-purple-100 text-purple-900 border-purple-300', label: 'Suspenso' },
+            reprovado: { bg: 'bg-red-100 text-red-900 border-red-300', label: 'Reprovado' }
+          }[approval.status as string] || { bg: 'bg-neutral-100 text-neutral-800 border-neutral-300', label: approval.status };
+
+          return (
+            <div className="space-y-6">
+              {/* Banner Superior com Identificação Principal */}
+              <div className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-5 shadow-sm">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center rounded-lg border px-2.5 py-0.5 text-xs font-black uppercase ${statusBadge.bg}`}>
+                        {statusBadge.label}
+                      </span>
+                      {approval.id && (
+                        <span className="text-xs font-semibold text-neutral-400">
+                          ID: {approval.id.slice(0, 8)}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="mt-2 text-xl font-black text-neutral-900">
+                      {approval.razao_social || approval.nome_fantasia || 'Sem nome registrado'}
+                    </h3>
+                    {approval.nome_fantasia && approval.nome_fantasia !== approval.razao_social && (
+                      <p className="text-sm font-medium text-neutral-600">
+                        Nome Fantasia: <span className="font-bold text-neutral-800">{approval.nome_fantasia}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="text-right text-xs text-neutral-500">
+                    <p>Cadastrado em:</p>
+                    <p className="font-bold text-neutral-800">{formatDateTime(approval.created_at)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid de Seções com Informações Cadastrais */}
+              <div className="grid gap-4 md:grid-cols-2">
+
+                {/* 1. Dados Identificadores & Empresa */}
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm space-y-3">
+                  <div className="flex items-center gap-2 border-b border-neutral-100 pb-2.5">
+                    <Building2 className="h-4 w-4 text-indigo-600" />
+                    <h4 className="text-xs font-black uppercase tracking-wider text-neutral-900">Dados da Empresa / Pessoa</h4>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="block text-neutral-400 font-medium">Tipo de Pessoa</span>
+                      <span className="font-black text-neutral-800 uppercase">{approval.tipo_pessoa === 'pj' ? 'Pessoa Jurídica (PJ)' : 'Pessoa Física (PF)'}</span>
+                    </div>
+
+                    <div>
+                      <span className="block text-neutral-400 font-medium">{isPj ? 'CNPJ' : 'CPF'}</span>
+                      <span className="font-black text-neutral-900">{formattedDoc || approval.documento || '—'}</span>
+                    </div>
+
+                    <div className="col-span-2">
+                      <span className="block text-neutral-400 font-medium">Razão Social / Nome Completo</span>
+                      <span className="font-bold text-neutral-900">{approval.razao_social || '—'}</span>
+                    </div>
+
+                    {approval.nome_fantasia && (
+                      <div className="col-span-2">
+                        <span className="block text-neutral-400 font-medium">Nome Fantasia</span>
+                        <span className="font-bold text-neutral-900">{approval.nome_fantasia}</span>
+                      </div>
+                    )}
+
+                    <div>
+                      <span className="block text-neutral-400 font-medium">Inscrição Estadual</span>
+                      <span className="font-bold text-neutral-900">{approval.inscricao_estadual || 'Não informada'}</span>
+                    </div>
+
+                    <div>
+                      <span className="block text-neutral-400 font-medium">Responsável Legal</span>
+                      <span className="font-bold text-neutral-900">{approval.responsavel_nome || '—'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Contato & Endereço */}
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm space-y-3">
+                  <div className="flex items-center gap-2 border-b border-neutral-100 pb-2.5">
+                    <MapPin className="h-4 w-4 text-emerald-600" />
+                    <h4 className="text-xs font-black uppercase tracking-wider text-neutral-900">Contato & Localização</h4>
+                  </div>
+
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
+                      <div>
+                        <span className="block text-[10px] text-neutral-400 font-medium">E-mail Principal</span>
+                        <span className="font-bold text-neutral-900 select-all">{approval.email || '—'}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
+                      <div>
+                        <span className="block text-[10px] text-neutral-400 font-medium">Telefone / WhatsApp</span>
+                        <span className="font-bold text-neutral-900">{maskPhone(approval.telefone) || '—'}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-1 border-t border-neutral-100 grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="block text-neutral-400 font-medium">CEP</span>
+                        <span className="font-bold text-neutral-900">{maskCEP(approval.cep) || '—'}</span>
+                      </div>
+                      <div>
+                        <span className="block text-neutral-400 font-medium">Cidade / UF</span>
+                        <span className="font-bold text-neutral-900">
+                          {approval.cidade && approval.estado ? `${approval.cidade} / ${approval.estado}` : approval.cidade || approval.estado || '—'}
+                        </span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="block text-neutral-400 font-medium">Endereço</span>
+                        <span className="font-bold text-neutral-900">
+                          {approval.endereco ? `${approval.endereco}${approval.numero ? `, ${approval.numero}` : ''}${approval.complemento ? ` (${approval.complemento})` : ''}${approval.bairro ? ` - ${approval.bairro}` : ''}` : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Informações Complementares e Observações */}
+              <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm space-y-2">
+                <div className="flex items-center gap-2 border-b border-neutral-100 pb-2">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                  <h4 className="text-xs font-black uppercase tracking-wider text-neutral-900">Observações Comerciais & Informações Complementares</h4>
+                </div>
+                <p className="text-xs text-neutral-700 whitespace-pre-line leading-relaxed p-3 bg-neutral-50 rounded-xl border border-neutral-100">
+                  {approval.observacoes || 'Nenhuma observação comercial informada pelo fornecedor.'}
+                </p>
+              </div>
+
+              {/* 4. Dados Bancários (se cadastrados) */}
+              <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm space-y-3">
+                <div className="flex items-center gap-2 border-b border-neutral-100 pb-2.5">
+                  <WalletCards className="h-4 w-4 text-purple-600" />
+                  <h4 className="text-xs font-black uppercase tracking-wider text-neutral-900">Dados Bancários para Recebimento</h4>
+                </div>
+
+                {bank && (bank.banco || bank.chave_pix || bank.conta) ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    <div>
+                      <span className="block text-neutral-400 font-medium">Banco</span>
+                      <span className="font-bold text-neutral-900">{bank.banco || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-neutral-400 font-medium">Agência</span>
+                      <span className="font-bold text-neutral-900">{bank.agencia || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-neutral-400 font-medium">Conta / Tipo</span>
+                      <span className="font-bold text-neutral-900">{bank.conta || '—'} {bank.tipo_conta ? `(${bank.tipo_conta})` : ''}</span>
+                    </div>
+                    <div>
+                      <span className="block text-neutral-400 font-medium">Tipo Chave PIX</span>
+                      <span className="font-bold text-neutral-900 uppercase">{bank.tipo_chave_pix || '—'}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="block text-neutral-400 font-medium">Chave PIX</span>
+                      <span className="font-bold text-neutral-900 select-all">{bank.chave_pix || '—'}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="block text-neutral-400 font-medium">Titular da Conta / Doc</span>
+                      <span className="font-bold text-neutral-900">
+                        {bank.titular || '—'} {bank.documento_titular ? `(${maskCNPJ(bank.documento_titular) || maskCPF(bank.documento_titular)})` : ''}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-neutral-500 italic bg-neutral-50 p-3 rounded-xl border border-neutral-100">
+                    O fornecedor ainda não cadastrou dados bancários no perfil.
+                  </p>
+                )}
+              </div>
+
+              {/* 5. Painel de Parecer Administrativo & Ações */}
+              <div className="rounded-2xl border-2 border-indigo-100 bg-indigo-50/40 p-5 space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-indigo-600" />
+                  Parecer Administrativo e Decisão
+                </h4>
+
+                <label className="block text-xs font-bold text-neutral-800">
+                  Motivo ou observação da análise
+                  <textarea
+                    rows={3}
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    className="mt-1.5 w-full rounded-xl border border-neutral-300 bg-white p-3 text-xs focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    placeholder="Descreva o motivo caso solicite ajustes ou reprove, ou insira observações internas da aprovação..."
+                  />
+                </label>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-neutral-800">
+                    PIN inicial de 4 dígitos para aprovação
+                    <input
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={pin}
+                      onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 4))}
+                      className="mt-1.5 w-full rounded-xl border border-neutral-300 bg-white p-3 text-center text-xl font-black tracking-[0.5em] focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      placeholder="0000"
+                    />
+                  </label>
+                  <p className="rounded-xl bg-blue-50 p-3 text-[11px] font-semibold text-blue-900 border border-blue-100">
+                    💡 Após aprovar, comunique este PIN de 4 dígitos ao fornecedor por canal seguro para o primeiro acesso ao Portal do Fornecedor.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => void changeSupplierStatus('reprovado')}
+                    className="rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 py-3 text-xs font-black text-red-700 transition-all disabled:opacity-50"
+                  >
+                    Reprovar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => void changeSupplierStatus(approval.status === 'ativo' ? 'suspenso' : 'ajuste_solicitado')}
+                    className="rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 py-3 text-xs font-black text-amber-800 transition-all disabled:opacity-50"
+                  >
+                    {approval.status === 'ativo' ? 'Suspender' : 'Pedir ajuste'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => void changeSupplierStatus('ativo')}
+                    className="rounded-xl bg-emerald-600 hover:bg-emerald-700 py-3 text-xs font-black text-white shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Aprovar fornecedor
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </Modal>
 
       <Modal isOpen={orderOpen} onClose={() => !saving && setOrderOpen(false)} title="Novo pedido de compra" size="wide">
