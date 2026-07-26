@@ -3,17 +3,20 @@ import {
   ArrowLeft,
   ArrowRight,
   Baby,
+  BadgePercent,
   BriefcaseBusiness,
+  Building2,
   Calculator,
   Check,
   CheckCircle2,
+  Clock3,
   HandCoins,
   HeartHandshake,
-  Info,
   Landmark,
   LockKeyhole,
   Palmtree,
   ShieldCheck,
+  TrendingUp,
 } from 'lucide-react';
 import {
   FreeToolsTieredCalculatorDialog,
@@ -44,8 +47,14 @@ const TOOLS: ToolCard[] = [
   { id: 'retirement', icon: Landmark, number: '02', title: 'Aposentadoria pelo INSS', description: 'Panorama inicial da regra geral e de duas regras de transição consideradas em 2026.', category: 'Previdenciário', useCase: 'Para comparar idade e contribuição com critérios previdenciários básicos.', includes: ['Regra geral', 'Regra dos pontos', 'Idade progressiva', 'Pendências por requisito'], available: true },
   { id: 'vacation', icon: Palmtree, number: '03', title: 'Cálculo de férias', description: 'Estimativa bruta da remuneração de férias e do adicional constitucional de um terço.', category: 'Trabalhista', useCase: 'Para visualizar o valor bruto antes dos descontos e das condições específicas do vínculo.', includes: ['Salário mensal', 'Médias variáveis', 'Adicional de 1/3', 'Total bruto estimado'], available: true },
   { id: 'thirteenth', icon: HandCoins, number: '04', title: '13º salário', description: 'Simulação das parcelas e do valor proporcional aos meses trabalhados.', category: 'Trabalhista', useCase: 'Para visualizar a formação aproximada do décimo terceiro salário.', includes: ['Meses trabalhados', 'Primeira parcela', 'Segunda parcela', 'Valor proporcional'], available: true },
-  { id: 'benefits', icon: Baby, number: '05', title: 'Benefícios do INSS', description: 'Orientação inicial sobre incapacidade, salário-maternidade, pensão e outros benefícios.', category: 'Previdenciário', useCase: 'Para identificar as informações necessárias antes de uma análise completa.', includes: ['Tipo de benefício', 'Qualidade de segurado', 'Carência', 'Documentação inicial'], available: true },
-  { id: 'bpc', icon: HeartHandshake, number: '06', title: 'BPC / LOAS', description: 'Triagem educativa dos critérios básicos do benefício assistencial.', category: 'Assistencial', useCase: 'Para compreender os pontos normalmente avaliados em um pedido.', includes: ['Renda familiar', 'Grupo familiar', 'Impedimento de longo prazo', 'Cadastro social'], available: true },
+  { id: 'overtime', icon: Clock3, number: '05', title: 'Horas extras & Noturno', description: 'Cálculo de horas suplementares (50%/100%), hora noturna reduzida e reflexos no DSR.', category: 'Trabalhista', useCase: 'Para conferir a remuneração de horas excedentes e adicionais da jornada.', includes: ['Horas 50% e 100%', 'Adicional noturno', 'Hora noturna reduzida', 'Reflexo no DSR'], available: true },
+  { id: 'net_salary', icon: Calculator, number: '06', title: 'Salário líquido (CLT x PJ)', description: 'Demonstrativo dos descontos de INSS/IRRF 2026 e comparativo de faturamento PJ equivalente.', category: 'Trabalhista & Fiscal', useCase: 'Para comparar a remuneração líquida recebida no bolso com contratação PJ.', includes: ['Tabela INSS 2026', 'Tabela IRRF', 'Salário líquido real', 'Equivalência CLT x PJ'], available: true },
+  { id: 'mei_limit', icon: Building2, number: '07', title: 'Limite e excesso do MEI', description: 'Projeção do limite proporcional de faturamento anual do MEI e cálculo de extrapolação.', category: 'Empresarial & MEI', useCase: 'Para acompanhar a margem de faturamento do MEI e evitar desenquadramento.', includes: ['Limite proporcional', 'Saldo disponível', 'Projeção de vendas', 'Cálculo de excesso'], available: true },
+  { id: 'unemployment', icon: HandCoins, number: '08', title: 'Seguro-desemprego', description: 'Simulação da quantidade de parcelas (3 a 5) e cálculo do valor MTE 2026.', category: 'Trabalhista', useCase: 'Para verificar a elegibilidade e o valor das parcelas do benefício.', includes: ['Triagem de requisitos', 'Número de parcelas', 'Média dos salários', 'Teto oficial MTE'], available: true },
+  { id: 'fator_r', icon: BadgePercent, number: '09', title: 'Fator R do Simples Nacional', description: 'Cálculo do enquadramento nos Anexos III ou V com base na razão folha/faturamento.', category: 'Tributário & Empresa', useCase: 'Para otimizar impostos reduzindo a alíquota de 15,5% para 6%.', includes: ['Razão Folha/Receita', 'Anexo III vs Anexo V', 'Ajuste de pró-labore', 'Economia tributária'], available: true },
+  { id: 'amortization', icon: TrendingUp, number: '10', title: 'Amortização de parcelas', description: 'Simulação de economia em juros e redução de prazo ao amortizar parcelas SAC ou PRICE.', category: 'Financeiro', useCase: 'Para planejar amortizações antecipadas em financiamentos de imóveis ou veículos.', includes: ['Tabela SAC e PRICE', 'Novo saldo devedor', 'Redução de prazo', 'Economia em juros'], available: true },
+  { id: 'benefits', icon: Baby, number: '11', title: 'Benefícios do INSS', description: 'Orientação inicial sobre incapacidade, salário-maternidade, pensão e outros benefícios.', category: 'Previdenciário', useCase: 'Para identificar as informações necessárias antes de uma análise completa.', includes: ['Tipo de benefício', 'Qualidade de segurado', 'Carência', 'Documentação inicial'], available: true },
+  { id: 'bpc', icon: HeartHandshake, number: '12', title: 'BPC / LOAS', description: 'Triagem educativa dos critérios básicos do benefício assistencial.', category: 'Assistencial', useCase: 'Para compreender os pontos normalmente avaliados em um pedido.', includes: ['Renda familiar', 'Grupo familiar', 'Impedimento de longo prazo', 'Cadastro social'], available: true },
 ];
 
 const AVAILABLE_TOOLS = TOOLS.filter((tool) => tool.available);
