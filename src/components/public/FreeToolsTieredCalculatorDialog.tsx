@@ -4,6 +4,7 @@ import {
   Baby,
   BriefcaseBusiness,
   Calculator,
+  Crown,
   HandCoins,
   HeartHandshake,
   Landmark,
