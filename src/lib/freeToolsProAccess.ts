@@ -12,7 +12,14 @@ export type ProToolId =
   | 'mei_limit'
   | 'unemployment'
   | 'fator_r'
-  | 'amortization';
+  | 'amortization'
+  | 'internship_termination'
+  | 'prolabore_vs_lucros'
+  | 'employee_cost'
+  | 'night_shift_rural_urban'
+  | 'proportional_salary'
+  | 'late_fee_calculator'
+  | 'child_support';
 
 export type ProBlockMode = 'total' | 'partial';
 
