@@ -443,7 +443,7 @@ export function PublicHeader({
               aria-label="Ir para a página inicial"
               className="flex min-w-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"
             >
-              <LogoGSA size="md" variant="light" />
+              <LogoGSA size="sm" variant="light" showText />
             </button>
           </div>
 
