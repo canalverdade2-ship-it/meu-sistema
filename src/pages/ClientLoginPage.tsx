@@ -158,13 +158,37 @@ export function ClientLoginPage({
     setPinError(false);
   };
 
-  const handleDocumentSubmit = (event: FormEvent) => {
+  const handleDocumentSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!isDocumentValid) {
       toast.error(`Informe um ${documentLabel} válido.`);
       return;
     }
-    setLoginStage('pin');
+
+    setLoading(true);
+    try {
+      const docCol = isBusiness ? 'cnpj' : 'cpf';
+      const { data: clientCheck } = await supabase
+        .from('clientes')
+        .select('id, pin_hash, email, telefone')
+        .eq(docCol, cleanDocument)
+        .maybeSingle();
+
+      if (clientCheck && !clientCheck.pin_hash) {
+        setMode('first_access');
+        if (clientCheck.email || clientCheck.telefone) {
+          setFirstAccessContact(clientCheck.email || clientCheck.telefone || '');
+        }
+        toast.success('Primeiro acesso identificado! Cadastre a sua nova senha de acesso.');
+        return;
+      }
+
+      setLoginStage('pin');
+    } catch {
+      setLoginStage('pin');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const confirmExpectedAccountType = async (clientId: string) => {
