@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState, type ComponentType } from 'react';
 import {
   ArrowRight,
   Baby,
+  BadgePercent,
   BriefcaseBusiness,
+  Building2,
   Calculator,
+  Clock3,
   Crown,
   HandCoins,
   HeartHandshake,
@@ -12,33 +14,9 @@ import {
   LockKeyhole,
   Palmtree,
   Sparkles,
+  TrendingUp,
   X,
 } from 'lucide-react';
-import { AccessibleDialog } from '../ui/AccessibleDialog';
-import { FreeToolsSimpleCalculator } from './FreeToolsSimpleCalculators';
-import { FreeToolsAdvancedCalculator } from './FreeToolsAdvancedCalculators';
-import { FreeToolsProUnlockDialog } from './FreeToolsProUnlockDialog';
-import {
-  FreeToolsProEligibilityDialog,
-  type ProEligibilityResult,
-} from './FreeToolsProEligibilityDialog';
-import {
-  clearInfinitePayReturnFromUrl,
-  freeToolsProAccess,
-  readInfinitePayReturn,
-  type ProAccessStatus,
-  type ProToolId,
-} from '../../lib/freeToolsProAccess';
-
-export type FreeToolId = ProToolId;
-
-interface FreeToolsTieredCalculatorDialogProps {
-  tool: FreeToolId | null;
-  onClose: () => void;
-  onToolChange: (tool: FreeToolId) => void;
-  onServices: () => void;
-  onClientLogin: () => void;
-}
 
 const TOOLS: Record<FreeToolId, {
   icon: ComponentType<{ className?: string }>;
@@ -59,6 +37,30 @@ const TOOLS: Record<FreeToolId, {
   thirteenth: {
     icon: HandCoins,
     title: 'Calculadora de 13º salário',
+  },
+  overtime: {
+    icon: Clock3,
+    title: 'Calculadora de horas extras e noturno',
+  },
+  net_salary: {
+    icon: Calculator,
+    title: 'Calculadora de salário líquido (CLT x PJ)',
+  },
+  mei_limit: {
+    icon: Building2,
+    title: 'Calculadora de limite e excesso do MEI',
+  },
+  unemployment: {
+    icon: HandCoins,
+    title: 'Simulador de seguro-desemprego',
+  },
+  fator_r: {
+    icon: BadgePercent,
+    title: 'Calculadora do Fator R (Simples Nacional)',
+  },
+  amortization: {
+    icon: TrendingUp,
+    title: 'Calculadora de amortização (SAC / PRICE)',
   },
   benefits: {
     icon: Baby,
