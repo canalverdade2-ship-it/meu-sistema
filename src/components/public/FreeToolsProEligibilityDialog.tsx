@@ -38,6 +38,13 @@ const TOOL_NAMES: Record<ProToolId, string> = {
   unemployment: 'Seguro-desemprego Pro',
   fator_r: 'Fator R Simples Nacional Pro',
   amortization: 'Amortização Pro',
+  internship_termination: 'Rescisão de estágio Pro',
+  prolabore_vs_lucros: 'Pró-labore vs Lucros Pro',
+  employee_cost: 'Custo do funcionário Pro',
+  night_shift_rural_urban: 'Adicional noturno rural/urbano Pro',
+  proportional_salary: 'Salário proporcional Pro',
+  late_fee_calculator: 'Juros e multa por atraso Pro',
+  child_support: 'Pensão alimentícia Pro',
   benefits: 'Benefícios do INSS Pro',
   bpc: 'BPC / LOAS Pro',
 };
