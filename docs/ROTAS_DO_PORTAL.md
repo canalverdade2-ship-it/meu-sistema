@@ -8,22 +8,25 @@ A base do roteamento foi construída usando TypeScript e APIs nativas do HTML5 H
 
 Os seguintes arquivos compõem o ecossistema:
 
-1. [types.ts](file:///c:/Users/Adriano%20Farias/Downloads/remix-9.10_-grupo-gsa---gest%C3%A3o-de-servi%C3%A7os%20-%20Copia%20%284%29/src/routing/types.ts): Definições de tipos e interfaces das áreas do sistema (`public`, `marketplace`, `client`, `admin`, `prestador`).
+1. [types.ts](file:///c:/Users/Adriano%20Farias/Downloads/remix-9.10_-grupo-gsa---gest%C3%A3o-de-servi%C3%A7os%20-%20Copia%20%284%29/src/routing/types.ts): Definições de tipos e interfaces das áreas do sistema (`public`, `marketplace`, `client`, `business`, `admin`, `prestador`).
 2. [routeCatalog.ts](file:///c:/Users/Adriano%20Farias/Downloads/remix-9.10_-grupo-gsa---gest%C3%A3o-de-servi%C3%A7os%20-%20Copia%20%284%29/src/routing/routeCatalog.ts): Catálogo canônico gerador de links dinâmicos e tipados.
 3. [routeMatcher.ts](file:///c:/Users/Adriano%20Farias/Downloads/remix-9.10_-grupo-gsa---gest%C3%A3o-de-servi%C3%A7os%20-%20Copia%20%284%29/src/routing/routeMatcher.ts): Parser reverso de URL que traduz strings em estruturas de estado.
 4. [navigationService.ts](file:///c:/Users/Adriano%20Farias/Downloads/remix-9.10_-grupo-gsa---gest%C3%A3o-de-servi%C3%A7os%20-%20Copia%20%284%29/src/routing/navigationService.ts): Envoltório centralizado para mudanças de URL que notifica listeners reativos.
 5. [useAppLocation.ts](file:///c:/Users/Adriano%20Farias/Downloads/remix-9.10_-grupo-gsa---gest%C3%A3o-de-servi%C3%A7os%20-%20Copia%20%284%29/src/routing/useAppLocation.ts): Hook React reativo utilizado pelos componentes para monitorar a URL.
 6. [legacyRouteResolver.ts](file:///c:/Users/Adriano%20Farias/Downloads/remix-9.10_-grupo-gsa---gest%C3%A3o-de-servi%C3%A7os%20-%20Copia%20%284%29/src/routing/legacyRouteResolver.ts): Camada de compatibilidade retroativa para URLs antigas com query strings (`?module=x&tab=y`).
-7. [routeSecurity.ts](file:///c:/Users/Adriano%20Farias/Downloads/remix-9.10_-grupo-gsa---gest%C3%A3o-de-servi%C3%A7os%20-%20Copia%20%284%29/src/routing/routeSecurity.ts): Proteção de áreas por nível de acesso (Cliente, Admin, Prestador).
+7. [routeSecurity.ts](file:///c:/Users/Adriano%20Farias/Downloads/remix-9.10_-grupo-gsa---gest%C3%A3o-de-servi%C3%A7os%20-%20Copia%20%284%29/src/routing/routeSecurity.ts): Proteção de áreas por nível de acesso e separação entre contas PF e PJ.
 
 ---
 
 ## Catálogo Completo de Rotas
 
 ### 1. Rotas Públicas (Sem Autenticação)
-- `/login`: Tela de autenticação unificada.
-- `/registro`: Cadastro de novos usuários.
-- `/recuperar-senha`: Fluxo de redefinição de credenciais.
+- `/login`: Seletor entre os ambientes Pessoa Física e Empresa.
+- `/login/pessoa-fisica`: Página exclusiva de autenticação por CPF.
+- `/login/pessoa-fisica/recuperar-senha`: Recuperação segura do acesso PF.
+- `/login/empresa`: Página corporativa exclusiva de autenticação por CNPJ.
+- `/login/empresa/recuperar-senha`: Recuperação segura do acesso PJ.
+- `/login/cliente`: Compatibilidade com o endereço legado do login PF.
 
 ### 2. Rotas do Marketplace (`/marketplace`)
 - `/marketplace`: Landing Page da loja GSA Store.
@@ -45,7 +48,7 @@ Os seguintes arquivos compõem o ecossistema:
 - `?modal=checkout`: Abre o fluxo de checkout e pagamento.
 - `?modal=filtros`: Abre o modal de filtros avançados.
 
-### 3. Rotas do Portal do Cliente (`/cliente/`)
+### 3. Rotas do Portal do Cliente Pessoa Física (`/cliente/`)
 - `/cliente/dashboard`: Tela inicial com visão geral.
 - `/cliente/perfil`: Edição de perfil do cliente.
 - `/cliente/servicos-e-assinaturas`: Gestão de serviços, orçamentos e assinaturas.
@@ -53,7 +56,18 @@ Os seguintes arquivos compõem o ecossistema:
 - `/cliente/fidelidade`: Vouchers, pontos, cashback e área VIP.
 - `/cliente/suporte`: Chat de tickets com suporte da GSA.
 
-### 4. Rotas do Painel Administrativo (`/admin/`)
+### 4. Rotas do GSA HUB Empresas (`/empresa/`)
+- `/empresa/dashboard`: Visão executiva da conta empresarial.
+- `/empresa/cadastro`: Dados cadastrais, contatos e documentos da empresa.
+- `/empresa/operacoes`: Orçamentos, serviços, produtos, contratos e assinaturas.
+- `/empresa/financeiro`: Faturas, notas fiscais, extrato, crédito e movimentações.
+- `/empresa/beneficios`: Pontos, vouchers, promoções e condições corporativas.
+- `/empresa/marketplace`: Soluções e oportunidades do ecossistema GSA.
+- `/empresa/suporte`: Atendimento executivo e acompanhamento de chamados.
+
+Uma sessão de CNPJ pode acessar somente as rotas `/empresa`; uma sessão de CPF permanece nas rotas `/cliente`.
+
+### 5. Rotas do Painel Administrativo (`/admin/`)
 - `/admin/dashboard`: Monitor de métricas gerais e lucros.
 - `/admin/clientes`: Gestão e auditoria de clientes cadastrados.
 - `/admin/produtos`: Cadastro e precificação do catálogo da loja.
@@ -65,7 +79,7 @@ Os seguintes arquivos compõem o ecossistema:
 - `/admin/acessos`: Gestão de permissões de colaboradores e RLS.
 - `/admin/sistema`: Telemetria de integridade e logs do sistema.
 
-### 5. Rotas do Portal do Prestador (`/prestador/`)
+### 6. Rotas do Portal do Prestador (`/prestador/`)
 - `/prestador/dashboard`: Indicadores de ganhos e resumo diário.
 - `/prestador/demandas`: Listagem de ordens de serviço e chamados disponíveis.
 - `/prestador/agenda`: Escala e compromissos agendados.
