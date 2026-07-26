@@ -28,7 +28,7 @@ import { supabase } from '../../lib/supabase';
 import { routes } from '../../routing/routeCatalog';
 import type { AdvertisingFormat } from '../../types/advertising';
 import { validarCNPJ, validarCPF } from '../../utils/cpfValidator';
-import { copyToClipboard, maskCNPJ, maskCPF, maskPhone } from '../../lib/utils';
+import { copyToClipboard, handleCurrencyInputChange, maskCNPJ, maskCPF, maskCurrency, maskPhone } from '../../lib/utils';
 import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
 import { PublicHeader } from './final/PublicHeader';
 
