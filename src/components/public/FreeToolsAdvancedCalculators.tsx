@@ -25,7 +25,7 @@ import {
   type TerminationReason,
 } from '../../lib/freeToolsCalculations';
 import type { CalculatorPdfReport } from '../../lib/freeToolsPdfReport';
-import type { ProToolId } from '../../lib/freeToolsProAccess';
+import type { ProAccessStatus, ProToolId } from '../../lib/freeToolsProAccess';
 import { BenefitsPro, BpcPro, ThirteenthPro } from './FreeToolsAdditionalCalculators';
 import { CalculatorPdfReportButton } from './CalculatorPdfReportButton';
 
