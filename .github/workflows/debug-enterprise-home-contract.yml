@@ -1,0 +1,36 @@
+name: Enterprise Home Contract Debug
+
+on:
+  push:
+    branches:
+      - feature/portal-empresarial-pj
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Capture Home contract output
+        shell: bash
+        run: |
+          set +e
+          npm run test:home > enterprise-home-contract.log 2>&1
+          echo $? > enterprise-home-contract.exit
+          exit 0
+      - name: Upload diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: enterprise-home-contract-debug
+          path: |
+            enterprise-home-contract.log
+            enterprise-home-contract.exit
+          retention-days: 1
