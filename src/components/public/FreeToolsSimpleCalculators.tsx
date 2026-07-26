@@ -253,6 +253,150 @@ function AmortizationFree() {
   return <FreeLayout title="Simulação de financiamento" description="Visualize o valor inicial da prestação e a projeção do saldo devedor." form={<><Field label="Saldo devedor atual" value={balance} onChange={setBalance} prefix="R$" /><div className="grid grid-cols-2 gap-3"><Field label="Juros ao ano (%)" value={rate} onChange={setRate} suffix="%" /><Field label="Meses restantes" value={months} onChange={setMonths} suffix="meses" /></div></>} result={<><Landmark className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-3xl font-black">{currency.format(result.currentInstallment)}</p><p className="mt-2 text-sm leading-6 text-white/70">Prestação inicial estimada na Tabela SAC.</p></>} proItems={['Simulação de aporte extra de amortização', 'Comparativo de redução de prazo vs redução da parcela', 'Cálculo exato da economia em R$ de juros', 'Relatório impresso para o banco']} report={report} />;
 }
 
+function InternshipTerminationFree() {
+  const [stipend, setStipend] = useState('1800');
+  const [months, setMonths] = useState('6');
+
+  const result = useMemo(() => calculateInternshipTerminationEstimate(numeric(stipend), numeric(months)), [stipend, months]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Rescisão de contrato de estágio (Lei 11.788)',
+    mode: 'free',
+    headline: `Recesso proporcional + 1/3: ${currency.format(result.totalRecess)}`,
+    summary: 'Estimativa dos valores devidos no desligamento de estagiários.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Bolsa-auxílio mensal', value: currency.format(numeric(stipend)) }, { label: 'Meses estagiados', value: `${numeric(months)} meses` }] },
+      { title: 'Valores devidos', rows: [{ label: 'Recesso proporcional', value: currency.format(result.proportionalRecessPay) }, { label: 'Adicional de 1/3', value: currency.format(result.proportionalRecessThird) }, { label: 'Total devido', value: currency.format(result.totalRecess) }] },
+    ],
+    disclaimer: 'Estágio é isento de aviso-prévio, FGTS e multa de 40% (Lei 11.788/2008).',
+  };
+
+  return <FreeLayout title="Rescisão de estágio (Lei 11.788)" description="Informe a bolsa e os meses estagiados para apurar o recesso remunerado proporcional." form={<><Field label="Bolsa-auxílio mensal" value={stipend} onChange={setStipend} prefix="R$" /><Field label="Meses de estágio cumpridos" value={months} onChange={setMonths} suffix="meses" max={24} /></>} result={<><BriefcaseBusiness className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.totalRecess)}</p><div className="mt-4 space-y-1.5 text-xs text-white/65"><p>Recesso proporcional: {currency.format(result.proportionalRecessPay)}</p><p>1/3 Constitucional: {currency.format(result.proportionalRecessThird)}</p></div></>} proItems={['Apuração de recesso vencido', 'Inclusão de auxílio-transporte proporcional', 'Relatório jurídico em PDF', 'Checklist de documentos do estagiário']} report={report} />;
+}
+
+function ProlaboreVsLucrosFree() {
+  const [withdrawal, setWithdrawal] = useState('10000');
+
+  const result = useMemo(() => calculateProlaboreVsLucrosEstimate(numeric(withdrawal)), [withdrawal]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Pró-labore vs Distribuição de lucros',
+    mode: 'free',
+    headline: `Economia anual estimada: ${currency.format(result.annualSavings)}`,
+    summary: 'Comparativo de retenções tributárias entre pró-labore e distribuição de lucros.',
+    sections: [
+      { title: 'Retirada Desejada', rows: [{ label: 'Valor total mensal', value: currency.format(numeric(withdrawal)) }] },
+      { title: 'Resultado da Economia', rows: [{ label: 'Impostos em 100% Pró-labore', value: currency.format(result.taxA) }, { label: 'Impostos com Pró-labore mínimo + Lucros', value: currency.format(result.taxB) }, { label: 'Economia mensal', value: currency.format(result.monthlySavings) }, { label: 'Economia anual', value: currency.format(result.annualSavings) }] },
+    ],
+    disclaimer: 'Distribuição de lucros é isenta de IRRF e INSS para o sócio.',
+  };
+
+  return <FreeLayout title="Economia Pró-labore vs Lucros" description="Compare o imposto pago ao retirar 100% em pró-labore versus otimizar com distribuição de lucros." form={<Field label="Retirada total mensal planejada pelo sócio" value={withdrawal} onChange={setWithdrawal} prefix="R$" />} result={<><Landmark className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.monthlySavings)}</p><p className="mt-2 text-sm leading-6 text-white/70">Economia estimada por mês ao adotar Pró-Labore de 1 salário mínimo + Distribuição de lucros ({currency.format(result.annualSavings)}/ano).</p></>} proItems={['Análise por regime (Simples vs Lucro Presumido)', 'Projeção de balancetes e retenção fiscal', 'Matriz de planejamento para o sócio', 'Relatório contábil em PDF']} report={report} />;
+}
+
+function EmployeeCostFree() {
+  const [salary, setSalary] = useState('3000');
+  const [benefits, setBenefits] = useState('500');
+
+  const result = useMemo(() => calculateEmployeeCostEstimate(numeric(salary), numeric(benefits)), [salary, benefits]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Custo total do funcionário para a empresa',
+    mode: 'free',
+    headline: `Custo mensal total: ${currency.format(result.totalMonthlyCost)} (+${result.costPercentageOverSalary}%)`,
+    summary: 'Estimativa simples de encargos e provisões de contratação CLT no Simples Nacional.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Salário bruto', value: currency.format(numeric(salary)) }, { label: 'Benefícios mensais', value: currency.format(numeric(benefits)) }] },
+      { title: 'Composição de custo', rows: [{ label: 'FGTS mensal (8%)', value: currency.format(result.fgtsMonthly) }, { label: 'Provisão 13º', value: currency.format(result.provision13th) }, { label: 'Provisão Férias + 1/3', value: currency.format(result.provisionVacation) }, { label: 'Custo total mensal', value: currency.format(result.totalMonthlyCost) }] },
+    ],
+    disclaimer: 'Estimativa de custo no Simples Nacional.',
+  };
+
+  return <FreeLayout title="Custo total de contratação CLT" description="Descubra quanto a empresa realmente gasta por mês ao contratar um funcionário." form={<><Field label="Salário bruto do funcionário" value={salary} onChange={setSalary} prefix="R$" /><Field label="Benefícios mensais (VR/VA/VT)" value={benefits} onChange={setBenefits} prefix="R$" /></>} result={<><BriefcaseBusiness className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.totalMonthlyCost)}</p><p className="mt-2 text-sm leading-6 text-white/70">Custo mensal estimado para a empresa (+{result.costPercentageOverSalary}% sobre o salário).</p></>} proItems={['Comparativo Simples Nacional vs Lucro Presumido/Real', 'Encargos patronais INSS/RAT/Sistema S (27,8%)', 'Detalhamento de provisões anuais', 'Relatório financeiro em PDF']} report={report} />;
+}
+
+function NightShiftRuralUrbanFree() {
+  const [salary, setSalary] = useState('3000');
+  const [hours, setHours] = useState('30');
+
+  const result = useMemo(() => calculateNightShiftRuralUrbanEstimate(numeric(salary), 'urban', numeric(hours)), [salary, hours]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Adicional noturno urbano vs rural',
+    mode: 'free',
+    headline: `Adicional noturno urbano estimado: ${currency.format(result.nightAditionalPay)}`,
+    summary: 'Estimativa simples de adicional noturno urbano (20% com hora reduzida 52m30s).',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Salário base', value: currency.format(numeric(salary)) }, { label: 'Horas noturnas', value: `${numeric(hours)} h` }] },
+    ],
+    disclaimer: 'Cálculo para adicional urbano (22h às 5h).',
+  };
+
+  return <FreeLayout title="Adicional noturno urbano" description="Calcule o valor do adicional noturno considerando a hora reduzida de 52m30s." form={<><Field label="Salário base mensal" value={salary} onChange={setSalary} prefix="R$" /><Field label="Horas noturnas trabalhadas" value={hours} onChange={setHours} suffix="horas" /></>} result={<><Clock3 className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.nightAditionalPay)}</p><p className="mt-2 text-sm leading-6 text-white/70">Adicional bruto estimado ({result.computedHours}h noturnas computadas).</p></>} proItems={['Comparativo com Noturno Rural Pecuária (25%)', 'Comparativo com Noturno Rural Lavoura (25%)', 'Reflexos no DSR mensal', 'Relatório analítico em PDF']} report={report} />;
+}
+
+function ProportionalSalaryFree() {
+  const [salary, setSalary] = useState('3000');
+  const [days, setDays] = useState('12');
+
+  const result = useMemo(() => calculateProportionalSalaryEstimate(numeric(salary), numeric(days)), [salary, days]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de salário proporcional',
+    mode: 'free',
+    headline: `Salário proporcional (30 dias): ${currency.format(result.proportional30)}`,
+    summary: 'Cálculo de salário por dias trabalhados na admissão ou saída.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Salário mensal integral', value: currency.format(numeric(salary)) }, { label: 'Dias trabalhados', value: `${numeric(days)} dias` }] },
+    ],
+    disclaimer: 'Cálculo pela regra padrão CLT de 30 dias.',
+  };
+
+  return <FreeLayout title="Salário proporcional por dias" description="Calcule o salário devido por dias trabalhados no mês de admissão ou desligamento." form={<><Field label="Salário mensal integral" value={salary} onChange={setSalary} prefix="R$" /><Field label="Dias trabalhados no mês" value={days} onChange={setDays} suffix="dias" max={31} /></>} result={<><Clock3 className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.proportional30)}</p><p className="mt-2 text-sm leading-6 text-white/70">Salário proporcional para {numeric(days)} dias trabalhados.</p></>} proItems={['Comparação regra 30 dias vs dias reais do mês (28/31d)', 'Desconto proporcional de faltas', 'Exportação de memória em PDF', 'Conferência de holerite de admissão']} report={report} />;
+}
+
+function LateFeeFree() {
+  const [amount, setAmount] = useState('1000');
+  const [days, setDays] = useState('15');
+
+  const result = useMemo(() => calculateLateFeeEstimate(numeric(amount), numeric(days)), [amount, days]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Juros e multa por atraso',
+    mode: 'free',
+    headline: `Total atualizado: ${currency.format(result.totalUpdated)}`,
+    summary: 'Cálculo de multa de 2% + juros de mora de 1% a.m. por atraso.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Valor original', value: currency.format(numeric(amount)) }, { label: 'Dias de atraso', value: `${numeric(days)} dias` }] },
+      { title: 'Acréscimos', rows: [{ label: 'Multa de 2%', value: currency.format(result.fineAmount) }, { label: 'Juros de mora', value: currency.format(result.interestAmount) }, { label: 'Total atualizado', value: currency.format(result.totalUpdated) }] },
+    ],
+    disclaimer: 'Simulação básica de encargos por atraso em cobranças.',
+  };
+
+  return <FreeLayout title="Atualização por atraso" description="Calcule a multa de 2% e os juros de mora proporcionais de 1% a.m. para contas em atraso." form={<><Field label="Valor original da conta / débito" value={amount} onChange={setAmount} prefix="R$" /><Field label="Dias em atraso" value={days} onChange={setDays} suffix="dias" /></>} result={<><Landmark className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.totalUpdated)}</p><div className="mt-4 space-y-1.5 text-xs text-white/65"><p>Multa (2%): {currency.format(result.fineAmount)}</p><p>Juros (1% a.m.): {currency.format(result.interestAmount)}</p></div></>} proItems={['Atualização pela taxa SELIC acumulada oficial', 'Simulação de juros compostos contratuais', 'Impressão de demonstrativo de cobrança em PDF', 'Opção de parcelamento com encargos']} report={report} />;
+}
+
+function ChildSupportFree() {
+  const [gross, setGross] = useState('4500');
+  const [percentage, setPercentage] = useState('20');
+
+  const result = useMemo(() => calculateChildSupportEstimate(numeric(gross), 1, numeric(percentage)), [gross, percentage]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Simulador de pensão alimentícia',
+    mode: 'free',
+    headline: `Pensão estimada: ${currency.format(result.pensionValue)}`,
+    summary: 'Estimativa de pensão alimentícia sobre a base líquida (após INSS e IRRF).',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Salário bruto', value: currency.format(numeric(gross)) }, { label: 'Porcentagem aplicada', value: `${numeric(percentage)}%` }] },
+      { title: 'Cálculo', rows: [{ label: 'Salário líquido base', value: currency.format(result.netBase) }, { label: 'Pensão estimada', value: currency.format(result.pensionValue) }] },
+    ],
+    disclaimer: 'Simulação com base na renda líquida após descontos fiscais.',
+  };
+
+  return <FreeLayout title="Pensão alimentícia estimada" description="Calcule o valor estimado da pensão alimentícia sobre a renda líquida descontando INSS e IRRF." form={<><Field label="Salário bruto do alimentante" value={gross} onChange={setGross} prefix="R$" /><Field label="Porcentagem de pensão fixada (%)" value={percentage} onChange={setPercentage} suffix="%" max={50} /></>} result={<><Heart className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.pensionValue)}</p><p className="mt-2 text-sm leading-6 text-white/70">Valor estimado da pensão sobre a base líquida de {currency.format(result.netBase)}.</p></>} proItems={['Inclusão de despesas extraordinárias (Escola/Saúde)', 'Incidência sobre 13º salário, férias e PLR', 'Relatório em PDF para instrução de acordo', 'Demonstrativo detalhado das retenções']} report={report} />;
+}
+
 export function FreeToolsSimpleCalculator({ tool }: { tool: ProToolId }) {
   if (tool === 'termination') return <TerminationFree />;
   if (tool === 'retirement') return <RetirementFree />;
@@ -264,6 +408,13 @@ export function FreeToolsSimpleCalculator({ tool }: { tool: ProToolId }) {
   if (tool === 'unemployment') return <UnemploymentFree />;
   if (tool === 'fator_r') return <FatorRFree />;
   if (tool === 'amortization') return <AmortizationFree />;
+  if (tool === 'internship_termination') return <InternshipTerminationFree />;
+  if (tool === 'prolabore_vs_lucros') return <ProlaboreVsLucrosFree />;
+  if (tool === 'employee_cost') return <EmployeeCostFree />;
+  if (tool === 'night_shift_rural_urban') return <NightShiftRuralUrbanFree />;
+  if (tool === 'proportional_salary') return <ProportionalSalaryFree />;
+  if (tool === 'late_fee_calculator') return <LateFeeFree />;
+  if (tool === 'child_support') return <ChildSupportFree />;
   if (tool === 'benefits') return <BenefitsFree />;
   return <BpcFree />;
 }
