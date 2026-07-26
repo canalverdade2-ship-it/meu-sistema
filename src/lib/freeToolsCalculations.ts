@@ -400,3 +400,308 @@ export function calculateVacationEstimate(salaryInput: number, variableAveragesI
     netTotal: roundCurrency(totalNet),
   };
 }
+
+// ==========================================
+// CÁLCULO DE HORAS EXTRAS & NOTURNO (CLT)
+// ==========================================
+
+export interface OvertimeEstimateInput {
+  salary: number;
+  monthlyHours?: number; // padrão 220h
+  overtime50Hours?: number;
+  overtime100Hours?: number;
+  nightHours?: number;
+  businessDays?: number; // padrão 25
+  sundaysAndHolidays?: number; // padrão 5
+}
+
+export function calculateOvertimeEstimate(salaryInput: number, options: Partial<OvertimeEstimateInput> = {}) {
+  const salary = positiveNumber(salaryInput);
+  const monthlyHours = clamp(options.monthlyHours || 220, 1, 300);
+  const hourlyRate = salary / monthlyHours;
+
+  const hours50 = positiveNumber(options.overtime50Hours || 0);
+  const hours100 = positiveNumber(options.overtime100Hours || 0);
+  const nightHoursRaw = positiveNumber(options.nightHours || 0);
+
+  // Hora noturna reduzida (52m30s = 52.5min -> fator 60/52.5 = 1.142857)
+  const reducedNightHours = nightHoursRaw * (60 / 52.5);
+
+  // Valores das horas
+  const pay50 = hours50 * (hourlyRate * 1.5);
+  const pay100 = hours100 * (hourlyRate * 2.0);
+  const nightAditionalPay = reducedNightHours * (hourlyRate * 0.20);
+
+  const totalExtraWithoutDsr = pay50 + pay100 + nightAditionalPay;
+
+  // DSR (Descanso Semanal Remunerado)
+  const businessDays = clamp(options.businessDays || 25, 1, 31);
+  const sundaysAndHolidays = clamp(options.sundaysAndHolidays || 5, 0, 15);
+  const dsrPay = businessDays > 0 ? (totalExtraWithoutDsr / businessDays) * sundaysAndHolidays : 0;
+
+  const totalGrossExtra = totalExtraWithoutDsr + dsrPay;
+
+  return {
+    hourlyRate: roundCurrency(hourlyRate),
+    pay50: roundCurrency(pay50),
+    pay100: roundCurrency(pay100),
+    nightAditionalPay: roundCurrency(nightAditionalPay),
+    reducedNightHours: roundCurrency(reducedNightHours),
+    totalExtraWithoutDsr: roundCurrency(totalExtraWithoutDsr),
+    dsrPay: roundCurrency(dsrPay),
+    totalGrossExtra: roundCurrency(totalGrossExtra),
+  };
+}
+
+// ==========================================
+// CÁLCULO DE SALÁRIO LÍQUIDO & CLT x PJ
+// ==========================================
+
+export interface NetSalaryInput {
+  grossSalary: number;
+  dependents?: number;
+  benefitsMonthly?: number; // VR/VA/Saúde
+  pjProposedGross?: number;
+}
+
+export function calculateNetSalaryEstimate(grossInput: number, dependentsInput = 0, options: Partial<NetSalaryInput> = {}) {
+  const gross = positiveNumber(grossInput);
+  const dependents = clamp(dependentsInput, 0, 20);
+  const benefits = positiveNumber(options.benefitsMonthly || 0);
+
+  const inssResult = calculateInssDeduction(gross);
+  const irrfResult = calculateIrrfDeduction(gross, inssResult.inss, dependents);
+
+  const netSalary = Math.max(0, gross - inssResult.inss - irrfResult.irrf);
+  const totalCltNetValue = netSalary + benefits;
+
+  // Equivalência PJ Estimada (Custo Anual CLT: 13,33 salários + FGTS 8% + Férias 1/3 + Benefícios)
+  const cltAnnualTotalCost = (gross * 13.33) + (gross * 0.08 * 12) + (gross / 3) + (benefits * 12);
+  const recommendedPjMonthlyGross = (cltAnnualTotalCost / 12) / 0.94; // Considerando Simples Nacional ~6%
+
+  const pjProposed = positiveNumber(options.pjProposedGross || 0);
+  const pjEstimatedTax = pjProposed * 0.06;
+  const pjNet = pjProposed - pjEstimatedTax;
+
+  return {
+    grossSalary: roundCurrency(gross),
+    inssDeduction: inssResult.inss,
+    inssEffectiveRate: inssResult.effectiveRate,
+    irrfDeduction: irrfResult.irrf,
+    netSalary: roundCurrency(netSalary),
+    benefitsMonthly: roundCurrency(benefits),
+    totalCltNetValue: roundCurrency(totalCltNetValue),
+    recommendedPjMonthlyGross: roundCurrency(recommendedPjMonthlyGross),
+    pjProposed: roundCurrency(pjProposed),
+    pjNet: roundCurrency(pjNet),
+    pjDifference: roundCurrency(pjNet - totalCltNetValue),
+  };
+}
+
+// ==========================================
+// LIMITE E EXCESSO DO MEI
+// ==========================================
+
+export const MEI_ANNUAL_LIMIT_2026 = 81000;
+
+export function calculateMeiLimitEstimate(openingMonthInput = 1, accumulatedRevenueInput = 0, projectedMonthlyInput = 0) {
+  const openingMonth = clamp(openingMonthInput, 1, 12);
+  const monthsActive = 12 - openingMonth + 1;
+  const proportionalLimit = (MEI_ANNUAL_LIMIT_2026 / 12) * monthsActive;
+
+  const accumulated = positiveNumber(accumulatedRevenueInput);
+  const remainingMonths = 12 - (new Date().getMonth() + 1);
+  const projectedMonthly = positiveNumber(projectedMonthlyInput);
+
+  const projectedTotal = accumulated + (projectedMonthly * Math.max(1, remainingMonths));
+  const usedPercentage = proportionalLimit > 0 ? (accumulated / proportionalLimit) * 100 : 0;
+  const projectedUsedPercentage = proportionalLimit > 0 ? (projectedTotal / proportionalLimit) * 100 : 0;
+
+  const remainingBalance = Math.max(0, proportionalLimit - accumulated);
+
+  // Cenários de estouro
+  const isOverLimit = projectedTotal > proportionalLimit;
+  const excessAmount = Math.max(0, projectedTotal - proportionalLimit);
+  const excessPercentage = proportionalLimit > 0 ? (excessAmount / proportionalLimit) * 100 : 0;
+
+  let excessCategory: 'within_limit' | 'up_to_20' | 'above_20' = 'within_limit';
+  if (isOverLimit) {
+    excessCategory = excessPercentage <= 20 ? 'up_to_20' : 'above_20';
+  }
+
+  return {
+    monthsActive,
+    proportionalLimit: roundCurrency(proportionalLimit),
+    accumulated: roundCurrency(accumulated),
+    remainingBalance: roundCurrency(remainingBalance),
+    usedPercentage: roundCurrency(usedPercentage),
+    projectedTotal: roundCurrency(projectedTotal),
+    projectedUsedPercentage: roundCurrency(projectedUsedPercentage),
+    isOverLimit,
+    excessAmount: roundCurrency(excessAmount),
+    excessPercentage: roundCurrency(excessPercentage),
+    excessCategory,
+  };
+}
+
+// ==========================================
+// SEGURO-DESEMPREGO (MTE 2026)
+// ==========================================
+
+export interface UnemploymentInput {
+  requestTimes: 1 | 2 | 3;
+  monthsWorked: number;
+  averageSalary: number;
+}
+
+export function calculateUnemploymentEstimate(requestTimes: 1 | 2 | 3 = 1, monthsWorkedInput = 12, averageSalaryInput = 2500) {
+  const months = clamp(monthsWorkedInput, 0, 120);
+  const averageSalary = positiveNumber(averageSalaryInput);
+
+  let eligible = false;
+  let installments = 0;
+
+  if (requestTimes === 1) {
+    if (months >= 12 && months <= 23) { eligible = true; installments = 4; }
+    else if (months >= 24) { eligible = true; installments = 5; }
+  } else if (requestTimes === 2) {
+    if (months >= 9 && months <= 11) { eligible = true; installments = 3; }
+    else if (months >= 12 && months <= 23) { eligible = true; installments = 4; }
+    else if (months >= 24) { eligible = true; installments = 5; }
+  } else {
+    if (months >= 6 && months <= 11) { eligible = true; installments = 3; }
+    else if (months >= 12 && months <= 23) { eligible = true; installments = 4; }
+    else if (months >= 24) { eligible = true; installments = 5; }
+  }
+
+  // Tabela de Cálculo do Valor MTE 2026
+  let installmentValue = 0;
+  if (averageSalary <= 2041.39) {
+    installmentValue = averageSalary * 0.80;
+  } else if (averageSalary <= 3402.65) {
+    installmentValue = 1633.11 + ((averageSalary - 2041.39) * 0.50);
+  } else {
+    installmentValue = 2313.74; // Teto MTE 2026
+  }
+
+  // Garante pelo menos o salário mínimo
+  installmentValue = Math.max(MINIMUM_WAGE_2026, Math.min(2313.74, installmentValue));
+
+  const totalBenefit = eligible ? installmentValue * installments : 0;
+
+  return {
+    eligible,
+    installments,
+    averageSalary: roundCurrency(averageSalary),
+    installmentValue: eligible ? roundCurrency(installmentValue) : 0,
+    totalBenefit: roundCurrency(totalBenefit),
+  };
+}
+
+// ==========================================
+// FATOR R (SIMPLES NACIONAL)
+// ==========================================
+
+export function calculateFatorREstimate(rbt12Input: number, payroll12Input: number) {
+  const rbt12 = positiveNumber(rbt12Input);
+  const payroll12 = positiveNumber(payroll12Input);
+
+  const fatorRRatio = rbt12 > 0 ? (payroll12 / rbt12) : 0;
+  const fatorRPercentage = fatorRRatio * 100;
+  const isAnexo3 = fatorRPercentage >= 28;
+
+  const requiredPayrollFor28 = rbt12 * 0.28;
+  const payrollShortfall = Math.max(0, requiredPayrollFor28 - payroll12);
+
+  // Estimativa de alíquota inicial
+  const currentRate = isAnexo3 ? 6.0 : 15.5;
+
+  return {
+    rbt12: roundCurrency(rbt12),
+    payroll12: roundCurrency(payroll12),
+    fatorRPercentage: roundCurrency(fatorRPercentage),
+    isAnexo3,
+    anexoName: isAnexo3 ? 'Anexo III (Alíquota menor ~6%)' : 'Anexo V (Alíquota maior ~15.5%)',
+    currentRate,
+    requiredPayrollFor28: roundCurrency(requiredPayrollFor28),
+    payrollShortfall: roundCurrency(payrollShortfall),
+    recommendedMonthlyProLaboreAdjustment: roundCurrency(payrollShortfall / 12),
+  };
+}
+
+// ==========================================
+// AMORTIZAÇÃO DE FINANCIAMENTO (SAC / PRICE)
+// ==========================================
+
+export interface AmortizationInput {
+  balance: number;
+  annualInterestRate: number;
+  monthsRemaining: number;
+  system: 'SAC' | 'PRICE';
+  extraAmortization?: number;
+  amortizationOption?: 'reduce_term' | 'reduce_installment';
+}
+
+export function calculateAmortizationEstimate(balanceInput: number, rateInput: number, monthsInput: number, options: Partial<AmortizationInput> = {}) {
+  const balance = positiveNumber(balanceInput);
+  const annualRate = positiveNumber(rateInput);
+  const months = clamp(monthsInput, 1, 420);
+  const system = options.system || 'SAC';
+  const extraAmortization = positiveNumber(options.extraAmortization || 0);
+
+  const monthlyRate = (annualRate / 100) / 12;
+
+  let currentInstallment = 0;
+  let totalInterestWithoutAmortization = 0;
+
+  if (system === 'SAC') {
+    const amort = balance / months;
+    currentInstallment = amort + (balance * monthlyRate);
+    totalInterestWithoutAmortization = ((months + 1) * balance * monthlyRate) / 2;
+  } else {
+    // PRICE
+    if (monthlyRate > 0) {
+      currentInstallment = balance * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+      totalInterestWithoutAmortization = (currentInstallment * months) - balance;
+    } else {
+      currentInstallment = balance / months;
+    }
+  }
+
+  const newBalance = Math.max(0, balance - extraAmortization);
+  let newInstallment = currentInstallment;
+  let newMonths = months;
+
+  if (extraAmortization > 0 && newBalance > 0) {
+    if (options.amortizationOption === 'reduce_installment') {
+      if (system === 'SAC') {
+        const newAmort = newBalance / months;
+        newInstallment = newAmort + (newBalance * monthlyRate);
+      } else {
+        if (monthlyRate > 0) {
+          newInstallment = newBalance * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+        }
+      }
+    } else {
+      // Reduzir prazo mantendo a parcela aproximada
+      if (currentInstallment > 0) {
+        newMonths = Math.max(1, Math.round(newBalance / (currentInstallment - (newBalance * monthlyRate))));
+      }
+    }
+  }
+
+  const estimatedInterestSaved = Math.max(0, totalInterestWithoutAmortization * (extraAmortization / (balance || 1)));
+
+  return {
+    balance: roundCurrency(balance),
+    currentInstallment: roundCurrency(currentInstallment),
+    totalInterestWithoutAmortization: roundCurrency(totalInterestWithoutAmortization),
+    extraAmortization: roundCurrency(extraAmortization),
+    newBalance: roundCurrency(newBalance),
+    newInstallment: roundCurrency(newInstallment),
+    newMonths,
+    monthsSaved: Math.max(0, months - newMonths),
+    estimatedInterestSaved: roundCurrency(estimatedInterestSaved),
+  };
+}
+
