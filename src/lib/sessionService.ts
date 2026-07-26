@@ -1,11 +1,14 @@
 import { supabase } from './supabase';
 
+export type ClientPersonType = 'pf' | 'pj';
+
 type StoredSession = {
   sessaoId: string;
   sessionToken?: string;
   atorTipo: string;
   atorId: string;
   atorNome: string;
+  clientPersonType?: ClientPersonType;
   [key: string]: any;
 };
 
@@ -312,6 +315,30 @@ export const sessionService = {
     });
     if (error || !(data as any)?.success) return null;
     return data as any;
+  },
+
+  async resolveAuthenticatedClientPersonType(clientId: string): Promise<ClientPersonType | null> {
+    const sessionData = readStoredSession();
+    if (sessionData?.atorTipo !== 'cliente' || sessionData.atorId !== clientId) return null;
+
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('tipo_pessoa')
+      .eq('id', clientId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    const personType: ClientPersonType = data.tipo_pessoa === 'pj' ? 'pj' : 'pf';
+    sessionData.clientPersonType = personType;
+    writeStoredSession(sessionData);
+    return personType;
+  },
+
+  setClientPersonType(personType: ClientPersonType) {
+    const sessionData = readStoredSession();
+    if (sessionData?.atorTipo !== 'cliente') return;
+    sessionData.clientPersonType = personType;
+    writeStoredSession(sessionData);
   },
 
   async setPinAndLogin(

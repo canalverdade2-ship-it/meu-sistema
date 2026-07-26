@@ -34,7 +34,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   if (segments[0] === 'login') {
     area = 'login';
     module = segments[1] || 'root';
-    if (segments[1] === 'cliente' && segments[2] === 'recuperar-senha') {
+    if (['cliente', 'pessoa-fisica', 'empresa'].includes(segments[1] || '') && segments[2] === 'recuperar-senha') {
       submodule = 'recuperar-senha';
     }
     return { pathname, search, hash, area, module, submodule, query };
@@ -180,7 +180,38 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     return { pathname, search, hash, area, module, submodule, itemId, query };
   }
 
-  // 5. PORTAL DO ANUNCIANTE
+  // 5. GSA HUB EMPRESAS
+  if (segments[0] === 'empresa') {
+    area = 'business';
+    const routeModule = segments[1] || 'dashboard';
+    module = routeModule;
+
+    if (routeModule === 'cadastro' || routeModule === 'perfil') {
+      module = 'perfil';
+    } else if (routeModule === 'operacoes') {
+      module = 'servicos_assinaturas';
+      submodule = segments[2];
+      if (segments[3]) itemId = segments[3];
+    } else if (routeModule === 'financeiro') {
+      module = 'financeiro';
+      submodule = segments[2];
+      if (segments[3]) itemId = segments[3];
+    } else if (routeModule === 'beneficios') {
+      module = 'fidelidade';
+      submodule = segments[2];
+      if (segments[3]) itemId = segments[3];
+    } else if (routeModule === 'marketplace') {
+      module = 'gsa_store';
+      submodule = segments[2] || 'home';
+      if (segments[3]) itemId = segments[3];
+    } else if (routeModule === 'suporte' && segments[2]) {
+      itemId = segments[2];
+    }
+
+    return { pathname, search, hash, area, module, submodule, itemId, query };
+  }
+
+  // 6. PORTAL DO ANUNCIANTE
   // /anuncios permanece como vitrine pública; as subrotas pertencem ao portal.
   if (segments[0] === 'anuncios' && segments[1]) {
     area = 'advertiser';
@@ -192,7 +223,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     return { pathname, search, hash, area: 'public', module: 'free-tools', query };
   }
 
-  // 6. PAINEL ADMINISTRATIVO
+  // 7. PAINEL ADMINISTRATIVO
   if (segments[0] === 'admin') {
     area = 'admin';
     module = segments[1] || 'dashboard'; // ex: 'cadastros', 'catalogo', 'operacoes', 'financeiro', etc.
@@ -216,7 +247,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     return { pathname, search, hash, area, module, submodule, itemId, query };
   }
 
-  // 7. PORTAL DO PRESTADOR
+  // 8. PORTAL DO PRESTADOR
   if (segments[0] === 'prestador') {
     area = 'provider';
     module = segments[1] || 'dashboard'; // ex: 'agenda', 'demandas', 'documentos', etc.
@@ -230,7 +261,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     return { pathname, search, hash, area, module, submodule, itemId, query };
   }
 
-  // 8. PORTAL DO FORNECEDOR
+  // 9. PORTAL DO FORNECEDOR
   if (segments[0] === 'fornecedor') {
     area = 'supplier';
     module = segments[1] || 'home';

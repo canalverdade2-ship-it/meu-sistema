@@ -1,4 +1,4 @@
-export type AppArea = 'public' | 'marketplace' | 'client' | 'admin' | 'provider' | 'supplier' | 'advertiser' | 'login' | 'unknown';
+export type AppArea = 'public' | 'marketplace' | 'client' | 'business' | 'admin' | 'provider' | 'supplier' | 'advertiser' | 'login' | 'unknown';
 
 export interface RouteState {
   pathname: string;

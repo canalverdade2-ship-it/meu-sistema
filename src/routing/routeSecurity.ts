@@ -3,6 +3,7 @@ import { hasAdminModuleAccess } from '../security/collaboratorAccess';
 
 interface SessionState {
   clientId?: string;
+  clientPersonType?: 'pf' | 'pj';
   adminAuth?: boolean;
   adminType?: 'admin' | 'colaborador';
   colaboradorModulos?: string[];
@@ -22,7 +23,8 @@ export function isRouteAllowed(
   module?: string,
   submodule?: string,
 ): boolean {
-  if (area === 'client') return Boolean(session.clientId);
+  if (area === 'client') return Boolean(session.clientId) && session.clientPersonType !== 'pj';
+  if (area === 'business') return Boolean(session.clientId) && session.clientPersonType === 'pj';
   if (area === 'provider') return Boolean(session.prestadorId);
   if (area === 'supplier') return ['home', 'login', 'access'].includes(module || '') || Boolean(session.fornecedorId);
   if (area === 'public' && module === 'affiliates') {
