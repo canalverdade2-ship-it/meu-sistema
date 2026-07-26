@@ -323,6 +323,7 @@ export const routes = {
   },
   // Prestador
   provider: {
+    home: () => '/prestador',
     dashboard: () => '/prestador/dashboard',
     agenda: () => '/prestador/agenda',
     agendamento: (id: string) => `/prestador/agenda/${id}`,

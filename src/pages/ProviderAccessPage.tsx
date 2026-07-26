@@ -290,7 +290,7 @@ export function ProviderAccessPage({
             className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#becbd5] bg-white/75 px-4 text-sm font-bold text-[#415363] transition hover:border-[#7e9aaf] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f5a86]"
           >
             <ArrowLeft className="h-4 w-4" />
-            Voltar às áreas de acesso
+            Voltar à Área do Prestador
           </button>
         </header>
 

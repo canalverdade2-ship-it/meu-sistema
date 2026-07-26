@@ -261,7 +261,7 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   // 8. PORTAL DO PRESTADOR
   if (segments[0] === 'prestador') {
     area = 'provider';
-    module = segments[1] || 'dashboard'; // ex: 'agenda', 'demandas', 'documentos', etc.
+    module = segments[1] || 'home'; // apresentação pública ou módulos autenticados
 
     if (module === 'financeiro' && segments[2]) {
       submodule = segments[2]; // 'saques'

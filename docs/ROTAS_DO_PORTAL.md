@@ -28,6 +28,7 @@ Os seguintes arquivos compõem o ecossistema:
 - `/login/empresa/cadastro`: Página exclusiva de solicitação e cadastro empresarial.
 - `/login/empresa/recuperar-senha`: Recuperação segura do acesso PJ.
 - `/login/acesso-restrito`: Página institucional exclusiva de login para Gestão e Colaborador GSA.
+- `/prestador`: Página institucional pública de apresentação da Rede de Prestadores GSA HUB.
 - `/login/prestador`: Página exclusiva de login da Área do Prestador.
 - `/login/prestador/cadastro`: Página exclusiva de cadastro de profissionais e empresas prestadoras.
 - `/login/colaborador`: Endereço direto compatível que abre a Área Restrita no perfil Colaborador.
@@ -87,6 +88,7 @@ Uma sessão de CNPJ pode acessar somente as rotas `/empresa`; uma sessão de CPF
 - `/admin/sistema`: Telemetria de integridade e logs do sistema.
 
 ### 6. Rotas do Portal do Prestador (`/prestador/`)
+- `/prestador`: Apresentação institucional, benefícios, processo de credenciamento e acesso ao portal.
 - `/prestador/dashboard`: Indicadores de ganhos e resumo diário.
 - `/prestador/demandas`: Listagem de ordens de serviço e chamados disponíveis.
 - `/prestador/agenda`: Escala e compromissos agendados.

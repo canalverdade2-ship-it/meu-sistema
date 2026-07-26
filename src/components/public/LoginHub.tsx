@@ -81,7 +81,7 @@ export function LoginHub({
                     <span className="min-w-0 flex-1">
                       <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-[#267153]">Prestadores GSA</span>
                       <span className="mt-1 block text-base font-black text-[#123d5d]">Área do Prestador</span>
-                      <span className="mt-1 block text-xs leading-5 text-neutral-600">Login e cadastro para profissionais e empresas prestadoras.</span>
+                      <span className="mt-1 block text-xs leading-5 text-neutral-600">Conheça a rede, acesse o portal ou solicite seu credenciamento.</span>
                     </span>
                     <ArrowRight className="h-5 w-5 shrink-0 text-[#267153] transition-transform group-hover:translate-x-1" />
                   </motion.button>

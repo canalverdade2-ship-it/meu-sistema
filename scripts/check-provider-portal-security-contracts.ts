@@ -163,7 +163,7 @@ async function main() {
   ]);
 
   await includes('src/routing/routeSecurity.ts', [
-    "if (area === 'provider') return Boolean(session.prestadorId);",
+    "if (area === 'provider') return module === 'home' || Boolean(session.prestadorId);",
   ]);
 
   await includes('src/components/admin/AcessosModule.tsx', [

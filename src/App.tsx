@@ -32,6 +32,7 @@ const ClientLoginPage = lazy(() => import('./pages/ClientLoginPage').then((modul
 const BusinessRegistrationPage = lazy(() => import('./pages/BusinessRegistrationPage').then((module) => ({ default: module.BusinessRegistrationPage })));
 const RestrictedAccessHubPage = lazy(() => import('./pages/RestrictedAccessHubPage').then((module) => ({ default: module.RestrictedAccessHubPage })));
 const ProviderAccessPage = lazy(() => import('./pages/ProviderAccessPage').then((module) => ({ default: module.ProviderAccessPage })));
+const ProviderLandingPage = lazy(() => import('./pages/Prestador/ProviderLandingPage').then((module) => ({ default: module.ProviderLandingPage })));
 const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
 const FornecedorDashboard = lazy(() => import('./pages/Fornecedor/FornecedorDashboard').then((module) => ({ default: module.FornecedorDashboard })));
 const FornecedorAccessPage = lazy(() => import('./pages/Fornecedor/FornecedorAccessPage').then((module) => ({ default: module.FornecedorAccessPage })));
@@ -108,7 +109,7 @@ export default function App() {
             if (!access) {
               await sessionService.endSession();
               setSession({});
-              if (route.area === 'provider') {
+              if (route.area === 'provider' && route.module !== 'home') {
                 const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
                 replace(`${routes.login.provider()}?returnTo=${returnTo}&msg=revoked`);
               }
@@ -128,7 +129,11 @@ export default function App() {
             setSession({ fornecedorId: (access as any).supplier_id });
             if (window.location.pathname === '/login/fornecedor') replace(routes.supplier.dashboard());
           }
-        } else if (['client', 'business', 'admin', 'provider'].includes(route.area) || (route.area === 'supplier' && !['home', 'login', 'access'].includes(route.module))) {
+        } else if (
+          ['client', 'business', 'admin'].includes(route.area)
+          || (route.area === 'provider' && route.module !== 'home')
+          || (route.area === 'supplier' && !['home', 'login', 'access'].includes(route.module))
+        ) {
           const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
           const loginPath = route.area === 'supplier'
             ? routes.login.supplier()
@@ -237,7 +242,7 @@ export default function App() {
     const logoutDestination = session.fornecedorId
       ? routes.login.supplier()
       : session.prestadorId
-        ? routes.login.provider()
+        ? routes.provider.home()
         : session.adminAuth
           ? routes.login.restricted()
           : routes.public.home();
@@ -413,7 +418,7 @@ export default function App() {
             {activeView === 'login' && route.module === 'prestador' && (
               <ProviderAccessPage
                 initialMode={route.submodule === 'cadastro' || route.query.mode === 'register' ? 'register' : 'login'}
-                onBack={() => navigate(`${routes.login.root()}${loginReturnSuffix}`)}
+                onBack={() => navigate(`${routes.provider.home()}${loginReturnSuffix}`)}
                 onLoginProvider={handleLoginPrestador}
                 onModeChange={(mode) => navigate(
                   `${mode === 'register' ? routes.login.providerRegistration() : routes.login.provider()}${loginReturnSuffix}`,
@@ -445,8 +450,16 @@ export default function App() {
                 onBackHome={() => navigate(routes.public.home())}
                 onPersonalLoginPage={() => navigate(`${routes.login.personal()}${loginReturnSuffix}`)}
                 onBusinessLoginPage={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
-                onProviderLoginPage={() => navigate(`${routes.login.provider()}${loginReturnSuffix}`)}
+                onProviderPage={() => navigate(`${routes.provider.home()}${loginReturnSuffix}`)}
                 onRestrictedLoginPage={() => navigate(`${routes.login.restricted()}${loginReturnSuffix}`)}
+              />
+            )}
+
+            {activeView === 'provider' && route.module === 'home' && !session.prestadorId && (
+              <ProviderLandingPage
+                onBackToSite={() => navigate(routes.public.home())}
+                onLogin={() => navigate(`${routes.login.provider()}${loginReturnSuffix}`)}
+                onRegister={() => navigate(`${routes.login.providerRegistration()}${loginReturnSuffix}`)}
               />
             )}
 

@@ -25,7 +25,7 @@ export function isRouteAllowed(
 ): boolean {
   if (area === 'client') return Boolean(session.clientId) && session.clientPersonType !== 'pj';
   if (area === 'business') return Boolean(session.clientId) && session.clientPersonType === 'pj';
-  if (area === 'provider') return Boolean(session.prestadorId);
+  if (area === 'provider') return module === 'home' || Boolean(session.prestadorId);
   if (area === 'supplier') return ['home', 'login', 'access'].includes(module || '') || Boolean(session.fornecedorId);
   if (area === 'public' && module === 'affiliates') {
     return isAffiliatePublicAccessRoute() || Boolean(session.clientId);
