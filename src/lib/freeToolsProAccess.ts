@@ -1,6 +1,18 @@
 import { supabase } from './supabase';
 
-export type ProToolId = 'termination' | 'retirement' | 'vacation' | 'thirteenth' | 'benefits' | 'bpc';
+export type ProToolId =
+  | 'termination'
+  | 'retirement'
+  | 'vacation'
+  | 'thirteenth'
+  | 'benefits'
+  | 'bpc'
+  | 'overtime'
+  | 'net_salary'
+  | 'mei_limit'
+  | 'unemployment'
+  | 'fator_r'
+  | 'amortization';
 
 export type ProBlockMode = 'total' | 'partial';
 
