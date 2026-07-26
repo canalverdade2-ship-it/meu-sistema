@@ -25,6 +25,7 @@ export const routes = {
     client: () => '/login/pessoa-fisica',
     personal: () => '/login/pessoa-fisica',
     business: () => '/login/empresa',
+    businessRegistration: () => '/login/empresa/cadastro',
     admin: () => '/login/admin',
     provider: () => '/login/prestador',
     supplier: () => '/fornecedor/login',

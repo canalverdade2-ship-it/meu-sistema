@@ -10,6 +10,13 @@ export function resolveLegacyRoute(pathname: string, search: string): string | n
     const legacyTab = params.get('tab');
     const legacyItemId = params.get('itemId') || params.get('item');
 
+    if (normalizedPath === '/login' && params.get('mode') === 'register' && params.get('type') === 'pj') {
+      const returnTo = params.get('returnTo');
+      return returnTo
+        ? `${routes.login.businessRegistration()}?${new URLSearchParams({ returnTo }).toString()}`
+        : routes.login.businessRegistration();
+    }
+
     if (legacyModule === 'gsa_store') {
       if (legacyTab === 'shop' || legacyTab === 'produtos-assinaturas') {
         if (legacyItemId) {

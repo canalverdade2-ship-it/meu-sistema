@@ -25,6 +25,7 @@ Os seguintes arquivos compõem o ecossistema:
 - `/login/pessoa-fisica`: Página exclusiva de autenticação por CPF.
 - `/login/pessoa-fisica/recuperar-senha`: Recuperação segura do acesso PF.
 - `/login/empresa`: Página corporativa exclusiva de autenticação por CNPJ.
+- `/login/empresa/cadastro`: Página exclusiva de solicitação e cadastro empresarial.
 - `/login/empresa/recuperar-senha`: Recuperação segura do acesso PJ.
 - `/login/cliente`: Compatibilidade com o endereço legado do login PF.
 

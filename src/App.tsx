@@ -29,6 +29,7 @@ const queryClient = new QueryClient();
 const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((module) => ({ default: module.SecureAdminPanel })));
 const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
 const ClientLoginPage = lazy(() => import('./pages/ClientLoginPage').then((module) => ({ default: module.ClientLoginPage })));
+const BusinessRegistrationPage = lazy(() => import('./pages/BusinessRegistrationPage').then((module) => ({ default: module.BusinessRegistrationPage })));
 const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
 const FornecedorDashboard = lazy(() => import('./pages/Fornecedor/FornecedorDashboard').then((module) => ({ default: module.FornecedorDashboard })));
 const FornecedorAccessPage = lazy(() => import('./pages/Fornecedor/FornecedorAccessPage').then((module) => ({ default: module.FornecedorAccessPage })));
@@ -360,14 +361,21 @@ export default function App() {
               />
             )}
 
-            {activeView === 'login' && route.module === 'empresa' && (
+            {activeView === 'login' && route.module === 'empresa' && route.submodule !== 'cadastro' && (
               <ClientLoginPage
                 personType="pj"
                 initialMode={route.submodule === 'recuperar-senha' || route.query.mode === 'recovery' ? 'recovery' : 'login'}
                 onLoginClient={handleLoginClient}
                 onBack={() => navigate(`${routes.login.root()}${loginReturnSuffix}`)}
                 onSwitchPortal={() => navigate(`${routes.login.personal()}${loginReturnSuffix}`)}
-                onRegister={() => navigate(`${routes.login.root()}?mode=register&type=pj`)}
+                onRegister={() => navigate(`${routes.login.businessRegistration()}${loginReturnSuffix}`)}
+              />
+            )}
+
+            {activeView === 'login' && route.module === 'empresa' && route.submodule === 'cadastro' && (
+              <BusinessRegistrationPage
+                onBack={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
+                onLogin={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
               />
             )}
 

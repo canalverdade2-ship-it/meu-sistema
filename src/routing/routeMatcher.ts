@@ -34,8 +34,16 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   if (segments[0] === 'login') {
     area = 'login';
     module = segments[1] || 'root';
+    if (module === 'root' && query.mode === 'register' && query.type === 'pj') {
+      module = 'empresa';
+      submodule = 'cadastro';
+      return { pathname, search, hash, area, module, submodule, query };
+    }
     if (['cliente', 'pessoa-fisica', 'empresa'].includes(segments[1] || '') && segments[2] === 'recuperar-senha') {
       submodule = 'recuperar-senha';
+    }
+    if (segments[1] === 'empresa' && segments[2] === 'cadastro') {
+      submodule = 'cadastro';
     }
     return { pathname, search, hash, area, module, submodule, query };
   }
