@@ -27,6 +27,8 @@ import {
   maskCNPJ,
   maskPhone,
 } from '../lib/utils';
+import { consultarCEP } from '../utils/viaCep';
+import { validarCNPJ, validarEmail } from '../utils/cpfValidator';
 import { Modal } from '../components/ui/Modal';
 
 type RegistrationStage = 'authorization' | 'company' | 'success';
