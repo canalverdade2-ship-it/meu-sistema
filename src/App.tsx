@@ -30,6 +30,7 @@ const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((mod
 const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
 const ClientLoginPage = lazy(() => import('./pages/ClientLoginPage').then((module) => ({ default: module.ClientLoginPage })));
 const BusinessRegistrationPage = lazy(() => import('./pages/BusinessRegistrationPage').then((module) => ({ default: module.BusinessRegistrationPage })));
+const RestrictedAccessHubPage = lazy(() => import('./pages/RestrictedAccessHubPage').then((module) => ({ default: module.RestrictedAccessHubPage })));
 const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
 const FornecedorDashboard = lazy(() => import('./pages/Fornecedor/FornecedorDashboard').then((module) => ({ default: module.FornecedorDashboard })));
 const FornecedorAccessPage = lazy(() => import('./pages/Fornecedor/FornecedorAccessPage').then((module) => ({ default: module.FornecedorAccessPage })));
@@ -382,6 +383,16 @@ export default function App() {
               />
             )}
 
+            {activeView === 'login' && route.module === 'acesso-restrito' && (
+              <RestrictedAccessHubPage
+                onBack={() => navigate(`${routes.login.root()}${loginReturnSuffix}`)}
+                onProviderAccess={() => navigate(`${routes.login.provider()}${loginReturnSuffix}`)}
+                onCollaboratorAccess={() => navigate(`${routes.login.collaborator()}${loginReturnSuffix}`)}
+                onManagementAccess={() => navigate(`${routes.login.admin()}${loginReturnSuffix}`)}
+                onSupplierAccess={() => navigate(routes.login.supplier())}
+              />
+            )}
+
             {activeView === 'login' && ['root', 'admin', 'prestador', 'colaborador'].includes(route.module) && (
               <Home
                 onLoginClient={handleLoginClient}
@@ -410,6 +421,7 @@ export default function App() {
                 onBackHome={() => navigate(routes.public.home())}
                 onPersonalLoginPage={() => navigate(`${routes.login.personal()}${loginReturnSuffix}`)}
                 onBusinessLoginPage={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
+                onRestrictedLoginPage={() => navigate(`${routes.login.restricted()}${loginReturnSuffix}`)}
               />
             )}
 

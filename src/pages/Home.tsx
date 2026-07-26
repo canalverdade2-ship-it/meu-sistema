@@ -34,6 +34,7 @@ interface HomeProps {
   onLoginPage?: () => void;
   onPersonalLoginPage?: () => void;
   onBusinessLoginPage?: () => void;
+  onRestrictedLoginPage?: () => void;
   loginOnly?: boolean;
   initialRestrictedTab?: RestrictedTab;
   onBackHome?: () => void;
@@ -58,6 +59,7 @@ export function Home({
   onLoginPage,
   onPersonalLoginPage,
   onBusinessLoginPage,
+  onRestrictedLoginPage,
   loginOnly = false,
   initialRestrictedTab,
   onBackHome,
@@ -171,7 +173,7 @@ export function Home({
           onBack={onBackHome}
           onPersonalAccess={onPersonalLoginPage ?? (() => openClient('login'))}
           onBusinessAccess={onBusinessLoginPage ?? (() => openClient('login'))}
-          onRestrictedAccess={() => openRestricted('prestador')}
+          onRestrictedAccess={onRestrictedLoginPage ?? (() => openRestricted('prestador'))}
         />
       ) : publicPage === 'systems' ? (
         <Suspense fallback={<PublicPageLoading />}>

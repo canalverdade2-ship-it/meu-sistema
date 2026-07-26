@@ -27,6 +27,11 @@ Os seguintes arquivos compõem o ecossistema:
 - `/login/empresa`: Página corporativa exclusiva de autenticação por CNPJ.
 - `/login/empresa/cadastro`: Página exclusiva de solicitação e cadastro empresarial.
 - `/login/empresa/recuperar-senha`: Recuperação segura do acesso PJ.
+- `/login/acesso-restrito`: Gateway de seleção entre os perfis institucionais.
+- `/login/prestador`: Autenticação do prestador de serviços.
+- `/login/colaborador`: Autenticação da equipe e dos colaboradores autorizados.
+- `/login/admin`: Autenticação da gestão GSA.
+- `/fornecedor/login`: Autenticação e cadastro de fornecedores.
 - `/login/cliente`: Compatibilidade com o endereço legado do login PF.
 
 ### 2. Rotas do Marketplace (`/marketplace`)
