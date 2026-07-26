@@ -705,3 +705,222 @@ export function calculateAmortizationEstimate(balanceInput: number, rateInput: n
   };
 }
 
+// ==========================================
+// CÁLCULO DE RESCISÃO DE ESTÁGIO (LEI 11.788)
+// ==========================================
+
+export interface InternshipTerminationInput {
+  stipend: number;
+  monthsWorked: number;
+  expiredRecessDays?: number;
+  transportAllowance?: number;
+}
+
+export function calculateInternshipTerminationEstimate(stipendInput: number, monthsWorkedInput = 6, options: Partial<InternshipTerminationInput> = {}) {
+  const stipend = positiveNumber(stipendInput);
+  const months = clamp(monthsWorkedInput, 1, 24);
+  const expiredDays = positiveNumber(options.expiredRecessDays || 0);
+
+  const proportionalRecessPay = (stipend / 12) * months;
+  const proportionalRecessThird = proportionalRecessPay / 3;
+
+  const expiredRecessPay = (stipend / 30) * expiredDays;
+  const expiredRecessThird = expiredRecessPay / 3;
+
+  const totalRecess = proportionalRecessPay + proportionalRecessThird + expiredRecessPay + expiredRecessThird;
+
+  return {
+    stipend: roundCurrency(stipend),
+    monthsWorked: months,
+    proportionalRecessPay: roundCurrency(proportionalRecessPay),
+    proportionalRecessThird: roundCurrency(proportionalRecessThird),
+    expiredRecessPay: roundCurrency(expiredRecessPay),
+    expiredRecessThird: roundCurrency(expiredRecessThird),
+    totalRecess: roundCurrency(totalRecess),
+    hasNoticeOrFgts: false,
+  };
+}
+
+// ==========================================
+// PRÓ-LABORE VS DISTRIBUIÇÃO DE LUCROS
+// ==========================================
+
+export function calculateProlaboreVsLucrosEstimate(totalWithdrawalInput: number) {
+  const totalWithdrawal = positiveNumber(totalWithdrawalInput);
+
+  const inssA = Math.min(totalWithdrawal * 0.11, 897.31);
+  const irrfA = calculateIrrfDeduction(totalWithdrawal, inssA, 0).irrf;
+  const totalTaxA = inssA + irrfA;
+  const netA = Math.max(0, totalWithdrawal - totalTaxA);
+
+  const prolaboreB = Math.min(totalWithdrawal, MINIMUM_WAGE_2026);
+  const lucrosB = Math.max(0, totalWithdrawal - prolaboreB);
+  const inssB = prolaboreB * 0.11;
+  const irrfB = 0;
+  const totalTaxB = inssB + irrfB;
+  const netB = Math.max(0, totalWithdrawal - totalTaxB);
+
+  const monthlySavings = Math.max(0, totalTaxA - totalTaxB);
+  const annualSavings = monthlySavings * 12;
+
+  return {
+    totalWithdrawal: roundCurrency(totalWithdrawal),
+    taxA: roundCurrency(totalTaxA),
+    netA: roundCurrency(netA),
+    prolaboreB: roundCurrency(prolaboreB),
+    lucrosB: roundCurrency(lucrosB),
+    taxB: roundCurrency(totalTaxB),
+    netB: roundCurrency(netB),
+    monthlySavings: roundCurrency(monthlySavings),
+    annualSavings: roundCurrency(annualSavings),
+  };
+}
+
+// ==========================================
+// CUSTO TOTAL DO FUNCIONÁRIO PARA A EMPRESA
+// ==========================================
+
+export function calculateEmployeeCostEstimate(salaryInput: number, benefitsMonthlyInput = 0, isSimples = true) {
+  const salary = positiveNumber(salaryInput);
+  const benefits = positiveNumber(benefitsMonthlyInput);
+
+  const fgtsMonthly = salary * 0.08;
+  const provision13th = (salary / 12) + (fgtsMonthly / 12);
+  const provisionVacation = (salary / 12) + (salary / 36) + (fgtsMonthly / 12);
+
+  const employerTaxesRate = isSimples ? 0 : 0.278;
+  const employerTaxes = salary * employerTaxesRate;
+
+  const totalMonthlyCost = salary + benefits + fgtsMonthly + provision13th + provisionVacation + employerTaxes;
+  const costPercentageOverSalary = salary > 0 ? ((totalMonthlyCost - salary) / salary) * 100 : 0;
+
+  return {
+    salary: roundCurrency(salary),
+    benefits: roundCurrency(benefits),
+    fgtsMonthly: roundCurrency(fgtsMonthly),
+    provision13th: roundCurrency(provision13th),
+    provisionVacation: roundCurrency(provisionVacation),
+    employerTaxes: roundCurrency(employerTaxes),
+    totalMonthlyCost: roundCurrency(totalMonthlyCost),
+    costPercentageOverSalary: roundCurrency(costPercentageOverSalary),
+  };
+}
+
+// ==========================================
+// ADICIONAL NOTURNO URBANO VS RURAL
+// ==========================================
+
+export function calculateNightShiftRuralUrbanEstimate(salaryInput: number, shiftType: 'urban' | 'rural_cattle' | 'rural_farming' = 'urban', nightHoursInput = 20) {
+  const salary = positiveNumber(salaryInput);
+  const hourlyRate = salary / 220;
+  const hours = positiveNumber(nightHoursInput);
+
+  let rate = 0.20;
+  let factor = 60 / 52.5;
+  let periodName = '22h às 05h (Urbano)';
+
+  if (shiftType === 'rural_cattle') {
+    rate = 0.25;
+    factor = 1.0;
+    periodName = '20h às 04h (Pecuária Rural)';
+  } else if (shiftType === 'rural_farming') {
+    rate = 0.25;
+    factor = 1.0;
+    periodName = '21h às 05h (Lavoura Rural)';
+  }
+
+  const computedHours = hours * factor;
+  const nightAditionalPay = computedHours * (hourlyRate * rate);
+
+  return {
+    salary: roundCurrency(salary),
+    hourlyRate: roundCurrency(hourlyRate),
+    hours,
+    computedHours: roundCurrency(computedHours),
+    ratePercentage: Math.round(rate * 100),
+    periodName,
+    nightAditionalPay: roundCurrency(nightAditionalPay),
+  };
+}
+
+// ==========================================
+// SALÁRIO PROPORCIONAL
+// ==========================================
+
+export function calculateProportionalSalaryEstimate(salaryInput: number, daysWorkedInput = 15, daysInMonthInput = 30) {
+  const salary = positiveNumber(salaryInput);
+  const daysWorked = clamp(daysWorkedInput, 1, 31);
+  const daysInMonth = clamp(daysInMonthInput, 28, 31);
+
+  const dailyRate30 = salary / 30;
+  const proportional30 = dailyRate30 * daysWorked;
+
+  const dailyRateActual = salary / daysInMonth;
+  const proportionalActual = dailyRateActual * daysWorked;
+
+  return {
+    salary: roundCurrency(salary),
+    daysWorked,
+    daysInMonth,
+    dailyRate30: roundCurrency(dailyRate30),
+    proportional30: roundCurrency(proportional30),
+    dailyRateActual: roundCurrency(dailyRateActual),
+    proportionalActual: roundCurrency(proportionalActual),
+  };
+}
+
+// ==========================================
+// JUROS DE MORA & MULTA POR ATRASO
+// ==========================================
+
+export function calculateLateFeeEstimate(amountInput: number, daysLateInput = 30, finePercentageInput = 2, interestMonthlyInput = 1) {
+  const amount = positiveNumber(amountInput);
+  const daysLate = positiveNumber(daysLateInput);
+  const fineRate = positiveNumber(finePercentageInput) / 100;
+  const monthlyInterestRate = positiveNumber(interestMonthlyInput) / 100;
+
+  const fineAmount = amount * fineRate;
+  const dailyInterestRate = monthlyInterestRate / 30;
+  const interestAmount = amount * (dailyInterestRate * daysLate);
+
+  const totalUpdated = amount + fineAmount + interestAmount;
+
+  return {
+    amount: roundCurrency(amount),
+    daysLate,
+    fineAmount: roundCurrency(fineAmount),
+    interestAmount: roundCurrency(interestAmount),
+    totalUpdated: roundCurrency(totalUpdated),
+  };
+}
+
+// ==========================================
+// PENSÃO ALIMENTÍCIA ESTIMADA
+// ==========================================
+
+export function calculateChildSupportEstimate(grossSalaryInput: number, dependentsInput = 1, pensionPercentageInput = 20, extraExpensesInput = 0) {
+  const gross = positiveNumber(grossSalaryInput);
+  const dependents = clamp(dependentsInput, 0, 10);
+  const percentage = clamp(pensionPercentageInput, 5, 50);
+  const extraExpenses = positiveNumber(extraExpensesInput);
+
+  const inss = calculateInssDeduction(gross).inss;
+  const irrf = calculateIrrfDeduction(gross, inss, dependents).irrf;
+
+  const netBase = Math.max(0, gross - inss - irrf);
+  const pensionValue = (netBase * (percentage / 100)) + extraExpenses;
+  const percentageOfGross = gross > 0 ? (pensionValue / gross) * 100 : 0;
+
+  return {
+    grossSalary: roundCurrency(gross),
+    inssDeduction: roundCurrency(inss),
+    irrfDeduction: roundCurrency(irrf),
+    netBase: roundCurrency(netBase),
+    pensionPercentage: percentage,
+    extraExpenses: roundCurrency(extraExpenses),
+    pensionValue: roundCurrency(pensionValue),
+    percentageOfGross: roundCurrency(percentageOfGross),
+  };
+}
+
+
