@@ -346,14 +346,6 @@ export const sessionService = {
     telefone: string,
     pin: string,
     tipo: 'cliente' | 'prestador',
-  async loginColaborador(code: string) {
-    return authenticate('login_colaborador', { code });
-  },
-
-  async restoreSession() {
-    if (!restoreSessionPromise) {
-      restoreSessionPromise = restoreStoredSession().finally(() => {
-        restoreSessionPromise = null;
       });
     }
     return restoreSessionPromise;
