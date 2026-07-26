@@ -153,7 +153,12 @@ const TABS: Array<{ id: TabId; label: string; icon: ComponentType<{ className?: 
 function mergeProducts(products: Product[]) {
   return DEFAULT_PRODUCTS.map((fallback) => {
     const persisted = products.find((product) => product.tool_id === fallback.tool_id);
-    return persisted ? { ...fallback, ...persisted } : { ...fallback };
+    const storedBlockMode = (typeof localStorage !== 'undefined' ? localStorage.getItem(`gsa_free_tools_block_mode_${fallback.tool_id}`) as 'total' | 'partial' | null : null);
+    const base = persisted ? { ...fallback, ...persisted } : { ...fallback };
+    if (storedBlockMode && !persisted?.modo_bloqueio) {
+      base.modo_bloqueio = storedBlockMode;
+    }
+    return base;
   });
 }
 
@@ -257,12 +262,19 @@ export function CalculatorProAdminPanel() {
   };
 
   const saveProduct = async (product: Product, successMessage?: string) => {
+    const modoBloqueio = product.modo_bloqueio || 'total';
+    try {
+      localStorage.setItem(`gsa_free_tools_block_mode_${product.tool_id}`, modoBloqueio);
+    } catch {
+      // Ignora erro de local storage
+    }
     await callAdminRpc('gsa_admin_save_calculator_pro_product', {
       p_tool_id: product.tool_id,
       p_payload: {
         ativo: product.ativo,
         preco_centavos: Math.max(0, Math.round(Number(product.preco_centavos || 0))),
         duracao_acesso_minutos: Math.max(15, Math.round(Number(product.duracao_acesso_minutos || 15))),
+        modo_bloqueio: modoBloqueio,
         liberar_cliente_com_fatura_paga: true,
         gratuito_inicio: product.gratuito_inicio || null,
         gratuito_fim: product.gratuito_fim || null,
@@ -500,6 +512,37 @@ export function CalculatorProAdminPanel() {
                     <input type="number" min={15} value={product.duracao_acesso_minutos} onChange={(event) => updateProduct(product.tool_id, { duracao_acesso_minutos: Number(event.target.value) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
                     <span className="mt-1 block text-[10px] font-medium text-neutral-400">{durationLabel(product.duracao_acesso_minutos)}</span>
                   </label>
+                </div>
+
+                <div className="mt-4">
+                  <label className="mb-2 block text-xs font-black text-neutral-600">Regra de Bloqueio Pro</label>
+                  <div className="grid grid-cols-2 gap-2 rounded-xl bg-neutral-100 p-1 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => updateProduct(product.tool_id, { modo_bloqueio: 'total' })}
+                      className={`min-h-11 rounded-lg p-2.5 text-left font-black transition ${
+                        (product.modo_bloqueio || 'total') === 'total'
+                          ? 'bg-white text-indigo-900 shadow-sm ring-1 ring-indigo-200'
+                          : 'text-neutral-600 hover:text-neutral-900'
+                      }`}
+                    >
+                      🔒 Bloqueio Total
+                      <span className="mt-0.5 block text-[9px] font-normal leading-3 text-neutral-500">Impede uso e cálculo</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => updateProduct(product.tool_id, { modo_bloqueio: 'partial' })}
+                      className={`min-h-11 rounded-lg p-2.5 text-left font-black transition ${
+                        product.modo_bloqueio === 'partial'
+                          ? 'bg-white text-indigo-900 shadow-sm ring-1 ring-indigo-200'
+                          : 'text-neutral-600 hover:text-neutral-900'
+                      }`}
+                    >
+                      📄 Bloqueio Parcial
+                      <span className="mt-0.5 block text-[9px] font-normal leading-3 text-neutral-500">Bloqueia apenas PDF</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-4 rounded-xl bg-neutral-50 p-3 text-xs leading-5 text-neutral-600">A elegibilidade de clientes é automática e não pode ser desligada por calculadora.</div>
