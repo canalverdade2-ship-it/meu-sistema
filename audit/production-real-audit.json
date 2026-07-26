@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-07-26T17:11:54.286Z",
+  "generated_at": "2026-07-26T17:53:06.458Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
-  "scanned_files": 368,
+  "scanned_files": 369,
   "blocker_count": 0,
   "review_count": 27,
   "blockers": [],
