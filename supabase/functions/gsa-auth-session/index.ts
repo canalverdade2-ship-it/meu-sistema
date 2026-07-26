@@ -141,11 +141,14 @@ export function normalizePayload(
 
   if (action === 'set_pin_and_login') {
     const documento = digits(payload.documento);
-    const telefone = digits(payload.telefone);
+    const rawContact = text(payload.telefone, 254).trim();
+    const phoneDigits = digits(rawContact);
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawContact.toLowerCase());
+    const validContact = isEmail || [10, 11].includes(phoneDigits.length);
     const pin = digits(payload.pin);
     const tipo = payload.tipo === 'cliente' || payload.tipo === 'prestador' ? payload.tipo : '';
-    if (![11, 14].includes(documento.length) || ![10, 11].includes(telefone.length) || pin.length !== 4 || !tipo) return null;
-    return { documento, telefone, pin, tipo };
+    if (![11, 14].includes(documento.length) || !validContact || pin.length !== 4 || !tipo) return null;
+    return { documento, telefone: rawContact, pin, tipo };
   }
 
   if (action === 'request_client_recovery') {
