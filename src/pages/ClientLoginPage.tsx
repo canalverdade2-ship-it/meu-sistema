@@ -439,14 +439,20 @@ export function ClientLoginPage({
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8a651f]">
-                      {mode === 'recovery' ? 'Recuperação segura' : 'Acesso protegido'}
+                      {mode === 'first_access'
+                        ? 'Primeiro Acesso'
+                        : mode === 'recovery'
+                          ? 'Recuperação segura'
+                          : 'Acesso protegido'}
                     </p>
                     <h2 id="access-title" className="mt-2 text-2xl font-black tracking-[-0.03em] text-[#0b1522] sm:text-3xl">
-                      {mode === 'recovery'
-                        ? 'Recupere seu acesso'
-                        : isBusiness
-                          ? 'Entre na conta da empresa'
-                          : 'Entre na sua conta'}
+                      {mode === 'first_access'
+                        ? 'Cadastre sua senha'
+                        : mode === 'recovery'
+                          ? 'Recupere seu acesso'
+                          : isBusiness
+                            ? 'Entre na conta da empresa'
+                            : 'Entre na sua conta'}
                     </h2>
                   </div>
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d8bd73]/35 bg-[#fff9ea] text-[#8a651f]">
@@ -500,13 +506,22 @@ export function ClientLoginPage({
                       <ArrowRight className="h-4 w-4" />
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => resetAccessState('recovery')}
-                      className="min-h-11 w-full text-center text-sm font-bold text-[#8a651f] transition hover:text-[#654914] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
-                    >
-                      Primeiro acesso ou esqueci minha senha
-                    </button>
+                    <div className="flex flex-col gap-1.5 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => resetAccessState('first_access')}
+                        className="min-h-10 w-full text-center text-sm font-bold text-[#8a651f] transition hover:text-[#654914] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                      >
+                        Primeiro acesso (cadastrar senha)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => resetAccessState('recovery')}
+                        className="min-h-9 w-full text-center text-xs font-bold text-[#718096] transition hover:text-[#0b1522] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                      >
+                        Esqueci minha senha
+                      </button>
+                    </div>
                   </form>
                 )}
 
@@ -559,14 +574,98 @@ export function ClientLoginPage({
                       {loading ? 'Verificando...' : isBusiness ? 'Acessar GSA HUB Empresas' : 'Acessar minha área'}
                     </button>
 
+                    <div className="flex flex-col gap-1.5 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => resetAccessState('first_access')}
+                        className="min-h-10 w-full text-center text-xs font-bold text-[#8a651f] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                      >
+                        Primeiro acesso (cadastrar senha)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => resetAccessState('recovery')}
+                        className="min-h-9 w-full text-center text-xs font-bold text-[#718096] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                      >
+                        Esqueci minha senha
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {mode === 'first_access' && (
+                  <form onSubmit={handleFirstAccessSubmit} className="mt-6 space-y-5">
+                    <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs leading-5 text-emerald-950">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                      <div>
+                        <strong className="block font-bold text-emerald-950">Primeiro Acesso — Definir Senha</strong>
+                        Confirme o celular ou e-mail cadastrado e crie sua senha numérica de 4 dígitos para acessar o portal.
+                      </div>
+                    </div>
+
+                    <label htmlFor={`first-access-document-${personType}`} className="grid gap-2 text-sm font-bold text-[#344154]">
+                      {documentLabel}
+                      <input
+                        id={`first-access-document-${personType}`}
+                        name="documento-primeiro-acesso"
+                        type="text"
+                        inputMode="numeric"
+                        required
+                        value={documentValue}
+                        onChange={(event) => handleDocumentChange(event.target.value)}
+                        placeholder={isBusiness ? '00.000.000/0000-00' : '000.000.000-00'}
+                        className="min-h-14 w-full rounded-xl border border-[#d7dde3] bg-white px-4 text-base outline-none transition focus:border-[#8a651f] focus:ring-4 focus:ring-[#d8bd73]/15"
+                      />
+                    </label>
+
+                    <label htmlFor={`first-access-contact-${personType}`} className="grid gap-2 text-sm font-bold text-[#344154]">
+                      Celular ou e-mail cadastrado
+                      <input
+                        id={`first-access-contact-${personType}`}
+                        name="contato-primeiro-acesso"
+                        type="text"
+                        required
+                        value={firstAccessContact}
+                        onChange={(event) => setFirstAccessContact(event.target.value)}
+                        placeholder={isBusiness ? '(00) 00000-0000 ou contato@empresa.com.br' : '(00) 00000-0000 ou email@exemplo.com'}
+                        className="min-h-14 w-full rounded-xl border border-[#d7dde3] bg-white px-4 text-base outline-none transition placeholder:text-[#9aa4af] focus:border-[#8a651f] focus:ring-4 focus:ring-[#d8bd73]/15"
+                      />
+                    </label>
+
+                    <div className="space-y-4 pt-2">
+                      <PinInput
+                        value={firstAccessPin}
+                        onChange={(val) => setFirstAccessPin(val)}
+                        disabled={loading}
+                        label="Nova senha de 4 dígitos"
+                      />
+
+                      <PinInput
+                        value={firstAccessPinConfirm}
+                        onChange={(val) => setFirstAccessPinConfirm(val)}
+                        disabled={loading}
+                        label="Confirme a nova senha de 4 dígitos"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading || firstAccessPin.length !== 4 || firstAccessPinConfirm.length !== 4}
+                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] disabled:opacity-55"
+                    >
+                      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {loading ? 'Cadastrando...' : isBusiness ? 'Cadastrar senha e acessar GSA HUB Empresas' : 'Cadastrar senha e acessar'}
+                    </button>
+
                     <button
                       type="button"
-                      onClick={() => resetAccessState('recovery')}
-                      className="min-h-11 w-full text-center text-sm font-bold text-[#8a651f] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                      onClick={() => resetAccessState('login')}
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 text-sm font-bold text-[#344154] hover:text-[#0b1522] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
                     >
-                      Esqueci minha senha
+                      <ArrowLeft className="h-4 w-4" />
+                      Voltar ao login
                     </button>
-                  </div>
+                  </form>
                 )}
 
                 {mode === 'recovery' && recoveryStage === 'request' && (
