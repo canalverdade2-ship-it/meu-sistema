@@ -2,6 +2,8 @@ import { supabase } from './supabase';
 
 export type ProToolId = 'termination' | 'retirement' | 'vacation' | 'thirteenth' | 'benefits' | 'bpc';
 
+export type ProBlockMode = 'total' | 'partial';
+
 export interface ProProductInfo {
   tool_id: ProToolId;
   nome: string;
@@ -9,6 +11,7 @@ export interface ProProductInfo {
   duracao_acesso_minutos: number;
   gratuito_inicio?: string | null;
   gratuito_fim?: string | null;
+  modo_bloqueio?: ProBlockMode;
 }
 
 export interface ProAccessStatus {
