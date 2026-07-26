@@ -1376,7 +1376,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
             />
           </div>
         </header>
-        <div className={activeModule === 'area_vip' ? '' : (activeModule as string) === 'gsa_store' ? 'p-4 lg:px-6 lg:pt-2 lg:pb-12' : 'p-6 lg:p-12'}>
+        <div className={`${activeModule === 'area_vip' ? '' : (activeModule as string) === 'gsa_store' ? 'p-4 lg:px-6 lg:pt-2 lg:pb-12' : 'p-4 sm:p-6 lg:p-10 xl:p-12'} ${isBusiness ? 'mx-auto w-full max-w-[1680px]' : ''}`}>
           {activeModule !== 'dashboard' && (activeModule as string) !== 'gsa_store' && (activeModule as string) !== 'classificados' && activeModule !== 'financeiro' && activeModule !== 'fidelidade' && activeModule !== 'servicos_assinaturas' && (
             <button 
               onClick={() => {
@@ -1424,26 +1424,47 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={activeModule === 'dashboard' ? '' : activeModule === 'area_vip' ? '' : 'card-refined'}
+            className={
+              activeModule === 'dashboard' || activeModule === 'area_vip'
+                ? ''
+                : isBusiness
+                  ? 'rounded-[1.5rem] border border-[#dce3e8] bg-white p-1 shadow-sm sm:p-2'
+                  : 'card-refined'
+            }
           >
             {activeModule === 'dashboard' && (
-              <ClientDashboard 
-                menuItems={menuItems} 
-                onNavigate={(mod) => {
-                  const item = menuItems.find(i => i.id === mod);
-                  if (item?.locked) {
-                    if (!vipModuleConfig.ativo && mod === 'area_vip') {
-                      toast.error('Área VIP desativada por tempo indeterminado.');
-                    } else {
-                      toast.error('Módulo bloqueado. Seu cadastro está em análise.');
+              isBusiness ? (
+                <BusinessDashboard
+                  menuItems={menuItems}
+                  onNavigate={(mod) => {
+                    const item = menuItems.find(i => i.id === mod);
+                    if (item?.locked) {
+                      toast.error('Módulo bloqueado. O cadastro da empresa está em análise.');
+                      return;
                     }
-                    return;
-                  }
-                  navigateClientModule(mod as Module);
-                }} 
-                cliente={cliente}
-                vipModuleConfig={vipModuleConfig}
-              />
+                    navigateClientModule(mod);
+                  }}
+                  cliente={cliente}
+                />
+              ) : (
+                <ClientDashboard 
+                  menuItems={menuItems} 
+                  onNavigate={(mod) => {
+                    const item = menuItems.find(i => i.id === mod);
+                    if (item?.locked) {
+                      if (!vipModuleConfig.ativo && mod === 'area_vip') {
+                        toast.error('Área VIP desativada por tempo indeterminado.');
+                      } else {
+                        toast.error('Módulo bloqueado. Seu cadastro está em análise.');
+                      }
+                      return;
+                    }
+                    navigateClientModule(mod as Module);
+                  }} 
+                  cliente={cliente}
+                  vipModuleConfig={vipModuleConfig}
+                />
+              )
             )}
             {activeModule === 'perfil' && <ClientProfile cliente={cliente} onOpenTicket={handleOpenTicket} initialTab={activeTab} initialItemId={activeItemId} />}
             {activeModule === 'orcamentos' && (
