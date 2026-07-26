@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
+  ArrowLeft,
   BriefcaseBusiness,
   Calculator,
   Code2,
   Home as HomeIcon,
+  LockKeyhole,
   LogIn,
   Menu,
   Palette,
