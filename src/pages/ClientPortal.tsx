@@ -1066,7 +1066,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
 
   if (!cliente) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-[#f8f7f5]">
+      <div className={`flex h-screen flex-col items-center justify-center ${isBusiness ? 'bg-[#07111f] text-white' : 'bg-[#f8f7f5]'}`}>
         {fetchError ? (
           <div className="text-center">
             <p className="text-red-600 font-medium mb-4">{fetchError}</p>
@@ -1079,8 +1079,8 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
           </div>
         ) : (
           <div className="flex flex-col items-center">
-            <div className="w-8 h-8 border-4 border-[#1a1a1a] border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-[#1a1a1a]/60 font-medium">Carregando...</p>
+            <div className={`mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-transparent ${isBusiness ? 'border-[#d8bd73]' : 'border-[#1a1a1a]'}`}></div>
+            <p className={`font-medium ${isBusiness ? 'text-white/60' : 'text-[#1a1a1a]/60'}`}>Carregando ambiente...</p>
           </div>
         )}
       </div>
@@ -1090,7 +1090,13 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   const isEffectiveExpanded = isSidebarPinned || !isSidebarCollapsed || isSidebarHovered;
 
   return (
-    <div className="flex min-h-screen bg-[#f8f7f5] overflow-hidden font-sans">
+    <div className={`flex min-h-screen overflow-hidden font-sans ${isBusiness ? 'bg-[#eef2f5]' : 'bg-[#f8f7f5]'}`}>
+      <a
+        href="#portal-main-content"
+        className="fixed left-4 top-4 z-[120] -translate-y-24 rounded-lg bg-white px-4 py-3 text-sm font-bold text-[#0b1522] shadow-xl focus:translate-y-0"
+      >
+        Ir para o conteúdo principal
+      </a>
       {/* Mobile Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
@@ -1108,7 +1114,9 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       <aside 
         onMouseEnter={() => !isMobile && setIsSidebarHovered(true)}
         onMouseLeave={() => !isMobile && setIsSidebarHovered(false)}
-        className={`fixed inset-y-0 left-0 z-[70] flex flex-col border-r border-black/5 bg-[#fdfcfb] transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-[70] flex flex-col border-r transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 ${
+          isBusiness ? 'border-white/8 bg-[#081522] text-white shadow-2xl shadow-black/20' : 'border-black/5 bg-[#fdfcfb]'
+        } ${
           isMobileMenuOpen ? 'translate-x-0 w-72' : (isMobile ? '-translate-x-full w-72' : '')
         } ${
           !isMobile ? (isEffectiveExpanded ? 'lg:w-72' : 'lg:w-20') : ''
@@ -1116,9 +1124,16 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       >
         <div className="flex h-24 items-center justify-between px-6">
           {isEffectiveExpanded ? (
-            <span className="text-xl tracking-tight text-[#1a1a1a] font-medium truncate">Grupo GSA</span>
+            isBusiness ? (
+              <div className="min-w-0">
+                <LogoGSA size="xs" variant="light" showText />
+                <span className="ml-8 mt-1 block text-[8px] font-black uppercase tracking-[0.24em] text-[#edcf83]">Empresas</span>
+              </div>
+            ) : (
+              <span className="text-xl tracking-tight text-[#1a1a1a] font-medium truncate">Grupo GSA</span>
+            )
           ) : (
-            <span className="text-xl font-bold tracking-tight text-[#1a1a1a] mx-auto">GSA</span>
+            <LogoGSA size="xs" variant={isBusiness ? 'light' : 'dark'} />
           )}
           
           {!isMobile && (
@@ -1127,13 +1142,17 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                 onClick={() => {
                   const newPinned = !isSidebarPinned;
                   setIsSidebarPinned(newPinned);
-                  localStorage.setItem('client_sidebar_pinned', JSON.stringify(newPinned));
+                  localStorage.setItem(sidebarPinnedKey, JSON.stringify(newPinned));
                   if (newPinned) {
                     setIsSidebarCollapsed(false);
-                    localStorage.setItem('client_sidebar_collapsed', JSON.stringify(false));
+                    localStorage.setItem(sidebarCollapsedKey, JSON.stringify(false));
                   }
                 }}
-                className={`rounded-full p-1.5 hover:bg-black/5 transition-colors ${isSidebarPinned ? 'text-indigo-600' : 'text-[#1a1a1a]/30'}`}
+                className={`rounded-full p-1.5 transition-colors ${
+                  isBusiness
+                    ? `${isSidebarPinned ? 'text-[#edcf83]' : 'text-white/25'} hover:bg-white/8`
+                    : `${isSidebarPinned ? 'text-indigo-600' : 'text-[#1a1a1a]/30'} hover:bg-black/5`
+                }`}
                 title={isSidebarPinned ? "Desafixar menu" : "Fixar menu"}
               >
                 <Pin className="h-3.5 w-3.5" style={{ transform: isSidebarPinned ? 'rotate(0deg)' : 'rotate(45deg)', transition: 'transform 0.2s' }} />
@@ -1142,13 +1161,13 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                 onClick={() => {
                   const newCollapsed = !isSidebarCollapsed;
                   setIsSidebarCollapsed(newCollapsed);
-                  localStorage.setItem('client_sidebar_collapsed', JSON.stringify(newCollapsed));
+                  localStorage.setItem(sidebarCollapsedKey, JSON.stringify(newCollapsed));
                   if (newCollapsed) {
                     setIsSidebarPinned(false);
-                    localStorage.setItem('client_sidebar_pinned', JSON.stringify(false));
+                    localStorage.setItem(sidebarPinnedKey, JSON.stringify(false));
                   }
                 }}
-                className="rounded-full p-1.5 hover:bg-black/5 transition-colors text-[#1a1a1a]/60"
+                className={`rounded-full p-1.5 transition-colors ${isBusiness ? 'text-white/45 hover:bg-white/8 hover:text-white' : 'text-[#1a1a1a]/60 hover:bg-black/5'}`}
                 title={isSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
               >
                 {isSidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
@@ -1156,8 +1175,8 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
             </div>
           )}
 
-          <button onClick={() => setIsMobileMenuOpen(false)} className="rounded-full p-2 hover:bg-black/5 transition-colors lg:hidden">
-            <X className="h-5 w-5 text-[#1a1a1a]/60" />
+          <button onClick={() => setIsMobileMenuOpen(false)} className={`rounded-full p-2 transition-colors lg:hidden ${isBusiness ? 'hover:bg-white/8' : 'hover:bg-black/5'}`}>
+            <X className={`h-5 w-5 ${isBusiness ? 'text-white/60' : 'text-[#1a1a1a]/60'}`} />
           </button>
         </div>
 
