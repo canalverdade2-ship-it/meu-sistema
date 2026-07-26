@@ -346,14 +346,6 @@ export const sessionService = {
     telefone: string,
     pin: string,
     tipo: 'cliente' | 'prestador',
-  ) {
-    return authenticate('set_pin_and_login', { documento, telefone, pin, tipo });
-  },
-
-  async loginAdmin(code: string) {
-    return authenticate('login_admin', { code });
-  },
-
   async loginColaborador(code: string) {
     return authenticate('login_colaborador', { code });
   },
