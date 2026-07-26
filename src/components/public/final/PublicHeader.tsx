@@ -447,31 +447,6 @@ export function PublicHeader({
             </button>
           </div>
 
-          {currentPage !== 'home' && (
-            <nav aria-label="Navegação principal desktop" className="hidden items-center gap-1 lg:flex xl:gap-2">
-              {NAV_LINKS.map((link) => {
-                const Icon = link.icon;
-                const isActive = currentPage === link.id;
-
-                return (
-                  <button
-                    key={link.id}
-                    type="button"
-                    onClick={() => handleLinkClick(link)}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73] ${
-                      isActive
-                        ? 'border border-[#d8bd73]/40 bg-[#d8bd73]/15 text-[#d8bd73] shadow-sm'
-                        : 'text-white/75 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#d8bd73]' : 'text-white/60'}`} />
-                    <span>{link.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          )}
-
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
@@ -482,51 +457,8 @@ export function PublicHeader({
               <LockKeyhole className="h-4 w-4 text-[#d8bd73]" />
               <span className="gsa-public-header-login-label">Área do Cliente</span>
             </button>
-
-            {currentPage !== 'home' && (
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen((prev) => !prev)}
-                aria-expanded={mobileMenuOpen}
-                aria-controls="public-mobile-navigation"
-                aria-label={mobileMenuOpen ? 'Fechar menu de navegação' : 'Abrir menu de navegação'}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73] lg:hidden"
-              >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            )}
           </div>
         </div>
-
-        {mobileMenuOpen && currentPage !== 'home' && (
-          <div
-            id="public-mobile-navigation"
-            className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-white/10 bg-[#080c12] px-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-2xl animate-in slide-in-from-top duration-200 sm:px-4 lg:hidden"
-          >
-            <nav aria-label="Navegação principal mobile" className="flex flex-col gap-1.5">
-              {NAV_LINKS.map((link) => {
-                const Icon = link.icon;
-                const isActive = currentPage === link.id;
-
-                return (
-                  <button
-                    key={link.id}
-                    type="button"
-                    onClick={() => handleLinkClick(link)}
-                    className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-left text-xs font-bold transition ${
-                      isActive
-                        ? 'border border-[#d8bd73]/40 bg-[#d8bd73]/15 text-[#d8bd73]'
-                        : 'text-white/80 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#d8bd73]' : 'text-white/60'}`} />
-                    <span>{link.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        )}
       </header>
     </>
   );
