@@ -16,7 +16,7 @@ import { LogoGSA } from '../../ui/LogoGSA';
 import { navigate } from '../../../routing/navigationService';
 import type { PublicPage } from '../../../data/publicServiceCatalog';
 
-export type PublicHeaderPage = PublicPage | 'brand-journey' | 'marketplace';
+export type PublicHeaderPage = PublicPage | 'brand-journey' | 'marketplace' | 'ads' | 'careers' | 'free-tools';
 
 interface PublicHeaderProps {
   currentPage?: PublicHeaderPage;
