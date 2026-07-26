@@ -2,6 +2,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Building2,
+  Clock,
   CreditCard,
   FileCheck2,
   Headphones,
