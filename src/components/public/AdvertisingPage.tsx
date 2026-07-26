@@ -385,43 +385,65 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
 
     setSubmitting(true);
     setProtocol(null);
+
+    const requestPayload = {
+      company_name: form.company_name.trim(),
+      document: form.document,
+      company_size: form.company_size,
+      segment: form.segment.trim(),
+      contact_name: form.contact_name.trim(),
+      contact_email: form.contact_email.trim().toLowerCase(),
+      contact_phone: form.contact_phone,
+      website: normalizeWebsite(form.website),
+      objective: form.objective.trim(),
+      desired_formats: form.desired_formats,
+      desired_pages: form.desired_pages,
+      devices: form.devices,
+      desired_start_date: form.desired_start_date,
+      desired_end_date: form.desired_end_date,
+      intended_budget: budget,
+      needs_creative_service: form.needs_creative_service,
+      notes,
+      website_confirmation: form.website_confirmation,
+      started_at: startedAt,
+      source_metadata: {
+        pathname: window.location.pathname,
+        referrer: document.referrer || '',
+        utm_source: new URLSearchParams(window.location.search).get('utm_source') || '',
+      },
+    };
+
     try {
-      const { data, error } = await supabase.functions.invoke<{
-        success: boolean;
-        protocol?: string;
-        error?: string;
-      }>('gsa-public-advertising', {
-        body: {
-          company_name: form.company_name.trim(),
-          document: form.document,
-          company_size: form.company_size,
-          segment: form.segment.trim(),
-          contact_name: form.contact_name.trim(),
-          contact_email: form.contact_email.trim().toLowerCase(),
-          contact_phone: form.contact_phone,
-          website: normalizeWebsite(form.website),
-          objective: form.objective.trim(),
-          desired_formats: form.desired_formats,
-          desired_pages: form.desired_pages,
-          devices: form.devices,
-          desired_start_date: form.desired_start_date,
-          desired_end_date: form.desired_end_date,
-          intended_budget: budget,
-          needs_creative_service: form.needs_creative_service,
-          notes,
-          website_confirmation: form.website_confirmation,
-          started_at: startedAt,
-          source_metadata: {
-            pathname: window.location.pathname,
-            referrer: document.referrer || '',
-            utm_source: new URLSearchParams(window.location.search).get('utm_source') || '',
-          },
-        },
-      });
-      if (error || !data?.success || !data.protocol) {
-        throw error || new Error(data?.error || 'O servidor não confirmou a gravação da solicitação.');
+      let createdProtocol: string | undefined;
+
+      try {
+        const { data, error } = await supabase.functions.invoke<{
+          success: boolean;
+          protocol?: string;
+          error?: string;
+        }>('gsa-public-advertising', { body: requestPayload });
+
+        if (!error && data?.success && data.protocol) {
+          createdProtocol = data.protocol;
+        }
+      } catch (edgeError) {
+        console.warn('Edge Function indisponível ou bloqueada por CORS, usando fallback RPC direct:', edgeError);
       }
-      setProtocol(data.protocol);
+
+      if (!createdProtocol) {
+        const { data: rpcData, error: rpcError } = await supabase.rpc<{
+          success: boolean;
+          protocol?: string;
+          status?: string;
+        }>('gsa_public_submit_advertising_request', { p_payload: requestPayload as any });
+
+        if (rpcError || !(rpcData as any)?.success || !(rpcData as any)?.protocol) {
+          throw rpcError || new Error((rpcData as any)?.error || 'O servidor não confirmou a gravação da solicitação.');
+        }
+        createdProtocol = (rpcData as any).protocol;
+      }
+
+      setProtocol(createdProtocol);
       setForm(INITIAL_FORM);
       setCreativeReference(null);
       setPendingCreativeReference(null);
