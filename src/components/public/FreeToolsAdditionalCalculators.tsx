@@ -304,7 +304,7 @@ export function ThirteenthFree() {
   );
 }
 
-export function ThirteenthPro() {
+export function ThirteenthPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void } = {}) {
   const [salary, setSalary] = useState('3500');
   const [averages, setAverages] = useState('0');
   const [months, setMonths] = useState('12');
@@ -364,6 +364,8 @@ export function ThirteenthPro() {
           icon={<HandCoins className="h-5 w-5" />}
           note="Todos os descontos tributários do 13º salário (INSS e IRRF) concentram-se na 2ª parcela."
           report={report}
+          status={status}
+          onUnlockRequired={onUnlockRequired}
         >
           <ResultLine label="13º Salário Bruto Total" value={currency.format(result.grossValue)} />
           <ResultLine label="1ª Parcela (até 30/11 - Isenta)" value={currency.format(result.firstInstallmentPaid)} subtext="50% do valor bruto sem descontos" />
@@ -484,7 +486,7 @@ export function BenefitsFree() {
   );
 }
 
-export function BenefitsPro() {
+export function BenefitsPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void } = {}) {
   const [benefitType, setBenefitType] = useState<InssBenefitType>('temporary_incapacity');
   const [insured, setInsured] = useState(true);
   const [contributions, setContributions] = useState('24');
@@ -582,6 +584,8 @@ export function BenefitsPro() {
           icon={<HeartHandshake className="h-5 w-5" />}
           note="O valor definitivo é apurado pelo INSS com base nos salários de contribuição homologados no CNIS."
           report={report}
+          status={status}
+          onUnlockRequired={onUnlockRequired}
         >
           <div className="my-3 rounded-lg border border-white/10 bg-white/5 p-3">
             <span className="text-[10px] font-black uppercase tracking-[#d8bd73] text-[#d8bd73]">Status dos Requisitos</span>
