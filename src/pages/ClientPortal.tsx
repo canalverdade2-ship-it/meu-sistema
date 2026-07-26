@@ -10,6 +10,11 @@ type ClientPortalProps = ComponentProps<typeof ClientPortalLegacy>;
 
 type ClientKind = 'pf' | 'pj' | null;
 
+function navigateClientCompatibility(path: string, replaceFlag = false) {
+  if (replaceFlag) replace(path);
+  else window.location.assign(path);
+}
+
 export function ClientPortal(props: ClientPortalProps) {
   const route = useAppLocation();
   const [clientKind, setClientKind] = useState<ClientKind>(null);
@@ -43,12 +48,12 @@ export function ClientPortal(props: ClientPortalProps) {
 
     if (clientKind === 'pj' && (pathname === '/cliente' || pathname.startsWith('/cliente/'))) {
       const suffix = pathname === '/cliente' ? '/dashboard' : pathname.slice('/cliente'.length);
-      replace(`/empresa${suffix}${route.search}${route.hash}`);
+      navigateClientCompatibility(`/empresa${suffix}${route.search}${route.hash}`, true);
       return;
     }
 
     if (clientKind === 'pf' && (pathname === '/empresa' || pathname.startsWith('/empresa/'))) {
-      replace('/cliente/dashboard');
+      navigateClientCompatibility('/cliente/dashboard', true);
     }
   }, [clientKind, route.hash, route.pathname, route.search]);
 
