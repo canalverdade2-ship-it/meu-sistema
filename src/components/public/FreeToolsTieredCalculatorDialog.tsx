@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useState, type ComponentType } from 'react';
 import {
   ArrowRight,
   Baby,
@@ -6,43 +5,25 @@ import {
   BriefcaseBusiness,
   Building2,
   Calculator,
+  CalendarDays,
   Clock3,
+  Coins,
   Crown,
+  GraduationCap,
   HandCoins,
+  Heart,
   HeartHandshake,
   Landmark,
   Loader2,
   LockKeyhole,
   Palmtree,
+  Percent,
   Sparkles,
+  SunMedium,
   TrendingUp,
+  Users,
   X,
 } from 'lucide-react';
-import { AccessibleDialog } from '../ui/AccessibleDialog';
-import { FreeToolsSimpleCalculator } from './FreeToolsSimpleCalculators';
-import { FreeToolsAdvancedCalculator } from './FreeToolsAdvancedCalculators';
-import { FreeToolsProUnlockDialog } from './FreeToolsProUnlockDialog';
-import {
-  FreeToolsProEligibilityDialog,
-  type ProEligibilityResult,
-} from './FreeToolsProEligibilityDialog';
-import {
-  clearInfinitePayReturnFromUrl,
-  freeToolsProAccess,
-  readInfinitePayReturn,
-  type ProAccessStatus,
-  type ProToolId,
-} from '../../lib/freeToolsProAccess';
-
-export type FreeToolId = ProToolId;
-
-interface FreeToolsTieredCalculatorDialogProps {
-  tool: FreeToolId | null;
-  onClose: () => void;
-  onToolChange: (tool: FreeToolId) => void;
-  onServices: () => void;
-  onClientLogin: () => void;
-}
 
 const TOOLS: Record<FreeToolId, {
   icon: ComponentType<{ className?: string }>;
@@ -87,6 +68,34 @@ const TOOLS: Record<FreeToolId, {
   amortization: {
     icon: TrendingUp,
     title: 'Calculadora de amortização (SAC / PRICE)',
+  },
+  internship_termination: {
+    icon: GraduationCap,
+    title: 'Rescisão de contrato de estágio',
+  },
+  prolabore_vs_lucros: {
+    icon: Coins,
+    title: 'Pró-labore vs Distribuição de lucros',
+  },
+  employee_cost: {
+    icon: Users,
+    title: 'Custo total do funcionário',
+  },
+  night_shift_rural_urban: {
+    icon: SunMedium,
+    title: 'Adicional noturno urbano vs rural',
+  },
+  proportional_salary: {
+    icon: CalendarDays,
+    title: 'Calculadora de salário proporcional',
+  },
+  late_fee_calculator: {
+    icon: Percent,
+    title: 'Juros e multa por atraso',
+  },
+  child_support: {
+    icon: Heart,
+    title: 'Simulador de pensão alimentícia',
   },
   benefits: {
     icon: Baby,
