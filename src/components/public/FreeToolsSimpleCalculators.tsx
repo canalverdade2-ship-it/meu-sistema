@@ -113,9 +113,6 @@ function VacationFree() {
   return <FreeLayout title="Estimativa simples de 30 dias de férias" description="Informe apenas o salário mensal para visualizar a remuneração e o adicional constitucional de um terço." form={<Field label="Salário bruto mensal" value={salary} onChange={setSalary} prefix="R$" />} result={<><Palmtree className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.total)}</p><div className="mt-5 space-y-2 text-sm text-white/62"><p>Remuneração: {currency.format(result.remuneration)}</p><p>Adicional de 1/3: {currency.format(result.constitutionalThird)}</p></div></>} proItems={['médias de horas extras e adicionais', 'composição detalhada do total', 'cenários e condições consideradas', 'resultado avançado para conferência']} report={report} />;
 }
 
-    disclaimer: 'Estimativa educativa para 30 dias de férias. Não considera descontos, faltas, médias, abono pecuniário, adiantamento do 13º ou férias em dobro.',
-  };
-  return <FreeLayout title="Estimativa simples de 30 dias de férias" description="Informe apenas o salário mensal para visualizar a remuneração e o adicional constitucional de um terço." form={<Field label="Salário bruto mensal" value={salary} onChange={setSalary} prefix="R$" />} result={<><Palmtree className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.total)}</p><div className="mt-5 space-y-2 text-sm text-white/62"><p>Remuneração: {currency.format(result.remuneration)}</p><p>Adicional de 1/3: {currency.format(result.constitutionalThird)}</p></div></>} proItems={['médias de horas extras e adicionais', 'composição detalhada do total', 'cenários e condições consideradas', 'resultado avançado para conferência']} report={report} />;
 }
 
 function OvertimeFree() {
