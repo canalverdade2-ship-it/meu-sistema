@@ -280,7 +280,7 @@ export function SystemsBudgetModal({ isOpen, onClose }: SystemsBudgetModalProps)
             <div className="mt-4 flex items-start gap-2.5 rounded-[10px] border border-[#ded8cc] bg-white px-3.5 py-3">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#80672c]" />
               <p className="text-[11px] leading-5 text-neutral-500">
-                Seus dados serão usados somente para analisar a solicitação, registrar sua origem e entrar em contato sobre o projeto.
+                Seus dados serão usados somente para analisar a solicitação e entrar em contato sobre o projeto. Também registramos a página de origem, o domínio de referência e parâmetros de campanha para identificar a procedência do atendimento.
               </p>
             </div>
           </div>
