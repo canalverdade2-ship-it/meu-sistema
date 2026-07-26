@@ -28,7 +28,7 @@ import {
   consumeFreeToolsProLoginReturn,
 } from '../lib/freeToolsProLoginReturn';
 
-type AccessMode = 'login' | 'recovery';
+type AccessMode = 'login' | 'recovery' | 'first_access';
 type LoginStage = 'document' | 'pin';
 type RecoveryStage = 'request' | 'code';
 
@@ -77,6 +77,9 @@ export function ClientLoginPage({
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryId, setRecoveryId] = useState('');
   const [recoveryCode, setRecoveryCode] = useState('');
+  const [firstAccessContact, setFirstAccessContact] = useState('');
+  const [firstAccessPin, setFirstAccessPin] = useState('');
+  const [firstAccessPinConfirm, setFirstAccessPinConfirm] = useState('');
   const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
   const [pinError, setPinError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -90,6 +93,9 @@ export function ClientLoginPage({
     setRecoveryEmail('');
     setRecoveryId('');
     setRecoveryCode('');
+    setFirstAccessContact('');
+    setFirstAccessPin('');
+    setFirstAccessPinConfirm('');
     setAttemptsLeft(null);
     setPinError(false);
   }, [initialMode, personType]);
@@ -127,6 +133,9 @@ export function ClientLoginPage({
     setPin('');
     setRecoveryId('');
     setRecoveryCode('');
+    setFirstAccessContact('');
+    setFirstAccessPin('');
+    setFirstAccessPinConfirm('');
     setAttemptsLeft(null);
     setPinError(false);
   };
@@ -169,6 +178,11 @@ export function ClientLoginPage({
     try {
       const data = await sessionService.loginWithPin(cleanDocument, pin, 'cliente');
       if (!data?.valid) {
+        if (data?.error === 'primeiro_acesso') {
+          setMode('first_access');
+          toast.success('Primeiro acesso identificado! Confirme seus dados e cadastre sua senha.');
+          return;
+        }
         setPinError(true);
         setPin('');
         setAttemptsLeft(typeof data?.attempts_left === 'number' ? data.attempts_left : null);
@@ -196,6 +210,56 @@ export function ClientLoginPage({
       setPinError(true);
       setPin('');
       toast.error(error?.message || `${documentLabel} ou senha inválidos.`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFirstAccessSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!isDocumentValid) {
+      toast.error(`Informe um ${documentLabel} válido.`);
+      return;
+    }
+    if (!firstAccessContact.trim()) {
+      toast.error('Informe o celular ou e-mail cadastrado na empresa.');
+      return;
+    }
+    if (firstAccessPin.length !== 4) {
+      toast.error('Informe uma senha numérica de 4 dígitos.');
+      return;
+    }
+    if (firstAccessPin !== firstAccessPinConfirm) {
+      toast.error('As senhas informadas não coincidem.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = await sessionService.setPinAndLogin(
+        cleanDocument,
+        firstAccessContact.trim(),
+        firstAccessPin,
+        'cliente',
+      );
+      if (!data?.success) {
+        throw new Error(data?.error || 'Não foi possível cadastrar a senha.');
+      }
+
+      await confirmExpectedAccountType(data.id);
+      await logService.logAction({
+        ator_tipo: 'cliente',
+        ator_id: data.id,
+        ator_nome: data.nome,
+        acao: 'PRIMEIRO_ACESSO_SENHA',
+        detalhes: isBusiness
+          ? 'Senha cadastrada no Primeiro Acesso GSA HUB Empresas'
+          : 'Senha cadastrada no Primeiro Acesso portal Pessoa Física',
+      });
+      toast.success(isBusiness ? 'Senha cadastrada com sucesso! Bem-vindo ao GSA HUB Empresas.' : 'Senha cadastrada com sucesso.');
+      await completeLogin(data.id);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível cadastrar a senha.');
     } finally {
       setLoading(false);
     }
