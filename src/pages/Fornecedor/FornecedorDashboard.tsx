@@ -377,12 +377,10 @@ function Dashboard({ snapshot, pendingOrders, pendingDeliveries, receivable, onN
 }) {
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-[2rem] bg-neutral-950 p-7 text-white">
-        <div className="relative z-10">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Bem-vindo</p>
-          <h1 className="mt-2 text-3xl font-black">{snapshot.supplier?.nome_fantasia || snapshot.supplier?.razao_social || 'Fornecedor'}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-white/70">Acompanhe produtos aprovados, pedidos de compra, entregas, notas fiscais e pagamentos.</p>
-        </div>
+      <section className="rounded-[2rem] bg-neutral-950 p-7 text-white">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Bem-vindo</p>
+        <h1 className="mt-2 text-3xl font-black">{snapshot.supplier?.nome_fantasia || snapshot.supplier?.razao_social || 'Fornecedor'}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-white/60">Acompanhe produtos aprovados, pedidos de compra, entregas, notas fiscais e pagamentos.</p>
       </section>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Metric label="Produtos aprovados" value={snapshot.products.length} icon={Package} />

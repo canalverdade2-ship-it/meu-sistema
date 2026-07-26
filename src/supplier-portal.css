@@ -1042,25 +1042,15 @@
   background: var(--supplier-dashboard-ink) !important;
 }
 
-.min-h-screen.bg-\[\#f5f5f2\].text-neutral-900 main > div > section:first-child.bg-neutral-950 > * {
-  position: relative;
-  z-index: 1;
-}
-
 .min-h-screen.bg-\[\#f5f5f2\].text-neutral-900 main > div > section:first-child.bg-neutral-950::after {
   content: "RELAÇÃO COMERCIAL ATIVA";
   position: absolute;
   right: 30px;
-  bottom: 20px;
-  z-index: 0;
-  pointer-events: none;
-  user-select: none;
-  color: rgba(255, 255, 255, 0.05);
+  bottom: 26px;
+  color: rgba(255, 255, 255, 0.16);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.2rem, 2.5vw, 2.2rem);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
+  font-size: clamp(1.5rem, 3vw, 3rem);
+  letter-spacing: 0.04em;
 }
 
 .min-h-screen.bg-\[\#f5f5f2\].text-neutral-900 [class*="text-emerald-"] {
