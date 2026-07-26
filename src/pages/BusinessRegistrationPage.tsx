@@ -926,6 +926,46 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
           </span>
         </footer>
       </div>
+
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Cadastro realizado com sucesso"
+        size="md"
+      >
+        <div className="text-center py-4 px-2">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-8 ring-emerald-50/50">
+            <CheckCircle2 className="h-10 w-10" />
+          </div>
+
+          <h3 className="mt-5 text-xl font-black text-neutral-900 sm:text-2xl">
+            Cadastro realizado com sucesso!
+          </h3>
+
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1 text-xs font-bold text-amber-900">
+            <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            Entrou em análise pelo sistema
+          </div>
+
+          <p className="mt-4 text-sm leading-6 text-neutral-600">
+            Os dados da sua empresa foram recebidos. Crie agora a sua nova senha de acesso para entrar no Portal Empresas e acompanhar a liberação do seu cadastro no módulo <strong>Meu Cadastro</strong>.
+          </p>
+
+          <div className="mt-7">
+            <button
+              type="button"
+              onClick={() => {
+                setShowSuccessModal(false);
+                onLogin(cnpj);
+              }}
+              className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1828] px-6 text-sm font-black text-white shadow-lg shadow-[#0b1828]/20 transition hover:bg-[#152942] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9a742b]"
+            >
+              Acessar agora o portal empresas
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }
