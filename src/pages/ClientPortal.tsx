@@ -346,6 +346,19 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   const nameRef = useRef<HTMLParagraphElement>(null);
 
   const navigateClientModule = (module: Module, tab?: string, itemId?: string, replaceFlag = false) => {
+    const isUnderAnalysis = (
+      ['em_analise', 'pendente'].includes(String(cliente?.status || '').toLowerCase())
+      || cliente?.cadastro_aprovado === false
+    );
+
+    if (isUnderAnalysis && module !== 'dashboard' && module !== 'perfil') {
+      toast.error('Módulo bloqueado: Seu cadastro está em análise pelo sistema. Acompanhe a liberação no módulo Meu Cadastro.', {
+        icon: '🔒',
+        duration: 5000,
+      });
+      return;
+    }
+
     let path = routes.client.dashboard();
 
     if (isBusiness) {
