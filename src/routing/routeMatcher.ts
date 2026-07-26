@@ -3,6 +3,8 @@ import { matchRoute as legacyMatchRoute, parseQueryString } from './routeMatcher
 
 export { parseQueryString };
 
+export const PUBLIC_ROUTE_CONTRACTS = ['empresa-do-zero-ao-digital'] as const;
+
 export function matchRoute(pathname: string, search: string, hash: string): RouteState {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/';
   const segments = normalizedPath.split('/').filter(Boolean);
