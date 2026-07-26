@@ -50,6 +50,7 @@ type Product = {
   duracao_acesso_minutos: number;
   gratuito_inicio?: string | null;
   gratuito_fim?: string | null;
+  modo_bloqueio?: 'total' | 'partial';
 };
 
 type Voucher = {
@@ -88,6 +89,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     duracao_acesso_minutos: 1440,
     gratuito_inicio: null,
     gratuito_fim: null,
+    modo_bloqueio: 'total',
   },
   {
     tool_id: 'retirement',
@@ -97,6 +99,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     duracao_acesso_minutos: 1440,
     gratuito_inicio: null,
     gratuito_fim: null,
+    modo_bloqueio: 'total',
   },
   {
     tool_id: 'vacation',
@@ -106,6 +109,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     duracao_acesso_minutos: 1440,
     gratuito_inicio: null,
     gratuito_fim: null,
+    modo_bloqueio: 'total',
   },
   {
     tool_id: 'thirteenth',
@@ -115,6 +119,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     duracao_acesso_minutos: 1440,
     gratuito_inicio: null,
     gratuito_fim: null,
+    modo_bloqueio: 'total',
   },
   {
     tool_id: 'benefits',
@@ -124,6 +129,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     duracao_acesso_minutos: 1440,
     gratuito_inicio: null,
     gratuito_fim: null,
+    modo_bloqueio: 'total',
   },
   {
     tool_id: 'bpc',
@@ -133,6 +139,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     duracao_acesso_minutos: 1440,
     gratuito_inicio: null,
     gratuito_fim: null,
+    modo_bloqueio: 'total',
   },
 ];
 
