@@ -1,7 +1,8 @@
+import type { ComponentProps } from 'react';
 import { EnterpriseAccessPage } from './EnterpriseAccessPage';
 import { Home as HomeLegacy } from './HomeLegacy';
 
-type HomeProps = React.ComponentProps<typeof HomeLegacy>;
+type HomeProps = ComponentProps<typeof HomeLegacy>;
 
 export function Home(props: HomeProps) {
   const enterpriseLogin = props.loginOnly && (

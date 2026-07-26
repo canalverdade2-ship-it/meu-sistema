@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ComponentProps } from 'react';
 import { Building2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { replace } from '../routing/navigationService';
@@ -6,7 +6,7 @@ import { useAppLocation } from '../routing/useAppLocation';
 import { ClientPortal as ClientPortalLegacy } from './ClientPortalLegacy';
 import { EnterprisePortal } from './EnterprisePortal';
 
-type ClientPortalProps = React.ComponentProps<typeof ClientPortalLegacy>;
+type ClientPortalProps = ComponentProps<typeof ClientPortalLegacy>;
 
 type ClientKind = 'pf' | 'pj' | null;
 
