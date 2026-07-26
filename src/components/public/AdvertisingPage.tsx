@@ -739,14 +739,23 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
                         />
                       </Field>
                       <Field label="Investimento estimado" required>
-                        <input
-                          type="number"
-                          min="1"
-                          step="0.01"
-                          value={form.intended_budget}
-                          onChange={(event) => setForm({ ...form, intended_budget: event.target.value })}
-                          className={inputClass}
-                        />
+                        <div className="relative">
+                          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-extrabold text-[#73808a]">
+                            R$
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={form.intended_budget ? maskCurrency(form.intended_budget) : ''}
+                            onChange={(event) =>
+                              handleCurrencyInputChange(event.target.value, (val) =>
+                                setForm({ ...form, intended_budget: val > 0 ? val.toString() : '' })
+                              )
+                            }
+                            placeholder="0,00"
+                            className={`${inputClass} pl-10`}
+                          />
+                        </div>
                       </Field>
                     </div>
 
