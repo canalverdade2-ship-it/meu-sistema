@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import {
   AlertCircle,
   BadgeCheck,
+  BriefcaseBusiness,
   Calculator,
   CheckCircle2,
   Clock3,
