@@ -208,7 +208,7 @@ export function PublicHomeLanding({ reduceMotion, setPublicPage, onGuestStore }:
             >
               <div className="mb-8 flex items-center gap-4 text-[11px] font-black uppercase tracking-[0.28em] text-[#d5b86b] sm:text-xs">
                 <span className="h-px w-12 bg-[#d5b86b]" />
-                Ecossistema empresarial GSA
+                GSA HUB - Soluções Digitais
               </div>
 
               <h1 className="max-w-[13ch] text-[clamp(3.1rem,8.2vw,7.8rem)] font-semibold leading-[0.9] tracking-[-0.065em] text-white">
