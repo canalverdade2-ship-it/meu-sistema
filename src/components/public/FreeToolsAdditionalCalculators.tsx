@@ -172,7 +172,29 @@ function ResultLine({ label, value, emphasized, subtext }: { label: string; valu
   );
 }
 
-function Result({ eyebrow, headline, summary, icon, children, note, report, action }: { eyebrow: string; headline: string; summary: string; icon: ReactNode; children: ReactNode; note: string; report: CalculatorPdfReport; action?: ReactNode }) {
+function Result({
+  eyebrow,
+  headline,
+  summary,
+  icon,
+  children,
+  note,
+  report,
+  action,
+  status,
+  onUnlockRequired,
+}: {
+  eyebrow: string;
+  headline: string;
+  summary: string;
+  icon: ReactNode;
+  children: ReactNode;
+  note: string;
+  report: CalculatorPdfReport;
+  action?: ReactNode;
+  status?: ProAccessStatus | null;
+  onUnlockRequired?: () => void;
+}) {
   return (
     <aside className="bg-[#132231] p-5 text-white sm:p-7 lg:sticky lg:top-0 lg:self-start">
       <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-4">
@@ -196,7 +218,7 @@ function Result({ eyebrow, headline, summary, icon, children, note, report, acti
         {note}
       </div>
       <div className="mt-6 border-t border-white/10 pt-5">
-        <CalculatorPdfReportButton report={report} mode="pro" />
+        <CalculatorPdfReportButton report={report} mode="pro" status={status} onUnlockRequired={onUnlockRequired} />
       </div>
       {action && <div className="mt-4">{action}</div>}
     </aside>
