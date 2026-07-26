@@ -45,48 +45,36 @@ const BENEFIT_OPTIONS: Array<[InssBenefitType, string]> = [
 
 const BENEFIT_LABELS = Object.fromEntries(BENEFIT_OPTIONS) as Record<InssBenefitType, string>;
 
-function numeric(value: string) {
-  const parsed = Number(value.trim().replace(',', '.'));
-  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
-}
+const BENEFIT_LABELS: Record<InssBenefitType, string> = {
+  temporary_incapacity: 'Auxílio por incapacidade temporária (Auxílio-doença)',
+  maternity: 'Salário-maternidade',
+  death_pension: 'Pensão por morte previdenciária',
+  accident_assistance: 'Auxílio-acidente de qualquer natureza',
+};
 
 function yesNo(value: boolean) {
   return value ? 'Sim' : 'Não';
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  prefix,
-  suffix,
-  max,
-  step = 'any',
-  help,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  prefix?: string;
-  suffix?: string;
-  max?: number;
-  step?: number | 'any';
-  help?: string;
-}) {
+function numeric(value: string) {
+  const parsed = Number(value.replace(/\D/g, ''));
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function Field({ label, value, onChange, prefix, suffix, help, min = 0, max = 1000000, step = 1 }: { label: string; value: string; onChange: (value: string) => void; prefix?: string; suffix?: string; help?: string; min?: number; max?: number; step?: number }) {
   return (
     <label className="block">
-      <span className="text-sm font-black text-[#26313a]">{label}</span>
-      <span className="relative mt-2 block">
-        {prefix && <span className="absolute inset-y-0 left-4 flex items-center text-sm font-bold text-[#727c84]">{prefix}</span>}
+      <span className="text-xs font-black text-[#26313a] sm:text-sm">{label}</span>
+      <span className="relative mt-1.5 block">
+        {prefix && <span className="absolute inset-y-0 left-4 flex items-center text-xs font-bold text-[#727c84]">{prefix}</span>}
         <input
           type="number"
-          inputMode="decimal"
-          min={0}
+          min={min}
           max={max}
           step={step}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className={`min-h-12 w-full rounded-lg border border-[#d5cfc5] bg-white py-3 text-sm font-bold text-[#111820] outline-none transition hover:border-[#bbb1a1] focus:border-[#91722f] focus:ring-4 focus:ring-[#91722f]/10 ${prefix ? 'pl-12' : 'pl-4'} ${suffix ? 'pr-20' : 'pr-4'}`}
+          className={`min-h-12 w-full rounded-lg border border-[#d5cfc5] bg-white py-3 text-sm font-bold text-[#111820] outline-none transition hover:border-[#bbb1a1] focus:border-[#91722f] focus:ring-4 focus:ring-[#91722f]/10 ${prefix ? 'pl-12' : 'pl-4'} ${suffix ? 'pr-16' : 'pr-4'}`}
         />
         {suffix && <span className="absolute inset-y-0 right-4 flex items-center text-xs font-bold text-[#727c84]">{suffix}</span>}
       </span>
