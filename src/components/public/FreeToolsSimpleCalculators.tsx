@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react';
 import { ArrowUpRight, BriefcaseBusiness, CheckCircle2, Clock3, Landmark, Palmtree } from 'lucide-react';
 import {
+  calculateAmortizationEstimate,
+  calculateFatorREstimate,
+  calculateMeiLimitEstimate,
+  calculateNetSalaryEstimate,
+  calculateOvertimeEstimate,
   calculateTerminationEstimate,
+  calculateUnemploymentEstimate,
   calculateVacationEstimate,
   evaluateRetirement2026,
   type TerminationReason,
