@@ -772,7 +772,7 @@ export function BpcFree() {
   );
 }
 
-export function BpcPro() {
+export function BpcPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void } = {}) {
   const [applicantType, setApplicantType] = useState<BpcApplicantType>('elderly');
   const [age, setAge] = useState('67');
   const [grossIncome, setGrossIncome] = useState('1200');
@@ -849,6 +849,8 @@ export function BpcPro() {
           icon={<ShieldCheck className="h-5 w-5" />}
           note="O BPC garante o pagamento mensal de 1 salário mínimo sem direito a 13º salário ou pensão por morte aos dependentes."
           report={report}
+          status={status}
+          onUnlockRequired={onUnlockRequired}
         >
           <div className="my-3 grid grid-cols-2 gap-2 rounded-lg border border-white/10 bg-white/5 p-3 text-xs">
             <div>
