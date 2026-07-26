@@ -346,6 +346,46 @@ export const sessionService = {
     telefone: string,
     pin: string,
     tipo: 'cliente' | 'prestador',
+  ) {
+    const cleanDoc = documento.replace(/\D/g, '');
+    const cleanContact = telefone.trim();
+
+    try {
+      return await authenticate('set_pin_and_login', {
+        documento: cleanDoc,
+        telefone: cleanContact,
+        pin: pin.trim(),
+        tipo,
+      });
+    } catch (edgeError: any) {
+      console.warn('Edge Function set_pin_and_login retornou erro, tentando via RPC gsa_set_pin_and_login:', edgeError);
+      const { data, error } = await supabase.rpc('gsa_set_pin_and_login', {
+        p_documento: cleanDoc,
+        p_telefone: cleanContact,
+        p_pin: pin.trim(),
+        p_tipo: tipo,
+      });
+      if (error) throw error;
+      const res = data as any;
+      if (res?.success) {
+        await persistAuthenticatedSession(res);
+      }
+      return res;
+    }
+  },
+
+  async loginAdmin(code: string) {
+    return authenticate('login_admin', { code });
+  },
+
+  async loginColaborador(code: string) {
+    return authenticate('login_colaborador', { code });
+  },
+
+  async restoreSession() {
+    if (!restoreSessionPromise) {
+      restoreSessionPromise = restoreStoredSession().finally(() => {
+        restoreSessionPromise = null;
       });
     }
     return restoreSessionPromise;
