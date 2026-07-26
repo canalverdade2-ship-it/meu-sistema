@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState, type ComponentType } from 'react';
 import {
   ArrowRight,
   Baby,
@@ -24,6 +25,31 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { AccessibleDialog } from '../ui/AccessibleDialog';
+import { FreeToolsSimpleCalculator } from './FreeToolsSimpleCalculators';
+import { FreeToolsAdvancedCalculator } from './FreeToolsAdvancedCalculators';
+import { FreeToolsProUnlockDialog } from './FreeToolsProUnlockDialog';
+import {
+  FreeToolsProEligibilityDialog,
+  type ProEligibilityResult,
+} from './FreeToolsProEligibilityDialog';
+import {
+  clearInfinitePayReturnFromUrl,
+  freeToolsProAccess,
+  readInfinitePayReturn,
+  type ProAccessStatus,
+  type ProToolId,
+} from '../../lib/freeToolsProAccess';
+
+export type FreeToolId = ProToolId;
+
+interface FreeToolsTieredCalculatorDialogProps {
+  tool: FreeToolId | null;
+  onClose: () => void;
+  onToolChange: (tool: FreeToolId) => void;
+  onServices: () => void;
+  onClientLogin: () => void;
+}
 
 const TOOLS: Record<FreeToolId, {
   icon: ComponentType<{ className?: string }>;
