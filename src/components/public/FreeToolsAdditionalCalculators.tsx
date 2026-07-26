@@ -32,6 +32,7 @@ import {
   type ScreeningRequirement,
 } from '../../lib/freeToolsAdditionalCalculations';
 import type { CalculatorPdfReport } from '../../lib/freeToolsPdfReport';
+import type { ProAccessStatus } from '../../lib/freeToolsProAccess';
 import { CalculatorPdfReportButton } from './CalculatorPdfReportButton';
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -42,8 +43,6 @@ const BENEFIT_OPTIONS: Array<[InssBenefitType, string]> = [
   ['death_pension', 'Pensão por morte'],
   ['accident_assistance', 'Auxílio-acidente'],
 ];
-
-const BENEFIT_LABELS = Object.fromEntries(BENEFIT_OPTIONS) as Record<InssBenefitType, string>;
 
 const BENEFIT_LABELS: Record<InssBenefitType, string> = {
   temporary_incapacity: 'Auxílio por incapacidade temporária (Auxílio-doença)',
@@ -148,7 +147,7 @@ function Section({ number, title, description, children }: { number: string; tit
   );
 }
 
-function ResultLine({ label, value, emphasized, subtext }: { label: string; value: string; emphasized?: boolean; subtext?: string }) {
+function ResultLine({ label, value, emphasized, subtext }: { label: string; value: string; emphasized?: boolean; subtext?: string; key?: React.Key }) {
   return (
     <div className={`flex flex-col border-b border-white/10 py-3 last:border-0 ${emphasized ? 'text-[#f0d98f]' : 'text-white/76'}`}>
       <div className="flex items-start justify-between gap-5">
