@@ -31,6 +31,7 @@ import {
   type FreeToolId,
 } from './FreeToolsTieredCalculatorDialog';
 import { readInfinitePayReturn } from '../../lib/freeToolsProAccess';
+import { PublicHeader } from './final/PublicHeader';
 
 interface FreeToolsPageProps {
   onBack: () => void;
