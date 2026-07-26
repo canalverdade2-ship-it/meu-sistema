@@ -4,7 +4,6 @@ import { toast } from 'react-hot-toast';
 import { GSAEnterpriseHomeFinal } from '../components/public/GSAEnterpriseHomeFinal';
 import { LoginHub } from '../components/public/LoginHub';
 import { ClientAccessModalWithReturn as ClientAccessModal, type ClientAccessMode } from '../components/auth/ClientAccessModalWithReturn';
-import { RestrictedAccessModal, type RestrictedTab } from '../components/auth/RestrictedAccessModal';
 import {
   getServicePackageSlug,
   type Audience,
@@ -21,9 +20,6 @@ const AdvertisingPage = lazy(() => import('../components/public/AdvertisingPage'
 
 interface HomeProps {
   onLoginClient: (id: string, isRecovery?: boolean, personType?: ClientPersonType) => void;
-  onLoginAdmin: (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => void;
-  onLoginPrestador: (id: string) => void;
-  onSupplierAccess: () => void;
   onGuestStore?: () => void;
   initialPublicPage?: PublicPage;
   initialServiceSlug?: string;
@@ -34,9 +30,9 @@ interface HomeProps {
   onLoginPage?: () => void;
   onPersonalLoginPage?: () => void;
   onBusinessLoginPage?: () => void;
+  onProviderLoginPage?: () => void;
   onRestrictedLoginPage?: () => void;
   loginOnly?: boolean;
-  initialRestrictedTab?: RestrictedTab;
   onBackHome?: () => void;
 }
 
@@ -46,9 +42,6 @@ function PublicPageLoading() {
 
 export function Home({
   onLoginClient,
-  onLoginAdmin,
-  onLoginPrestador,
-  onSupplierAccess,
   onGuestStore,
   initialPublicPage = 'home',
   initialServiceSlug,
@@ -59,17 +52,15 @@ export function Home({
   onLoginPage,
   onPersonalLoginPage,
   onBusinessLoginPage,
+  onProviderLoginPage,
   onRestrictedLoginPage,
   loginOnly = false,
-  initialRestrictedTab,
   onBackHome,
 }: HomeProps) {
   const [publicPage, setPublicPage] = useState<PublicPage>(initialPublicPage);
   const [publicAudience, setPublicAudience] = useState<Audience>('PF');
   const [clientModalOpen, setClientModalOpen] = useState(false);
   const [clientMode, setClientMode] = useState<ClientAccessMode>('login');
-  const [restrictedModalOpen, setRestrictedModalOpen] = useState(false);
-  const [restrictedTab, setRestrictedTab] = useState<RestrictedTab>('prestador');
   const [managedPackages, setManagedPackages] = useState<ServicePackage[]>([]);
   const [managedServices, setManagedServices] = useState<IconItem[]>([]);
 
@@ -84,12 +75,6 @@ export function Home({
   useEffect(() => {
     setPublicPage(initialPublicPage);
   }, [initialPublicPage]);
-
-  useEffect(() => {
-    if (!loginOnly || !initialRestrictedTab) return;
-    setRestrictedTab(initialRestrictedTab);
-    setRestrictedModalOpen(true);
-  }, [initialRestrictedTab, loginOnly]);
 
   useEffect(() => {
     if (!loginOnly) return;
@@ -158,11 +143,6 @@ export function Home({
     setClientModalOpen(true);
   };
 
-  const openRestricted = (tab: RestrictedTab) => {
-    setRestrictedTab(tab);
-    setRestrictedModalOpen(true);
-  };
-
   const handlePublicLogin = onLoginPage ?? (() => openClient('login'));
   const modalPersonType: ClientPersonType = new URLSearchParams(window.location.search).get('type') === 'pj' ? 'pj' : 'pf';
 
@@ -173,7 +153,8 @@ export function Home({
           onBack={onBackHome}
           onPersonalAccess={onPersonalLoginPage ?? (() => openClient('login'))}
           onBusinessAccess={onBusinessLoginPage ?? (() => openClient('login'))}
-          onRestrictedAccess={onRestrictedLoginPage ?? (() => openRestricted('prestador'))}
+          onProviderAccess={onProviderLoginPage}
+          onRestrictedAccess={onRestrictedLoginPage}
         />
       ) : publicPage === 'systems' ? (
         <Suspense fallback={<PublicPageLoading />}>
@@ -197,12 +178,11 @@ export function Home({
           onPartnerDetailChange={onPartnerDetailChange}
           onGuestStore={onGuestStore}
           onClientLogin={handlePublicLogin}
-          onAdminLogin={() => openRestricted('gestao')}
+          onAdminLogin={onRestrictedLoginPage ?? handlePublicLogin}
         />
       )}
 
       <ClientAccessModal isOpen={clientModalOpen} initialMode={clientMode} initialPersonType={modalPersonType} onClose={() => setClientModalOpen(false)} onLoginClient={onLoginClient} />
-      <RestrictedAccessModal isOpen={restrictedModalOpen} initialTab={restrictedTab} onClose={() => setRestrictedModalOpen(false)} onLoginAdmin={onLoginAdmin} onLoginPrestador={onLoginPrestador} />
     </>
   );
 }
