@@ -149,5 +149,6 @@ export function FreeToolsPage({ onBack, onServices, onClientLogin }: FreeToolsPa
 
       <FreeToolsTieredCalculatorDialog tool={activeTool} onClose={() => setActiveTool(null)} onToolChange={setActiveTool} onServices={() => { setActiveTool(null); onServices(); }} onClientLogin={onClientLogin} />
     </main>
+    </div>
   );
 }
