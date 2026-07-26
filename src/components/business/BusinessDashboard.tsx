@@ -131,7 +131,7 @@ export function BusinessDashboard({ cliente, menuItems, onNavigate }: BusinessDa
         </div>
       </section>
 
-      {(!isActive || cliente.status === 'em_analise' || cliente.status === 'pendente') && (
+      {(!isActive || (cliente.status as string) === 'em_analise' || (cliente.status as string) === 'pendente') && (
         <section className="rounded-2xl border border-amber-300/80 bg-amber-50/90 p-5 text-amber-950 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-4">

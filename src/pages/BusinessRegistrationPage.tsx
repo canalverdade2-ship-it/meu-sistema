@@ -27,11 +27,7 @@ import {
   maskCNPJ,
   maskPhone,
 } from '../lib/utils';
-import { consultarCEP } from '../utils/viaCep';
-import { validarCNPJ, validarEmail } from '../utils/cpfValidator';
-
 import { Modal } from '../components/ui/Modal';
-import { LogoGSA } from '../components/ui/LogoGSA';
 
 type RegistrationStage = 'authorization' | 'company' | 'success';
 type VoucherTab = 'com-indicacao' | 'sem-indicacao';
