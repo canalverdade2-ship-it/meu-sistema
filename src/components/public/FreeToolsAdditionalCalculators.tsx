@@ -147,7 +147,7 @@ function Section({ number, title, description, children }: { number: string; tit
   );
 }
 
-function ResultLine({ label, value, emphasized, subtext }: { label: string; value: string; emphasized?: boolean; subtext?: string; key?: React.Key }) {
+function ResultLine({ label, value, emphasized, subtext }: { label: string; value: string; emphasized?: boolean; subtext?: string; key?: string | number }) {
   return (
     <div className={`flex flex-col border-b border-white/10 py-3 last:border-0 ${emphasized ? 'text-[#f0d98f]' : 'text-white/76'}`}>
       <div className="flex items-start justify-between gap-5">
