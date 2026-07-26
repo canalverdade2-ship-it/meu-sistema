@@ -2,10 +2,17 @@ import { useMemo, useState } from 'react';
 import { ArrowUpRight, BriefcaseBusiness, CheckCircle2, Clock3, Landmark, Palmtree } from 'lucide-react';
 import {
   calculateAmortizationEstimate,
+  calculateChildSupportEstimate,
+  calculateEmployeeCostEstimate,
   calculateFatorREstimate,
+  calculateInternshipTerminationEstimate,
+  calculateLateFeeEstimate,
   calculateMeiLimitEstimate,
   calculateNetSalaryEstimate,
+  calculateNightShiftRuralUrbanEstimate,
   calculateOvertimeEstimate,
+  calculateProlaboreVsLucrosEstimate,
+  calculateProportionalSalaryEstimate,
   calculateTerminationEstimate,
   calculateUnemploymentEstimate,
   calculateVacationEstimate,
