@@ -33,7 +33,8 @@ import {
   Minimize,
   Landmark,
   Store,
-  Tags
+  Tags,
+  Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
@@ -1187,22 +1188,28 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
               setIsMobileMenuOpen(false);
               if (!isSidebarPinned && !isMobile) {
                 setIsSidebarCollapsed(true);
-                localStorage.setItem('client_sidebar_collapsed', JSON.stringify(true));
+                localStorage.setItem(sidebarCollapsedKey, JSON.stringify(true));
               }
             }}
-            className={`mb-8 flex items-center rounded-2xl bg-white ring-1 ring-black/5 shadow-sm cursor-pointer hover:bg-neutral-50 transition-all ${
+            className={`mb-8 flex cursor-pointer items-center rounded-2xl ring-1 shadow-sm transition-all ${
+              isBusiness
+                ? 'bg-white/[0.055] ring-white/10 hover:bg-white/[0.085]'
+                : 'bg-white ring-black/5 hover:bg-neutral-50'
+            } ${
               isEffectiveExpanded ? 'p-4 gap-4 w-full' : 'p-2 justify-center mx-auto w-12 h-12'
             }`}
-            title={!isEffectiveExpanded ? cliente.nome : undefined}
+            title={!isEffectiveExpanded ? (cliente.nome_razao || cliente.nome) : undefined}
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a1a1a] text-white">
-              <User className="h-5 w-5" />
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+              isBusiness ? 'bg-[#d8bd73]/12 text-[#edcf83] ring-1 ring-[#d8bd73]/25' : 'bg-[#1a1a1a] text-white'
+            }`}>
+              {isBusiness ? <Building2 className="h-5 w-5" /> : <User className="h-5 w-5" />}
             </div>
             {isEffectiveExpanded && (
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p ref={nameRef} className="font-medium text-[#1a1a1a] whitespace-nowrap text-sm truncate">{cliente.nome}</p>
+                <p ref={nameRef} className={`truncate whitespace-nowrap text-sm font-medium ${isBusiness ? 'text-white' : 'text-[#1a1a1a]'}`}>{isBusiness ? (cliente.nome_razao || cliente.nome) : cliente.nome}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-[10px] font-medium tracking-widest text-[#1a1a1a]/40 uppercase">{cliente.codigo_cliente}</p>
+                  <p className={`text-[10px] font-medium uppercase tracking-widest ${isBusiness ? 'text-white/35' : 'text-[#1a1a1a]/40'}`}>{cliente.codigo_cliente}</p>
                   <span className={`px-1.5 py-0.5 text-[8px] font-bold rounded-full uppercase tracking-wider ${
                     cliente.status === 'ativo' ? 'bg-emerald-100 text-emerald-700' :
                     cliente.status === 'inativo' ? 'bg-amber-100 text-amber-700' :
@@ -1234,18 +1241,30 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                 className={`group relative flex items-center justify-between rounded-full transition-all ${
                   isEffectiveExpanded ? 'w-full px-5 py-3.5 text-sm font-medium' : 'w-12 h-12 px-0 justify-center mx-auto'
                 } ${
-                  activeModule === item.id 
-                    ? 'bg-[#1a1a1a] text-white shadow-md' 
-                    : item.locked 
-                      ? 'text-[#1a1a1a]/40 cursor-not-allowed'
-                      : 'text-[#1a1a1a]/60 hover:bg-black/5 hover:text-[#1a1a1a]'
+                  isBusiness
+                    ? activeModule === item.id
+                      ? 'bg-[#d8bd73] text-[#07111f] shadow-lg shadow-black/20'
+                      : item.locked
+                        ? 'cursor-not-allowed text-white/25'
+                        : 'text-white/58 hover:bg-white/[0.07] hover:text-white'
+                    : activeModule === item.id 
+                      ? 'bg-[#1a1a1a] text-white shadow-md' 
+                      : item.locked 
+                        ? 'text-[#1a1a1a]/40 cursor-not-allowed'
+                        : 'text-[#1a1a1a]/60 hover:bg-black/5 hover:text-[#1a1a1a]'
                 }`}
                 title={!isEffectiveExpanded ? String(item.label) : undefined}
               >
                 <div className="flex items-center gap-3">
                   <item.icon className={`h-4 w-4 shrink-0 ${
-                    activeModule === item.id 
-                      ? 'text-white' 
+                    isBusiness
+                      ? activeModule === item.id
+                        ? 'text-[#07111f]'
+                        : item.locked
+                          ? 'text-white/20'
+                          : 'text-[#d8bd73]'
+                      : activeModule === item.id 
+                        ? 'text-white' 
                       : item.locked 
                         ? 'text-neutral-400'
                         : item.id === 'orcamentos' ? 'text-blue-600' :
@@ -1274,7 +1293,11 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                     ) : (
                       <>
                         {item.count > 0 && (
-                          <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${activeModule === item.id ? 'bg-white text-[#1a1a1a]' : 'bg-[#1a1a1a] text-white'}`}>
+                          <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
+                            isBusiness
+                              ? activeModule === item.id ? 'bg-[#07111f] text-white' : 'bg-[#d8bd73] text-[#07111f]'
+                              : activeModule === item.id ? 'bg-white text-[#1a1a1a]' : 'bg-[#1a1a1a] text-white'
+                          }`}>
                             {item.count}
                           </span>
                         )}
@@ -1297,20 +1320,24 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         <div className="p-4">
           <button 
             onClick={onLogout}
-            className={`flex items-center gap-3 rounded-full text-sm font-medium text-red-600/80 transition-all hover:bg-red-50 hover:text-red-600 ${
+            className={`flex items-center gap-3 rounded-full text-sm font-medium transition-all ${
+              isBusiness ? 'text-white/45 hover:bg-white/[0.06] hover:text-white' : 'text-red-600/80 hover:bg-red-50 hover:text-red-600'
+            } ${
               isEffectiveExpanded ? 'w-full px-5 py-3.5' : 'w-12 h-12 px-0 justify-center mx-auto'
             }`}
-            title={!isEffectiveExpanded ? "Sair do Portal" : undefined}
+            title={!isEffectiveExpanded ? (isBusiness ? 'Sair do GSA HUB Empresas' : 'Sair do Portal') : undefined}
           >
             <LogOut className="h-4 w-4 shrink-0" />
-            {isEffectiveExpanded && <span>Sair do Portal</span>}
+            {isEffectiveExpanded && <span>{isBusiness ? 'Sair do ambiente' : 'Sair do Portal'}</span>}
           </button>
         </div>
       </aside>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-30 flex h-24 items-center justify-between bg-[#f8f7f5]/80 px-6 backdrop-blur-md lg:px-12">
+      <main id="portal-main-content" className="flex-1 overflow-y-auto">
+        <header className={`sticky top-0 z-30 flex h-24 items-center justify-between border-b px-6 backdrop-blur-md lg:px-12 ${
+          isBusiness ? 'border-[#d9e0e6]/80 bg-[#eef2f5]/90' : 'border-transparent bg-[#f8f7f5]/80'
+        }`}>
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
@@ -1318,9 +1345,12 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
             >
               <Menu className="h-5 w-5 text-[#1a1a1a]" />
             </button>
-            <h1 className="text-2xl tracking-tight text-[#1a1a1a] lg:text-3xl">
-              {menuItems.find(i => i.id === activeModule)?.label}
-            </h1>
+            <div>
+              {isBusiness && <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8a651f]">GSA HUB Empresas</p>}
+              <h1 className={`tracking-tight ${isBusiness ? 'mt-1 text-xl font-black text-[#102033] lg:text-2xl' : 'text-2xl text-[#1a1a1a] lg:text-3xl'}`}>
+                {menuItems.find(i => i.id === activeModule)?.label}
+              </h1>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <button
