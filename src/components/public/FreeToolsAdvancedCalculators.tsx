@@ -1087,36 +1087,68 @@ function InternshipTerminationPro({ status, onUnlockRequired }: { status?: ProAc
   const [stipend, setStipend] = useState('1800');
   const [months, setMonths] = useState('6');
   const [expiredDays, setExpiredDays] = useState('0');
+  const [workedDays, setWorkedDays] = useState('30');
+  const [dailyTransport, setDailyTransport] = useState('12');
+  const [transportDays, setTransportDays] = useState('20');
+  const [reason, setReason] = useState<'employer_initiative' | 'intern_initiative' | 'contract_expiry'>('contract_expiry');
 
-  const result = useMemo(() => calculateInternshipTerminationEstimate(numeric(stipend), numeric(months), { expiredRecessDays: numeric(expiredDays) }), [stipend, months, expiredDays]);
+  const result = useMemo(() => calculateInternshipTerminationEstimate(numeric(stipend), numeric(months), {
+    expiredRecessDays: numeric(expiredDays),
+    workedDaysInLastMonth: numeric(workedDays),
+    dailyTransportRate: numeric(dailyTransport),
+    transportDays: numeric(transportDays),
+    terminationReason: reason,
+  }), [stipend, months, expiredDays, workedDays, dailyTransport, transportDays, reason]);
+
+  const reasonLabels = {
+    employer_initiative: 'Rescisão antecipada pela empresa (Sem justa causa)',
+    intern_initiative: 'Rescisão antecipada pelo estagiário',
+    contract_expiry: 'Término normal do prazo do contrato',
+  };
 
   const report: CalculatorPdfReport = {
     calculator: 'Rescisão de contrato de estágio (Modo Pro)',
     mode: 'pro',
-    headline: `Recesso total devido: ${currency.format(result.totalRecess)}`,
-    summary: 'Demonstrativo de recesso remunerado proporcional e vencido conforme a Lei do Estágio 11.788/2008.',
+    headline: `Total devido no encerramento: ${currency.format(result.totalTerminationPay)}`,
+    summary: 'Demonstrativo completo de verbas de estágio conforme a Lei do Estágio (Lei 11.788/2008).',
     sections: [
-      { title: 'Dados do Estágio', rows: [{ label: 'Bolsa-auxílio', value: currency.format(numeric(stipend)) }, { label: 'Tempo cumprido', value: `${numeric(months)} meses` }, { label: 'Recesso vencido', value: `${numeric(expiredDays)} dias` }] },
-      { title: 'Verbas Apuradas', rows: [{ label: 'Recesso proporcional', value: currency.format(result.proportionalRecessPay) }, { label: '1/3 proporcional', value: currency.format(result.proportionalRecessThird) }, { label: 'Recesso vencido', value: currency.format(result.expiredRecessPay) }, { label: '1/3 vencido', value: currency.format(result.expiredRecessThird) }, { label: 'Total devido', value: currency.format(result.totalRecess) }] },
+      { title: 'Contrato e Motivo', rows: [{ label: 'Bolsa-auxílio', value: currency.format(numeric(stipend)) }, { label: 'Tempo cumprido', value: `${numeric(months)} meses` }, { label: 'Motivo da rescisão', value: reasonLabels[reason] }] },
+      { title: 'Bolsa e Transporte Proporcional', rows: [{ label: 'Saldo de bolsa do mês', value: currency.format(result.stipendBalance) }, { label: 'Auxílio-transporte proporcional', value: currency.format(result.transportTotal) }] },
+      { title: 'Recesso Remunerado (Férias de Estágio)', rows: [{ label: 'Recesso proporcional', value: currency.format(result.proportionalRecessPay) }, { label: '1/3 proporcional', value: currency.format(result.proportionalRecessThird) }, { label: 'Recesso vencido', value: currency.format(result.expiredRecessPay) }, { label: '1/3 vencido', value: currency.format(result.expiredRecessThird) }, { label: 'Subtotal Recesso', value: currency.format(result.totalRecess) }] },
+      { title: 'Total Final', rows: [{ label: 'Total bruto a receber pelo estagiário', value: currency.format(result.totalTerminationPay) }] },
     ],
-    disclaimer: 'Sem incidência de aviso prévio, FGTS ou multa de 40%.',
+    disclaimer: 'Estágio é isento de aviso-prévio, FGTS e multa de 40% (Art. 13 da Lei 11.788/2008).',
   };
 
   return (
-    <Workbench title="Rescisão de Contrato de Estágio (Lei 11.788)" description="Cálculo completo de recesso proporcional e vencido com 1/3 constitucional." result={
-      <Result eyebrow="Total a pagar no desligamento" headline={currency.format(result.totalRecess)} summary="Recesso remunerado proporcional e vencido somado ao terço constitucional." icon={<GraduationCap className="h-5 w-5" />} note="Isento de aviso-prévio e encargos de FGTS." report={report} status={status} onUnlockRequired={onUnlockRequired}>
-        <ResultLine label="Recesso proporcional" value={currency.format(result.proportionalRecessPay)} subtext={`${result.monthsWorked} meses estagiados`} />
-        <ResultLine label="1/3 Constitucional proporcional" value={currency.format(result.proportionalRecessThird)} />
-        <ResultLine label="Recesso vencido indenizado" value={currency.format(result.expiredRecessPay)} subtext={`${numeric(expiredDays)} dias acumulados`} />
-        <ResultLine label="1/3 Constitucional vencido" value={currency.format(result.expiredRecessThird)} />
-        <ResultLine label="Total líquido a receber" value={currency.format(result.totalRecess)} emphasized />
+    <Workbench title="Rescisão de Contrato de Estágio (Lei 11.788)" description="Apuração completa de saldo de bolsa, auxílio-transporte e recesso indenizado." result={
+      <Result eyebrow="Total a receber na rescisão" headline={currency.format(result.totalTerminationPay)} summary={`Soma do recesso (${currency.format(result.totalRecess)}) + Saldo de bolsa (${currency.format(result.stipendBalance)}) + Transporte (${currency.format(result.transportTotal)}).`} icon={<GraduationCap className="h-5 w-5" />} note="Contrato isento de aviso-prévio, FGTS e multa de 40%." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Saldo de bolsa mensal" value={currency.format(result.stipendBalance)} subtext={`${workedDays} dias trabalhados no mês`} />
+        <ResultLine label="Auxílio-transporte proporcional" value={currency.format(result.transportTotal)} subtext={`${transportDays} dias a R$ ${dailyTransport}/dia`} />
+        <ResultLine label="Recesso proporcional + 1/3" value={currency.format(result.proportionalRecessPay + result.proportionalRecessThird)} subtext={`${result.monthsWorked} meses estagiados`} />
+        <ResultLine label="Recesso vencido + 1/3" value={currency.format(result.expiredRecessPay + result.expiredRecessThird)} subtext={`${expiredDays} dias acumulados`} />
+        <ResultLine label="Total líquido a receber" value={currency.format(result.totalTerminationPay)} emphasized />
       </Result>
     }>
-      <Section number="01" title="Contrato e período" description="Bolsa-auxílio e tempo de estágio.">
+      <Section number="01" title="Bolsa e período de estágio" description="Valores do contrato e tempo de vigência.">
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Bolsa-auxílio mensal" value={stipend} onChange={setStipend} prefix="R$" />
           <Field label="Meses de estágio cumpridos" value={months} onChange={setMonths} suffix="meses" max={24} />
+          <Field label="Dias trabalhados no mês da saída" value={workedDays} onChange={setWorkedDays} suffix="dias" max={30} />
+        </div>
+      </Section>
+      <Section number="02" title="Recesso acumulado e transporte" description="Dias não gozados e auxílio diário.">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Dias de recesso vencido não gozado" value={expiredDays} onChange={setExpiredDays} suffix="dias" />
+          <Field label="Valor diário do auxílio-transporte" value={dailyTransport} onChange={setDailyTransport} prefix="R$" />
+          <Field label="Dias úteis de transporte devidos" value={transportDays} onChange={setTransportDays} suffix="dias" />
+        </div>
+      </Section>
+      <Section number="03" title="Motivo do encerramento" description="Causa da rescisão do termo de compromisso.">
+        <div className="grid grid-cols-3 gap-2 rounded-lg bg-[#ece9e2] p-1">
+          <button type="button" onClick={() => setReason('contract_expiry')} className={`min-h-11 rounded-md px-2 py-2 text-xs font-black ${reason === 'contract_expiry' ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Fim do Contrato</button>
+          <button type="button" onClick={() => setReason('employer_initiative')} className={`min-h-11 rounded-md px-2 py-2 text-xs font-black ${reason === 'employer_initiative' ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Iniciativa Empresa</button>
+          <button type="button" onClick={() => setReason('intern_initiative')} className={`min-h-11 rounded-md px-2 py-2 text-xs font-black ${reason === 'intern_initiative' ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Iniciativa Estagiário</button>
         </div>
       </Section>
     </Workbench>
@@ -1125,35 +1157,55 @@ function InternshipTerminationPro({ status, onUnlockRequired }: { status?: ProAc
 
 function ProlaboreVsLucrosPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
   const [withdrawal, setWithdrawal] = useState('15000');
+  const [regime, setRegime] = useState<'simples_anexo3' | 'simples_anexo5' | 'lucro_presumido'>('simples_anexo3');
+  const [otherInss, setOtherInss] = useState('0');
 
-  const result = useMemo(() => calculateProlaboreVsLucrosEstimate(numeric(withdrawal)), [withdrawal]);
+  const result = useMemo(() => calculateProlaboreVsLucrosEstimate(numeric(withdrawal), regime, numeric(otherInss)), [withdrawal, regime, otherInss]);
+
+  const regimeLabels = {
+    simples_anexo3: 'Simples Nacional (Anexo III - Sem CPP 20%)',
+    simples_anexo5: 'Simples Nacional (Anexo V - Com CPP 20%)',
+    lucro_presumido: 'Lucro Presumido (Com CPP 20% patronal)',
+  };
 
   const report: CalculatorPdfReport = {
     calculator: 'Pró-labore vs Distribuição de lucros (Modo Pro)',
     mode: 'pro',
     headline: `Economia anual estimada: ${currency.format(result.annualSavings)}`,
-    summary: 'Matriz comparativa de eficiência tributária entre pró-labore e lucros isentos.',
+    summary: 'Matriz comparativa de eficiência tributária e projeção multianual de rendimentos.',
     sections: [
-      { title: 'Planejamento de Retirada', rows: [{ label: 'Retirada total mensal', value: currency.format(numeric(withdrawal)) }] },
-      { title: 'Estrutura A (100% Pró-labore)', rows: [{ label: 'Imposto retido (INSS+IRRF)', value: currency.format(result.taxA) }, { label: 'Líquido no bolso', value: currency.format(result.netA) }] },
-      { title: 'Estrutura B Otimizada (Pró-labore 1SM + Lucros)', rows: [{ label: 'Pró-labore (1 Salário Mínimo)', value: currency.format(result.prolaboreB) }, { label: 'Distribuição de Lucros Isenta', value: currency.format(result.lucrosB) }, { label: 'Imposto retido', value: currency.format(result.taxB) }, { label: 'Líquido no bolso', value: currency.format(result.netB) }] },
-      { title: 'Ganho', rows: [{ label: 'Economia mensal', value: currency.format(result.monthlySavings) }, { label: 'Economia anual acumulada', value: currency.format(result.annualSavings) }] },
+      { title: 'Parâmetros da Empresa', rows: [{ label: 'Retirada total mensal', value: currency.format(numeric(withdrawal)) }, { label: 'Regime tributário', value: regimeLabels[regime] }, { label: 'INSS já pago em outra fonte', value: currency.format(numeric(otherInss)) }] },
+      { title: 'Cenário 1 (100% Pró-labore)', rows: [{ label: 'Impostos mensais retidos', value: currency.format(result.taxA) }, { label: 'Líquido no bolso', value: currency.format(result.netA) }] },
+      { title: 'Cenário 2 Otimizado (Pró-labore 1SM + Lucros Isentos)', rows: [{ label: 'Pró-labore (1 Salário Mínimo)', value: currency.format(result.prolaboreB) }, { label: 'Distribuição de Lucros', value: currency.format(result.lucrosB) }, { label: 'Impostos mensais retidos', value: currency.format(result.taxB) }, { label: 'Líquido no bolso', value: currency.format(result.netB) }] },
+      { title: 'Projeção de Economia', rows: [{ label: 'Economia mensal de tributos', value: currency.format(result.monthlySavings) }, { label: 'Economia em 1 ano', value: currency.format(result.annualSavings) }, { label: 'Economia em 3 anos', value: currency.format(result.savings3Years) }, { label: 'Economia em 5 anos', value: currency.format(result.savings5Years) }, { label: 'Economia em 1 ano investida (100% CDI)', value: currency.format(result.cdiInvestmentYield1Year) }] },
     ],
     disclaimer: 'Lucros distribuídos com base em escrituração contábil são isentos de IRRF/INSS.',
   };
 
   return (
-    <Workbench title="Planejamento de Retiradas: Pró-labore vs Lucros" description="Matriz de otimização tributária para redução de retenção fiscal de sócios." result={
-      <Result eyebrow="Economia de impostos estimada" headline={currency.format(result.monthlySavings)} summary={`Economia mensal ao adotar Pró-Labore de R$ 1.621,00 + R$ ${result.lucrosB} em lucros.`} icon={<Coins className="h-5 w-5" />} note="A distribuição de lucros é isenta de Imposto de Renda e INSS." report={report} status={status} onUnlockRequired={onUnlockRequired}>
-        <ResultLine label="Impostos em 100% Pró-Labore" value={currency.format(result.taxA)} subtext="INSS 11% + IRRF Tabela Progressiva" />
-        <ResultLine label="Impostos na Estrutura Otimizada" value={currency.format(result.taxB)} subtext="Apenas INSS sobre 1 Salário Mínimo" />
-        <ResultLine label="Líquido no bolso (Estratégia Otimizada)" value={currency.format(result.netB)} />
-        <ResultLine label="Economia mensal de tributos" value={currency.format(result.monthlySavings)} />
-        <ResultLine label="Economia acumulada em 1 ano" value={currency.format(result.annualSavings)} emphasized />
+    <Workbench title="Planejamento de Retiradas: Pró-labore vs Lucros" description="Otimização tributária com projeção multianual e rendimento no CDI." result={
+      <Result eyebrow="Economia de impostos mensal" headline={currency.format(result.monthlySavings)} summary={`Ao adotar Pró-Labore de R$ 1.621,00 + R$ ${result.lucrosB} em lucros, você economiza ${currency.format(result.annualSavings)}/ano.`} icon={<Coins className="h-5 w-5" />} note="Distribuição de lucros é 100% isenta de Imposto de Renda e INSS." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Impostos no Pró-Labore Integral (Cenário 1)" value={currency.format(result.taxA)} subtext="INSS 11% + IRRF + CPP patronal" />
+        <ResultLine label="Impostos na Estrutura Otimizada (Cenário 2)" value={currency.format(result.taxB)} subtext="Apenas INSS sobre 1 Salário Mínimo" />
+        <ResultLine label="Líquido real mensal recebido" value={currency.format(result.netB)} />
+        <ResultLine label="Economia em 1 ano" value={currency.format(result.annualSavings)} />
+        <ResultLine label="Economia acumulada em 3 anos" value={currency.format(result.savings3Years)} />
+        <ResultLine label="Economia acumulada em 5 anos" value={currency.format(result.savings5Years)} emphasized />
+        <ResultLine label="Projeção investida em 1 ano (100% CDI)" value={currency.format(result.cdiInvestmentYield1Year)} subtext="Rendimento estimado com CDI a 10.75% a.a." />
       </Result>
     }>
-      <Section number="01" title="Retirada mensal do sócio" description="Valor líquido desejado por mês.">
-        <Field label="Retirada mensal total planejada pelo sócio" value={withdrawal} onChange={setWithdrawal} prefix="R$" />
+      <Section number="01" title="Retirada mensal do sócio" description="Valor total a retirar da empresa.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Retirada mensal total desejada" value={withdrawal} onChange={setWithdrawal} prefix="R$" />
+          <Field label="INSS já recolhido em outra fonte (teto)" value={otherInss} onChange={setOtherInss} prefix="R$" />
+        </div>
+      </Section>
+      <Section number="02" title="Regime tributário da empresa" description="Inclusão de encargo patronal (CPP 20%).">
+        <div className="grid grid-cols-3 gap-2 rounded-lg bg-[#ece9e2] p-1">
+          <button type="button" onClick={() => setRegime('simples_anexo3')} className={`min-h-11 rounded-md px-2 py-2 text-xs font-black ${regime === 'simples_anexo3' ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Simples Anexo III</button>
+          <button type="button" onClick={() => setRegime('simples_anexo5')} className={`min-h-11 rounded-md px-2 py-2 text-xs font-black ${regime === 'simples_anexo5' ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Simples Anexo V</button>
+          <button type="button" onClick={() => setRegime('lucro_presumido')} className={`min-h-11 rounded-md px-2 py-2 text-xs font-black ${regime === 'lucro_presumido' ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Lucro Presumido</button>
+        </div>
       </Section>
     </Workbench>
   );
@@ -1162,46 +1214,59 @@ function ProlaboreVsLucrosPro({ status, onUnlockRequired }: { status?: ProAccess
 function EmployeeCostPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
   const [salary, setSalary] = useState('4000');
   const [benefits, setBenefits] = useState('800');
+  const [onboarding, setOnboarding] = useState('200');
   const [isSimples, setIsSimples] = useState(true);
+  const [ratRate, setRatRate] = useState('2');
+  const [fapRate, setFapRate] = useState('1.0');
 
-  const result = useMemo(() => calculateEmployeeCostEstimate(numeric(salary), numeric(benefits), isSimples), [salary, benefits, isSimples]);
+  const result = useMemo(() => calculateEmployeeCostEstimate(numeric(salary), numeric(benefits), isSimples, numeric(ratRate)/100, numeric(fapRate), numeric(onboarding)), [salary, benefits, isSimples, ratRate, fapRate, onboarding]);
 
   const report: CalculatorPdfReport = {
     calculator: 'Custo total do funcionário para a empresa (Modo Pro)',
     mode: 'pro',
     headline: `Custo mensal total: ${currency.format(result.totalMonthlyCost)} (+${result.costPercentageOverSalary}%)`,
-    summary: 'Demonstrativo completo de provisões e encargos patronais conforme o regime tributário da empresa.',
+    summary: 'Demonstrativo analítico de encargos patronais, RAT/FAP, provisões e onboarding.',
     sections: [
-      { title: 'Remuneração e Benefícios', rows: [{ label: 'Salário bruto', value: currency.format(numeric(salary)) }, { label: 'Benefícios mensais', value: currency.format(numeric(benefits)) }] },
-      { title: 'Provisões e Encargos', rows: [{ label: 'FGTS mensal (8%)', value: currency.format(result.fgtsMonthly) }, { label: 'Provisão 13º salário', value: currency.format(result.provision13th) }, { label: 'Provisão Férias + 1/3', value: currency.format(result.provisionVacation) }, { label: 'Encargos Patronais (INSS/RAT/Sistema S)', value: currency.format(result.employerTaxes) }] },
-      { title: 'Resultado', rows: [{ label: 'Custo mensal total da empresa', value: currency.format(result.totalMonthlyCost) }, { label: 'Custo adicional sobre o salário', value: `+${result.costPercentageOverSalary}%` }] },
+      { title: 'Remuneração e Benefícios', rows: [{ label: 'Salário bruto', value: currency.format(numeric(salary)) }, { label: 'Benefícios mensais', value: currency.format(numeric(benefits)) }, { label: 'Custos de onboarding/equipamentos', value: currency.format(numeric(onboarding)) }] },
+      { title: 'Provisões Mensais de Encerramento', rows: [{ label: 'FGTS mensal (8%)', value: currency.format(result.fgtsMonthly) }, { label: 'Provisão 13º salário + FGTS', value: currency.format(result.provision13th) }, { label: 'Provisão Férias + 1/3 + FGTS', value: currency.format(result.provisionVacation) }, { label: 'Provisão Rescisão (Multa 40% + Aviso)', value: currency.format(result.terminationProvisionMonthly) }] },
+      { title: 'Encargos Patronais', rows: [{ label: 'Encargos Patronais (INSS/RAT*FAP/Sistema S)', value: currency.format(result.employerTaxes) }] },
+      { title: 'Custo Total Final', rows: [{ label: 'Custo mensal total da empresa', value: currency.format(result.totalMonthlyCost) }, { label: 'Adicional percentual sobre o salário', value: `+${result.costPercentageOverSalary}%` }] },
     ],
-    disclaimer: 'Cálculo analítico do impacto financeiro do funcionário.',
+    disclaimer: 'Cálculo analítico do impacto financeiro de contratação CLT.',
   };
 
   return (
-    <Workbench title="Custo Real do Funcionário para a Empresa" description="Apuração completa de encargos patronais, FGTS e provisões anuais." result={
-      <Result eyebrow="Custo total mensal da empresa" headline={currency.format(result.totalMonthlyCost)} summary={`Um funcionário de R$ ${salary} custa R$ ${result.totalMonthlyCost} por mês para a empresa.`} icon={<Users className="h-5 w-5" />} note={isSimples ? 'Regime Simples Nacional (Sem INSS patronal direto na folha).' : 'Regime Lucro Presumido/Real (INSS Patronal 20% + RAT 2% + Sistema S 5.8%).'} report={report} status={status} onUnlockRequired={onUnlockRequired}>
+    <Workbench title="Custo Real do Funcionário para a Empresa" description="Apuração completa de encargos patronais, FAP/RAT, provisões e onboarding." result={
+      <Result eyebrow="Custo total mensal da empresa" headline={currency.format(result.totalMonthlyCost)} summary={`Um funcionário de R$ ${salary} custa R$ ${result.totalMonthlyCost} por mês para a empresa.`} icon={<Users className="h-5 w-5" />} note={isSimples ? 'Simples Nacional (Sem INSS patronal na folha).' : 'Lucro Presumido/Real (INSS Patronal + RAT*FAP + Sistema S).'} report={report} status={status} onUnlockRequired={onUnlockRequired}>
         <ResultLine label="Salário bruto mensal" value={currency.format(result.salary)} />
-        <ResultLine label="Benefícios mensais (VR/VA/VT)" value={currency.format(result.benefits)} />
+        <ResultLine label="Benefícios (VR/VA/VT/Saúde)" value={currency.format(result.benefits)} />
+        <ResultLine label="Custos indiretos de Onboarding/EPI" value={currency.format(result.onboardingMonthly)} />
         <ResultLine label="FGTS mensal (8%)" value={currency.format(result.fgtsMonthly)} />
-        <ResultLine label="Provisão mensal de 13º + FGTS" value={currency.format(result.provision13th)} />
-        <ResultLine label="Provisão mensal de Férias + 1/3 + FGTS" value={currency.format(result.provisionVacation)} />
-        <ResultLine label="Encargos Patronais (INSS/RAT/Sistema S)" value={currency.format(result.employerTaxes)} subtext={isSimples ? 'Isento no Simples' : '27,8% sobre a folha'} />
-        <ResultLine label="Custo total mensal final" value={currency.format(result.totalMonthlyCost)} emphasized subtext={`+${result.costPercentageOverSalary}% sobre o salário base`} />
+        <ResultLine label="Provisão mensal 13º salário" value={currency.format(result.provision13th)} />
+        <ResultLine label="Provisão mensal Férias + 1/3" value={currency.format(result.provisionVacation)} />
+        <ResultLine label="Provisão rescisória (FGTS 40% + Aviso)" value={currency.format(result.terminationProvisionMonthly)} />
+        <ResultLine label="Encargos Patronais (INSS/RAT/Sistema S)" value={currency.format(result.employerTaxes)} subtext={isSimples ? 'Isento no Simples' : `RAT ${ratRate}% x FAP ${fapRate}`} />
+        <ResultLine label="Custo mensal total final" value={currency.format(result.totalMonthlyCost)} emphasized subtext={`+${result.costPercentageOverSalary}% sobre o salário base`} />
       </Result>
     }>
-      <Section number="01" title="Contrato e benefícios" description="Remuneração e auxílios concedidos.">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <Section number="01" title="Contrato, benefícios e onboarding" description="Remuneração e auxílios concedidos.">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Salário bruto do funcionário" value={salary} onChange={setSalary} prefix="R$" />
           <Field label="Benefícios mensais (VR/VA/VT/Saúde)" value={benefits} onChange={setBenefits} prefix="R$" />
+          <Field label="Custo mensal indireto (EPI/Treino)" value={onboarding} onChange={setOnboarding} prefix="R$" />
         </div>
       </Section>
-      <Section number="02" title="Regime tributário da empresa" description="Alíquota de encargos patronais.">
-        <div className="grid grid-cols-2 gap-3 rounded-lg bg-[#ece9e2] p-1">
+      <Section number="02" title="Regime tributário e RAT/FAP" description="Alíquota de encargos patronais.">
+        <div className="mb-4 grid grid-cols-2 gap-3 rounded-lg bg-[#ece9e2] p-1">
           <button type="button" onClick={() => setIsSimples(true)} className={`min-h-11 rounded-md px-4 py-2.5 text-xs font-black ${isSimples ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Simples Nacional</button>
           <button type="button" onClick={() => setIsSimples(false)} className={`min-h-11 rounded-md px-4 py-2.5 text-xs font-black ${!isSimples ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Lucro Presumido / Real</button>
         </div>
+        {!isSimples && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Alíquota RAT da empresa (%)" value={ratRate} onChange={setRatRate} suffix="%" />
+            <Field label="Fator FAP da empresa (0.5 a 2.0)" value={fapRate} onChange={setFapRate} />
+          </div>
+        )}
       </Section>
     </Workbench>
   );
@@ -1211,38 +1276,49 @@ function NightShiftRuralUrbanPro({ status, onUnlockRequired }: { status?: ProAcc
   const [salary, setSalary] = useState('3500');
   const [shiftType, setShiftType] = useState<'urban' | 'rural_cattle' | 'rural_farming'>('urban');
   const [hours, setHours] = useState('40');
+  const [overtimeRate, setOvertimeRate] = useState('0');
+  const [workingDays, setWorkingDays] = useState('25');
+  const [sundays, setSundays] = useState('4');
 
-  const result = useMemo(() => calculateNightShiftRuralUrbanEstimate(numeric(salary), shiftType, numeric(hours)), [salary, shiftType, hours]);
+  const result = useMemo(() => calculateNightShiftRuralUrbanEstimate(numeric(salary), shiftType, numeric(hours), numeric(overtimeRate), numeric(workingDays), numeric(sundays)), [salary, shiftType, hours, overtimeRate, workingDays, sundays]);
 
   const report: CalculatorPdfReport = {
     calculator: 'Adicional noturno urbano vs rural (Modo Pro)',
     mode: 'pro',
-    headline: `Adicional noturno apurado: ${currency.format(result.nightAditionalPay)}`,
-    summary: 'Comparativo de alíquotas e jornada reduzida entre trabalho noturno urbano e rural.',
+    headline: `Adicional noturno + DSR: ${currency.format(result.totalWithDsr)}`,
+    summary: 'Demonstrativo de adicional noturno, hora extra noturna e reflexo no DSR mensal.',
     sections: [
-      { title: 'Jornada Informada', rows: [{ label: 'Salário base', value: currency.format(numeric(salary)) }, { label: 'Regime/Horário', value: result.periodName }, { label: 'Horas noturnas prestadas', value: `${numeric(hours)} horas` }, { label: 'Horas computadas com redução', value: `${result.computedHours} horas` }] },
-      { title: 'Resultado', rows: [{ label: 'Percentual do adicional', value: `${result.ratePercentage}%` }, { label: 'Adicional noturno a receber', value: currency.format(result.nightAditionalPay) }] },
+      { title: 'Jornada Informada', rows: [{ label: 'Salário base', value: currency.format(numeric(salary)) }, { label: 'Regime/Horário', value: result.periodName }, { label: 'Horas noturnas prestadas', value: `${numeric(hours)} horas` }, { label: 'Horas computadas', value: `${result.computedHours} horas` }] },
+      { title: 'Adicionais Apurados', rows: [{ label: 'Adicional noturno bruto', value: currency.format(result.nightAditionalPay) }, { label: 'Reflexo no DSR mensal', value: currency.format(result.dsrReflex) }, { label: 'Total devido', value: currency.format(result.totalWithDsr) }] },
     ],
     disclaimer: 'Conforme Art. 73 da CLT (Urbano) e Lei 5.889/1973 (Rural).',
   };
 
   return (
-    <Workbench title="Adicional Noturno Urbano vs Rural" description="Análise de percentuais (20% vs 25%) e horário reduzido (52m30s)." result={
-      <Result eyebrow="Adicional noturno a receber" headline={currency.format(result.nightAditionalPay)} summary={`Valor bruto referente a ${result.computedHours} horas noturnas computadas (${result.ratePercentage}% adicional).`} icon={<SunMedium className="h-5 w-5" />} note={`Regra aplicável: ${result.periodName}`} report={report} status={status} onUnlockRequired={onUnlockRequired}>
+    <Workbench title="Adicional Noturno Urbano vs Rural" description="Análise de alíquotas (20% vs 25%), hora extra noturna e reflexo no DSR." result={
+      <Result eyebrow="Total noturno + DSR" headline={currency.format(result.totalWithDsr)} summary={`Adicional noturno de R$ ${result.nightAditionalPay} + Reflexo no DSR de R$ ${result.dsrReflex}.`} icon={<SunMedium className="h-5 w-5" />} note={`Regra aplicável: ${result.periodName}`} report={report} status={status} onUnlockRequired={onUnlockRequired}>
         <ResultLine label="Valor da hora normal" value={currency.format(result.hourlyRate)} />
-        <ResultLine label="Período noturno de referência" value={result.periodName} />
-        <ResultLine label="Percentual do adicional" value={`${result.ratePercentage}%`} />
         <ResultLine label="Horas noturnas computadas" value={`${result.computedHours} horas`} subtext={shiftType === 'urban' ? 'Hora reduzida (52m30s)' : 'Hora normal (60m)'} />
-        <ResultLine label="Total do adicional noturno" value={currency.format(result.nightAditionalPay)} emphasized />
+        <ResultLine label="Percentual de adicional" value={`${result.ratePercentage}%`} />
+        <ResultLine label="Adicional noturno de horas extras" value={currency.format(result.nightAditionalPay)} subtext={numeric(overtimeRate) > 0 ? `Com hora extra de ${overtimeRate}%` : 'Sem hora extra'} />
+        <ResultLine label="Reflexo no DSR mensal" value={currency.format(result.dsrReflex)} subtext={`${sundays} descansos para ${workingDays} dias úteis`} />
+        <ResultLine label="Total noturno a receber no mês" value={currency.format(result.totalWithDsr)} emphasized />
       </Result>
     }>
-      <Section number="01" title="Salário e horas" description="Valor base e quantidade de horas noturnas.">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <Section number="01" title="Salário, horas e horas extras" description="Base de cálculo e jornada.">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Salário base mensal" value={salary} onChange={setSalary} prefix="R$" />
-          <Field label="Horas noturnas trabalhadas no mês" value={hours} onChange={setHours} suffix="horas" />
+          <Field label="Horas noturnas trabalhadas" value={hours} onChange={setHours} suffix="horas" />
+          <Field label="Adicional de hora extra (%)" value={overtimeRate} onChange={setOvertimeRate} suffix="%" />
         </div>
       </Section>
-      <Section number="02" title="Tipo de atividade / horário" description="Definição da regra urbana ou rural.">
+      <Section number="02" title="Parâmetros do DSR no mês" description="Dias úteis e descansos da folha.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Dias úteis no mês" value={workingDays} onChange={setWorkingDays} suffix="dias" />
+          <Field label="Domingos e feriados" value={sundays} onChange={setSundays} suffix="dias" />
+        </div>
+      </Section>
+      <Section number="03" title="Tipo de atividade / horário" description="Definição da regra urbana ou rural.">
         <div className="grid grid-cols-3 gap-2 rounded-lg bg-[#ece9e2] p-1">
           <button type="button" onClick={() => setShiftType('urban')} className={`min-h-11 rounded-md px-2 py-2 text-xs font-black ${shiftType === 'urban' ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Urbano (22h-5h)</button>
           <button type="button" onClick={() => setShiftType('rural_cattle')} className={`min-h-11 rounded-md px-2 py-2 text-xs font-black ${shiftType === 'rural_cattle' ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>Pecuária (20h-4h)</button>
@@ -1255,38 +1331,48 @@ function NightShiftRuralUrbanPro({ status, onUnlockRequired }: { status?: ProAcc
 
 function ProportionalSalaryPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
   const [salary, setSalary] = useState('3500');
+  const [additional, setAdditional] = useState('500');
   const [days, setDays] = useState('18');
   const [daysInMonth, setDaysInMonth] = useState('31');
+  const [absences, setAbsences] = useState('1');
 
-  const result = useMemo(() => calculateProportionalSalaryEstimate(numeric(salary), numeric(days), numeric(daysInMonth)), [salary, days, daysInMonth]);
+  const result = useMemo(() => calculateProportionalSalaryEstimate(numeric(salary), numeric(days), numeric(daysInMonth), numeric(absences), numeric(additional)), [salary, additional, days, daysInMonth, absences]);
 
   const report: CalculatorPdfReport = {
     calculator: 'Calculadora de salário proporcional (Modo Pro)',
     mode: 'pro',
-    headline: `Proporcional (30 dias): ${currency.format(result.proportional30)}`,
-    summary: 'Comparativo entre a regra padrão de 30 dias (CLT) e dias reais do mês (28/31 dias).',
+    headline: `Salário proporcional: ${currency.format(result.proportional30)}`,
+    summary: 'Demonstrativo analítico de salário proporcional, adicionais e descontos por faltas/DSR.',
     sections: [
-      { title: 'Dados do Mês', rows: [{ label: 'Salário integral', value: currency.format(numeric(salary)) }, { label: 'Dias trabalhados', value: `${numeric(days)} dias` }, { label: 'Dias no mês calendário', value: `${numeric(daysInMonth)} dias` }] },
-      { title: 'Comparação de Regras', rows: [{ label: 'Regra CLT 30 dias (Valor diário)', value: currency.format(result.dailyRate30) }, { label: 'Salário proporcional 30d', value: currency.format(result.proportional30) }, { label: 'Regra Dias Reais (Valor diário)', value: currency.format(result.dailyRateActual) }, { label: 'Salário proporcional dias reais', value: currency.format(result.proportionalActual) }] },
+      { title: 'Dados do Mês', rows: [{ label: 'Salário base', value: currency.format(numeric(salary)) }, { label: 'Adicionais (Insalubridade/Periculosidade)', value: currency.format(numeric(additional)) }, { label: 'Base salarial total', value: currency.format(result.totalBaseSalary) }, { label: 'Dias trabalhados', value: `${numeric(days)} dias` }, { label: 'Dias no mês', value: `${numeric(daysInMonth)} dias` }] },
+      { title: 'Descontos de Faltas', rows: [{ label: 'Faltas não justificadas', value: `${result.absences} dia(s)` }, { label: 'Desconto por faltas', value: currency.format(result.absenceDiscountValue) }, { label: 'Perda de DSR decorrente', value: `${result.dsrLossCount} dia(s)` }, { label: 'Desconto por perda de DSR', value: currency.format(result.dsrLossValue) }] },
+      { title: 'Comparativo de Regras', rows: [{ label: 'Regra CLT 30 dias', value: currency.format(result.proportional30) }, { label: 'Regra Dias Reais do Mês', value: currency.format(result.proportionalActual) }] },
     ],
     disclaimer: 'A jurisprudência trabalhista adota majoritariamente a regra de divisão por 30 dias.',
   };
 
   return (
-    <Workbench title="Salário Proporcional (Regra 30d vs Dias Reais)" description="Apuração exata do valor por dia trabalhado na entrada ou saída." result={
-      <Result eyebrow="Salário proporcional CLT" headline={currency.format(result.proportional30)} summary={`Valor proporcional para ${numeric(days)} dias trabalhados (regra padrão CLT de divisão por 30).`} icon={<CalendarDays className="h-5 w-5" />} note="Exibe também o cálculo proporcional pelo total de dias reais do mês." report={report} status={status} onUnlockRequired={onUnlockRequired}>
-        <ResultLine label="Salário integral mensal" value={currency.format(result.salary)} />
-        <ResultLine label="Valor por dia (Regra CLT 30 dias)" value={currency.format(result.dailyRate30)} />
-        <ResultLine label="Salário proporcional (Regra 30 dias)" value={currency.format(result.proportional30)} emphasized />
-        <ResultLine label="Valor por dia (Regra Dias Reais)" value={currency.format(result.dailyRateActual)} subtext={`Divisão por ${daysInMonth} dias`} />
-        <ResultLine label="Salário proporcional (Dias Reais)" value={currency.format(result.proportionalActual)} />
+    <Workbench title="Salário Proporcional (Faltas, DSR e Adicionais)" description="Apuração exata com desconto de faltas e adicionais habituais." result={
+      <Result eyebrow="Salário proporcional CLT" headline={currency.format(result.proportional30)} summary={`Proporcional para ${numeric(days)} dias trabalhados com dedução de ${absences} falta(s) e perda de DSR.`} icon={<CalendarDays className="h-5 w-5" />} note="Exibe também a comparação pela regra de dias reais do mês." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Base salarial total (Salário + Adicionais)" value={currency.format(result.totalBaseSalary)} />
+        <ResultLine label="Valor diário (Regra 30 dias)" value={currency.format(result.dailyRate30)} />
+        <ResultLine label="Desconto de faltas injustificadas" value={`-${currency.format(result.absenceDiscountValue)}`} subtext={`${absences} dia(s) de falta`} />
+        <ResultLine label="Desconto de DSR por faltas" value={`-${currency.format(result.dsrLossValue)}`} subtext={`${result.dsrLossCount} DSR perdido(s)`} />
+        <ResultLine label="Salário proporcional líquido (Regra 30d)" value={currency.format(result.proportional30)} emphasized />
+        <ResultLine label="Salário proporcional (Regra Dias Reais)" value={currency.format(result.proportionalActual)} subtext={`Divisão por ${daysInMonth} dias`} />
       </Result>
     }>
-      <Section number="01" title="Salário e dias trabalhados" description="Valores do contrato e período no mês.">
+      <Section number="01" title="Salário e adicionais" description="Remuneração mensal de referência.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Salário base contratual" value={salary} onChange={setSalary} prefix="R$" />
+          <Field label="Adicionais fixos (Insalubridade/Periculosidade)" value={additional} onChange={setAdditional} prefix="R$" />
+        </div>
+      </Section>
+      <Section number="02" title="Período e faltas no mês" description="Dias trabalhados e ocorrências da folha.">
         <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="Salário mensal integral" value={salary} onChange={setSalary} prefix="R$" />
           <Field label="Dias trabalhados no mês" value={days} onChange={setDays} suffix="dias" max={31} />
           <Field label="Total de dias no mês calendário" value={daysInMonth} onChange={setDaysInMonth} suffix="dias" max={31} />
+          <Field label="Faltas não justificadas" value={absences} onChange={setAbsences} suffix="faltas" />
         </div>
       </Section>
     </Workbench>
@@ -1298,41 +1384,46 @@ function LateFeePro({ status, onUnlockRequired }: { status?: ProAccessStatus | n
   const [days, setDays] = useState('45');
   const [fine, setFine] = useState('2');
   const [interest, setInterest] = useState('1');
+  const [legalFees, setLegalFees] = useState('10');
 
-  const result = useMemo(() => calculateLateFeeEstimate(numeric(amount), numeric(days), numeric(fine), numeric(interest)), [amount, days, fine, interest]);
+  const result = useMemo(() => calculateLateFeeEstimate(numeric(amount), numeric(days), numeric(fine), numeric(interest), numeric(legalFees)), [amount, days, fine, interest, legalFees]);
 
   const report: CalculatorPdfReport = {
     calculator: 'Juros e multa por atraso (Modo Pro)',
     mode: 'pro',
     headline: `Total atualizado: ${currency.format(result.totalUpdated)}`,
-    summary: 'Demonstrativo analítico de acréscimos moratórios e atualização de cobrança.',
+    summary: 'Demonstrativo analítico de encargos moratórios, honorários e projeção de evolução da dívida.',
     sections: [
       { title: 'Débito Original', rows: [{ label: 'Valor do débito', value: currency.format(numeric(amount)) }, { label: 'Tempo de atraso', value: `${numeric(days)} dias` }] },
-      { title: 'Acréscimos Moratórios', rows: [{ label: `Multa (${numeric(fine)}%)`, value: currency.format(result.fineAmount) }, { label: `Juros de mora (${numeric(interest)}% a.m.)`, value: currency.format(result.interestAmount) }, { label: 'Total final atualizado', value: currency.format(result.totalUpdated) }] },
+      { title: 'Encargos e Honorários', rows: [{ label: `Multa (${numeric(fine)}%)`, value: currency.format(result.fineAmount) }, { label: `Juros de mora (${numeric(interest)}% a.m.)`, value: currency.format(result.interestAmount) }, { label: `Honorários de cobrança (${numeric(legalFees)}%)`, value: currency.format(result.legalFeesAmount) }, { label: 'Total final atualizado', value: currency.format(result.totalUpdated) }] },
+      { title: 'Projeção de Evolução da Dívida', rows: [{ label: 'Projeção em 30 dias', value: currency.format(result.proj30) }, { label: 'Projeção em 90 dias', value: currency.format(result.proj90) }, { label: 'Projeção em 180 dias', value: currency.format(result.proj180) }, { label: 'Projeção em 360 dias', value: currency.format(result.proj360) }] },
     ],
-    disclaimer: 'Cálculo analítico do modo Pro para atualização de débitos.',
+    disclaimer: 'Cálculo analítico do modo Pro para atualização de débitos e demonstrativo de cobrança.',
   };
 
   return (
-    <Workbench title="Atualização de Débitos e Encargos por Atraso" description="Cálculo analítico de multa contratual, juros de mora diários e encargos." result={
-      <Result eyebrow="Total atualizado do débito" headline={currency.format(result.totalUpdated)} summary={`Débito acrescido de R$ ${result.fineAmount} de multa e R$ ${result.interestAmount} de juros de mora.`} icon={<Percent className="h-5 w-5" />} note="Juros calculados proporcionalmente ao número de dias em atraso." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+    <Workbench title="Atualização de Débitos e Encargos por Atraso" description="Cálculo de multa, juros de mora diários, honorários e evolução temporal." result={
+      <Result eyebrow="Total atualizado do débito" headline={currency.format(result.totalUpdated)} summary={`Débito acrescido de R$ ${result.fineAmount} de multa, R$ ${result.interestAmount} de juros e R$ ${result.legalFeesAmount} de honorários.`} icon={<Percent className="h-5 w-5" />} note="Exibe a projeção do saldo devedor para períodos futuros." report={report} status={status} onUnlockRequired={onUnlockRequired}>
         <ResultLine label="Valor original do débito" value={currency.format(result.amount)} />
-        <ResultLine label="Dias em atraso" value={`${result.daysLate} dias`} />
-        <ResultLine label={`Multa por atraso (${fine}%)`} value={currency.format(result.fineAmount)} />
-        <ResultLine label={`Juros de mora (${interest}% a.m.)`} value={currency.format(result.interestAmount)} subtext="Juros diários de 0.033%" />
-        <ResultLine label="Valor total atualizado" value={currency.format(result.totalUpdated)} emphasized />
+        <ResultLine label="Multa por atraso" value={currency.format(result.fineAmount)} subtext={`${fine}% sobre o débito`} />
+        <ResultLine label="Juros de mora diários acumulados" value={currency.format(result.interestAmount)} subtext={`${interest}% a.m. (${days} dias)`} />
+        <ResultLine label="Honorários de cobrança/advocaticiais" value={currency.format(result.legalFeesAmount)} subtext={`${legalFees}% sobre o subtotal`} />
+        <ResultLine label="Valor total final atualizado" value={currency.format(result.totalUpdated)} emphasized />
+        <ResultLine label="Projeção em 90 dias de atraso" value={currency.format(result.proj90)} />
+        <ResultLine label="Projeção em 360 dias de atraso" value={currency.format(result.proj360)} subtext="Evolução sem pagamento" />
       </Result>
     }>
-      <Section number="01" title="Valor e dias em atraso" description="Dados da dívida ou documento.">
+      <Section number="01" title="Valor e tempo de atraso" description="Dados da conta ou título.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Valor original da conta" value={amount} onChange={setAmount} prefix="R$" />
           <Field label="Dias em atraso" value={days} onChange={setDays} suffix="dias" />
         </div>
       </Section>
-      <Section number="02" title="Taxas de multa e juros" description="Configuração das taxas moratórias.">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <Section number="02" title="Taxas moratórias e honorários" description="Encargos contratados ou legais.">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Multa por atraso (%)" value={fine} onChange={setFine} suffix="%" />
           <Field label="Juros de mora ao mês (%)" value={interest} onChange={setInterest} suffix="%" />
+          <Field label="Honorários de cobrança (%)" value={legalFees} onChange={setLegalFees} suffix="%" />
         </div>
       </Section>
     </Workbench>
@@ -1341,46 +1432,48 @@ function LateFeePro({ status, onUnlockRequired }: { status?: ProAccessStatus | n
 
 function ChildSupportPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
   const [gross, setGross] = useState('6000');
+  const [motherGross, setMotherGross] = useState('4000');
   const [dependents, setDependents] = useState('1');
   const [percentage, setPercentage] = useState('25');
   const [extraExpenses, setExtraExpenses] = useState('300');
 
-  const result = useMemo(() => calculateChildSupportEstimate(numeric(gross), numeric(dependents), numeric(percentage), numeric(extraExpenses)), [gross, dependents, percentage, extraExpenses]);
+  const result = useMemo(() => calculateChildSupportEstimate(numeric(gross), numeric(dependents), numeric(percentage), numeric(extraExpenses), numeric(motherGross)), [gross, dependents, percentage, extraExpenses, motherGross]);
 
   const report: CalculatorPdfReport = {
     calculator: 'Simulador de pensão alimentícia (Modo Pro)',
     mode: 'pro',
-    headline: `Pensão total mensal: ${currency.format(result.pensionValue)}`,
-    summary: 'Demonstrativo analítico da pensão alimentícia sobre a base líquida de impostos.',
+    headline: `Pensão mensal total: ${currency.format(result.pensionValue)}`,
+    summary: 'Demonstrativo analítico da pensão alimentícia, incidência em 13º/férias e partilha de sustento.',
     sections: [
-      { title: 'Remuneração do Alimentante', rows: [{ label: 'Salário bruto', value: currency.format(numeric(gross)) }, { label: 'Desconto INSS 2026', value: currency.format(result.inssDeduction) }, { label: 'Desconto IRRF', value: currency.format(result.irrfDeduction) }, { label: 'Renda líquida base', value: currency.format(result.netBase) }] },
-      { title: 'Fixação da Pensão', rows: [{ label: 'Porcentagem aplicada', value: `${result.pensionPercentage}%` }, { label: 'Despesas extraordinárias (Saúde/Escola)', value: currency.format(numeric(extraExpenses)) }, { label: 'Valor da pensão mensal', value: currency.format(result.pensionValue) }, { label: 'Comprometimento sobre a renda bruta', value: `${result.percentageOfGross}%` }] },
+      { title: 'Remuneração dos Genitores', rows: [{ label: 'Salário bruto do alimentante (Pai/Mãe 1)', value: currency.format(numeric(gross)) }, { label: 'Salário bruto do outro genitor (Mãe/Pai 2)', value: currency.format(numeric(motherGross)) }, { label: 'Partilha de renda relativa', value: `${result.fatherSharePercentage}% vs ${result.motherSharePercentage}%` }] },
+      { title: 'Base Líquida de Impostos', rows: [{ label: 'Desconto INSS 2026', value: currency.format(result.inssDeduction) }, { label: 'Desconto IRRF', value: currency.format(result.irrfDeduction) }, { label: 'Renda líquida base', value: currency.format(result.netBase) }] },
+      { title: 'Fixação da Pensão e Projeção Anual', rows: [{ label: 'Porcentagem aplicada', value: `${result.pensionPercentage}%` }, { label: 'Despesas extraordinárias (Escola/Saúde)', value: currency.format(numeric(extraExpenses)) }, { label: 'Pensão mensal devida', value: currency.format(result.pensionValue) }, { label: 'Recebimento total anual (com 13º e Férias)', value: currency.format(result.annualTotalPension) }] },
     ],
-    disclaimer: 'Relatório educativo para instrução de acordos ou processos de pensão.',
+    disclaimer: 'Relatório educativo para instrução de acordos judiciais ou extrajudiciais de alimentos.',
   };
 
   return (
-    <Workbench title="Simulação Analítica de Pensão Alimentícia" description="Cálculo detalhado com dedução de impostos e despesas extraordinárias." result={
-      <Result eyebrow="Pensão mensal total" headline={currency.format(result.pensionValue)} summary={`Corresponde a ${result.pensionPercentage}% da base líquida + R$ ${extraExpenses} de despesas adicionais.`} icon={<Heart className="h-5 w-5" />} note="Base líquida calculada deduzindo as retenções oficiais de INSS e IRRF 2026." report={report} status={status} onUnlockRequired={onUnlockRequired}>
-        <ResultLine label="Salário bruto mensal" value={currency.format(result.grossSalary)} />
-        <ResultLine label="Desconto INSS" value={currency.format(result.inssDeduction)} />
-        <ResultLine label="Desconto IRRF" value={currency.format(result.irrfDeduction)} />
-        <ResultLine label="Renda líquida base para pensão" value={currency.format(result.netBase)} />
-        <ResultLine label="Pensão sobre renda líquida" value={currency.format(result.netBase * (result.pensionPercentage / 100))} subtext={`${result.pensionPercentage}% sobre R$ ${result.netBase}`} />
-        <ResultLine label="Despesas extraordinárias de saúde/escola" value={currency.format(result.extraExpenses)} />
-        <ResultLine label="Valor total da pensão mensal" value={currency.format(result.pensionValue)} emphasized subtext={`Compromete ${result.percentageOfGross}% do salário bruto`} />
+    <Workbench title="Simulação Analítica de Pensão Alimentícia" description="Apuração com dedução fiscal, partilha por renda dos pais e incidência no 13º/férias." result={
+      <Result eyebrow="Pensão mensal total" headline={currency.format(result.pensionValue)} summary={`Corresponde a ${result.pensionPercentage}% da base líquida de R$ ${result.netBase} + R$ ${extraExpenses} extras.`} icon={<Heart className="h-5 w-5" />} note="Calcula o montante anual recebido pelo filho considerando 13º e adicional de férias." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Salário bruto do alimentante" value={currency.format(result.grossSalary)} />
+        <ResultLine label="Retenções fiscais oficiais (INSS+IRRF)" value={`-${currency.format(result.inssDeduction + result.irrfDeduction)}`} />
+        <ResultLine label="Renda líquida base para a pensão" value={currency.format(result.netBase)} />
+        <ResultLine label="Pensão mensal (Porcentagem + Extras)" value={currency.format(result.pensionValue)} emphasized subtext={`Compromete ${result.percentageOfGross}% da renda bruta`} />
+        <ResultLine label="Total de pensão recebida em 1 ano" value={currency.format(result.annualTotalPension)} subtext="Inclui reflexos no 13º Salário e 1/3 de Férias" />
+        <ResultLine label="Partilha de renda dos genitores" value={`${result.fatherSharePercentage}% alimentante / ${result.motherSharePercentage}% guardião`} subtext="Proporção de renda entre ambos os pais" />
       </Result>
     }>
-      <Section number="01" title="Renda e dependentes do alimentante" description="Base para apuração dos impostos retidos na fonte.">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <Section number="01" title="Renda dos genitores e dependentes" description="Apuração da proporção salarial dos pais.">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Salário bruto do alimentante" value={gross} onChange={setGross} prefix="R$" />
-          <Field label="Dependentes para o IRRF" value={dependents} onChange={setDependents} suffix="dep." />
+          <Field label="Salário bruto do outro genitor" value={motherGross} onChange={setMotherGross} prefix="R$" />
+          <Field label="Dependentes para IRRF" value={dependents} onChange={setDependents} suffix="dep." />
         </div>
       </Section>
-      <Section number="02" title="Porcentagem e despesas extraordinárias" description="Parâmetros fixados para o pagamento da pensão.">
+      <Section number="02" title="Porcentagem e despesas extraordinárias" description="Parâmetros fixados para a pensão.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Porcentagem fixada de pensão (%)" value={percentage} onChange={setPercentage} suffix="%" max={50} />
-          <Field label="Despesas extras (Saúde / Plano / Escola)" value={extraExpenses} onChange={setExtraExpenses} prefix="R$" />
+          <Field label="Despesas extras mensais (Escola/Saúde)" value={extraExpenses} onChange={setExtraExpenses} prefix="R$" />
         </div>
       </Section>
     </Workbench>
