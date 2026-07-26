@@ -12,17 +12,17 @@ import {
   ReceiptText,
   ShieldCheck,
   Sparkles,
-  Store,
   WalletCards,
 } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
+import type { ComponentType, ReactNode } from 'react';
 import type { Cliente, Module } from '../../types';
 import { formatCurrency, maskCNPJ } from '../../lib/utils';
 
 interface BusinessMenuItem {
   id: Module;
-  label: string | React.ReactNode;
-  icon: React.ComponentType<{ className?: string }>;
+  label: string | ReactNode;
+  icon: ComponentType<{ className?: string }>;
   count: number;
   locked: boolean;
 }

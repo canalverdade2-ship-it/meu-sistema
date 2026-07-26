@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -131,7 +131,7 @@ export function ClientLoginPage({
     setPinError(false);
   };
 
-  const handleDocumentSubmit = (event: React.FormEvent) => {
+  const handleDocumentSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!isDocumentValid) {
       toast.error(`Informe um ${documentLabel} válido.`);
@@ -201,7 +201,7 @@ export function ClientLoginPage({
     }
   };
 
-  const handleRecoveryRequest = async (event: React.FormEvent) => {
+  const handleRecoveryRequest = async (event: FormEvent) => {
     event.preventDefault();
     if (!isDocumentValid || !validarEmail(recoveryEmail)) {
       toast.error(`Informe ${documentLabel} e e-mail válidos.`);
@@ -228,7 +228,7 @@ export function ClientLoginPage({
     }
   };
 
-  const handleRecoveryCode = async (event?: React.FormEvent) => {
+  const handleRecoveryCode = async (event?: FormEvent) => {
     event?.preventDefault();
     if (!recoveryId || recoveryCode.length !== 6 || loading) {
       toast.error('Informe o código de seis dígitos enviado ao seu e-mail.');
