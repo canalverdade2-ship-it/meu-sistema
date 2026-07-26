@@ -30,13 +30,16 @@ import {
 import { consultarCEP } from '../utils/viaCep';
 import { validarCNPJ, validarEmail } from '../utils/cpfValidator';
 
+import { Modal } from '../components/ui/Modal';
+import { LogoGSA } from '../components/ui/LogoGSA';
+
 type RegistrationStage = 'authorization' | 'company' | 'success';
 type VoucherTab = 'com-indicacao' | 'sem-indicacao';
 type SubmissionStatus = 'pendente' | 'ativo';
 
 interface BusinessRegistrationPageProps {
   onBack: () => void;
-  onLogin: () => void;
+  onLogin: (cnpj?: string) => void;
 }
 
 interface RegistrationData {
