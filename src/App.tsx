@@ -375,7 +375,10 @@ export default function App() {
             {activeView === 'login' && route.module === 'empresa' && route.submodule === 'cadastro' && (
               <BusinessRegistrationPage
                 onBack={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
-                onLogin={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
+                onLogin={(cnpj) => {
+                  const cnpjQuery = cnpj ? `&cnpj=${encodeURIComponent(cnpj)}` : '';
+                  navigate(`${routes.login.business()}?mode=first_access${cnpjQuery}${loginReturnSuffix ? `&${loginReturnSuffix.replace('?', '')}` : ''}`);
+                }}
               />
             )}
 
