@@ -114,6 +114,7 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
   const [loading, setLoading] = useState(false);
   const [loadingCep, setLoadingCep] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('pendente');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { settings, loading: settingsLoading } = usePublicRegistrationSettings(true);
 
   useEffect(() => {
@@ -276,6 +277,7 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
 
       setSubmissionStatus(data?.status === 'pendente' ? 'pendente' : 'ativo');
       setStage('success');
+      setShowSuccessModal(true);
       window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível concluir o cadastro empresarial.');
