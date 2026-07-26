@@ -241,7 +241,15 @@ export function FreeToolsTieredCalculatorDialog({
         setNotice('O modo Pro desta calculadora está temporariamente indisponível.');
         return;
       }
+      const cachedBlockMode = typeof localStorage !== 'undefined' ? localStorage.getItem(`gsa_free_tools_block_mode_${tool}`) : null;
+      const isPartialLock = (next?.product?.modo_bloqueio || cachedBlockMode) === 'partial';
+
       if (!next.access) {
+        if (isPartialLock) {
+          setMode('pro');
+          setNotice('Modo Pro liberado para simulação. A emissão do Relatório PDF exige a liberação de acesso Pro.');
+          return;
+        }
         setUnlockOpen(true);
         return;
       }
@@ -350,13 +358,10 @@ export function FreeToolsTieredCalculatorDialog({
                 <button
                   type="button"
                   onClick={() => void selectPro()}
-                  className={`min-h-12 rounded-lg px-4 text-sm font-black transition ${mode === 'pro' ? 'bg-[linear-gradient(135deg,#735721,#b58c37)] text-white shadow-sm' : 'text-[#725921] hover:bg-[#faf4e6]'}`}
+                  className={`min-h-12 rounded-lg px-4 text-sm font-black transition ${mode === 'pro' ? 'bg-[#91722f] text-white shadow-sm' : 'text-[#59646d] hover:bg-[#f5f2ec]'}`}
                 >
-                  <span className="inline-flex items-center gap-2">
-                    {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : status?.access ? <Sparkles className="h-4 w-4" /> : <LockKeyhole className="h-4 w-4" />}
-                    Pro
-                  </span>
-                  <small className={`mt-0.5 block text-[9px] font-bold ${mode === 'pro' ? 'text-white/60' : 'text-[#9a8558]'}`}>
+                  <span className="inline-flex items-center gap-2"><Crown className="h-4 w-4 text-[#f5eaaf]" />Pro</span>
+                  <small className={`mt-0.5 block text-[9px] font-bold ${mode === 'pro' ? 'text-white/80' : 'text-[#8b9297]'}`}>
                     {proSubtitle}
                   </small>
                 </button>
@@ -370,7 +375,7 @@ export function FreeToolsTieredCalculatorDialog({
             <main className="p-3 sm:p-6">
               {tool && (mode === 'free'
                 ? <FreeToolsSimpleCalculator tool={tool} />
-                : <FreeToolsAdvancedCalculator tool={tool} />)}
+                : <FreeToolsAdvancedCalculator tool={tool} status={status} onUnlockRequired={openUnlockOptions} />)}
             </main>
           </div>
 
