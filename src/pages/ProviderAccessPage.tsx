@@ -753,11 +753,11 @@ export function ProviderAccessPage({
                   </p>
 
                   <div className="mx-auto mt-8 grid max-w-xl gap-3 text-left sm:grid-cols-3">
-                    {[
+                    {([
                       ['1', 'Dados recebidos', true],
                       ['2', 'Análise GSA', false],
                       ['3', 'Acesso liberado', false],
-                    ].map(([number, label, complete]) => (
+                    ] as const).map(([number, label, complete]) => (
                       <div key={String(number)} className="rounded-2xl border border-[#dbe4ea] bg-white p-4">
                         <span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${
                           complete ? 'bg-emerald-600 text-white' : 'bg-[#e7edf2] text-[#667887]'

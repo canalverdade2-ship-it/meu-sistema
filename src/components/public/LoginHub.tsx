@@ -6,7 +6,6 @@ interface LoginHubProps {
   onBack?: () => void;
   onPersonalAccess: () => void;
   onBusinessAccess: () => void;
-  onSupplierAccess?: () => void;
   onProviderAccess?: () => void;
   onRestrictedAccess?: () => void;
 }

@@ -230,7 +230,7 @@ export function RestrictedAccessHubPage({
           >
             <div className="border-b border-[#e0e6eb] bg-white px-6 py-7 sm:px-9">
               <div className="flex items-start gap-4">
-                <span className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-[#0b1828] text-[#e4c36f]">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#0b1828] text-[#e4c36f]">
                   <SelectedIcon className="h-6 w-6" />
                 </span>
                 <div>
