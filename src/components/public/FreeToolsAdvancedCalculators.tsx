@@ -759,21 +759,6 @@ function VacationPro({ status, onUnlockRequired }: { status?: ProAccessStatus | 
   );
 }
 
-          </label>
-
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d5cfc5] bg-[#faf8f3] p-3 text-xs font-bold text-[#26313a]">
-            <input type="checkbox" checked={isDouble} onChange={(event) => setIsDouble(event.target.checked)} className="h-4 w-4 accent-[#8a6e2f]" />
-            <span>Férias em dobro (concessivo vencido)</span>
-          </label>
-        </div>
-      </Section>
-
-      <button type="button" onClick={() => { setSalary('3500'); setAverages('0'); setVacationDays('30'); setSellDays(false); setAbsences('0'); setThirteenthAdvance(false); setIsDouble(false); setDependents('0'); }} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#d5cec3] bg-white px-4 text-sm font-black text-[#59646d]">
-        <RotateCcw className="h-4 w-4" />Restaurar exemplo
-      </button>
-    </Workbench>
-  );
-}
 
 function OvertimePro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
   const [salary, setSalary] = useState('3500');
