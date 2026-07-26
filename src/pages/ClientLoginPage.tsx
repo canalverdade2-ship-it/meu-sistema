@@ -17,6 +17,7 @@ import {
 import { motion, useReducedMotion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { LogoGSA } from '../components/ui/LogoGSA';
+import { Modal } from '../components/ui/Modal';
 import { PinInput } from '../components/ui/PinInput';
 import { sessionService, type ClientPersonType } from '../lib/sessionService';
 import { logService } from '../lib/logService';
@@ -83,12 +84,29 @@ export function ClientLoginPage({
   const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
   const [pinError, setPinError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPasswordSuccessModal, setShowPasswordSuccessModal] = useState(false);
+  const [registeredClientId, setRegisteredClientId] = useState('');
 
   useEffect(() => {
-    setMode(initialMode);
+    const params = new URLSearchParams(window.location.search);
+    const cnpjParam = params.get('cnpj') || params.get('document');
+    const modeParam = params.get('mode');
+
+    if (modeParam === 'first_access') {
+      setMode('first_access');
+    } else {
+      setMode(initialMode);
+    }
+
+    if (cnpjParam) {
+      const clean = cnpjParam.replace(/\D/g, '');
+      setDocumentValue(isBusiness ? maskCNPJ(clean) : maskCPF(clean));
+    } else {
+      setDocumentValue('');
+    }
+
     setLoginStage('document');
     setRecoveryStage('request');
-    setDocumentValue('');
     setPin('');
     setRecoveryEmail('');
     setRecoveryId('');
@@ -98,7 +116,7 @@ export function ClientLoginPage({
     setFirstAccessPinConfirm('');
     setAttemptsLeft(null);
     setPinError(false);
-  }, [initialMode, personType]);
+  }, [initialMode, personType, isBusiness]);
 
   useEffect(() => {
     const previousTitle = document.title;
