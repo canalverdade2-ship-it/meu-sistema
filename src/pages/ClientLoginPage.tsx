@@ -274,8 +274,13 @@ export function ClientLoginPage({
           ? 'Senha cadastrada no Primeiro Acesso GSA HUB Empresas'
           : 'Senha cadastrada no Primeiro Acesso portal Pessoa Física',
       });
-      toast.success(isBusiness ? 'Senha cadastrada com sucesso! Bem-vindo ao GSA HUB Empresas.' : 'Senha cadastrada com sucesso.');
-      await completeLogin(data.id);
+      toast.success(isBusiness ? 'Senha cadastrada com sucesso!' : 'Senha cadastrada com sucesso.');
+      if (isBusiness) {
+        setRegisteredClientId(data.id);
+        setShowPasswordSuccessModal(true);
+      } else {
+        await completeLogin(data.id);
+      }
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível cadastrar a senha.');
     } finally {
