@@ -1,4 +1,4 @@
-import { ArrowRight, BriefcaseBusiness, Building2, KeyRound, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Building2, KeyRound, PackageSearch, ShieldCheck, UserRound } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { LogoGSA } from '../ui/LogoGSA';
 
@@ -7,6 +7,7 @@ interface LoginHubProps {
   onPersonalAccess: () => void;
   onBusinessAccess: () => void;
   onProviderAccess?: () => void;
+  onSupplierAccess?: () => void;
   onRestrictedAccess?: () => void;
 }
 
@@ -15,6 +16,7 @@ export function LoginHub({
   onPersonalAccess,
   onBusinessAccess,
   onProviderAccess,
+  onSupplierAccess,
   onRestrictedAccess,
 }: LoginHubProps) {
   const reduceMotion = useReducedMotion();
@@ -87,10 +89,30 @@ export function LoginHub({
                   </motion.button>
                 )}
 
+                {onSupplierAccess && (
+                  <motion.button
+                    {...cardAnimation}
+                    transition={{ delay: 0.22 }}
+                    type="button"
+                    onClick={onSupplierAccess}
+                    className="group flex min-h-[128px] w-full items-center gap-4 rounded-[1.35rem] border border-[#dacabc] bg-[#f8f3ed] p-5 text-left transition hover:border-[#a66d3f] hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a572f]"
+                  >
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#142336] text-[#e5b98f]">
+                      <PackageSearch className="h-6 w-6" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-[#8a572f]">Suprimentos GSA</span>
+                      <span className="mt-1 block text-base font-black text-[#142336]">Portal do Fornecedor</span>
+                      <span className="mt-1 block text-xs leading-5 text-neutral-600">Conheça a central, acesse o portal ou solicite credenciamento.</span>
+                    </span>
+                    <ArrowRight className="h-5 w-5 shrink-0 text-[#8a572f] transition-transform group-hover:translate-x-1" />
+                  </motion.button>
+                )}
+
                 {onRestrictedAccess && (
                   <motion.button
                     {...cardAnimation}
-                    transition={{ delay: 0.24 }}
+                    transition={{ delay: 0.26 }}
                     type="button"
                     onClick={onRestrictedAccess}
                     className="group flex min-h-[128px] w-full items-center gap-4 rounded-[1.35rem] border border-[#cfd6dd] bg-[#f3f5f7] p-5 text-left transition hover:border-[#8fa0b0] hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"

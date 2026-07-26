@@ -451,6 +451,7 @@ export default function App() {
                 onPersonalLoginPage={() => navigate(`${routes.login.personal()}${loginReturnSuffix}`)}
                 onBusinessLoginPage={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
                 onProviderPage={() => navigate(`${routes.provider.home()}${loginReturnSuffix}`)}
+                onSupplierPage={() => navigate(routes.supplier.home())}
                 onRestrictedLoginPage={() => navigate(`${routes.login.restricted()}${loginReturnSuffix}`)}
               />
             )}
