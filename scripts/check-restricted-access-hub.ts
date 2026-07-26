@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(path, 'utf8');
 const loginHub = read('src/components/public/LoginHub.tsx');
 const restrictedPage = read('src/pages/RestrictedAccessHubPage.tsx');
 const providerPage = read('src/pages/ProviderAccessPage.tsx');
+const providerLanding = read('src/pages/Prestador/ProviderLandingPage.tsx');
 const home = read('src/pages/Home.tsx');
 const app = read('src/App.tsx');
 
@@ -31,15 +32,26 @@ assert.match(providerPage, /gsa_public_register_provider/, 'O cadastro deve usar
 assert.match(providerPage, /Cadastre-se como prestador/, 'A página deve permitir novo cadastro de prestador.');
 assert.match(providerPage, /confirmação de identidade e a aprovação do cadastro/, 'O primeiro acesso deve manter a liberação segura.');
 
+assert.match(providerLanding, /Rede de Prestadores GSA HUB/, 'A apresentação deve possuir identidade institucional própria.');
+assert.match(providerLanding, /Seu trabalho encontra estrutura para crescer/, 'A apresentação deve comunicar a proposta de valor ao prestador.');
+assert.match(providerLanding, /PORTAL_FEATURES/, 'A página institucional deve apresentar os recursos reais da área logada.');
+assert.match(providerLanding, /PROCESS_STEPS/, 'A página institucional deve explicar o processo de credenciamento.');
+assert.match(providerLanding, /onLogin/, 'A apresentação deve oferecer acesso para prestadores aprovados.');
+assert.match(providerLanding, /onRegister/, 'A apresentação deve encaminhar novos prestadores ao cadastro.');
+assert.doesNotMatch(providerLanding, /loginWithPin|gsa_public_register_provider/, 'Login e cadastro devem permanecer em páginas próprias, fora da apresentação institucional.');
+
 assert.match(app, /RestrictedAccessHubPage/, 'O aplicativo deve montar a página exclusiva da Área Restrita.');
 assert.match(app, /ProviderAccessPage/, 'O aplicativo deve montar a página exclusiva da Área do Prestador.');
+assert.match(app, /ProviderLandingPage/, 'O aplicativo deve montar a apresentação institucional do Prestador.');
 assert.match(app, /\['acesso-restrito', 'admin', 'colaborador'\]\.includes\(route\.module\)/, 'As rotas restritas devem usar a página exclusiva.');
 assert.match(app, /route\.module === 'prestador'/, 'A rota do prestador deve usar sua página exclusiva.');
+assert.match(app, /routes\.provider\.home\(\)/, 'O seletor principal deve abrir primeiro a apresentação institucional.');
 assert.match(app, /routes\.login\.providerRegistration\(\)/, 'O seletor de cadastro deve navegar para a rota exclusiva.');
 
 assert.equal(routes.login.restricted(), '/login/acesso-restrito');
 assert.equal(routes.login.provider(), '/login/prestador');
 assert.equal(routes.login.providerRegistration(), '/login/prestador/cadastro');
+assert.equal(routes.provider.home(), '/prestador');
 assert.equal(routes.login.collaborator(), '/login/colaborador');
 assert.equal(routes.login.admin(), '/login/admin');
 assert.equal(routes.login.supplier(), '/fornecedor/login');
@@ -57,6 +69,10 @@ const providerRegistrationRoute = matchRoute('/login/prestador/cadastro', '', ''
 assert.equal(providerRegistrationRoute.area, 'login');
 assert.equal(providerRegistrationRoute.module, 'prestador');
 assert.equal(providerRegistrationRoute.submodule, 'cadastro');
+
+const providerInstitutionalRoute = matchRoute('/prestador', '', '');
+assert.equal(providerInstitutionalRoute.area, 'provider');
+assert.equal(providerInstitutionalRoute.module, 'home');
 
 for (const [path, module] of [
   ['/login/colaborador', 'colaborador'],
