@@ -27,10 +27,11 @@ Os seguintes arquivos compõem o ecossistema:
 - `/login/empresa`: Página corporativa exclusiva de autenticação por CNPJ.
 - `/login/empresa/cadastro`: Página exclusiva de solicitação e cadastro empresarial.
 - `/login/empresa/recuperar-senha`: Recuperação segura do acesso PJ.
-- `/login/acesso-restrito`: Gateway de seleção entre os perfis institucionais.
-- `/login/prestador`: Autenticação do prestador de serviços.
-- `/login/colaborador`: Autenticação da equipe e dos colaboradores autorizados.
-- `/login/admin`: Autenticação da gestão GSA.
+- `/login/acesso-restrito`: Página institucional exclusiva de login para Gestão e Colaborador GSA.
+- `/login/prestador`: Página exclusiva de login da Área do Prestador.
+- `/login/prestador/cadastro`: Página exclusiva de cadastro de profissionais e empresas prestadoras.
+- `/login/colaborador`: Endereço direto compatível que abre a Área Restrita no perfil Colaborador.
+- `/login/admin`: Endereço direto compatível que abre a Área Restrita no perfil Gestão.
 - `/fornecedor/login`: Autenticação e cadastro de fornecedores.
 - `/login/cliente`: Compatibilidade com o endereço legado do login PF.
 
