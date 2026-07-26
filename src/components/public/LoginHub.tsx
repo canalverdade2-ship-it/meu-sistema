@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, KeyRound, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Building2, KeyRound, ShieldCheck, UserRound } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { LogoGSA } from '../ui/LogoGSA';
 
@@ -7,10 +7,17 @@ interface LoginHubProps {
   onPersonalAccess: () => void;
   onBusinessAccess: () => void;
   onSupplierAccess?: () => void;
+  onProviderAccess?: () => void;
   onRestrictedAccess?: () => void;
 }
 
-export function LoginHub({ onBack, onPersonalAccess, onBusinessAccess, onRestrictedAccess }: LoginHubProps) {
+export function LoginHub({
+  onBack,
+  onPersonalAccess,
+  onBusinessAccess,
+  onProviderAccess,
+  onRestrictedAccess,
+}: LoginHubProps) {
   const reduceMotion = useReducedMotion();
   const cardAnimation = reduceMotion
     ? {}
@@ -60,25 +67,47 @@ export function LoginHub({ onBack, onPersonalAccess, onBusinessAccess, onRestric
                 </motion.button>
               </div>
 
-              {onRestrictedAccess && (
-                <motion.button
-                  {...cardAnimation}
-                  transition={{ delay: 0.18 }}
-                  type="button"
-                  onClick={onRestrictedAccess}
-                  className="group mt-4 flex min-h-[104px] w-full items-center gap-4 rounded-[1.35rem] border border-[#cfd6dd] bg-[#f3f5f7] p-5 text-left transition hover:border-[#8fa0b0] hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#142030] text-[#edcf83]">
-                    <KeyRound className="h-6 w-6" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-[#8a651f]">Perfis institucionais</span>
-                    <span className="mt-1 block text-base font-black text-[#142030]">Acesso Restrito</span>
-                    <span className="mt-1 block text-xs leading-5 text-neutral-600">Prestador, colaborador, gestão e fornecedor.</span>
-                  </span>
-                  <ArrowRight className="h-5 w-5 shrink-0 text-[#8a651f] transition-transform group-hover:translate-x-1" />
-                </motion.button>
-              )}
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {onProviderAccess && (
+                  <motion.button
+                    {...cardAnimation}
+                    transition={{ delay: 0.18 }}
+                    type="button"
+                    onClick={onProviderAccess}
+                    className="group flex min-h-[128px] w-full items-center gap-4 rounded-[1.35rem] border border-[#b9d2e2] bg-[#edf5fa] p-5 text-left transition hover:border-[#5687a7] hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f5a86]"
+                  >
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#123d5d] text-[#9bd8bb]">
+                      <BriefcaseBusiness className="h-6 w-6" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-[#267153]">Prestadores GSA</span>
+                      <span className="mt-1 block text-base font-black text-[#123d5d]">Área do Prestador</span>
+                      <span className="mt-1 block text-xs leading-5 text-neutral-600">Login e cadastro para profissionais e empresas prestadoras.</span>
+                    </span>
+                    <ArrowRight className="h-5 w-5 shrink-0 text-[#267153] transition-transform group-hover:translate-x-1" />
+                  </motion.button>
+                )}
+
+                {onRestrictedAccess && (
+                  <motion.button
+                    {...cardAnimation}
+                    transition={{ delay: 0.24 }}
+                    type="button"
+                    onClick={onRestrictedAccess}
+                    className="group flex min-h-[128px] w-full items-center gap-4 rounded-[1.35rem] border border-[#cfd6dd] bg-[#f3f5f7] p-5 text-left transition hover:border-[#8fa0b0] hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                  >
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#142030] text-[#edcf83]">
+                      <KeyRound className="h-6 w-6" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-[#8a651f]">Equipe interna</span>
+                      <span className="mt-1 block text-base font-black text-[#142030]">Acesso Restrito</span>
+                      <span className="mt-1 block text-xs leading-5 text-neutral-600">Exclusivo para Gestão e Colaborador GSA.</span>
+                    </span>
+                    <ArrowRight className="h-5 w-5 shrink-0 text-[#8a651f] transition-transform group-hover:translate-x-1" />
+                  </motion.button>
+                )}
+              </div>
             </div>
           </div>
         </section>

@@ -29,6 +29,7 @@ export const routes = {
     restricted: () => '/login/acesso-restrito',
     admin: () => '/login/admin',
     provider: () => '/login/prestador',
+    providerRegistration: () => '/login/prestador/cadastro',
     collaborator: () => '/login/colaborador',
     supplier: () => '/fornecedor/login',
     affiliate: () => '/afiliados/login',

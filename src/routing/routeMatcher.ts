@@ -45,6 +45,9 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     if (segments[1] === 'empresa' && segments[2] === 'cadastro') {
       submodule = 'cadastro';
     }
+    if (segments[1] === 'prestador' && segments[2] === 'cadastro') {
+      submodule = 'cadastro';
+    }
     return { pathname, search, hash, area, module, submodule, query };
   }
 
