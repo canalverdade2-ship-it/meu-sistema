@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { AdminNotificationProvider } from './hooks/useAdminNotifications';
 import { logService } from './lib/logService';
 import { useAutoLogout } from './hooks/useAutoLogout';
-import { sessionService } from './lib/sessionService';
+import { sessionService, type ClientPersonType } from './lib/sessionService';
 import { validateProviderSessionAccess } from './lib/providerSessionAccess';
 import { ClientNotificationProvider } from './hooks/useClientNotifications';
 import { ProviderNotificationProvider } from './hooks/useProviderNotifications';
@@ -28,6 +28,7 @@ const queryClient = new QueryClient();
 
 const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((module) => ({ default: module.SecureAdminPanel })));
 const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
+const ClientLoginPage = lazy(() => import('./pages/ClientLoginPage').then((module) => ({ default: module.ClientLoginPage })));
 const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
 const FornecedorDashboard = lazy(() => import('./pages/Fornecedor/FornecedorDashboard').then((module) => ({ default: module.FornecedorDashboard })));
 const FornecedorAccessPage = lazy(() => import('./pages/Fornecedor/FornecedorAccessPage').then((module) => ({ default: module.FornecedorAccessPage })));
@@ -48,6 +49,7 @@ export default function App() {
   const route = useAppLocation();
   const [session, setSession] = useState<{
     clientId?: string;
+    clientPersonType?: ClientPersonType;
     adminAuth?: boolean;
     adminType?: 'admin' | 'colaborador';
     colaboradorId?: string;
@@ -70,9 +72,22 @@ export default function App() {
         const restored = await sessionService.restoreSession();
         if (restored) {
           if (restored.atorTipo === 'cliente') {
-            setSession({ clientId: restored.atorId });
-            if (restored.precisa_trocar_senha && window.location.pathname !== '/cliente/perfil') {
-              replace('/cliente/perfil?modal=alterar-senha&origem=recuperacao');
+            const restoredPersonType = restored.clientPersonType === 'pj' || restored.clientPersonType === 'pf'
+              ? restored.clientPersonType
+              : await sessionService.resolveAuthenticatedClientPersonType(restored.atorId);
+            const clientPersonType: ClientPersonType = restoredPersonType || (route.area === 'business' ? 'pj' : 'pf');
+            sessionService.setClientPersonType(clientPersonType);
+            setSession({ clientId: restored.atorId, clientPersonType });
+
+            const recoveryProfile = clientPersonType === 'pj' ? routes.business.profile() : routes.client.perfil();
+            if (restored.precisa_trocar_senha && window.location.pathname !== recoveryProfile) {
+              replace(`${recoveryProfile}?modal=alterar-senha&origem=recuperacao`);
+            } else if (clientPersonType === 'pj' && route.area === 'client') {
+              replace(routes.business.dashboard());
+            } else if (clientPersonType === 'pf' && route.area === 'business') {
+              replace(routes.client.dashboard());
+            } else if (route.area === 'login' && ['cliente', 'pessoa-fisica', 'empresa'].includes(route.module)) {
+              replace(clientPersonType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
             }
           } else if (restored.atorTipo === 'admin' || restored.atorTipo === 'colaborador') {
             setSession({
@@ -104,9 +119,16 @@ export default function App() {
             setSession({ fornecedorId: (access as any).supplier_id });
             if (window.location.pathname === '/login/fornecedor') replace(routes.supplier.dashboard());
           }
-        } else if (['client', 'admin', 'provider'].includes(route.area) || (route.area === 'supplier' && !['home', 'login', 'access'].includes(route.module))) {
+        } else if (['client', 'business', 'admin', 'provider'].includes(route.area) || (route.area === 'supplier' && !['home', 'login', 'access'].includes(route.module))) {
           const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-          replace(route.area === 'supplier' ? `${routes.login.supplier()}?returnTo=${returnTo}` : `${routes.login.root()}?returnTo=${returnTo}`);
+          const loginPath = route.area === 'supplier'
+            ? routes.login.supplier()
+            : route.area === 'business'
+              ? routes.login.business()
+              : route.area === 'client'
+                ? routes.login.personal()
+                : routes.login.root();
+          replace(`${loginPath}?returnTo=${returnTo}`);
         }
       } catch (err) {
         console.error('Failed to restore session:', err);
@@ -125,16 +147,27 @@ export default function App() {
     return <div className="min-h-screen flex items-center justify-center bg-neutral-50">Carregando sessão...</div>;
   }
 
-  const handleLoginClient = (clientId: string, isRecovery: boolean = false) => {
-    setSession({ clientId });
-    const returnTo = readSafeReturnTo(window.location.search, ['/cliente', '/marketplace']);
+  const handleLoginClient = async (
+    clientId: string,
+    isRecovery: boolean = false,
+    hintedPersonType?: ClientPersonType,
+  ) => {
+    const resolvedPersonType = await sessionService.resolveAuthenticatedClientPersonType(clientId);
+    const clientPersonType: ClientPersonType = resolvedPersonType || hintedPersonType || 'pf';
+    sessionService.setClientPersonType(clientPersonType);
+    setSession({ clientId, clientPersonType });
+    const returnTo = readSafeReturnTo(
+      window.location.search,
+      clientPersonType === 'pj' ? ['/empresa', '/marketplace'] : ['/cliente', '/marketplace'],
+    );
 
     if (isRecovery) {
-      replace('/cliente/perfil?modal=alterar-senha&origem=recuperacao');
+      const profilePath = clientPersonType === 'pj' ? routes.business.profile() : routes.client.perfil();
+      replace(`${profilePath}?modal=alterar-senha&origem=recuperacao`);
     } else if (returnTo) {
       replace(returnTo);
     } else {
-      replace(routes.client.dashboard());
+      replace(clientPersonType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
     }
   };
 
@@ -166,7 +199,8 @@ export default function App() {
   const handleLoginAfiliado = (clientId?: string) => {
     const sessionData = sessionService.getCurrentSession();
     const id = clientId || sessionData?.atorId || session.clientId || '';
-    setSession({ clientId: id });
+    sessionService.setClientPersonType('pf');
+    setSession({ clientId: id, clientPersonType: 'pf' });
     const returnTo = readSafeReturnTo(window.location.search, ['/afiliados']);
     replace(returnTo || routes.public.affiliateDashboard());
   };
@@ -197,9 +231,20 @@ export default function App() {
   if (!isRouteAllowed(route.area, session, route.module, route.submodule)) {
     if (route.area === 'admin' && session.adminAuth) {
       replace(defaultAdminPath(session.adminType, session.colaboradorModulos || []));
+    } else if (route.area === 'business' && session.clientId && session.clientPersonType === 'pf') {
+      replace(routes.client.dashboard());
+    } else if (route.area === 'client' && session.clientId && session.clientPersonType === 'pj') {
+      replace(routes.business.dashboard());
     } else {
       const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-      replace(route.area === 'supplier' ? `${routes.login.supplier()}?returnTo=${returnTo}` : `${routes.login.root()}?returnTo=${returnTo}`);
+      const loginPath = route.area === 'supplier'
+        ? routes.login.supplier()
+        : route.area === 'business'
+          ? routes.login.business()
+          : route.area === 'client'
+            ? routes.login.personal()
+            : routes.login.root();
+      replace(`${loginPath}?returnTo=${returnTo}`);
     }
     return null;
   }
