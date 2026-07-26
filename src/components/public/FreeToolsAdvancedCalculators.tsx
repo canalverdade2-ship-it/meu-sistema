@@ -753,6 +753,278 @@ function VacationPro({ status, onUnlockRequired }: { status?: ProAccessStatus | 
   );
 }
 
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d5cfc5] bg-[#faf8f3] p-3 text-xs font-bold text-[#26313a]">
+            <input type="checkbox" checked={isDouble} onChange={(event) => setIsDouble(event.target.checked)} className="h-4 w-4 accent-[#8a6e2f]" />
+            <span>Férias em dobro (concessivo vencido)</span>
+          </label>
+        </div>
+      </Section>
+
+      <button type="button" onClick={() => { setSalary('3500'); setAverages('0'); setVacationDays('30'); setSellDays(false); setAbsences('0'); setThirteenthAdvance(false); setIsDouble(false); setDependents('0'); }} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#d5cec3] bg-white px-4 text-sm font-black text-[#59646d]">
+        <RotateCcw className="h-4 w-4" />Restaurar exemplo
+      </button>
+    </Workbench>
+  );
+}
+
+function OvertimePro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
+  const [salary, setSalary] = useState('3500');
+  const [monthlyHours, setMonthlyHours] = useState('220');
+  const [hours50, setHours50] = useState('15');
+  const [hours100, setHours100] = useState('5');
+  const [nightHours, setNightHours] = useState('20');
+  const [businessDays, setBusinessDays] = useState('25');
+  const [sundaysAndHolidays, setSundaysAndHolidays] = useState('5');
+
+  const result = useMemo(() => calculateOvertimeEstimate(numeric(salary), {
+    monthlyHours: numeric(monthlyHours),
+    overtime50Hours: numeric(hours50),
+    overtime100Hours: numeric(hours100),
+    nightHours: numeric(nightHours),
+    businessDays: numeric(businessDays),
+    sundaysAndHolidays: numeric(sundaysAndHolidays),
+  }), [salary, monthlyHours, hours50, hours100, nightHours, businessDays, sundaysAndHolidays]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de horas extras e noturno (Modo Pro)',
+    mode: 'pro',
+    headline: `Total com DSR: ${currency.format(result.totalGrossExtra)}`,
+    summary: 'Memória de cálculo completa incluindo adicionais noturnos e reflexo no DSR.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Salário base', value: currency.format(numeric(salary)) }, { label: 'Jornada mensal', value: `${numeric(monthlyHours)} horas` }, { label: 'Horas 50%', value: `${numeric(hours50)} h` }, { label: 'Horas 100%', value: `${numeric(hours100)} h` }, { label: 'Horas noturnas', value: `${numeric(nightHours)} h` }, { label: 'Dias úteis', value: `${numeric(businessDays)} d` }, { label: 'Domingos/Feriados', value: `${numeric(sundaysAndHolidays)} d` }] },
+      { title: 'Valores apurados', rows: [{ label: 'Valor da hora normal', value: currency.format(result.hourlyRate) }, { label: 'Horas extras 50%', value: currency.format(result.pay50) }, { label: 'Horas extras 100%', value: currency.format(result.pay100) }, { label: 'Adicional noturno', value: currency.format(result.nightAditionalPay) }, { label: 'Subtotal sem DSR', value: currency.format(result.totalExtraWithoutDsr) }, { label: 'Reflexo no DSR', value: currency.format(result.dsrPay) }, { label: 'Total bruto extras', value: currency.format(result.totalGrossExtra) }] },
+    ],
+    disclaimer: 'Cálculo analítico do modo Pro com adicionais e DSR.',
+  };
+
+  return (
+    <Workbench tool="overtime" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Total bruto de horas extras: ${currency.format(result.totalGrossExtra)}`} summary="Cálculo analítico das horas suplementares, adicional noturno reduzido e reflexo no DSR." metrics={[{ label: 'Hora normal', value: currency.format(result.hourlyRate) }, { label: 'Subtotal sem DSR', value: currency.format(result.totalExtraWithoutDsr) }, { label: 'Reflexo DSR', value: currency.format(result.dsrPay) }, { label: 'Total bruto', value: currency.format(result.totalGrossExtra), highlight: true }]}>
+      <Section number="01" title="Jornada e salário" description="Dados base do contrato de trabalho.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Salário base mensal" value={salary} onChange={setSalary} prefix="R$" />
+          <Field label="Jornada mensal" value={monthlyHours} onChange={setMonthlyHours} suffix="horas" />
+        </div>
+      </Section>
+      <Section number="02" title="Horas suplementares" description="Horas excedentes trabalhadas no mês.">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Horas a 50%" value={hours50} onChange={setHours50} suffix="h" />
+          <Field label="Horas a 100%" value={hours100} onChange={setHours100} suffix="h" />
+          <Field label="Horas noturnas (22h às 5h)" value={nightHours} onChange={setNightHours} suffix="h" help="Considera hora reduzida de 52m30s" />
+        </div>
+      </Section>
+      <Section number="03" title="Calendário do mês para DSR" description="Quantidade de dias úteis e repousos remunerados.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Dias úteis no mês" value={businessDays} onChange={setBusinessDays} suffix="dias" />
+          <Field label="Domingos e feriados" value={sundaysAndHolidays} onChange={setSundaysAndHolidays} suffix="dias" />
+        </div>
+      </Section>
+    </Workbench>
+  );
+}
+
+function NetSalaryPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
+  const [gross, setGross] = useState('6000');
+  const [dependents, setDependents] = useState('1');
+  const [benefits, setBenefits] = useState('800');
+  const [pjProposed, setPjProposed] = useState('9500');
+
+  const result = useMemo(() => calculateNetSalaryEstimate(numeric(gross), numeric(dependents), { benefitsMonthly: numeric(benefits), pjProposedGross: numeric(pjProposed) }), [gross, dependents, benefits, pjProposed]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de salário líquido e equivalência CLT x PJ (Modo Pro)',
+    mode: 'pro',
+    headline: `Salário líquido + benefícios: ${currency.format(result.totalCltNetValue)}`,
+    summary: 'Comparativo detalhado de retenções fiscais e faturamento PJ equivalente.',
+    sections: [
+      { title: 'Remuneração CLT', rows: [{ label: 'Salário bruto', value: currency.format(numeric(gross)) }, { label: 'Desconto INSS 2026', value: currency.format(result.inssDeduction) }, { label: 'Desconto IRRF', value: currency.format(result.irrfDeduction) }, { label: 'Salário líquido', value: currency.format(result.netSalary) }, { label: 'Benefícios mensais (VR/VA/Saúde)', value: currency.format(numeric(benefits)) }, { label: 'Total recebido no bolso', value: currency.format(result.totalCltNetValue) }] },
+      { title: 'Comparativo PJ', rows: [{ label: 'Faturamento PJ recomendado', value: currency.format(result.recommendedPjMonthlyGross) }, { label: 'Proposta PJ informada', value: currency.format(result.pjProposed) }, { label: 'Imposto PJ estimado (Simples ~6%)', value: currency.format(result.pjProposed * 0.06) }, { label: 'Líquido PJ no bolso', value: currency.format(result.pjNet) }, { label: 'Diferença em relação à CLT', value: `${result.pjDifference >= 0 ? '+' : ''}${currency.format(result.pjDifference)}` }] },
+    ],
+    disclaimer: 'Demonstrativo avançado de tributação e equivalência CLT vs PJ.',
+  };
+
+  return (
+    <Workbench tool="net_salary" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Líquido + Benefícios: ${currency.format(result.totalCltNetValue)}`} summary="Demonstrativo analítico de descontos de INSS/IRRF e recomendação de faturamento PJ equivalente." metrics={[{ label: 'Salário líquido', value: currency.format(result.netSalary) }, { label: 'Benefícios', value: currency.format(numeric(benefits)) }, { label: 'PJ Recomendado', value: currency.format(result.recommendedPjMonthlyGross) }, { label: 'Total CLT Líquido', value: currency.format(result.totalCltNetValue), highlight: true }]}>
+      <Section number="01" title="Contrato CLT e dependentes" description="Informações para cálculo dos descontos e deduções.">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Salário bruto mensal" value={gross} onChange={setGross} prefix="R$" />
+          <Field label="Número de dependentes" value={dependents} onChange={setDependents} suffix="dep." />
+          <Field label="Benefícios mensais (VR/VA/Saúde)" value={benefits} onChange={setBenefits} prefix="R$" />
+        </div>
+      </Section>
+      <Section number="02" title="Simulação de proposta PJ" description="Verifique se a proposta PJ compensa todos os direitos da CLT.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Proposta de faturamento PJ mensal" value={pjProposed} onChange={setPjProposed} prefix="R$" />
+          <div className="flex flex-col justify-center rounded-lg border border-[#d5cfc5] bg-[#faf8f3] p-4 text-xs font-bold text-[#26313a]">
+            <span>PJ Líquido Estimado: {currency.format(result.pjNet)}</span>
+            <span className={`mt-1 font-black ${result.pjDifference >= 0 ? 'text-emerald-700' : 'text-amber-700'}`}>Diferença vs CLT: {result.pjDifference >= 0 ? '+' : ''}{currency.format(result.pjDifference)}</span>
+          </div>
+        </div>
+      </Section>
+    </Workbench>
+  );
+}
+
+function MeiLimitPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
+  const [openingMonth, setOpeningMonth] = useState('1');
+  const [accumulated, setAccumulated] = useState('50000');
+  const [projectedMonthly, setProjectedMonthly] = useState('9000');
+
+  const result = useMemo(() => calculateMeiLimitEstimate(numeric(openingMonth), numeric(accumulated), numeric(projectedMonthly)), [openingMonth, accumulated, projectedMonthly]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de limite e excesso do MEI (Modo Pro)',
+    mode: 'pro',
+    headline: `Projeção anual: ${currency.format(result.projectedTotal)} (${result.projectedUsedPercentage}%)`,
+    summary: 'Diagnóstico avançado de margem de faturamento do MEI e regras de desenquadramento.',
+    sections: [
+      { title: 'Status atual', rows: [{ label: 'Mês de abertura', value: `Mês ${numeric(openingMonth)}` }, { label: 'Limite proporcional', value: currency.format(result.proportionalLimit) }, { label: 'Faturamento acumulado', value: currency.format(result.accumulated) }, { label: 'Saldo disponível', value: currency.format(result.remainingBalance) }] },
+      { title: 'Projeção', rows: [{ label: 'Vendas mensais previstas', value: currency.format(numeric(projectedMonthly)) }, { label: 'Faturamento total projetado', value: currency.format(result.projectedTotal) }, { label: 'Diagnóstico', value: result.excessCategory === 'within_limit' ? 'Dentro do limite' : result.excessCategory === 'up_to_20' ? 'Extrapolação em até 20%' : 'Extrapolação acima de 20%' }] },
+    ],
+    disclaimer: 'Relatório educativo do modo Pro para acompanhamento do limite MEI.',
+  };
+
+  return (
+    <Workbench tool="mei_limit" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Projeção final: ${currency.format(result.projectedTotal)}`} summary="Acompanhamento preventivo de limite proporcional e diagnósticos de migração para o Simples Nacional." metrics={[{ label: 'Limite proporcional', value: currency.format(result.proportionalLimit) }, { label: 'Acumulado atual', value: currency.format(result.accumulated) }, { label: 'Saldo restante', value: currency.format(result.remainingBalance) }, { label: 'Uso projetado', value: `${result.projectedUsedPercentage}%`, highlight: true }]}>
+      <Section number="01" title="Situação do MEI" description="Meses ativos e faturamento acumulado.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Mês de abertura no ano (1 a 12)" value={openingMonth} onChange={setOpeningMonth} suffix="mês" max={12} />
+          <Field label="Faturamento acumulado no ano" value={accumulated} onChange={setAccumulated} prefix="R$" />
+        </div>
+      </Section>
+      <Section number="02" title="Projeção para os próximos meses" description="Previsão de vendas mensais até dezembro.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Média de faturamento mensal previsto" value={projectedMonthly} onChange={setProjectedMonthly} prefix="R$" />
+          <div className="flex flex-col justify-center rounded-lg border border-[#d5cfc5] bg-[#faf8f3] p-4 text-xs font-bold text-[#26313a]">
+            <span>Diagnóstico do limite:</span>
+            <span className={`mt-1 font-black ${result.excessCategory === 'within_limit' ? 'text-emerald-700' : 'text-amber-700'}`}>
+              {result.excessCategory === 'within_limit' ? '✅ Dentro do limite anual' : result.excessCategory === 'up_to_20' ? '⚠️ Estouro até 20% (DAS extra em janeiro)' : '🚨 Estouro > 20% (Desenquadramento retroativo)'}
+            </span>
+          </div>
+        </div>
+      </Section>
+    </Workbench>
+  );
+}
+
+function UnemploymentPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
+  const [requestTimes, setRequestTimes] = useState<1 | 2 | 3>(1);
+  const [monthsWorked, setMonthsWorked] = useState('24');
+  const [salary1, setSalary1] = useState('3000');
+  const [salary2, setSalary2] = useState('3200');
+  const [salary3, setSalary3] = useState('3400');
+
+  const average = useMemo(() => (numeric(salary1) + numeric(salary2) + numeric(salary3)) / 3, [salary1, salary2, salary3]);
+  const result = useMemo(() => calculateUnemploymentEstimate(requestTimes, numeric(monthsWorked), average), [requestTimes, monthsWorked, average]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Simulador de seguro-desemprego MTE 2026 (Modo Pro)',
+    mode: 'pro',
+    headline: result.eligible ? `Direito a ${result.installments} parcelas de ${currency.format(result.installmentValue)}` : 'Não atinge requisitos de carência',
+    summary: 'Cálculo analítico do benefício conforme tabela oficial MTE 2026.',
+    sections: [
+      { title: 'Histórico', rows: [{ label: 'Solicitação', value: `${requestTimes}ª vez` }, { label: 'Tempo trabalhado', value: `${numeric(monthsWorked)} meses` }, { label: 'Salários últimos 3 meses', value: `${currency.format(numeric(salary1))} | ${currency.format(numeric(salary2))} | ${currency.format(numeric(salary3))}` }, { label: 'Média apurada', value: currency.format(average) }] },
+      { title: 'Benefício', rows: [{ label: 'Elegibilidade', value: result.eligible ? 'Elegível' : 'Pendente' }, { label: 'Número de parcelas', value: `${result.installments}` }, { label: 'Valor da parcela', value: currency.format(result.installmentValue) }, { label: 'Total a receber', value: currency.format(result.totalBenefit) }] },
+    ],
+    disclaimer: 'Cálculo detalhado do Seguro-Desemprego conforme regras do MTE.',
+  };
+
+  return (
+    <Workbench tool="unemployment" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={result.eligible ? `${result.installments} parcelas de ${currency.format(result.installmentValue)}` : 'Requisitos pendentes'} summary="Análise exata do valor do benefício por salário mensal individual." metrics={[{ label: 'Média salarial', value: currency.format(average) }, { label: 'Parcelas', value: `${result.installments}` }, { label: 'Valor parcela', value: currency.format(result.installmentValue) }, { label: 'Total benefício', value: currency.format(result.totalBenefit), highlight: true }]}>
+      <Section number="01" title="Regras de carência MTE" description="Histórico de solicitações e meses de carteira assinada.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="block"><span className="text-sm font-black text-[#26313a]">Solicitação</span><div className="mt-2 grid grid-cols-3 gap-2 rounded-lg bg-[#ece9e2] p-1">{([1, 2, 3] as const).map((t) => <button key={t} type="button" onClick={() => setRequestTimes(t)} className={`min-h-11 rounded-md text-xs font-black ${requestTimes === t ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>{t}ª Vez</button>)}</div></div>
+          <Field label="Meses trabalhados nos últimos 36 meses" value={monthsWorked} onChange={setMonthsWorked} suffix="meses" />
+        </div>
+      </Section>
+      <Section number="02" title="Últimos 3 salários recebidos" description="Informe os salários dos últimos 3 meses antes da demissão.">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Salário 1" value={salary1} onChange={setSalary1} prefix="R$" />
+          <Field label="Salário 2" value={salary2} onChange={setSalary2} prefix="R$" />
+          <Field label="Salário 3" value={salary3} onChange={setSalary3} prefix="R$" />
+        </div>
+      </Section>
+    </Workbench>
+  );
+}
+
+function FatorRPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
+  const [rbt12, setRbt12] = useState('240000');
+  const [payroll12, setPayroll12] = useState('60000');
+
+  const result = useMemo(() => calculateFatorREstimate(numeric(rbt12), numeric(payroll12)), [rbt12, payroll12]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora do Fator R do Simples Nacional (Modo Pro)',
+    mode: 'pro',
+    headline: `Fator R: ${result.fatorRPercentage}% - Enquadramento: ${result.anexoName}`,
+    summary: 'Planejamento e ajuste de pró-labore para enquadramento na menor alíquota tributária.',
+    sections: [
+      { title: 'Visão Geral', rows: [{ label: 'RBT12', value: currency.format(numeric(rbt12)) }, { label: 'Folha 12 Meses', value: currency.format(numeric(payroll12)) }, { label: 'Percentual Fator R', value: `${result.fatorRPercentage}%` }, { label: 'Anexo Atual', value: result.anexoName }] },
+      { title: 'Ajuste Recomendado', rows: [{ label: 'Folha necessária para 28%', value: currency.format(result.requiredPayrollFor28) }, { label: 'Aumento de pró-labore mensal recomendado', value: currency.format(result.recommendedMonthlyProLaboreAdjustment) }] },
+    ],
+    disclaimer: 'Relatório de planejamento tributário do Fator R.',
+  };
+
+  return (
+    <Workbench tool="fator_r" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Fator R atual: ${result.fatorRPercentage}%`} summary="Planejamento de folha de pagamento e pró-labore para manter enquadramento no Anexo III." metrics={[{ label: 'RBT12', value: currency.format(numeric(rbt12)) }, { label: 'Folha 12m', value: currency.format(numeric(payroll12)) }, { label: 'Ajuste mensal pró-labore', value: currency.format(result.recommendedMonthlyProLaboreAdjustment) }, { label: 'Enquadramento', value: result.isAnexo3 ? 'Anexo III (6%)' : 'Anexo V (15.5%)', highlight: true }]}>
+      <Section number="01" title="Faturamento e folha dos últimos 12 meses" description="Dados dos últimos 12 meses da empresa.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Receita Bruta 12 meses (RBT12)" value={rbt12} onChange={setRbt12} prefix="R$" />
+          <Field label="Folha de Pagamento 12 meses" value={payroll12} onChange={setPayroll12} prefix="R$" />
+        </div>
+      </Section>
+    </Workbench>
+  );
+}
+
+function AmortizationPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
+  const [balance, setBalance] = useState('300000');
+  const [rate, setRate] = useState('9.5');
+  const [months, setMonths] = useState('360');
+  const [system, setSystem] = useState<'SAC' | 'PRICE'>('SAC');
+  const [extraAmortization, setExtraAmortization] = useState('20000');
+  const [option, setOption] = useState<'reduce_term' | 'reduce_installment'>('reduce_term');
+
+  const result = useMemo(() => calculateAmortizationEstimate(numeric(balance), numeric(rate), numeric(months), {
+    system,
+    extraAmortization: numeric(extraAmortization),
+    amortizationOption: option,
+  }), [balance, rate, months, system, extraAmortization, option]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de amortização de financiamento (Modo Pro)',
+    mode: 'pro',
+    headline: `Economia estimada em juros: ${currency.format(result.estimatedInterestSaved)}`,
+    summary: 'Simulação comparativa de amortização extraordinária antecipada.',
+    sections: [
+      { title: 'Contrato Original', rows: [{ label: 'Saldo devedor', value: currency.format(numeric(balance)) }, { label: 'Taxa anual', value: `${numeric(rate)}% a.a.` }, { label: 'Prazo', value: `${numeric(months)} meses` }, { label: 'Sistema', value: system }] },
+      { title: 'Aporte Extra e Resultado', rows: [{ label: 'Valor amortizado', value: currency.format(numeric(extraAmortization)) }, { label: 'Novo saldo devedor', value: currency.format(result.newBalance) }, { label: 'Nova parcela', value: currency.format(result.newInstallment) }, { label: 'Meses eliminados', value: `${result.monthsSaved} meses` }, { label: 'Juros economizados', value: currency.format(result.estimatedInterestSaved) }] },
+    ],
+    disclaimer: 'Simulação de amortização extraordinária.',
+  };
+
+  return (
+    <Workbench tool="amortization" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Juros economizados: ${currency.format(result.estimatedInterestSaved)}`} summary="Simulação exata de amortização extraordinária antecipada." metrics={[{ label: 'Prestação atual', value: currency.format(result.currentInstallment) }, { label: 'Nova prestação', value: currency.format(result.newInstallment) }, { label: 'Meses reduzidos', value: `${result.monthsSaved} m` }, { label: 'Economia juros', value: currency.format(result.estimatedInterestSaved), highlight: true }]}>
+      <Section number="01" title="Financiamento atual" description="Dados do contrato.">
+        <div className="grid gap-4 sm:grid-cols-4">
+          <Field label="Saldo devedor" value={balance} onChange={setBalance} prefix="R$" />
+          <Field label="Taxa de juros (% a.a.)" value={rate} onChange={setRate} suffix="%" />
+          <Field label="Prazo restante" value={months} onChange={setMonths} suffix="meses" />
+          <div className="block"><span className="text-sm font-black text-[#26313a]">Sistema</span><div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-[#ece9e2] p-1">{(['SAC', 'PRICE'] as const).map((s) => <button key={s} type="button" onClick={() => setSystem(s)} className={`min-h-11 rounded-md text-xs font-black ${system === s ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>{s}</button>)}</div></div>
+        </div>
+      </Section>
+      <Section number="02" title="Amortização extraordinária" description="Valor adicional que pretende amortizar.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Valor do aporte extra" value={extraAmortization} onChange={setExtraAmortization} prefix="R$" />
+          <div className="block"><span className="text-sm font-black text-[#26313a]">Objetivo da amortização</span><div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-[#ece9e2] p-1">{([['reduce_term', 'Reduzir Prazo'], ['reduce_installment', 'Reduzir Parcela']] as const).map(([val, label]) => <button key={val} type="button" onClick={() => setOption(val)} className={`min-h-11 rounded-md text-xs font-black ${option === val ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>{label}</button>)}</div></div>
+        </div>
+      </Section>
+    </Workbench>
+  );
+}
+
 export function FreeToolsAdvancedCalculator({
   tool,
   status,
@@ -766,6 +1038,12 @@ export function FreeToolsAdvancedCalculator({
   if (tool === 'retirement') return <RetirementPro status={status} onUnlockRequired={onUnlockRequired} />;
   if (tool === 'vacation') return <VacationPro status={status} onUnlockRequired={onUnlockRequired} />;
   if (tool === 'thirteenth') return <ThirteenthPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'overtime') return <OvertimePro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'net_salary') return <NetSalaryPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'mei_limit') return <MeiLimitPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'unemployment') return <UnemploymentPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'fator_r') return <FatorRPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'amortization') return <AmortizationPro status={status} onUnlockRequired={onUnlockRequired} />;
   if (tool === 'benefits') return <BenefitsPro status={status} onUnlockRequired={onUnlockRequired} />;
   return <BpcPro status={status} onUnlockRequired={onUnlockRequired} />;
 }
