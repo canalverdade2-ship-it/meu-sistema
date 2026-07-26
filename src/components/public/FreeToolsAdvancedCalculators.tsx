@@ -16,7 +16,13 @@ import {
   Sparkles,
 } from 'lucide-react';
 import {
+  calculateAmortizationEstimate,
+  calculateFatorREstimate,
+  calculateMeiLimitEstimate,
+  calculateNetSalaryEstimate,
+  calculateOvertimeEstimate,
   calculateTerminationEstimate,
+  calculateUnemploymentEstimate,
   calculateVacationEstimate,
   evaluateRetirement2026,
   type InsalubrityLevel,
