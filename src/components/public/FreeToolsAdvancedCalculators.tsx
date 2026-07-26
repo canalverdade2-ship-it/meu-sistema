@@ -791,7 +791,17 @@ function OvertimePro({ status, onUnlockRequired }: { status?: ProAccessStatus | 
   };
 
   return (
-    <Workbench tool="overtime" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Total bruto de horas extras: ${currency.format(result.totalGrossExtra)}`} summary="Cálculo analítico das horas suplementares, adicional noturno reduzido e reflexo no DSR." metrics={[{ label: 'Hora normal', value: currency.format(result.hourlyRate) }, { label: 'Subtotal sem DSR', value: currency.format(result.totalExtraWithoutDsr) }, { label: 'Reflexo DSR', value: currency.format(result.dsrPay) }, { label: 'Total bruto', value: currency.format(result.totalGrossExtra), highlight: true }]}>
+    <Workbench title="Cálculo analítico de horas extras & noturno" description="Informe jornada, horas excedentes e calendário do mês para cálculo com DSR." result={
+      <Result eyebrow="Horas extras + DSR" headline={currency.format(result.totalGrossExtra)} summary="Total bruto a receber no mês pelas horas suplementares e reflexos no repouso remunerado." icon={<Clock3 className="h-5 w-5" />} note="Considera adicional noturno de 20% com hora noturna reduzida de 52m30s." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Valor hora normal" value={currency.format(result.hourlyRate)} />
+        <ResultLine label="Horas a 50%" value={currency.format(result.pay50)} />
+        <ResultLine label="Horas a 100%" value={currency.format(result.pay100)} />
+        <ResultLine label="Adicional noturno" value={currency.format(result.nightAditionalPay)} subtext={`${result.reducedNightHours}h noturnas computadas`} />
+        <ResultLine label="Subtotal extras sem DSR" value={currency.format(result.totalExtraWithoutDsr)} />
+        <ResultLine label="Reflexo no DSR" value={currency.format(result.dsrPay)} subtext={`${businessDays}d úteis e ${sundaysAndHolidays}d repouso`} />
+        <ResultLine label="Total bruto extras" value={currency.format(result.totalGrossExtra)} emphasized />
+      </Result>
+    }>
       <Section number="01" title="Jornada e salário" description="Dados base do contrato de trabalho.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Salário base mensal" value={salary} onChange={setSalary} prefix="R$" />
@@ -836,7 +846,17 @@ function NetSalaryPro({ status, onUnlockRequired }: { status?: ProAccessStatus |
   };
 
   return (
-    <Workbench tool="net_salary" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Líquido + Benefícios: ${currency.format(result.totalCltNetValue)}`} summary="Demonstrativo analítico de descontos de INSS/IRRF e recomendação de faturamento PJ equivalente." metrics={[{ label: 'Salário líquido', value: currency.format(result.netSalary) }, { label: 'Benefícios', value: currency.format(numeric(benefits)) }, { label: 'PJ Recomendado', value: currency.format(result.recommendedPjMonthlyGross) }, { label: 'Total CLT Líquido', value: currency.format(result.totalCltNetValue), highlight: true }]}>
+    <Workbench title="Salário líquido & Equivalência CLT vs PJ" description="Demonstrativo dos descontos de INSS/IRRF e recomendação de faturamento PJ." result={
+      <Result eyebrow="Líquido + Benefícios no bolso" headline={currency.format(result.totalCltNetValue)} summary="Valor líquido recebido no mês somado aos benefícios (VR/VA/Saúde)." icon={<Calculator className="h-5 w-5" />} note="Considera tabelas oficiais de INSS e IRRF de 2026." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Salário bruto CLT" value={currency.format(result.grossSalary)} />
+        <ResultLine label="Desconto INSS (2026)" value={currency.format(result.inssDeduction)} subtext={`Alíquota efetiva ${result.inssEffectiveRate}%`} />
+        <ResultLine label="Desconto IRRF" value={currency.format(result.irrfDeduction)} />
+        <ResultLine label="Salário líquido CLT" value={currency.format(result.netSalary)} />
+        <ResultLine label="Benefícios (VR/VA/Saúde)" value={currency.format(result.benefitsMonthly)} />
+        <ResultLine label="Faturamento PJ equivalente recomendado" value={currency.format(result.recommendedPjMonthlyGross)} subtext="Para cobrir FGTS, 13º, férias + 1/3 e benefícios" />
+        <ResultLine label="Proposta PJ líquida estimada" value={currency.format(result.pjNet)} emphasized subtext={`Diferença de ${result.pjDifference >= 0 ? '+' : ''}${currency.format(result.pjDifference)} vs CLT`} />
+      </Result>
+    }>
       <Section number="01" title="Contrato CLT e dependentes" description="Informações para cálculo dos descontos e deduções.">
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Salário bruto mensal" value={gross} onChange={setGross} prefix="R$" />
@@ -877,7 +897,15 @@ function MeiLimitPro({ status, onUnlockRequired }: { status?: ProAccessStatus | 
   };
 
   return (
-    <Workbench tool="mei_limit" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Projeção final: ${currency.format(result.projectedTotal)}`} summary="Acompanhamento preventivo de limite proporcional e diagnósticos de migração para o Simples Nacional." metrics={[{ label: 'Limite proporcional', value: currency.format(result.proportionalLimit) }, { label: 'Acumulado atual', value: currency.format(result.accumulated) }, { label: 'Saldo restante', value: currency.format(result.remainingBalance) }, { label: 'Uso projetado', value: `${result.projectedUsedPercentage}%`, highlight: true }]}>
+    <Workbench title="Limite e extrapolação do faturamento MEI" description="Controle preventivo do limite proporcional e projeção de faturamento até dezembro." result={
+      <Result eyebrow="Projeção anual do MEI" headline={currency.format(result.projectedTotal)} summary={`Faturamento total previsto (${result.projectedUsedPercentage}% do limite proporcional).`} icon={<Landmark className="h-5 w-5" />} note="Limite anual padrão de R$ 81.000,00 proporcional ao mês de abertura." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Meses ativos no ano" value={`${result.monthsActive} meses`} />
+        <ResultLine label="Limite proporcional no ano" value={currency.format(result.proportionalLimit)} />
+        <ResultLine label="Faturamento acumulado até agora" value={currency.format(result.accumulated)} subtext={`${result.usedPercentage}% já utilizado`} />
+        <ResultLine label="Saldo disponível restante" value={currency.format(result.remainingBalance)} />
+        <ResultLine label="Previsão de extrapolação" value={result.isOverLimit ? currency.format(result.excessAmount) : 'R$ 0,00'} subtext={result.excessCategory === 'within_limit' ? 'Dentro do limite' : result.excessCategory === 'up_to_20' ? 'Extrapolação até 20%' : 'Extrapolação acima de 20%'} emphasized={result.isOverLimit} />
+      </Result>
+    }>
       <Section number="01" title="Situação do MEI" description="Meses ativos e faturamento acumulado.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Mês de abertura no ano (1 a 12)" value={openingMonth} onChange={setOpeningMonth} suffix="mês" max={12} />
@@ -922,7 +950,16 @@ function UnemploymentPro({ status, onUnlockRequired }: { status?: ProAccessStatu
   };
 
   return (
-    <Workbench tool="unemployment" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={result.eligible ? `${result.installments} parcelas de ${currency.format(result.installmentValue)}` : 'Requisitos pendentes'} summary="Análise exata do valor do benefício por salário mensal individual." metrics={[{ label: 'Média salarial', value: currency.format(average) }, { label: 'Parcelas', value: `${result.installments}` }, { label: 'Valor parcela', value: currency.format(result.installmentValue) }, { label: 'Total benefício', value: currency.format(result.totalBenefit), highlight: true }]}>
+    <Workbench title="Simulação analítica de Seguro-Desemprego" description="Análise exata do valor das parcelas por média salarial individual." result={
+      <Result eyebrow="Seguro-Desemprego MTE 2026" headline={result.eligible ? `${result.installments} parcelas` : 'Sem direito'} summary={result.eligible ? `Valor de cada parcela: ${currency.format(result.installmentValue)}.` : 'Tempo de serviço insuficiente para esta solicitação.'} icon={<Clock3 className="h-5 w-5" />} note="Tabela MTE 2026 com teto de R$ 2.313,74." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Solicitação informada" value={`${requestTimes}ª vez`} />
+        <ResultLine label="Meses de registro" value={`${numeric(monthsWorked)} meses`} />
+        <ResultLine label="Média dos 3 salários" value={currency.format(average)} />
+        <ResultLine label="Número de parcelas liberadas" value={`${result.installments} parcelas`} />
+        <ResultLine label="Valor bruto de cada parcela" value={currency.format(result.installmentValue)} />
+        <ResultLine label="Total acumulado do benefício" value={currency.format(result.totalBenefit)} emphasized />
+      </Result>
+    }>
       <Section number="01" title="Regras de carência MTE" description="Histórico de solicitações e meses de carteira assinada.">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="block"><span className="text-sm font-black text-[#26313a]">Solicitação</span><div className="mt-2 grid grid-cols-3 gap-2 rounded-lg bg-[#ece9e2] p-1">{([1, 2, 3] as const).map((t) => <button key={t} type="button" onClick={() => setRequestTimes(t)} className={`min-h-11 rounded-md text-xs font-black ${requestTimes === t ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>{t}ª Vez</button>)}</div></div>
@@ -959,7 +996,14 @@ function FatorRPro({ status, onUnlockRequired }: { status?: ProAccessStatus | nu
   };
 
   return (
-    <Workbench tool="fator_r" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Fator R atual: ${result.fatorRPercentage}%`} summary="Planejamento de folha de pagamento e pró-labore para manter enquadramento no Anexo III." metrics={[{ label: 'RBT12', value: currency.format(numeric(rbt12)) }, { label: 'Folha 12m', value: currency.format(numeric(payroll12)) }, { label: 'Ajuste mensal pró-labore', value: currency.format(result.recommendedMonthlyProLaboreAdjustment) }, { label: 'Enquadramento', value: result.isAnexo3 ? 'Anexo III (6%)' : 'Anexo V (15.5%)', highlight: true }]}>
+    <Workbench title="Análise tributária do Fator R" description="Planejamento de folha e pró-labore para enquadramento no Anexo III." result={
+      <Result eyebrow="Resultado do Fator R" headline={`${result.fatorRPercentage}%`} summary={`Enquadramento atual: ${result.anexoName}`} icon={<BriefcaseBusiness className="h-5 w-5" />} note="Razão mínima de 28% de folha para tributação reduzida no Anexo III." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Receita Bruta 12 meses (RBT12)" value={currency.format(result.rbt12)} />
+        <ResultLine label="Folha de Pagamento 12 meses" value={currency.format(result.payroll12)} />
+        <ResultLine label="Folha necessária para 28%" value={currency.format(result.requiredPayrollFor28)} />
+        <ResultLine label="Ajuste mensal de pró-labore sugerido" value={currency.format(result.recommendedMonthlyProLaboreAdjustment)} emphasized subtext={result.isAnexo3 ? 'Empresa já atinge o Fator R!' : 'Pró-labore mensal adicional necessário'} />
+      </Result>
+    }>
       <Section number="01" title="Faturamento e folha dos últimos 12 meses" description="Dados dos últimos 12 meses da empresa.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Receita Bruta 12 meses (RBT12)" value={rbt12} onChange={setRbt12} prefix="R$" />
@@ -997,7 +1041,15 @@ function AmortizationPro({ status, onUnlockRequired }: { status?: ProAccessStatu
   };
 
   return (
-    <Workbench tool="amortization" status={status} onUnlockRequired={onUnlockRequired} report={report} headline={`Juros economizados: ${currency.format(result.estimatedInterestSaved)}`} summary="Simulação exata de amortização extraordinária antecipada." metrics={[{ label: 'Prestação atual', value: currency.format(result.currentInstallment) }, { label: 'Nova prestação', value: currency.format(result.newInstallment) }, { label: 'Meses reduzidos', value: `${result.monthsSaved} m` }, { label: 'Economia juros', value: currency.format(result.estimatedInterestSaved), highlight: true }]}>
+    <Workbench title="Simulador de Amortização Extraordinária" description="Calcule os juros economizados e a redução do prazo ou parcela ao amortizar." result={
+      <Result eyebrow="Economia estimada de juros" headline={currency.format(result.estimatedInterestSaved)} summary={`Economia aproximada ao aportar ${currency.format(result.extraAmortization)}.`} icon={<Landmark className="h-5 w-5" />} note="Simulação de amortização antecipada de financiamento." report={report} status={status} onUnlockRequired={onUnlockRequired}>
+        <ResultLine label="Prestação atual estimada" value={currency.format(result.currentInstallment)} />
+        <ResultLine label="Novo saldo devedor" value={currency.format(result.newBalance)} />
+        <ResultLine label="Nova prestação estimada" value={currency.format(result.newInstallment)} />
+        <ResultLine label="Meses reduzidos no prazo" value={`${result.monthsSaved} meses`} />
+        <ResultLine label="Total de juros economizados" value={currency.format(result.estimatedInterestSaved)} emphasized />
+      </Result>
+    }>
       <Section number="01" title="Financiamento atual" description="Dados do contrato.">
         <div className="grid gap-4 sm:grid-cols-4">
           <Field label="Saldo devedor" value={balance} onChange={setBalance} prefix="R$" />
@@ -1038,3 +1090,4 @@ export function FreeToolsAdvancedCalculator({
   if (tool === 'benefits') return <BenefitsPro status={status} onUnlockRequired={onUnlockRequired} />;
   return <BpcPro status={status} onUnlockRequired={onUnlockRequired} />;
 }
+
