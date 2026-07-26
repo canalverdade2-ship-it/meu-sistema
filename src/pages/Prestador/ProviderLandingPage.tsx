@@ -60,6 +60,29 @@ const PORTAL_FEATURES = [
   },
 ] as const;
 
+const JOURNEY_STEPS = [
+  {
+    icon: CheckCircle2,
+    title: 'Cadastro aprovado',
+    description: 'Perfil validado pela equipe GSA',
+  },
+  {
+    icon: BriefcaseBusiness,
+    title: 'Demanda vinculada',
+    description: 'Escopo e acompanhamento no portal',
+  },
+  {
+    icon: ClipboardCheck,
+    title: 'Execução organizada',
+    description: 'Agenda, evidências e documentos',
+  },
+  {
+    icon: Landmark,
+    title: 'Financeiro acompanhado',
+    description: 'Movimentações e histórico reunidos',
+  },
+] as const;
+
 const PROCESS_STEPS = [
   {
     number: '01',
@@ -283,13 +306,8 @@ export function ProviderLandingPage({
                 </div>
 
                 <div className="space-y-3 p-5 sm:p-6">
-                  {[
-                    ['Cadastro aprovado', 'Perfil validado pela equipe GSA', CheckCircle2],
-                    ['Demanda vinculada', 'Escopo e acompanhamento no portal', BriefcaseBusiness],
-                    ['Execução organizada', 'Agenda, evidências e documentos', ClipboardCheck],
-                    ['Financeiro acompanhado', 'Movimentações e histórico reunidos', Landmark],
-                  ].map(([title, description, Icon], index) => (
-                    <div key={String(title)} className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+                  {JOURNEY_STEPS.map(({ title, description, icon: Icon }, index) => (
+                    <div key={title} className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.045] p-4">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#84d5ad]/20 bg-[#84d5ad]/10 text-[#9ce0bd]">
                         <Icon className="h-5 w-5" />
                       </span>
