@@ -713,13 +713,22 @@ export interface InternshipTerminationInput {
   stipend: number;
   monthsWorked: number;
   expiredRecessDays?: number;
-  transportAllowance?: number;
+  workedDaysInLastMonth?: number;
+  dailyTransportRate?: number;
+  transportDays?: number;
+  terminationReason?: 'employer_initiative' | 'intern_initiative' | 'contract_expiry';
 }
 
 export function calculateInternshipTerminationEstimate(stipendInput: number, monthsWorkedInput = 6, options: Partial<InternshipTerminationInput> = {}) {
   const stipend = positiveNumber(stipendInput);
   const months = clamp(monthsWorkedInput, 1, 24);
   const expiredDays = positiveNumber(options.expiredRecessDays || 0);
+  const workedDaysInLastMonth = clamp(options.workedDaysInLastMonth || 30, 1, 30);
+  const dailyTransportRate = positiveNumber(options.dailyTransportRate || 0);
+  const transportDays = positiveNumber(options.transportDays || 0);
+
+  const stipendBalance = (stipend / 30) * workedDaysInLastMonth;
+  const transportTotal = dailyTransportRate * transportDays;
 
   const proportionalRecessPay = (stipend / 12) * months;
   const proportionalRecessThird = proportionalRecessPay / 3;
@@ -728,15 +737,20 @@ export function calculateInternshipTerminationEstimate(stipendInput: number, mon
   const expiredRecessThird = expiredRecessPay / 3;
 
   const totalRecess = proportionalRecessPay + proportionalRecessThird + expiredRecessPay + expiredRecessThird;
+  const totalTerminationPay = totalRecess + stipendBalance + transportTotal;
 
   return {
     stipend: roundCurrency(stipend),
     monthsWorked: months,
+    stipendBalance: roundCurrency(stipendBalance),
+    workedDaysInLastMonth,
+    transportTotal: roundCurrency(transportTotal),
     proportionalRecessPay: roundCurrency(proportionalRecessPay),
     proportionalRecessThird: roundCurrency(proportionalRecessThird),
     expiredRecessPay: roundCurrency(expiredRecessPay),
     expiredRecessThird: roundCurrency(expiredRecessThird),
     totalRecess: roundCurrency(totalRecess),
+    totalTerminationPay: roundCurrency(totalTerminationPay),
     hasNoticeOrFgts: false,
   };
 }
@@ -745,23 +759,34 @@ export function calculateInternshipTerminationEstimate(stipendInput: number, mon
 // PRÓ-LABORE VS DISTRIBUIÇÃO DE LUCROS
 // ==========================================
 
-export function calculateProlaboreVsLucrosEstimate(totalWithdrawalInput: number) {
+export function calculateProlaboreVsLucrosEstimate(totalWithdrawalInput: number, regime: 'simples_anexo3' | 'simples_anexo5' | 'lucro_presumido' = 'simples_anexo3', otherInssPaidInput = 0) {
   const totalWithdrawal = positiveNumber(totalWithdrawalInput);
+  const otherInssPaid = positiveNumber(otherInssPaidInput);
 
-  const inssA = Math.min(totalWithdrawal * 0.11, 897.31);
+  const inssCap = Math.max(0, 897.31 - otherInssPaid);
+  const inssA = Math.min(totalWithdrawal * 0.11, inssCap);
   const irrfA = calculateIrrfDeduction(totalWithdrawal, inssA, 0).irrf;
-  const totalTaxA = inssA + irrfA;
+
+  // Se empresa for Simples Anexo V ou Lucro Presumido, pró-labore tem CPP de 20% patronal
+  const cppRate = regime === 'simples_anexo5' || regime === 'lucro_presumido' ? 0.20 : 0.0;
+  const cppA = totalWithdrawal * cppRate;
+
+  const totalTaxA = inssA + irrfA + cppA;
   const netA = Math.max(0, totalWithdrawal - totalTaxA);
 
   const prolaboreB = Math.min(totalWithdrawal, MINIMUM_WAGE_2026);
   const lucrosB = Math.max(0, totalWithdrawal - prolaboreB);
-  const inssB = prolaboreB * 0.11;
+  const inssB = Math.min(prolaboreB * 0.11, inssCap);
   const irrfB = 0;
-  const totalTaxB = inssB + irrfB;
+  const cppB = prolaboreB * cppRate;
+  const totalTaxB = inssB + irrfB + cppB;
   const netB = Math.max(0, totalWithdrawal - totalTaxB);
 
   const monthlySavings = Math.max(0, totalTaxA - totalTaxB);
   const annualSavings = monthlySavings * 12;
+  const savings3Years = monthlySavings * 36;
+  const savings5Years = monthlySavings * 60;
+  const cdiInvestmentYield1Year = annualSavings * 1.1075; // 10.75% a.a.
 
   return {
     totalWithdrawal: roundCurrency(totalWithdrawal),
@@ -773,6 +798,9 @@ export function calculateProlaboreVsLucrosEstimate(totalWithdrawalInput: number)
     netB: roundCurrency(netB),
     monthlySavings: roundCurrency(monthlySavings),
     annualSavings: roundCurrency(annualSavings),
+    savings3Years: roundCurrency(savings3Years),
+    savings5Years: roundCurrency(savings5Years),
+    cdiInvestmentYield1Year: roundCurrency(cdiInvestmentYield1Year),
   };
 }
 
@@ -780,18 +808,23 @@ export function calculateProlaboreVsLucrosEstimate(totalWithdrawalInput: number)
 // CUSTO TOTAL DO FUNCIONÁRIO PARA A EMPRESA
 // ==========================================
 
-export function calculateEmployeeCostEstimate(salaryInput: number, benefitsMonthlyInput = 0, isSimples = true) {
+export function calculateEmployeeCostEstimate(salaryInput: number, benefitsMonthlyInput = 0, isSimples = true, ratRateInput = 0.02, fapRateInput = 1.0, onboardingMonthlyInput = 0) {
   const salary = positiveNumber(salaryInput);
   const benefits = positiveNumber(benefitsMonthlyInput);
+  const onboarding = positiveNumber(onboardingMonthlyInput);
+  const rat = clamp(ratRateInput, 0.01, 0.03);
+  const fap = clamp(fapRateInput, 0.5, 2.0);
 
   const fgtsMonthly = salary * 0.08;
   const provision13th = (salary / 12) + (fgtsMonthly / 12);
   const provisionVacation = (salary / 12) + (salary / 36) + (fgtsMonthly / 12);
+  const terminationProvisionMonthly = (fgtsMonthly * 0.40) + ((salary / 12) * 0.10); // Provisão 40% FGTS + Aviso
 
-  const employerTaxesRate = isSimples ? 0 : 0.278;
+  const effectiveRat = rat * fap;
+  const employerTaxesRate = isSimples ? 0 : (0.20 + effectiveRat + 0.058); // INSS 20% + RAT*FAP + Sistema S 5.8%
   const employerTaxes = salary * employerTaxesRate;
 
-  const totalMonthlyCost = salary + benefits + fgtsMonthly + provision13th + provisionVacation + employerTaxes;
+  const totalMonthlyCost = salary + benefits + fgtsMonthly + provision13th + provisionVacation + terminationProvisionMonthly + employerTaxes + onboarding;
   const costPercentageOverSalary = salary > 0 ? ((totalMonthlyCost - salary) / salary) * 100 : 0;
 
   return {
@@ -800,7 +833,9 @@ export function calculateEmployeeCostEstimate(salaryInput: number, benefitsMonth
     fgtsMonthly: roundCurrency(fgtsMonthly),
     provision13th: roundCurrency(provision13th),
     provisionVacation: roundCurrency(provisionVacation),
+    terminationProvisionMonthly: roundCurrency(terminationProvisionMonthly),
     employerTaxes: roundCurrency(employerTaxes),
+    onboardingMonthly: roundCurrency(onboarding),
     totalMonthlyCost: roundCurrency(totalMonthlyCost),
     costPercentageOverSalary: roundCurrency(costPercentageOverSalary),
   };
@@ -810,7 +845,7 @@ export function calculateEmployeeCostEstimate(salaryInput: number, benefitsMonth
 // ADICIONAL NOTURNO URBANO VS RURAL
 // ==========================================
 
-export function calculateNightShiftRuralUrbanEstimate(salaryInput: number, shiftType: 'urban' | 'rural_cattle' | 'rural_farming' = 'urban', nightHoursInput = 20) {
+export function calculateNightShiftRuralUrbanEstimate(salaryInput: number, shiftType: 'urban' | 'rural_cattle' | 'rural_farming' = 'urban', nightHoursInput = 20, overtimeRatePercentage = 0, workingDaysInMonth = 25, sundaysInMonth = 4) {
   const salary = positiveNumber(salaryInput);
   const hourlyRate = salary / 220;
   const hours = positiveNumber(nightHoursInput);
@@ -830,7 +865,12 @@ export function calculateNightShiftRuralUrbanEstimate(salaryInput: number, shift
   }
 
   const computedHours = hours * factor;
-  const nightAditionalPay = computedHours * (hourlyRate * rate);
+  const extraOvertimeMultiplier = 1 + (overtimeRatePercentage / 100);
+  const nightAditionalPay = computedHours * (hourlyRate * rate * extraOvertimeMultiplier);
+
+  // Reflexo no DSR = (Adicional Noturno / Dias Úteis) * Dias de Descanso (Domingos/Feriados)
+  const dsrReflex = workingDaysInMonth > 0 ? (nightAditionalPay / workingDaysInMonth) * sundaysInMonth : 0;
+  const totalWithDsr = nightAditionalPay + dsrReflex;
 
   return {
     salary: roundCurrency(salary),
@@ -840,6 +880,8 @@ export function calculateNightShiftRuralUrbanEstimate(salaryInput: number, shift
     ratePercentage: Math.round(rate * 100),
     periodName,
     nightAditionalPay: roundCurrency(nightAditionalPay),
+    dsrReflex: roundCurrency(dsrReflex),
+    totalWithDsr: roundCurrency(totalWithDsr),
   };
 }
 
@@ -847,21 +889,41 @@ export function calculateNightShiftRuralUrbanEstimate(salaryInput: number, shift
 // SALÁRIO PROPORCIONAL
 // ==========================================
 
-export function calculateProportionalSalaryEstimate(salaryInput: number, daysWorkedInput = 15, daysInMonthInput = 30) {
+export function calculateProportionalSalaryEstimate(salaryInput: number, daysWorkedInput = 15, daysInMonthInput = 30, unjustifiedAbsencesInput = 0, additionalAllowancesInput = 0) {
   const salary = positiveNumber(salaryInput);
+  const additional = positiveNumber(additionalAllowancesInput);
+  const totalBaseSalary = salary + additional;
+
   const daysWorked = clamp(daysWorkedInput, 1, 31);
   const daysInMonth = clamp(daysInMonthInput, 28, 31);
+  const absences = positiveNumber(unjustifiedAbsencesInput);
 
-  const dailyRate30 = salary / 30;
-  const proportional30 = dailyRate30 * daysWorked;
+  // Perda do DSR se houver falta injustificada
+  const dsrLossCount = absences > 0 ? Math.ceil(absences / 6) : 0;
+  const totalDiscountDays = absences + dsrLossCount;
 
-  const dailyRateActual = salary / daysInMonth;
-  const proportionalActual = dailyRateActual * daysWorked;
+  const netWorkedDays30 = Math.max(0, daysWorked - totalDiscountDays);
+  const netWorkedDaysActual = Math.max(0, daysWorked - totalDiscountDays);
+
+  const dailyRate30 = totalBaseSalary / 30;
+  const proportional30 = dailyRate30 * netWorkedDays30;
+
+  const dailyRateActual = totalBaseSalary / daysInMonth;
+  const proportionalActual = dailyRateActual * netWorkedDaysActual;
+
+  const absenceDiscountValue = dailyRate30 * absences;
+  const dsrLossValue = dailyRate30 * dsrLossCount;
 
   return {
     salary: roundCurrency(salary),
+    additional: roundCurrency(additional),
+    totalBaseSalary: roundCurrency(totalBaseSalary),
     daysWorked,
     daysInMonth,
+    absences,
+    dsrLossCount,
+    absenceDiscountValue: roundCurrency(absenceDiscountValue),
+    dsrLossValue: roundCurrency(dsrLossValue),
     dailyRate30: roundCurrency(dailyRate30),
     proportional30: roundCurrency(proportional30),
     dailyRateActual: roundCurrency(dailyRateActual),
@@ -873,24 +935,38 @@ export function calculateProportionalSalaryEstimate(salaryInput: number, daysWor
 // JUROS DE MORA & MULTA POR ATRASO
 // ==========================================
 
-export function calculateLateFeeEstimate(amountInput: number, daysLateInput = 30, finePercentageInput = 2, interestMonthlyInput = 1) {
+export function calculateLateFeeEstimate(amountInput: number, daysLateInput = 30, finePercentageInput = 2, interestMonthlyInput = 1, legalFeesPercentageInput = 0) {
   const amount = positiveNumber(amountInput);
   const daysLate = positiveNumber(daysLateInput);
   const fineRate = positiveNumber(finePercentageInput) / 100;
   const monthlyInterestRate = positiveNumber(interestMonthlyInput) / 100;
+  const legalFeesRate = positiveNumber(legalFeesPercentageInput) / 100;
 
   const fineAmount = amount * fineRate;
   const dailyInterestRate = monthlyInterestRate / 30;
   const interestAmount = amount * (dailyInterestRate * daysLate);
 
-  const totalUpdated = amount + fineAmount + interestAmount;
+  const subtotal = amount + fineAmount + interestAmount;
+  const legalFeesAmount = subtotal * legalFeesRate;
+  const totalUpdated = subtotal + legalFeesAmount;
+
+  // Projeções temporais (30, 60, 90, 180, 360 dias)
+  const proj30 = amount + (amount * fineRate) + (amount * (dailyInterestRate * 30));
+  const proj90 = amount + (amount * fineRate) + (amount * (dailyInterestRate * 90));
+  const proj180 = amount + (amount * fineRate) + (amount * (dailyInterestRate * 180));
+  const proj360 = amount + (amount * fineRate) + (amount * (dailyInterestRate * 360));
 
   return {
     amount: roundCurrency(amount),
     daysLate,
     fineAmount: roundCurrency(fineAmount),
     interestAmount: roundCurrency(interestAmount),
+    legalFeesAmount: roundCurrency(legalFeesAmount),
     totalUpdated: roundCurrency(totalUpdated),
+    proj30: roundCurrency(proj30),
+    proj90: roundCurrency(proj90),
+    proj180: roundCurrency(proj180),
+    proj360: roundCurrency(proj360),
   };
 }
 
@@ -898,8 +974,9 @@ export function calculateLateFeeEstimate(amountInput: number, daysLateInput = 30
 // PENSÃO ALIMENTÍCIA ESTIMADA
 // ==========================================
 
-export function calculateChildSupportEstimate(grossSalaryInput: number, dependentsInput = 1, pensionPercentageInput = 20, extraExpensesInput = 0) {
+export function calculateChildSupportEstimate(grossSalaryInput: number, dependentsInput = 1, pensionPercentageInput = 20, extraExpensesInput = 0, motherGrossSalaryInput = 0) {
   const gross = positiveNumber(grossSalaryInput);
+  const motherGross = positiveNumber(motherGrossSalaryInput);
   const dependents = clamp(dependentsInput, 0, 10);
   const percentage = clamp(pensionPercentageInput, 5, 50);
   const extraExpenses = positiveNumber(extraExpensesInput);
@@ -908,19 +985,32 @@ export function calculateChildSupportEstimate(grossSalaryInput: number, dependen
   const irrf = calculateIrrfDeduction(gross, inss, dependents).irrf;
 
   const netBase = Math.max(0, gross - inss - irrf);
-  const pensionValue = (netBase * (percentage / 100)) + extraExpenses;
-  const percentageOfGross = gross > 0 ? (pensionValue / gross) * 100 : 0;
+  const monthlyPension = (netBase * (percentage / 100)) + extraExpenses;
+  const percentageOfGross = gross > 0 ? (monthlyPension / gross) * 100 : 0;
+
+  // Incidência sobre 13º Salário e Férias (13 meses de pensão + 1/3 sobre férias)
+  const annualTotalPension = (monthlyPension * 13) + (monthlyPension / 3);
+
+  // Proporção de renda entre pai e mãe
+  const combinedGross = gross + motherGross;
+  const fatherSharePercentage = combinedGross > 0 ? (gross / combinedGross) * 100 : 100;
+  const motherSharePercentage = combinedGross > 0 ? (motherGross / combinedGross) * 100 : 0;
 
   return {
     grossSalary: roundCurrency(gross),
+    motherGrossSalary: roundCurrency(motherGross),
+    fatherSharePercentage: roundCurrency(fatherSharePercentage),
+    motherSharePercentage: roundCurrency(motherSharePercentage),
     inssDeduction: roundCurrency(inss),
     irrfDeduction: roundCurrency(irrf),
     netBase: roundCurrency(netBase),
     pensionPercentage: percentage,
     extraExpenses: roundCurrency(extraExpenses),
-    pensionValue: roundCurrency(pensionValue),
+    pensionValue: roundCurrency(monthlyPension),
+    annualTotalPension: roundCurrency(annualTotalPension),
     percentageOfGross: roundCurrency(percentageOfGross),
   };
 }
+
 
 
