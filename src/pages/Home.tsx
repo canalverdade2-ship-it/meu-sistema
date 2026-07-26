@@ -14,12 +14,13 @@ import {
 } from '../data/publicServiceCatalog';
 import { usePublicPageMetadata } from '../hooks/usePublicPageMetadata';
 import { fetchPublicServiceCatalog } from '../lib/serviceCatalog';
+import type { ClientPersonType } from '../lib/sessionService';
 
 const SystemsPageFinal = lazy(() => import('../components/public/SystemsPageFinal').then((module) => ({ default: module.SystemsPageFinal })));
 const AdvertisingPage = lazy(() => import('../components/public/AdvertisingPage').then((module) => ({ default: module.AdvertisingPage })));
 
 interface HomeProps {
-  onLoginClient: (id: string, isRecovery?: boolean) => void;
+  onLoginClient: (id: string, isRecovery?: boolean, personType?: ClientPersonType) => void;
   onLoginAdmin: (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => void;
   onLoginPrestador: (id: string) => void;
   onSupplierAccess: () => void;
@@ -31,6 +32,8 @@ interface HomeProps {
   onServiceDetailChange?: (slug: string | null) => void;
   onPartnerDetailChange?: (slug: string | null) => void;
   onLoginPage?: () => void;
+  onPersonalLoginPage?: () => void;
+  onBusinessLoginPage?: () => void;
   loginOnly?: boolean;
   initialRestrictedTab?: RestrictedTab;
   onBackHome?: () => void;
@@ -53,6 +56,8 @@ export function Home({
   onServiceDetailChange,
   onPartnerDetailChange,
   onLoginPage,
+  onPersonalLoginPage,
+  onBusinessLoginPage,
   loginOnly = false,
   initialRestrictedTab,
   onBackHome,
@@ -157,14 +162,15 @@ export function Home({
   };
 
   const handlePublicLogin = onLoginPage ?? (() => openClient('login'));
+  const modalPersonType: ClientPersonType = new URLSearchParams(window.location.search).get('type') === 'pj' ? 'pj' : 'pf';
 
   return (
     <>
       {loginOnly ? (
         <LoginHub
           onBack={onBackHome}
-          onClientLogin={() => openClient('login')}
-          onClientRegister={() => openClient('register')}
+          onPersonalAccess={onPersonalLoginPage ?? (() => openClient('login'))}
+          onBusinessAccess={onBusinessLoginPage ?? (() => openClient('login'))}
           onRestrictedAccess={() => openRestricted('prestador')}
         />
       ) : publicPage === 'systems' ? (
@@ -193,7 +199,7 @@ export function Home({
         />
       )}
 
-      <ClientAccessModal isOpen={clientModalOpen} initialMode={clientMode} onClose={() => setClientModalOpen(false)} onLoginClient={onLoginClient} />
+      <ClientAccessModal isOpen={clientModalOpen} initialMode={clientMode} initialPersonType={modalPersonType} onClose={() => setClientModalOpen(false)} onLoginClient={onLoginClient} />
       <RestrictedAccessModal isOpen={restrictedModalOpen} initialTab={restrictedTab} onClose={() => setRestrictedModalOpen(false)} onLoginAdmin={onLoginAdmin} onLoginPrestador={onLoginPrestador} />
     </>
   );

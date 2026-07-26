@@ -11,6 +11,7 @@ import { copyToClipboard, formatCurrency, maskCNPJ, maskCPF, maskPhone } from '.
 import { validarCNPJ, validarCPF, validarEmail } from '../../utils/cpfValidator';
 import { consultarCEP } from '../../utils/viaCep';
 import { usePublicRegistrationSettings } from '../../hooks/usePublicRegistrationSettings';
+import type { ClientPersonType } from '../../lib/sessionService';
 
 export type ClientAccessMode = 'login' | 'first_access' | 'recovery' | 'register';
 
@@ -20,8 +21,9 @@ type RegisterStage = 'voucher' | 'confirm' | 'form';
 interface ClientAccessModalProps {
   isOpen: boolean;
   initialMode?: ClientAccessMode;
+  initialPersonType?: ClientPersonType;
   onClose: () => void;
-  onLoginClient: (id: string, isRecovery?: boolean) => void;
+  onLoginClient: (id: string, isRecovery?: boolean, personType?: ClientPersonType) => void;
 }
 
 const emptyRegistration = {
@@ -38,9 +40,9 @@ const emptyRegistration = {
   data_cadastro: new Date().toISOString().split('T')[0],
 };
 
-export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLoginClient }: ClientAccessModalProps) {
+export function ClientAccessModal({ isOpen, initialMode = 'login', initialPersonType = 'pf', onClose, onLoginClient }: ClientAccessModalProps) {
   const [mode, setMode] = useState<ClientAccessMode>(initialMode);
-  const [personType, setPersonType] = useState<PersonType>('pf');
+  const [personType, setPersonType] = useState<PersonType>(initialPersonType);
   const [documento, setDocumento] = useState('');
   const [loginStage, setLoginStage] = useState<'document' | 'pin'>('document');
   const [pin, setPin] = useState('');
@@ -63,6 +65,7 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
   useEffect(() => {
     if (!isOpen) return;
     setMode(initialMode);
+    setPersonType(initialPersonType);
     setLoginStage('document');
     setPin('');
     setPinConfirm('');
@@ -76,7 +79,7 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
     setRegisterStage('voucher');
     setVoucherInput('');
     setReferralInfo(null);
-  }, [initialMode, isOpen]);
+  }, [initialMode, initialPersonType, isOpen]);
 
   const cleanDocument = () => documento.replace(/\D/g, '');
   const validDocumentLength = () => cleanDocument().length === (personType === 'pf' ? 11 : 14);
@@ -112,7 +115,7 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
       if (data?.valid) {
         await logService.logAction({ ator_tipo: 'cliente', ator_id: data.id, ator_nome: data.nome, acao: 'LOGIN', detalhes: 'Acesso via portal principal' });
         toast.success('Login realizado com sucesso.');
-        onLoginClient(data.id);
+        onLoginClient(data.id, false, personType);
         return;
       }
       setPinError(true);
@@ -176,7 +179,7 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', onClose, onLo
       if (!data?.success) throw new Error('Não foi possível concluir a recuperação.');
 
       toast.success('Identidade confirmada. Crie sua nova senha.');
-      onLoginClient(data.id, true);
+      onLoginClient(data.id, true, personType);
     } catch (error: any) {
       await supabase.auth.signOut({ scope: 'local' });
       setRecoveryCode('');
