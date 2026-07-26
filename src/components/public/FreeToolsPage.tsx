@@ -1,4 +1,3 @@
-import { useEffect, useState, type ComponentType } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -7,17 +6,24 @@ import {
   BriefcaseBusiness,
   Building2,
   Calculator,
+  CalendarDays,
   Check,
   CheckCircle2,
   Clock3,
+  Coins,
+  GraduationCap,
   HandCoins,
+  Heart,
   HeartHandshake,
   Info,
   Landmark,
   LockKeyhole,
   Palmtree,
+  Percent,
   ShieldCheck,
+  SunMedium,
   TrendingUp,
+  Users,
 } from 'lucide-react';
 import {
   FreeToolsTieredCalculatorDialog,
@@ -54,8 +60,15 @@ const TOOLS: ToolCard[] = [
   { id: 'unemployment', icon: HandCoins, number: '08', title: 'Seguro-desemprego', description: 'Simulação da quantidade de parcelas (3 a 5) e cálculo do valor MTE 2026.', category: 'Trabalhista', useCase: 'Para verificar a elegibilidade e o valor das parcelas do benefício.', includes: ['Triagem de requisitos', 'Número de parcelas', 'Média dos salários', 'Teto oficial MTE'], available: true },
   { id: 'fator_r', icon: BadgePercent, number: '09', title: 'Fator R do Simples Nacional', description: 'Cálculo do enquadramento nos Anexos III ou V com base na razão folha/faturamento.', category: 'Tributário & Empresa', useCase: 'Para otimizar impostos reduzindo a alíquota de 15,5% para 6%.', includes: ['Razão Folha/Receita', 'Anexo III vs Anexo V', 'Ajuste de pró-labore', 'Economia tributária'], available: true },
   { id: 'amortization', icon: TrendingUp, number: '10', title: 'Amortização de parcelas', description: 'Simulação de economia em juros e redução de prazo ao amortizar parcelas SAC ou PRICE.', category: 'Financeiro', useCase: 'Para planejar amortizações antecipadas em financiamentos de imóveis ou veículos.', includes: ['Tabela SAC e PRICE', 'Novo saldo devedor', 'Redução de prazo', 'Economia em juros'], available: true },
-  { id: 'benefits', icon: Baby, number: '11', title: 'Benefícios do INSS', description: 'Orientação inicial sobre incapacidade, salário-maternidade, pensão e outros benefícios.', category: 'Previdenciário', useCase: 'Para identificar as informações necessárias antes de uma análise completa.', includes: ['Tipo de benefício', 'Qualidade de segurado', 'Carência', 'Documentação inicial'], available: true },
-  { id: 'bpc', icon: HeartHandshake, number: '12', title: 'BPC / LOAS', description: 'Triagem educativa dos critérios básicos do benefício assistencial.', category: 'Assistencial', useCase: 'Para compreender os pontos normalmente avaliados em um pedido.', includes: ['Renda familiar', 'Grupo familiar', 'Impedimento de longo prazo', 'Cadastro social'], available: true },
+  { id: 'internship_termination', icon: GraduationCap, number: '11', title: 'Rescisão de estágio (Lei 11.788)', description: 'Cálculo do recesso remunerado proporcional + 1/3 (Sem aviso prévio ou FGTS).', category: 'Trabalhista', useCase: 'Para apurar os valores devidos no encerramento de contrato de estágio.', includes: ['Lei do Estágio 11.788', 'Recesso proporcional', 'Adicional de 1/3', 'Isenção de FGTS/Aviso'], available: true },
+  { id: 'prolabore_vs_lucros', icon: Coins, number: '12', title: 'Pró-labore vs Lucros', description: 'Comparativo de economia tributária entre Pró-Labore (INSS/IRRF) e Lucros Isentos.', category: 'Tributário & Empresa', useCase: 'Para sócios de empresas reduzirem retenções de INSS e IRRF no pro-labore.', includes: ['Teto de INSS 11%', 'Isenção de lucros', 'Matriz de economia', 'Estratégia fiscal'], available: true },
+  { id: 'employee_cost', icon: Users, number: '13', title: 'Custo do funcionário', description: 'Cálculo do custo total para a empresa contratar (Salário + Provisões + Encargos).', category: 'Empresarial & RH', useCase: 'Para planejar contratações e entender o impacto financeiro da folha.', includes: ['INSS Patronal', 'FGTS 8%', 'Provisão 13º e férias', 'Custo total real'], available: true },
+  { id: 'night_shift_rural_urban', icon: SunMedium, number: '14', title: 'Adicional noturno urbano vs rural', description: 'Comparativo entre horário noturno urbano (20% + 52m30s) e rural (25%).', category: 'Trabalhista', useCase: 'Para apurar adicionais noturnos em atividades urbanas, pecuária ou lavoura.', includes: ['Urbano (22h-5h)', 'Pecuária (20h-4h)', 'Lavoura (21h-5h)', 'Hora reduzida'], available: true },
+  { id: 'proportional_salary', icon: CalendarDays, number: '15', title: 'Salário proporcional', description: 'Cálculo por dias trabalhados na admissão, demissão ou mês incompleto.', category: 'Trabalhista', useCase: 'Para apurar o salário líquido exato proporcional aos dias de trabalho.', includes: ['Regra base 30 dias', 'Regra dias reais', 'Proporção exata', 'Valor por dia'], available: true },
+  { id: 'late_fee_calculator', icon: Percent, number: '16', title: 'Juros e multa por atraso', description: 'Cálculo de multa moratória, juros de mora e atualização SELIC de débitos.', category: 'Financeiro & Fiscal', useCase: 'Para atualizar boletos, impostos ou contas em atraso.', includes: ['Multa moratória', 'Juros de mora 1% a.m.', 'Atualização SELIC', 'Total atualizado'], available: true },
+  { id: 'child_support', icon: Heart, number: '17', title: 'Simulador de pensão alimentícia', description: 'Cálculo da pensão percentual sobre o salário líquido (após INSS e IRRF).', category: 'Familiar & Jurídico', useCase: 'Para estimar o valor da pensão alimentícia judicial ou consensual.', includes: ['Dedução INSS/IRRF', 'Base líquida real', 'Porcentagem aplicada', 'Despesas extra'], available: true },
+  { id: 'benefits', icon: Baby, number: '18', title: 'Benefícios do INSS', description: 'Orientação inicial sobre incapacidade, salário-maternidade, pensão e outros benefícios.', category: 'Previdenciário', useCase: 'Para identificar as informações necessárias antes de uma análise completa.', includes: ['Tipo de benefício', 'Qualidade de segurado', 'Carência', 'Documentação inicial'], available: true },
+  { id: 'bpc', icon: HeartHandshake, number: '19', title: 'BPC / LOAS', description: 'Triagem educativa dos critérios básicos do benefício assistencial.', category: 'Assistencial', useCase: 'Para compreender os pontos normalmente avaliados em um pedido.', includes: ['Renda familiar', 'Grupo familiar', 'Impedimento de longo prazo', 'Cadastro social'], available: true },
 ];
 
 const AVAILABLE_TOOLS = TOOLS.filter((tool) => tool.available);
