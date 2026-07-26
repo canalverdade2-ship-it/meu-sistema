@@ -83,7 +83,9 @@ export function FreeToolsPage({ onBack, onServices, onClientLogin }: FreeToolsPa
   }, []);
 
   return (
-    <main className="overflow-x-clip bg-[#eee9df] pt-[73px] text-[#17202a]">
+    <div className="min-h-screen bg-[#eee9df] text-[#17202a]">
+      <PublicHeader currentPage="free-tools" onClientLogin={onClientLogin} />
+      <main className="overflow-x-clip pt-16">
       <section className="relative overflow-hidden border-b border-[#d4ccbe] bg-[linear-gradient(135deg,#faf7f0_0%,#f3ede2_56%,#e9dfcf_100%)]">
         <div className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full border border-[#b8903e]/15" />
         <div className="pointer-events-none absolute right-10 top-12 h-64 w-64 rounded-full bg-[#d8bd73]/14 blur-3xl" />
