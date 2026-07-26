@@ -1,3 +1,4 @@
+import { useEffect, useState, type ComponentType } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
