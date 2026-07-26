@@ -9,6 +9,12 @@ const TOOL_NAMES: Record<ProToolId, string> = {
   retirement: 'Aposentadoria INSS Pro',
   vacation: 'Cálculo de férias Pro',
   thirteenth: '13º salário Pro',
+  overtime: 'Horas extras & Noturno Pro',
+  net_salary: 'Salário líquido & CLT x PJ Pro',
+  mei_limit: 'Limite do MEI Pro',
+  unemployment: 'Seguro-desemprego Pro',
+  fator_r: 'Fator R Simples Nacional Pro',
+  amortization: 'Amortização Pro',
   benefits: 'Benefícios do INSS Pro',
   bpc: 'BPC / LOAS Pro',
 };
