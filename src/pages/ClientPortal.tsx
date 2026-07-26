@@ -953,30 +953,45 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
     }
   }, [activeModule, cliente?.id, isBlocked]);
 
-  let menuItems: MenuItem[] = [
-    { id: 'perfil', label: 'Meu Perfil', icon: User, count: pendencies.modulePerfil, locked: false },
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, count: 0, locked: false },
-    { id: 'gsa_store' as Module, label: 'Marketplace GSA', icon: Store, count: 0, locked: isBlocked },
-    { id: 'classificados' as Module, label: 'Meus Classificados', icon: Tags, count: 0, locked: isBlocked },
-    { id: 'credito_loja' as Module, label: 'Meu Crédito', icon: Landmark, count: 0, locked: isBlocked },
-    { id: 'servicos_assinaturas', label: 'Serviços e Assinaturas', icon: Briefcase, count: pendencies.moduleOrcamentos + pendencies.moduleServicos + pendencies.moduleProdutos + pendencies.moduleAssinaturas, locked: isBlocked },
-    { id: 'orcamentos', label: 'Meus Orçamentos', icon: FileText, count: pendencies.moduleOrcamentos, locked: isBlocked },
-    { id: 'servicos', label: 'Meus Serviços', icon: Briefcase, count: pendencies.moduleServicos, locked: isBlocked },
-    { id: 'produtos', label: 'Meus Produtos', icon: Package, count: pendencies.moduleProdutos, locked: isBlocked },
-    { id: 'assinaturas', label: 'Minhas Assinaturas', icon: Calendar, count: pendencies.moduleAssinaturas, locked: isBlocked },
-    { id: 'emprestimos', label: 'Meus Empréstimos', icon: Landmark, count: pendencies.moduleEmprestimos, locked: isBlocked },
-    { id: 'transferencias', label: 'Transferências', icon: ArrowLeftRight, count: 0, locked: isBlocked },
-    { id: 'financeiro', label: 'Financeiro', icon: CreditCard, count: pendencies.moduleFinanceiro, locked: isBlocked },
-    { id: 'fidelidade', label: 'Fidelidade', icon: Gift, count: pendencies.moduleVouchers + pendencies.moduleIndiqueGanhe + pendencies.modulePromocoes, locked: isBlocked },
-    { id: 'promocoes', label: 'Promoções', icon: Megaphone, count: pendencies.modulePromocoes, locked: isBlocked },
-    { id: 'premios', label: 'Meus Prêmios', icon: Gift, count: 0, locked: isBlocked },
-    { id: 'vouchers', label: 'Vouchers', icon: Ticket, count: pendencies.moduleVouchers, locked: isBlocked },
-    { id: 'indique-ganhe', label: 'Indique e Ganhe', icon: Users, count: pendencies.moduleIndiqueGanhe, locked: isBlocked },
-    { id: 'pontos', label: 'Meus Pontos', icon: Star, count: 0, locked: isBlocked },
-    // Área VIP: só inclui no menu se não estiver oculto
-    ...(!vipModuleConfig.oculto ? [{ id: 'area_vip' as Module, label: 'Área VIP', icon: Crown, count: 0, locked: isBlocked || !vipModuleConfig.ativo }] : []),
-    { id: 'suporte', label: 'Suporte', icon: MessageSquare, count: pendencies.moduleSuporte, locked: false },
-  ];
+  let menuItems: MenuItem[] = isBusiness
+    ? [
+        { id: 'dashboard', label: 'Visão executiva', icon: LayoutDashboard, count: 0, locked: false },
+        { id: 'perfil', label: 'Cadastro da empresa', icon: User, count: pendencies.modulePerfil, locked: false },
+        {
+          id: 'servicos_assinaturas',
+          label: 'Operações e contratos',
+          icon: Briefcase,
+          count: pendencies.moduleOrcamentos + pendencies.moduleServicos + pendencies.moduleProdutos + pendencies.moduleAssinaturas,
+          locked: isBlocked,
+        },
+        { id: 'financeiro', label: 'Financeiro corporativo', icon: CreditCard, count: pendencies.moduleFinanceiro, locked: isBlocked },
+        { id: 'fidelidade', label: 'Benefícios GSA', icon: Gift, count: pendencies.moduleVouchers + pendencies.moduleIndiqueGanhe + pendencies.modulePromocoes, locked: isBlocked },
+        { id: 'gsa_store' as Module, label: 'Soluções e marketplace', icon: Store, count: 0, locked: isBlocked },
+        { id: 'suporte', label: 'Atendimento executivo', icon: MessageSquare, count: pendencies.moduleSuporte, locked: false },
+      ]
+    : [
+        { id: 'perfil', label: 'Meu Perfil', icon: User, count: pendencies.modulePerfil, locked: false },
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, count: 0, locked: false },
+        { id: 'gsa_store' as Module, label: 'Marketplace GSA', icon: Store, count: 0, locked: isBlocked },
+        { id: 'classificados' as Module, label: 'Meus Classificados', icon: Tags, count: 0, locked: isBlocked },
+        { id: 'credito_loja' as Module, label: 'Meu Crédito', icon: Landmark, count: 0, locked: isBlocked },
+        { id: 'servicos_assinaturas', label: 'Serviços e Assinaturas', icon: Briefcase, count: pendencies.moduleOrcamentos + pendencies.moduleServicos + pendencies.moduleProdutos + pendencies.moduleAssinaturas, locked: isBlocked },
+        { id: 'orcamentos', label: 'Meus Orçamentos', icon: FileText, count: pendencies.moduleOrcamentos, locked: isBlocked },
+        { id: 'servicos', label: 'Meus Serviços', icon: Briefcase, count: pendencies.moduleServicos, locked: isBlocked },
+        { id: 'produtos', label: 'Meus Produtos', icon: Package, count: pendencies.moduleProdutos, locked: isBlocked },
+        { id: 'assinaturas', label: 'Minhas Assinaturas', icon: Calendar, count: pendencies.moduleAssinaturas, locked: isBlocked },
+        { id: 'emprestimos', label: 'Meus Empréstimos', icon: Landmark, count: pendencies.moduleEmprestimos, locked: isBlocked },
+        { id: 'transferencias', label: 'Transferências', icon: ArrowLeftRight, count: 0, locked: isBlocked },
+        { id: 'financeiro', label: 'Financeiro', icon: CreditCard, count: pendencies.moduleFinanceiro, locked: isBlocked },
+        { id: 'fidelidade', label: 'Fidelidade', icon: Gift, count: pendencies.moduleVouchers + pendencies.moduleIndiqueGanhe + pendencies.modulePromocoes, locked: isBlocked },
+        { id: 'promocoes', label: 'Promoções', icon: Megaphone, count: pendencies.modulePromocoes, locked: isBlocked },
+        { id: 'premios', label: 'Meus Prêmios', icon: Gift, count: 0, locked: isBlocked },
+        { id: 'vouchers', label: 'Vouchers', icon: Ticket, count: pendencies.moduleVouchers, locked: isBlocked },
+        { id: 'indique-ganhe', label: 'Indique e Ganhe', icon: Users, count: pendencies.moduleIndiqueGanhe, locked: isBlocked },
+        { id: 'pontos', label: 'Meus Pontos', icon: Star, count: 0, locked: isBlocked },
+        ...(!vipModuleConfig.oculto ? [{ id: 'area_vip' as Module, label: 'Área VIP', icon: Crown, count: 0, locked: isBlocked || !vipModuleConfig.ativo }] : []),
+        { id: 'suporte', label: 'Suporte', icon: MessageSquare, count: pendencies.moduleSuporte, locked: false },
+      ];
   menuItems = menuItems.filter(item => !['classificados', 'credito_loja', 'emprestimos', 'transferencias', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'vouchers', 'pontos', 'promocoes', 'premios', 'indique-ganhe', 'area_vip'].includes(String(item.id)));
 
   const handleOpenTicket = async (assunto: string, descricao: string) => {
