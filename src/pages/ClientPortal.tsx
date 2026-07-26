@@ -1,6 +1,7 @@
 import { useEffect, useState, type ComponentProps } from 'react';
 import { Building2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { callClientRpc } from '../lib/clientRpc';
 import { replace } from '../routing/navigationService';
 import { useAppLocation } from '../routing/useAppLocation';
 import { ClientPortal as ClientPortalLegacy } from './ClientPortalLegacy';
@@ -9,6 +10,13 @@ import { EnterprisePortal } from './EnterprisePortal';
 type ClientPortalProps = ComponentProps<typeof ClientPortalLegacy>;
 
 type ClientKind = 'pf' | 'pj' | null;
+
+export const CLIENT_PORTAL_RESTRICTED_STATUSES = ['bloqueado', 'inativo', 'excluido'] as const;
+export const restrictedModules = new Set(['servicos', 'financeiro', 'documentos', 'marketplace', 'empresa', 'equipe']);
+
+export function processScheduledCreditReleaseForClientPortal() {
+  return callClientRpc<{ released?: number }>('gsa_client_process_scheduled_credit_release');
+}
 
 function navigateClientCompatibility(path: string, replaceFlag = false) {
   if (replaceFlag) replace(path);
@@ -48,7 +56,7 @@ export function ClientPortal(props: ClientPortalProps) {
 
     if (clientKind === 'pj' && (pathname === '/cliente' || pathname.startsWith('/cliente/'))) {
       const suffix = pathname === '/cliente' ? '/dashboard' : pathname.slice('/cliente'.length);
-      navigateClientCompatibility(`/empresa${suffix}${route.search}${route.hash}`, true);
+      navigateClientCompatibility(`/hempresa${suffix}${route.search}${route.hash}`, true);
       return;
     }
 
