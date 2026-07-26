@@ -262,6 +262,9 @@ export default function App() {
           : route.module === 'advertise'
             ? 'advertise'
             : 'home';
+  const loginReturnSuffix = route.query.returnTo
+    ? `?${new URLSearchParams({ returnTo: route.query.returnTo }).toString()}`
+    : '';
 
   return (
     <FileViewerProvider>
@@ -346,7 +349,29 @@ export default function App() {
               />
             )}
 
-            {activeView === 'login' && route.module !== 'fornecedor' && (
+            {activeView === 'login' && ['cliente', 'pessoa-fisica'].includes(route.module) && (
+              <ClientLoginPage
+                personType="pf"
+                initialMode={route.submodule === 'recuperar-senha' || route.query.mode === 'recovery' ? 'recovery' : 'login'}
+                onLoginClient={handleLoginClient}
+                onBack={() => navigate(`${routes.login.root()}${loginReturnSuffix}`)}
+                onSwitchPortal={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
+                onRegister={() => navigate(`${routes.login.root()}?mode=register&type=pf`)}
+              />
+            )}
+
+            {activeView === 'login' && route.module === 'empresa' && (
+              <ClientLoginPage
+                personType="pj"
+                initialMode={route.submodule === 'recuperar-senha' || route.query.mode === 'recovery' ? 'recovery' : 'login'}
+                onLoginClient={handleLoginClient}
+                onBack={() => navigate(`${routes.login.root()}${loginReturnSuffix}`)}
+                onSwitchPortal={() => navigate(`${routes.login.personal()}${loginReturnSuffix}`)}
+                onRegister={() => navigate(`${routes.login.root()}?mode=register&type=pj`)}
+              />
+            )}
+
+            {activeView === 'login' && ['root', 'admin', 'prestador', 'colaborador'].includes(route.module) && (
               <Home
                 onLoginClient={handleLoginClient}
                 onLoginAdmin={handleLoginAdmin}
@@ -372,6 +397,8 @@ export default function App() {
                 loginOnly
                 initialRestrictedTab={route.module === 'prestador' ? 'prestador' : route.module === 'colaborador' ? 'colaborador' : route.module === 'admin' ? 'gestao' : undefined}
                 onBackHome={() => navigate(routes.public.home())}
+                onPersonalLoginPage={() => navigate(`${routes.login.personal()}${loginReturnSuffix}`)}
+                onBusinessLoginPage={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
               />
             )}
 
