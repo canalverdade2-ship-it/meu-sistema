@@ -131,6 +131,38 @@ export function BusinessDashboard({ cliente, menuItems, onNavigate }: BusinessDa
         </div>
       </section>
 
+      {(!isActive || cliente.status === 'em_analise' || cliente.status === 'pendente') && (
+        <section className="rounded-2xl border border-amber-300/80 bg-amber-50/90 p-5 text-amber-950 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-amber-300 bg-amber-100 text-amber-800">
+                <Clock className="h-6 w-6" />
+              </span>
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-amber-200/80 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-900">
+                  Cadastro em Análise
+                </div>
+                <h3 className="mt-2 text-lg font-black text-amber-950 sm:text-xl">
+                  Seu cadastro empresarial está sendo analisado pelo sistema
+                </h3>
+                <p className="mt-1 text-xs leading-6 text-amber-800 sm:text-sm">
+                  Sua solicitação foi registrada com sucesso! Enquanto nossos analistas realizam a validação dos dados, os demais módulos permanecerão temporariamente bloqueados. Você pode acompanhar o status de liberação no módulo <strong>Meu Cadastro</strong>.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate('perfil')}
+              className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-900 px-5 text-xs font-bold text-white transition hover:bg-amber-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-700"
+            >
+              <Building2 className="h-4 w-4 text-[#edcf83]" />
+              Acompanhar no Meu Cadastro
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </section>
+      )}
+
       <section aria-labelledby="business-indicators-title">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
