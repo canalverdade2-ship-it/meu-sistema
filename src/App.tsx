@@ -31,6 +31,7 @@ const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => 
 const ClientLoginPage = lazy(() => import('./pages/ClientLoginPage').then((module) => ({ default: module.ClientLoginPage })));
 const BusinessRegistrationPage = lazy(() => import('./pages/BusinessRegistrationPage').then((module) => ({ default: module.BusinessRegistrationPage })));
 const RestrictedAccessHubPage = lazy(() => import('./pages/RestrictedAccessHubPage').then((module) => ({ default: module.RestrictedAccessHubPage })));
+const ProviderAccessPage = lazy(() => import('./pages/ProviderAccessPage').then((module) => ({ default: module.ProviderAccessPage })));
 const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
 const FornecedorDashboard = lazy(() => import('./pages/Fornecedor/FornecedorDashboard').then((module) => ({ default: module.FornecedorDashboard })));
 const FornecedorAccessPage = lazy(() => import('./pages/Fornecedor/FornecedorAccessPage').then((module) => ({ default: module.FornecedorAccessPage })));
@@ -99,6 +100,9 @@ export default function App() {
               colaboradorNome: restored.atorNome,
               colaboradorModulos: restored.modulos || [],
             });
+            if (route.area === 'login' && ['acesso-restrito', 'admin', 'colaborador'].includes(route.module)) {
+              replace(defaultAdminPath(restored.atorTipo, restored.modulos || []));
+            }
           } else if (restored.atorTipo === 'prestador') {
             const access = await validateProviderSessionAccess(restored.atorId);
             if (!access) {
@@ -106,11 +110,14 @@ export default function App() {
               setSession({});
               if (route.area === 'provider') {
                 const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-                replace(`${routes.login.root()}?returnTo=${returnTo}&msg=revoked`);
+                replace(`${routes.login.provider()}?returnTo=${returnTo}&msg=revoked`);
               }
               return;
             }
             setSession({ prestadorId: access.provider_id });
+            if (route.area === 'login' && route.module === 'prestador') {
+              replace(routes.provider.dashboard());
+            }
           } else if (restored.atorTipo === 'fornecedor') {
             const { data: access, error } = await supabase.rpc('gsa_supplier_session_access_state');
             if (error || !(access as any)?.success) {
@@ -129,6 +136,10 @@ export default function App() {
               ? routes.login.business()
               : route.area === 'client'
                 ? routes.login.personal()
+                : route.area === 'admin'
+                  ? routes.login.restricted()
+                  : route.area === 'provider'
+                    ? routes.login.provider()
                 : routes.login.root();
           replace(`${loginPath}?returnTo=${returnTo}`);
         }
@@ -223,9 +234,15 @@ export default function App() {
       localStorage.removeItem(key);
       sessionStorage.removeItem(key);
     }
-    const supplierLogout = Boolean(session.fornecedorId);
+    const logoutDestination = session.fornecedorId
+      ? routes.login.supplier()
+      : session.prestadorId
+        ? routes.login.provider()
+        : session.adminAuth
+          ? routes.login.restricted()
+          : routes.public.home();
     setSession({});
-    replace(supplierLogout ? routes.login.supplier() : routes.public.home());
+    replace(logoutDestination);
   };
 
   const activeView = route.area;
@@ -245,6 +262,10 @@ export default function App() {
           ? routes.login.business()
           : route.area === 'client'
             ? routes.login.personal()
+            : route.area === 'admin'
+              ? routes.login.restricted()
+              : route.area === 'provider'
+                ? routes.login.provider()
             : routes.login.root();
       replace(`${loginPath}?returnTo=${returnTo}`);
     }
@@ -323,9 +344,6 @@ export default function App() {
             {activeView === 'public' && !['affiliates', 'trabalhe-conosco', 'careers'].includes(route.module) && (
               <Home
                 onLoginClient={handleLoginClient}
-                onLoginAdmin={handleLoginAdmin}
-                onLoginPrestador={handleLoginPrestador}
-                onSupplierAccess={() => navigate(routes.login.supplier())}
                 onGuestStore={() => navigate(routes.marketplace.root())}
                 initialPublicPage={publicPage}
                 initialServiceSlug={route.module === 'services' ? route.itemId : undefined}
@@ -348,6 +366,7 @@ export default function App() {
                             : routes.public.systems(),
                 )}
                 onLoginPage={() => navigate(routes.login.root())}
+                onRestrictedLoginPage={() => navigate(routes.login.restricted())}
               />
             )}
 
@@ -383,22 +402,28 @@ export default function App() {
               />
             )}
 
-            {activeView === 'login' && route.module === 'acesso-restrito' && (
+            {activeView === 'login' && ['acesso-restrito', 'admin', 'colaborador'].includes(route.module) && (
               <RestrictedAccessHubPage
+                initialRole={route.module === 'admin' ? 'gestao' : 'colaborador'}
                 onBack={() => navigate(`${routes.login.root()}${loginReturnSuffix}`)}
-                onProviderAccess={() => navigate(`${routes.login.provider()}${loginReturnSuffix}`)}
-                onCollaboratorAccess={() => navigate(`${routes.login.collaborator()}${loginReturnSuffix}`)}
-                onManagementAccess={() => navigate(`${routes.login.admin()}${loginReturnSuffix}`)}
-                onSupplierAccess={() => navigate(routes.login.supplier())}
+                onLoginAdmin={handleLoginAdmin}
               />
             )}
 
-            {activeView === 'login' && ['root', 'admin', 'prestador', 'colaborador'].includes(route.module) && (
+            {activeView === 'login' && route.module === 'prestador' && (
+              <ProviderAccessPage
+                initialMode={route.submodule === 'cadastro' || route.query.mode === 'register' ? 'register' : 'login'}
+                onBack={() => navigate(`${routes.login.root()}${loginReturnSuffix}`)}
+                onLoginProvider={handleLoginPrestador}
+                onModeChange={(mode) => navigate(
+                  `${mode === 'register' ? routes.login.providerRegistration() : routes.login.provider()}${loginReturnSuffix}`,
+                )}
+              />
+            )}
+
+            {activeView === 'login' && route.module === 'root' && (
               <Home
                 onLoginClient={handleLoginClient}
-                onLoginAdmin={handleLoginAdmin}
-                onLoginPrestador={handleLoginPrestador}
-                onSupplierAccess={() => navigate(routes.login.supplier())}
                 onGuestStore={() => navigate(routes.marketplace.root())}
                 initialPublicPage="home"
                 onPublicPageChange={(page) => navigate(
@@ -417,10 +442,10 @@ export default function App() {
                             : routes.public.systems(),
                 )}
                 loginOnly
-                initialRestrictedTab={route.module === 'prestador' ? 'prestador' : route.module === 'colaborador' ? 'colaborador' : route.module === 'admin' ? 'gestao' : undefined}
                 onBackHome={() => navigate(routes.public.home())}
                 onPersonalLoginPage={() => navigate(`${routes.login.personal()}${loginReturnSuffix}`)}
                 onBusinessLoginPage={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
+                onProviderLoginPage={() => navigate(`${routes.login.provider()}${loginReturnSuffix}`)}
                 onRestrictedLoginPage={() => navigate(`${routes.login.restricted()}${loginReturnSuffix}`)}
               />
             )}
