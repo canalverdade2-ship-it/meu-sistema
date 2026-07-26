@@ -452,6 +452,7 @@ export default function App() {
                 <ClientPortal
                   clientId={session.clientId}
                   onLogout={handleLogout}
+                  portalVariant={session.clientPersonType === 'pj' ? 'business' : 'personal'}
                   initialModule="gsa_store"
                   initialStoreTab={route.submodule?.replace('loja-', '') || 'home'}
                   initialStoreItemId={route.itemId}
@@ -473,7 +474,13 @@ export default function App() {
 
             {activeView === 'client' && session.clientId && (
               <ClientNotificationProvider clientId={session.clientId}>
-                <ClientPortal clientId={session.clientId} onLogout={handleLogout} initialModule={route.module} />
+                <ClientPortal clientId={session.clientId} onLogout={handleLogout} portalVariant="personal" initialModule={route.module} />
+              </ClientNotificationProvider>
+            )}
+
+            {activeView === 'business' && session.clientId && (
+              <ClientNotificationProvider clientId={session.clientId}>
+                <ClientPortal clientId={session.clientId} onLogout={handleLogout} portalVariant="business" initialModule={route.module} />
               </ClientNotificationProvider>
             )}
 
