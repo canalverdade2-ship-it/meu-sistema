@@ -547,20 +547,15 @@ export function ClientLoginPage({
 
                     <button
                       type="submit"
-                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white shadow-lg shadow-[#0b1522]/15 transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] focus-visible:ring-offset-2 active:scale-[0.99]"
+                      disabled={loading}
+                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white shadow-lg shadow-[#0b1522]/15 transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] focus-visible:ring-offset-2 active:scale-[0.99] disabled:opacity-60"
                     >
-                      Continuar
-                      <ArrowRight className="h-4 w-4" />
+                      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {loading ? 'Verificando...' : 'Continuar'}
+                      {!loading && <ArrowRight className="h-4 w-4" />}
                     </button>
 
                     <div className="flex flex-col gap-1.5 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => resetAccessState('first_access')}
-                        className="min-h-10 w-full text-center text-sm font-bold text-[#8a651f] transition hover:text-[#654914] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
-                      >
-                        Primeiro acesso (cadastrar senha)
-                      </button>
                       <button
                         type="button"
                         onClick={() => resetAccessState('recovery')}
