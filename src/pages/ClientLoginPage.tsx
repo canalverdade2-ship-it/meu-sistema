@@ -1,0 +1,649 @@
+import { useEffect, useState } from 'react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  FileCheck2,
+  Fingerprint,
+  Headphones,
+  KeyRound,
+  Landmark,
+  Loader2,
+  LockKeyhole,
+  ShieldCheck,
+  UserRound,
+} from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { toast } from 'react-hot-toast';
+import { LogoGSA } from '../components/ui/LogoGSA';
+import { PinInput } from '../components/ui/PinInput';
+import { sessionService, type ClientPersonType } from '../lib/sessionService';
+import { logService } from '../lib/logService';
+import { supabase } from '../lib/supabase';
+import { maskCNPJ, maskCPF } from '../lib/utils';
+import { validarCNPJ, validarCPF, validarEmail } from '../utils/cpfValidator';
+import {
+  buildFreeToolsProLoginReturnUrl,
+  consumeFreeToolsProLoginReturn,
+} from '../lib/freeToolsProLoginReturn';
+
+type AccessMode = 'login' | 'recovery';
+type LoginStage = 'document' | 'pin';
+type RecoveryStage = 'request' | 'code';
+
+interface ClientLoginPageProps {
+  personType: ClientPersonType;
+  initialMode?: AccessMode;
+  onLoginClient: (
+    id: string,
+    isRecovery?: boolean,
+    personType?: ClientPersonType,
+  ) => void | Promise<void>;
+  onBack: () => void;
+  onSwitchPortal: () => void;
+  onRegister: () => void;
+}
+
+const accessBenefits = {
+  pf: [
+    { icon: FileCheck2, title: 'Serviços em um só lugar', text: 'Acompanhe solicitações, documentos e assinaturas.' },
+    { icon: Landmark, title: 'Financeiro organizado', text: 'Consulte faturas, extrato, crédito e benefícios.' },
+    { icon: Headphones, title: 'Suporte próximo', text: 'Fale com a GSA sem sair do seu portal.' },
+  ],
+  pj: [
+    { icon: FileCheck2, title: 'Gestão operacional', text: 'Contratos, orçamentos, serviços e documentos centralizados.' },
+    { icon: Landmark, title: 'Visão financeira', text: 'Faturas, notas fiscais, extrato e crédito empresarial.' },
+    { icon: Headphones, title: 'Atendimento executivo', text: 'Canal exclusivo para as demandas da sua empresa.' },
+  ],
+} as const;
+
+export function ClientLoginPage({
+  personType,
+  initialMode = 'login',
+  onLoginClient,
+  onBack,
+  onSwitchPortal,
+  onRegister,
+}: ClientLoginPageProps) {
+  const isBusiness = personType === 'pj';
+  const documentLabel = isBusiness ? 'CNPJ' : 'CPF';
+  const reduceMotion = useReducedMotion();
+  const [mode, setMode] = useState<AccessMode>(initialMode);
+  const [loginStage, setLoginStage] = useState<LoginStage>('document');
+  const [recoveryStage, setRecoveryStage] = useState<RecoveryStage>('request');
+  const [documentValue, setDocumentValue] = useState('');
+  const [pin, setPin] = useState('');
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryId, setRecoveryId] = useState('');
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
+  const [pinError, setPinError] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setMode(initialMode);
+    setLoginStage('document');
+    setRecoveryStage('request');
+    setDocumentValue('');
+    setPin('');
+    setRecoveryEmail('');
+    setRecoveryId('');
+    setRecoveryCode('');
+    setAttemptsLeft(null);
+    setPinError(false);
+  }, [initialMode, personType]);
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    const previousDescription = document.querySelector('meta[name="description"]')?.getAttribute('content');
+    document.title = isBusiness
+      ? 'Acesso Empresarial | GSA HUB Empresas'
+      : 'Área do Cliente Pessoa Física | GSA HUB';
+    document.querySelector('meta[name="description"]')?.setAttribute(
+      'content',
+      isBusiness
+        ? 'Acesso seguro e exclusivo ao ambiente corporativo GSA HUB Empresas.'
+        : 'Acesso seguro à Área do Cliente Pessoa Física da GSA HUB.',
+    );
+
+    return () => {
+      document.title = previousTitle;
+      if (previousDescription) {
+        document.querySelector('meta[name="description"]')?.setAttribute('content', previousDescription);
+      }
+    };
+  }, [isBusiness]);
+
+  const cleanDocument = documentValue.replace(/\D/g, '');
+  const isDocumentValid = isBusiness
+    ? validarCNPJ(cleanDocument)
+    : validarCPF(cleanDocument);
+
+  const resetAccessState = (nextMode: AccessMode) => {
+    setMode(nextMode);
+    setLoginStage('document');
+    setRecoveryStage('request');
+    setPin('');
+    setRecoveryId('');
+    setRecoveryCode('');
+    setAttemptsLeft(null);
+    setPinError(false);
+  };
+
+  const handleDocumentSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!isDocumentValid) {
+      toast.error(`Informe um ${documentLabel} válido.`);
+      return;
+    }
+    setLoginStage('pin');
+  };
+
+  const confirmExpectedAccountType = async (clientId: string) => {
+    const resolvedType = await sessionService.resolveAuthenticatedClientPersonType(clientId);
+    if (resolvedType && resolvedType !== personType) {
+      await sessionService.endSession();
+      throw new Error(
+        resolvedType === 'pj'
+          ? 'Este cadastro pertence a uma empresa. Use a Área do Cliente Empresa — PJ.'
+          : 'Este cadastro pertence a uma pessoa física. Use a Área do Cliente Pessoa Física — PF.',
+      );
+    }
+    sessionService.setClientPersonType(personType);
+  };
+
+  const completeLogin = async (clientId: string, isRecovery = false) => {
+    const pendingTool = isRecovery ? null : consumeFreeToolsProLoginReturn();
+    await onLoginClient(clientId, isRecovery, personType);
+    if (pendingTool) {
+      window.location.replace(buildFreeToolsProLoginReturnUrl(pendingTool));
+    }
+  };
+
+  const handleLogin = async () => {
+    if (pin.length !== 4 || loading) return;
+    setLoading(true);
+    setPinError(false);
+
+    try {
+      const data = await sessionService.loginWithPin(cleanDocument, pin, 'cliente');
+      if (!data?.valid) {
+        setPinError(true);
+        setPin('');
+        setAttemptsLeft(typeof data?.attempts_left === 'number' ? data.attempts_left : null);
+        toast.error(
+          data?.error === 'blocked'
+            ? 'Acesso temporariamente bloqueado. Entre em contato com o suporte.'
+            : `${documentLabel} ou senha inválidos.`,
+        );
+        return;
+      }
+
+      await confirmExpectedAccountType(data.id);
+      await logService.logAction({
+        ator_tipo: 'cliente',
+        ator_id: data.id,
+        ator_nome: data.nome,
+        acao: 'LOGIN',
+        detalhes: isBusiness
+          ? 'Acesso via GSA HUB Empresas'
+          : 'Acesso via portal Pessoa Física',
+      });
+      toast.success(isBusiness ? 'Bem-vindo ao GSA HUB Empresas.' : 'Login realizado com sucesso.');
+      await completeLogin(data.id);
+    } catch (error: any) {
+      setPinError(true);
+      setPin('');
+      toast.error(error?.message || `${documentLabel} ou senha inválidos.`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRecoveryRequest = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!isDocumentValid || !validarEmail(recoveryEmail)) {
+      toast.error(`Informe ${documentLabel} e e-mail válidos.`);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = await sessionService.requestClientRecovery(
+        cleanDocument,
+        recoveryEmail.trim().toLowerCase(),
+      );
+      if (!data?.success || !data?.recovery_id) {
+        throw new Error('Não foi possível iniciar a recuperação.');
+      }
+      setRecoveryId(data.recovery_id);
+      setRecoveryStage('code');
+      setRecoveryCode('');
+      toast.success('Enviamos um código de confirmação para o e-mail cadastrado.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível iniciar a recuperação.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRecoveryCode = async (event?: React.FormEvent) => {
+    event?.preventDefault();
+    if (!recoveryId || recoveryCode.length !== 6 || loading) {
+      toast.error('Informe o código de seis dígitos enviado ao seu e-mail.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const email = recoveryEmail.trim().toLowerCase();
+      const { error: otpError } = await supabase.auth.verifyOtp({
+        email,
+        token: recoveryCode,
+        type: 'email',
+      });
+      if (otpError) throw new Error('Código inválido ou expirado.');
+
+      const data = await sessionService.completeClientRecovery(recoveryId);
+      if (!data?.success || !data?.id) {
+        throw new Error('Não foi possível concluir a recuperação.');
+      }
+
+      await confirmExpectedAccountType(data.id);
+      toast.success('Identidade confirmada. Agora crie sua nova senha.');
+      await completeLogin(data.id, true);
+    } catch (error: any) {
+      await supabase.auth.signOut({ scope: 'local' });
+      setRecoveryCode('');
+      toast.error(error?.message || 'Não foi possível confirmar o código.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDocumentChange = (value: string) => {
+    setDocumentValue(isBusiness ? maskCNPJ(value) : maskCPF(value));
+  };
+
+  const pageBackground = isBusiness
+    ? 'bg-[#07111f] text-white'
+    : 'bg-[radial-gradient(circle_at_top_left,#fff8e8_0%,#f8f7f4_42%,#eef1f4_100%)] text-[#142030]';
+
+  return (
+    <main className={`relative min-h-screen overflow-hidden ${pageBackground}`}>
+      <a
+        href="#access-form"
+        className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-lg bg-white px-4 py-3 text-sm font-bold text-[#0b1522] shadow-xl focus:translate-y-0"
+      >
+        Ir para o formulário de acesso
+      </a>
+
+      {isBusiness && (
+        <>
+          <div className="pointer-events-none absolute -left-24 top-24 h-80 w-80 rounded-full bg-[#b88a35]/10 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-[#31577b]/20 blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:64px_64px]" />
+        </>
+      )}
+
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-4 py-5 sm:px-7 lg:px-10 lg:py-8">
+        <header className="flex min-h-14 items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={onBack}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 ${
+              isBusiness
+                ? 'border-white/15 bg-white/[0.04] text-white/80 hover:border-[#d8bd73]/55 hover:text-white focus-visible:ring-[#d8bd73]'
+                : 'border-[#142030]/10 bg-white/80 text-[#142030] shadow-sm hover:border-[#d8bd73] focus-visible:ring-[#8a651f]'
+            }`}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </button>
+
+          <div className="flex items-center gap-3">
+            {isBusiness && (
+              <span className="hidden rounded-full border border-[#d8bd73]/30 bg-[#d8bd73]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#edcf83] sm:inline-flex">
+                Ambiente empresarial
+              </span>
+            )}
+            <LogoGSA size="sm" variant={isBusiness ? 'light' : 'dark'} showText />
+          </div>
+        </header>
+
+        <div className="flex flex-1 items-center py-8 lg:py-12">
+          <div className={`grid w-full overflow-hidden border shadow-2xl lg:grid-cols-[minmax(0,1.08fr)_minmax(430px,.92fr)] ${
+            isBusiness
+              ? 'rounded-[2rem] border-white/10 bg-[#0b1726]/90 shadow-black/40'
+              : 'rounded-[2rem] border-[#d8bd73]/30 bg-white/85 shadow-[#142030]/15'
+          }`}>
+            <section className={`relative overflow-hidden p-7 sm:p-10 lg:p-14 ${
+              isBusiness
+                ? 'bg-[linear-gradient(145deg,#0d1d2f_0%,#07111f_74%)]'
+                : 'bg-[linear-gradient(145deg,#142030_0%,#0b111a_78%)] text-white'
+            }`}>
+              <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-[#946c22] via-[#fff1ba] to-[#b88a35]" />
+              <div className="relative z-10 flex h-full flex-col">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-[#d8bd73]/25 bg-[#d8bd73]/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-[#edcf83]">
+                    {isBusiness ? <Building2 className="h-4 w-4" /> : <UserRound className="h-4 w-4" />}
+                    {isBusiness ? 'GSA HUB Empresas' : 'Portal Pessoa Física'}
+                  </div>
+                  <h1 className="mt-7 max-w-xl text-4xl font-black leading-[1.08] tracking-[-0.04em] text-white sm:text-5xl">
+                    {isBusiness
+                      ? 'A gestão da sua empresa, em um ambiente exclusivo.'
+                      : 'Tudo o que você precisa, perto de você.'}
+                  </h1>
+                  <p className="mt-5 max-w-xl text-sm leading-7 text-white/62 sm:text-base">
+                    {isBusiness
+                      ? 'Acesse operações, financeiro, documentos, benefícios e atendimento executivo com a segurança e a atenção da GSA.'
+                      : 'Consulte seus serviços, acompanhe solicitações e cuide da sua vida financeira com simplicidade e segurança.'}
+                  </p>
+                </div>
+
+                <div className="mt-9 grid gap-3">
+                  {accessBenefits[personType].map((benefit) => (
+                    <div key={benefit.title} className="flex items-start gap-4 rounded-2xl border border-white/8 bg-white/[0.035] p-4">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#d8bd73]/20 bg-[#d8bd73]/10 text-[#edcf83]">
+                        <benefit.icon className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <h2 className="text-sm font-bold text-white">{benefit.title}</h2>
+                        <p className="mt-1 text-xs leading-5 text-white/50">{benefit.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-auto hidden items-center gap-3 pt-10 text-xs text-white/42 sm:flex">
+                  <ShieldCheck className="h-4 w-4 text-[#d8bd73]" />
+                  Sessão protegida e dados exibidos somente após a autenticação.
+                </div>
+              </div>
+            </section>
+
+            <motion.section
+              id="access-form"
+              initial={reduceMotion ? false : { opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.3 }}
+              className="bg-[#fbfcfd] p-6 text-[#0b1522] sm:p-10 lg:p-12"
+              aria-labelledby="access-title"
+            >
+              <div className="mx-auto flex h-full w-full max-w-md flex-col justify-center">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8a651f]">
+                      {mode === 'recovery' ? 'Recuperação segura' : 'Acesso protegido'}
+                    </p>
+                    <h2 id="access-title" className="mt-2 text-2xl font-black tracking-[-0.03em] text-[#0b1522] sm:text-3xl">
+                      {mode === 'recovery'
+                        ? 'Recupere seu acesso'
+                        : isBusiness
+                          ? 'Entre na conta da empresa'
+                          : 'Entre na sua conta'}
+                    </h2>
+                  </div>
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d8bd73]/35 bg-[#fff9ea] text-[#8a651f]">
+                    {mode === 'recovery' ? <KeyRound className="h-6 w-6" /> : <Fingerprint className="h-6 w-6" />}
+                  </span>
+                </div>
+
+                {mode === 'login' && (
+                  <div className="mt-7 flex items-center gap-3" aria-label={`Etapa ${loginStage === 'document' ? 1 : 2} de 2`}>
+                    {[1, 2].map((step) => {
+                      const active = step <= (loginStage === 'document' ? 1 : 2);
+                      return (
+                        <div key={step} className="flex flex-1 items-center gap-2">
+                          <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-black ${
+                            active ? 'bg-[#0b1522] text-white' : 'bg-[#e8ecf1] text-[#718096]'
+                          }`}>{step}</span>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                            active ? 'text-[#0b1522]' : 'text-[#94a0ad]'
+                          }`}>{step === 1 ? documentLabel : 'Senha'}</span>
+                          {step === 1 && <span className="ml-auto h-px flex-1 bg-[#e0e5ea]" />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {mode === 'login' && loginStage === 'document' && (
+                  <form onSubmit={handleDocumentSubmit} className="mt-8 space-y-5">
+                    <label htmlFor={`login-document-${personType}`} className="grid gap-2 text-sm font-bold text-[#344154]">
+                      {documentLabel}
+                      <input
+                        id={`login-document-${personType}`}
+                        name="documento"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        required
+                        autoFocus
+                        value={documentValue}
+                        onChange={(event) => handleDocumentChange(event.target.value)}
+                        placeholder={isBusiness ? '00.000.000/0000-00' : '000.000.000-00'}
+                        className="min-h-14 w-full rounded-xl border border-[#d7dde3] bg-white px-4 text-base text-[#0b1522] outline-none transition placeholder:text-[#9aa4af] focus:border-[#8a651f] focus:ring-4 focus:ring-[#d8bd73]/15"
+                      />
+                    </label>
+
+                    <button
+                      type="submit"
+                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white shadow-lg shadow-[#0b1522]/15 transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] focus-visible:ring-offset-2 active:scale-[0.99]"
+                    >
+                      Continuar
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => resetAccessState('recovery')}
+                      className="min-h-11 w-full text-center text-sm font-bold text-[#8a651f] transition hover:text-[#654914] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                    >
+                      Primeiro acesso ou esqueci minha senha
+                    </button>
+                  </form>
+                )}
+
+                {mode === 'login' && loginStage === 'pin' && (
+                  <div className="mt-8 space-y-6">
+                    <div className="rounded-xl border border-[#dfe5ea] bg-white p-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-[#81909e]">{documentLabel} informado</p>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <strong className="text-sm text-[#0b1522]">{documentValue}</strong>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLoginStage('document');
+                            setPin('');
+                            setPinError(false);
+                          }}
+                          className="min-h-10 rounded-lg px-3 text-xs font-black text-[#8a651f] hover:bg-[#fff9ea] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                        >
+                          Alterar
+                        </button>
+                      </div>
+                    </div>
+
+                    <PinInput
+                      value={pin}
+                      onChange={(value) => {
+                        setPin(value);
+                        setPinError(false);
+                      }}
+                      error={pinError}
+                      disabled={loading}
+                      label="Senha numérica de quatro dígitos"
+                      onEnter={() => void handleLogin()}
+                      onComplete={() => void handleLogin()}
+                    />
+
+                    {attemptsLeft !== null && attemptsLeft <= 2 && (
+                      <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-xs font-bold text-red-700" role="alert">
+                        {attemptsLeft} tentativa(s) restante(s).
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => void handleLogin()}
+                      disabled={loading || pin.length !== 4}
+                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white shadow-lg shadow-[#0b1522]/15 transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
+                    >
+                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LockKeyhole className="h-4 w-4" />}
+                      {loading ? 'Verificando...' : isBusiness ? 'Acessar GSA HUB Empresas' : 'Acessar minha área'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => resetAccessState('recovery')}
+                      className="min-h-11 w-full text-center text-sm font-bold text-[#8a651f] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                )}
+
+                {mode === 'recovery' && recoveryStage === 'request' && (
+                  <form onSubmit={handleRecoveryRequest} className="mt-8 space-y-5">
+                    <div className="flex items-start gap-3 rounded-xl border border-[#d8bd73]/35 bg-[#fff9ea] p-4 text-xs leading-5 text-[#634a1e]">
+                      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#8a651f]" />
+                      A redefinição só será liberada após confirmar o código enviado ao e-mail cadastrado.
+                    </div>
+
+                    <label htmlFor={`recovery-document-${personType}`} className="grid gap-2 text-sm font-bold text-[#344154]">
+                      {documentLabel}
+                      <input
+                        id={`recovery-document-${personType}`}
+                        name="documento-recuperacao"
+                        type="text"
+                        inputMode="numeric"
+                        required
+                        value={documentValue}
+                        onChange={(event) => handleDocumentChange(event.target.value)}
+                        placeholder={isBusiness ? '00.000.000/0000-00' : '000.000.000-00'}
+                        className="min-h-14 w-full rounded-xl border border-[#d7dde3] bg-white px-4 text-base outline-none transition focus:border-[#8a651f] focus:ring-4 focus:ring-[#d8bd73]/15"
+                      />
+                    </label>
+
+                    <label htmlFor={`recovery-email-${personType}`} className="grid gap-2 text-sm font-bold text-[#344154]">
+                      E-mail cadastrado
+                      <input
+                        id={`recovery-email-${personType}`}
+                        name="email-recuperacao"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        value={recoveryEmail}
+                        onChange={(event) => setRecoveryEmail(event.target.value)}
+                        placeholder={isBusiness ? 'financeiro@suaempresa.com.br' : 'voce@exemplo.com'}
+                        className="min-h-14 w-full rounded-xl border border-[#d7dde3] bg-white px-4 text-base outline-none transition placeholder:text-[#9aa4af] focus:border-[#8a651f] focus:ring-4 focus:ring-[#d8bd73]/15"
+                      />
+                    </label>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] disabled:opacity-55"
+                    >
+                      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {loading ? 'Enviando...' : 'Enviar código de confirmação'}
+                    </button>
+                  </form>
+                )}
+
+                {mode === 'recovery' && recoveryStage === 'code' && (
+                  <form onSubmit={handleRecoveryCode} className="mt-8 space-y-5">
+                    <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs leading-5 text-emerald-900">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
+                      Código enviado para <strong className="break-all">{recoveryEmail}</strong>.
+                    </div>
+
+                    <label htmlFor={`recovery-code-${personType}`} className="grid gap-2 text-sm font-bold text-[#344154]">
+                      Código de seis dígitos
+                      <input
+                        id={`recovery-code-${personType}`}
+                        name="codigo-recuperacao"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        autoFocus
+                        value={recoveryCode}
+                        onChange={(event) => setRecoveryCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="000000"
+                        maxLength={6}
+                        className="min-h-16 w-full rounded-xl border border-[#d7dde3] bg-white px-4 text-center font-mono text-2xl tracking-[0.45em] outline-none transition focus:border-[#8a651f] focus:ring-4 focus:ring-[#d8bd73]/15"
+                      />
+                    </label>
+
+                    <button
+                      type="submit"
+                      disabled={loading || recoveryCode.length !== 6}
+                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] disabled:opacity-55"
+                    >
+                      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {loading ? 'Confirmando...' : 'Confirmar identidade'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRecoveryStage('request');
+                        setRecoveryCode('');
+                      }}
+                      className="min-h-11 w-full text-sm font-bold text-[#8a651f] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                    >
+                      Reenviar código
+                    </button>
+                  </form>
+                )}
+
+                {mode === 'recovery' && (
+                  <button
+                    type="button"
+                    onClick={() => resetAccessState('login')}
+                    className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 text-sm font-bold text-[#344154] hover:text-[#0b1522] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Voltar ao login
+                  </button>
+                )}
+
+                <div className="mt-8 border-t border-[#e2e7eb] pt-6">
+                  <p className="text-center text-xs leading-5 text-[#71808e]">
+                    Ainda não possui cadastro?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onRegister}
+                    className="mt-2 min-h-11 w-full text-center text-sm font-black text-[#0b1522] hover:text-[#8a651f] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                  >
+                    {isBusiness ? 'Solicitar acesso empresarial' : 'Criar meu cadastro'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onSwitchPortal}
+                    className="mt-1 min-h-11 w-full text-center text-xs font-bold text-[#71808e] hover:text-[#0b1522] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                  >
+                    {isBusiness ? 'Sou Pessoa Física — acessar portal PF' : 'Sou Empresa — acessar portal PJ'}
+                  </button>
+                </div>
+              </div>
+            </motion.section>
+          </div>
+        </div>
+
+        <footer className={`flex flex-col items-center justify-between gap-3 border-t py-5 text-center text-[11px] sm:flex-row sm:text-left ${
+          isBusiness ? 'border-white/10 text-white/38' : 'border-[#142030]/10 text-[#65717c]'
+        }`}>
+          <span>© {new Date().getFullYear()} GSA HUB. Ambiente seguro e de uso exclusivo.</span>
+          <span className="inline-flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-[#b88a35]" />
+            Seus dados não são exibidos antes da autenticação.
+          </span>
+        </footer>
+      </div>
+    </main>
+  );
+}
