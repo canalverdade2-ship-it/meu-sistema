@@ -431,16 +431,15 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
       }
 
       if (!createdProtocol) {
-        const { data: rpcData, error: rpcError } = await supabase.rpc<{
-          success: boolean;
-          protocol?: string;
-          status?: string;
-        }>('gsa_public_submit_advertising_request', { p_payload: requestPayload as any });
+        const { data: rpcData, error: rpcError } = await supabase.rpc('gsa_public_submit_advertising_request', {
+          p_payload: requestPayload as any,
+        });
 
-        if (rpcError || !(rpcData as any)?.success || !(rpcData as any)?.protocol) {
-          throw rpcError || new Error((rpcData as any)?.error || 'O servidor não confirmou a gravação da solicitação.');
+        const res = rpcData as { success?: boolean; protocol?: string; error?: string } | null;
+        if (rpcError || !res?.success || !res.protocol) {
+          throw rpcError || new Error(res?.error || 'O servidor não confirmou a gravação da solicitação.');
         }
-        createdProtocol = (rpcData as any).protocol;
+        createdProtocol = res.protocol;
       }
 
       setProtocol(createdProtocol);
