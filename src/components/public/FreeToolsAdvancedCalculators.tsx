@@ -189,7 +189,7 @@ function Workbench({ title, description, children, result }: { title: string; de
 // 1. RESCISÃO CLT (PRO AVANÇADA)
 // ==========================================
 
-function TerminationPro() {
+function TerminationPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
   const [salary, setSalary] = useState('3500');
   const [reason, setReason] = useState<TerminationReason>('without_cause');
   const [noticeType, setNoticeType] = useState<NoticeType>('indemnified_employer');
@@ -305,6 +305,8 @@ function TerminationPro() {
           icon={<Calculator className="h-5 w-5" />}
           note="O saldo do FGTS não integra o total líquido. O saque depende da modalidade e da chave de conectividade."
           report={report}
+          status={status}
+          onUnlockRequired={onUnlockRequired}
         >
           {/* Gráfico/Barra de Distribuição Visual */}
           <div className="my-4 overflow-hidden rounded-lg bg-white/10 p-1">
@@ -444,7 +446,7 @@ function Requirement({ title, eligible, lines }: { title: string; eligible: bool
   );
 }
 
-function RetirementPro() {
+function RetirementPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
   const [gender, setGender] = useState<RetirementGender>('woman');
   const [age, setAge] = useState('57');
   const [contribution, setContribution] = useState('29');
@@ -516,6 +518,8 @@ function RetirementPro() {
           icon={<Landmark className="h-5 w-5" />}
           note="Atividade especial, magistério, trabalho rural e direito adquirido exigem simulação documental específica."
           report={report}
+          status={status}
+          onUnlockRequired={onUnlockRequired}
           action={
             <a
               href="https://meu.inss.gov.br/"
@@ -607,7 +611,7 @@ function RetirementPro() {
 // 3. FÉRIAS CLT (PRO AVANÇADA)
 // ==========================================
 
-function VacationPro() {
+function VacationPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
   const [salary, setSalary] = useState('3500');
   const [averages, setAverages] = useState('0');
   const [vacationDays, setVacationDays] = useState('30');
@@ -684,6 +688,8 @@ function VacationPro() {
           icon={<Palmtree className="h-5 w-5" />}
           note="O pagamento integral das férias e abono deve ser realizado até 2 dias antes do início do período de descanso (Art. 145 CLT)."
           report={report}
+          status={status}
+          onUnlockRequired={onUnlockRequired}
         >
           <ResultLine label={`Férias gozadas (${result.actualVacationDays} dias)`} value={currency.format(result.vacationPay)} />
           <ResultLine label="Adicional constitucional de 1/3" value={currency.format(result.constitutionalThird)} />
@@ -724,17 +730,17 @@ function VacationPro() {
       <Section number="03" title="Opções avançadas de férias">
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d5cfc5] bg-[#faf8f3] p-3 text-xs font-bold text-[#26313a]">
-            <input type="checkbox" checked={sellDays} onChange={(event) => setSellDays(event.target.checked)} className="mt-0.5 h-4 w-4 accent-[#8a6e2f]" />
+            <input type="checkbox" checked={sellDays} onChange={(event) => setSellDays(event.target.checked)} className="h-4 w-4 accent-[#8a6e2f]" />
             <span>Vender 10 dias (Abono pecuniário)</span>
           </label>
 
           <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d5cfc5] bg-[#faf8f3] p-3 text-xs font-bold text-[#26313a]">
-            <input type="checkbox" checked={thirteenthAdvance} onChange={(event) => setThirteenthAdvance(event.target.checked)} className="mt-0.5 h-4 w-4 accent-[#8a6e2f]" />
+            <input type="checkbox" checked={thirteenthAdvance} onChange={(event) => setThirteenthAdvance(event.target.checked)} className="h-4 w-4 accent-[#8a6e2f]" />
             <span>Adiantar 1ª parcela do 13º</span>
           </label>
 
           <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d5cfc5] bg-[#faf8f3] p-3 text-xs font-bold text-[#26313a]">
-            <input type="checkbox" checked={isDouble} onChange={(event) => setIsDouble(event.target.checked)} className="mt-0.5 h-4 w-4 accent-[#8a6e2f]" />
+            <input type="checkbox" checked={isDouble} onChange={(event) => setIsDouble(event.target.checked)} className="h-4 w-4 accent-[#8a6e2f]" />
             <span>Férias em dobro (concessivo vencido)</span>
           </label>
         </div>
@@ -747,11 +753,19 @@ function VacationPro() {
   );
 }
 
-export function FreeToolsAdvancedCalculator({ tool }: { tool: ProToolId }) {
-  if (tool === 'termination') return <TerminationPro />;
-  if (tool === 'retirement') return <RetirementPro />;
-  if (tool === 'vacation') return <VacationPro />;
-  if (tool === 'thirteenth') return <ThirteenthPro />;
-  if (tool === 'benefits') return <BenefitsPro />;
-  return <BpcPro />;
+export function FreeToolsAdvancedCalculator({
+  tool,
+  status,
+  onUnlockRequired,
+}: {
+  tool: ProToolId;
+  status?: ProAccessStatus | null;
+  onUnlockRequired?: () => void;
+}) {
+  if (tool === 'termination') return <TerminationPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'retirement') return <RetirementPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'vacation') return <VacationPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'thirteenth') return <ThirteenthPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'benefits') return <BenefitsPro status={status} onUnlockRequired={onUnlockRequired} />;
+  return <BpcPro status={status} onUnlockRequired={onUnlockRequired} />;
 }
