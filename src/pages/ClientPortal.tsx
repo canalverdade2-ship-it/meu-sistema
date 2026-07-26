@@ -75,10 +75,13 @@ import { logService } from '../lib/logService';
 import { MarketplaceGSAStore } from '../components/client/marketplace/MarketplaceGSAStore';
 import { ClientMeuCredito } from '../components/client/ClientMeuCredito';
 import { callClientRpc } from '../lib/clientRpc';
+import { BusinessDashboard } from '../components/business/BusinessDashboard';
+import { LogoGSA } from '../components/ui/LogoGSA';
 
 interface ClientPortalProps {
   clientId: string;
   onLogout: () => void;
+  portalVariant?: 'personal' | 'business';
   initialModule?: string;
   initialStoreTab?: string;
   initialStoreItemId?: string;
@@ -279,9 +282,12 @@ function buildClientRoute(module: Module, tab?: string, itemId?: string) {
   return query ? `${path}?${query}` : path;
 }
 
-export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTab, initialStoreItemId }: ClientPortalProps) {
+export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', initialModule, initialStoreTab, initialStoreItemId }: ClientPortalProps) {
   const route = useAppLocation();
   const { levels } = useVipLevels();
+  const isBusiness = portalVariant === 'business';
+  const sidebarCollapsedKey = isBusiness ? 'business_sidebar_collapsed' : 'client_sidebar_collapsed';
+  const sidebarPinnedKey = isBusiness ? 'business_sidebar_pinned' : 'client_sidebar_pinned';
   
   // O estado do módulo e abas é diretamente derivado da URL reativa
   const activeModule = (route.area === 'marketplace' 
@@ -303,11 +309,11 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   const [vipModuleConfig, setVipModuleConfig] = useState({ ativo: true, oculto: false });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem('client_sidebar_collapsed');
+    const saved = localStorage.getItem(sidebarCollapsedKey);
     return saved ? JSON.parse(saved) : false;
   });
   const [isSidebarPinned, setIsSidebarPinned] = useState(() => {
-    const saved = localStorage.getItem('client_sidebar_pinned');
+    const saved = localStorage.getItem(sidebarPinnedKey);
     return saved ? JSON.parse(saved) : true;
   });
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
@@ -341,7 +347,61 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   const navigateClientModule = (module: Module, tab?: string, itemId?: string, replaceFlag = false) => {
     let path = routes.client.dashboard();
 
-    if (module === 'dashboard') {
+    if (isBusiness) {
+      if (module === 'dashboard') {
+        path = routes.business.dashboard();
+      } else if (module === 'perfil') {
+        path = routes.business.profile();
+      } else if (module === 'servicos_assinaturas' || module === 'orcamentos' || module === 'servicos' || module === 'produtos' || module === 'assinaturas') {
+        const operationTab = tab || (
+          module === 'orcamentos' || module === 'servicos' || module === 'produtos' || module === 'assinaturas'
+            ? module
+            : undefined
+        );
+        if (operationTab === 'orcamentos') path = itemId ? routes.business.operations.budget(itemId) : routes.business.operations.budgets();
+        else if (operationTab === 'servicos') path = itemId ? routes.business.operations.service(itemId) : routes.business.operations.services();
+        else if (operationTab === 'produtos') path = itemId ? routes.business.operations.product(itemId) : routes.business.operations.products();
+        else if (operationTab === 'assinaturas') path = itemId ? routes.business.operations.subscription(itemId) : routes.business.operations.subscriptions();
+        else path = routes.business.operations.root();
+      } else if (module === 'financeiro' || module === 'transferencias' || module === 'emprestimos' || module === 'credito_loja') {
+        const financeTab = tab || (
+          module === 'transferencias' ? 'transferencias'
+            : module === 'emprestimos' ? 'emprestimos'
+              : module === 'credito_loja' ? 'credito'
+                : undefined
+        );
+        if (financeTab === 'faturas') path = itemId ? routes.business.finance.invoice(itemId) : routes.business.finance.invoices();
+        else if (financeTab === 'nf' || financeTab === 'notas-fiscais') path = itemId ? routes.business.finance.taxDocument(itemId) : routes.business.finance.taxDocuments();
+        else if (financeTab === 'extrato') path = itemId ? routes.business.finance.transaction(itemId) : routes.business.finance.statement();
+        else if (financeTab === 'saques') path = itemId ? routes.business.finance.withdrawal(itemId) : routes.business.finance.withdrawals();
+        else if (financeTab === 'transferencias') path = itemId ? routes.business.finance.transfer(itemId) : routes.business.finance.transfers();
+        else if (financeTab === 'credito' || financeTab === 'credito_loja') path = itemId ? routes.business.finance.creditRequest(itemId) : routes.business.finance.credit();
+        else if (financeTab === 'emprestimos') path = itemId ? routes.business.finance.loan(itemId) : routes.business.finance.loans();
+        else path = routes.business.finance.root();
+      } else if (module === 'fidelidade' || module === 'vouchers' || module === 'pontos' || module === 'promocoes' || module === 'premios' || module === 'indique-ganhe' || module === 'area_vip') {
+        const benefitsTab = tab || (
+          module === 'indique-ganhe' ? 'indique-ganhe'
+            : module === 'area_vip' ? 'area-vip'
+              : module !== 'fidelidade' ? String(module)
+                : undefined
+        );
+        if (benefitsTab === 'pontos') path = routes.business.benefits.points();
+        else if (benefitsTab === 'vouchers') path = itemId ? routes.business.benefits.voucher(itemId) : routes.business.benefits.vouchers();
+        else if (benefitsTab === 'promocoes') path = itemId ? routes.business.benefits.promotion(itemId) : routes.business.benefits.promotions();
+        else if (benefitsTab === 'premios') path = itemId ? routes.business.benefits.reward(itemId) : routes.business.benefits.rewards();
+        else if (benefitsTab === 'indique-ganhe') path = routes.business.benefits.referrals();
+        else if (benefitsTab === 'area-vip') path = routes.business.benefits.vip();
+        else path = routes.business.benefits.root();
+      } else if (module === 'suporte') {
+        path = itemId ? routes.business.ticket(itemId) : routes.business.support();
+      } else if ((module as string) === 'gsa_store' || (module as string) === 'classificados') {
+        const marketplaceTab = tab && tab !== 'home' ? `/${encodeURIComponent(tab)}` : '';
+        const marketplaceItem = itemId ? `/${encodeURIComponent(itemId)}` : '';
+        path = `${routes.business.marketplace()}${marketplaceTab}${marketplaceItem}`;
+      } else {
+        path = routes.business.dashboard();
+      }
+    } else if (module === 'dashboard') {
       path = routes.client.dashboard();
     } else if (module === 'perfil') {
       path = routes.client.perfil();
@@ -395,7 +455,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     // Auto collapse sidebar if not pinned on desktop
     if (!isSidebarPinned && window.innerWidth >= 1024) {
       setIsSidebarCollapsed(true);
-      localStorage.setItem('client_sidebar_collapsed', JSON.stringify(true));
+      localStorage.setItem(sidebarCollapsedKey, JSON.stringify(true));
     }
   };
 
