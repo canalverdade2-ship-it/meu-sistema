@@ -12,6 +12,7 @@ import {
   Clock3,
   HandCoins,
   HeartHandshake,
+  Info,
   Landmark,
   LockKeyhole,
   Palmtree,
