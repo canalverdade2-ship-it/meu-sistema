@@ -23,6 +23,7 @@
     "test:classificados": "tsx scripts/check-classifieds-production-contracts.ts",
     "test:client-security": "tsx scripts/check-client-portal-security-contracts.ts && tsx scripts/check-client-session-restore-contract.ts && npm run test:classificados",
     "test:client-portals": "tsx scripts/check-client-audience-portals.ts",
+    "test:restricted-access": "tsx scripts/check-restricted-access-hub.ts",
     "test:provider": "tsx scripts/check-provider-portal-security-contracts.ts",
     "test:suppliers": "tsx scripts/check-supplier-procurement-contracts.ts",
     "test:home": "tsx scripts/check-home-public-contracts.ts && npm run test:partners",
