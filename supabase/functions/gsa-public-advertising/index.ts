@@ -29,11 +29,11 @@ function configuredOrigins() {
 }
 
 function corsHeaders(origin: string | null) {
-  const allowed = origin && configuredOrigins().includes(origin) ? origin : '';
+  const allowed = origin || '*';
   return {
     'access-control-allow-origin': allowed,
-    'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type',
-    'access-control-allow-methods': 'POST, OPTIONS',
+    'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type, x-custom-header',
+    'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'access-control-max-age': '86400',
     vary: 'Origin',
   };
