@@ -113,11 +113,149 @@ function VacationFree() {
   return <FreeLayout title="Estimativa simples de 30 dias de férias" description="Informe apenas o salário mensal para visualizar a remuneração e o adicional constitucional de um terço." form={<Field label="Salário bruto mensal" value={salary} onChange={setSalary} prefix="R$" />} result={<><Palmtree className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.total)}</p><div className="mt-5 space-y-2 text-sm text-white/62"><p>Remuneração: {currency.format(result.remuneration)}</p><p>Adicional de 1/3: {currency.format(result.constitutionalThird)}</p></div></>} proItems={['médias de horas extras e adicionais', 'composição detalhada do total', 'cenários e condições consideradas', 'resultado avançado para conferência']} report={report} />;
 }
 
+    disclaimer: 'Estimativa educativa para 30 dias de férias. Não considera descontos, faltas, médias, abono pecuniário, adiantamento do 13º ou férias em dobro.',
+  };
+  return <FreeLayout title="Estimativa simples de 30 dias de férias" description="Informe apenas o salário mensal para visualizar a remuneração e o adicional constitucional de um terço." form={<Field label="Salário bruto mensal" value={salary} onChange={setSalary} prefix="R$" />} result={<><Palmtree className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.total)}</p><div className="mt-5 space-y-2 text-sm text-white/62"><p>Remuneração: {currency.format(result.remuneration)}</p><p>Adicional de 1/3: {currency.format(result.constitutionalThird)}</p></div></>} proItems={['médias de horas extras e adicionais', 'composição detalhada do total', 'cenários e condições consideradas', 'resultado avançado para conferência']} report={report} />;
+}
+
+function OvertimeFree() {
+  const [salary, setSalary] = useState('3500');
+  const [hours50, setHours50] = useState('10');
+  const [hours100, setHours100] = useState('0');
+
+  const result = useMemo(() => calculateOvertimeEstimate(numeric(salary), { overtime50Hours: numeric(hours50), overtime100Hours: numeric(hours100) }), [salary, hours50, hours100]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de horas extras e noturno',
+    mode: 'free',
+    headline: `Total estimado de horas extras: ${currency.format(result.totalExtraWithoutDsr)}`,
+    summary: 'Estimativa simples de horas suplementares a 50% e 100%.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Salário base mensal', value: currency.format(numeric(salary)) }, { label: 'Horas 50%', value: `${numeric(hours50)} h` }, { label: 'Horas 100%', value: `${numeric(hours100)} h` }] },
+      { title: 'Resultado simples', rows: [{ label: 'Valor da hora normal', value: currency.format(result.hourlyRate) }, { label: 'Horas 50%', value: currency.format(result.pay50) }, { label: 'Horas 100%', value: currency.format(result.pay100) }, { label: 'Total sem DSR', value: currency.format(result.totalExtraWithoutDsr) }] },
+    ],
+    disclaimer: 'Cálculo básico educativo sem considerar adicional noturno, hora reduzida ou reflexo no DSR.',
+  };
+
+  return <FreeLayout title="Horas extras simples" description="Informe o salário e as horas excedentes a 50% ou 100% para visualizar o valor das horas." form={<><Field label="Salário base mensal" value={salary} onChange={setSalary} prefix="R$" /><div className="grid grid-cols-2 gap-3"><Field label="Horas a 50%" value={hours50} onChange={setHours50} suffix="horas" /><Field label="Horas a 100%" value={hours100} onChange={setHours100} suffix="horas" /></div></>} result={<><Clock3 className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.totalExtraWithoutDsr)}</p><div className="mt-4 space-y-1.5 text-xs leading-5 text-white/60"><p>Valor hora normal: {currency.format(result.hourlyRate)}</p><p>Extras 50%: {currency.format(result.pay50)}</p><p>Extras 100%: {currency.format(result.pay100)}</p></div></>} proItems={['Adicional noturno e hora noturna reduzida', 'Reflexo automático no DSR mensal', 'Memória detalhada de cálculo', 'Relatório em PDF para conferência']} report={report} />;
+}
+
+function NetSalaryFree() {
+  const [gross, setGross] = useState('5000');
+  const [dependents, setDependents] = useState('1');
+
+  const result = useMemo(() => calculateNetSalaryEstimate(numeric(gross), numeric(dependents)), [gross, dependents]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de salário líquido (CLT x PJ)',
+    mode: 'free',
+    headline: `Salário líquido estimado: ${currency.format(result.netSalary)}`,
+    summary: 'Demonstrativo simplificado dos descontos oficiais de INSS e IRRF 2026.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Salário bruto', value: currency.format(numeric(gross)) }, { label: 'Dependentes', value: `${numeric(dependents)}` }] },
+      { title: 'Descontos calculados', rows: [{ label: 'Desconto INSS (2026)', value: currency.format(result.inssDeduction) }, { label: 'Desconto IRRF', value: currency.format(result.irrfDeduction) }, { label: 'Salário líquido', value: currency.format(result.netSalary) }] },
+    ],
+    disclaimer: 'Cálculo de salário líquido com base nas tabelas vigentes de 2026.',
+  };
+
+  return <FreeLayout title="Salário líquido 2026" description="Simule os descontos de INSS e Imposto de Renda para saber o valor líquido no bolso." form={<><Field label="Salário bruto mensal" value={gross} onChange={setGross} prefix="R$" /><Field label="Número de dependentes" value={dependents} onChange={setDependents} suffix="dep." /></>} result={<><BriefcaseBusiness className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{currency.format(result.netSalary)}</p><div className="mt-4 space-y-1.5 text-xs leading-5 text-white/60"><p>Desconto INSS: {currency.format(result.inssDeduction)} ({result.inssEffectiveRate}% efetivo)</p><p>Desconto IRRF: {currency.format(result.irrfDeduction)}</p></div></>} proItems={['Comparador CLT x Contratação PJ', 'Cálculo do faturamento PJ necessário', 'Inclusão de VR/VA e plano de saúde', 'Relatório completo de equivalência']} report={report} />;
+}
+
+function MeiLimitFree() {
+  const [openingMonth, setOpeningMonth] = useState('1');
+  const [accumulated, setAccumulated] = useState('45000');
+
+  const result = useMemo(() => calculateMeiLimitEstimate(numeric(openingMonth), numeric(accumulated)), [openingMonth, accumulated]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de limite e excesso do MEI',
+    mode: 'free',
+    headline: `Limite proporcional: ${currency.format(result.proportionalLimit)}`,
+    summary: 'Verificação do limite de faturamento anual do MEI.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Mês de abertura', value: `Mês ${numeric(openingMonth)}` }, { label: 'Faturamento acumulado', value: currency.format(numeric(accumulated)) }] },
+      { title: 'Situação', rows: [{ label: 'Limite proporcional', value: currency.format(result.proportionalLimit) }, { label: 'Saldo disponível', value: currency.format(result.remainingBalance) }, { label: 'Uso do limite', value: `${result.usedPercentage}%` }] },
+    ],
+    disclaimer: 'Cálculo com base no limite anual padrão do MEI de R$ 81.000,00.',
+  };
+
+  return <FreeLayout title="Limite proporcional do MEI" description="Verifique o limite proporcional de faturamento do seu MEI conforme o mês de abertura." form={<><Field label="Mês de abertura no ano (1 a 12)" value={openingMonth} onChange={setOpeningMonth} suffix="mês" max={12} /><Field label="Faturamento acumulado até agora" value={accumulated} onChange={setAccumulated} prefix="R$" /></>} result={<><Landmark className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-3xl font-black tracking-[-0.03em]">{currency.format(result.remainingBalance)}</p><p className="mt-2 text-sm leading-6 text-white/70">Saldo disponível até atingir o limite proporcional de {currency.format(result.proportionalLimit)} ({result.usedPercentage}% utilizado).</p></>} proItems={['Projeção de vendas até o fim do ano', 'Diagnóstico de excesso (até 20% vs acima de 20%)', 'Simulação de imposto Simples Nacional (ME)', 'Relatório de acompanhamento fiscal']} report={report} />;
+}
+
+function UnemploymentFree() {
+  const [requestTimes, setRequestTimes] = useState<1 | 2 | 3>(1);
+  const [monthsWorked, setMonthsWorked] = useState('18');
+  const [averageSalary, setAverageSalary] = useState('2800');
+
+  const result = useMemo(() => calculateUnemploymentEstimate(requestTimes, numeric(monthsWorked), numeric(averageSalary)), [requestTimes, monthsWorked, averageSalary]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Simulador de seguro-desemprego',
+    mode: 'free',
+    headline: result.eligible ? `Elegível: ${result.installments} parcelas de ${currency.format(result.installmentValue)}` : 'Não cumpre requisitos básicos de meses',
+    summary: 'Triagem de parcelas e estimativa simples do benefício.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Solicitação', value: `${requestTimes}ª vez` }, { label: 'Meses trabalhados', value: `${numeric(monthsWorked)} meses` }, { label: 'Média salarial', value: currency.format(numeric(averageSalary)) }] },
+    ],
+    disclaimer: 'Estimativa simples baseada na tabela oficial do MTE 2026.',
+  };
+
+  return <FreeLayout title="Seguro-desemprego MTE 2026" description="Simule o número de parcelas e o valor aproximado do benefício." form={<><div className="block"><span className="text-sm font-black text-[#26313a]">Solicitação do benefício</span><div className="mt-2 grid grid-cols-3 gap-2 rounded-lg bg-[#ece9e2] p-1">{([1, 2, 3] as const).map((t) => <button key={t} type="button" onClick={() => setRequestTimes(t)} className={`min-h-11 rounded-md text-xs font-black ${requestTimes === t ? 'bg-white text-[#111820] shadow-sm' : 'text-[#69727a]'}`}>{t}ª Solicitação</button>)}</div></div><Field label="Meses trabalhados (últimos 36 meses)" value={monthsWorked} onChange={setMonthsWorked} suffix="meses" /><Field label="Média dos últimos 3 salários" value={averageSalary} onChange={setAverageSalary} prefix="R$" /></>} result={<><CheckCircle2 className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-3xl font-black">{result.eligible ? `${result.installments} parcelas` : 'Requisitos pendentes'}</p><div className="mt-4 space-y-1.5 text-xs text-white/65">{result.eligible ? <><p>Valor da parcela: {currency.format(result.installmentValue)}</p><p>Total estimado: {currency.format(result.totalBenefit)}</p></> : <p>Tempo trabalhado insuficiente para a solicitação informada.</p>}</div></>} proItems={['Detalhamento das regras do MTE 2026', 'Cálculo por salário individual dos 3 meses', 'Checklist de documentos para dar entrada', 'Exportação do extrato em PDF']} report={report} />;
+}
+
+function FatorRFree() {
+  const [rbt12, setRbt12] = useState('180000');
+  const [payroll12, setPayroll12] = useState('54000');
+
+  const result = useMemo(() => calculateFatorREstimate(numeric(rbt12), numeric(payroll12)), [rbt12, payroll12]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora do Fator R (Simples Nacional)',
+    mode: 'free',
+    headline: `Fator R: ${result.fatorRPercentage}% - Enquadramento: ${result.anexoName}`,
+    summary: 'Cálculo rápido da razão folha/faturamento.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Receita Bruta 12 meses (RBT12)', value: currency.format(numeric(rbt12)) }, { label: 'Folha de pagamento 12 meses', value: currency.format(numeric(payroll12)) }] },
+      { title: 'Resultado', rows: [{ label: 'Fator R (%)', value: `${result.fatorRPercentage}%` }, { label: 'Anexo de enquadramento', value: result.anexoName }] },
+    ],
+    disclaimer: 'Cálculo baseado na regra geral do Fator R (>= 28% para Anexo III).',
+  };
+
+  return <FreeLayout title="Fator R do Simples Nacional" description="Verifique se sua empresa atinge 28% de folha para tributar no Anexo III (alíquota de 6%)." form={<><Field label="Receita bruta dos últimos 12 meses (RBT12)" value={rbt12} onChange={setRbt12} prefix="R$" /><Field label="Folha de pagamento dos últimos 12 meses" value={payroll12} onChange={setPayroll12} prefix="R$" /></>} result={<><BriefcaseBusiness className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-4xl font-black tracking-[-0.04em]">{result.fatorRPercentage}%</p><p className="mt-2 text-sm leading-6 text-white/70">{result.isAnexo3 ? 'Parabéns! Enquadrado no Anexo III (alíquota a partir de 6%).' : 'Atenção: Enquadrado no Anexo V (alíquota maior a partir de 15.5%).'}</p></>} proItems={['Projeção de pro-labore necessário para atingir 28%', 'Cálculo de economia em R$ nos próximos meses', 'Simulação de enquadramento por atividade', 'Relatório para contabilidade']} report={report} />;
+}
+
+function AmortizationFree() {
+  const [balance, setBalance] = useState('200000');
+  const [rate, setRate] = useState('10');
+  const [months, setMonths] = useState('240');
+
+  const result = useMemo(() => calculateAmortizationEstimate(numeric(balance), numeric(rate), numeric(months)), [balance, rate, months]);
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de amortização (SAC / PRICE)',
+    mode: 'free',
+    headline: `Prestação atual estimada: ${currency.format(result.currentInstallment)}`,
+    summary: 'Estimativa inicial das parcelas e saldo devedor.',
+    sections: [
+      { title: 'Dados informados', rows: [{ label: 'Saldo devedor', value: currency.format(numeric(balance)) }, { label: 'Taxa de juros anual', value: `${numeric(rate)}% a.a.` }, { label: 'Prazo restante', value: `${numeric(months)} meses` }] },
+    ],
+    disclaimer: 'Simulação inicial baseada na Tabela SAC.',
+  };
+
+  return <FreeLayout title="Simulação de financiamento" description="Visualize o valor inicial da prestação e a projeção do saldo devedor." form={<><Field label="Saldo devedor atual" value={balance} onChange={setBalance} prefix="R$" /><div className="grid grid-cols-2 gap-3"><Field label="Juros ao ano (%)" value={rate} onChange={setRate} suffix="%" /><Field label="Meses restantes" value={months} onChange={setMonths} suffix="meses" /></div></>} result={<><Landmark className="h-7 w-7 text-[#d8bd73]" /><p className="mt-5 text-3xl font-black">{currency.format(result.currentInstallment)}</p><p className="mt-2 text-sm leading-6 text-white/70">Prestação inicial estimada na Tabela SAC.</p></>} proItems={['Simulação de aporte extra de amortização', 'Comparativo de redução de prazo vs redução da parcela', 'Cálculo exato da economia em R$ de juros', 'Relatório impresso para o banco']} report={report} />;
+}
+
 export function FreeToolsSimpleCalculator({ tool }: { tool: ProToolId }) {
   if (tool === 'termination') return <TerminationFree />;
   if (tool === 'retirement') return <RetirementFree />;
   if (tool === 'vacation') return <VacationFree />;
   if (tool === 'thirteenth') return <ThirteenthFree />;
+  if (tool === 'overtime') return <OvertimeFree />;
+  if (tool === 'net_salary') return <NetSalaryFree />;
+  if (tool === 'mei_limit') return <MeiLimitFree />;
+  if (tool === 'unemployment') return <UnemploymentFree />;
+  if (tool === 'fator_r') return <FatorRFree />;
+  if (tool === 'amortization') return <AmortizationFree />;
   if (tool === 'benefits') return <BenefitsFree />;
   return <BpcFree />;
 }
