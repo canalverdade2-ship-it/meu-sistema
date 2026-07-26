@@ -31,7 +31,7 @@ import {
   type InssBenefitType,
   type ScreeningRequirement,
 } from '../../lib/freeToolsAdditionalCalculations';
-import type { CalculatorPdfReport, CalculatorReportRow } from '../../lib/freeToolsPdfReport';
+import type { CalculatorPdfReport } from '../../lib/freeToolsPdfReport';
 import { CalculatorPdfReportButton } from './CalculatorPdfReportButton';
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -92,6 +92,56 @@ function Field({
       </span>
       {help && <span className="mt-1.5 block text-xs leading-5 text-[#68727a]">{help}</span>}
     </label>
+  );
+}
+
+function FreeLayout({
+  eyebrow,
+  title,
+  description,
+  form,
+  result,
+  proItems,
+  report,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  form: ReactNode;
+  result: ReactNode;
+  proItems: string[];
+  report: CalculatorPdfReport;
+}) {
+  return (
+    <div className="grid overflow-hidden rounded-2xl border border-[#d4cdc2] bg-white shadow-[0_20px_55px_rgba(29,36,42,0.09)] lg:grid-cols-[1fr_0.88fr]">
+      <section className="bg-[#fffdfa] p-5 sm:p-7 lg:p-8">
+        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#806128]">Modo Free · {eyebrow}</p>
+        <h3 className="mt-3 text-2xl font-black tracking-[-0.03em] text-[#111820]">{title}</h3>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-[#68727a]">{description}</p>
+        <div className="mt-7 space-y-5">{form}</div>
+      </section>
+      <aside className="bg-[#152433] p-5 text-white sm:p-7 lg:p-8">
+        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#d8bd73]">Resultado básico</p>
+        <div className="mt-5">{result}</div>
+        <div className="mt-7 border-t border-white/10 pt-6">
+          <CalculatorPdfReportButton report={report} mode="free" />
+        </div>
+        <div className="mt-7 border-t border-white/10 pt-6">
+          <p className="flex items-center gap-2 text-xs font-black text-white">
+            <ClipboardCheck className="h-4 w-4 text-[#d8bd73]" />
+            No modo Pro você também recebe
+          </p>
+          <ul className="mt-4 space-y-2.5 text-xs leading-5 text-white/58">
+            {proItems.map((item) => (
+              <li key={item} className="flex gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#d8bd73]" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    </div>
   );
 }
 
@@ -170,8 +220,67 @@ function Workbench({ title, description, children, result }: { title: string; de
 }
 
 // ==========================================
-// 4. CALCULADORA DE 13º SALÁRIO (PRO AVANÇADA)
+// 13º SALÁRIO (FREE & PRO)
 // ==========================================
+
+export function ThirteenthFree() {
+  const [salary, setSalary] = useState('3500');
+  const [months, setMonths] = useState('12');
+  const result = useMemo(
+    () =>
+      calculateThirteenthSalary({
+        salary: numeric(salary),
+        eligibleMonths: numeric(months),
+      }),
+    [salary, months]
+  );
+  const report: CalculatorPdfReport = {
+    calculator: 'Calculadora de 13º salário',
+    mode: 'free',
+    headline: `Total bruto estimado: ${currency.format(result.grossValue)}`,
+    summary: 'Estimativa simples dos valores brutos do 13º salário.',
+    sections: [
+      {
+        title: 'Valores brutos',
+        rows: [
+          { label: 'Salário mensal', value: currency.format(numeric(salary)) },
+          { label: 'Avos de 13º', value: `${result.eligibleMonths} de 12` },
+          { label: '1ª Parcela (50%)', value: currency.format(result.firstInstallmentPaid) },
+          { label: '2ª Parcela Bruta', value: currency.format(result.secondInstallmentBeforeDeductions) },
+          { label: 'Total Bruto Estimado', value: currency.format(result.grossValue) },
+        ],
+      },
+    ],
+    disclaimer: 'Estimativa inicial bruta sem considerar impostos e adicionais.',
+  };
+  return (
+    <FreeLayout
+      eyebrow="13º Salário"
+      title="Estimativa bruta do 13º"
+      description="Calcule a estimativa inicial da 1ª e 2ª parcela antes de descontos tributários."
+      form={
+        <>
+          <Field label="Salário bruto mensal" value={salary} onChange={setSalary} prefix="R$" />
+          <Field label="Avos de 13º no ano" value={months} onChange={setMonths} suffix="/ 12" max={12} step={1} />
+        </>
+      }
+      result={
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] font-black uppercase text-[#d8bd73]">Total Bruto Estimado</p>
+            <p className="text-3xl font-black">{currency.format(result.grossValue)}</p>
+          </div>
+          <div className="space-y-2 border-t border-white/10 pt-3 text-sm">
+            <div className="flex justify-between"><span>1ª Parcela (50%):</span><strong className="font-black">{currency.format(result.firstInstallmentPaid)}</strong></div>
+            <div className="flex justify-between"><span>2ª Parcela Bruta:</span><strong className="font-black">{currency.format(result.secondInstallmentBeforeDeductions)}</strong></div>
+          </div>
+        </div>
+      }
+      proItems={['Cálculo automático de INSS e IRRF 2026', 'Abatimento por dependente', 'Médias de horas extras e adicionais', 'Memória detalhada de cálculo em PDF']}
+      report={report}
+    />
+  );
+}
 
 export function ThirteenthPro() {
   const [salary, setSalary] = useState('3500');
@@ -261,8 +370,97 @@ export function ThirteenthPro() {
 }
 
 // ==========================================
-// 5. TRIAGEM BENEFÍCIOS INSS (PRO AVANÇADA)
+// TRIAGEM BENEFÍCIOS INSS (FREE & PRO)
 // ==========================================
+
+export function BenefitsFree() {
+  const [benefitType, setBenefitType] = useState<InssBenefitType>('temporary_incapacity');
+  const [insured, setInsured] = useState(true);
+  const [incapacityDays, setIncapacityDays] = useState('30');
+  const [maternityDoc, setMaternityDoc] = useState(true);
+  const [deceasedCoverage, setDeceasedCoverage] = useState(true);
+  const [eligibleDependent, setEligibleDependent] = useState(true);
+  const [accidentCategory, setAccidentCategory] = useState(true);
+  const [permanentSequela, setPermanentSequela] = useState(true);
+
+  const result = useMemo(
+    () =>
+      evaluateInssBenefitScreening({
+        benefitType,
+        hasInsuredStatus: insured,
+        incapacityDays: numeric(incapacityDays),
+        maternityEventDocumented: maternityDoc,
+        deceasedHadCoverage: deceasedCoverage,
+        isEligibleDependent: eligibleDependent,
+        accidentCategoryEligible: accidentCategory,
+        hasPermanentSequela: permanentSequela,
+      }),
+    [benefitType, insured, incapacityDays, maternityDoc, deceasedCoverage, eligibleDependent, accidentCategory, permanentSequela]
+  );
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Triagem de benefícios do INSS',
+    mode: 'free',
+    headline: result.allMet ? 'Requisitos básicos atingidos' : 'Requisitos básicos pendentes',
+    summary: `Triagem inicial do ${BENEFIT_LABELS[benefitType]}.`,
+    sections: [
+      {
+        title: 'Resultado da triagem',
+        rows: result.requirements.map((req) => ({
+          label: req.label,
+          value: req.met ? 'Atingido' : 'Pendente',
+        })),
+      },
+    ],
+    disclaimer: 'Triagem básica simplificada sem estimativa financeira de benefício.',
+  };
+
+  return (
+    <FreeLayout
+      eyebrow="Triagem INSS"
+      title="Panorama inicial de benefícios"
+      description="Verifique os requisitos básicos para benefício do INSS."
+      form={
+        <>
+          <label className="block">
+            <span className="text-sm font-black text-[#26313a]">Tipo de benefício</span>
+            <select
+              value={benefitType}
+              onChange={(event) => setBenefitType(event.target.value as InssBenefitType)}
+              className="mt-2 min-h-12 w-full rounded-lg border border-[#d5cfc5] bg-white px-4 py-3 text-sm font-bold outline-none"
+            >
+              {BENEFIT_OPTIONS.map(([val, label]) => (
+                <option key={val} value={val}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#d5cfc5] bg-[#faf8f3] p-3 text-xs font-bold text-[#26313a]">
+            <input type="checkbox" checked={insured} onChange={(event) => setInsured(event.target.checked)} className="h-4 w-4 accent-[#8a6e2f]" />
+            Possui qualidade de segurado
+          </label>
+        </>
+      }
+      result={
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] font-black uppercase text-[#d8bd73]">Panorama</p>
+            <p className="text-xl font-black">{result.allMet ? '✅ Requisitos básicos atingidos' : '⚠️ Requisitos pendentes'}</p>
+          </div>
+          <div className="space-y-2 border-t border-white/10 pt-3 text-xs">
+            {result.requirements.map((req) => (
+              <div key={req.label} className="flex justify-between">
+                <span>{req.label}:</span>
+                <strong className="font-black">{req.met ? 'Sim' : 'Não'}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      }
+      proItems={['Simulador de Renda Mensal Inicial (RMI)', 'Cálculo do período de graça acumulado', 'Checklist completo de documentos', 'Relatório em PDF com fundamento legal']}
+      report={report}
+    />
+  );
+}
 
 export function BenefitsPro() {
   const [benefitType, setBenefitType] = useState<InssBenefitType>('temporary_incapacity');
@@ -364,7 +562,7 @@ export function BenefitsPro() {
           report={report}
         >
           <div className="my-3 rounded-lg border border-white/10 bg-white/5 p-3">
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#d8bd73]">Status dos Requisitos</span>
+            <span className="text-[10px] font-black uppercase tracking-[#d8bd73] text-[#d8bd73]">Status dos Requisitos</span>
             <p className="mt-1 text-sm font-black">{result.allMet ? '✅ Requisitos preliminares atingidos' : '⚠️ Requisitos em análise'}</p>
           </div>
 
@@ -464,8 +662,89 @@ export function BenefitsPro() {
 }
 
 // ==========================================
-// 6. TRIAGEM BPC / LOAS (PRO AVANÇADA)
+// TRIAGEM BPC / LOAS (FREE & PRO)
 // ==========================================
+
+export function BpcFree() {
+  const [applicantType, setApplicantType] = useState<BpcApplicantType>('elderly');
+  const [age, setAge] = useState('67');
+  const [grossIncome, setGrossIncome] = useState('1200');
+  const [members, setMembers] = useState('4');
+
+  const result = useMemo(
+    () =>
+      evaluateBpcScreening({
+        applicantType,
+        age: numeric(age),
+        familyGrossIncome: numeric(grossIncome),
+        familyMembers: numeric(members),
+      }),
+    [applicantType, age, grossIncome, members]
+  );
+
+  const report: CalculatorPdfReport = {
+    calculator: 'Triagem BPC / LOAS',
+    mode: 'free',
+    headline: result.incomeWithinObjectiveLimit ? 'Renda per capita dentro do limite' : 'Renda per capita acima do limite administrativo',
+    summary: `Renda de ${currency.format(result.rawIncomePerPerson)} por pessoa.`,
+    sections: [
+      {
+        title: 'Dados da renda',
+        rows: [
+          { label: 'Renda bruta familiar', value: currency.format(result.familyGrossIncome) },
+          { label: 'Integrantes', value: `${result.familyMembers} pessoa(s)` },
+          { label: 'Renda per capita bruta', value: currency.format(result.rawIncomePerPerson) },
+          { label: 'Limite de 1/4 SM (2026)', value: currency.format(result.incomeLimit) },
+        ],
+      },
+    ],
+    disclaimer: 'Triagem administrativa básica.',
+  };
+
+  return (
+    <FreeLayout
+      eyebrow="BPC / LOAS"
+      title="Triagem básica de renda"
+      description="Verifique o enquadramento inicial no critério de renda do BPC."
+      form={
+        <>
+          <div className="grid grid-cols-2 rounded-lg bg-[#ece9e2] p-1">
+            {(
+              [
+                ['elderly', 'Idoso (65+)'],
+                ['disabled', 'PCD'],
+              ] as const
+            ).map(([val, label]) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => setApplicantType(val)}
+                className={`min-h-11 rounded-md text-xs font-black ${applicantType === val ? 'bg-white shadow-sm' : 'text-[#69727a]'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <Field label="Renda familiar bruta" value={grossIncome} onChange={setGrossIncome} prefix="R$" />
+          <Field label="Número de pessoas" value={members} onChange={setMembers} suffix="pessoas" max={30} step={1} />
+        </>
+      }
+      result={
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] font-black uppercase text-[#d8bd73]">Renda Per Capita Bruta</p>
+            <p className="text-2xl font-black">{currency.format(result.rawIncomePerPerson)}</p>
+          </div>
+          <p className="text-xs text-white/70">
+            {result.incomeWithinObjectiveLimit ? '✅ Renda dentro do limite objetivo (1/4 SM).' : '⚠️ Renda acima de R$ 405,25 por pessoa.'}
+          </p>
+        </div>
+      }
+      proItems={['Dedução de gastos com remédios/fraldas/cuidados', 'Análise de flexibilização judicial (1/2 SM)', 'Ajuste fino de renda per capita líquida', 'Relatório completo em PDF']}
+      report={report}
+    />
+  );
+}
 
 export function BpcPro() {
   const [applicantType, setApplicantType] = useState<BpcApplicantType>('elderly');
