@@ -422,15 +422,30 @@ export function PublicHeader({
             : 'border-transparent bg-transparent py-4 sm:py-5'
         }`}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
-          <button
-            type="button"
-            onClick={() => handleLinkClick(NAV_LINKS[0])}
-            aria-label="Ir para a página inicial"
-            className="flex min-w-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"
-          >
-            <LogoGSA size="md" variant="light" />
-          </button>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3 sm:gap-4">
+            {currentPage !== 'home' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleLinkClick(NAV_LINKS[0])}
+                  className="flex items-center gap-2 text-xs font-bold text-white/80 transition hover:text-white"
+                >
+                  <ArrowLeft className="h-4 w-4 text-[#d8bd73]" />
+                  <span className="hidden sm:inline">Voltar ao site</span>
+                </button>
+                <span className="h-5 w-px bg-white/20 sm:block" />
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => handleLinkClick(NAV_LINKS[0])}
+              aria-label="Ir para a página inicial"
+              className="flex min-w-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73]"
+            >
+              <LogoGSA size="md" variant="light" />
+            </button>
+          </div>
 
           {currentPage !== 'home' && (
             <nav aria-label="Navegação principal desktop" className="hidden items-center gap-1 lg:flex xl:gap-2">
@@ -462,10 +477,10 @@ export function PublicHeader({
               type="button"
               onClick={onClientLogin}
               aria-label="Acessar área do cliente"
-              className="gsa-public-header-login inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#d8bd73]/50 bg-white/5 px-3 py-2 text-xs font-black uppercase tracking-wider text-[#d8bd73] transition hover:bg-[#d8bd73]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73] sm:px-4"
+              className="gsa-public-header-login inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#d8bd73] bg-white/5 px-3 py-2 text-xs font-bold text-[#d8bd73] transition hover:bg-[#d8bd73] hover:text-[#080c12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd73] sm:px-4"
             >
-              <LogIn className="h-4 w-4" />
-              <span className="gsa-public-header-login-label">Login</span>
+              <LockKeyhole className="h-4 w-4 text-[#d8bd73]" />
+              <span className="gsa-public-header-login-label">Área do Cliente</span>
             </button>
 
             {currentPage !== 'home' && (
