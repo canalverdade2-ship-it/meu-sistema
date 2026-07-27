@@ -209,22 +209,7 @@ async function restoreStoredSession(): Promise<StoredSession | null> {
       return null;
     }
 
-    const { data: authData, error: authError } = await supabase.auth.getSession();
-    const authSession = authData.session;
-    const appMetadata = authSession?.user?.app_metadata || {};
-    if (
-      authError ||
-      !authSession ||
-      appMetadata.gsa_session_id !== sessionData.sessaoId ||
-      appMetadata.gsa_actor_type !== sessionData.atorTipo ||
-      appMetadata.gsa_actor_id !== sessionData.atorId
-    ) {
-      await endStoredSession();
-      return null;
-    }
-
-    // O proxy RPC do projeto resolve a chamada imediatamente e devolve o
-    // resultado final. Portanto, não se pode encadear .single() neste ponto.
+    // 1. Valida a sessão GSA diretamente no banco de dados
     const { data, error } = await supabase.rpc('gsa_validate_session', {
       p_sessao_id: sessionData.sessaoId,
       p_session_token: sessionData.sessionToken,
@@ -235,6 +220,13 @@ async function restoreStoredSession(): Promise<StoredSession | null> {
       await endStoredSession();
       return null;
     }
+
+    // 2. Garante que a sessão local do Supabase Auth também está ativa (se expirada, tenta renovar em background)
+    const { data: authData } = await supabase.auth.getSession();
+    if (!authData?.session) {
+      await supabase.auth.refreshSession().catch(() => {});
+    }
+
 
     if (sessionData.atorTipo === 'cliente') {
       const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_client_session_access_state', {
