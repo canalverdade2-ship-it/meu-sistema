@@ -22,7 +22,7 @@ import { isRouteAllowed } from './routing/routeSecurity';
 import { readSafeReturnTo } from './routing/safeReturnTo';
 import { defaultAdminPath } from './security/collaboratorAccess';
 import { supabase } from './lib/supabase';
-import { AffiliateTrackingBridge } from './components/AffiliateTrackingBridge';
+import { clientOperationalWrite } from './lib/clientOperationalWrite';
 
 const queryClient = new QueryClient();
 
@@ -174,6 +174,10 @@ export default function App() {
     const clientPersonType: ClientPersonType = resolvedPersonType || hintedPersonType || 'pf';
     sessionService.setClientPersonType(clientPersonType);
     setSession({ clientId, clientPersonType });
+
+    // Migrar carrinho de visitante agora — sessão GSA já está ativa
+    await migrateGuestCartToAccount(clientId);
+
     const returnTo = readSafeReturnTo(
       window.location.search,
       clientPersonType === 'pj'
