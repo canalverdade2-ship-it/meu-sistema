@@ -650,13 +650,13 @@ export function ClientLoginPage({
                   </div>
                 )}
 
-                {mode === 'first_access' && (
-                  <form onSubmit={handleFirstAccessSubmit} className="mt-6 space-y-5">
+                {mode === 'first_access' && firstAccessStage === 'request' && (
+                  <form onSubmit={handleFirstAccessRequest} className="mt-6 space-y-5">
                     <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs leading-5 text-emerald-950">
                       <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
                       <div>
                         <strong className="block font-bold text-emerald-950">Primeiro Acesso — Definir Senha</strong>
-                        Confirme o celular ou e-mail cadastrado e crie sua senha numérica de 4 dígitos para acessar o portal.
+                        Confirme o código enviado ao e-mail cadastrado antes de criar sua senha numérica de 4 dígitos.
                       </div>
                     </div>
 
@@ -676,15 +676,16 @@ export function ClientLoginPage({
                     </label>
 
                     <label htmlFor={`first-access-contact-${personType}`} className="grid gap-2 text-sm font-bold text-[#344154]">
-                      Celular ou e-mail cadastrado
+                      E-mail cadastrado
                       <input
                         id={`first-access-contact-${personType}`}
-                        name="contato-primeiro-acesso"
-                        type="text"
+                        name="email-primeiro-acesso"
+                        type="email"
+                        autoComplete="email"
                         required
                         value={firstAccessContact}
                         onChange={(event) => setFirstAccessContact(event.target.value)}
-                        placeholder={isBusiness ? '(00) 00000-0000 ou contato@empresa.com.br' : '(00) 00000-0000 ou email@exemplo.com'}
+                        placeholder={isBusiness ? 'contato@empresa.com.br' : 'email@exemplo.com'}
                         className="min-h-14 w-full rounded-xl border border-[#d7dde3] bg-white px-4 text-base outline-none transition placeholder:text-[#9aa4af] focus:border-[#8a651f] focus:ring-4 focus:ring-[#d8bd73]/15"
                       />
                     </label>
@@ -711,7 +712,7 @@ export function ClientLoginPage({
                       className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] disabled:opacity-55"
                     >
                       {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {loading ? 'Cadastrando...' : isBusiness ? 'Cadastrar senha e acessar GSA HUB Empresas' : 'Cadastrar senha e acessar'}
+                      {loading ? 'Enviando...' : 'Enviar código de confirmação'}
                     </button>
 
                     <button
@@ -721,6 +722,53 @@ export function ClientLoginPage({
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Voltar ao login
+                    </button>
+                  </form>
+                )}
+
+                {mode === 'first_access' && firstAccessStage === 'code' && (
+                  <form onSubmit={handleFirstAccessComplete} className="mt-8 space-y-5">
+                    <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs leading-5 text-emerald-900">
+                      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
+                      Digite o código enviado para <strong className="break-all">{firstAccessContact}</strong>. A senha só será criada depois dessa confirmação.
+                    </div>
+
+                    <label htmlFor={`first-access-code-${personType}`} className="grid gap-2 text-sm font-bold text-[#344154]">
+                      Código de seis dígitos
+                      <input
+                        id={`first-access-code-${personType}`}
+                        name="codigo-primeiro-acesso"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        autoFocus
+                        value={firstAccessCode}
+                        onChange={(event) => setFirstAccessCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="000000"
+                        maxLength={6}
+                        className="min-h-16 w-full rounded-xl border border-[#d7dde3] bg-white px-4 text-center font-mono text-2xl tracking-[0.45em] outline-none transition focus:border-[#8a651f] focus:ring-4 focus:ring-[#d8bd73]/15"
+                      />
+                    </label>
+
+                    <button
+                      type="submit"
+                      disabled={loading || firstAccessCode.length !== 6}
+                      className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] disabled:opacity-55"
+                    >
+                      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {loading ? 'Confirmando...' : isBusiness ? 'Confirmar e acessar GSA HUB Empresas' : 'Confirmar e acessar'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFirstAccessStage('request');
+                        setFirstAccessCode('');
+                      }}
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 text-sm font-bold text-[#344154] hover:text-[#0b1522] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Reenviar código
                     </button>
                   </form>
                 )}
