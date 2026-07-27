@@ -1,6 +1,6 @@
 # Auditoria de operação real
 
-Gerada em: 2026-07-27T23:23:24.982Z
+Gerada em: 2026-07-27T23:24:52.522Z
 
 Arquivos executáveis examinados: **372**
 
@@ -15,9 +15,9 @@ Nenhum bloqueador explícito encontrado.
 ## Revisão humana
 
 - `src/components/admin/AffiliateAdminModule.tsx:177` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const notes = action === 'reject' ? window.prompt('Informe o motivo da rejeição:')?.trim() : \`Ação ${action} realizada no painel administrativo.\`;`
-- `src/components/admin/demandas/DemandasDetalhesModal.tsx:166` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Informe o motivo da recusa:');`
-- `src/components/admin/demandas/DemandasDetalhesModal.tsx:358` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Motivo para recusar a contraproposta do prestador:');`
-- `src/components/admin/demandas/DemandasDetalhesModal.tsx:402` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Por que deseja cancelar esta demanda?');`
+- `src/components/admin/demandas/DemandasDetalhesModal.tsx:167` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Informe o motivo da recusa:');`
+- `src/components/admin/demandas/DemandasDetalhesModal.tsx:359` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Motivo para recusar a contraproposta do prestador:');`
+- `src/components/admin/demandas/DemandasDetalhesModal.tsx:403` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Por que deseja cancelar esta demanda?');`
 - `src/components/ui/AccessibleDialog.tsx:57` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {`
 - `src/components/ui/AccessibleDialog.tsx:63` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {`
 - `src/components/ui/AccessibleDialog.tsx:67` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {`
