@@ -39,6 +39,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Cliente, Module, Notificacao } from '../types';
 import { formatCurrency, playPremiumBeep } from '../lib/utils';
 
