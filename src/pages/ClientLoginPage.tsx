@@ -17,7 +17,6 @@ import {
 import { motion, useReducedMotion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { LogoGSA } from '../components/ui/LogoGSA';
-import { Modal } from '../components/ui/Modal';
 import { PinInput } from '../components/ui/PinInput';
 import { sessionService, type ClientPersonType } from '../lib/sessionService';
 import { logService } from '../lib/logService';
