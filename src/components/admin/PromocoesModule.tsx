@@ -212,14 +212,15 @@ export function PromocoesModule({ activeSubTab, initialItemId, colaboradorId, co
 
     if (!window.confirm('Excluir esta promoção?')) return;
 
-    const { error } = await supabase
-      .from('promocoes')
-      .delete()
-      .eq('id', id);
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('promocoes')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
-      toast.error('Erro ao excluir promoção.');
-    } else {
+      if (error) throw error;
+
       toast.success('Promoção excluída.');
       
       // Log Action
@@ -232,6 +233,11 @@ export function PromocoesModule({ activeSubTab, initialItemId, colaboradorId, co
       });
 
       fetchPromocoes();
+    } catch (err: any) {
+      console.error('Erro ao excluir promoção:', err);
+      toast.error('Erro ao excluir promoção: ' + (err.message || 'Falha inesperada'));
+    } finally {
+      setLoading(false);
     }
   };
 
