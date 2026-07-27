@@ -146,10 +146,10 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
         valor_total: orcTotal,
         status_pagamento: 'pendente',
         status_emissao: 'pendente_emissao',
-      }]);
+      }]).throwOnError();
     } catch (err) {
       console.error('Erro ao criar ordem fiscal:', err);
-      // Não bloqueia o fluxo principal
+      throw err;
     }
   };
 
@@ -488,12 +488,12 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
         await supabase.from('os_notas').insert({
           os_id: selectedDemanda.os_id,
           nota: 'Demanda direcionada para o fluxo de Gestão Interna.'
-        });
+        }).throwOnError();
       } else if (selectedDemanda.os_id) {
         await supabase.from('os_notas').insert({
           os_id: selectedDemanda.os_id,
           nota: `Demanda direcionada para o prestador externo: ${destNome}.`
-        });
+        }).throwOnError();
       }
 
       if (!isGestaoInterna) {
@@ -742,7 +742,7 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
         await supabase.from('os_notas').insert({
           os_id: demanda.os_id,
           nota: '✅ Atendimento concluído com sucesso! Os arquivos finais foram disponibilizados e a fatura gerada. Obrigado por confiar na GSA!'
-        });
+        }).throwOnError();
 
         // 3. Gerar Fatura para o Cliente (Valor do Orçamento)
         const { data: fatura, error: errorFatura } = await supabase
@@ -912,7 +912,7 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
       await supabase.from('os_notas').insert({
         os_id: selectedDemanda.os_id,
         nota: `Demanda transferida de "${prevName}" para "${targetName}".`
-      });
+      }).throwOnError();
 
       if (transferTarget === 'prestador') {
         await notificationService.notifyProvider(
@@ -2389,7 +2389,7 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
                 await supabase.from('os_notas').insert({
                   os_id: selectedDemanda.os_id,
                   nota: `Ajuste solicitado ao prestador pela administração.`
-                });
+                }).throwOnError();
               }
 
               toast.success('Ajuste solicitado!');

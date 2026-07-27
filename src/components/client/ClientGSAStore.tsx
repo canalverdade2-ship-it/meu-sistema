@@ -372,7 +372,10 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       const activatedCouponIds = Array.isArray(parsedCoupons?.activatedCouponIds) ? parsedCoupons.activatedCouponIds : [];
       for (const cupomId of activatedCouponIds) {
         if (!cupomId) continue;
-        try { await supabase.from('cupons_ativados').insert({ cliente_id: clientId, cupom_id: cupomId }); } catch { /* ignore duplicate */ }
+        const { error } = await supabase
+          .from('cupons_ativados')
+          .insert({ cliente_id: clientId, cupom_id: cupomId });
+        if (error && error.code !== '23505') throw error;
       }
 
       if (imported) {

@@ -144,7 +144,8 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
             data_cancelamento: new Date().toISOString(),
             motivo_cancelamento: 'Prazo para resgate expirado.'
           })
-          .in('id', expirados.map(p => p.id));
+          .in('id', expirados.map(p => p.id))
+          .throwOnError();
 
         // Notificar cada cliente
         for (const p of expirados) {

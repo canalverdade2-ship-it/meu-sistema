@@ -518,10 +518,16 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       // Verificar se houve alteração de preço no banco antes de fechar
       const productIds = cartItems.filter((c: any) => c.tipo === 'produto').map((c: any) => c.item_id);
       if (productIds.length > 0) {
-        const { data: dbProducts } = await supabase
+        const { data: dbProducts, error: productValidationError } = await supabase
           .from('produtos')
           .select('id, status, visivel_na_loja, controle_estoque, estoque_disponivel, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada')
           .in('id', productIds);
+        if (productValidationError) {
+          throw new Error(`Não foi possível validar os produtos antes da compra: ${productValidationError.message}`);
+        }
+        if (!dbProducts || dbProducts.length !== new Set(productIds).size) {
+          throw new Error('Não foi possível validar todos os produtos do carrinho. Atualize a loja e tente novamente.');
+        }
         if (dbProducts) {
           let priceChanged = false;
           for (const item of cartItems) {

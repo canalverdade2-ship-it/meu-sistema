@@ -5,6 +5,139 @@ import { formatCurrency, formatDate } from '../../../lib/utils';
 import { FileText, Download, Receipt, Search, Eye, Printer, FileDown } from 'lucide-react';
 import { Modal } from '../../ui/Modal';
 
+const RECEIPT_PRINT_STYLES = `
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; padding: 40px; color: #111; background: #fff; }
+  .header { border-bottom: 3px solid #111; padding-bottom: 20px; margin-bottom: 24px; }
+  .title { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase; }
+  .subtitle { font-size: 11px; color: #666; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-top: 4px; }
+  .code { font-size: 13px; font-weight: 700; color: #4f46e5; margin-top: 8px; }
+  .section { margin-bottom: 24px; }
+  .section-title { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #666; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+  .row { display: flex; justify-content: space-between; gap: 24px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; }
+  .row label { font-size: 12px; color: #555; font-weight: 600; }
+  .row span { font-size: 12px; font-weight: 700; color: #111; text-align: right; overflow-wrap: anywhere; }
+  .total-row { border-top: 2px solid #111; margin-top: 8px; padding-top: 12px; }
+  .total-row label { font-size: 14px; font-weight: 900; }
+  .total-row span { font-size: 18px; font-weight: 900; color: #4f46e5; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .badge-pago { background: #d1fae5; color: #065f46; }
+  .badge-pendente { background: #fef3c7; color: #92400e; }
+  .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; letter-spacing: 1px; }
+  @media print { body { padding: 20px; } }
+`;
+
+function appendPrintElement<K extends keyof HTMLElementTagNameMap>(
+  doc: Document,
+  parent: Node,
+  tag: K,
+  className?: string,
+  text?: string,
+): HTMLElementTagNameMap[K] {
+  const element = doc.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  parent.appendChild(element);
+  return element;
+}
+
+function appendReceiptSection(
+  doc: Document,
+  parent: Node,
+  title: string,
+  rows: Array<[label: string, value: string, valueClass?: string, rowClass?: string]>,
+) {
+  const section = appendPrintElement(doc, parent, 'div', 'section');
+  appendPrintElement(doc, section, 'div', 'section-title', title);
+  rows.forEach(([label, value, valueClass, rowClass]) => {
+    const row = appendPrintElement(doc, section, 'div', `row${rowClass ? ` ${rowClass}` : ''}`);
+    appendPrintElement(doc, row, 'label', undefined, label);
+    appendPrintElement(doc, row, 'span', valueClass, value);
+  });
+}
+
+function formatReceiptAmount(value: unknown) {
+  const amount = Number(value);
+  return (Number.isFinite(amount) ? amount : 0).toFixed(2).replace('.', ',');
+}
+
+function renderFiscalReceipt(doc: Document, ordem: OrdemFiscal) {
+  const purchaseTypeLabels: Record<string, string> = {
+    servico: 'Serviço',
+    produto: 'Produto',
+    assinatura: 'Assinatura',
+  };
+  const issueStatusLabels: Record<string, string> = {
+    pendente_emissao: 'Pendente Emissão',
+    emitida: 'Emitida',
+    cancelada: 'Cancelada',
+    inutilizada: 'Inutilizada',
+  };
+
+  doc.documentElement.lang = 'pt-BR';
+  doc.title = `Recibo Fiscal — ${String(ordem.codigo_fiscal || '')}`;
+  doc.head.replaceChildren();
+  const charset = doc.createElement('meta');
+  charset.setAttribute('charset', 'UTF-8');
+  doc.head.appendChild(charset);
+  const style = doc.createElement('style');
+  style.textContent = RECEIPT_PRINT_STYLES;
+  doc.head.appendChild(style);
+  doc.body.replaceChildren();
+
+  const header = appendPrintElement(doc, doc.body, 'div', 'header');
+  appendPrintElement(doc, header, 'div', 'title', 'Recibo Fiscal');
+  appendPrintElement(doc, header, 'div', 'subtitle', 'Grupo GSA — Gestão de Serviços');
+  appendPrintElement(doc, header, 'div', 'code', String(ordem.codigo_fiscal || '—'));
+
+  const clientRows: Array<[string, string]> = [
+    ['Nome', String(ordem.cliente_nome || '—')],
+    ['CPF / CNPJ', String(ordem.cliente_documento || '—')],
+    ['Telefone', String(ordem.cliente_telefone || '—')],
+  ];
+  if (ordem.cliente_email) clientRows.push(['Email', String(ordem.cliente_email)]);
+  appendReceiptSection(doc, doc.body, 'Dados do Cliente', clientRows);
+
+  const purchaseRows: Array<[string, string]> = [
+    ['Tipo', purchaseTypeLabels[ordem.tipo_compra || ''] || '—'],
+    ['Descrição', String(ordem.descricao_item || '—')],
+  ];
+  if (ordem.codigo_ordem) purchaseRows.push(['Código da Ordem', String(ordem.codigo_ordem)]);
+  if (ordem.codigo_orcamento) purchaseRows.push(['Código do Orçamento', String(ordem.codigo_orcamento)]);
+  appendReceiptSection(doc, doc.body, 'Detalhes da Compra', purchaseRows);
+
+  const valueRows: Array<[string, string, string?, string?]> = [
+    ['Valor Bruto', `R$ ${formatReceiptAmount(ordem.valor_bruto)}`],
+  ];
+  if (Number(ordem.valor_desconto) > 0) valueRows.push(['Desconto', `- R$ ${formatReceiptAmount(ordem.valor_desconto)}`]);
+  if (Number(ordem.valor_acrescimo) > 0) valueRows.push(['Acréscimo', `+ R$ ${formatReceiptAmount(ordem.valor_acrescimo)}`]);
+  valueRows.push(['Total', `R$ ${formatReceiptAmount(ordem.valor_total)}`, undefined, 'total-row']);
+  appendReceiptSection(doc, doc.body, 'Valores', valueRows);
+
+  const paid = ordem.status_pagamento === 'pago';
+  const paymentRows: Array<[string, string, string?]> = [
+    ['Status', paid ? 'Pago' : 'Pendente', `badge ${paid ? 'badge-pago' : 'badge-pendente'}`],
+  ];
+  if (ordem.forma_pagamento) paymentRows.push(['Forma de Pagamento', String(ordem.forma_pagamento).toUpperCase()]);
+  if (ordem.data_pagamento) paymentRows.push(['Data do Pagamento', formatDate(ordem.data_pagamento)]);
+  appendReceiptSection(doc, doc.body, 'Pagamento', paymentRows);
+
+  const invoiceRows: Array<[string, string]> = [
+    ['Status de Emissão', issueStatusLabels[ordem.status_emissao || ''] || '—'],
+  ];
+  if (ordem.numero_nota) invoiceRows.push(['Número da NF', String(ordem.numero_nota)]);
+  if (ordem.data_emissao) invoiceRows.push(['Data de Emissão', formatDate(ordem.data_emissao)]);
+  appendReceiptSection(doc, doc.body, 'Nota Fiscal', invoiceRows);
+
+  appendPrintElement(
+    doc,
+    doc.body,
+    'div',
+    'footer',
+    `Gerado em ${formatDate(new Date())} • Sistema GSA Gestão de Serviços`,
+  );
+}
+
 export function NotasFiscaisList({ clientId, initialItemId }: { clientId: string, initialItemId?: string }) {
   const [ordens, setOrdens] = useState<OrdemFiscal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,103 +206,11 @@ export function NotasFiscaisList({ clientId, initialItemId }: { clientId: string
   );
 
   const handlePrintReceipt = (ordem: OrdemFiscal) => {
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open('about:blank', '_blank', 'noopener,noreferrer');
     if (!printWindow) return;
+    printWindow.opener = null;
 
-    const TIPO_COMPRA_LABEL: Record<string, string> = {
-      servico:    'Serviço',
-      produto:    'Produto',
-      assinatura: 'Assinatura',
-    };
-
-    const EMISSAO_STATUS_CONFIG: Record<string, { label: string }> = {
-      pendente_emissao: { label: 'Pendente Emissão' },
-      emitida:          { label: 'Emitida' },
-      cancelada:        { label: 'Cancelada' },
-      inutilizada:      { label: 'Inutilizada' },
-    };
-
-    const html = `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <title>Recibo Fiscal — ${ordem.codigo_fiscal}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: Arial, sans-serif; padding: 40px; color: #111; background: #fff; }
-          .header { border-bottom: 3px solid #111; padding-bottom: 20px; margin-bottom: 24px; }
-          .title { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase; }
-          .subtitle { font-size: 11px; color: #666; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-top: 4px; }
-          .code { font-size: 13px; font-weight: 700; color: #4f46e5; margin-top: 8px; }
-          .section { margin-bottom: 24px; }
-          .section-title { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #666; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px; }
-          .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5; }
-          .row label { font-size: 12px; color: #555; font-weight: 600; }
-          .row span { font-size: 12px; font-weight: 700; color: #111; }
-          .total-row { display: flex; justify-content: space-between; padding: 12px 0; border-top: 2px solid #111; margin-top: 8px; }
-          .total-row label { font-size: 14px; font-weight: 900; }
-          .total-row span { font-size: 18px; font-weight: 900; color: #4f46e5; }
-          .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-          .badge-pago { background: #d1fae5; color: #065f46; }
-          .badge-pendente { background: #fef3c7; color: #92400e; }
-          .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; letter-spacing: 1px; }
-          @media print { body { padding: 20px; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="title">Recibo Fiscal</div>
-          <div class="subtitle">Grupo GSA — Gestão de Serviços</div>
-          <div class="code">${ordem.codigo_fiscal}</div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Dados do Cliente</div>
-          <div class="row"><label>Nome</label><span>${ordem.cliente_nome || '—'}</span></div>
-          <div class="row"><label>CPF / CNPJ</label><span>${ordem.cliente_documento || '—'}</span></div>
-          <div class="row"><label>Telefone</label><span>${ordem.cliente_telefone || '—'}</span></div>
-          ${ordem.cliente_email ? `<div class="row"><label>Email</label><span>${ordem.cliente_email}</span></div>` : ''}
-        </div>
-
-        <div class="section">
-          <div class="section-title">Detalhes da Compra</div>
-          <div class="row"><label>Tipo</label><span>${TIPO_COMPRA_LABEL[ordem.tipo_compra || ''] || '—'}</span></div>
-          <div class="row"><label>Descrição</label><span>${ordem.descricao_item || '—'}</span></div>
-          ${ordem.codigo_ordem ? `<div class="row"><label>Código da Ordem</label><span>${ordem.codigo_ordem}</span></div>` : ''}
-          ${ordem.codigo_orcamento ? `<div class="row"><label>Código do Orçamento</label><span>${ordem.codigo_orcamento}</span></div>` : ''}
-        </div>
-
-        <div class="section">
-          <div class="section-title">Valores</div>
-          <div class="row"><label>Valor Bruto</label><span>R$ ${Number(ordem.valor_bruto).toFixed(2).replace('.', ',')}</span></div>
-          ${Number(ordem.valor_desconto) > 0 ? `<div class="row"><label>Desconto</label><span>- R$ ${Number(ordem.valor_desconto).toFixed(2).replace('.', ',')}</span></div>` : ''}
-          ${Number(ordem.valor_acrescimo) > 0 ? `<div class="row"><label>Acréscimo</label><span>+ R$ ${Number(ordem.valor_acrescimo).toFixed(2).replace('.', ',')}</span></div>` : ''}
-          <div class="total-row"><label>Total</label><span>R$ ${Number(ordem.valor_total).toFixed(2).replace('.', ',')}</span></div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Pagamento</div>
-          <div class="row"><label>Status</label><span class="badge ${ordem.status_pagamento === 'pago' ? 'badge-pago' : 'badge-pendente'}">${ordem.status_pagamento === 'pago' ? 'Pago' : 'Pendente'}</span></div>
-          ${ordem.forma_pagamento ? `<div class="row"><label>Forma de Pagamento</label><span>${ordem.forma_pagamento.toUpperCase()}</span></div>` : ''}
-          ${ordem.data_pagamento ? `<div class="row"><label>Data do Pagamento</label><span>${formatDate(ordem.data_pagamento)}</span></div>` : ''}
-        </div>
-
-        <div class="section">
-          <div class="section-title">Nota Fiscal</div>
-          <div class="row"><label>Status de Emissão</label><span>${EMISSAO_STATUS_CONFIG[ordem.status_emissao]?.label || '—'}</span></div>
-          ${ordem.numero_nota ? `<div class="row"><label>Número da NF</label><span>${ordem.numero_nota}</span></div>` : ''}
-          ${ordem.data_emissao ? `<div class="row"><label>Data de Emissão</label><span>${formatDate(ordem.data_emissao)}</span></div>` : ''}
-        </div>
-
-        <div class="footer">
-          Gerado em ${formatDate(new Date())} • Sistema GSA Gestão de Serviços
-        </div>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(html);
+    renderFiscalReceipt(printWindow.document, ordem);
     printWindow.document.close();
     setTimeout(() => {
       printWindow.focus();

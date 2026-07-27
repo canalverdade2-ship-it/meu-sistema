@@ -25,7 +25,7 @@ if (chainedSingle.test(source)) {
   throw new Error('A restauração voltou a encadear .single() no proxy assíncrono de supabase.rpc.');
 }
 
-const restoreCatch = /async function restoreStoredSession[\s\S]*?catch \(error\) \{([\s\S]*?)\n  \}\n\}/;
+const restoreCatch = /async function restoreStoredSession[\s\S]*?catch \(error\) \{([\s\S]*?)\r?\n  \}\r?\n\}/;
 const restoreCatchMatch = source.match(restoreCatch);
 if (!restoreCatchMatch) {
   throw new Error('Não foi possível localizar o tratamento de erro da restauração.');

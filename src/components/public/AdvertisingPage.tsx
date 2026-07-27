@@ -414,33 +414,17 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
     };
 
     try {
-      let createdProtocol: string | undefined;
+      const { data, error } = await supabase.functions.invoke<{
+        success: boolean;
+        protocol?: string;
+        error?: string;
+      }>('gsa-public-advertising', { body: requestPayload });
 
-      try {
-        const { data, error } = await supabase.functions.invoke<{
-          success: boolean;
-          protocol?: string;
-          error?: string;
-        }>('gsa-public-advertising', { body: requestPayload });
-
-        if (!error && data?.success && data.protocol) {
-          createdProtocol = data.protocol;
-        }
-      } catch (edgeError) {
-        console.warn('Edge Function indisponível ou bloqueada por CORS, usando fallback RPC direct:', edgeError);
+      if (error) throw error;
+      if (!data?.success || !data.protocol) {
+        throw new Error(data?.error || 'O servidor não confirmou a gravação da solicitação.');
       }
-
-      if (!createdProtocol) {
-        const { data: rpcData, error: rpcError } = await supabase.rpc('gsa_public_submit_advertising_request', {
-          p_payload: requestPayload as any,
-        });
-
-        const res = rpcData as { success?: boolean; protocol?: string; error?: string } | null;
-        if (rpcError || !res?.success || !res.protocol) {
-          throw rpcError || new Error(res?.error || 'O servidor não confirmou a gravação da solicitação.');
-        }
-        createdProtocol = res.protocol;
-      }
+      const createdProtocol = data.protocol;
 
       setProtocol(createdProtocol);
       setForm(INITIAL_FORM);

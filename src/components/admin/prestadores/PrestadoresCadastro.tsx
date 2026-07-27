@@ -155,7 +155,7 @@ export function PrestadoresCadastro({
         prestador_id: id,
         acao: `Status alterado para ${newStatus}`,
         descricao: `Status atualizado pelo administrador.`
-      }]);
+      }]).throwOnError();
 
       toast.success(`Status atualizado para ${newStatus}.`);
 
@@ -233,36 +233,8 @@ export function PrestadoresCadastro({
         throw new Error('O registro do prestador não foi encontrado no banco de dados. Ele pode ter sido excluído por outro administrador.');
       }
 
-      // 2. Limpeza de tabelas vinculadas
-      // Nota: O banco de dados agora possui ON DELETE CASCADE, mas mantemos a limpeza manual 
-      // para garantir a remoção de tabelas sem chaves estrangeiras explícitas ou disparar triggers específicos.
-      console.log('Limpando dados vinculados para garantir exclusão total...');
-      
-      const tablesToDelete = [
-        'prestador_suporte_demandas',
-        'prestador_transacoes',
-        'prestador_saques',
-        'prestador_faturas',
-        'prestador_documentos',
-        'prestador_historico',
-        'prestador_demandas',
-        'prestador_vouchers',
-        'prestador_premios',
-        'prestador_agendamentos',
-        'prestador_promocoes_ativacoes',
-        'notificacoes',
-        'tickets'
-      ];
-
-      for (const table of tablesToDelete) {
-        try {
-          await supabase.from(table).delete().eq('prestador_id', pId);
-        } catch (err) {
-          console.warn(`Erro (ignorado) ao limpar tabela ${table}:`, err);
-        }
-      }
-
-      // 3. Excluir o prestador principal
+      // A exclusão é feita somente no registro raiz. Relacionamentos devem usar
+      // ON DELETE CASCADE ou RESTRICT no banco, evitando limpezas parciais.
       const { error: mainError, count } = await supabase
         .from('prestadores')
         .delete({ count: 'exact' })
@@ -359,7 +331,7 @@ export function PrestadoresCadastro({
         prestador_id: data.id,
         acao: 'Cadastro realizado pelo administrador',
         descricao: 'Prestador cadastrado diretamente pelo painel administrativo com status ATIVO.'
-      }]);
+      }]).throwOnError();
 
       toast.success('Prestador cadastrado com sucesso!', { id: toastId, duration: 6000 });
       

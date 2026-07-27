@@ -44,7 +44,8 @@ export function AdminPrestadorPromocoes() {
         await supabase
           .from('prestador_promocoes')
           .update({ status: 'encerrada' })
-          .in('id', expiredPromos.map(p => p.id));
+          .in('id', expiredPromos.map(p => p.id))
+          .throwOnError();
       }
 
       const { data, error } = await supabase

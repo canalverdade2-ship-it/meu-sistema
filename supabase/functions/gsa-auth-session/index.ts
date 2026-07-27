@@ -128,6 +128,27 @@ function text(value: unknown, maxLength: number) {
   return value.trim().slice(0, maxLength);
 }
 
+async function readJsonWithinLimit(request: Request) {
+  if (!request.body) throw new SyntaxError('invalid_json');
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let rawBody = '';
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BODY_BYTES) throw new RangeError('payload_too_large');
+      rawBody += decoder.decode(value, { stream: true });
+    }
+    rawBody += decoder.decode();
+    return JSON.parse(rawBody) as { action?: AuthAction; payload?: Record<string, unknown> };
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export function normalizePayload(
   action: AuthAction,
   payload: Record<string, unknown>,
@@ -265,16 +286,15 @@ export async function handleRequest(request: Request) {
     const declaredLength = Number(request.headers.get('content-length') || 0);
     if (declaredLength > MAX_BODY_BYTES) return json({ error: 'payload_too_large' }, 413, allowedOrigin);
 
-    const rawBody = await request.text();
-    if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
-      return json({ error: 'payload_too_large' }, 413, allowedOrigin);
-    }
-
     let body: { action?: AuthAction; payload?: Record<string, unknown> };
     try {
-      body = JSON.parse(rawBody);
-    } catch {
-      return json({ error: 'invalid_json' }, 400, allowedOrigin);
+      body = await readJsonWithinLimit(request);
+    } catch (error) {
+      return json(
+        { error: error instanceof RangeError ? 'payload_too_large' : 'invalid_json' },
+        error instanceof RangeError ? 413 : 400,
+        allowedOrigin,
+      );
     }
 
     const supportedActions = new Set<AuthAction>([

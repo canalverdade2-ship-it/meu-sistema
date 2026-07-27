@@ -3,7 +3,7 @@ import { Search, ClipboardList, CheckCircle, XCircle, Clock, MessageSquare, Plus
 import { supabase } from '../../lib/supabase';
 import { OS } from '../../types';
 import { Modal } from '../ui/Modal';
-import { formatCurrency, formatDate, formatDateTime, generateCode, handleError } from '../../lib/utils';
+import { formatCurrency, formatDate, formatDateTime, generateUUID, handleError } from '../../lib/utils';
 import { GlobalFilter } from '../ui/GlobalFilter';
 import { toast } from 'react-hot-toast';
 import { generateOSPDF } from '../../lib/pdf';
@@ -17,6 +17,7 @@ import { canDeleteRecord } from '../../lib/deleteRequest';
 import { logService } from '../../lib/logService';
 import { PainelRentabilidade } from './PainelRentabilidade';
 import { useFileViewer } from '../../contexts/FileViewerContext';
+import { callAdminRpc } from '../../lib/adminRpc';
 
 export function OrdensServicoModule({ activeSubTab, initialItemId, colaboradorNome }: { activeSubTab?: 'abertas' | 'concluidas' | 'canceladas', initialItemId?: string, colaboradorNome?: string }) {
   const [activeTab, setActiveTab] = useState<'andamento' | 'concluido' | 'cancelado'>('andamento');
@@ -375,6 +376,7 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
   const [requestedDocs, setRequestedDocs] = useState<string[]>(['']);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
+  const finalizeRequestId = useRef(generateUUID());
 
   useEffect(() => {
     fetchNotas();
@@ -497,41 +499,14 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
   const confirmFinalizeOS = async () => {
     setIsSubmitting(true);
     try {
-      const agora = new Date().toISOString();
-      const orcamentoData = Array.isArray((os as any).orcamentos) ? (os as any).orcamentos[0] : (os as any).orcamentos;
-      const total = orcamentoData?.total || 0;
+      const result = await callAdminRpc<{ success?: boolean }>('gsa_admin_finalize_service_order', {
+        p_request_id: finalizeRequestId.current,
+        p_ordem_servico_id: os.id,
+      });
+      if (!result?.success) {
+        throw new Error('O servidor não confirmou a finalização da ordem de serviço.');
+      }
 
-      // 1. Atualizar a OS
-      const { error: errorOS } = await supabase
-        .from('ordens_servico')
-        .update({ 
-          status: 'concluido',
-          data_fim: agora 
-        })
-        .eq('id', os.id);
-      if (errorOS) throw errorOS;
-
-      // 2. Atualizar demandas vinculadas
-      await supabase
-        .from('prestador_demandas')
-        .update({ status: 'finalizada' })
-        .eq('os_id', os.id)
-        .eq('status', 'concluida_interna')
-        .throwOnError();
-
-      // 3. Gerar Fatura
-      await supabase.from('faturas').insert({
-        codigo_fatura: generateCode('FAT'),
-        os_id: os.id,
-        cliente_id: os.cliente_id,
-        valor_total: total,
-        valor_final_pendente: total,
-        status: 'pendente',
-        data_vencimento: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        tipo: 'servico'
-      }).throwOnError();
-
-      // 4. Notificar Cliente
       await notificationService.notifyClient(
         os.cliente_id,
         '🎉 Serviço Concluído e Entregue',
@@ -540,14 +515,6 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
         'os_concluida',
         { tab: 'concluido', itemId: os.id, prioridade: 'alta' }
       );
-
-      // 5. Log
-      await logService.logAction({
-        acao: 'FINALIZAR_OS_VENDAS',
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-        ator_nome: colaboradorNome || 'Administrador',
-        detalhes: `Finalizou oficialmente a OS ${os.codigo_os} após análise de entrega.`
-      });
 
       toast.success('Ordem de Serviço finalizada com sucesso!');
       setIsFinalizeModalOpen(false);

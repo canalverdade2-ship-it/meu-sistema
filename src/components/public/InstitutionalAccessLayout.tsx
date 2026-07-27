@@ -44,10 +44,11 @@ export function InstitutionalAccessLayout({
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex min-h-11 items-center gap-2 border border-white/20 px-4 text-xs font-semibold text-white/80 transition hover:border-[#d5b86b] hover:text-[#d5b86b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d5b86b]"
+              aria-label={backLabel}
+              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 border border-white/20 px-3 text-xs font-semibold text-white/80 transition hover:border-[#d5b86b] hover:text-[#d5b86b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d5b86b] sm:px-4"
             >
               <ArrowLeft className="h-4 w-4 text-[#d5b86b]" />
-              {backLabel}
+              <span className="hidden min-[380px]:inline">{backLabel}</span>
             </button>
           )}
         </div>
@@ -56,7 +57,7 @@ export function InstitutionalAccessLayout({
       <div className="flex-1">{children}</div>
 
       <footer className="border-t border-white/10 bg-[#080c12] text-white">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-5 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <span>© {new Date().getFullYear()} GSA HUB — Soluções Digitais.</span>
           <span className="inline-flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-[#d5b86b]" />

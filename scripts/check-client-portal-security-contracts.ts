@@ -144,8 +144,11 @@ console.log('Contratos críticos de segurança do painel do cliente validados.')
 assertContains('supabase/functions/gsa-auth-session/index.ts', [
   'request_client_recovery',
   'complete_client_recovery',
+  'request_client_first_access',
+  'complete_client_first_access',
   'signInWithOtp',
-  'gsa_client_recovery_challenges',
+  'gsa_complete_client_recovery',
+  'gsa_complete_client_first_access',
   'recovery_verification_required',
 ]);
 

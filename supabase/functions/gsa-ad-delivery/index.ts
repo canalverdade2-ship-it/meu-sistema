@@ -66,6 +66,29 @@ function clientIp(request: Request) {
     || 'unknown';
 }
 
+async function readJsonWithinLimit(request: Request): Promise<JsonRecord> {
+  if (!request.body) throw new SyntaxError('invalid_json');
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let text = '';
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BODY_BYTES) throw new RangeError('payload_too_large');
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new SyntaxError('invalid_json');
+    return parsed as JsonRecord;
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 async function checkRateLimit(
   admin: any,
   bucketKey: string,
@@ -104,16 +127,15 @@ export async function handleRequest(request: Request) {
   const declaredLength = Number(request.headers.get('content-length') || 0);
   if (declaredLength > MAX_BODY_BYTES) return json(413, { error: 'payload_too_large' }, origin);
 
-  const rawBody = await request.text();
-  if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
-    return json(413, { error: 'payload_too_large' }, origin);
-  }
-
   let body: JsonRecord;
   try {
-    body = JSON.parse(rawBody) as JsonRecord;
-  } catch {
-    return json(400, { error: 'invalid_json' }, origin);
+    body = await readJsonWithinLimit(request);
+  } catch (error) {
+    return json(
+      error instanceof RangeError ? 413 : 400,
+      { error: error instanceof RangeError ? 'payload_too_large' : 'invalid_json' },
+      origin,
+    );
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');

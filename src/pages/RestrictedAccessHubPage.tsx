@@ -159,7 +159,11 @@ export function RestrictedAccessHubPage({
         )}
       />
 
-      <section id="restricted-login" className="px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
+      <section
+        id="restricted-login"
+        tabIndex={-1}
+        className="px-5 py-12 focus:outline-none sm:px-8 lg:px-10 lg:py-16"
+      >
         <div className="mx-auto w-full max-w-7xl">
           <div className="grid gap-5 border-b border-[#cbc2b2] pb-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
             <div>
@@ -262,7 +266,6 @@ export function RestrictedAccessHubPage({
                       autoComplete="current-password"
                       inputMode="numeric"
                       required
-                      autoFocus
                       value={code}
                       onChange={(event) => setCode(event.target.value)}
                       placeholder="Digite sua credencial"

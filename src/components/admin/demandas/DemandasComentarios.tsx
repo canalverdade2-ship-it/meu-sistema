@@ -59,10 +59,9 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
           const ext = file.name.split('.').pop();
           const path = `comentarios/${demandaId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const { error } = await supabase.storage.from('entregas_demandas').upload(path, file);
-          if (!error) {
-            const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
-            urls.push(publicUrl);
-          }
+          if (error) throw error;
+          const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
+          urls.push(publicUrl);
         }
       }
 
@@ -79,13 +78,7 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
 
       // Incrementa contador de forma segura
       const { error: rpcError } = await supabase.rpc('increment_comentarios', { demanda_id_param: demandaId });
-      if (rpcError) {
-        // Fallback manual se a RPC falhar ou não existir
-        const { data } = await supabase.from('prestador_demandas').select('total_comentarios').eq('id', demandaId).single();
-        if (data) {
-          await supabase.from('prestador_demandas').update({ total_comentarios: (data.total_comentarios || 0) + 1 }).eq('id', demandaId);
-        }
-      }
+      if (rpcError) throw rpcError;
 
       // Notificar a outra parte
       const { data: demandaData } = await supabase

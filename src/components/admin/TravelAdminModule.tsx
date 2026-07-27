@@ -1547,6 +1547,8 @@ function TransacoesTab() {
     setRefundNote('Reembolso aprovado e processado pelo financeiro GSA.');
   };
 
+  const getRefundStatus = (item: any): string => String(item?.cancelamento_status || item?.status || '');
+
   const getAdminNote = (item: any): string | null => {
     if (!item?.id) return null;
     return item.resposta_gsa
@@ -1558,9 +1560,11 @@ function TransacoesTab() {
 
   const getNetRefundAmount = (item: any): number => {
     if (!item) return 0;
-    const persistedRefund = Number(item.valor_reembolsado);
-    if (Number.isFinite(persistedRefund) && persistedRefund >= 0) {
-      return persistedRefund;
+    if (item.valor_reembolsado !== null && item.valor_reembolsado !== undefined) {
+      const persistedRefund = Number(item.valor_reembolsado);
+      if (Number.isFinite(persistedRefund) && persistedRefund >= 0) {
+        return persistedRefund;
+      }
     }
     const eligible = Number(item.valor_elegivel_reembolso);
     return Number.isFinite(eligible) && eligible > 0 ? eligible : 0;
@@ -1704,7 +1708,7 @@ function TransacoesTab() {
               }`}>
                 <div className="space-y-1 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <StatusBadge status={item.status} />
+                    <StatusBadge status={refundStatus} />
                     <span className="text-xs font-bold text-neutral-400">Criado em {formatDate(item.created_at)}</span>
                     {isPendingApproval && (
                       <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800 animate-pulse">
@@ -1780,7 +1784,7 @@ function TransacoesTab() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
-                    <StatusBadge status={detailsTx.status} />
+                    <StatusBadge status={getRefundStatus(detailsTx)} />
                     <span className="rounded-lg bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-300 uppercase border border-indigo-500/30">
                       {detailsTx.protocolo || 'TRANSAÇÃO'}
                     </span>
@@ -1799,7 +1803,7 @@ function TransacoesTab() {
 
             <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-slate-50/50 custom-scrollbar">
               {/* Banner de Destaque para Status Reembolsada / Negado */}
-              {detailsTx.status === 'reembolsada' && (
+              {['concluido', 'reembolsada'].includes(getRefundStatus(detailsTx)) && (
                 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 p-4 text-white shadow-md border border-emerald-500/30">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -1820,7 +1824,7 @@ function TransacoesTab() {
                 </div>
               )}
 
-              {detailsTx.status === 'reembolso_negado' && (
+              {getRefundStatus(detailsTx) === 'reembolso_negado' && (
                 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-rose-950 via-slate-900 to-slate-950 p-4 text-white shadow-md border border-rose-500/30">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
@@ -1887,7 +1891,7 @@ function TransacoesTab() {
                     <p className="text-[9px] font-bold uppercase text-slate-400">Método de Pagamento</p>
                     <p className="text-xs font-bold text-slate-900 mt-0.5">{formatPaymentMethod(detailsTx)}</p>
                   </div>
-                  {detailsTx.status === 'reembolsada' && (
+                  {['concluido', 'reembolsada'].includes(getRefundStatus(detailsTx)) && (
                     <span className="rounded-lg bg-emerald-100 px-2.5 py-1 text-[10px] font-black text-emerald-800 border border-emerald-300">
                       ⚡ Reembolsado
                     </span>
@@ -1949,7 +1953,7 @@ function TransacoesTab() {
             {/* Footer Compacto */}
             <footer className="border-t border-slate-100 bg-white px-5 py-3.5 flex items-center justify-between">
               <div>
-                {['reembolso_em_analise', 'reembolso_solicitado', 'solicitado'].includes(detailsTx.status) && (
+                {['reembolso_em_analise', 'reembolso_solicitado', 'solicitado', 'em_analise'].includes(getRefundStatus(detailsTx)) && (
                   <div className="flex gap-2">
                     <button
                       type="button"
