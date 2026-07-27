@@ -31,6 +31,7 @@ import {
 type AccessMode = 'login' | 'recovery' | 'first_access';
 type LoginStage = 'document' | 'pin';
 type RecoveryStage = 'request' | 'code';
+type FirstAccessStage = 'request' | 'code';
 
 interface ClientLoginPageProps {
   personType: ClientPersonType;
@@ -77,6 +78,9 @@ export function ClientLoginPage({
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryId, setRecoveryId] = useState('');
   const [recoveryCode, setRecoveryCode] = useState('');
+  const [firstAccessStage, setFirstAccessStage] = useState<FirstAccessStage>('request');
+  const [firstAccessId, setFirstAccessId] = useState('');
+  const [firstAccessCode, setFirstAccessCode] = useState('');
   const [firstAccessContact, setFirstAccessContact] = useState('');
   const [firstAccessPin, setFirstAccessPin] = useState('');
   const [firstAccessPinConfirm, setFirstAccessPinConfirm] = useState('');
@@ -110,6 +114,9 @@ export function ClientLoginPage({
     setRecoveryEmail('');
     setRecoveryId('');
     setRecoveryCode('');
+    setFirstAccessStage('request');
+    setFirstAccessId('');
+    setFirstAccessCode('');
     setFirstAccessContact('');
     setFirstAccessPin('');
     setFirstAccessPinConfirm('');
@@ -150,6 +157,9 @@ export function ClientLoginPage({
     setPin('');
     setRecoveryId('');
     setRecoveryCode('');
+    setFirstAccessStage('request');
+    setFirstAccessId('');
+    setFirstAccessCode('');
     setFirstAccessContact('');
     setFirstAccessPin('');
     setFirstAccessPinConfirm('');
@@ -166,24 +176,6 @@ export function ClientLoginPage({
 
     setLoading(true);
     try {
-      const docCol = isBusiness ? 'cnpj' : 'cpf';
-      const { data: clientCheck } = await supabase
-        .from('clientes')
-        .select('id, pin_hash, email, telefone')
-        .eq(docCol, cleanDocument)
-        .maybeSingle();
-
-      if (clientCheck && !clientCheck.pin_hash) {
-        setMode('first_access');
-        if (clientCheck.email || clientCheck.telefone) {
-          setFirstAccessContact(clientCheck.email || clientCheck.telefone || '');
-        }
-        toast.success('Primeiro acesso identificado! Cadastre a sua nova senha de acesso.');
-        return;
-      }
-
-      setLoginStage('pin');
-    } catch {
       setLoginStage('pin');
     } finally {
       setLoading(false);
@@ -256,14 +248,14 @@ export function ClientLoginPage({
     }
   };
 
-  const handleFirstAccessSubmit = async (event: FormEvent) => {
+  const handleFirstAccessRequest = async (event: FormEvent) => {
     event.preventDefault();
     if (!isDocumentValid) {
       toast.error(`Informe um ${documentLabel} válido.`);
       return;
     }
-    if (!firstAccessContact.trim()) {
-      toast.error('Informe o celular ou e-mail cadastrado na empresa.');
+    if (!validarEmail(firstAccessContact)) {
+      toast.error('Informe o e-mail cadastrado.');
       return;
     }
     if (firstAccessPin.length !== 4) {
@@ -277,16 +269,45 @@ export function ClientLoginPage({
 
     setLoading(true);
     try {
-      const data = await sessionService.setPinAndLogin(
+      const data = await sessionService.requestClientFirstAccess(
         cleanDocument,
-        firstAccessContact.trim(),
-        firstAccessPin,
-        'cliente',
+        firstAccessContact.trim().toLowerCase(),
       );
-      if (!data?.success) {
-        throw new Error(data?.error || 'Não foi possível cadastrar a senha.');
+      if (!data?.success || !data?.challenge_id) {
+        throw new Error('Não foi possível iniciar a confirmação do primeiro acesso.');
       }
+      setFirstAccessId(data.challenge_id);
+      setFirstAccessCode('');
+      setFirstAccessStage('code');
+      toast.success('Se os dados conferirem, enviaremos um código ao e-mail cadastrado.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível iniciar o primeiro acesso.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const handleFirstAccessComplete = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!firstAccessId || firstAccessCode.length !== 6 || loading) {
+      toast.error('Informe o código de seis dígitos enviado ao seu e-mail.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const email = firstAccessContact.trim().toLowerCase();
+      const { error: otpError } = await supabase.auth.verifyOtp({
+        email,
+        token: firstAccessCode,
+        type: 'email',
+      });
+      if (otpError) throw new Error('Código inválido ou expirado.');
+
+      const data = await sessionService.completeClientFirstAccess(firstAccessId, firstAccessPin);
+      if (!data?.success || !data?.id) {
+        throw new Error('Não foi possível concluir o primeiro acesso.');
+      }
       await confirmExpectedAccountType(data.id);
       await logService.logAction({
         ator_tipo: 'cliente',
@@ -305,7 +326,9 @@ export function ClientLoginPage({
         await completeLogin(data.id);
       }
     } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível cadastrar a senha.');
+      await supabase.auth.signOut({ scope: 'local' });
+      setFirstAccessCode('');
+      toast.error(error?.message || 'Não foi possível concluir o primeiro acesso.');
     } finally {
       setLoading(false);
     }
