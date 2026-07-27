@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-27T20:55:50.294Z",
+  "generated_at": "2026-07-27T20:56:51.029Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
   "scanned_files": 371,
   "blocker_count": 0,
-  "review_count": 25,
+  "review_count": 24,
   "blockers": [],
   "review": [
     {
@@ -16,14 +16,6 @@
       "file": "src/components/admin/AffiliateAdminModule.tsx",
       "line": 177,
       "excerpt": "const notes = action === 'reject' ? window.prompt('Informe o motivo da rejeição:')?.trim() : `Ação ${action} realizada no painel administrativo.`;"
-    },
-    {
-      "severity": "review",
-      "rule": "runtime-prompt",
-      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
-      "file": "src/components/admin/EmprestimosModule.tsx",
-      "line": 445,
-      "excerpt": "const motivo = window.prompt('Motivo da reprovacao (o cliente recebera essa mensagem):');"
     },
     {
       "severity": "review",
