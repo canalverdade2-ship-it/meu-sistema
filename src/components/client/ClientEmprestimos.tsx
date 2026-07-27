@@ -108,39 +108,6 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
     return () => { supabase.removeChannel(channel); };
   }, [clientId, selected]);
 
-  const reFetchDetail = async (empId: string) => {
-    const [h, c] = await Promise.all([
-      supabase.from('emprestimo_historico').select('*').eq('emprestimo_id', empId).order('created_at', { ascending: false }),
-      supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', empId).order('created_at')
-    ]);
-    setHistorico((h.data || []) as any);
-    setComentarios((c.data || []) as any);
-  };
-
-  const fetchData = async () => {
-    setLoading(true);
-    const [e, p, t] = await Promise.all([
-      supabase.from('emprestimos')
-        .select('*, clientes(*), orcamentos(*)')
-        .eq('cliente_id', clientId)
-        .order('created_at', { ascending: false }),
-      supabase.from('emprestimo_parcelas').select('*, faturas!emprestimo_parcelas_fatura_id_fkey(cobrancas(id))').eq('cliente_id', clientId).order('data_vencimento'),
-      supabase.from('tickets')
-        .select('id')
-        .eq('cliente_id', clientId)
-        .eq('assunto', 'Solicitação de Alteração Cadastral')
-        .neq('status', 'concluido')
-        .limit(1)
-    ]);
-    setEmprestimos((e.data || []) as any);
-    setParcelas((p.data || []) as any);
-    setHasPendingEditTicket(t.data && t.data.length > 0 ? true : false);
-    setLoading(false);
-  };
-
-  const handleFinishEmprestimo = async () => {
-    if (isSolicitando) return;
-    setIsSolicitando(true);
     try {
       // Upload de documentos
       const uploadedDocs: { tipo: string; nome: string; url: string }[] = [];
