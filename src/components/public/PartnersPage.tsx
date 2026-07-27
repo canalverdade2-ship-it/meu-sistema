@@ -457,7 +457,7 @@ function PartnerDirectoryItem({ partner, index, featured = false, onOpen }: { ke
         <div className="partner-directory-item__services">{(partner.services || []).slice(0, 4).map((service) => <span key={service}><Check aria-hidden="true" />{service}</span>)}</div>
         <div className="partner-directory-item__footer">
           <span>{PARTNER_MODE_LABELS[partner.service_mode]}</span>
-          <button type="button" onClick={onOpen}>Ver perfil completo<ArrowRight aria-hidden="true" /></button>
+          <button type="button" onClick={onOpen}>Conhecer parceiro<ArrowRight aria-hidden="true" /></button>
         </div>
       </div>
     </article>
