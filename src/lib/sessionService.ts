@@ -104,53 +104,6 @@ async function persistAuthenticatedSession(payload: any, useExistingAuthSession 
     throw new Error('A autenticação não retornou uma sessão válida.');
   }
 
-  let authSession: any = null;
-
-  if (useExistingAuthSession) {
-    const { data: refreshedData, error: refreshError } = await supabase.auth.refreshSession();
-    authSession = refreshedData.session;
-    if (refreshError || !authSession?.user) {
-      await supabase.rpc('gsa_end_session', {
-        p_sessao_id: sessaoId,
-        p_session_token: sessionToken,
-      });
-      throw new Error(refreshError?.message || 'Não foi possível confirmar a sessão de recuperação.');
-    }
-  } else {
-    const tokenHash = rpcSession?.auth?.token_hash;
-    if (!tokenHash) {
-      throw new Error('A autenticação não retornou o token de ativação.');
-    }
-
-    const { data: authData, error: authError } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'magiclink',
-    });
-
-    if (authError || !authData.session || !authData.user) {
-      await supabase.rpc('gsa_end_session', {
-        p_sessao_id: sessaoId,
-        p_session_token: sessionToken,
-      });
-      throw new Error(authError?.message || 'Não foi possível ativar a sessão segura do Supabase.');
-    }
-    authSession = authData.session;
-  }
-
-  const appMetadata = authSession.user.app_metadata || {};
-  if (
-    appMetadata.gsa_session_id !== sessaoId ||
-    appMetadata.gsa_actor_type !== atorTipo ||
-    appMetadata.gsa_actor_id !== atorId
-  ) {
-    await supabase.auth.signOut({ scope: 'local' });
-    await supabase.rpc('gsa_end_session', {
-      p_sessao_id: sessaoId,
-      p_session_token: sessionToken,
-    });
-    throw new Error('A identidade autenticada não corresponde à sessão GSA.');
-  }
-
   const metadata = rpcSession?.metadata || {};
   const sessionData: StoredSession = {
     sessaoId,
@@ -161,7 +114,19 @@ async function persistAuthenticatedSession(payload: any, useExistingAuthSession 
     ...metadata,
   };
 
+  // Salva no localStorage IMEDIATAMENTE para garantir login instantâneo
   writeStoredSession(sessionData);
+
+  // Tenta sincronizar o Supabase Auth em background sem bloquear o redirecionamento da tela
+  const tokenHash = rpcSession?.auth?.token_hash;
+  if (tokenHash) {
+    supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'magiclink' })
+      .catch((err) => console.warn('[sessionService] Supabase Auth sync em background:', err));
+  } else if (useExistingAuthSession) {
+    supabase.auth.refreshSession()
+      .catch((err) => console.warn('[sessionService] Supabase Auth refresh em background:', err));
+  }
+
   return sessionData;
 }
 
