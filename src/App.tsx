@@ -45,38 +45,24 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
 
   let migrated = false;
   try {
-    for (const item of pendingItems) {
-      if (!item?.item_id || !item?.tipo) continue;
+    await Promise.all(pendingItems.map(async (item) => {
+      if (!item?.item_id || !item?.tipo) return;
 
       const quantidade = Math.max(1, Number(item.quantidade || 1));
       const prazoMeses = item.prazo_meses ? Number(item.prazo_meses) : undefined;
 
-      const { data: existing } = await supabase
-        .from('loja_carrinhos')
-        .select('id, quantidade')
-        .eq('cliente_id', clientId)
-        .eq('item_id', item.item_id)
-        .eq('tipo', item.tipo)
-        .maybeSingle();
-
-      if (existing) {
-        const updateData: any = { quantidade: Number(existing.quantidade || 0) + quantidade, updated_at: new Date().toISOString() };
-        if (prazoMeses) updateData.prazo_meses = prazoMeses;
-        await clientOperationalWrite(clientId, 'loja_carrinhos', 'update', updateData, { id: existing.id });
-      } else {
-        const insertData: any = { cliente_id: clientId, item_id: item.item_id, tipo: item.tipo, quantidade, updated_at: new Date().toISOString() };
-        if (prazoMeses) insertData.prazo_meses = prazoMeses;
-        await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
-      }
+      const insertData: any = { cliente_id: clientId, item_id: item.item_id, tipo: item.tipo, quantidade, updated_at: new Date().toISOString() };
+      if (prazoMeses) insertData.prazo_meses = prazoMeses;
+      await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
       migrated = true;
-    }
+    }));
 
     const rawCoupons = localStorage.getItem(PENDING_STORE_COUPONS_KEY);
     const parsedCoupons = rawCoupons ? JSON.parse(rawCoupons) : null;
     const couponIds: string[] = Array.isArray(parsedCoupons?.activatedCouponIds) ? parsedCoupons.activatedCouponIds : [];
     for (const cupomId of couponIds) {
       if (!cupomId) continue;
-      try { await clientOperationalWrite(clientId, 'cupons_ativados', 'insert', { cupom_id: cupomId }); } catch { /* ignore duplicate */ }
+      try { await clientOperationalWrite(clientId, 'cupons_ativados', 'insert', { cliente_id: clientId, cupom_id: cupomId }); } catch { /* ignore duplicate */ }
     }
 
     if (migrated) {
