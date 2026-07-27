@@ -420,23 +420,6 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
     if (!profileData.cep) missingFields.push('CEP');
     if (!profileData.endereco) missingFields.push('Endereço');
     if (!profileData.numero) missingFields.push('Número');
-    if (!profileData.bairro) missingFields.push('Bairro');
-    if (!profileData.cidade) missingFields.push('Cidade');
-    if (!profileData.estado) missingFields.push('Estado');
-
-    if (missingFields.length > 0) {
-      toast.error(`Preencha os campos obrigatórios: ${missingFields.join(', ')}`);
-      return;
-    }
-
-    const valorSolicitado = parseFloat(limiteDesejado);
-    if (isNaN(valorSolicitado) || valorSolicitado <= 0) {
-      toast.error('Informe um valor de limite desejado válido.');
-      return;
-    }
-
-    try {
-      setSubmitting(true);
 
       // 1. Atualiza dados cadastrais do cliente
       await clientOperationalWrite(clientId, 'clientes', 'update', {
