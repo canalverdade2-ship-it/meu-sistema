@@ -641,7 +641,6 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
 
     const pendingStoreCheckout = localStorage.getItem('gsa_pending_store_checkout');
     if (pendingStoreCheckout) {
-      localStorage.removeItem('gsa_pending_store_checkout');
       navigateClientModule('gsa_store' as Module, 'shop', undefined, true);
     }
 
