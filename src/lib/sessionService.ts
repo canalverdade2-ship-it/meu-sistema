@@ -395,12 +395,12 @@ export const sessionService = {
         p_sessao_id: sessionData.sessaoId,
         p_session_token: sessionData.sessionToken,
       });
-      if (error || (data as any)?.is_valid === false || (data as any)?.success === false) {
+      if (!error && data === false) {
         await endStoredSession();
         if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gsa-session-revoked'));
       }
     } catch (error) {
-      console.error('Falha ao atualizar a sessão:', error);
+      console.warn('Falha temporária no ping de sessão:', error);
     }
   },
 };
