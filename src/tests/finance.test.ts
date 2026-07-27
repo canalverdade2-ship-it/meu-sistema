@@ -1,8 +1,5 @@
 import { calcularParcela } from '../utils/emprestimoUtils';
-
-declare const describe: any;
-declare const it: any;
-declare const expect: any;
+import { describe, expect, it } from 'vitest';
 
 describe('Financial Math Utilities', () => {
   describe('calcularParcela (emprestimoUtils)', () => {
