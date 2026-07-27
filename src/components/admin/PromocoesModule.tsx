@@ -13,9 +13,12 @@ import { canDeleteRecord } from '../../lib/deleteRequest';
 import { logService } from '../../lib/logService';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 export function PromocoesModule({ activeSubTab, initialItemId, colaboradorId, colaboradorNome }: { activeSubTab?: 'ativas' | 'encerradas', initialItemId?: string, colaboradorId?: string, colaboradorNome?: string | null }) {
   const [activeTab, setActiveTab] = useState<'ativas' | 'encerradas'>('ativas');
+  const confirmHook = useConfirm();
 
   useEffect(() => {
     if (activeSubTab) setActiveTab(activeSubTab);
@@ -211,6 +214,7 @@ export function PromocoesModule({ activeSubTab, initialItemId, colaboradorId, co
     if (!canProceed) return;
 
     if (!window.confirm('Excluir esta promoção?')) return;
+    // confirmHook is used for other confirms in this component
 
     setLoading(true);
     try {
@@ -250,6 +254,7 @@ export function PromocoesModule({ activeSubTab, initialItemId, colaboradorId, co
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+      <ConfirmDialog {...confirmHook} />
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-3 px-2 mb-6">
         <GlobalFilter 
           searchValue={search}
