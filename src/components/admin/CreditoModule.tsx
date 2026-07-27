@@ -32,6 +32,8 @@ import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { sessionService } from '../../lib/sessionService';
 import { callAdminRpc } from '../../lib/adminRpc';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 type CreditoSubTab = 'analise' | 'documentos_pendentes' | 'contrato_pendente_assinatura' | 'contrato_assinado' | 'liberado' | 'negado';
 
@@ -52,6 +54,7 @@ export function CreditoModule({
 }) {
   const [activeTab, setActiveTab] = useState<'solicitacoes' | 'carteira' | 'movimentacoes' | 'quitacoes'>('solicitacoes');
   const [activeSubTab, setActiveSubTab] = useState<CreditoSubTab>('analise');
+  const confirmHook = useConfirm();
 
   useEffect(() => {
     if (initialItemId) {
@@ -591,16 +594,17 @@ const enviarOfertaQuitacao = async () => {
 
     let motivo = '';
     if (status === 'rejeitado') {
-      const inputMotivo = window.prompt('Digite o motivo da rejeicao do documento:');
-      if (inputMotivo === null) return;
-
-      const trimmed = inputMotivo.trim();
-      if (!trimmed) {
-        toast.error('O motivo da rejeicao e obrigatorio.');
-        return;
-      }
-      motivo = trimmed;
-    }
+      const inputMotivo = await confirmHook.confirm({
+        title: 'Rejeitar Documento',
+        message: 'Informe o motivo da rejeição. O cliente receberá esta mensagem.',
+        confirmLabel: 'Rejeitar Documento',
+        variant: 'warning',
+        promptLabel: 'Motivo da rejeição',
+        promptPlaceholder: 'Ex: Documento ilegível, fora do prazo de validade...',
+        promptRequired: true,
+      });
+      if (!inputMotivo || typeof inputMotivo !== 'string') return;
+      motivo = inputMotivo;
 
     try {
       const session = getAdminSessionForRpc();
@@ -639,14 +643,18 @@ const enviarOfertaQuitacao = async () => {
   const handleRejeitarContrato = async () => {
     if (!selectedRequest) return;
 
-    const inputMotivo = window.prompt('Digite o motivo da rejeicao da assinatura do contrato:');
-    if (inputMotivo === null) return;
+    const inputMotivo = await confirmHook.confirm({
+      title: 'Rejeitar Assinatura do Contrato',
+      message: 'Informe o motivo da rejeição. O cliente receberá esta mensagem e deverá enviar o contrato novamente.',
+      confirmLabel: 'Rejeitar Contrato',
+      variant: 'danger',
+      promptLabel: 'Motivo da rejeição',
+      promptPlaceholder: 'Ex: Assinatura ilegível, documento incompleto...',
+      promptRequired: true,
+    });
+    if (!inputMotivo || typeof inputMotivo !== 'string') return;
 
-    const motivo = inputMotivo.trim();
-    if (!motivo) {
-      toast.error('O motivo da rejeicao e obrigatorio.');
-      return;
-    }
+    const motivo = inputMotivo;
 
     setSubmitting(true);
     try {
@@ -683,9 +691,13 @@ const enviarOfertaQuitacao = async () => {
   const handleReenviarContrato = async () => {
     if (!selectedRequest) return;
     
-    if (!window.confirm('Tem certeza que deseja notificar novamente o cliente sobre o contrato pendente de assinatura?')) {
-      return;
-    }
+    const ok = await confirmHook.confirm({
+      title: 'Reenviar Lembrete de Assinatura?',
+      message: 'O cliente receberá uma notificação para assinar o contrato de crédito pendente.',
+      confirmLabel: 'Sim, reenviar',
+      variant: 'info',
+    });
+    if (!ok) return;
 
     setSubmitting(true);
     try {
