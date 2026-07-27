@@ -220,22 +220,28 @@ export default function App() {
     return <div className="min-h-screen flex items-center justify-center bg-neutral-50">Carregando sessão...</div>;
   }
 
-  const handleLoginClient = async (
+  const handleLoginClient = (
     clientId: string,
     isRecovery: boolean = false,
     hintedPersonType?: ClientPersonType,
   ) => {
-    const resolvedPersonType = await sessionService.resolveAuthenticatedClientPersonType(clientId);
-    const clientPersonType: ClientPersonType = resolvedPersonType || hintedPersonType || 'pf';
+    const clientPersonType: ClientPersonType = hintedPersonType || 'pf';
     sessionService.setClientPersonType(clientPersonType);
     setSession({ clientId, clientPersonType });
 
-    // Migrar carrinho de visitante agora — sessão GSA já está ativa
-    const cartMigrated = await migrateGuestCartToAccount(clientId);
-    if (cartMigrated) {
-      // Sinaliza ao componente da loja que o carrinho foi recuperado
-      window.dispatchEvent(new CustomEvent('gsa-cart-migrated'));
-    }
+    // Migra carrinho em background sem travar o redirecionamento da tela
+    migrateGuestCartToAccount(clientId).then((cartMigrated) => {
+      if (cartMigrated) {
+        window.dispatchEvent(new CustomEvent('gsa-cart-migrated'));
+      }
+    });
+
+    // Atualiza tipo de pessoa em background se houver divergência
+    sessionService.resolveAuthenticatedClientPersonType(clientId).then((resolved) => {
+      if (resolved && resolved !== clientPersonType) {
+        setSession((prev) => ({ ...prev, clientPersonType: resolved }));
+      }
+    });
 
     const returnTo = readSafeReturnTo(
       window.location.search,
