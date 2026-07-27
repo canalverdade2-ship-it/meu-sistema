@@ -138,7 +138,9 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
   const activeModule = route.module || 'dashboard';
   const activeTab = route.submodule;
   const activeItemId = route.itemId;
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    try { return localStorage.getItem('admin_sidebar_open') !== 'false'; } catch { return true; }
+  });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
   const [colaboradorNome, setColaboradorNome] = useState<string | null>(colaboradorNomeInicial || null);
