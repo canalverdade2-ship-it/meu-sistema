@@ -23,6 +23,7 @@ import { readSafeReturnTo } from './routing/safeReturnTo';
 import { defaultAdminPath } from './security/collaboratorAccess';
 import { supabase } from './lib/supabase';
 import { clientOperationalWrite } from './lib/clientOperationalWrite';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { AffiliateTrackingBridge } from './components/AffiliateTrackingBridge';
 
 const PENDING_STORE_CHECKOUT_KEY = 'gsa_pending_store_checkout';
@@ -370,7 +371,8 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <div className="min-h-screen bg-[#f8f7f5] font-sans text-neutral-900">
           <AffiliateTrackingBridge clientId={session.clientId} />
-          <Suspense fallback={<RouteLoading />}>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoading />}>
             {activeView === 'public' && route.module === 'affiliates' && !route.itemId && (
               <AffiliatePublicPage
                 onBack={() => navigate(routes.public.home())}
@@ -631,6 +633,7 @@ export default function App() {
               <FornecedorDashboard fornecedorId={session.fornecedorId} onLogout={handleLogout} />
             )}
           </Suspense>
+          </ErrorBoundary>
 
           {['public', 'marketplace', 'client'].includes(activeView) && <AdvertisingSlot placementCode="SITE_STICKY_BOTTOM" variant="sticky" />}
           {isSessionActive && <FullscreenPrompt />}

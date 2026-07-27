@@ -438,6 +438,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
       }, { id: clientId });
 
       // 2. Insere a solicitação de crédito
+      const valorSolicitado = Number(limiteDesejado) || 0;
       await clientOperationalWrite(clientId, 'loja_credito_solicitacoes', 'insert', {
         tipo_solicitacao: tipo,
         limite_solicitado: valorSolicitado,
