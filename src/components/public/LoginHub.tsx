@@ -1,6 +1,6 @@
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, Building2, KeyRound, PackageSearch, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Building2, KeyRound, PackageSearch, ShieldCheck, UserRound } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { LogoGSA } from '../ui/LogoGSA';
+import { InstitutionalAccessHero, InstitutionalAccessLayout } from './InstitutionalAccessLayout';
 
 interface LoginHubProps {
   onBack?: () => void;
@@ -25,211 +25,159 @@ export function LoginHub({
     : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } };
 
   return (
-    <main className="relative min-h-screen bg-[radial-gradient(circle_at_top,#fff9ee_0%,#f8f6f0_42%,#eeeae0_100%)] text-[#142030] flex flex-col justify-between">
-      <div className="relative mx-auto flex min-h-screen w-full max-w-[1360px] flex-col px-4 py-5 sm:px-7 lg:px-10">
-        
-        {/* Institutional Header */}
-        <header className="flex items-center justify-between gap-4 border-b border-[#142030]/10 pb-5">
-          <LogoGSA size="sm" variant="dark" showText />
-          
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#142030]/15 bg-white/80 px-4 text-sm font-bold text-[#142030] shadow-sm transition hover:border-[#d8bd73] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </button>
-        </header>
-
-        {/* Main Content Area */}
-        <div className="flex flex-1 items-center py-8 lg:py-12">
-          <div className="grid w-full overflow-hidden rounded-[2rem] border border-[#d8bd73]/35 bg-white shadow-2xl lg:grid-cols-[0.9fr_1.1fr]">
-            
-            {/* Left Panel: Institutional Dark Hero */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#0f1722] via-[#142030] to-[#090d13] p-8 text-white sm:p-12 lg:p-14 flex flex-col justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.28em] text-[#edcf83]">Acesso GSA</p>
-                <h1 className="mt-4 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
-                  Qual é o seu ambiente?
-                </h1>
-                <p className="mt-5 text-sm leading-relaxed text-white/70 sm:text-base">
-                  Pessoa Física e Empresa agora contam com experiências próprias. Escolha o acesso correspondente ao seu cadastro para continuar.
-                </p>
-              </div>
-
-              <div className="mt-10">
-                <div className="flex items-start gap-3.5 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-xs leading-relaxed text-white/65 sm:text-sm">
-                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#edcf83]" />
-                  <span>Nenhuma informação da conta é exibida antes da autenticação segura.</span>
-                </div>
-              </div>
-
-              <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-[#a87c2b] via-[#fff4d0] to-[#c19a43]" />
-            </div>
-
-            {/* Right Panel: Central Login Options (PF & PJ Only in Main Grid) */}
-            <div className="bg-[#fbfaf7] p-6 sm:p-10 flex flex-col justify-between">
-              <div>
-                <div className="mb-6">
-                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#8a651f]">Área Central de Login</p>
-                  <h2 className="mt-1 text-2xl font-black text-[#142030]">Selecione o seu Portal de Cliente</h2>
-                </div>
-
-                {/* Main Client Options: PF and PJ Only */}
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {/* PF Option */}
-                  <motion.button
-                    {...cardAnimation}
-                    transition={{ delay: 0.05 }}
-                    type="button"
-                    onClick={onPersonalAccess}
-                    className="group relative flex flex-col justify-between min-h-[200px] rounded-[1.5rem] border border-[#d8bd73]/55 bg-white p-6 text-left shadow-md transition duration-200 hover:-translate-y-0.5 hover:border-[#c19a43] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
-                  >
-                    <div>
-                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#142030] text-[#edcf83]">
-                        <UserRound className="h-6 w-6" />
-                      </span>
-                      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-[#8a651f]">
-                        Pessoa Física · PF
-                      </p>
-                      <h3 className="mt-1.5 text-lg font-black leading-tight text-[#142030]">
-                        Área do Cliente Pessoa Física — PF
-                      </h3>
-                      <p className="mt-2 text-xs leading-relaxed text-neutral-600">
-                        Acesse com seu CPF e senha.
-                      </p>
-                    </div>
-                    
-                    <div className="mt-6 flex items-center justify-between text-xs font-bold text-[#8a651f]">
-                      <span>Acessar</span>
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </motion.button>
-
-                  {/* PJ Option */}
-                  <motion.button
-                    {...cardAnimation}
-                    transition={{ delay: 0.12 }}
-                    type="button"
-                    onClick={onBusinessAccess}
-                    className="group relative flex flex-col justify-between min-h-[200px] rounded-[1.5rem] border border-[#142030] bg-[#0d1b2a] p-6 text-left shadow-lg transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd73] hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
-                  >
-                    <div>
-                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#d8bd73]/30 bg-[#d8bd73]/10 text-[#edcf83]">
-                        <Building2 className="h-6 w-6" />
-                      </span>
-                      <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-[#edcf83]">
-                        Empresa · PJ
-                      </p>
-                      <h3 className="mt-1.5 text-lg font-black leading-tight text-white">
-                        Área do Cliente Empresa — PJ
-                      </h3>
-                      <p className="mt-2 text-xs leading-relaxed text-white/60">
-                        Acesse o GSA HUB Empresas com seu CNPJ.
-                      </p>
-                    </div>
-
-                    <div className="mt-6 flex items-center justify-between text-xs font-bold text-[#edcf83]">
-                      <span>Acessar</span>
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </motion.button>
-                </div>
-              </div>
-
-              {/* Secondary Accesses (Prestadores, Suprimentos, Restrito) */}
-              {(onProviderAccess || onSupplierAccess || onRestrictedAccess) && (
-                <div className="mt-8 border-t border-neutral-200/80 pt-6">
-                  <p className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-neutral-500">
-                    Outros portais de acesso
-                  </p>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {onProviderAccess && (
-                      <motion.button
-                        {...cardAnimation}
-                        transition={{ delay: 0.18 }}
-                        type="button"
-                        onClick={onProviderAccess}
-                        className="group flex flex-col justify-between rounded-[1.25rem] border border-[#b9d2e2] bg-[#edf5fa] p-4 text-left transition hover:border-[#5687a7] hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f5a86]"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#123d5d] text-[#9bd8bb]">
-                            <BriefcaseBusiness className="h-4 w-4" />
-                          </span>
-                          <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#267153]">Prestadores GSA</span>
-                        </div>
-                        <div className="mt-3">
-                          <span className="block text-sm font-black text-[#123d5d]">Área do Prestador</span>
-                        </div>
-                        <div className="mt-3 flex items-center justify-end">
-                          <ArrowRight className="h-4 w-4 text-[#267153] transition-transform group-hover:translate-x-1" />
-                        </div>
-                      </motion.button>
-                    )}
-
-                    {onSupplierAccess && (
-                      <motion.button
-                        {...cardAnimation}
-                        transition={{ delay: 0.22 }}
-                        type="button"
-                        onClick={onSupplierAccess}
-                        className="group flex flex-col justify-between rounded-[1.25rem] border border-[#dacabc] bg-[#f8f3ed] p-4 text-left transition hover:border-[#a66d3f] hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a572f]"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#142336] text-[#e5b98f]">
-                            <PackageSearch className="h-4 w-4" />
-                          </span>
-                          <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8a572f]">Suprimentos GSA</span>
-                        </div>
-                        <div className="mt-3">
-                          <span className="block text-sm font-black text-[#142336]">Portal do Fornecedor</span>
-                        </div>
-                        <div className="mt-3 flex items-center justify-end">
-                          <ArrowRight className="h-4 w-4 text-[#8a572f] transition-transform group-hover:translate-x-1" />
-                        </div>
-                      </motion.button>
-                    )}
-
-                    {onRestrictedAccess && (
-                      <motion.button
-                        {...cardAnimation}
-                        transition={{ delay: 0.26 }}
-                        type="button"
-                        onClick={onRestrictedAccess}
-                        className="group flex flex-col justify-between rounded-[1.25rem] border border-[#cfd6dd] bg-[#f3f5f7] p-4 text-left transition hover:border-[#8fa0b0] hover:bg-white hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#142030] text-[#edcf83]">
-                            <KeyRound className="h-4 w-4" />
-                          </span>
-                          <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8a651f]">Equipe interna</span>
-                        </div>
-                        <div className="mt-3">
-                          <span className="block text-sm font-black text-[#142030]">Acesso Restrito</span>
-                          <span className="block text-[10px] text-neutral-500 mt-0.5">Exclusivo para Gestão e Colaborador GSA</span>
-                        </div>
-                        <div className="mt-3 flex items-center justify-end">
-                          <ArrowRight className="h-4 w-4 text-[#8a651f] transition-transform group-hover:translate-x-1" />
-                        </div>
-                      </motion.button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+    <InstitutionalAccessLayout
+      onBack={onBack}
+      backLabel="Voltar ao site"
+      skipTarget="login-options"
+      footerNote="Ambiente institucional seguro"
+    >
+      <InstitutionalAccessHero
+        eyebrow="GSA HUB · Acessos"
+        title="Área Central de Login"
+        description="Selecione o portal correspondente ao seu cadastro ou à sua relação com a GSA para continuar."
+        aside={(
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-[#d5b86b]" />
+            <p>
+              Cada ambiente possui autenticação e permissões próprias. Nenhuma informação da conta é exibida antes da validação de acesso.
+            </p>
           </div>
+        )}
+      />
+
+      <section id="login-options" className="px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="grid gap-5 border-b border-[#cbc2b2] pb-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#806329]">Clientes GSA</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-[#0b1825] sm:text-4xl">
+                Acessos para pessoas e empresas
+              </h2>
+            </div>
+            <p className="max-w-xl text-sm leading-7 text-[#60666b] lg:justify-self-end">
+              Use o mesmo tipo de cadastro informado na contratação dos serviços: CPF para pessoa física ou CNPJ para empresa.
+            </p>
+          </div>
+
+          <div className="mt-8 grid border-l border-t border-[#cfc6b7] sm:grid-cols-2">
+            <motion.button
+              {...cardAnimation}
+              transition={{ delay: 0.05 }}
+              type="button"
+              onClick={onPersonalAccess}
+              className="group min-h-[230px] border-b border-r border-[#cfc6b7] bg-[#f8f6f1] p-6 text-left transition duration-300 hover:bg-[#0c1c2b] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#806329] sm:p-8"
+            >
+              <div className="flex items-start justify-between gap-5">
+                <span className="flex h-11 w-11 items-center justify-center border border-[#ad9256]/55 text-[#806329] transition group-hover:border-[#d5b86b]/60 group-hover:text-[#d5b86b]">
+                  <UserRound className="h-5 w-5" />
+                </span>
+                <ArrowRight className="h-5 w-5 text-[#806329] transition group-hover:translate-x-1 group-hover:text-[#d5b86b]" />
+              </div>
+              <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.22em] text-[#806329] group-hover:text-[#d5b86b]">
+                Pessoa Física · PF
+              </p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-[-0.025em] text-[#101c27] transition group-hover:text-white">
+                Área do Cliente Pessoa Física — PF
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-[#666b70] transition group-hover:text-white/65">
+                Acesse com seu CPF e senha.
+              </p>
+            </motion.button>
+
+            <motion.button
+              {...cardAnimation}
+              transition={{ delay: 0.1 }}
+              type="button"
+              onClick={onBusinessAccess}
+              className="group min-h-[230px] border-b border-r border-[#cfc6b7] bg-[#f8f6f1] p-6 text-left transition duration-300 hover:bg-[#0c1c2b] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#806329] sm:p-8"
+            >
+              <div className="flex items-start justify-between gap-5">
+                <span className="flex h-11 w-11 items-center justify-center border border-[#ad9256]/55 text-[#806329] transition group-hover:border-[#d5b86b]/60 group-hover:text-[#d5b86b]">
+                  <Building2 className="h-5 w-5" />
+                </span>
+                <ArrowRight className="h-5 w-5 text-[#806329] transition group-hover:translate-x-1 group-hover:text-[#d5b86b]" />
+              </div>
+              <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.22em] text-[#806329] group-hover:text-[#d5b86b]">
+                Empresa · PJ
+              </p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-[-0.025em] text-[#101c27] transition group-hover:text-white">
+                Área do Cliente Empresa — PJ
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-[#666b70] transition group-hover:text-white/65">
+                Acesse o GSA HUB Empresas com seu CNPJ.
+              </p>
+            </motion.button>
+          </div>
+
+          {(onProviderAccess || onSupplierAccess || onRestrictedAccess) && (
+            <div className="mt-12">
+              <div className="flex flex-col gap-3 border-b border-[#cbc2b2] pb-5 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#806329]">Outros ambientes</p>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-[-0.025em] text-[#0b1825]">
+                    Portais operacionais
+                  </h2>
+                </div>
+                <p className="text-sm text-[#666b70]">Selecione o vínculo correspondente.</p>
+              </div>
+
+              <div className="mt-6 grid border-l border-t border-[#cfc6b7] md:grid-cols-3">
+                {onProviderAccess && (
+                  <motion.button
+                    {...cardAnimation}
+                    transition={{ delay: 0.15 }}
+                    type="button"
+                    onClick={onProviderAccess}
+                    className="group min-h-[170px] border-b border-r border-[#cfc6b7] bg-[#f8f6f1] p-5 text-left transition hover:bg-white focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#806329] sm:p-6"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <BriefcaseBusiness className="h-6 w-6 text-[#806329]" />
+                      <ArrowRight className="h-4 w-4 text-[#806329] transition group-hover:translate-x-1" />
+                    </div>
+                    <p className="mt-7 text-[10px] font-bold uppercase tracking-[0.2em] text-[#806329]">Prestadores GSA</p>
+                    <span className="mt-2 block text-lg font-semibold text-[#0b1825]">Área do Prestador</span>
+                  </motion.button>
+                )}
+
+                {onSupplierAccess && (
+                  <motion.button
+                    {...cardAnimation}
+                    transition={{ delay: 0.2 }}
+                    type="button"
+                    onClick={onSupplierAccess}
+                    className="group min-h-[170px] border-b border-r border-[#cfc6b7] bg-[#f8f6f1] p-5 text-left transition hover:bg-white focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#806329] sm:p-6"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <PackageSearch className="h-6 w-6 text-[#806329]" />
+                      <ArrowRight className="h-4 w-4 text-[#806329] transition group-hover:translate-x-1" />
+                    </div>
+                    <p className="mt-7 text-[10px] font-bold uppercase tracking-[0.2em] text-[#806329]">Suprimentos GSA</p>
+                    <span className="mt-2 block text-lg font-semibold text-[#0b1825]">Portal do Fornecedor</span>
+                  </motion.button>
+                )}
+
+                {onRestrictedAccess && (
+                  <motion.button
+                    {...cardAnimation}
+                    transition={{ delay: 0.25 }}
+                    type="button"
+                    onClick={onRestrictedAccess}
+                    className="group min-h-[170px] border-b border-r border-[#cfc6b7] bg-[#f8f6f1] p-5 text-left transition hover:bg-white focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#806329] sm:p-6"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <KeyRound className="h-6 w-6 text-[#806329]" />
+                      <ArrowRight className="h-4 w-4 text-[#806329] transition group-hover:translate-x-1" />
+                    </div>
+                    <p className="mt-7 text-[10px] font-bold uppercase tracking-[0.2em] text-[#806329]">Equipe interna</p>
+                    <span className="mt-2 block text-lg font-semibold text-[#0b1825]">Acesso Restrito</span>
+                    <span className="mt-1 block text-xs leading-5 text-[#666b70]">Exclusivo para Gestão e Colaborador GSA</span>
+                  </motion.button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-
-        {/* Institutional Footer */}
-        <footer className="flex flex-col items-center justify-between gap-3 border-t border-[#142030]/10 pt-4 text-center text-xs text-neutral-500 sm:flex-row sm:text-left">
-          <p>© {new Date().getFullYear()} Grupo GSA — Gestão de Serviços Avançados. Todos os direitos reservados.</p>
-          <div className="flex items-center gap-4 text-xs font-medium text-neutral-600">
-            <span>Ambiente Institucional Seguro</span>
-          </div>
-        </footer>
-      </div>
-    </main>
+      </section>
+    </InstitutionalAccessLayout>
   );
 }
-
