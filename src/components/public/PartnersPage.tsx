@@ -419,7 +419,7 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
 
             <div className="partners-application__copy">
               <h2 id="partners-application-title">Sua empresa tem estrutura para complementar esta rede?</h2>
-              <p>Apresente sua atuação, seus canais e sua capacidade de atendimento. A solicitação segue diretamente para análise administrativa e recebe protocolo oficial.</p>
+              <p>Apresente sua atuação, seus canais e sua capacidade de atendimento. A solicitação é enviada diretamente ao painel administrativo para análise e recebe protocolo oficial.</p>
               <button type="button" onClick={() => setApplicationOpen(true)} className="partner-gold-button">
                 Apresentar minha empresa
                 <ArrowRight aria-hidden="true" />
