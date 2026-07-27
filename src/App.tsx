@@ -245,7 +245,11 @@ export default function App() {
     setSession({ clientId, clientPersonType });
 
     // Migrar carrinho de visitante agora — sessão GSA já está ativa
-    await migrateGuestCartToAccount(clientId);
+    const cartMigrated = await migrateGuestCartToAccount(clientId);
+    if (cartMigrated) {
+      // Sinaliza ao componente da loja que o carrinho foi recuperado
+      window.dispatchEvent(new CustomEvent('gsa-cart-migrated'));
+    }
 
     const returnTo = readSafeReturnTo(
       window.location.search,
