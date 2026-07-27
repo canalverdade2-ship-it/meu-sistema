@@ -118,8 +118,8 @@ export async function handleRequest(request: Request) {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const hashSalt = Deno.env.get('AD_DELIVERY_HASH_SALT');
-  if (!supabaseUrl || !serviceRoleKey || !hashSalt) return json(503, { error: 'server_not_configured' }, origin);
+  const hashSalt = Deno.env.get('AD_DELIVERY_HASH_SALT') || 'gsa-ad-delivery-salt-fallback-v1';
+  if (!supabaseUrl || !serviceRoleKey) return json(503, { error: 'server_not_configured' }, origin);
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
