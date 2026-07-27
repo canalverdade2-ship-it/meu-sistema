@@ -482,7 +482,7 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div>
             <LogoGSA size="md" variant="light" />
-            <p className="mt-3 text-sm text-white/45">Estratégia, identidade e presença profissional.</p>
+            <p className="mt-3 text-sm text-white/45">Estratégia, identidade e presença profissional. Nenhuma empresa séria pode garantir vendas, mas a apresentação da sua marca muda a forma como o cliente enxerga seu valor.</p>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold text-white/65">
             <button type="button" onClick={onBack} className="hover:text-[#d6bb80]">Início</button>
