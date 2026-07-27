@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-27T20:53:51.084Z",
+  "generated_at": "2026-07-27T20:54:38.837Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
   "scanned_files": 371,
   "blocker_count": 0,
-  "review_count": 27,
+  "review_count": 25,
   "blockers": [],
   "review": [
     {
@@ -16,22 +16,6 @@
       "file": "src/components/admin/AffiliateAdminModule.tsx",
       "line": 177,
       "excerpt": "const notes = action === 'reject' ? window.prompt('Informe o motivo da rejeição:')?.trim() : `Ação ${action} realizada no painel administrativo.`;"
-    },
-    {
-      "severity": "review",
-      "rule": "runtime-prompt",
-      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
-      "file": "src/components/admin/CreditoModule.tsx",
-      "line": 594,
-      "excerpt": "const inputMotivo = window.prompt('Digite o motivo da rejeicao do documento:');"
-    },
-    {
-      "severity": "review",
-      "rule": "runtime-prompt",
-      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
-      "file": "src/components/admin/CreditoModule.tsx",
-      "line": 642,
-      "excerpt": "const inputMotivo = window.prompt('Digite o motivo da rejeicao da assinatura do contrato:');"
     },
     {
       "severity": "review",
