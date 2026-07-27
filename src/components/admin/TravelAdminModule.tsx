@@ -1549,85 +1549,58 @@ function TransacoesTab() {
 
   const getAdminNote = (item: any): string | null => {
     if (!item?.id) return null;
-    return item.resposta_admin || item.snapshot_completo?.resposta_admin || item.detalhes?.resposta_admin || localStorage.getItem(`gsa_refund_note_${item.id}`) || null;
+    return item.resposta_gsa
+      || item.resposta_admin
+      || item.snapshot_completo?.resposta_admin
+      || item.detalhes?.resposta_admin
+      || null;
   };
 
   const getNetRefundAmount = (item: any): number => {
     if (!item) return 0;
-    const storedNet = item.id ? localStorage.getItem(`gsa_refund_net_${item.id}`) : null;
-    if (storedNet != null && !isNaN(Number(storedNet))) {
-      return Number(storedNet);
+    const persistedRefund = Number(item.valor_reembolsado);
+    if (Number.isFinite(persistedRefund) && persistedRefund >= 0) {
+      return persistedRefund;
     }
-    const storedFees = item.id ? localStorage.getItem(`gsa_refund_fees_${item.id}`) : null;
-    const fees = storedFees != null ? Number(storedFees) : Number(item.taxa_cancelamento || 0);
-
-    const baseVal = Number(item.valor_elegivel_reembolso != null ? item.valor_elegivel_reembolso : (item.valor_pago || item.valor_total || 0));
-
-    if (fees > 0 && baseVal >= fees && baseVal === Number(item.valor_total || item.valor_pago)) {
-      return baseVal - fees;
-    }
-    return baseVal;
+    const eligible = Number(item.valor_elegivel_reembolso);
+    return Number.isFinite(eligible) && eligible > 0 ? eligible : 0;
   };
 
   const getRefundFeesAmount = (item: any): number => {
     if (!item) return 0;
-    const storedFees = item.id ? localStorage.getItem(`gsa_refund_fees_${item.id}`) : null;
-    if (storedFees != null && !isNaN(Number(storedFees))) {
-      return Number(storedFees);
-    }
-    return Number(item.taxa_cancelamento || 0);
+    const fees = Number(item.taxas_aplicaveis);
+    return Number.isFinite(fees) && fees > 0 ? fees : 0;
   };
 
-  // ETAPA 1: Aprovação de Reembolso -> Altera para status 'reembolso_aprovado'
   const handleApproveRefund = async () => {
     if (!refundTx) return;
     setProcessingRefund(true);
     try {
-      const numericRefund = parseCurrencyString(refundAmount); // ex: 5000
-      const numericFees = parseCurrencyString(refundFees);     // ex: 980
-      const netRefund = Math.max(0, numericRefund - numericFees); // ex: 4020
+      const numericRefund = parseCurrencyString(refundAmount);
+      const numericFees = parseCurrencyString(refundFees);
       const note = refundNote.trim() || 'Reembolso aprovado pelo financeiro. Aguardando processamento do pagamento.';
 
-      if (refundTx.id) {
-        localStorage.setItem(`gsa_refund_note_${refundTx.id}`, note);
-        localStorage.setItem(`gsa_refund_fees_${refundTx.id}`, String(numericFees));
-        localStorage.setItem(`gsa_refund_net_${refundTx.id}`, String(netRefund));
-        localStorage.setItem(`gsa_refund_gross_${refundTx.id}`, String(numericRefund));
-        localStorage.setItem(`gsa_refund_stage_${refundTx.id}`, 'approved');
+      if (numericRefund <= 0) {
+        throw new Error('Informe um valor de reembolso maior que zero.');
+      }
+      if (numericFees < 0 || numericFees > numericRefund) {
+        throw new Error('As taxas não podem superar o valor bruto aprovado.');
       }
 
-      let { error } = await supabase
-        .from('viagens_transacoes')
-        .update({
-          status: 'reembolso_aprovado',
-          valor_elegivel_reembolso: netRefund,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', refundTx.id);
-
-      if (error) {
-        await supabase
-          .from('viagens_transacoes')
-          .update({
-            valor_elegivel_reembolso: netRefund,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', refundTx.id);
+      const result = await callAdminRpc<TravelRefundResult>('gsa_admin_process_travel_refund', {
+        p_request_id: getRefundRequestId(refundTx.id, 'approve'),
+        p_transacao_id: refundTx.id,
+        p_action: 'approve',
+        p_valor_bruto: numericRefund,
+        p_taxas: numericFees,
+        p_resposta: note,
+        p_comprovante: null,
+      });
+      if (!result?.success) {
+        throw new Error('O servidor não confirmou a aprovação do reembolso.');
       }
 
-      // Sincroniza a tabela viagens_cancelamentos para o cliente visualizar imediatamente
-      await supabase
-        .from('viagens_cancelamentos')
-        .update({
-          status: 'reembolso_aprovado',
-          valor_reembolsado: netRefund,
-          taxas_aplicaveis: numericFees,
-          resposta_gsa: note,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('transacao_id', refundTx.id);
-
-      toast.success(`Etapa 1 Concluída! Reembolso de R$ ${formatCurrencyInputValue(netRefund)} Aprovado. Prossiga para a Etapa 2 (Processar Pagamento).`);
+      toast.success(`Etapa 1 concluída. Reembolso de R$ ${formatCurrencyInputValue(result.valor_reembolso || 0)} aprovado. Prossiga para o processamento do pagamento.`);
       setRefundTx(null);
       await list.load();
     } catch (error: any) {
@@ -1637,45 +1610,31 @@ function TransacoesTab() {
     }
   };
 
-  // ETAPA 2: Processamento e Efetivação do Pagamento -> Altera para status 'reembolsada'
   const handleProcessRefundPayment = async () => {
     if (!processRefundTx) return;
     setProcessingRefund(true);
     try {
       const netVal = getNetRefundAmount(processRefundTx);
-      const feesVal = getRefundFeesAmount(processRefundTx);
       const proofText = refundProof.trim() || 'Pagamento de reembolso efetuado e comprovado.';
 
-      if (processRefundTx.id) {
-        localStorage.setItem(`gsa_refund_proof_${processRefundTx.id}`, proofText);
-        localStorage.setItem(`gsa_refund_stage_${processRefundTx.id}`, 'completed');
+      if (netVal <= 0) {
+        throw new Error('O reembolso aprovado não possui valor líquido persistido.');
       }
 
-      const { error } = await supabase
-        .from('viagens_transacoes')
-        .update({
-          status: 'reembolsada',
-          valor_elegivel_reembolso: netVal,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', processRefundTx.id);
+      const result = await callAdminRpc<TravelRefundResult>('gsa_admin_process_travel_refund', {
+        p_request_id: getRefundRequestId(processRefundTx.id, 'complete'),
+        p_transacao_id: processRefundTx.id,
+        p_action: 'complete',
+        p_valor_bruto: null,
+        p_taxas: 0,
+        p_resposta: null,
+        p_comprovante: proofText,
+      });
+      if (!result?.success) {
+        throw new Error('O servidor não confirmou a efetivação do reembolso.');
+      }
 
-      if (error) throw new Error(error.message || 'Erro ao efetivar reembolso.');
-
-      // Sincroniza viagens_cancelamentos para 'concluido'
-      await supabase
-        .from('viagens_cancelamentos')
-        .update({
-          status: 'concluido',
-          valor_reembolsado: netVal,
-          taxas_aplicaveis: feesVal,
-          resposta_gsa: proofText,
-          concluido_em: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('transacao_id', processRefundTx.id);
-
-      toast.success(`Etapa 2 Concluída! Pagamento de R$ ${formatCurrencyInputValue(netVal)} confirmado e efetivado com sucesso.`);
+      toast.success(`Etapa 2 concluída. Pagamento de R$ ${formatCurrencyInputValue(result.valor_reembolso ?? netVal)} confirmado e efetivado.`);
       setProcessRefundTx(null);
       setRefundProof('');
       await list.load();
@@ -1692,30 +1651,18 @@ function TransacoesTab() {
     if (reason.length < 3) return toast.error('Informe o motivo da negação do reembolso (mínimo de 3 caracteres).');
     setProcessingRefund(true);
     try {
-      if (denyTx.id) {
-        localStorage.setItem(`gsa_refund_note_${denyTx.id}`, reason);
+      const result = await callAdminRpc<TravelRefundResult>('gsa_admin_process_travel_refund', {
+        p_request_id: getRefundRequestId(denyTx.id, 'deny'),
+        p_transacao_id: denyTx.id,
+        p_action: 'deny',
+        p_valor_bruto: null,
+        p_taxas: 0,
+        p_resposta: reason,
+        p_comprovante: null,
+      });
+      if (!result?.success) {
+        throw new Error('O servidor não confirmou a negativa do reembolso.');
       }
-
-      const { error } = await supabase
-        .from('viagens_transacoes')
-        .update({
-          status: 'reembolso_negado',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', denyTx.id);
-
-      if (error) throw new Error(error.message || 'Erro ao atualizar transação.');
-
-      // Sincroniza viagens_cancelamentos para 'reembolso_negado'
-      await supabase
-        .from('viagens_cancelamentos')
-        .update({
-          status: 'reembolso_negado',
-          resposta_gsa: reason,
-          decidido_em: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('transacao_id', denyTx.id);
 
       toast.success('Solicitação de reembolso negada e registrada.');
       setDenyTx(null);
@@ -1744,9 +1691,12 @@ function TransacoesTab() {
       ) : (
         <div className="space-y-3">
           {list.result.items.map((item) => {
-            const isStageCompleted = item.id && localStorage.getItem(`gsa_refund_stage_${item.id}`) === 'completed';
-            const isApprovedStage1 = (item.status === 'reembolso_aprovado' || (item.id && localStorage.getItem(`gsa_refund_stage_${item.id}`) === 'approved')) && item.status !== 'reembolsada' && !isStageCompleted;
-            const isPendingApproval = ['reembolso_em_analise', 'reembolso_solicitado', 'solicitado'].includes(item.status) && !isApprovedStage1 && item.status !== 'reembolsada';
+            const refundStatus = item.cancelamento_status || item.status;
+            const isStageCompleted = refundStatus === 'concluido' || item.status === 'reembolsada';
+            const isApprovedStage1 = refundStatus === 'reembolso_aprovado' && !isStageCompleted;
+            const isPendingApproval = ['reembolso_em_analise', 'reembolso_solicitado', 'solicitado', 'em_analise'].includes(refundStatus)
+              && !isApprovedStage1
+              && !isStageCompleted;
 
             return (
               <article key={item.id} className={`flex flex-col justify-between gap-4 rounded-2xl border p-5 lg:flex-row lg:items-center transition bg-white shadow-2xs ${
