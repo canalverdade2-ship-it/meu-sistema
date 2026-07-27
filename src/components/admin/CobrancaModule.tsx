@@ -5,6 +5,8 @@ import { useAdminNotifications } from '../../hooks/useAdminNotifications';
 import { formatCurrency, formatDateTime, formatDate, maskPhone, maskCPF, maskCNPJ, generateCode } from '../../lib/utils';
 import { toast } from 'react-hot-toast';
 import { logService } from '../../lib/logService';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { 
   Gavel, AlertTriangle, MessageCircle, Settings, History, Send, Clock, CheckCircle,
   Activity, User, Briefcase, Scale, Target, Banknote,
@@ -28,7 +30,7 @@ const getAdminSessionForRpc = () => {
 
 export function CobrancaModule({ initialTab, initialItemId, onNavigate, colaboradorNome }: { initialTab?: string, initialItemId?: string, onNavigate?: (mod: string, tab?: string, item?: string) => void, colaboradorNome?: string }) {
   const { pendencies } = useAdminNotifications();
-  // Fix #3: Usar initialTab quando fornecido
+  const confirmHook = useConfirm();
   const [activeTab, setActiveTab] = useState(initialTab || 'dashboard');
   const [loading, setLoading] = useState(true);
   const [cobrancas, setCobrancas] = useState<any[]>([]);
@@ -528,7 +530,14 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   };
 
   const handleCancelarAcordo = async (c: any) => {
-    if (!window.confirm('Deseja realmente CANCELAR este acordo? As faturas das parcelas pendentes serao canceladas e a divida original sera reativada.')) return;
+    const ok = await confirmHook.confirm({
+      title: 'Cancelar Acordo?',
+      message: 'As faturas das parcelas pendentes serão canceladas e a dívida original será reativada. Esta ação não pode ser desfeita.',
+      confirmLabel: 'Sim, cancelar acordo',
+      cancelLabel: 'Manter acordo',
+      variant: 'danger',
+    });
+    if (!ok) return;
 
     try {
       const session = getAdminSessionForRpc();
@@ -561,7 +570,14 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
     const canProceed = await canDeleteRecord('cobrancas', c.id);
     if (!canProceed) return;
 
-    if (!window.confirm('ATENCAO: A exclusao removera o registro de cobranca e cancelara o acordo. A divida original NAO sera reativada automaticamente se voce excluir o registro de cobranca. Deseja continuar?')) return;
+    const ok = await confirmHook.confirm({
+      title: 'Excluir Registro de Cobrança?',
+      message: 'ATENÇÃO: A exclusão removerá o registro de cobrança e cancelará o acordo. A dívida original NÃO será reativada automaticamente. Deseja continuar?',
+      confirmLabel: 'Sim, excluir definitivamente',
+      cancelLabel: 'Cancelar',
+      variant: 'danger',
+    });
+    if (!ok) return;
 
     try {
       const session = getAdminSessionForRpc();
