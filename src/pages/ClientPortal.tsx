@@ -1329,13 +1329,15 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
           </nav>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 border-t border-black/5">
           <button 
             onClick={onLogout}
-            className={`flex items-center gap-3 rounded-full text-sm font-medium transition-all ${
-              isBusiness ? 'text-white/45 hover:bg-white/[0.06] hover:text-white' : 'text-red-600/80 hover:bg-red-50 hover:text-red-600'
+            className={`flex items-center gap-3 rounded-xl text-xs font-black transition-all shadow-sm ${
+              isBusiness 
+                ? 'border border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white' 
+                : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white'
             } ${
-              isEffectiveExpanded ? 'w-full px-5 py-3.5' : 'w-12 h-12 px-0 justify-center mx-auto'
+              isEffectiveExpanded ? 'w-full px-4 py-3' : 'w-11 h-11 px-0 justify-center mx-auto'
             }`}
             title={!isEffectiveExpanded ? (isBusiness ? 'Sair do GSA HUB Empresas' : 'Sair do Portal') : undefined}
           >
@@ -1364,7 +1366,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={toggleFullscreen}
               className="group hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-black/5"
@@ -1386,6 +1388,19 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                 navigateClientModule(mod, tab, itemId);
               }}
             />
+            <button
+              type="button"
+              onClick={onLogout}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 text-xs font-black transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 ${
+                isBusiness
+                  ? 'border border-red-500/40 bg-red-950/20 text-red-400 hover:bg-red-600 hover:text-white focus-visible:ring-red-400'
+                  : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white focus-visible:ring-red-500'
+              }`}
+              title={isBusiness ? 'Sair do GSA HUB Empresas' : 'Sair do Portal'}
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">{isBusiness ? 'Sair do ambiente' : 'Sair do Portal'}</span>
+            </button>
           </div>
         </header>
         <div className={`${activeModule === 'area_vip' ? '' : (activeModule as string) === 'gsa_store' ? 'p-4 lg:px-6 lg:pt-2 lg:pb-12' : 'p-4 sm:p-6 lg:p-10 xl:p-12'} ${isBusiness ? 'mx-auto w-full max-w-[1680px]' : ''}`}>
