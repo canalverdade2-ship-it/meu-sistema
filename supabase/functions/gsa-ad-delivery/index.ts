@@ -97,8 +97,8 @@ export function normalizeServePayload(input: unknown) {
 
 export async function handleRequest(request: Request) {
   const origin = request.headers.get('origin');
-  if (origin && !configuredOrigins().includes(origin)) return json(403, { error: 'origin_not_allowed' }, origin);
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !isAllowedOrigin(origin)) return json(403, { error: 'origin_not_allowed' }, origin);
   if (request.method !== 'POST') return json(405, { error: 'method_not_allowed' }, origin, { allow: 'POST, OPTIONS' });
 
   const declaredLength = Number(request.headers.get('content-length') || 0);
