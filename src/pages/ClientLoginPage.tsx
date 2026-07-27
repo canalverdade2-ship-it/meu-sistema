@@ -618,13 +618,6 @@ export function ClientLoginPage({
                     <div className="flex flex-col gap-1.5 pt-1">
                       <button
                         type="button"
-                        onClick={() => resetAccessState('first_access')}
-                        className="min-h-10 w-full text-center text-xs font-bold text-[#8a651f] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
-                      >
-                        Primeiro acesso (cadastrar senha)
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => resetAccessState('recovery')}
                         className="min-h-9 w-full text-center text-xs font-bold text-[#718096] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
                       >
