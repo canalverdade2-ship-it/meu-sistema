@@ -351,7 +351,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       || cliente?.cadastro_aprovado === false
     );
 
-    if (isUnderAnalysis && module !== 'dashboard' && module !== 'perfil') {
+    if (isUnderAnalysis && module !== 'dashboard' && module !== 'perfil' && (module as string) !== 'gsa_store') {
       toast.error('Módulo bloqueado: Seu cadastro está em análise pelo sistema. Acompanhe a liberação no módulo Meu Cadastro.', {
         icon: '🔒',
         duration: 5000,
@@ -450,13 +450,13 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         path = routes.marketplace.travelPackages.root();
       } else if (tab === 'classificados') {
         path = routes.marketplace.classifieds.root();
-      } else if (tab === 'loja' || (tab && tab.startsWith('loja-'))) {
+      } else if (tab === 'loja' || tab === 'shop' || (tab && tab.startsWith('loja-'))) {
         const sub = tab.replace('loja-', '');
         if (sub === 'produtos') path = routes.marketplace.store.product(itemId || '');
         else if (sub === 'assinaturas') path = routes.marketplace.store.subscription(itemId || '');
-        else path = routes.marketplace.store.root();
+        else path = routes.marketplace.store.products();
       } else {
-        path = routes.marketplace.menu();
+        path = routes.marketplace.store.products();
       }
     } else if ((module as string) === 'classificados') {
       path = routes.marketplace.classifieds.meusAnuncios();
