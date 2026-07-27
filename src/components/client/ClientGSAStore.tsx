@@ -529,6 +529,8 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
         []
       ).then(res => {
         setPromosAplicadas(res);
+      }).catch(err => {
+        console.error('[GSAStore] Erro ao avaliar promoções:', err);
       });
     } else {
       setPromosAplicadas([]);
