@@ -826,7 +826,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         if (clientData.bonus_boas_vindas_pendente) {
           await supabase.from('clientes').update({
             bonus_boas_vindas_pendente: false
-          }).eq('id', clientId);
+          }).eq('id', clientId).throwOnError();
         }
         isCheckingBonus.current = false;
         return;
@@ -851,7 +851,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         console.log('[Bonus] Bônus já existe no extrato. Limpando flag e exibindo.');
         await supabase.from('clientes').update({ 
           bonus_boas_vindas_pendente: false
-        }).eq('id', clientId);
+        }).eq('id', clientId).throwOnError();
 
         const { data: settings } = await supabase
           .from('system_settings')

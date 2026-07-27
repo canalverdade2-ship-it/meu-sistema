@@ -166,11 +166,15 @@ export function OrdensServicoModule({ activeSubTab, initialItemId, colaboradorNo
       }
       
       // 2. Cascata: Cancelar todas as demandas de prestadores vinculadas
-      const { data: demandasAfetadas } = await supabase
+      const { data: demandasAfetadas, error: demandasError } = await supabase
         .from('prestador_demandas')
         .update({ status: 'cancelada' })
         .eq('os_id', osToCancel)
         .select('id, prestador_id, codigo_demanda');
+      if (demandasError) {
+        toast.error('A OS foi cancelada, mas houve falha ao cancelar as demandas vinculadas. Atualize a tela e tente novamente.');
+        return;
+      }
 
       // 3. Notificar Cliente
       if (os) {
@@ -512,7 +516,8 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
         .from('prestador_demandas')
         .update({ status: 'finalizada' })
         .eq('os_id', os.id)
-        .eq('status', 'concluida_interna');
+        .eq('status', 'concluida_interna')
+        .throwOnError();
 
       // 3. Gerar Fatura
       await supabase.from('faturas').insert({
@@ -524,7 +529,7 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
         status: 'pendente',
         data_vencimento: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
         tipo: 'servico'
-      });
+      }).throwOnError();
 
       // 4. Notificar Cliente
       await notificationService.notifyClient(
