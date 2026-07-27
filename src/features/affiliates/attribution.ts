@@ -1,5 +1,6 @@
 import { callClientRpc } from '../../lib/clientRpc';
 import { supabase } from '../../lib/supabase';
+import { generateUUID } from '../../lib/utils';
 
 const PENDING_CLICK_STORAGE_KEY = 'gsa_affiliate_pending_clicks_v1';
 const LINK_CODE_PATTERN = /^[A-Za-z0-9_-]{6,96}$/;
@@ -111,7 +112,7 @@ export async function processCapturedAffiliateReferral() {
   capturedReferral = null;
 
   processingReferral = (async () => {
-    const visitorToken = crypto.randomUUID();
+    const visitorToken = generateUUID();
     const { data, error } = await supabase.rpc('gsa_public_track_affiliate_click', {
       p_codigo: referral.code,
       p_visitante_token: visitorToken,
