@@ -12,14 +12,6 @@ interface LogData {
 }
 
 
-interface LogData {
-  ator_tipo: AtorTipo;
-  ator_id?: string;
-  ator_nome?: string;
-  acao: string;
-  detalhes?: string;
-}
-
 export const logService = {
   /**
    * Registra uma ação no extrato global (sistema_logs) via RPC validada.
