@@ -92,6 +92,9 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
 }
 
 
+
+const queryClient = new QueryClient();
+
 const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((module) => ({ default: module.SecureAdminPanel })));
 const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
 const ClientLoginPage = lazy(() => import('./pages/ClientLoginPage').then((module) => ({ default: module.ClientLoginPage })));
