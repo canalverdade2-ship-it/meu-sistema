@@ -425,28 +425,26 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     fetchStoreData();
 
     if (clientId) {
-      // Verificar se há carrinho pendente ou URL pede abertura do carrinho
-      const hasPending = !!localStorage.getItem(PENDING_STORE_CHECKOUT_KEY);
+      // A migração do carrinho visitante j\u00e1 foi feita em App.tsx antes da navega\u00e7\u00e3o.
+      // Aqui apenas carregamos o carrinho do banco e abrimos o drawer se a URL pedir.
       const urlWantsCart = window.location.search.includes('modal=carrinho') || window.location.search.includes('modal=checkout');
-      if (hasPending || urlWantsCart) {
+      if (urlWantsCart) {
         pendingCartOpenRef.current = true;
       }
 
-      importPendingStoreCheckout().then(async (imported) => {
-        await fetchCart();
-        if (imported || pendingCartOpenRef.current) {
+      fetchCart().then(() => {
+        if (pendingCartOpenRef.current) {
           pendingCartOpenRef.current = false;
-          // Usar timeout para garantir que o efeito de sync de URL já rodou
           setTimeout(() => {
             setIsCartOpen(true);
             updateRouteQuery({ modal: 'carrinho' });
-            if (imported) toast.success('Carrinho recuperado! Continue sua compra.');
           }, 50);
         }
       });
     } else {
       loadGuestCart();
     }
+
 
     const fetchAtivadas = async () => {
       try {
