@@ -447,6 +447,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
 
     const fetchAtivadas = async () => {
+      if (!clientId) return;
       try {
         const { data } = await supabase.from('promocoes_quantidade_ativadas').select('promocao_quantidade_id').eq('cliente_id', clientId);
         if (data) setPromosAtivadasIds(new Set(data.map(d => d.promocao_quantidade_id)));
@@ -561,10 +562,12 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
   const fetchClientType = async () => {
     try {
-      const { data } = await supabase.from('clientes').select('*').eq('id', clientId).maybeSingle();
-      if (data) {
-        setClientType(data.tipo_pessoa as 'pf' | 'pj');
-        setClienteAtual(data);
+      if (clientId) {
+        const { data } = await supabase.from('clientes').select('*').eq('id', clientId).maybeSingle();
+        if (data) {
+          setClientType(data.tipo_pessoa as 'pf' | 'pj');
+          setClienteAtual(data);
+        }
       }
       
       const { data: promos } = await supabase.from('promocoes_quantidade')
@@ -581,7 +584,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     
     // Buscar tipo de pessoa se ainda não tivermos para o filtro
     let currentType = clientType;
-    if (!currentType) {
+    if (!currentType && clientId) {
       const { data } = await supabase.from('clientes').select('tipo_pessoa').eq('id', clientId).maybeSingle();
       if (data) {
         currentType = data.tipo_pessoa as 'pf' | 'pj';
