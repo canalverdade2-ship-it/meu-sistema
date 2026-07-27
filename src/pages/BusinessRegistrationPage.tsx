@@ -231,7 +231,7 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
     if (!validarCNPJ(cleanCnpj)) nextErrors.cnpj = 'Informe um CNPJ válido.';
     if (registrationData.nome.trim().length < 3) nextErrors.nome = 'Informe a razão social da empresa.';
     if (!validarEmail(registrationData.email.trim())) nextErrors.email = 'Informe um e-mail válido.';
-    if (cleanPhone.length !== 11) nextErrors.telefone = 'Informe um celular com DDD.';
+    if (cleanPhone.length < 10 || cleanPhone.length > 11) nextErrors.telefone = 'Informe um telefone comercial ou celular válido com DDD.';
     if (cleanCep.length !== 8) nextErrors.cep = 'Informe um CEP válido.';
     if (!registrationData.numero.trim()) nextErrors.numero = 'Informe o número.';
     if (!registrationData.endereco.trim()) nextErrors.endereco = 'Informe o endereço.';
