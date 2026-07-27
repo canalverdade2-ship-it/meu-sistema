@@ -83,7 +83,7 @@ export function MediaImportSource({ type, onCandidatesReady }: MediaImportSource
       setProgressText('Identificando produtos...');
       
       // Rotate stages every 8 seconds to show real progress
-      intervalId = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         setProgressText((prev) => {
           if (prev === 'Identificando produtos...') return 'Organizando os resultados...';
           if (prev === 'Organizando os resultados...') return 'Preparando revisão...';
@@ -100,7 +100,10 @@ export function MediaImportSource({ type, onCandidatesReady }: MediaImportSource
         }
       });
 
-      if (intervalId) clearInterval(intervalId);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
 
       if (analyzeReq.error) {
          throw analyzeReq.error;
