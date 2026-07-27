@@ -1136,8 +1136,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
           onRemove={removeCartItem} 
           onCheckout={() => {
             if (!clientId) {
-              savePendingStoreCheckout();
-              updateRouteQuery({ modal: null });
+              savePendingStoreCheckout(cartItems);
               toast('Entre ou cadastre-se para finalizar sua compra.');
               if (onRequireAuth) onRequireAuth();
               return;
