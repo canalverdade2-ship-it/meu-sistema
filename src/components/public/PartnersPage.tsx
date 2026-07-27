@@ -272,7 +272,7 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
                   <ArrowRight aria-hidden="true" />
                 </a>
                 <button type="button" onClick={() => setApplicationOpen(true)} className="partner-secondary-button">
-                  Solicitar parceria
+                  Seja nosso parceiro
                 </button>
               </div>
 
