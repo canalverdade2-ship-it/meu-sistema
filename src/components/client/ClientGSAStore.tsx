@@ -346,6 +346,9 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       for (const pendingItem of pendingItems) {
         if (!pendingItem?.item_id || !pendingItem?.tipo) continue;
 
+        const quantidade = Math.max(1, Number(pendingItem.quantidade || 1));
+        const prazoMeses = pendingItem.prazo_meses ? Number(pendingItem.prazo_meses) : undefined;
+
         const { data: existing } = await supabase
           .from('loja_carrinhos')
           .select('id, quantidade')
@@ -354,17 +357,19 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
           .eq('tipo', pendingItem.tipo)
           .maybeSingle();
 
-        const quantidade = Math.max(1, Number(pendingItem.quantidade || 1));
-        const prazoMeses = pendingItem.prazo_meses ? Number(pendingItem.prazo_meses) : undefined;
-
         if (existing) {
           const updateData: any = {
-            quantidade,
+            quantidade: Number(existing.quantidade || 0) + quantidade,
             updated_at: new Date().toISOString()
           };
           if (prazoMeses) updateData.prazo_meses = prazoMeses;
 
-          await clientOperationalWrite(clientId, 'loja_carrinhos', 'update', updateData, { id: existing.id });
+          try {
+            await clientOperationalWrite(clientId, 'loja_carrinhos', 'update', updateData, { id: existing.id });
+          } catch (writeErr) {
+            console.warn('[GSAStore] clientOperationalWrite update falhou, aplicando fallback direto:', writeErr);
+            await supabase.from('loja_carrinhos').update(updateData).eq('id', existing.id);
+          }
         } else {
           const insertData: any = {
             cliente_id: clientId,
@@ -375,7 +380,12 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
           };
           if (prazoMeses) insertData.prazo_meses = prazoMeses;
 
-          await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
+          try {
+            await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
+          } catch (writeErr) {
+            console.warn('[GSAStore] clientOperationalWrite insert falhou, aplicando fallback direto:', writeErr);
+            await supabase.from('loja_carrinhos').insert(insertData);
+          }
         }
       }
 
@@ -389,7 +399,11 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
         try {
           await clientOperationalWrite(clientId, 'cupons_ativados', 'insert', { cupom_id: cupomId });
         } catch (error: any) {
-          console.warn('[GSAStore] Nao foi possivel ativar cupom pendente:', error);
+          try {
+            await supabase.from('cupons_ativados').insert({ cliente_id: clientId, cupom_id: cupomId });
+          } catch {
+            console.warn('[GSAStore] Nao foi possivel ativar cupom pendente:', error);
+          }
         }
       }
 
@@ -415,11 +429,11 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     fetchStoreData();
 
     if (clientId) {
-      importPendingStoreCheckout().then((imported) => {
-        fetchCart();
-        if (imported || route.query.modal === 'checkout') {
-          setIsCheckoutOpen(true);
-          updateRouteQuery({ modal: 'checkout' });
+      importPendingStoreCheckout().then(async (imported) => {
+        await fetchCart();
+        if (imported || route.query.modal === 'carrinho' || route.query.modal === 'checkout') {
+          setIsCartOpen(true);
+          updateRouteQuery({ modal: 'carrinho' });
           toast.success('Carrinho recuperado! Continue sua compra.');
         }
       });
