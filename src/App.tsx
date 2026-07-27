@@ -168,6 +168,22 @@ export default function App() {
   const handleLoginClient = async (
     clientId: string,
     isRecovery: boolean = false,
+    hintedPersonType?: ClientPersonType,
+  ) => {
+    const resolvedPersonType = await sessionService.resolveAuthenticatedClientPersonType(clientId);
+    const clientPersonType: ClientPersonType = resolvedPersonType || hintedPersonType || 'pf';
+    sessionService.setClientPersonType(clientPersonType);
+    setSession({ clientId, clientPersonType });
+    const returnTo = readSafeReturnTo(
+      window.location.search,
+      clientPersonType === 'pj'
+        ? ['/empresa', '/marketplace', '/loja', '/loja-assinaturas']
+        : ['/cliente', '/marketplace', '/loja', '/loja-assinaturas'],
+    );
+
+    if (isRecovery) {
+      const profilePath = clientPersonType === 'pj' ? routes.business.profile() : routes.client.perfil();
+      replace(`${profilePath}?modal=alterar-senha&origem=recuperacao`);
     } else if (returnTo) {
       replace(returnTo);
     } else {
