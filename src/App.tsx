@@ -23,8 +23,74 @@ import { readSafeReturnTo } from './routing/safeReturnTo';
 import { defaultAdminPath } from './security/collaboratorAccess';
 import { supabase } from './lib/supabase';
 import { clientOperationalWrite } from './lib/clientOperationalWrite';
+import { AffiliateTrackingBridge } from './components/AffiliateTrackingBridge';
 
-const queryClient = new QueryClient();
+const PENDING_STORE_CHECKOUT_KEY = 'gsa_pending_store_checkout';
+const PENDING_STORE_COUPONS_KEY = 'gsa_pending_store_coupons';
+const GUEST_ACTIVATED_STORE_COUPONS_KEY = 'gsa_guest_activated_store_coupons';
+
+async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
+  const rawCart = localStorage.getItem(PENDING_STORE_CHECKOUT_KEY);
+  if (!rawCart) return false;
+
+  let parsed: any;
+  try { parsed = JSON.parse(rawCart); } catch { return false; }
+
+  const pendingItems: Array<{ item_id: string; tipo: string; quantidade: number; prazo_meses?: number }> =
+    Array.isArray(parsed?.items) ? parsed.items : [];
+  if (pendingItems.length === 0) {
+    localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+    return false;
+  }
+
+  let migrated = false;
+  try {
+    for (const item of pendingItems) {
+      if (!item?.item_id || !item?.tipo) continue;
+
+      const quantidade = Math.max(1, Number(item.quantidade || 1));
+      const prazoMeses = item.prazo_meses ? Number(item.prazo_meses) : undefined;
+
+      const { data: existing } = await supabase
+        .from('loja_carrinhos')
+        .select('id, quantidade')
+        .eq('cliente_id', clientId)
+        .eq('item_id', item.item_id)
+        .eq('tipo', item.tipo)
+        .maybeSingle();
+
+      if (existing) {
+        const updateData: any = { quantidade: Number(existing.quantidade || 0) + quantidade, updated_at: new Date().toISOString() };
+        if (prazoMeses) updateData.prazo_meses = prazoMeses;
+        await clientOperationalWrite(clientId, 'loja_carrinhos', 'update', updateData, { id: existing.id });
+      } else {
+        const insertData: any = { cliente_id: clientId, item_id: item.item_id, tipo: item.tipo, quantidade, updated_at: new Date().toISOString() };
+        if (prazoMeses) insertData.prazo_meses = prazoMeses;
+        await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
+      }
+      migrated = true;
+    }
+
+    const rawCoupons = localStorage.getItem(PENDING_STORE_COUPONS_KEY);
+    const parsedCoupons = rawCoupons ? JSON.parse(rawCoupons) : null;
+    const couponIds: string[] = Array.isArray(parsedCoupons?.activatedCouponIds) ? parsedCoupons.activatedCouponIds : [];
+    for (const cupomId of couponIds) {
+      if (!cupomId) continue;
+      try { await clientOperationalWrite(clientId, 'cupons_ativados', 'insert', { cupom_id: cupomId }); } catch { /* ignore duplicate */ }
+    }
+
+    if (migrated) {
+      localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+      localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
+      localStorage.removeItem(GUEST_ACTIVATED_STORE_COUPONS_KEY);
+    }
+    return migrated;
+  } catch (err) {
+    console.error('[App] Erro ao migrar carrinho do visitante:', err);
+    return false;
+  }
+}
+
 
 const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((module) => ({ default: module.SecureAdminPanel })));
 const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
