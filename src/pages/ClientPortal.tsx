@@ -1447,8 +1447,9 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
             </div>
           )}
 
-          <motion.div 
-            key={`${activeModule}-${moduleKey}`}
+          <ErrorBoundary>
+            <motion.div 
+              key={`${activeModule}-${moduleKey}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
