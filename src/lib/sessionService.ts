@@ -21,6 +21,7 @@ export type AuthGatewayError = Error & {
 const SESSION_STORAGE_KEY = '_gsa_session';
 let restoreSessionPromise: Promise<StoredSession | null> | null = null;
 let endSessionPromise: Promise<void> | null = null;
+let loginQueue: Promise<void> = Promise.resolve();
 
 function getSessionStorage() {
   return typeof window === 'undefined' ? null : window.localStorage;
@@ -37,16 +38,18 @@ function readStoredSession(): StoredSession | null {
 }
 
 function writeStoredSession(sessionData: StoredSession) {
-  getSessionStorage()?.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
-  localStorage.removeItem('sessaoId');
-  localStorage.removeItem('_gsa_sess');
+  const storage = getSessionStorage();
+  storage?.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+  storage?.removeItem('sessaoId');
+  storage?.removeItem('_gsa_sess');
 }
 
 function clearStoredSession() {
-  getSessionStorage()?.removeItem(SESSION_STORAGE_KEY);
-  localStorage.removeItem('sessaoId');
-  localStorage.removeItem('_gsa_sess');
-  localStorage.removeItem('lastPing');
+  const storage = getSessionStorage();
+  storage?.removeItem(SESSION_STORAGE_KEY);
+  storage?.removeItem('sessaoId');
+  storage?.removeItem('_gsa_sess');
+  storage?.removeItem('lastPing');
 }
 
 function gatewayErrorMessage(code: string, retryAfter: number) {
@@ -93,6 +96,79 @@ async function invokeAuthGateway(action: string, payload: Record<string, unknown
   return data as any;
 }
 
+function serializeLogin<T>(operation: () => Promise<T>): Promise<T> {
+  const current = loginQueue.then(operation, operation);
+  loginQueue = current.then(
+    () => undefined,
+    () => undefined,
+  );
+  return current;
+}
+
+async function clearSessionPair(rpcSession?: any): Promise<void> {
+  const sessaoId = rpcSession?.sessao_id;
+  const sessionToken = rpcSession?.session_token;
+
+  try {
+    if (sessaoId && sessionToken) {
+      const { error } = await supabase.rpc('gsa_end_session', {
+        p_sessao_id: sessaoId,
+        p_session_token: sessionToken,
+      });
+      if (error) console.error('Falha ao revogar a sessão GSA inconsistente:', error);
+    }
+  } finally {
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error('Falha ao limpar a sessão Supabase Auth inconsistente:', error);
+    }
+    clearStoredSession();
+  }
+}
+
+async function synchronizeSupabaseAuth(
+  rpcSession: any,
+  useExistingAuthSession: boolean,
+): Promise<void> {
+  const sessaoId = String(rpcSession.sessao_id);
+  const atorTipo = String(rpcSession.ator_tipo);
+  const atorId = String(rpcSession.ator_id);
+  const tokenHash = rpcSession?.auth?.token_hash;
+  let authSession: any = null;
+
+  if (tokenHash) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'magiclink',
+    });
+    if (error || !data.session) {
+      throw new Error('Não foi possível sincronizar a sessão segura do usuário.');
+    }
+    authSession = data.session;
+  } else if (useExistingAuthSession) {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error || !data.session) {
+      throw new Error('A confirmação de identidade expirou. Solicite um novo código.');
+    }
+    authSession = data.session;
+  } else {
+    throw new Error('A autenticação não retornou o vínculo seguro da sessão.');
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser(authSession.access_token);
+  const appMetadata = userData.user?.app_metadata || {};
+  if (
+    userError
+    || !userData.user
+    || appMetadata.gsa_session_id !== sessaoId
+    || appMetadata.gsa_actor_type !== atorTipo
+    || appMetadata.gsa_actor_id !== atorId
+  ) {
+    throw new Error('A sessão segura não corresponde ao usuário autenticado.');
+  }
+}
+
 async function persistAuthenticatedSession(payload: any, useExistingAuthSession = false): Promise<StoredSession> {
   const rpcSession = payload?.session || payload;
   const sessaoId = rpcSession?.sessao_id;
@@ -114,26 +190,22 @@ async function persistAuthenticatedSession(payload: any, useExistingAuthSession 
     ...metadata,
   };
 
-  // Salva no localStorage IMEDIATAMENTE para garantir login instantâneo
-  writeStoredSession(sessionData);
-
-  // Tenta sincronizar o Supabase Auth em background sem bloquear o redirecionamento da tela
-  const tokenHash = rpcSession?.auth?.token_hash;
-  if (tokenHash) {
-    supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'magiclink' })
-      .catch((err) => console.warn('[sessionService] Supabase Auth sync em background:', err));
-  } else if (useExistingAuthSession) {
-    supabase.auth.refreshSession()
-      .catch((err) => console.warn('[sessionService] Supabase Auth refresh em background:', err));
+  try {
+    await synchronizeSupabaseAuth(rpcSession, useExistingAuthSession);
+    writeStoredSession(sessionData);
+    return sessionData;
+  } catch (error) {
+    await clearSessionPair(rpcSession);
+    throw error;
   }
-
-  return sessionData;
 }
 
 async function authenticate(action: string, payload: Record<string, unknown>) {
-  const data = await invokeAuthGateway(action, payload);
-  if (data?.valid || data?.success) await persistAuthenticatedSession(data);
-  return data;
+  return serializeLogin(async () => {
+    const data = await invokeAuthGateway(action, payload);
+    if (data?.valid || data?.success) await persistAuthenticatedSession(data);
+    return data;
+  });
 }
 
 async function endStoredSession(): Promise<void> {
@@ -177,7 +249,36 @@ async function restoreStoredSession(): Promise<StoredSession | null> {
       return null;
     }
 
-    // 1. Valida a sessão GSA diretamente no banco de dados
+    // A sessão persistida só pode ser restaurada quando o JWT Supabase Auth
+    // representa exatamente o mesmo ator e a mesma sessão GSA.
+    const { data: authData, error: authError } = await supabase.auth.getSession();
+    let authSession = authData.session;
+    if (!authSession && !authError) {
+      const refreshed = await supabase.auth.refreshSession();
+      authSession = refreshed.data.session;
+    }
+    if (authError || !authSession) {
+      await endStoredSession();
+      return null;
+    }
+
+    const { data: userData, error: userError } = await supabase.auth.getUser(authSession.access_token);
+    const appMetadata = userData.user?.app_metadata || {};
+    const sessaoId = sessionData.sessaoId;
+    const atorTipo = sessionData.atorTipo;
+    const atorId = sessionData.atorId;
+    if (
+      userError
+      || !userData.user
+      || appMetadata.gsa_session_id !== sessaoId
+      || appMetadata.gsa_actor_type !== atorTipo
+      || appMetadata.gsa_actor_id !== atorId
+    ) {
+      await endStoredSession();
+      return null;
+    }
+
+    // Depois do binding Auth, reconfirma a validade operacional da sessão GSA.
     const { data, error } = await supabase.rpc('gsa_validate_session', {
       p_sessao_id: sessionData.sessaoId,
       p_session_token: sessionData.sessionToken,
@@ -188,13 +289,6 @@ async function restoreStoredSession(): Promise<StoredSession | null> {
       await endStoredSession();
       return null;
     }
-
-    // 2. Garante que a sessão local do Supabase Auth também está ativa (se expirada, tenta renovar em background)
-    const { data: authData } = await supabase.auth.getSession();
-    if (!authData?.session) {
-      await supabase.auth.refreshSession().catch(() => {});
-    }
-
 
     if (sessionData.atorTipo === 'cliente') {
       const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_client_session_access_state', {
@@ -243,9 +337,11 @@ export const sessionService = {
   },
 
   async completeClientRecovery(recoveryId: string) {
-    const data = await invokeAuthGateway('complete_client_recovery', { recovery_id: recoveryId });
-    if (data?.success) await persistAuthenticatedSession(data, true);
-    return data;
+    return serializeLogin(async () => {
+      const data = await invokeAuthGateway('complete_client_recovery', { recovery_id: recoveryId });
+      if (data?.success) await persistAuthenticatedSession(data, true);
+      return data;
+    });
   },
 
   async updateClientPin(newPin: string) {
@@ -299,39 +395,6 @@ export const sessionService = {
     if (sessionData?.atorTipo !== 'cliente') return;
     sessionData.clientPersonType = personType;
     writeStoredSession(sessionData);
-  },
-
-  async setPinAndLogin(
-    documento: string,
-    telefone: string,
-    pin: string,
-    tipo: 'cliente' | 'prestador',
-  ) {
-    const cleanDoc = documento.replace(/\D/g, '');
-    const cleanContact = telefone.trim();
-
-    try {
-      return await authenticate('set_pin_and_login', {
-        documento: cleanDoc,
-        telefone: cleanContact,
-        pin: pin.trim(),
-        tipo,
-      });
-    } catch (edgeError: any) {
-      console.warn('Edge Function set_pin_and_login retornou erro, tentando via RPC gsa_set_pin_and_login:', edgeError);
-      const { data, error } = await supabase.rpc('gsa_set_pin_and_login', {
-        p_documento: cleanDoc,
-        p_telefone: cleanContact,
-        p_pin: pin.trim(),
-        p_tipo: tipo,
-      });
-      if (error) throw error;
-      const res = data as any;
-      if (res?.success) {
-        await persistAuthenticatedSession(res);
-      }
-      return res;
-    }
   },
 
   async loginAdmin(code: string) {
