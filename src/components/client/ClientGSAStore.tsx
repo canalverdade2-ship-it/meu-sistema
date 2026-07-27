@@ -347,51 +347,25 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       return false;
     }
 
-    // Aguarda até 3s para Supabase Auth ter sessão ativa (RLS)
-    let retries = 0;
-    while (retries < 6) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) break;
-      await new Promise(r => setTimeout(r, 500));
-      retries++;
-    }
-
     let imported = false;
     try {
-      for (const pendingItem of pendingItems) {
-        if (!pendingItem?.item_id || !pendingItem?.tipo) continue;
+      await Promise.all(pendingItems.map(async (pendingItem) => {
+        if (!pendingItem?.item_id || !pendingItem?.tipo) return;
 
         const quantidade = Math.max(1, Number(pendingItem.quantidade || 1));
         const prazoMeses = pendingItem.prazo_meses ? Number(pendingItem.prazo_meses) : undefined;
 
-        const { data: existing } = await supabase
-          .from('loja_carrinhos')
-          .select('id, quantidade')
-          .eq('cliente_id', clientId)
-          .eq('item_id', pendingItem.item_id)
-          .eq('tipo', pendingItem.tipo)
-          .maybeSingle();
-
-        if (existing) {
-          const updateData: any = {
-            quantidade: Number(existing.quantidade || 0) + quantidade,
-            updated_at: new Date().toISOString()
-          };
-          if (prazoMeses) updateData.prazo_meses = prazoMeses;
-          await supabase.from('loja_carrinhos').update(updateData).eq('id', existing.id);
-        } else {
-          const insertData: any = {
-            cliente_id: clientId,
-            item_id: pendingItem.item_id,
-            tipo: pendingItem.tipo,
-            quantidade,
-            updated_at: new Date().toISOString()
-          };
-          if (prazoMeses) insertData.prazo_meses = prazoMeses;
-          await supabase.from('loja_carrinhos').insert(insertData);
-        }
+        const insertData: any = {
+          cliente_id: clientId,
+          item_id: pendingItem.item_id,
+          tipo: pendingItem.tipo,
+          quantidade,
+          updated_at: new Date().toISOString()
+        };
+        if (prazoMeses) insertData.prazo_meses = prazoMeses;
+        await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
         imported = true;
-      }
+      }));
 
       const rawCoupons = localStorage.getItem(PENDING_STORE_COUPONS_KEY);
       const parsedCoupons = rawCoupons ? JSON.parse(rawCoupons) : null;
