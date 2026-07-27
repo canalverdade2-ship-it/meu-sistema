@@ -9,15 +9,26 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'http://127.0.0.1:3000',
 ];
 
+function isLocalOrigin(origin: string) {
+  return /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin);
+}
+
 function configuredOrigins() {
-  return (Deno.env.get('ALLOWED_ORIGINS') || DEFAULT_ALLOWED_ORIGINS.join(','))
+  const envOrigins = (Deno.env.get('ALLOWED_ORIGINS') || '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+  return [...DEFAULT_ALLOWED_ORIGINS, ...envOrigins];
+}
+
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return true;
+  if (isLocalOrigin(origin)) return true;
+  return configuredOrigins().includes(origin);
 }
 
 function corsHeaders(origin: string | null) {
-  const allowed = origin && configuredOrigins().includes(origin) ? origin : '';
+  const allowed = origin && isAllowedOrigin(origin) ? origin : '*';
   return {
     'access-control-allow-origin': allowed,
     'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type',
