@@ -887,6 +887,7 @@ const enviarOfertaQuitacao = async () => {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog {...confirmHook} />
       {/* Tab Selector */}
       <div className="flex border-b border-neutral-100 pb-px">
         <button
