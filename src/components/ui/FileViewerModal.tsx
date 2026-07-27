@@ -16,11 +16,7 @@ export function FileViewerModal({ isOpen, onClose, fileUrl, fileName }: FileView
     if (isOpen) {
       setZoom(1);
       setRotation(0);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
     }
-    return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
   if (!isOpen || !fileUrl) return null;
