@@ -958,7 +958,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
     || cliente?.cadastro_aprovado === false
     || cliente?.bloqueado === true
   );
-  const restrictedModules = new Set(['dashboard', 'perfil', 'suporte']);
+  const restrictedModules = new Set(['dashboard', 'perfil', 'suporte', 'gsa_store']);
 
   useEffect(() => {
     if (cliente && isBlocked && !restrictedModules.has(String(activeModule))) {
