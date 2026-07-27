@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Loader2, Search, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../../../../lib/supabase';
@@ -13,6 +13,13 @@ interface MediaImportSourceProps {
 export function MediaImportSource({ type, onCandidatesReady }: MediaImportSourceProps) {
   const [loading, setLoading] = useState(false);
   const [progressText, setProgressText] = useState('');
+  const intervalRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const accept = type === 'pdf' ? '.pdf' : '.jpg,.jpeg,.png,.webp';
   const maxSize = type === 'pdf' ? 15 : 10;
