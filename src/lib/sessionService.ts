@@ -188,9 +188,12 @@ async function endStoredSession(): Promise<void> {
       console.error('Falha ao encerrar a sessão:', error);
     } finally {
       try {
-        await supabase.auth.signOut({ scope: 'local' });
-      } catch (error) {
-        console.warn('Não foi possível confirmar o logout local no Supabase:', error);
+        const { data: authData } = await supabase.auth.getSession();
+        if (authData?.session) {
+          await supabase.auth.signOut({ scope: 'local' });
+        }
+      } catch {
+        // Ignora silenciosamente se não houver sessão do Supabase Auth
       }
       clearStoredSession();
     }
