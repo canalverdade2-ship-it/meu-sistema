@@ -18,11 +18,9 @@ interface AccessibleDialogProps {
 const DIALOG_MOBILE_STYLES = `
   @media (max-width: 767px) {
     [role="dialog"] {
-      width: calc(100vw - 0.5rem) !important;
-      max-width: calc(100vw - 0.5rem) !important;
-      max-height: calc(100dvh - 0.5rem) !important;
-      margin: 0.25rem !important;
-      border-radius: 0.75rem !important;
+      width: calc(100vw - 0.5rem);
+      max-width: calc(100vw - 0.5rem);
+      max-height: calc(100dvh - 0.5rem);
     }
 
     [role="dialog"] > div {
