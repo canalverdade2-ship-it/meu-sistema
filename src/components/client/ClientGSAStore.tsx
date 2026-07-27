@@ -456,6 +456,18 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     };
     fetchAtivadas();
 
+    // Ouve o evento disparado pelo App.tsx ap\u00f3s migrar o carrinho de visitante
+    const onCartMigrated = () => {
+      fetchCart().then(() => {
+        setTimeout(() => {
+          setIsCartOpen(true);
+          updateRouteQuery({ modal: 'carrinho' });
+          toast.success('Carrinho recuperado! Continue sua compra.');
+        }, 50);
+      });
+    };
+    window.addEventListener('gsa-cart-migrated', onCartMigrated);
+
     // Canais da Loja (Produtos, Serviços, Assinaturas)
     const storeChannel = supabase.channel('gsa-store-items')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(); fetchCart(); })
