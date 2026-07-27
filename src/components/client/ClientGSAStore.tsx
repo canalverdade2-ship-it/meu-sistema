@@ -278,6 +278,57 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     }
   }, [cartItems, clientId]);
 
+  const loadGuestCart = async () => {
+    if (clientId) return;
+    const rawCart = localStorage.getItem(PENDING_STORE_CHECKOUT_KEY);
+    if (!rawCart) return;
+
+    try {
+      const parsed = JSON.parse(rawCart);
+      const pendingItems = Array.isArray(parsed?.items) ? parsed.items : [];
+      if (pendingItems.length === 0) return;
+
+      const productIds = pendingItems.filter(c => c.tipo === 'produto').map(c => c.item_id);
+      const serviceIds = pendingItems.filter(c => c.tipo === 'servico').map(c => c.item_id);
+      const subscriptionIds = pendingItems.filter(c => c.tipo === 'assinatura').map(c => c.item_id);
+
+      const [prodRes, servRes, assRes] = await Promise.all([
+        productIds.length > 0 ? supabase.from('produtos').select('*').in('id', productIds) : Promise.resolve({ data: [] }),
+        serviceIds.length > 0 ? supabase.from('servicos').select('*').in('id', serviceIds) : Promise.resolve({ data: [] }),
+        subscriptionIds.length > 0 ? supabase.from('assinaturas').select('*').in('id', subscriptionIds) : Promise.resolve({ data: [] })
+      ]);
+
+      const guestItems: CartItem[] = [];
+      for (const item of pendingItems) {
+        let itemDetails = null;
+        if (item.tipo === 'produto') {
+          itemDetails = prodRes.data?.find((p: any) => p.id === item.item_id);
+        } else if (item.tipo === 'servico') {
+          itemDetails = servRes.data?.find((s: any) => s.id === item.item_id);
+        } else if (item.tipo === 'assinatura') {
+          itemDetails = assRes.data?.find((a: any) => a.id === item.item_id);
+        }
+
+        if (itemDetails) {
+          guestItems.push({
+            id: `guest-${item.tipo}-${item.item_id}`,
+            item_id: item.item_id,
+            tipo: item.tipo,
+            quantidade: Math.max(1, Number(item.quantidade || 1)),
+            item_detalhes: itemDetails,
+            prazo_meses: item.prazo_meses
+          });
+        }
+      }
+
+      if (guestItems.length > 0) {
+        setCartItems(guestItems);
+      }
+    } catch (err) {
+      console.error('[GSAStore] Erro ao carregar carrinho de visitante:', err);
+    }
+  };
+
   const importPendingStoreCheckout = async () => {
     if (!clientId) return false;
 
@@ -343,6 +394,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       }
 
       localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+      localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
       localStorage.removeItem(GUEST_ACTIVATED_STORE_COUPONS_KEY);
       return true;
     } catch (error) {
@@ -361,17 +413,18 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
   useEffect(() => {
     fetchClientType();
     fetchStoreData();
-    fetchCart();
 
     if (clientId) {
       importPendingStoreCheckout().then((imported) => {
+        fetchCart();
         if (imported) {
-          fetchCart();
           setIsCheckoutOpen(true);
           updateRouteQuery({ modal: 'checkout' });
           toast.success('Carrinho recuperado! Continue sua compra.');
         }
       });
+    } else {
+      loadGuestCart();
     }
 
     const fetchAtivadas = async () => {
