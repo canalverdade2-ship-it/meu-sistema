@@ -1587,6 +1587,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
               />
             )}
           </motion.div>
+        </ErrorBoundary>
         </div>
       </main>
 
