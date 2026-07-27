@@ -384,7 +384,7 @@ export default function App() {
                 onLoginClient={handleLoginClient}
                 onBack={() => navigate(`${routes.login.root()}${loginReturnSuffix}`)}
                 onSwitchPortal={() => navigate(`${routes.login.business()}${loginReturnSuffix}`)}
-                onRegister={() => navigate(`${routes.login.root()}?mode=register&type=pf`)}
+                onRegister={() => navigate(`${routes.login.root()}?mode=register&type=pf${loginReturnSuffix ? `&${loginReturnSuffix.replace('?', '')}` : ''}`)}
               />
             )}
 
