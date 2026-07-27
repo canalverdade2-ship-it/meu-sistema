@@ -1,6 +1,6 @@
 # Auditoria de operação real
 
-Gerada em: 2026-07-27T16:41:15.975Z
+Gerada em: 2026-07-27T16:48:25.650Z
 
 Arquivos executáveis examinados: **369**
 
