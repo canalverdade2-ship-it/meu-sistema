@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
-import { formatCurrency, formatDateTime } from '../../lib/utils';
+import { formatCurrency, formatDateTime, generateUUID } from '../../lib/utils';
 import { Modal } from '../ui/Modal';
 import { supabase } from '../../lib/supabase';
 
@@ -86,6 +86,22 @@ interface PagedResult {
   total: number;
   page: number;
   page_size: number;
+}
+
+interface TravelRefundResult {
+  success: boolean;
+  already_processed?: boolean;
+  request_id: string;
+  transacao_id: string;
+  cancelamento_id?: string | null;
+  action: 'approve' | 'complete' | 'deny';
+  status: string;
+  transacao_status?: string | null;
+  valor_bruto?: number | null;
+  taxas?: number | null;
+  valor_reembolso?: number | null;
+  resposta?: string | null;
+  comprovante?: string | null;
 }
 
 const PAGE_SIZE = 20;

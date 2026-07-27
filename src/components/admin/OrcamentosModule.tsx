@@ -323,112 +323,15 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
     setIsSubmitting(true);
     try {
       const itemsToApprove = orc.items || [orc];
-      
-      const { data: settings } = await supabase.from('system_settings').select('key, value');
-      const getSet = (k: string, d: string) => settings?.find(s => s.key === k)?.value || d;
-      const vencoProduto = parseInt(getSet('vencimento_padrao_produtos', '10'));
 
       for (const item of itemsToApprove) {
-        const { error } = await supabase
-          .from('orcamentos')
-          .update({ status: 'aprovado' })
-          .eq('id', item.id);
-
-        if (error) throw error;
-
-        // Marcar promoção como usada
-        if (item.promocao_id) {
-          await supabase.from('promocoes').update({ status: 'usada' }).eq('id', item.promocao_id);
-          await supabase.from('cliente_promocoes').update({ status: 'usada' }).eq('promocao_id', item.promocao_id).eq('cliente_id', item.cliente_id);
-        }
-
-        if (item.categoria === 'servico') {
-          const { data: os, error: osError } = await supabase
-            .from('ordens_servico')
-            .insert([{
-              codigo_os: generateCode('OS'),
-              orcamento_id: item.id,
-              cliente_id: item.cliente_id,
-              status: 'andamento',
-              data_inicio: new Date().toISOString().split('T')[0]
-            }])
-            .select()
-            .single();
-
-          if (os && !osError) {
-            await supabase.from('prestador_demandas').insert([{
-              titulo: `Serviço: ${(item as any).servicos?.nome || 'Não especificado'}`,
-              descricao: `Demanda gerada automaticamente para a OS ${os.codigo_os}`,
-              os_id: os.id,
-              status: 'aberta',
-              codigo_demanda: generateCode('DEM'),
-              arquivos_briefing: item.anexos || []
-            }]);
-          }
-        } else if (item.categoria === 'produto') {
-          const { data: oc } = await supabase
-            .from('ordens_compra')
-            .insert([{
-              codigo_ordem: generateCode('OC'),
-              produto_id: item.produto_id,
-              orcamento_id: item.id,
-              cliente_id: item.cliente_id,
-              status: 'em_analise',
-              data_criacao: new Date().toISOString(),
-              quantidade: item.quantidade || 1
-            }])
-            .select()
-            .single();
-
-          if (oc) {
-            const vDate = new Date(Date.now() + vencoProduto * 24 * 60 * 60 * 1000);
-            await supabase.from('faturas').insert([{
-              codigo_fatura: generateCode('FAT'),
-              ordem_compra_id: oc.id,
-              cliente_id: item.cliente_id,
-              valor_total: item.total,
-              valor_final_pendente: item.total,
-              status: 'pendente',
-              tipo: 'produto',
-              data_vencimento: vDate.toISOString().split('T')[0],
-              quantidade: item.quantidade || 1
-            }]);
-          }
-        } else if (item.categoria === 'assinatura') {
-          const { data: oa } = await supabase
-            .from('ordens_assinatura')
-            .insert([{
-              codigo_ordem: generateCode('OA'),
-              assinatura_id: item.assinatura_id,
-              orcamento_id: item.id,
-              cliente_id: item.cliente_id,
-              status: 'em_analise',
-              data_criacao: new Date().toISOString(),
-              quantidade: item.quantidade || 1
-            }])
-            .select()
-            .single();
-
-          if (oa) {
-            const vDate = new Date();
-            const diaVenc = item.dia_vencimento || 10;
-            vDate.setDate(diaVenc);
-            if (vDate <= new Date()) vDate.setMonth(vDate.getMonth() + 1);
-            const mesRef = `${(vDate.getMonth() + 1).toString().padStart(2, '0')}/${vDate.getFullYear()}`;
-
-            await supabase.from('faturas').insert([{
-              codigo_fatura: generateCode('FAT'),
-              ordem_assinatura_id: oa.id,
-              cliente_id: item.cliente_id,
-              valor_total: item.total,
-              valor_final_pendente: item.total,
-              status: 'pendente',
-              tipo: 'assinatura',
-              data_vencimento: vDate.toISOString().split('T')[0],
-              quantidade: item.quantidade || 1,
-              mes_referencia: mesRef
-            }]);
-          }
+        const approval = await callAdminRpc<BudgetApprovalResult>('gsa_admin_approve_budget', {
+          p_request_id: generateUUID(),
+          p_orcamento_id: item.id,
+          p_approval_kind: 'standard',
+        });
+        if (!approval?.success) {
+          throw new Error(`O servidor não confirmou a aprovação do orçamento ${item.codigo_orcamento || item.id}.`);
         }
       }
 
@@ -443,10 +346,10 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
 
       toast.success('Pedido aprovado com sucesso!');
       setIsDetailOpen(false);
-      fetchOrcamentos();
-    } catch (err) {
+      await fetchOrcamentos();
+    } catch (err: any) {
       console.error('Erro ao aprovar:', err);
-      toast.error('Erro ao aprovar pedido.');
+      toast.error(handleError(err, 'Erro ao aprovar pedido'));
     } finally {
       setIsSubmitting(false);
     }

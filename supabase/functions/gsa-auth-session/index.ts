@@ -15,6 +15,8 @@ export type AuthAction =
   | 'login_pin'
   | 'login_admin'
   | 'login_colaborador'
+  | 'request_client_first_access'
+  | 'complete_client_first_access'
   | 'request_client_recovery'
   | 'complete_client_recovery';
 
@@ -42,6 +44,14 @@ const rateLimits: Record<AuthAction, { ip: RateLimitRule; subject: RateLimitRule
   login_colaborador: {
     ip: { limit: 20, windowSeconds: 900, blockSeconds: 3600 },
     subject: { limit: 6, windowSeconds: 1800, blockSeconds: 7200 },
+  },
+  request_client_first_access: {
+    ip: { limit: 10, windowSeconds: 900, blockSeconds: 3600 },
+    subject: { limit: 4, windowSeconds: 1800, blockSeconds: 7200 },
+  },
+  complete_client_first_access: {
+    ip: { limit: 15, windowSeconds: 900, blockSeconds: 3600 },
+    subject: { limit: 6, windowSeconds: 900, blockSeconds: 3600 },
   },
   request_client_recovery: {
     ip: { limit: 10, windowSeconds: 900, blockSeconds: 3600 },
@@ -130,7 +140,7 @@ export function normalizePayload(
     return { documento, pin, tipo };
   }
 
-  if (action === 'request_client_recovery') {
+  if (action === 'request_client_recovery' || action === 'request_client_first_access') {
     const documento = digits(payload.documento);
     const email = text(payload.email, 254).toLowerCase();
     const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -138,10 +148,15 @@ export function normalizePayload(
     return { documento, email };
   }
 
-  if (action === 'complete_client_recovery') {
-    const recoveryId = text(payload.recovery_id, 36).toLowerCase();
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(recoveryId)) return null;
-    return { recovery_id: recoveryId };
+  if (action === 'complete_client_recovery' || action === 'complete_client_first_access') {
+    const challengeId = text(payload.challenge_id || payload.recovery_id, 36).toLowerCase();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(challengeId)) return null;
+    if (action === 'complete_client_first_access') {
+      const newPin = digits(payload.new_pin);
+      if (newPin.length !== 4) return null;
+      return { challenge_id: challengeId, new_pin: newPin };
+    }
+    return { challenge_id: challengeId };
   }
 
   const code = text(payload.code, 128);
@@ -151,11 +166,14 @@ export function normalizePayload(
 
 function subjectFor(action: AuthAction, payload: Record<string, string>) {
   if (action === 'login_admin' || action === 'login_colaborador') return payload.code;
-  return payload.documento || payload.recovery_id;
+  return payload.documento || payload.challenge_id;
 }
 
 export function subjectRateLimitMode(action: AuthAction): 'before' | 'invalid-only' {
-  return action === 'request_client_recovery' || action === 'complete_client_recovery'
+  return action === 'request_client_recovery'
+      || action === 'complete_client_recovery'
+      || action === 'request_client_first_access'
+      || action === 'complete_client_first_access'
     ? 'before'
     : 'invalid-only';
 }
