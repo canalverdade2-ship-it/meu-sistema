@@ -36,7 +36,7 @@ import {
 
 const WHATSAPP_NUMBER = '5511920857756';
 const PAGE_TITLE = 'Empresa do Zero ao Digital | Marca, Site e Redes Sociais | GSA HUB';
-const PAGE_DESCRIPTION = 'Criação de nome, logo, identidade visual, materiais, redes sociais, conteúdo e presença digital para transformar uma ideia em uma marca profissional.';
+const PAGE_DESCRIPTION = 'Da primeira ideia a uma marca pronta. Criação de nome, logo, identidade visual, materiais, redes sociais, conteúdo e presença digital para transformar uma ideia em uma marca profissional.';
 
 interface BrandJourneyPageProps {
   onBack: () => void;
