@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-07-27T16:40:11.284Z",
-  "validated_sha": "a8e718a02c4d06af400c7d52d7291fec256cf181",
+  "generated_at_utc": "2026-07-27T16:41:22.126Z",
+  "validated_sha": "095cf06a607987a88458d73bdf3fee88dac34df9",
   "install_exit_code": 0,
   "test_exit_code": 1,
   "result": "failure",
   "install_log_sha256": "9b24e586d84e64fee5ce17bc43c032c54807db7bfbc937cbee403439e6218a65",
-  "test_log_sha256": "a9839edf32b8f5b1972c79a8ffddde22fcb55833b6f0cd5f05aa5cb673fb8a62",
+  "test_log_sha256": "293b26e50cee75bebf5a03bfa1f02e293b9fcaf88a41a05d49cb9500cfd27907",
   "failed_markers": [
     "Contratos públicos ativos da Home validados com sucesso.",
-    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: Conhecer parceiro",
+    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: enviada diretamente ao painel administrativo para análise",
     "  code: 'ERR_ASSERTION',",
     "  expected: true,"
   ],
@@ -18,7 +18,7 @@
     "Contratos públicos ativos da Home validados com sucesso.",
     "> react-example@0.0.0 test:partners",
     "> tsx scripts/check-partners-contracts.ts && deno check supabase/functions/gsa-partner-application/index.ts",
-    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: Conhecer parceiro",
+    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: enviada diretamente ao painel administrativo para análise",
     "    at contains (/home/runner/work/meu-sistema/meu-sistema/scripts/check-partners-contracts.ts:17:12)",
     "    at async main (/home/runner/work/meu-sistema/meu-sistema/scripts/check-partners-contracts.ts:66:3) {",
     "  generatedMessage: false,",
