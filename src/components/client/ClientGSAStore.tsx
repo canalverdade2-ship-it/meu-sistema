@@ -417,7 +417,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     if (clientId) {
       importPendingStoreCheckout().then((imported) => {
         fetchCart();
-        if (imported) {
+        if (imported || route.query.modal === 'checkout') {
           setIsCheckoutOpen(true);
           updateRouteQuery({ modal: 'checkout' });
           toast.success('Carrinho recuperado! Continue sua compra.');
