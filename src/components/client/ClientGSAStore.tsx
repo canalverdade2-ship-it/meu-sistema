@@ -59,6 +59,8 @@ export const mapColumnsToGallery = (item: any) => {
 };
 
 export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFinalSuccess, onRequireAuth, onBack }: { clientId?: string, initialAssinaturaId?: string, onSuccess?: (orderId?: string) => void, onRequireAuth?: () => void, onBack?: () => void }) {
+  // Ref para sinalizar que o carrinho deve abrir após migração/fetch
+  const pendingCartOpenRef = React.useRef(false);
   const route = useAppLocation();
 
   const [activeTab, setActiveTab] = useState<Tab>(route.submodule === 'loja-assinaturas' ? 'assinaturas' : 'produtos');
@@ -329,20 +331,33 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     }
   };
 
-  const importPendingStoreCheckout = async () => {
+  const importPendingStoreCheckout = async (): Promise<boolean> => {
     if (!clientId) return false;
 
     const rawCart = localStorage.getItem(PENDING_STORE_CHECKOUT_KEY);
     if (!rawCart) return false;
 
-    try {
-      const parsed = JSON.parse(rawCart);
-      const pendingItems = Array.isArray(parsed?.items) ? parsed.items : [];
-      if (pendingItems.length === 0) {
-        localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
-        return false;
-      }
+    let parsed: any;
+    try { parsed = JSON.parse(rawCart); } catch { return false; }
 
+    const pendingItems: Array<{ item_id: string; tipo: string; quantidade: number; prazo_meses?: number }> = 
+      Array.isArray(parsed?.items) ? parsed.items : [];
+    if (pendingItems.length === 0) {
+      localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+      return false;
+    }
+
+    // Aguarda até 3s para Supabase Auth ter sessão ativa (RLS)
+    let retries = 0;
+    while (retries < 6) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) break;
+      await new Promise(r => setTimeout(r, 500));
+      retries++;
+    }
+
+    let imported = false;
+    try {
       for (const pendingItem of pendingItems) {
         if (!pendingItem?.item_id || !pendingItem?.tipo) continue;
 
@@ -363,13 +378,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
             updated_at: new Date().toISOString()
           };
           if (prazoMeses) updateData.prazo_meses = prazoMeses;
-
-          try {
-            await clientOperationalWrite(clientId, 'loja_carrinhos', 'update', updateData, { id: existing.id });
-          } catch (writeErr) {
-            console.warn('[GSAStore] clientOperationalWrite update falhou, aplicando fallback direto:', writeErr);
-            await supabase.from('loja_carrinhos').update(updateData).eq('id', existing.id);
-          }
+          await supabase.from('loja_carrinhos').update(updateData).eq('id', existing.id);
         } else {
           const insertData: any = {
             cliente_id: clientId,
@@ -379,38 +388,25 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
             updated_at: new Date().toISOString()
           };
           if (prazoMeses) insertData.prazo_meses = prazoMeses;
-
-          try {
-            await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
-          } catch (writeErr) {
-            console.warn('[GSAStore] clientOperationalWrite insert falhou, aplicando fallback direto:', writeErr);
-            await supabase.from('loja_carrinhos').insert(insertData);
-          }
+          await supabase.from('loja_carrinhos').insert(insertData);
         }
+        imported = true;
       }
 
       const rawCoupons = localStorage.getItem(PENDING_STORE_COUPONS_KEY);
       const parsedCoupons = rawCoupons ? JSON.parse(rawCoupons) : null;
       const activatedCouponIds = Array.isArray(parsedCoupons?.activatedCouponIds) ? parsedCoupons.activatedCouponIds : [];
-
       for (const cupomId of activatedCouponIds) {
         if (!cupomId) continue;
-
-        try {
-          await clientOperationalWrite(clientId, 'cupons_ativados', 'insert', { cupom_id: cupomId });
-        } catch (error: any) {
-          try {
-            await supabase.from('cupons_ativados').insert({ cliente_id: clientId, cupom_id: cupomId });
-          } catch {
-            console.warn('[GSAStore] Nao foi possivel ativar cupom pendente:', error);
-          }
-        }
+        await supabase.from('cupons_ativados').insert({ cliente_id: clientId, cupom_id: cupomId }).throwOnError().catch(() => {});
       }
 
-      localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
-      localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
-      localStorage.removeItem(GUEST_ACTIVATED_STORE_COUPONS_KEY);
-      return true;
+      if (imported) {
+        localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+        localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
+        localStorage.removeItem(GUEST_ACTIVATED_STORE_COUPONS_KEY);
+      }
+      return imported;
     } catch (error) {
       console.error('[GSAStore] Erro ao importar carrinho pendente:', error);
       return false;
@@ -429,12 +425,23 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     fetchStoreData();
 
     if (clientId) {
+      // Verificar se há carrinho pendente ou URL pede abertura do carrinho
+      const hasPending = !!localStorage.getItem(PENDING_STORE_CHECKOUT_KEY);
+      const urlWantsCart = window.location.search.includes('modal=carrinho') || window.location.search.includes('modal=checkout');
+      if (hasPending || urlWantsCart) {
+        pendingCartOpenRef.current = true;
+      }
+
       importPendingStoreCheckout().then(async (imported) => {
         await fetchCart();
-        if (imported || route.query.modal === 'carrinho' || route.query.modal === 'checkout') {
-          setIsCartOpen(true);
-          updateRouteQuery({ modal: 'carrinho' });
-          toast.success('Carrinho recuperado! Continue sua compra.');
+        if (imported || pendingCartOpenRef.current) {
+          pendingCartOpenRef.current = false;
+          // Usar timeout para garantir que o efeito de sync de URL já rodou
+          setTimeout(() => {
+            setIsCartOpen(true);
+            updateRouteQuery({ modal: 'carrinho' });
+            if (imported) toast.success('Carrinho recuperado! Continue sua compra.');
+          }, 50);
         }
       });
     } else {
