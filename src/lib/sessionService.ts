@@ -340,9 +340,24 @@ export const sessionService = {
     return invokeAuthGateway('request_client_recovery', { documento, email });
   },
 
+  async requestClientFirstAccess(documento: string, email: string) {
+    return invokeAuthGateway('request_client_first_access', { documento, email });
+  },
+
+  async completeClientFirstAccess(challengeId: string, newPin: string) {
+    return serializeLogin(async () => {
+      const data = await invokeAuthGateway('complete_client_first_access', {
+        challenge_id: challengeId,
+        new_pin: newPin,
+      });
+      if (data?.success) await persistAuthenticatedSession(data, true);
+      return data;
+    });
+  },
+
   async completeClientRecovery(recoveryId: string) {
     return serializeLogin(async () => {
-      const data = await invokeAuthGateway('complete_client_recovery', { recovery_id: recoveryId });
+      const data = await invokeAuthGateway('complete_client_recovery', { challenge_id: recoveryId });
       if (data?.success) await persistAuthenticatedSession(data, true);
       return data;
     });

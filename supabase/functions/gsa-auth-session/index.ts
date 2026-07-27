@@ -281,6 +281,8 @@ export async function handleRequest(request: Request) {
       'login_pin',
       'login_admin',
       'login_colaborador',
+      'request_client_first_access',
+      'complete_client_first_access',
       'request_client_recovery',
       'complete_client_recovery',
     ]);
@@ -315,16 +317,25 @@ export async function handleRequest(request: Request) {
       }
     }
 
-    if (body.action === 'request_client_recovery') {
-      const recoveryId = crypto.randomUUID();
-      const { data: beginData, error: beginError } = await admin.rpc('gsa_begin_client_recovery', {
+    if (
+      body.action === 'request_client_recovery'
+      || body.action === 'request_client_first_access'
+    ) {
+      const challengeId = crypto.randomUUID();
+      const isFirstAccess = body.action === 'request_client_first_access';
+      const { data: beginData, error: beginError } = await admin.rpc(
+        isFirstAccess ? 'gsa_begin_client_first_access' : 'gsa_begin_client_recovery',
+        {
         p_documento: normalizedPayload.documento,
         p_email: normalizedPayload.email,
-        p_challenge_id: recoveryId,
-      });
+          p_challenge_id: challengeId,
+        },
+      );
 
       let delivered = false;
-      if (!beginError && beginData?.success === true) {
+      const challengeCreated = beginData?.challenge_created === true
+        || (beginData?.challenge_created === undefined && beginData?.success === true);
+      if (!beginError && challengeCreated) {
         const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
         if (!anonKey) return json({ error: 'server_not_configured' }, 500, allowedOrigin);
         const publicClient = createClient<any>(supabaseUrl, anonKey, {
@@ -332,93 +343,82 @@ export async function handleRequest(request: Request) {
         });
         const { error: otpError } = await publicClient.auth.signInWithOtp({
           email: normalizedPayload.email,
-          options: { shouldCreateUser: false },
+          options: { shouldCreateUser: true },
         });
         delivered = !otpError;
-        if (otpError) console.error('Falha ao enviar o código de recuperação.', otpError);
-      }
-
-      if (!delivered) {
-        await admin.from('gsa_client_recovery_challenges').delete().eq('id', recoveryId);
+        if (otpError) console.error('Falha ao enviar o código de confirmação.', otpError);
+      } else if (beginError) {
+        console.error('Falha ao iniciar o desafio de confirmação.', beginError);
       }
 
       // Resposta uniforme para não revelar se documento/e-mail existem.
-      return json({ success: true, recovery_id: recoveryId, expires_in: 600 }, 200, allowedOrigin);
+      return json({
+        success: true,
+        challenge_id: challengeId,
+        recovery_id: isFirstAccess ? undefined : challengeId,
+        expires_in: 600,
+      }, 200, allowedOrigin);
     }
 
-    if (body.action === 'complete_client_recovery') {
+    if (
+      body.action === 'complete_client_recovery'
+      || body.action === 'complete_client_first_access'
+    ) {
       const authorization = request.headers.get('authorization') || '';
       const accessToken = authorization.toLowerCase().startsWith('bearer ')
         ? authorization.slice(7).trim()
         : '';
       if (!accessToken) return json({ error: 'recovery_verification_required' }, 401, allowedOrigin);
 
-      const { data: userData, error: userError } = await admin.auth.getUser(accessToken);
-      const verifiedUser = userData.user;
-      const verifiedEmail = verifiedUser?.email?.trim().toLowerCase();
-      if (userError || !verifiedUser || !verifiedEmail) {
-        return json({ error: 'recovery_verification_required' }, 401, allowedOrigin);
-      }
-
-      const now = new Date().toISOString();
-      const { data: challenge, error: challengeError } = await admin
-        .from('gsa_client_recovery_challenges')
-        .update({ consumed_at: now })
-        .eq('id', normalizedPayload.recovery_id)
-        .eq('auth_email', verifiedEmail)
-        .is('consumed_at', null)
-        .gt('expires_at', now)
-        .select('id, cliente_id, documento, auth_email')
-        .maybeSingle();
-
-      if (challengeError || !challenge) {
-        return json({ error: 'invalid_or_expired_recovery' }, 400, allowedOrigin);
-      }
-
-      const { data: recoveryData, error: recoveryError } = await admin.rpc('gsa_recuperar_senha_cliente', {
-        p_documento: challenge.documento,
-        p_email: challenge.auth_email,
+      const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+      if (!anonKey) return json({ error: 'server_not_configured' }, 500, allowedOrigin);
+      const userClient = createClient<any>(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: `Bearer ${accessToken}` } },
+        auth: { autoRefreshToken: false, persistSession: false },
       });
-      const rpcSession = recoveryData?.session || recoveryData;
-      if (recoveryError || !recoveryData?.success || !rpcSession?.sessao_id || !rpcSession?.session_token) {
-        console.error('Falha ao concluir recuperação validada.', recoveryError);
-        return json({ error: 'recovery_completion_failed' }, 500, allowedOrigin);
-      }
 
-      const existingMetadata = verifiedUser.app_metadata || {};
-      const { error: metadataError } = await admin.auth.admin.updateUserById(verifiedUser.id, {
-        app_metadata: {
-          ...existingMetadata,
-          gsa_session_id: rpcSession.sessao_id,
-          gsa_actor_type: rpcSession.ator_tipo,
-          gsa_actor_id: rpcSession.ator_id,
-        },
-      });
-      if (metadataError) {
-        console.error('Falha ao vincular a sessão recuperada ao usuário Auth.', metadataError);
-        await admin.rpc('gsa_end_session', {
-          p_sessao_id: rpcSession.sessao_id,
-          p_session_token: rpcSession.session_token,
-        });
-        return json({ error: 'recovery_completion_failed' }, 500, allowedOrigin);
+      const isFirstAccess = body.action === 'complete_client_first_access';
+      const { data: completionData, error: completionError } = await userClient.rpc(
+        isFirstAccess ? 'gsa_complete_client_first_access' : 'gsa_complete_client_recovery',
+        isFirstAccess
+          ? {
+            p_challenge_id: normalizedPayload.challenge_id,
+            p_new_pin: normalizedPayload.new_pin,
+          }
+          : {
+            p_challenge_id: normalizedPayload.challenge_id,
+          },
+      );
+      const rpcSession = completionData?.session || completionData;
+      if (
+        completionError
+        || !completionData?.success
+        || !rpcSession?.sessao_id
+        || !rpcSession?.session_token
+      ) {
+        console.error('Falha ao concluir a confirmação de identidade.', completionError);
+        const denied = completionError?.code === '42501'
+          || completionError?.code === 'P0002'
+          || completionData?.error;
+        return json(
+          denied ? 400 : 500,
+          { error: denied ? 'invalid_or_expired_challenge' : 'identity_completion_failed' },
+          allowedOrigin,
+        );
       }
-
-      await admin.from('sistema_sessoes').update({ status: 'encerrado' })
-        .eq('ator_tipo', 'cliente').eq('ator_id', rpcSession.ator_id)
-        .neq('id', rpcSession.sessao_id).neq('status', 'encerrado');
 
       return json({
+        ...completionData,
         success: true,
         valid: true,
-        id: rpcSession.ator_id,
-        nome: rpcSession.ator_nome,
+        id: completionData.id || rpcSession.ator_id,
+        nome: completionData.nome || rpcSession.ator_nome,
         session: {
-          sessao_id: rpcSession.sessao_id,
-          session_token: rpcSession.session_token,
-          ator_tipo: rpcSession.ator_tipo,
-          ator_id: rpcSession.ator_id,
-          ator_nome: rpcSession.ator_nome,
-          metadata: { ...(rpcSession.metadata || {}), precisa_trocar_senha: true },
+          ...rpcSession,
+          metadata: {
+            ...(rpcSession.metadata || {}),
+            ...(isFirstAccess ? {} : { precisa_trocar_senha: true }),
+          },
         },
       }, 200, allowedOrigin);
     }

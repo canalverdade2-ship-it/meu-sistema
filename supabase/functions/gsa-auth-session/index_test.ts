@@ -92,12 +92,14 @@ Deno.test('normaliza recuperação somente com e-mail válido e desafio UUID', (
 
   assertEquals(normalizePayload('complete_client_recovery', {
     recovery_id: '550e8400-e29b-41d4-a716-446655440000',
-  }), { recovery_id: '550e8400-e29b-41d4-a716-446655440000' });
+  }), { challenge_id: '550e8400-e29b-41d4-a716-446655440000' });
 
   assertEquals(normalizePayload('complete_client_recovery', { recovery_id: 'invalido' }), null);
 });
 
 Deno.test('aplica limite por identidade antes dos fluxos de recuperação', () => {
+  assertEquals(subjectRateLimitMode('request_client_first_access'), 'before');
+  assertEquals(subjectRateLimitMode('complete_client_first_access'), 'before');
   assertEquals(subjectRateLimitMode('request_client_recovery'), 'before');
   assertEquals(subjectRateLimitMode('complete_client_recovery'), 'before');
   assertEquals(subjectRateLimitMode('login_pin'), 'invalid-only');

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import {
   ChevronLeft,
@@ -848,7 +848,8 @@ function PacotesTab() {
         await supabase
           .from('viagens_pacote_imagens')
           .delete()
-          .eq('pacote_id', editingPkg.id);
+          .eq('pacote_id', editingPkg.id)
+          .throwOnError();
 
         if (imagens.length > 0) {
           const toInsert = imagens.map((url, idx) => ({
@@ -858,7 +859,7 @@ function PacotesTab() {
             ordem: idx,
           }));
 
-          await supabase.from('viagens_pacote_imagens').insert(toInsert);
+          await supabase.from('viagens_pacote_imagens').insert(toInsert).throwOnError();
         }
         toast.success('Pacote atualizado com sucesso.');
       } else {
@@ -878,7 +879,7 @@ function PacotesTab() {
             ordem: idx + 1,
           }));
 
-          await supabase.from('viagens_pacote_imagens').insert(remainingImages);
+          await supabase.from('viagens_pacote_imagens').insert(remainingImages).throwOnError();
         }
         toast.success('Pacote criado como rascunho.');
       }
