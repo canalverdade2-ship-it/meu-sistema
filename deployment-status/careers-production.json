@@ -1,12 +1,12 @@
 {
-  "status": "success",
-  "workflow_run_id": "30211222062",
-  "validated_sha": "a1bba2315f173cda63fae099bdec0d5f83a7dd9b",
-  "validated_at_utc": "2026-07-26T16:49:04Z",
+  "status": "failure",
+  "workflow_run_id": "30313191788",
+  "validated_sha": "4118c56cd33660ef3ff6914d7f05d56ea6e28ef1",
+  "validated_at_utc": "2026-07-27T23:10:05Z",
   "scope": "careers-form-candidate-portal-admin-rpcs-rls-storage-history",
   "migration": "20260722235959",
-  "validation": "success",
-  "database": "success",
-  "frontend": "success",
-  "tests": "success"
+  "validation": "failure",
+  "database": "skipped",
+  "frontend": "failure",
+  "tests": "failure"
 }
