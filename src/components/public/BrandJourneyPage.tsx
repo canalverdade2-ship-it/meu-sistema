@@ -81,7 +81,7 @@ const services: BrandService[] = [
   {
     id: 'social',
     icon: Instagram,
-    title: 'Redes sociais',
+    title: 'Social media e conteúdo',
     text: 'Estruturamos perfil, biografia, capas, destaques e direção visual para os principais canais sociais.',
     result: 'Perfis que parecem parte da mesma empresa.',
   },
