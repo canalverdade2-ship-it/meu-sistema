@@ -551,7 +551,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                 }
               }
               const dbPriceBreakdown = getProductQuantityPriceBreakdown(
-                { ...dbProd, desconto_ativo: isStillActive },
+                { ...dbProd, desconto_ativo: isStillActive } as any,
                 item.quantidade
               );
               const currentDbPrice = dbPriceBreakdown.subtotalFinal / item.quantidade;

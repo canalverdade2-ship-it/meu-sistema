@@ -147,6 +147,10 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
   const [internalModulos, setInternalModulos] = useState(() => normalizeCollaboratorModules(colaboradorModulos));
 
   useEffect(() => setInternalModulos(normalizeCollaboratorModules(colaboradorModulos)), [colaboradorModulos]);
+
+  useEffect(() => {
+    try { localStorage.setItem('admin_sidebar_open', String(isSidebarOpen)); } catch { /* ignore */ }
+  }, [isSidebarOpen]);
   useEffect(() => { if (colaboradorNomeInicial) setColaboradorNome(colaboradorNomeInicial); }, [colaboradorNomeInicial]);
   useEffect(() => {
     const resize = () => setIsMobile(window.innerWidth < 1024);
