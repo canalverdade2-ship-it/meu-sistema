@@ -421,6 +421,12 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
     if (!profileData.endereco) missingFields.push('Endereço');
     if (!profileData.numero) missingFields.push('Número');
 
+    // Bloquear envio se campos obrigatórios estiverem faltando
+    if (missingFields.length > 0) {
+      toast.error(`Preencha os campos obrigatórios: ${missingFields.join(', ')}`);
+      return;
+    }
+
     try {
       // 1. Atualiza dados cadastrais do cliente
       await clientOperationalWrite(clientId, 'clientes', 'update', {

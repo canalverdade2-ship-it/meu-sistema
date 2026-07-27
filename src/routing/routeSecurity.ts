@@ -31,7 +31,8 @@ export function isRouteAllowed(
     return isAffiliatePublicAccessRoute() || Boolean(session.clientId);
   }
   // O portal do anunciante valida o Supabase Auth e o vínculo da empresa no próprio módulo.
-  if (area === 'advertiser') return true;
+  // Requer autenticação mínima: cliente logado ou admin (não permite acesso completamente anônimo).
+  if (area === 'advertiser') return Boolean(session.clientId) || Boolean(session.adminAuth);
   if (area === 'admin') {
     if (!session.adminAuth) return false;
     return hasAdminModuleAccess(module, session.adminType || 'admin', session.colaboradorModulos || [], submodule);
