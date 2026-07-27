@@ -511,8 +511,11 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   };
 
   const handleFinalizar = async () => {
-    // Verificar se houve alteração de preço no banco antes de fechar
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
+      // Verificar se houve alteração de preço no banco antes de fechar
       const productIds = cartItems.filter((c: any) => c.tipo === 'produto').map((c: any) => c.item_id);
       if (productIds.length > 0) {
         const { data: dbProducts } = await supabase
@@ -565,33 +568,25 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           }
         }
       }
-    } catch (err) {
-      console.error('Erro ao validar alteração de preço:', err);
-      toast.error('Não foi possível validar preços e estoque. Tente novamente.');
-      return;
-    }
 
-    const hasOutOfStock = cartItems.some((c: any) => c.tipo === 'produto' && c.item_detalhes?.controle_estoque && (c.item_detalhes?.estoque_disponivel <= 0));
-    if (hasOutOfStock) {
-      toast.error('Remova os produtos esgotados do carrinho antes de finalizar.');
-      return;
-    }
-
-    if (temProdutos && (!endereco.cep || !endereco.numero)) {
-      toast.error('Endereço completo é obrigatório para entrega de produtos.');
-      return;
-    }
-
-    if (formaPagamento === 'credito_loja') {
-      if (totalHojeFinal > limiteCreditoDisponivel) {
-        toast.error('Saldo de crédito disponível insuficiente para esta compra (incluindo taxas de juros).');
+      const hasOutOfStock = cartItems.some((c: any) => c.tipo === 'produto' && c.item_detalhes?.controle_estoque && (c.item_detalhes?.estoque_disponivel <= 0));
+      if (hasOutOfStock) {
+        toast.error('Remova os produtos esgotados do carrinho antes de finalizar.');
         return;
       }
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
+
+      if (temProdutos && (!endereco.cep || !endereco.numero)) {
+        toast.error('Endereço completo é obrigatório para entrega de produtos.');
+        return;
+      }
+
+      if (formaPagamento === 'credito_loja') {
+        if (totalHojeFinal > limiteCreditoDisponivel) {
+          toast.error('Saldo de crédito disponível insuficiente para esta compra (incluindo taxas de juros).');
+          return;
+        }
+      }
+
       if (isTravelCheckout) {
         // Fluxo de checkout de viagem
         const pacote = cartItems.find((c: any) => c.tipo === 'pacote_viagem');
@@ -632,7 +627,6 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         checkoutRequestId.current = generateUUID();
         onSuccess(data.orcamento_id);
       }
-      
     } catch (e: any) {
       console.error('Erro no checkout RPC:', e);
       toast.error(e.message || 'Falha ao processar compra. Tente novamente.');
