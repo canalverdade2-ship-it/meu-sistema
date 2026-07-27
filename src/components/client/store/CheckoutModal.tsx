@@ -550,7 +550,11 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                   isStillActive = false;
                 }
               }
-              const currentDbPrice = isStillActive ? dbProd.valor_promocional : dbProd.valor;
+              const dbPriceBreakdown = getProductQuantityPriceBreakdown(
+                { ...dbProd, desconto_ativo: isStillActive },
+                item.quantidade
+              );
+              const currentDbPrice = dbPriceBreakdown.subtotalFinal / item.quantidade;
               const cartPrice = getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade;
               if (Math.abs((currentDbPrice || 0) - cartPrice) > 0.001) {
                 priceChanged = true;
