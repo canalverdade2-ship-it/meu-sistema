@@ -1,9 +1,9 @@
 {
-  "generated_at_utc": "2026-07-26T16:52:46Z",
-  "result": "success",
-  "validated_sha": "bcb65c4eb91be38d9d97adef615c36ba041ae7c4",
-  "client_security_contracts": "success",
-  "edge_function_validation": "success",
-  "database_objects": "success",
-  "edge_function_deployment": "success"
+  "generated_at_utc": "2026-07-27T23:22:31Z",
+  "result": "failure",
+  "validated_sha": "319423e205d973da8ee993db411d3a09a1580d40",
+  "client_security_contracts": "failure",
+  "edge_function_validation": "failure",
+  "database_objects": "failure",
+  "edge_function_deployment": "failure"
 }
