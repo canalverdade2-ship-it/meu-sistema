@@ -1,15 +1,15 @@
 {
-  "generated_at_utc": "2026-07-27T16:35:47.511Z",
-  "validated_sha": "0afb59c8eb10eb6cd00931121c62603b6996bfdb",
+  "generated_at_utc": "2026-07-27T16:36:31.627Z",
+  "validated_sha": "58ee3141b4647fc514e61e5f7430b99e931bb3fe",
   "install_exit_code": 0,
   "test_exit_code": 1,
   "result": "failure",
-  "install_log_sha256": "363a8c7342c22ed5cb1c08bbbfe32db6d1376bab585ef37cea0b2003beec3f9b",
-  "test_log_sha256": "8f98a7323bf2380e95e5b60e56f80eba7254a9951361bb41b59e4a038a38126e",
+  "install_log_sha256": "bb9637ea90e6ecd00300ccb84e946344c4df86a7ce173b271d81b9ac4cd54b1d",
+  "test_log_sha256": "101acedec7cbcc70f179f5c80236dca7d1e5058315671f2ec0000f388460a61e",
   "failed_markers": [
-    "AssertionError [ERR_ASSERTION]: A página deve apresentar a proposta comercial principal",
+    "AssertionError [ERR_ASSERTION]: A página deve oferecer social media",
     "  code: 'ERR_ASSERTION',",
-    "  expected: /Da primeira ideia a uma marca pronta/,"
+    "  expected: /Social media e conteúdo/,"
   ],
   "tail": [
     "    \"    title: 'Conteúdo e campanhas',\\n\" +",
@@ -186,8 +186,8 @@
     "    '                <button\\n' +",
     "    '                  type=\"button\"\\n' +",
     "    '                  onClick={() => setBudgetOpen(true)}\\n' +",
-    "    '                  className=\"inline-flex items-center justify-center gap-2 bg-[#211a14] px-6 py-4 text-sm font-black text-white transition hover:bg-[#35291f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8e6e3d] focus-visible:ring-off'... 20600 more characters,",
-    "  expected: /Da primeira ideia a uma marca pronta/,",
+    "    '                  className=\"inline-flex items-center justify-center gap-2 bg-[#211a14] px-6 py-4 text-sm font-black text-white transition hover:bg-[#35291f] focus-visible:outline-none focus-visible:ring-2 focus-visible'... 20638 more characters,",
+    "  expected: /Social media e conteúdo/,",
     "  operator: 'match',",
     "  diff: 'simple'",
     "}",
