@@ -352,7 +352,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       || cliente?.cadastro_aprovado === false
     );
 
-    if (isUnderAnalysis && module !== 'dashboard' && module !== 'perfil' && (module as string) !== 'gsa_store') {
+    if (isUnderAnalysis && module !== 'dashboard' && module !== 'perfil' && module !== 'suporte' && (module as string) !== 'gsa_store') {
       toast.error('Módulo bloqueado: Seu cadastro está em análise pelo sistema. Acompanhe a liberação no módulo Meu Cadastro.', {
         icon: '🔒',
         duration: 5000,
