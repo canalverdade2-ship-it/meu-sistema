@@ -531,6 +531,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       window.removeEventListener('open-store-cart', handleOpenCart);
       window.removeEventListener('whatsapp-modal-state', handleModalState);
       window.removeEventListener('promo-ativada', handlePromoAtivada);
+      window.removeEventListener('gsa-cart-migrated', onCartMigrated);
     };
   }, [clientId]);
 
