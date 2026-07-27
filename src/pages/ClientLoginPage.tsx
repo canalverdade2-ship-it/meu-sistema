@@ -849,48 +849,44 @@ export function ClientLoginPage({
         </footer>
       </div>
 
-      <Modal
-        isOpen={showPasswordSuccessModal}
-        onClose={() => {
-          setShowPasswordSuccessModal(false);
-          if (registeredClientId) completeLogin(registeredClientId);
-        }}
-        title="Senha cadastrada com sucesso"
-        size="md"
-      >
-        <div className="text-center py-4 px-2">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-8 ring-emerald-50/50">
-            <CheckCircle2 className="h-10 w-10" />
-          </div>
+      {showPasswordSuccessModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-white/20 bg-white p-6 shadow-2xl">
+            <div className="text-center py-4 px-2">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-8 ring-emerald-50/50">
+                <CheckCircle2 className="h-10 w-10" />
+              </div>
 
-          <h3 className="mt-5 text-xl font-black text-neutral-900 sm:text-2xl">
-            Senha cadastrada com sucesso!
-          </h3>
+              <h3 className="mt-5 text-xl font-black text-neutral-900 sm:text-2xl">
+                Senha cadastrada com sucesso!
+              </h3>
 
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-800">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-            Senha criada e ativada com segurança
-          </div>
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-800">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                Senha criada e ativada com segurança
+              </div>
 
-          <p className="mt-4 text-sm leading-6 text-neutral-600">
-            Sua conta está preparada. Ao acessar o portal, o módulo <strong>Dashboard</strong> estará visível e o módulo <strong>Meu Cadastro</strong> estará disponível para acompanhamento da liberação dos demais serviços.
-          </p>
+              <p className="mt-4 text-sm leading-6 text-neutral-600">
+                Sua conta está preparada. Ao acessar o portal, o módulo <strong>Dashboard</strong> estará visível e o módulo <strong>Meu Cadastro</strong> estará disponível para acompanhamento da liberação dos demais serviços.
+              </p>
 
-          <div className="mt-7">
-            <button
-              type="button"
-              onClick={() => {
-                setShowPasswordSuccessModal(false);
-                if (registeredClientId) completeLogin(registeredClientId);
-              }}
-              className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-6 text-sm font-black text-white shadow-lg shadow-[#0b1522]/20 transition hover:bg-[#15273c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
-            >
-              Acessar portal empresa
-              <ArrowRight className="h-4 w-4" />
-            </button>
+              <div className="mt-7">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordSuccessModal(false);
+                    if (registeredClientId) completeLogin(registeredClientId);
+                  }}
+                  className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-6 text-sm font-black text-white shadow-lg shadow-[#0b1522]/20 transition hover:bg-[#15273c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
+                >
+                  Acessar portal empresa
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </Modal>
+      )}
     </main>
   );
 }
