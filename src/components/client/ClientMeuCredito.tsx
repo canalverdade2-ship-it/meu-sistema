@@ -421,6 +421,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
     if (!profileData.endereco) missingFields.push('Endereço');
     if (!profileData.numero) missingFields.push('Número');
 
+    try {
       // 1. Atualiza dados cadastrais do cliente
       await clientOperationalWrite(clientId, 'clientes', 'update', {
         nome: profileData.nome,
