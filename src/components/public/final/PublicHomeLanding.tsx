@@ -162,10 +162,10 @@ export function PublicHomeLanding({ reduceMotion, setPublicPage, onGuestStore }:
     },
     {
       eyebrow: 'Rede GSA',
-      title: 'Parceiros',
+      title: 'Nossos Parceiros',
       description: 'Conheça empresas e profissionais conectados ao ecossistema.',
       icon: Network,
-      action: () => setPublicPage('partners'),
+      action: () => navigate(routes.public.partners()),
     },
     {
       eyebrow: 'Carreiras',
