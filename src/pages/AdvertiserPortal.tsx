@@ -603,8 +603,18 @@ export function AdvertiserPortal() {
       const { data, error } = await supabase.functions.invoke('gsa-advertiser-access', {
         body: { action: 'register', protocol, document: documentValue, email: email.trim().toLowerCase(), password },
       });
-      const result = data as { success?: boolean; account_exists?: boolean } | null;
+      const result = data as {
+        success?: boolean;
+        account_exists?: boolean;
+        verification_required?: boolean;
+      } | null;
       if (error || !result?.success) throw error || new Error('Cadastro não confirmado pelo servidor.');
+      if (result.verification_required) {
+        setPassword('');
+        setPasswordConfirm('');
+        toast.success('Enviamos a confirmação para o e-mail cadastrado. Confirme o endereço e retorne por esse link para concluir o vínculo.');
+        return;
+      }
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
       if (signInError) {
         if (result.account_exists) {

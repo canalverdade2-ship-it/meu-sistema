@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import {
   BarChart3,
   BellRing,
@@ -38,38 +38,50 @@ import { DashboardLayout } from '../components/ui/DashboardLayout';
 import { UniversalNotificationBell } from '../components/ui/UniversalNotificationBell';
 import { LogoGSA } from '../components/ui/LogoGSA';
 import { useAdminNotifications } from '../hooks/useAdminNotifications';
-import { Dashboard } from '../components/admin/Dashboard';
-import { CollaboratorDashboard } from '../components/admin/CollaboratorDashboard';
-import { CadastroModule } from '../components/admin/CadastroModule';
-import { VendasModule } from '../components/admin/VendasModule';
-import { FinanceiroModule } from '../components/admin/FinanceiroModule';
-import { AffiliateAdminModule } from '../components/admin/AffiliateAdminModule';
-import { TicketsModule } from '../components/admin/TicketsModule';
-import { RelatoriosModule } from '../components/admin/RelatoriosModule';
-import { ConfiguracoesModule } from '../components/admin/ConfiguracoesModule';
-import { AreaVIPModule } from '../components/admin/AreaVIPModule';
-import { AcessosModule } from '../components/admin/AcessosModule';
-import { DemandasColaboradorModule } from '../components/admin/DemandasColaboradorModule';
-import { SystemMonitorModule } from '../components/admin/SystemMonitorModule';
-import { FiscalModule } from '../components/admin/FiscalModule';
-import { CobrancaModule } from '../components/admin/CobrancaModule';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { SystemStatusIndicator } from '../components/admin/SystemStatusIndicator';
-import { PromocaoQuantidadeModule } from '../components/admin/PromocaoQuantidadeModule';
-import { ClassifiedsModule } from '../components/admin/ClassifiedsModule';
-import { TravelAdminModule } from '../components/admin/TravelAdminModule';
-import { ProtectionAdminModule } from '../components/admin/ProtectionAdminModule';
-import { PartnersAdminModule } from '../components/admin/PartnersAdminModule';
-import { AdvertisingAdminModule } from '../components/admin/AdvertisingAdminModule';
-import { FornecedoresModule } from '../components/admin/FornecedoresModule';
-import { CareersAdminModule } from '../components/admin/CareersAdminModule';
-import { SiteCampaignAdminPage } from '../components/admin/SiteCampaignAdminPage';
 import {
   adminPathFor,
   hasAdminModuleAccess,
   normalizeAdminModule,
   normalizeCollaboratorModules,
 } from '../security/collaboratorAccess';
+
+const Dashboard = lazy(() => import('../components/admin/Dashboard').then((module) => ({ default: module.Dashboard })));
+const CollaboratorDashboard = lazy(() => import('../components/admin/CollaboratorDashboard').then((module) => ({ default: module.CollaboratorDashboard })));
+const CadastroModule = lazy(() => import('../components/admin/CadastroModule').then((module) => ({ default: module.CadastroModule })));
+const VendasModule = lazy(() => import('../components/admin/VendasModule').then((module) => ({ default: module.VendasModule })));
+const FinanceiroModule = lazy(() => import('../components/admin/FinanceiroModule').then((module) => ({ default: module.FinanceiroModule })));
+const AffiliateAdminModule = lazy(() => import('../components/admin/AffiliateAdminModule').then((module) => ({ default: module.AffiliateAdminModule })));
+const TicketsModule = lazy(() => import('../components/admin/TicketsModule').then((module) => ({ default: module.TicketsModule })));
+const RelatoriosModule = lazy(() => import('../components/admin/RelatoriosModule').then((module) => ({ default: module.RelatoriosModule })));
+const ConfiguracoesModule = lazy(() => import('../components/admin/ConfiguracoesModule').then((module) => ({ default: module.ConfiguracoesModule })));
+const AreaVIPModule = lazy(() => import('../components/admin/AreaVIPModule').then((module) => ({ default: module.AreaVIPModule })));
+const AcessosModule = lazy(() => import('../components/admin/AcessosModule').then((module) => ({ default: module.AcessosModule })));
+const DemandasColaboradorModule = lazy(() => import('../components/admin/DemandasColaboradorModule').then((module) => ({ default: module.DemandasColaboradorModule })));
+const SystemMonitorModule = lazy(() => import('../components/admin/SystemMonitorModule').then((module) => ({ default: module.SystemMonitorModule })));
+const FiscalModule = lazy(() => import('../components/admin/FiscalModule').then((module) => ({ default: module.FiscalModule })));
+const CobrancaModule = lazy(() => import('../components/admin/CobrancaModule').then((module) => ({ default: module.CobrancaModule })));
+const PromocaoQuantidadeModule = lazy(() => import('../components/admin/PromocaoQuantidadeModule').then((module) => ({ default: module.PromocaoQuantidadeModule })));
+const ClassifiedsModule = lazy(() => import('../components/admin/ClassifiedsModule').then((module) => ({ default: module.ClassifiedsModule })));
+const TravelAdminModule = lazy(() => import('../components/admin/TravelAdminModule').then((module) => ({ default: module.TravelAdminModule })));
+const ProtectionAdminModule = lazy(() => import('../components/admin/ProtectionAdminModule').then((module) => ({ default: module.ProtectionAdminModule })));
+const PartnersAdminModule = lazy(() => import('../components/admin/PartnersAdminModule').then((module) => ({ default: module.PartnersAdminModule })));
+const AdvertisingAdminModule = lazy(() => import('../components/admin/AdvertisingAdminModule').then((module) => ({ default: module.AdvertisingAdminModule })));
+const FornecedoresModule = lazy(() => import('../components/admin/FornecedoresModule').then((module) => ({ default: module.FornecedoresModule })));
+const CareersAdminModule = lazy(() => import('../components/admin/CareersAdminModule').then((module) => ({ default: module.CareersAdminModule })));
+const SiteCampaignAdminPage = lazy(() => import('../components/admin/SiteCampaignAdminPage').then((module) => ({ default: module.SiteCampaignAdminPage })));
+
+function ModuleLoadingState() {
+  return (
+    <div className="flex min-h-[45vh] items-center justify-center" role="status" aria-live="polite">
+      <div className="flex items-center gap-3 text-sm font-semibold text-neutral-500">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-200 border-t-indigo-600" aria-hidden="true" />
+        Carregando módulo…
+      </div>
+    </div>
+  );
+}
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -221,6 +233,7 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
       </>}
     >
       <div className="p-3 lg:p-5"><div className="min-h-[calc(100vh-140px)] rounded-[2rem] bg-white p-3 lg:p-4 shadow-sm ring-1 ring-neutral-100">
+        <Suspense fallback={<ModuleLoadingState />}>
         {normalizedActive === 'dashboard' && (adminType === 'colaborador' ? <CollaboratorDashboard colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || undefined} colaboradorModulos={internalModulos} onNavigate={commonNavigate} /> : <Dashboard adminType="admin" colaboradorNome="Administrador" colaboradorModulos={internalModulos} onNavigate={commonNavigate} />)}
         {normalizedActive === 'cadastro' && <ErrorBoundary><CadastroModule title="Cadastros" allowedTabs={cadastroTabs as any} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
         {normalizedActive === 'fornecedores' && <ErrorBoundary><FornecedoresModule initialTab={activeTab} /></ErrorBoundary>}
@@ -249,6 +262,7 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
         {normalizedActive === 'afiliados' && <ErrorBoundary><AffiliateAdminModule /></ErrorBoundary>}
         {normalizedActive === 'saude' && <ErrorBoundary><ProtectionAdminModule domain="saude" initialTab={activeTab} initialItemId={activeItemId} /></ErrorBoundary>}
         {normalizedActive === 'seguros' && <ErrorBoundary><ProtectionAdminModule domain="seguros" initialTab={activeTab} initialItemId={activeItemId} /></ErrorBoundary>}
+        </Suspense>
       </div></div>
     </DashboardLayout>
   );

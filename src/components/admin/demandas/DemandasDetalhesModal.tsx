@@ -11,6 +11,7 @@ import { isPast } from 'date-fns';
 import { notificationService } from '../../../lib/notificationService';
 import { logService } from '../../../lib/logService';
 import { demandService } from '../../../lib/demandService';
+import { callAdminRpc } from '../../../lib/adminRpc';
 import { DemandasComentarios } from './DemandasComentarios';
 import { useFileViewer } from '../../../contexts/FileViewerContext';
 
@@ -111,7 +112,7 @@ export function DemandasDetalhesModal({
   const handleStartService = async () => {
     setIsSubmitting(true);
     try {
-      await supabase.from('prestador_demandas').update({ status: 'ativa', data_inicio: new Date().toISOString() }).eq('id', demanda.id);
+      await supabase.from('prestador_demandas').update({ status: 'ativa', data_inicio: new Date().toISOString() }).eq('id', demanda.id).throwOnError();
       await demandService.addDemandHistory({
         demandaId: demanda.id,
         tipoEvento: 'aceite',
@@ -138,7 +139,7 @@ export function DemandasDetalhesModal({
   const handleAceitarDemanda = async () => {
     setIsSubmitting(true);
     try {
-      await supabase.from('prestador_demandas').update({ status_aceite: 'aceito', status: 'aberta' }).eq('id', demanda.id);
+      await supabase.from('prestador_demandas').update({ status_aceite: 'aceito', status: 'aberta' }).eq('id', demanda.id).throwOnError();
       await demandService.addDemandHistory({
         demandaId: demanda.id,
         tipoEvento: 'aceite',
@@ -167,7 +168,7 @@ export function DemandasDetalhesModal({
     if (!motivo) return;
     setIsSubmitting(true);
     try {
-      await supabase.from('prestador_demandas').update({ status_aceite: 'recusado', motivo_recusa: motivo, colaborador_id: null, status: 'aberta' }).eq('id', demanda.id);
+      await supabase.from('prestador_demandas').update({ status_aceite: 'recusado', motivo_recusa: motivo, colaborador_id: null, status: 'aberta' }).eq('id', demanda.id).throwOnError();
       await demandService.addDemandHistory({
         demandaId: demanda.id,
         tipoEvento: 'recusa',
@@ -201,7 +202,7 @@ export function DemandasDetalhesModal({
         data_inicio: new Date().toISOString(),
         colaborador_id: null,
         prestador_id: null
-      }).eq('id', demanda.id);
+      }).eq('id', demanda.id).throwOnError();
 
       // 2. Histórico da demanda
       await demandService.addDemandHistory({
@@ -216,7 +217,7 @@ export function DemandasDetalhesModal({
         await supabase.from('os_notas').insert({
           os_id: demanda.os_id,
           nota: '✅ Sua demanda foi iniciada e está em atendimento pela equipe interna da GSA.'
-        });
+        }).throwOnError();
 
         const clienteId = demanda.ordem_servico?.cliente_id;
         const codigoOs = demanda.ordem_servico?.codigo_os;
@@ -314,7 +315,7 @@ export function DemandasDetalhesModal({
         status: 'contraproposta_admin_final',
         valor_proposto_admin: Number(novoValorAdmin),
         motivo_negociacao: motivoNegociacao,
-      }).eq('id', demanda.id);
+      }).eq('id', demanda.id).throwOnError();
       
       await demandService.addDemandHistory({
         demandaId: demanda.id,
@@ -364,7 +365,7 @@ export function DemandasDetalhesModal({
         prestador_id: null,
         motivo_recusa: motivo,
         valor_proposto_prestador: null,
-      }).eq('id', demanda.id);
+      }).eq('id', demanda.id).throwOnError();
       await demandService.addDemandHistory({
         demandaId: demanda.id,
         tipoEvento: 'recusa',
@@ -406,32 +407,11 @@ export function DemandasDetalhesModal({
 
     setIsSubmitting(true);
     try {
-      // 1. Atualizar Demanda
-      const { error: errorDemanda } = await supabase
-        .from('prestador_demandas')
-        .update({ status: 'cancelada' })
-        .eq('id', demanda.id);
-      if (errorDemanda) throw errorDemanda;
-
-      // 2. Atualizar OS
-      if (demanda.os_id) {
-        await supabase.from('ordens_servico').update({ status: 'cancelada' }).eq('id', demanda.os_id);
-        
-        // 3. Cancelar Orçamento
-        if (demanda.ordem_servico?.orcamento_id) {
-          await supabase.from('orcamentos').update({ status: 'cancelado' }).eq('id', demanda.ordem_servico.orcamento_id);
-        }
-
-        // 4. Cancelar Faturas vinculadas
-        await supabase.from('faturas').update({ status: 'cancelado' }).eq('os_id', demanda.os_id);
-      }
-
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'cancelamento',
-        motivo: `Demanda cancelada pela administração. Motivo: ${motivo}`,
-        colaboradorOrigemId: colaboradorId || null
+      const result = await callAdminRpc<{ success?: boolean }>('gsa_admin_cancelar_demanda', {
+        p_demanda_id: demanda.id,
+        p_motivo: motivo,
       });
+      if (!result?.success) throw new Error('O servidor não confirmou o cancelamento da demanda.');
 
       // Notificar quem estava com a demanda
       if (demanda.colaborador_id) {
@@ -452,14 +432,6 @@ export function DemandasDetalhesModal({
           { itemId: demanda.id, prioridade: 'alta' }
         );
       }
-
-      await logService.logAction({
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-        ator_id: colaboradorId || 'admin',
-        ator_nome: colaboradorNome || 'Administrador',
-        acao: 'CANCELAR_DEMANDA_PRESTADOR',
-        detalhes: `Cancelou a demanda #${demanda.id.slice(0, 8)}. Motivo: ${motivo}`
-      });
 
       toast.success('Demanda cancelada com sucesso.');
       onRefreshHistorico?.();

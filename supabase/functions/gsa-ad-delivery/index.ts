@@ -118,8 +118,10 @@ export async function handleRequest(request: Request) {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const hashSalt = Deno.env.get('AD_DELIVERY_HASH_SALT') || 'gsa-ad-delivery-salt-fallback-v1';
-  if (!supabaseUrl || !serviceRoleKey) return json(503, { error: 'server_not_configured' }, origin);
+  const hashSalt = Deno.env.get('AD_DELIVERY_HASH_SALT');
+  if (!supabaseUrl || !serviceRoleKey || !hashSalt || hashSalt.length < 32) {
+    return json(503, { error: 'server_not_configured' }, origin);
+  }
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -146,7 +148,8 @@ export async function handleRequest(request: Request) {
       });
     }
   } catch (error) {
-    console.warn('Ad delivery rate limiting unavailable, proceeding without limit:', error);
+    console.error('Ad delivery rate limiting unavailable:', error);
+    return json(503, { error: 'rate_limit_unavailable' }, origin);
   }
 
   if (action === 'serve') {

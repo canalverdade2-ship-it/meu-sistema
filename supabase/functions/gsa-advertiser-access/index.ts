@@ -3,6 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.98.0';
 
 type JsonRecord = Record<string, unknown>;
 const MAX_BODY_BYTES = 8_000;
+const ACCESS_ELIGIBLE_STATUSES = new Set([
+  'proposal_sent',
+  'negotiation_requested',
+  'accepted',
+]);
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://grupo-gsa.com.br',
   'https://www.grupo-gsa.com.br',
@@ -51,11 +56,26 @@ async function digest(value: string) {
 }
 
 async function readJson(request: Request) {
-  const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > MAX_BODY_BYTES) throw new RangeError('payload_too_large');
-  const value = JSON.parse(text);
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new SyntaxError('invalid_json');
-  return value as JsonRecord;
+  if (!request.body) throw new SyntaxError('invalid_json');
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let text = '';
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BODY_BYTES) throw new RangeError('payload_too_large');
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+    const value = JSON.parse(text);
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new SyntaxError('invalid_json');
+    return value as JsonRecord;
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 function normalizeProtocol(value: unknown) {
@@ -92,6 +112,8 @@ export async function handleRequest(request: Request) {
   if (!(request.headers.get('content-type') || '').toLowerCase().includes('application/json')) {
     return json(415, { error: 'unsupported_media_type' }, origin);
   }
+  const declaredLength = Number(request.headers.get('content-length') || 0);
+  if (declaredLength > MAX_BODY_BYTES) return json(413, { error: 'payload_too_large' }, origin);
 
   let body: JsonRecord;
   try {
@@ -101,8 +123,9 @@ export async function handleRequest(request: Request) {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!supabaseUrl || !serviceRoleKey) return json(503, { error: 'server_not_configured' }, origin);
+  if (!supabaseUrl || !anonKey || !serviceRoleKey) return json(503, { error: 'server_not_configured' }, origin);
   const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }) as any;
 
   const action = String(body.action || '').trim();
@@ -127,6 +150,9 @@ export async function handleRequest(request: Request) {
     return json(500, { error: 'validation_failed' }, origin);
   }
   if (!validation?.success || !validation?.request) return json(404, { error: 'protocol_not_found' }, origin);
+  if (!ACCESS_ELIGIBLE_STATUSES.has(String(validation.request.status || ''))) {
+    return json(403, { error: 'advertiser_access_not_approved' }, origin);
+  }
   if (action === 'validate') return json(200, { success: true, request: validation.request }, origin);
 
   const email = normalizeEmail(body.email);
@@ -140,18 +166,73 @@ export async function handleRequest(request: Request) {
 
   let user = await findUserByEmail(admin, email);
   const accountExists = Boolean(user);
+  const redirectUrl = new URL(
+    '/anuncios/login',
+    origin && configuredOrigins().includes(origin) ? origin : configuredOrigins()[0],
+  );
+  redirectUrl.searchParams.set('protocolo', protocol);
+  const publicClient = createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  }) as any;
+
   if (!user) {
-    const { data: created, error: createError } = await admin.auth.admin.createUser({
+    const { data: created, error: createError } = await publicClient.auth.signUp({
       email,
       password,
-      email_confirm: true,
-      user_metadata: { gsa_role: 'advertiser', protocol },
+      options: {
+        emailRedirectTo: redirectUrl.toString(),
+        data: { gsa_role: 'advertiser', protocol },
+      },
     });
     if (createError || !created?.user) {
       console.error('Advertiser user creation failed', createError);
       return json(502, { error: 'account_creation_failed' }, origin);
     }
-    user = created.user;
+    return json(202, {
+      success: true,
+      account_exists: false,
+      verification_required: true,
+    }, origin);
+  }
+
+  if (!user.email_confirmed_at) {
+    const { error: resendError } = await publicClient.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: redirectUrl.toString() },
+    });
+    if (resendError) {
+      console.error('Advertiser confirmation resend failed', resendError);
+      return json(502, { error: 'confirmation_email_failed' }, origin);
+    }
+    return json(202, {
+      success: true,
+      account_exists: true,
+      verification_required: true,
+    }, origin);
+  }
+
+  const authorization = request.headers.get('authorization') || '';
+  const accessToken = authorization.toLowerCase().startsWith('bearer ')
+    ? authorization.slice(7).trim()
+    : '';
+  let possessionVerified = false;
+  if (accessToken) {
+    const { data: tokenUser } = await admin.auth.getUser(accessToken);
+    possessionVerified = tokenUser.user?.id === user.id
+      && String(tokenUser.user?.email || '').toLowerCase() === email;
+  }
+  if (!possessionVerified) {
+    const { data: signInData, error: signInError } = await publicClient.auth.signInWithPassword({
+      email,
+      password,
+    });
+    possessionVerified = !signInError
+      && signInData.user?.id === user.id
+      && String(signInData.user?.email || '').toLowerCase() === email;
+  }
+  if (!possessionVerified) {
+    return json(401, { error: 'invalid_credentials' }, origin);
   }
 
   const { data: claimed, error: claimError } = await admin.rpc('gsa_ads_claim_protocol_for_user', {
@@ -163,7 +244,12 @@ export async function handleRequest(request: Request) {
     return json(409, { error: 'protocol_claim_failed' }, origin);
   }
 
-  return json(200, { success: true, account_exists: accountExists }, origin);
+  return json(200, {
+    success: true,
+    account_exists: accountExists,
+    verification_required: false,
+    advertiser_status: claimed.advertiser_status,
+  }, origin);
 }
 
 if (import.meta.main) Deno.serve(handleRequest);
