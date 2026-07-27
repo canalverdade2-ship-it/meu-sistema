@@ -418,7 +418,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
       });
       const faturaId = data?.fatura_id;
       toast.success(data?.already_exists ? 'A fatura de quitação já estava gerada.' : 'Fatura de quitação gerada com sucesso!');
-      onNavigate('financeiro', 'faturas', faturaId);
+      if (onNavigate) onNavigate('financeiro', 'faturas', faturaId);
     } catch (e: any) {
       toast.error(e.message || 'Erro ao gerar fatura');
     } finally {
