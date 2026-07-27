@@ -11,6 +11,15 @@ interface LogData {
   detalhes?: string;
 }
 
+
+interface LogData {
+  ator_tipo: AtorTipo;
+  ator_id?: string;
+  ator_nome?: string;
+  acao: string;
+  detalhes?: string;
+}
+
 export const logService = {
   /**
    * Registra uma ação no extrato global (sistema_logs) via RPC validada.
@@ -19,9 +28,12 @@ export const logService = {
   async logAction(data: LogData) {
     try {
       const session = sessionService.getCurrentSession();
+      if (!session?.sessaoId || !session?.sessionToken) {
+        return;
+      }
       const { error } = await supabase.rpc('gsa_log_action', {
-        p_sessao_id: session?.sessaoId || null,
-        p_session_token: session?.sessionToken || null,
+        p_sessao_id: session.sessaoId,
+        p_session_token: session.sessionToken,
         p_ator_tipo: data.ator_tipo,
         p_ator_id: data.ator_id || null,
         p_ator_nome: data.ator_nome || null,
@@ -30,10 +42,10 @@ export const logService = {
       });
 
       if (error) {
-        console.error('Erro ao salvar log no banco de dados:', error);
+        console.warn('[logService] Não foi possível registrar log:', error.message);
       }
     } catch (error) {
-      console.error('Falha inesperada no logService:', error);
+      console.warn('[logService] Falha inesperada no logService:', error);
     }
   },
 };
