@@ -457,10 +457,9 @@ export function DemandasDetalhesModal({
           const ext = file.name.split('.').pop();
           const path = `transferencias/${demanda.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const { error } = await supabase.storage.from('entregas_demandas').upload(path, file);
-          if (!error) {
-            const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
-            urls.push(publicUrl);
-          }
+          if (error) throw error;
+          const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
+          urls.push(publicUrl);
         }
       }
 
@@ -553,10 +552,9 @@ export function DemandasDetalhesModal({
           const ext = file.name.split('.').pop();
           const path = `entregas/${demanda.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const { error } = await supabase.storage.from('entregas_demandas').upload(path, file);
-          if (!error) {
-            const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
-            urls.push(publicUrl);
-          }
+          if (error) throw error;
+          const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
+          urls.push(publicUrl);
         }
       }
       // Usa concluida_interna para sinalizar que a gestão interna concluiu mas a finalização oficial fica no módulo Demandas
@@ -577,7 +575,7 @@ export function DemandasDetalhesModal({
 
       // Registrar nota na OS
       if (demanda.os_id) {
-        await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna concluiu a demanda. Aguardando finalização oficial pela administração.' });
+        await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna concluiu a demanda. Aguardando finalização oficial pela administração.' }).throwOnError();
 
         // Quando o admin assumiu diretamente (sem prestador/colaborador), notifica o cliente também
         if (isAdmin && !demanda.prestador_id && !demanda.colaborador_id) {
@@ -624,7 +622,7 @@ export function DemandasDetalhesModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await supabase.from('prestador_demandas').update({ status: 'em_ajuste', ajuste_solicitado: ajusteDesc, prazo_ajuste: ajustePrazo ? new Date(ajustePrazo).toISOString() : null, status_ajuste: 'solicitado' }).eq('id', demanda.id);
+      await supabase.from('prestador_demandas').update({ status: 'em_ajuste', ajuste_solicitado: ajusteDesc, prazo_ajuste: ajustePrazo ? new Date(ajustePrazo).toISOString() : null, status_ajuste: 'solicitado' }).eq('id', demanda.id).throwOnError();
       await demandService.addDemandHistory({
         demandaId: demanda.id,
         tipoEvento: 'ajuste',
@@ -680,7 +678,7 @@ export function DemandasDetalhesModal({
 
       // Registrar nota na OS
       if (demanda.os_id) {
-        await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna aprovou e concluiu a demanda. Aguardando finalização oficial pela administração.' });
+        await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna aprovou e concluiu a demanda. Aguardando finalização oficial pela administração.' }).throwOnError();
       }
 
       // Notificar admin
