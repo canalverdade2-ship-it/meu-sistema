@@ -502,7 +502,7 @@ export default function App() {
                 onRequireAuth={() => {
                   const params = new URLSearchParams(window.location.search);
                   if (!params.has('modal')) {
-                    params.set('modal', 'checkout');
+                    params.set('modal', 'carrinho');
                   }
                   const returnUrl = window.location.pathname + '?' + params.toString();
                   const returnTo = encodeURIComponent(returnUrl);
