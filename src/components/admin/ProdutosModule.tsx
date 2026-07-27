@@ -1757,7 +1757,7 @@ function ProdutoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
            next.valor_custo = importData.preco.toString();
            const lucro = parseFloat(next.porcentagem_lucro || '0');
            if (lucro > 0) {
-              next.valor = (importData.preco * (1 + (lucro / 100))).toString();
+              next.valor = (Math.round(importData.preco * (1 + (lucro / 100)) * 100) / 100).toString();
            }
         }
         next.imagens_adicionais = finalImages;
