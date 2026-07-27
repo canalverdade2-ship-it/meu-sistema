@@ -1,14 +1,14 @@
 {
-  "generated_at_utc": "2026-07-27T16:40:11.284Z",
-  "validated_sha": "a8e718a02c4d06af400c7d52d7291fec256cf181",
+  "generated_at_utc": "2026-07-27T16:41:17.575Z",
+  "validated_sha": "74b647dcb2dd5698bae62f46e685884d2e821a6a",
   "install_exit_code": 0,
   "test_exit_code": 1,
   "result": "failure",
-  "install_log_sha256": "9b24e586d84e64fee5ce17bc43c032c54807db7bfbc937cbee403439e6218a65",
-  "test_log_sha256": "a9839edf32b8f5b1972c79a8ffddde22fcb55833b6f0cd5f05aa5cb673fb8a62",
+  "install_log_sha256": "bb9637ea90e6ecd00300ccb84e946344c4df86a7ce173b271d81b9ac4cd54b1d",
+  "test_log_sha256": "293b26e50cee75bebf5a03bfa1f02e293b9fcaf88a41a05d49cb9500cfd27907",
   "failed_markers": [
     "Contratos públicos ativos da Home validados com sucesso.",
-    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: Conhecer parceiro",
+    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: enviada diretamente ao painel administrativo para análise",
     "  code: 'ERR_ASSERTION',",
     "  expected: true,"
   ],
@@ -18,7 +18,7 @@
     "Contratos públicos ativos da Home validados com sucesso.",
     "> react-example@0.0.0 test:partners",
     "> tsx scripts/check-partners-contracts.ts && deno check supabase/functions/gsa-partner-application/index.ts",
-    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: Conhecer parceiro",
+    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: enviada diretamente ao painel administrativo para análise",
     "    at contains (/home/runner/work/meu-sistema/meu-sistema/scripts/check-partners-contracts.ts:17:12)",
     "    at async main (/home/runner/work/meu-sistema/meu-sistema/scripts/check-partners-contracts.ts:66:3) {",
     "  generatedMessage: false,",
