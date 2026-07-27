@@ -485,7 +485,7 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
         <section className="border-t border-white/8 bg-[#07101b] px-4 py-7 sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-400">Sua empresa ainda precisa de nome, identidade visual e presença digital completa?</p>
-            <button type="button" onClick={() => navigate('/empresa-do-zero-ao-digital')} className="inline-flex items-center gap-2 text-sm font-black text-cyan-300 hover:text-cyan-200">Conhecer Construção de Marca <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={() => navigate('/empresa-do-zero-ao-digital')} className="inline-flex items-center gap-2 text-sm font-black text-cyan-300 hover:text-cyan-200">Conhecer a jornada completa <ArrowRight className="h-4 w-4" /></button>
           </div>
         </section>
       </main>
