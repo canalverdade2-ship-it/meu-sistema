@@ -23,7 +23,7 @@ let restoreSessionPromise: Promise<StoredSession | null> | null = null;
 let endSessionPromise: Promise<void> | null = null;
 
 function getSessionStorage() {
-  return typeof window === 'undefined' ? null : window.sessionStorage;
+  return typeof window === 'undefined' ? null : window.localStorage;
 }
 
 function readStoredSession(): StoredSession | null {
