@@ -209,8 +209,7 @@ export function AdvertisingSlot({
         }
       } catch (error) {
         if (!active) return;
-        setStatus('error');
-        console.warn(`Falha ao carregar posição publicitária ${placementCode}:`, error);
+        setStatus('empty');
       }
     };
     void load();
