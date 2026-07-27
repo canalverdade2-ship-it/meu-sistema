@@ -28,7 +28,8 @@ const syncFaturasVencidas = async () => {
 
   syncFaturasPromise = (async () => {
     try {
-      await supabase.rpc('fn_marcar_faturas_vencidas');
+      const { error } = await supabase.rpc('fn_marcar_faturas_vencidas');
+      if (error) throw error;
     } catch (err) {
       console.error('Erro ao sincronizar faturas vencidas:', err);
     } finally {
