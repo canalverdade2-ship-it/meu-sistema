@@ -605,6 +605,7 @@ const enviarOfertaQuitacao = async () => {
       });
       if (!inputMotivo || typeof inputMotivo !== 'string') return;
       motivo = inputMotivo;
+    }
 
     try {
       const session = getAdminSessionForRpc();
