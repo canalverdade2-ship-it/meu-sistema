@@ -83,6 +83,9 @@ export type Cliente = {
   limite_credito_disponivel?: number;
   opcao_pagamento_parcelado?: boolean;
   max_parcelas?: number;
+  pin_bloqueado?: boolean;
+  saldo?: number;
+  pontos?: number;
 };
 
 export interface LojaCategoria {
@@ -217,6 +220,7 @@ export type Voucher = {
   usage_count: number;
   status: 'ativo' | 'usado' | 'cancelado';
   motivo_cancelamento?: string;
+  data_cancelamento?: string;
   categoria: 'desconto' | 'saque';
   data_uso?: string;
   tipo_uso?: string;
@@ -320,7 +324,7 @@ export type Fatura = {
   cliente_id: string;
   valor_total: number;
   valor_pago: number;
-  status: 'pendente' | 'pago' | 'cancelado' | 'revisada' | 'vencida' | 'aguardando_link' | 'pendente_pagamento';
+  status: 'pendente' | 'pago' | 'cancelado' | 'revisada' | 'vencida' | 'aguardando_link' | 'pendente_pagamento' | 'fatura_negociada' | 'protestado';
   data_vencimento: string;
   data_emissao?: string;
   data_pagamento?: string;
@@ -345,6 +349,11 @@ export type Fatura = {
   historico_pagamentos?: Record<string, unknown>[];
   observacoes?: string;
   emprestimo_id?: string;
+  orcamento_id?: string;
+  tem_cobranca?: boolean;
+  is_amortizacao_credito?: boolean;
+  clientes?: Cliente;
+  ordens_compra?: OrdemCompra;
 };
 
 export type OrdemCompra = {
@@ -380,6 +389,7 @@ export type Ticket = {
   status: 'aberto' | 'em andamento' | 'concluido';
   data_abertura: string;
   data_fechamento?: string;
+  prestador_id?: string;
 };
 
 export type TicketMensagem = {
@@ -410,6 +420,7 @@ export type Saque = {
   observacoes?: string;
   motivo_cancelamento?: string;
   motivo_prorrogacao?: string;
+  clientes?: Cliente;
 };
 
 export type Transferencia = {
@@ -467,7 +478,7 @@ export type Promocao = {
   data_inicio_divulgacao: string;
   data_fim_divulgacao: string;
   prazo_validade_meses: number;
-  status: 'ativa' | 'suspensa' | 'encerrada' | 'usada' | 'cancelada';
+  status: 'ativa' | 'suspensa' | 'encerrada' | 'usada' | 'cancelada' | 'cancelado' | 'disponivel';
   created_at: string;
 };
 
@@ -674,7 +685,7 @@ export type Emprestimo = {
     ted_conta?: string;
     ted_tipo_conta?: 'corrente' | 'poupanca';
   };
-  status: 'analise_inicial' | 'proposta_enviada' | 'proposta_expirada' | 'aguardando_dados_bancarios' | 'analise_final' | 'pendencia_assinatura' | 'analise_contrato' | 'pendencia_documentos' | 'aprovado' | 'ativo' | 'quitado' | 'cancelado';
+  status: 'analise_inicial' | 'proposta_enviada' | 'proposta_expirada' | 'aguardando_dados_bancarios' | 'analise_final' | 'pendencia_assinatura' | 'analise_contrato' | 'pendencia_documentos' | 'analise_quitacao' | 'aguardando_pagamento_quitacao' | 'aprovado' | 'ativo' | 'quitado' | 'cancelado';
   contrato_url?: string;
   assinatura_url?: string;
   data_assinatura?: string;
@@ -686,6 +697,7 @@ export type Emprestimo = {
   data_deposito?: string;
   perfil_risco?: 'baixo' | 'medio' | 'alto';
   motivo_pendencia?: string;
+  valor_quitacao_acordo?: number;
   created_at: string;
   updated_at: string;
   clientes?: Cliente;
@@ -784,9 +796,17 @@ export type LojaSolicitacao = {
   imagens?: string[] | Record<string, unknown>[];
   produto_desejado_id?: string;
   valor_diferenca?: number;
-  status: 'em_analise' | 'aprovado' | 'rejeitado' | 'concluido';
+  status: 'pendente' | 'em_analise' | 'aprovado' | 'rejeitado' | 'aguardando_instrucoes' | 'aguardando_devolucao' | 'devolucao_postada' | 'agendado' | 'devolucao_recebida' | 'novo_produto_enviado' | 'concluido';
   resposta_admin?: string;
   novo_orcamento_id?: string;
+  descricao_detalhada?: string;
+  imagens_anexo?: string[];
+  metodo_entrega?: string;
+  endereco_devolucao?: string;
+  data_agendamento?: string;
+  rastreio_cliente?: string;
+  rastreio_admin?: string;
+  historico_status?: Record<string, unknown>[];
   created_at: string;
   updated_at: string;
   // joins
@@ -828,6 +848,7 @@ export type LojaCreditoSolicitacao = {
   id: string;
   cliente_id: string;
   tipo_solicitacao: 'adesao' | 'alteracao';
+  tipo?: 'adesao' | 'alteracao';
   status: 'analise' | 'documentos_pendentes' | 'pre_aprovado' | 'contrato_pendente_assinatura' | 'contrato_assinado' | 'liberado' | 'negado';
   limite_solicitado?: number;
   limite_aprovado?: number;
