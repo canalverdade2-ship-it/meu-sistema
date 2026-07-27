@@ -13,7 +13,6 @@ const baseHeaders: Record<string, string> = {
 
 export type AuthAction =
   | 'login_pin'
-  | 'set_pin_and_login'
   | 'login_admin'
   | 'login_colaborador'
   | 'request_client_recovery'
@@ -35,10 +34,6 @@ const rateLimits: Record<AuthAction, { ip: RateLimitRule; subject: RateLimitRule
   login_pin: {
     ip: { limit: 30, windowSeconds: 300, blockSeconds: 900 },
     subject: { limit: 8, windowSeconds: 600, blockSeconds: 900 },
-  },
-  set_pin_and_login: {
-    ip: { limit: 12, windowSeconds: 900, blockSeconds: 3600 },
-    subject: { limit: 5, windowSeconds: 1800, blockSeconds: 7200 },
   },
   login_admin: {
     ip: { limit: 20, windowSeconds: 900, blockSeconds: 3600 },
@@ -62,10 +57,6 @@ const rpcByAction: Partial<Record<AuthAction, { name: string; params: (payload: 
   login_pin: {
     name: 'gsa_login_pin',
     params: (payload) => ({ p_documento: payload.documento, p_pin: payload.pin, p_tipo: payload.tipo }),
-  },
-  set_pin_and_login: {
-    name: 'gsa_set_pin_and_login',
-    params: (payload) => ({ p_documento: payload.documento, p_telefone: payload.telefone, p_pin: payload.pin, p_tipo: payload.tipo }),
   },
   login_admin: {
     name: 'gsa_login_admin',
@@ -137,18 +128,6 @@ export function normalizePayload(
     const tipo = payload.tipo === 'cliente' || payload.tipo === 'prestador' || payload.tipo === 'fornecedor' ? payload.tipo : '';
     if (![11, 14].includes(documento.length) || pin.length !== 4 || !tipo) return null;
     return { documento, pin, tipo };
-  }
-
-  if (action === 'set_pin_and_login') {
-    const documento = digits(payload.documento);
-    const rawContact = text(payload.telefone, 254).trim();
-    const phoneDigits = digits(rawContact);
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawContact.toLowerCase());
-    const validContact = isEmail || [10, 11].includes(phoneDigits.length);
-    const pin = digits(payload.pin);
-    const tipo = payload.tipo === 'cliente' || payload.tipo === 'prestador' ? payload.tipo : '';
-    if (![11, 14].includes(documento.length) || !validContact || pin.length !== 4 || !tipo) return null;
-    return { documento, telefone: rawContact, pin, tipo };
   }
 
   if (action === 'request_client_recovery') {
@@ -282,7 +261,6 @@ export async function handleRequest(request: Request) {
 
     const supportedActions = new Set<AuthAction>([
       'login_pin',
-      'set_pin_and_login',
       'login_admin',
       'login_colaborador',
       'request_client_recovery',
@@ -438,20 +416,32 @@ export async function handleRequest(request: Request) {
 
     const isSuccess = Boolean(data?.valid || data?.success);
     if (isSuccess) {
-      await clearSubjectRateLimit(admin, subjectBucket);
       const authObj = data?.session?.auth || data?.auth;
-      if (authObj?.email) {
-        const linkRes = await admin.auth.admin.generateLink({
-          type: 'magiclink',
-          email: authObj.email,
+      if (!authObj?.email) {
+        console.error('Sessão GSA criada sem identidade Supabase Auth.');
+        await admin.rpc('gsa_end_session', {
+          p_sessao_id: data?.session?.sessao_id || data?.sessao_id,
+          p_session_token: data?.session?.session_token || data?.session_token,
         });
-        const hashedToken = linkRes.data?.properties?.hashed_token;
-        if (hashedToken) {
-          authObj.token_hash = hashedToken;
-        } else if (linkRes.error) {
-          console.error('Falha ao gerar token de ativação Supabase Auth:', linkRes.error);
-        }
+        return json({ valid: false, success: false, error: 'auth_sync_unavailable' }, 503, allowedOrigin);
       }
+
+      const linkRes = await admin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: authObj.email,
+      });
+      const hashedToken = linkRes.data?.properties?.hashed_token;
+      if (!hashedToken || linkRes.error) {
+        console.error('Falha ao gerar token de ativação Supabase Auth:', linkRes.error);
+        await admin.rpc('gsa_end_session', {
+          p_sessao_id: data?.session?.sessao_id || data?.sessao_id,
+          p_session_token: data?.session?.session_token || data?.session_token,
+        });
+        return json({ valid: false, success: false, error: 'auth_sync_unavailable' }, 503, allowedOrigin);
+      }
+
+      authObj.token_hash = hashedToken;
+      await clearSubjectRateLimit(admin, subjectBucket);
     } else if (subjectRateLimitMode(body.action) === 'invalid-only') {
       const subjectLimit = await checkRateLimit(admin, subjectBucket, rules.subject);
       if (!subjectLimit.allowed) {

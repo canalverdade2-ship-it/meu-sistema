@@ -3,18 +3,33 @@ import { Plus, Search, FileText, CheckCircle, XCircle, ChevronRight, ChevronLeft
 import { supabase } from '../../lib/supabase';
 import { Orcamento, Cliente, Servico, Produto, Assinatura, Promocao, ClientePromocao } from '../../types';
 import { Modal } from '../ui/Modal';
-import { formatCurrency, formatDate, generateCode, handleError, maskCurrency, handleCurrencyInputChange } from '../../lib/utils';
+import { formatCurrency, formatDate, generateCode, generateUUID, handleError, maskCurrency, handleCurrencyInputChange } from '../../lib/utils';
 import { GlobalFilter } from '../ui/GlobalFilter';
 import { toast } from 'react-hot-toast';
 import { generateOrcamentoPDF } from '../../lib/pdf';
 import { pdfSharingService } from '../../lib/pdfSharingService';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
+import { callAdminRpc } from '../../lib/adminRpc';
 
 import { notificationService } from '../../lib/notificationService';
-import { osService } from '../../lib/osService';
 import { logService } from '../../lib/logService';
 import { PainelRentabilidade } from './PainelRentabilidade';
+
+interface BudgetApprovalResult {
+  success: boolean;
+  already_processed?: boolean;
+  request_id: string;
+  orcamento_id: string;
+  status: string;
+  tipo?: string;
+  os_id?: string | null;
+  demanda_id?: string | null;
+  ordem_compra_id?: string | null;
+  ordem_assinatura_id?: string | null;
+  fatura_id?: string | null;
+  total_aprovado?: number | null;
+}
 
 export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colaboradorId, colaboradorNome, onNavigate }: { activeSubTab?: 'abertos' | 'analise' | 'aprovados' | 'cancelados', initialItemId?: string, adminType?: string, colaboradorId?: string, colaboradorNome?: string, onNavigate?: (module: string, tab?: string) => void }) {
   const [activeTab, setActiveTab] = useState<'abertos' | 'aprovados' | 'cancelados'>(activeSubTab === 'analise' ? 'abertos' : (activeSubTab as any) || 'abertos');
@@ -207,48 +222,29 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      // Verificar se o status ainda é 'negociação' antes de prosseguir
       const { data: currentOrc, error: fetchError } = await supabase
         .from('orcamentos')
         .select('status')
         .eq('id', orc.id)
         .single();
 
-      if (fetchError || currentOrc?.status !== 'negociação') {
+      if (fetchError) throw fetchError;
+      if (currentOrc?.status !== 'negociação') {
         toast.error('Este orçamento já foi alterado por outro usuário.');
         setIsDetailOpen(false);
-        fetchOrcamentos();
-        setIsSubmitting(true);
-      }
-      
-      // Buscar configurações de vencimento padrão
-      const { data: settings } = await supabase.from('system_settings').select('key, value');
-      const getSet = (k: string, d: string) => settings?.find(s => s.key === k)?.value || d;
-      
-      const vencoServico = parseInt(getSet('vencimento_padrao_servicos', '10'));
-      const vencoProduto = parseInt(getSet('vencimento_padrao_produtos', '10'));
-
-      const discountAmount = (orc.total * (orc.proposta_admin_porcentagem || 0)) / 100;
-      const newTotal = orc.total - discountAmount;
-
-      const { error } = await supabase
-        .from('orcamentos')
-        .update({
-          status: 'aprovado',
-          total: newTotal,
-          desconto: orc.desconto + discountAmount
-        })
-        .eq('id', orc.id);
-
-      if (error) throw error;
-
-      // Marcar promoção como usada
-      if (orc.promocao_id) {
-        await supabase.from('promocoes').update({ status: 'usada' }).eq('id', orc.promocao_id);
-        await supabase.from('cliente_promocoes').update({ status: 'usada' }).eq('promocao_id', orc.promocao_id).eq('cliente_id', orc.cliente_id);
+        await fetchOrcamentos();
+        return;
       }
 
-      // Notificar cliente sobre aprovação da negociação
+      const approval = await callAdminRpc<BudgetApprovalResult>('gsa_admin_approve_budget', {
+        p_request_id: generateUUID(),
+        p_orcamento_id: orc.id,
+        p_approval_kind: 'negotiation',
+      });
+      if (!approval?.success) {
+        throw new Error('O servidor não confirmou a aprovação do orçamento.');
+      }
+
       await notificationService.notifyClient(
         orc.cliente_id,
         '🤝 Negociação Aprovada!',
@@ -258,134 +254,13 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
         { tab: 'aprovados', itemId: orc.id, prioridade: 'alta', contexto: { orcamento_id: orc.id, codigo: orc.codigo_orcamento } }
       );
 
-      // Create OS/OC/OA based on category
       if (orc.categoria === 'servico') {
-        const { data: os } = await supabase
-          .from('ordens_servico')
-          .insert([{
-            codigo_os: generateCode('OS'),
-            orcamento_id: orc.id,
-            cliente_id: orc.cliente_id,
-            status: 'andamento',
-            data_inicio: new Date().toISOString().split('T')[0]
-          }])
-          .select()
-          .single();
-
-        if (os) {
-          // Criar demanda automaticamente no módulo dos prestadores
-          const { data: demanda, error: demandaError } = await supabase
-            .from('prestador_demandas')
-            .insert([{
-              titulo: `Serviço: ${(orc as any).servicos?.nome || 'Não especificado'}`,
-              descricao: `Demanda gerada automaticamente para a OS ${os.codigo_os}`,
-              os_id: os.id,
-              status: 'aberta',
-              codigo_demanda: generateCode('DEM'),
-              arquivos_briefing: (orc as any).anexos || []
-            }])
-            .select()
-            .single();
-            
-          if (demandaError) {
-             console.error('Erro ao gerar demanda para prestador:', demandaError);
-          } else if (demanda) {
-            const codigoDemandaFinal = demanda.codigo_demanda || `#${demanda.id.slice(0, 8)}`;
-            
-            // 1. Primeiro log automático
-            await osService.addOSNote(
-              os.id,
-              orc.cliente_id,
-              'Demanda aberta e encaminhada para o setor responsavél.',
-              os.codigo_os
-            );
-
-            // 2. Segundo log automático (detalhado)
-            const clienteNome = (orc as any).clientes?.nome || 'Cliente';
-            const dataHoraRaw = new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const dataHora = dataHoraRaw.includes(',') ? dataHoraRaw : dataHoraRaw.replace(' ', ', ');
-            
-            const logDetalhado = `Orçamento nº ${orc.codigo_orcamento} aprovado em ${dataHora} pelo cliente ${clienteNome}, a Ordem de Serviço (OS) foi gerada através do nº ${os.codigo_os} e já foi gerada a demanda sobre nº ${codigoDemandaFinal}.`;
-            
-            await osService.addOSNote(
-              os.id,
-              orc.cliente_id,
-              logDetalhado,
-              os.codigo_os
-            );
-          }
-        }
         toast.success('Negociação aprovada e OS gerada!');
         if (onNavigate) onNavigate('vendas', 'os');
       } else if (orc.categoria === 'produto') {
-        const { data: oc } = await supabase
-          .from('ordens_compra')
-          .insert([{
-            codigo_ordem: generateCode('OC'),
-            produto_id: orc.produto_id,
-            orcamento_id: orc.id,
-            cliente_id: orc.cliente_id,
-            status: 'em_analise',
-            data_criacao: new Date().toISOString(),
-            quantidade: orc.quantidade || 1
-          }])
-          .select()
-          .single();
-
-        if (oc) {
-          const vDate = new Date(Date.now() + vencoProduto * 24 * 60 * 60 * 1000);
-
-          await supabase.from('faturas').insert([{
-            codigo_fatura: generateCode('FAT'),
-            ordem_compra_id: oc.id,
-            cliente_id: orc.cliente_id,
-            valor_total: newTotal,
-            valor_final_pendente: newTotal,
-            status: 'pendente',
-            tipo: 'produto',
-            data_vencimento: vDate.toISOString().split('T')[0],
-            quantidade: orc.quantidade || 1
-          }]);
-        }
         toast.success('Negociação aprovada e Ordem de Compra gerada!');
         if (onNavigate) onNavigate('vendas', 'produtos');
       } else {
-        const { data: oa } = await supabase
-          .from('ordens_assinatura')
-          .insert([{
-            codigo_ordem: generateCode('OA'),
-            assinatura_id: orc.assinatura_id,
-            orcamento_id: orc.id,
-            cliente_id: orc.cliente_id,
-            status: 'em_analise',
-            data_criacao: new Date().toISOString(),
-            quantidade: orc.quantidade || 1
-          }])
-          .select()
-          .single();
-
-        if (oa) {
-          // A primeira fatura da assinatura vence no dia escolhido
-          const vDate = new Date();
-          const diaVenc = orc.dia_vencimento || 10;
-          vDate.setDate(diaVenc);
-          if (vDate <= new Date()) vDate.setMonth(vDate.getMonth() + 1);
-
-          const mesRef = `${(vDate.getMonth() + 1).toString().padStart(2, '0')}/${vDate.getFullYear()}`;
-
-          await supabase.from('faturas').insert([{
-            codigo_fatura: generateCode('FAT'),
-            ordem_assinatura_id: oa.id,
-            cliente_id: orc.cliente_id,
-            valor_total: newTotal,
-            valor_final_pendente: newTotal,
-            status: 'pendente',
-            tipo: 'assinatura',
-            data_vencimento: vDate.toISOString().split('T')[0],
-            quantidade: orc.quantidade || 1,
-            mes_referencia: mesRef
-          }]);
-        }
         toast.success('Negociação aprovada e Ordem de Assinatura gerada!');
         if (onNavigate) onNavigate('vendas', 'assinaturas');
       }
@@ -395,9 +270,10 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
       // Log Action
       await logService.logAction({ acao: 'ACAO_SISTEMA', detalhes: JSON.stringify({}), ator_tipo: 'admin', ator_nome: 'Administrador' });
 
-      fetchOrcamentos();
-    } catch (err) {
-      toast.error('Erro ao aprovar negociação.');
+      await fetchOrcamentos();
+    } catch (err: any) {
+      console.error('Erro ao aprovar negociação:', err);
+      toast.error(handleError(err, 'Erro ao aprovar negociação'));
     } finally {
       setIsSubmitting(false);
     }

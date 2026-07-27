@@ -60,7 +60,11 @@ function gatewayErrorMessage(code: string, retryAfter: number) {
   if (code === 'origin_not_allowed') {
     return 'Este endereço não está autorizado para acessar o sistema.';
   }
-  if (code === 'server_not_configured' || code === 'rate_limit_unavailable') {
+  if (
+    code === 'server_not_configured'
+    || code === 'rate_limit_unavailable'
+    || code === 'auth_sync_unavailable'
+  ) {
     return 'O acesso está temporariamente indisponível. Tente novamente mais tarde.';
   }
   return 'Não foi possível concluir a autenticação.';

@@ -10,7 +10,7 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit && node scripts/audit-production-real.mjs --enforce",
     "typecheck:strict": "tsc --noEmit -p tsconfig.strict.json",
-    "test:unit": "vitest run",
+    "test:unit": "vitest run src/tests",
     "backup": "node backup.cjs",
     "backup:source": "node backup.cjs",
     "backup:database": "bash scripts/backup-database.sh",
