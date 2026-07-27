@@ -1,16 +1,15 @@
 {
-  "generated_at_utc": "2026-07-27T16:41:22.126Z",
-  "validated_sha": "095cf06a607987a88458d73bdf3fee88dac34df9",
+  "generated_at_utc": "2026-07-27T16:48:38.952Z",
+  "validated_sha": "24eebfd61773505d084ee743d7b56e6ae987042e",
   "install_exit_code": 0,
-  "test_exit_code": 1,
+  "test_exit_code": 127,
   "result": "failure",
-  "install_log_sha256": "9b24e586d84e64fee5ce17bc43c032c54807db7bfbc937cbee403439e6218a65",
-  "test_log_sha256": "293b26e50cee75bebf5a03bfa1f02e293b9fcaf88a41a05d49cb9500cfd27907",
+  "install_log_sha256": "363a8c7342c22ed5cb1c08bbbfe32db6d1376bab585ef37cea0b2003beec3f9b",
+  "test_log_sha256": "2ac0d95567172d3d39e0fda9e3927cae456239104d792a6deb567ce05f2cbf4e",
   "failed_markers": [
     "Contratos públicos ativos da Home validados com sucesso.",
-    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: enviada diretamente ao painel administrativo para análise",
-    "  code: 'ERR_ASSERTION',",
-    "  expected: true,"
+    "Contratos da página e das solicitações públicas de parceiros validados com sucesso.",
+    "sh: 1: deno: not found"
   ],
   "tail": [
     "> react-example@0.0.0 test:home",
@@ -18,15 +17,7 @@
     "Contratos públicos ativos da Home validados com sucesso.",
     "> react-example@0.0.0 test:partners",
     "> tsx scripts/check-partners-contracts.ts && deno check supabase/functions/gsa-partner-application/index.ts",
-    "AssertionError [ERR_ASSERTION]: src/components/public/PartnersPage.tsx: contrato ausente: enviada diretamente ao painel administrativo para análise",
-    "    at contains (/home/runner/work/meu-sistema/meu-sistema/scripts/check-partners-contracts.ts:17:12)",
-    "    at async main (/home/runner/work/meu-sistema/meu-sistema/scripts/check-partners-contracts.ts:66:3) {",
-    "  generatedMessage: false,",
-    "  code: 'ERR_ASSERTION',",
-    "  actual: false,",
-    "  expected: true,",
-    "  operator: '==',",
-    "  diff: 'simple'",
-    "}"
+    "Contratos da página e das solicitações públicas de parceiros validados com sucesso.",
+    "sh: 1: deno: not found"
   ]
 }
