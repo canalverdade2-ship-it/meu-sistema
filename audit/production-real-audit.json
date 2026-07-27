@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T16:32:08.949Z",
+  "generated_at": "2026-07-27T16:33:19.550Z",
   "scope": [
     "src",
     "supabase/functions"
@@ -37,14 +37,6 @@
       "severity": "review",
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
-      "file": "src/components/admin/EmprestimosModule.tsx",
-      "line": 445,
-      "excerpt": "const motivo = window.prompt('Motivo da reprovacao (o cliente recebera essa mensagem):');"
-    },
-    {
-      "severity": "review",
-      "rule": "runtime-prompt",
-      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
       "line": 166,
       "excerpt": "const motivo = prompt('Informe o motivo da recusa:');"
@@ -64,6 +56,14 @@
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
       "line": 402,
       "excerpt": "const motivo = prompt('Por que deseja cancelar esta demanda?');"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 445,
+      "excerpt": "const motivo = window.prompt('Motivo da reprovacao (o cliente recebera essa mensagem):');"
     },
     {
       "severity": "review",
