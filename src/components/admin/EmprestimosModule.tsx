@@ -13,6 +13,8 @@ import { calcularPerfilRisco, getPerfilRiscoInfo } from '../../utils/riskProfile
 import { Landmark, Upload, FileText, CheckCircle, XCircle, Send, Percent, Clock, Trash2, History, User, MapPin, Calculator, ShieldCheck, Download, Filter, Printer, Search, Plus, ChevronRight } from 'lucide-react';
 import { maskCPF, maskPhone, maskCurrency, handleCurrencyInputChange } from '../../lib/utils';
 import { sessionService } from '../../lib/sessionService';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 const getAdminSessionForRpc = () => {
   const session = sessionService.getCurrentSession();
@@ -28,6 +30,7 @@ export function EmprestimosModule({ activeSubTab, initialItemId, onNavigate, col
   const [historico, setHistorico] = useState<EmprestimoHistorico[]>([]);
   const [comentarios, setComentarios] = useState<any[]>([]);
   const [parcelas, setParcelas] = useState<any[]>([]);
+  const confirmHook = useConfirm();
   const [newMsg, setNewMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -442,8 +445,16 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
   const reprovarDocumento = async (docId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const motivo = window.prompt('Motivo da reprovacao (o cliente recebera essa mensagem):');
-    if (!motivo) return;
+    const motivo = await confirmHook.confirm({
+      title: 'Reprovar Documento',
+      message: 'Informe o motivo da reprovação. O cliente receberá esta mensagem.',
+      confirmLabel: 'Reprovar Documento',
+      variant: 'danger',
+      promptLabel: 'Motivo da reprovação',
+      promptPlaceholder: 'Ex: Renda insuficiente, documentação incompleta...',
+      promptRequired: true,
+    });
+    if (!motivo || typeof motivo !== 'string') return;
 
     try {
       const session = getAdminSessionForRpc();
@@ -504,6 +515,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700">
+      <ConfirmDialog {...confirmHook} />
       {/* Header com Ações */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
         <div>
