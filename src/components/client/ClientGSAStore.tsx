@@ -471,10 +471,11 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
     // Canais da Loja (Produtos, Serviços, Assinaturas)
     const storeChannel = supabase.channel('gsa-store-items')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(); fetchCart(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(); fetchCart(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(); fetchCart(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(true); fetchCart(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(true); fetchCart(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(true); fetchCart(); })
       .subscribe();
+
 
     // Canais de Cupons
     const couponChannel = supabase.channel('gsa-store-coupons')
@@ -579,33 +580,36 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     }
   };
 
-  const fetchStoreData = async () => {
-    setIsLoading(true);
-    
-    // Buscar tipo de pessoa se ainda não tivermos para o filtro
-    let currentType = clientType;
-    if (!currentType && clientId) {
-      const { data } = await supabase.from('clientes').select('tipo_pessoa').eq('id', clientId).maybeSingle();
-      if (data) {
-        currentType = data.tipo_pessoa as 'pf' | 'pj';
-        setClientType(currentType);
+  const fetchStoreData = async (isBackground = false) => {
+    if (!isBackground) setIsLoading(true);
+    try {
+      let currentType = clientType;
+      if (!currentType && clientId) {
+        const { data } = await supabase.from('clientes').select('tipo_pessoa').eq('id', clientId).maybeSingle();
+        if (data?.tipo_pessoa) {
+          currentType = data.tipo_pessoa as 'pf' | 'pj';
+          setClientType(currentType);
+        }
       }
+
+      const types = currentType ? [currentType, 'ambos'] : ['pf', 'pj', 'ambos'];
+
+      const [prodRes, servRes, assRes, catRes] = await Promise.all([
+        supabase.from('produtos').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types),
+        supabase.from('servicos').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types),
+        supabase.from('assinaturas').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types),
+        supabase.from('loja_categorias').select('*').eq('status', 'ativo').order('ordem')
+      ]);
+
+      if (prodRes.data) setProdutos(prodRes.data);
+      if (servRes.data) setServicos(servRes.data);
+      if (assRes.data) setAssinaturas(assRes.data);
+      if (catRes.data) setCategorias(catRes.data);
+    } catch (err) {
+      console.error('[GSAStore] Erro ao carregar dados da loja:', err);
+    } finally {
+      setIsLoading(false);
     }
-
-    const types = currentType ? [currentType, 'ambos'] : ['pf', 'pj', 'ambos'];
-
-    const [prodRes, servRes, assRes, catRes] = await Promise.all([
-      supabase.from('produtos').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types),
-      supabase.from('servicos').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types),
-      supabase.from('assinaturas').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types),
-      supabase.from('loja_categorias').select('*').eq('status', 'ativo').order('ordem')
-    ]);
-
-    if (prodRes.data) setProdutos(prodRes.data);
-    if (servRes.data) setServicos(servRes.data);
-    if (assRes.data) setAssinaturas(assRes.data);
-    if (catRes.data) setCategorias(catRes.data);
-    setIsLoading(false);
   };
 
   const fetchCart = async () => {
