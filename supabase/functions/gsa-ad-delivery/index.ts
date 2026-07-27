@@ -146,8 +146,7 @@ export async function handleRequest(request: Request) {
       });
     }
   } catch (error) {
-    console.error('Ad delivery rate limiting unavailable', error);
-    return json(503, { error: 'rate_limit_unavailable' }, origin);
+    console.warn('Ad delivery rate limiting unavailable, proceeding without limit:', error);
   }
 
   if (action === 'serve') {
