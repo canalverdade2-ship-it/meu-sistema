@@ -24,6 +24,13 @@ export async function callClientRpc<T = unknown>(
     ...parameters,
   });
 
-  if (error) throw error;
+  if (error) {
+    const msg = String(error.message || '').toLowerCase();
+    if (msg.includes('invalida ou expirada') || msg.includes('inválida ou expirada')) {
+      void sessionService.endSession();
+      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gsa-session-revoked'));
+    }
+    throw error;
+  }
   return data as T;
 }
