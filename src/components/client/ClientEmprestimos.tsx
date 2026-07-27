@@ -108,6 +108,9 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
     return () => { supabase.removeChannel(channel); };
   }, [clientId, selected]);
 
+  const handleFinishEmprestimo = async () => {
+    if (isSolicitando) return;
+    setIsSolicitando(true);
     try {
       // Upload de documentos
       const uploadedDocs: { tipo: string; nome: string; url: string }[] = [];
