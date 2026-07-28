@@ -50,9 +50,11 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
   const [categorias, setCategorias] = useState<any[]>([]);
 
   useEffect(() => {
+    let isMounted = true;
     supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['assinatura', 'todos']).order('ordem').then(({data}) => {
-      if (data) setCategorias(data);
+      if (isMounted && data) setCategorias(data);
     });
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {
@@ -116,7 +118,7 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 };
 
-const fetchAssinaturas = async () => {
+const fetchAssinaturas = async (isMounted = { current: true }) => {
     let query = supabase
       .from('assinaturas')
       .select('*')
@@ -134,7 +136,7 @@ const fetchAssinaturas = async () => {
     }
 
     const { data } = await query.order('codigo_assinatura', { ascending: false });
-    if (data) setAssinaturas(data);
+    if (isMounted.current && data) setAssinaturas(data);
   };
 
 const handleCreate = async (formData: any) => {
@@ -533,7 +535,7 @@ return (
                   <p className="text-xs font-bold text-neutral-400 uppercase mb-4">Galeria de Imagens</p>
                   <div className="grid grid-cols-5 gap-3">
                     {mapColumnsToGallery(selectedAssinatura).map((url, idx) => (
-                      <div key={idx} className="aspect-square rounded-xl border border-neutral-200 bg-neutral-50 overflow-hidden flex items-center justify-center">
+                      <div key={url} className="aspect-square rounded-xl border border-neutral-200 bg-neutral-50 overflow-hidden flex items-center justify-center">
                         <img src={url} alt="" className="w-full h-full object-contain" />
                       </div>
                     ))}
@@ -819,7 +821,7 @@ const removeGalleryImage = (index: number) => {
         
         <div className="grid grid-cols-5 gap-3">
           {formData.imagens_adicionais.map((url, index) => (
-            <div key={index} className="relative aspect-square bg-white rounded-xl overflow-hidden group border border-neutral-200 flex items-center justify-center">
+            <div key={url} className="relative aspect-square bg-white rounded-xl overflow-hidden group border border-neutral-200 flex items-center justify-center">
               <img src={url} alt="" className="w-full h-full object-contain" />
               <button 
                 type="button"

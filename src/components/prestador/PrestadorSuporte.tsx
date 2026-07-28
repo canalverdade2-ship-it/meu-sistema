@@ -47,7 +47,7 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
   const [submitting, setSubmitting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const loadTickets = async () => {
+  const loadTickets = async (getIsMounted?: () => boolean) => {
     try {
       let query = supabase
         .from('tickets')
@@ -58,8 +58,8 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
         .limit(100);
       if (error) throw error;
       const rows = (data || []) as ProviderTicket[];
-      setTickets(rows);
-      if (initialItemId) {
+      if (!getIsMounted || getIsMounted()) setTickets(rows);
+      if (initialItemId && (!getIsMounted || getIsMounted())) {
         const target = rows.find((item) => item.id === initialItemId);
         if (target) {
           setActiveTab(target.status);
@@ -67,9 +67,9 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
         }
       }
     } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível carregar os atendimentos.');
+      if (!getIsMounted || getIsMounted()) toast.error(error?.message || 'Não foi possível carregar os atendimentos.');
     } finally {
-      setLoading(false);
+      if (!getIsMounted || getIsMounted()) setLoading(false);
     }
   };
 
@@ -92,11 +92,12 @@ export function PrestadorSuporte({ prestadorId, initialItemId }: { prestadorId: 
   };
 
   useEffect(() => {
-    void loadTickets();
+    let isMounted = true;
+    void loadTickets(() => isMounted);
     const channel = supabase.channel(`provider-tickets-${prestadorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, () => void loadTickets())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, () => void loadTickets(() => isMounted))
       .subscribe();
-    return () => { supabase.removeChannel(channel).catch(console.error); };
+    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };
   }, [activeTab, prestadorId, initialItemId]);
 
   useEffect(() => {

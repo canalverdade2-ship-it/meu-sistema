@@ -34,7 +34,7 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
   const [progress, setProgress] = useState(0);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = async (getIsMounted?: () => boolean) => {
     try {
       const { data, error } = await supabase
         .from('prestador_documentos')
@@ -43,20 +43,21 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;
-      setDocuments((data || []) as ProviderDocument[]);
+      if (!getIsMounted || getIsMounted()) setDocuments((data || []) as ProviderDocument[]);
     } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível carregar os documentos.');
+      if (!getIsMounted || getIsMounted()) toast.error(error?.message || 'Não foi possível carregar os documentos.');
     } finally {
-      setLoading(false);
+      if (!getIsMounted || getIsMounted()) setLoading(false);
     }
   };
 
   useEffect(() => {
-    void load();
+    let isMounted = true;
+    void load(() => isMounted);
     const channel = supabase.channel(`provider-documents-${prestadorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))
       .subscribe();
-    return () => { supabase.removeChannel(channel).catch(console.error); };
+    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };
   }, [prestadorId]);
 
   useEffect(() => {
@@ -120,12 +121,17 @@ export function PrestadorDocumentos({ prestadorId, initialItemId }: { prestadorI
     }
   };
 
+  const [isViewing, setIsViewing] = useState(false);
   const view = async (reference: string, name: string) => {
+    if (isViewing) return;
+    setIsViewing(true);
     try {
       const signedUrl = await resolveProviderFileUrl(reference);
       openFile(signedUrl, name);
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível abrir o arquivo.');
+    } finally {
+      setIsViewing(false);
     }
   };
 

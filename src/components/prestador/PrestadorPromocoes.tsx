@@ -28,7 +28,7 @@ export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = async (getIsMounted?: () => boolean) => {
     try {
       const [promotionResult, activationResult] = await Promise.all([
         supabase.from('prestador_promocoes').select('id,titulo,descricao,regras,status,data_inicio,data_fim,created_at').order('created_at', { ascending: false }).limit(100),
@@ -36,22 +36,25 @@ export function PrestadorPromocoes({ prestadorId, initialItemId }: { prestadorId
       ]);
       if (promotionResult.error) throw promotionResult.error;
       if (activationResult.error) throw activationResult.error;
-      setPromotions((promotionResult.data || []) as Promotion[]);
-      setActivations((activationResult.data || []) as Activation[]);
+      if (!getIsMounted || getIsMounted()) {
+        setPromotions((promotionResult.data || []) as Promotion[]);
+        setActivations((activationResult.data || []) as Activation[]);
+      }
     } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível carregar as promoções.');
+      if (!getIsMounted || getIsMounted()) toast.error(error?.message || 'Não foi possível carregar as promoções.');
     } finally {
-      setLoading(false);
+      if (!getIsMounted || getIsMounted()) setLoading(false);
     }
   };
 
   useEffect(() => {
-    void load();
+    let isMounted = true;
+    void load(() => isMounted);
     const channel = supabase.channel(`provider-promotions-${prestadorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load(() => isMounted))
       .subscribe();
-    return () => { supabase.removeChannel(channel).catch(console.error); };
+    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };
   }, [prestadorId]);
 
   useEffect(() => {

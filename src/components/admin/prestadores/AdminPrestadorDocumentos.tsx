@@ -41,38 +41,44 @@ export function AdminPrestadorDocumentos({
   const [monthFilter, setMonthFilter] = useState<string>('');
 
   useEffect(() => {
-    fetchDocumentos();
+    let isMounted = true;
+    const fetchDocumentosLocal = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('prestador_documentos')
+          .select('*')
+          .eq('prestador_id', prestadorId)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        
+        if (data && isMounted) {
+          let filtered = data;
+          if (monthFilter) {
+            filtered = filtered.filter((d: any) => d.created_at?.startsWith(monthFilter));
+          }
+          setDocumentos(filtered || []);
+        }
+      } catch (e) {
+        console.error(e);
+        toast.error('Erro ao buscar documentos.');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchDocumentosLocal();
+
     const channel = supabase
       .channel('admin-prestador-documentos')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, fetchDocumentos)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, fetchDocumentosLocal)
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [prestadorId, monthFilter]);
-
-  const fetchDocumentos = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('prestador_documentos')
-        .select('*')
-        .eq('prestador_id', prestadorId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
       
-      if (data) {
-        let filtered = data;
-        if (monthFilter) {
-          filtered = filtered.filter((d: any) => d.created_at?.startsWith(monthFilter));
-        }
-        setDocumentos(filtered || []);
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error('Erro ao buscar documentos.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => { 
+      isMounted = false;
+      supabase.removeChannel(channel); 
+    };
+  }, [prestadorId, monthFilter]);
 
   const handleRequestDocument = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,7 +120,7 @@ export function AdminPrestadorDocumentos({
       const urls: string[] = [];
       const actualTipo = uploadData.tipo === 'outro' ? uploadData.outroTipo : uploadData.tipo;
 
-      for (const file of uploadData.files) {
+      const uploadPromises = uploadData.files.map(async (file) => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${uploadData.tipo}-admin-${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
         const filePath = `${prestadorId}/${fileName}`;
@@ -123,8 +129,11 @@ export function AdminPrestadorDocumentos({
         if (uploadError) throw uploadError;
 
         const { data: publicUrlData } = supabase.storage.from('documentos_prestador').getPublicUrl(filePath);
-        urls.push(publicUrlData.publicUrl);
-      }
+        return publicUrlData.publicUrl;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      urls.push(...uploadedUrls);
 
       const { error: insertError } = await supabase.from('prestador_documentos').insert([{
         prestador_id: prestadorId,
@@ -192,22 +201,23 @@ export function AdminPrestadorDocumentos({
     if (!canProceed) return;
 
     if (!confirm(`Excluir ${nome}?`)) return;
+    setActionLoading(true);
     try {
       setDocumentos(prev => prev.filter(doc => doc.id !== id));
       
       if (urls && Array.isArray(urls)) {
-        for (const url of urls) {
+        const deletePaths = urls.map(url => {
           try {
             const urlObj = new URL(url);
             const pathSegments = urlObj.pathname.split('/');
-            const storagePath = pathSegments.slice(pathSegments.indexOf('documentos_prestador') + 1).join('/');
-            
-            if (storagePath) {
-              await supabase.storage.from('documentos_prestador').remove([storagePath]);
-            }
-          } catch (storageErr) {
-            console.error('Erro ao excluir arquivo do storage:', storageErr);
+            return pathSegments.slice(pathSegments.indexOf('documentos_prestador') + 1).join('/');
+          } catch {
+            return null;
           }
+        }).filter(Boolean) as string[];
+
+        if (deletePaths.length > 0) {
+          await supabase.storage.from('documentos_prestador').remove(deletePaths);
         }
       }
 
@@ -230,6 +240,8 @@ export function AdminPrestadorDocumentos({
       });
     } catch (e) {
       toast.error('Erro ao excluir.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -259,10 +271,10 @@ export function AdminPrestadorDocumentos({
         </div>
         
         <div className="flex gap-2">
-          <button onClick={() => setIsRequestModalOpen(true)} className="btn-secondary text-indigo-600 bg-indigo-50 border-none px-3 py-1.5 h-auto text-xs">
+          <button onClick={() => setIsRequestModalOpen(true)} disabled={actionLoading} className="btn-secondary text-indigo-600 bg-indigo-50 border-none px-3 py-1.5 h-auto text-xs disabled:opacity-50">
             <Plus className="w-4 h-4 mr-1" /> Requisitar
           </button>
-          <button onClick={() => setIsUploadModalOpen(true)} className="btn-secondary text-emerald-600 bg-emerald-50 border-none px-3 py-1.5 h-auto text-xs">
+          <button onClick={() => setIsUploadModalOpen(true)} disabled={actionLoading} className="btn-secondary text-emerald-600 bg-emerald-50 border-none px-3 py-1.5 h-auto text-xs disabled:opacity-50">
             <Upload className="w-4 h-4 mr-1" /> Envio Direto
           </button>
         </div>
@@ -309,12 +321,12 @@ export function AdminPrestadorDocumentos({
 
               {doc.status === 'em_analise' && (
                 <div className="flex items-center gap-1 border-l pl-3 ml-1 border-neutral-200">
-                  <button onClick={() => updateStatus(doc.id, 'aprovado')} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded" title="Aprovar"><CheckCircle className="w-5 h-5"/></button>
-                  <button onClick={() => { setSelectedDocId(doc.id); setIsRejectModalOpen(true); }} className="p-1 text-red-600 hover:bg-red-50 rounded" title="Reprovar"><XCircle className="w-5 h-5"/></button>
+                  <button onClick={() => updateStatus(doc.id, 'aprovado')} disabled={actionLoading} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded disabled:opacity-50" title="Aprovar"><CheckCircle className="w-5 h-5"/></button>
+                  <button onClick={() => { setSelectedDocId(doc.id); setIsRejectModalOpen(true); }} disabled={actionLoading} className="p-1 text-red-600 hover:bg-red-50 rounded disabled:opacity-50" title="Reprovar"><XCircle className="w-5 h-5"/></button>
                 </div>
               )}
 
-              <button onClick={() => handleDelete(doc.id, doc.nome, doc.urls)} className="p-1 text-neutral-400 hover:text-red-600 ml-2" title="Excluir"><Trash2 className="w-4 h-4"/></button>
+              <button onClick={() => handleDelete(doc.id, doc.nome, doc.urls)} disabled={actionLoading} className="p-1 text-neutral-400 hover:text-red-600 ml-2 disabled:opacity-50" title="Excluir"><Trash2 className="w-4 h-4"/></button>
               
               {prestadorTelefone && (
                  <div className="border-l pl-3 ml-1 border-neutral-200 scale-90 origin-right">

@@ -26,7 +26,7 @@ export function PrestadorVouchers({ prestadorId, initialItemId }: { prestadorId:
   const [submitting, setSubmitting] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = async (getIsMounted?: () => boolean) => {
     try {
       const { data, error } = await supabase
         .from('prestador_vouchers')
@@ -35,20 +35,21 @@ export function PrestadorVouchers({ prestadorId, initialItemId }: { prestadorId:
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;
-      setVouchers((data || []) as Voucher[]);
+      if (!getIsMounted || getIsMounted()) setVouchers((data || []) as Voucher[]);
     } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível carregar os vouchers.');
+      if (!getIsMounted || getIsMounted()) toast.error(error?.message || 'Não foi possível carregar os vouchers.');
     } finally {
-      setLoading(false);
+      if (!getIsMounted || getIsMounted()) setLoading(false);
     }
   };
 
   useEffect(() => {
-    void load();
+    let isMounted = true;
+    void load(() => isMounted);
     const channel = supabase.channel(`provider-vouchers-${prestadorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, () => void load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))
       .subscribe();
-    return () => { supabase.removeChannel(channel).catch(console.error); };
+    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };
   }, [prestadorId]);
 
   useEffect(() => {

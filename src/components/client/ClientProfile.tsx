@@ -141,8 +141,34 @@ export function ClientProfile({
   const [selectedDocToUpload, setSelectedDocToUpload] = useState<Documento | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [highlightedDocId, setHighlightedDocId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    const fetchDocumentos = async () => {
+      try {
+        if (isMounted) setDocsLoading(true);
+        let query = supabase
+          .from('cliente_documentos')
+          .select('*')
+          .eq('cliente_id', cliente.id)
+          .order('created_at', { ascending: false });
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        let filtered = (data || []) as Documento[];
+        if (monthFilter) {
+          filtered = filtered.filter(doc => doc.created_at.startsWith(monthFilter));
+        }
+        if (isMounted) setDocumentos(filtered);
+      } catch (err) {
+        console.error('Erro ao buscar documentos:', err);
+      } finally {
+        if (isMounted) setDocsLoading(false);
+      }
+    };
+
     fetchDocumentos();
 
     const channel = supabase
@@ -157,7 +183,10 @@ export function ClientProfile({
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      isMounted = false;
+      supabase.removeChannel(channel); 
+    };
   }, [cliente.id, monthFilter]);
 
   // Scroll to specific document if initialItemId is a doc
@@ -179,30 +208,7 @@ export function ClientProfile({
     }
   }, [initialItemId, documentos.length]);
 
-  const fetchDocumentos = async () => {
-    try {
-      setDocsLoading(true);
-      let query = supabase
-        .from('cliente_documentos')
-        .select('*')
-        .eq('cliente_id', cliente.id)
-        .order('created_at', { ascending: false });
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      let filtered = (data || []) as Documento[];
-      if (monthFilter) {
-        filtered = filtered.filter(doc => doc.created_at.startsWith(monthFilter));
-      }
-      setDocumentos(filtered);
-    } catch (err) {
-      console.error('Erro ao buscar documentos:', err);
-    } finally {
-      setDocsLoading(false);
-    }
-  };
-
+  // fetchDocumentos was moved into useEffect to fix race condition
   // ── Perfil handlers ──────────────────────────────────────────────────────────
   const handleEdit = (label: string, value: string) => {
     setEditingField({ label, value });
@@ -226,12 +232,17 @@ export function ClientProfile({
   };
 
   const handleConfirm = async () => {
-    if (!editingField || !newValue || !motivo) return;
-    const assunto = `Solicitação de alteração: ${editingField.label}`;
-    const descricao = `O cliente solicitou a alteração do campo "${editingField.label}".\n\nValor atual: ${editingField.value}\nNovo valor solicitado: ${newValue}\nMotivo: ${motivo}\n\nPrazo de retorno: até 48 horas.`;
-    await onOpenTicket(assunto, descricao);
-    setIsModalOpen(false);
-    toast.success('Solicitação de alteração enviada com sucesso! Um ticket foi aberto.');
+    if (!editingField || !newValue || !motivo || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const assunto = `Solicitação de alteração: ${editingField.label}`;
+      const descricao = `O cliente solicitou a alteração do campo "${editingField.label}".\n\nValor atual: ${editingField.value}\nNovo valor solicitado: ${newValue}\nMotivo: ${motivo}\n\nPrazo de retorno: até 48 horas.`;
+      await onOpenTicket(assunto, descricao);
+      setIsModalOpen(false);
+      toast.success('Solicitação de alteração enviada com sucesso! Um ticket foi aberto.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetPinModal = () => {
@@ -325,16 +336,21 @@ export function ClientProfile({
   };
 
   const handleRequestDelete = async () => {
-    if (!deleteReason.trim()) {
-      toast.error('Por favor, informe o motivo.');
+    if (!deleteReason.trim() || isSubmitting) {
+      if (!deleteReason.trim()) toast.error('Por favor, informe o motivo.');
       return;
     }
-    const assunto = `Solicitação de Exclusão de Conta`;
-    const descricao = `O cliente solicitou a EXCLUSÃO PERMANENTE da conta.\n\nMotivo informado:\n${deleteReason}\n\nA solicitação entrou em análise pelo sistema (prazo: 3 dias úteis).`;
-    await onOpenTicket(assunto, descricao);
-    setIsDeleteModalOpen(false);
-    setDeleteReason('');
-    toast.success('Solicitação de exclusão enviada! Retornaremos em até 3 dias úteis.');
+    setIsSubmitting(true);
+    try {
+      const assunto = `Solicitação de Exclusão de Conta`;
+      const descricao = `O cliente solicitou a EXCLUSÃO PERMANENTE da conta.\n\nMotivo informado:\n${deleteReason}\n\nA solicitação entrou em análise pelo sistema (prazo: 3 dias úteis).`;
+      await onOpenTicket(assunto, descricao);
+      setIsDeleteModalOpen(false);
+      setDeleteReason('');
+      toast.success('Solicitação de exclusão enviada! Retornaremos em até 3 dias úteis.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // ── Documentos handlers ──────────────────────────────────────────────────────
@@ -850,9 +866,10 @@ export function ClientProfile({
           />
           <button
             onClick={handleConfirm}
-            className="w-full rounded-xl bg-indigo-600 py-3 font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-indigo-600 py-3 font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50"
           >
-            Confirmar Alteração
+            {isSubmitting ? 'Enviando...' : 'Confirmar Alteração'}
           </button>
         </div>
       </Modal>
@@ -916,10 +933,10 @@ export function ClientProfile({
             <button onClick={() => setIsDeleteModalOpen(false)} className="btn-secondary flex-1">Cancelar</button>
             <button
               onClick={handleRequestDelete}
-              disabled={!deleteReason.trim()}
+              disabled={!deleteReason.trim() || isSubmitting}
               className="btn-primary flex-1 bg-red-600 hover:bg-red-700 shadow-red-600/20 disabled:bg-red-300 disabled:shadow-none"
             >
-              Confirmar Solicitação
+              {isSubmitting ? 'Enviando...' : 'Confirmar Solicitação'}
             </button>
           </div>
         </div>
