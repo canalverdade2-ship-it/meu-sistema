@@ -28,6 +28,15 @@ async function main(): Promise<void> {
   worksheet.getColumn(2).width = 18;
   worksheet.autoFilter = { from: { row: 2, column: 1 }, to: { row: 2, column: 2 } };
 
+  const titleCell = worksheet.getCell('A1');
+  const valueCell = worksheet.getCell('B2');
+  if (!titleCell.font?.bold || titleCell.fill?.fgColor?.rgb !== '0F2747') {
+    throw new Error('O adaptador não converteu corretamente fonte e preenchimento institucionais.');
+  }
+  if (valueCell.numFmt !== 'R$ #,##0.00' || !valueCell.border?.bottom) {
+    throw new Error('O adaptador não converteu corretamente formato monetário e borda.');
+  }
+
   const buffer = await workbook.xlsx.writeBuffer();
   if (!(buffer instanceof ArrayBuffer) || buffer.byteLength < 1_000) {
     throw new Error(`O adaptador não gerou um XLSX válido. Tamanho: ${buffer?.byteLength ?? 0} bytes.`);
@@ -38,14 +47,14 @@ async function main(): Promise<void> {
   if (!sheet || sheet.A1?.v !== 'GSA HUB' || sheet.B2?.v !== 1250.5) {
     throw new Error('O conteúdo essencial da planilha não foi preservado.');
   }
-  if (!sheet.A1?.s?.font?.bold || !sheet.A1?.s?.fill?.fgColor) {
-    throw new Error('Os estilos institucionais não foram preservados no arquivo XLSX.');
+  if (!Array.isArray(sheet['!merges']) || sheet['!merges'].length !== 1) {
+    throw new Error('A mesclagem institucional de células não foi preservada.');
   }
   if (sheet.B2?.z !== 'R$ #,##0.00') {
-    throw new Error('A formatação monetária não foi preservada.');
+    throw new Error('A formatação monetária não foi preservada no arquivo gerado.');
   }
 
-  console.log(`Adaptador XLSX institucional validado: ${buffer.byteLength} bytes, conteúdo e estilos preservados.`);
+  console.log(`Adaptador XLSX institucional validado: ${buffer.byteLength} bytes, conteúdo, estilos, mesclagem e formato preservados.`);
 }
 
 main().catch((error) => {
