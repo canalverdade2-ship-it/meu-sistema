@@ -40,8 +40,24 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
-      - name: Validar contratos
+      - name: Validar contratos institucionais
         run: node scripts/check-institutional-file-exports.mjs
+
+      - name: Validar contratos das calculadoras
+        run: npm run test:free-tools
+
+      - name: Validar sintaxe dos componentes alterados
+        run: >-
+          npx esbuild
+          src/components/admin/FiscalModule.tsx
+          src/components/admin/demandas/DemandasTabela.tsx
+          src/components/admin/relatorios/Relatorio*.tsx
+          src/components/client/financeiro/NotasFiscaisList.tsx
+          --outdir=/tmp/institutional-file-syntax
+          --format=esm
+          --platform=browser
+          --jsx=automatic
+          --log-level=warning
 
       - name: Validar TypeScript isolado
         run: >-
