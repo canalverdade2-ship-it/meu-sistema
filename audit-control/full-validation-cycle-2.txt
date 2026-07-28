@@ -1,0 +1,1 @@
+Segunda validação integral após correções de dependências, CORS, contratos lazy e diálogos acessíveis.
