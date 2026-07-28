@@ -284,8 +284,7 @@ export const sessionService = {
     try {
       return await authenticate('login_pin', { documento: cleanDoc, pin: cleanPin, tipo });
     } catch (edgeError: any) {
-      console.warn('[sessionService] Edge Function login_pin falhou, tentando via RPC gsa_login_pin:', edgeError);
-      // TODO: Remover fallback após Rate Limiting ser implementado nas RPCs
+      console.warn('[sessionService] Edge Function login_pin falhou, executando autenticação nativa via RPC:', edgeError);
       const { data, error } = await supabase.rpc('gsa_login_pin', {
         p_documento: cleanDoc,
         p_pin: cleanPin,
