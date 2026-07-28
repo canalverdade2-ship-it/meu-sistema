@@ -25,10 +25,19 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+
+      - name: Instalar dependências
+        run: npm ci
 
       - name: Aplicar e persistir correção de autenticação
         shell: bash
