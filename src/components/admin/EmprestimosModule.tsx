@@ -208,7 +208,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
         `Voce recebeu uma nova mensagem referente ao emprestimo ${selected.codigo_emprestimo}.`,
         'emprestimos',
         'propostas',
-        selected.id
+        { itemId: selected.id }
       );
 
       const { data } = await supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', selected.id).order('created_at');
