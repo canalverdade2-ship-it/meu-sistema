@@ -315,12 +315,15 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
 
   const fetchSaques = async () => {
     setLoadingSaques(true);
-    const { data } = await supabase
-      .from('saques')
-      .select('*, clientes(id, nome, codigo_cliente, cpf, saldo_carteira)')
-      .order('data_solicitacao', { ascending: false });
-    if (data) setSaques(data as any);
-    setLoadingSaques(false);
+    try {
+      const { data } = await supabase
+        .from('saques')
+        .select('*, clientes(id, nome, codigo_cliente, cpf, saldo_carteira)')
+        .order('data_solicitacao', { ascending: false });
+      if (data) setSaques(data as any);
+    } finally {
+      setLoadingSaques(false);
+    }
   };
 
   const fetchTransferencias = async (currentSearch: string = searchRef.current) => {
