@@ -134,7 +134,7 @@ export function AffiliateAdminModule() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedAffiliate, setSelectedAffiliate] = useState<AffiliateRecord | null>(null);
-  const [activeSummaryModal, setActiveSummaryModal] = useState<'carencia' | 'disponivel' | null>(null);
+  const [activeSummaryModal, setActiveSummaryModal] = useState<'carencia' | 'disponivel' | 'vendas' | null>(null);
   const [isEditingAffiliate, setIsEditingAffiliate] = useState(false);
   const [editAffiliateForm, setEditAffiliateForm] = useState({
     nome_divulgacao: '',
@@ -281,7 +281,7 @@ export function AffiliateAdminModule() {
 
   const cards = [
     { label: 'Afiliados ativos', value: snapshot.summary.afiliados_ativos.toLocaleString('pt-BR'), icon: Users, color: 'text-indigo-600 bg-indigo-50', modalType: null },
-    { label: 'Vendas atribuídas', value: snapshot.summary.vendas_atribuidas.toLocaleString('pt-BR'), icon: Link2, color: 'text-sky-600 bg-sky-50', modalType: null },
+    { label: 'Vendas atribuídas', value: snapshot.summary.vendas_atribuidas.toLocaleString('pt-BR'), icon: Link2, color: 'text-sky-600 bg-sky-50', modalType: 'vendas' as const },
     { label: 'Em carência', value: formatCurrency(snapshot.summary.comissoes_pendentes), icon: Clock3, color: 'text-amber-600 bg-amber-50', modalType: 'carencia' as const },
     { label: 'Disponível', value: formatCurrency(snapshot.summary.comissoes_disponiveis), icon: Banknote, color: 'text-emerald-600 bg-emerald-50', modalType: 'disponivel' as const },
   ];
@@ -630,37 +630,53 @@ export function AffiliateAdminModule() {
         )}
       </Modal>
 
-      {/* Modal de Resumo por Categoria (Em Carência / Disponível) */}
+      {/* Modal de Resumo por Categoria (Em Carência / Disponível / Vendas Atribuídas) */}
       <Modal
         isOpen={Boolean(activeSummaryModal)}
         onClose={() => setActiveSummaryModal(null)}
-        title={activeSummaryModal === 'carencia' ? "Afiliados com Comissões em Carência" : "Afiliados com Saldo Disponível"}
+        title={
+          activeSummaryModal === 'carencia'
+            ? "Afiliados com Comissões em Carência"
+            : activeSummaryModal === 'disponivel'
+            ? "Afiliados com Saldo Disponível"
+            : "Afiliados com Vendas Atribuídas"
+        }
         size="xl"
       >
         {activeSummaryModal && (
           <div className="space-y-4">
             <div className={`rounded-2xl border p-4.5 ${
-              activeSummaryModal === 'carencia' ? 'bg-amber-50/70 border-amber-200 text-amber-950' : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+              activeSummaryModal === 'carencia' 
+                ? 'bg-amber-50/70 border-amber-200 text-amber-950' 
+                : activeSummaryModal === 'disponivel'
+                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                : 'bg-sky-50/70 border-sky-200 text-sky-950'
             }`}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h4 className="font-black text-base">
-                    {activeSummaryModal === 'carencia' ? 'Relatório de Carência (Comissões Pendentes)' : 'Relatório de Saldo Disponível para Saque'}
+                    {activeSummaryModal === 'carencia'
+                      ? 'Relatório de Carência (Comissões Pendentes)'
+                      : activeSummaryModal === 'disponivel'
+                      ? 'Relatório de Saldo Disponível para Saque'
+                      : 'Relatório de Vendas Atribuídas aos Afiliados'}
                   </h4>
                   <p className="text-xs font-medium mt-0.5 opacity-80">
                     {activeSummaryModal === 'carencia'
                       ? 'Listagem de afiliados que possuem valores em período de retenção temporária (carência).'
-                      : 'Listagem de afiliados que possuem saldo acumulado liberado para resgate via PIX.'}
+                      : activeSummaryModal === 'disponivel'
+                      ? 'Listagem de afiliados que possuem saldo acumulado liberado para resgate via PIX.'
+                      : 'Listagem de afiliados que geraram vendas e conversões confirmadas na plataforma.'}
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] font-black uppercase tracking-wider block opacity-70">Total Acumulado</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider block opacity-70">Total</span>
                   <strong className="text-xl font-black">
-                    {formatCurrency(
-                      activeSummaryModal === 'carencia'
-                        ? snapshot.summary.comissoes_pendentes
-                        : snapshot.summary.comissoes_disponiveis
-                    )}
+                    {activeSummaryModal === 'carencia'
+                      ? formatCurrency(snapshot.summary.comissoes_pendentes)
+                      : activeSummaryModal === 'disponivel'
+                      ? formatCurrency(snapshot.summary.comissoes_disponiveis)
+                      : `${snapshot.summary.vendas_atribuidas.toLocaleString('pt-BR')} Vendas`}
                   </strong>
                 </div>
               </div>
@@ -673,10 +689,11 @@ export function AffiliateAdminModule() {
                   .filter((aff) =>
                     activeSummaryModal === 'carencia'
                       ? number(aff.comissao_pendente) > 0
-                      : number(aff.saldo_disponivel) > 0
+                      : activeSummaryModal === 'disponivel'
+                      ? number(aff.saldo_disponivel) > 0
+                      : number(aff.conversoes) > 0
                   )
                   .map((aff) => {
-                    const valor = activeSummaryModal === 'carencia' ? number(aff.comissao_pendente) : number(aff.saldo_disponivel);
                     return (
                       <div key={aff.id} className="flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-neutral-50/80 transition-colors">
                         <div>
@@ -694,12 +711,24 @@ export function AffiliateAdminModule() {
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
-                              {activeSummaryModal === 'carencia' ? 'Em carência' : 'Disponível'}
+                              {activeSummaryModal === 'carencia' 
+                                ? 'Em carência' 
+                                : activeSummaryModal === 'disponivel' 
+                                ? 'Disponível' 
+                                : 'Vendas Atribuídas'}
                             </span>
                             <strong className={`text-base font-black ${
-                              activeSummaryModal === 'carencia' ? 'text-amber-600' : 'text-emerald-600'
+                              activeSummaryModal === 'carencia' 
+                                ? 'text-amber-600' 
+                                : activeSummaryModal === 'disponivel' 
+                                ? 'text-emerald-600'
+                                : 'text-sky-600'
                             }`}>
-                              {formatCurrency(valor)}
+                              {activeSummaryModal === 'carencia'
+                                ? formatCurrency(number(aff.comissao_pendente))
+                                : activeSummaryModal === 'disponivel'
+                                ? formatCurrency(number(aff.saldo_disponivel))
+                                : `${number(aff.conversoes).toLocaleString('pt-BR')} Vendas (${formatCurrency(number(aff.comissao_total))})`}
                             </strong>
                           </div>
                           <button
@@ -720,10 +749,18 @@ export function AffiliateAdminModule() {
                 {snapshot.affiliates.filter((aff) =>
                   activeSummaryModal === 'carencia'
                     ? number(aff.comissao_pendente) > 0
-                    : number(aff.saldo_disponivel) > 0
+                    : activeSummaryModal === 'disponivel'
+                    ? number(aff.saldo_disponivel) > 0
+                    : number(aff.conversoes) > 0
                 ).length === 0 && (
                   <div className="p-8 text-center text-sm font-bold text-neutral-400">
-                    Nenhum afiliado possui valor {activeSummaryModal === 'carencia' ? 'em carência' : 'disponível'} no momento.
+                    Nenhum afiliado possui {
+                      activeSummaryModal === 'carencia' 
+                        ? 'valor em carência' 
+                        : activeSummaryModal === 'disponivel' 
+                        ? 'valor disponível'
+                        : 'vendas atribuídas'
+                    } no momento.
                   </div>
                 )}
               </div>
