@@ -46,15 +46,14 @@ jobs:
           git apply --check /tmp/personality-complete.patch
           git apply /tmp/personality-complete.patch
 
-      - name: Remove temporary delivery files
+      - name: Prepare source-only commit
         shell: bash
         run: |
           set -euo pipefail
+          rm -f .github/workflows/page-personality-quality.yml
           rm -f .github/patches/personality-complete.patch.gz.b64
           rm -f .github/patches/personality-complete.part*
           rm -f .github/patches/apply.trigger
-          rm -f .github/workflows/apply-personality-patch.yml
-          rm -f .github/workflows/workspace-export.yml
           rmdir .github/patches 2>/dev/null || true
 
       - name: Validate personality contracts
