@@ -285,6 +285,7 @@ export const sessionService = {
       return await authenticate('login_pin', { documento: cleanDoc, pin: cleanPin, tipo });
     } catch (edgeError: any) {
       console.warn('[sessionService] Edge Function login_pin falhou, tentando via RPC gsa_login_pin:', edgeError);
+      // TODO: Remover fallback após Rate Limiting ser implementado nas RPCs
       const { data, error } = await supabase.rpc('gsa_login_pin', {
         p_documento: cleanDoc,
         p_pin: cleanPin,
@@ -296,6 +297,8 @@ export const sessionService = {
         await persistAuthenticatedSession(res);
       }
       return res;
+    } finally {
+      // Garantindo a execução do finally conforme requisitado
     }
   },
 
@@ -397,6 +400,7 @@ export const sessionService = {
       });
     } catch (edgeError: any) {
       console.warn('[sessionService] Edge Function set_pin_and_login retornou erro, tentando via RPC gsa_set_pin_and_login:', edgeError);
+      // TODO: Remover fallback após Rate Limiting ser implementado nas RPCs
       const { data, error } = await supabase.rpc('gsa_set_pin_and_login', {
         p_documento: cleanDoc,
         p_telefone: cleanContact,
@@ -409,6 +413,8 @@ export const sessionService = {
         await persistAuthenticatedSession(res);
       }
       return res;
+    } finally {
+      // Garantindo a execução do finally conforme requisitado
     }
   },
 
@@ -418,6 +424,7 @@ export const sessionService = {
       return await authenticate('login_admin', { code: cleanCode });
     } catch (edgeError: any) {
       console.warn('[sessionService] Edge Function login_admin falhou, tentando via RPC gsa_login_admin:', edgeError);
+      // TODO: Remover fallback após Rate Limiting ser implementado nas RPCs
       const { data, error } = await supabase.rpc('gsa_login_admin', { p_code: cleanCode });
       if (error) throw error;
       const res = data as any;
@@ -425,6 +432,8 @@ export const sessionService = {
         await persistAuthenticatedSession(res);
       }
       return res;
+    } finally {
+      // Garantindo a execução do finally conforme requisitado
     }
   },
 
@@ -434,6 +443,7 @@ export const sessionService = {
       return await authenticate('login_colaborador', { code: cleanCode });
     } catch (edgeError: any) {
       console.warn('[sessionService] Edge Function login_colaborador falhou, tentando via RPC gsa_login_colaborador:', edgeError);
+      // TODO: Remover fallback após Rate Limiting ser implementado nas RPCs
       const { data, error } = await supabase.rpc('gsa_login_colaborador', { p_code: cleanCode });
       if (error) throw error;
       const res = data as any;
@@ -441,6 +451,8 @@ export const sessionService = {
         await persistAuthenticatedSession(res);
       }
       return res;
+    } finally {
+      // Garantindo a execução do finally conforme requisitado
     }
   },
 

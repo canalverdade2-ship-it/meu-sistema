@@ -23,7 +23,7 @@ export function FileViewerModal({ isOpen, onClose, fileUrl, fileName }: FileView
 
   const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i) || fileName?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
   const isPdf = fileUrl.match(/\.pdf(\?.*)?$/i) || fileName?.match(/\.pdf$/i);
-  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.5));

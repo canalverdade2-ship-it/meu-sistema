@@ -221,13 +221,17 @@ export function SiteCampaignLayer({ page, audience, actorId }: SiteCampaignLayer
   useEffect(() => {
     if (!modalCampaign) return;
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    if (previousOverflow !== 'hidden') {
+      document.body.style.overflow = 'hidden';
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && modalCampaign.dismissible && modalCampaign.dismiss_on_escape) close(modalCampaign);
     };
     document.addEventListener('keydown', onKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      if (previousOverflow !== 'hidden') {
+        document.body.style.overflow = previousOverflow;
+      }
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [close, modalCampaign]);

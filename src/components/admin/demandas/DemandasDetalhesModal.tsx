@@ -73,7 +73,7 @@ export function DemandasDetalhesModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Transfer
-  const [transferTarget, setTransferTarget] = useState<'colaborador' | 'prestador'>('colaborador');
+  const [transferTarget, setTransferTarget] = useState<'colaborador' | 'prestador' | 'admin'>('colaborador');
   const [selectedTargetId, setSelectedTargetId] = useState('');
   const [transferReason, setTransferReason] = useState('');
   const [transferFiles, setTransferFiles] = useState<File[]>([]);

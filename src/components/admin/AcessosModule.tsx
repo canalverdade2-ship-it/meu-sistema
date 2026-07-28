@@ -18,6 +18,8 @@ import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatDateTime } from '../../lib/utils';
 import { useAdminNotifications } from '../../hooks/useAdminNotifications';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 interface Funcao {
   id: string;
@@ -117,6 +119,9 @@ export function AcessosModule(_props: AcessosModuleProps) {
   const [showFunctionModal, setShowFunctionModal] = useState(false);
   const [issuedCredential, setIssuedCredential] = useState<{ nome: string; credential: string } | null>(null);
 
+  const confirmHook = useConfirm();
+  const { confirm } = confirmHook;
+
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
@@ -210,7 +215,7 @@ export function AcessosModule(_props: AcessosModuleProps) {
   };
 
   const rotateCredential = async (collaborator: Colaborador) => {
-    if (!window.confirm(`Gerar uma nova credencial para ${collaborator.nome}? Todas as sessões atuais serão encerradas.`)) return;
+    if (!await confirm({ title: 'Atenção', message: `Gerar uma nova credencial para ${collaborator.nome}? Todas as sessões atuais serão encerradas.` })) return;
     try {
       const result = await callAdminRpc<{ initial_credential: string }>('gsa_admin_rotate_collaborator_credential', {
         p_colaborador_id: collaborator.id,
@@ -226,7 +231,7 @@ export function AcessosModule(_props: AcessosModuleProps) {
     const message = decision === 'aprovar'
       ? `Aprovar a exclusão permanente do registro em ${request.tabela}?`
       : 'Rejeitar esta solicitação de exclusão?';
-    if (!window.confirm(message)) return;
+    if (!await confirm({ title: 'Confirmação', message })) return;
     try {
       await callAdminRpc('gsa_admin_review_deletion_request', {
         p_request_id: request.id,
@@ -395,6 +400,7 @@ export function AcessosModule(_props: AcessosModuleProps) {
           <div className="text-center"><span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700"><KeyRound className="h-7 w-7" /></span><h2 className="mt-4 text-2xl font-black">Credencial de {issuedCredential.nome}</h2><p className="mt-2 text-sm text-neutral-500">Ela é exibida somente agora. Envie por um canal seguro.</p><div className="mt-6 rounded-2xl bg-neutral-950 p-5 font-mono text-xl font-black tracking-widest text-white break-all">{issuedCredential.credential}</div><button type="button" onClick={async () => { await copyToClipboard(issuedCredential.credential); toast.success('Credencial copiada.'); }} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-black text-white"><Copy className="h-4 w-4" /> Copiar credencial</button><button type="button" onClick={() => setIssuedCredential(null)} className="mt-3 w-full rounded-xl border border-neutral-200 px-5 py-3 font-bold">Fechar</button></div>
         </Overlay>
       )}
+      <ConfirmDialog {...confirmHook} />
     </div>
   );
 }
