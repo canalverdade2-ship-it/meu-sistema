@@ -3,55 +3,27 @@ name: Dependency Security
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/workflows/dependency-security.yml
+  schedule:
+    - cron: '17 8 * * 1'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   audit:
-    if: github.head_ref == 'audit/full-system-remediation-continuation-20260727'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
-      - name: Checkout da branch isolada
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Instalar dependências atuais
-        run: npm ci
-      - name: Confirmar que ExcelJS não é usado pelo sistema
-        shell: bash
-        run: |
-          matches=$(grep -RIni --exclude='package.json' --exclude='package-lock.json' --exclude-dir='node_modules' --exclude-dir='.git' 'exceljs' src scripts supabase tests 2>/dev/null || true)
-          if [ -n "$matches" ]; then
-            echo "$matches"
-            echo "ExcelJS ainda é usado e não pode ser removido automaticamente."
-            exit 1
-          fi
-          echo "Nenhum uso de ExcelJS encontrado no código executável ou nos testes."
-      - name: Remover dependência vulnerável sem uso
-        run: npm uninstall exceljs --save
-      - name: Validar segurança e regressão
-        run: |
-          npm audit --audit-level=high
-          npx tsc --noEmit --pretty false
-          npm run test:unit
-          npm run build
-      - name: Persistir remoção validada
-        shell: bash
-        run: |
-          git diff --check
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json
-          if git diff --cached --quiet; then
-            echo "Dependência já removida."
-          else
-            git commit -m "fix(security): remover ExcelJS vulnerável e sem uso"
-            git push origin HEAD:${GITHUB_HEAD_REF}
-          fi
+      - run: npm ci
+      - run: npm audit --audit-level=high
