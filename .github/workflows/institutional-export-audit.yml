@@ -16,7 +16,7 @@ permissions:
 jobs:
   apply-upgrade:
     name: Aplicar migração controlada
-    if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
+    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
