@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Download, RefreshCw, TrendingUp, AlertCircle, Percent, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { formatarMoeda, exportarCSV } from './utils/relatorioExport';
+import { formatarMoeda, exportarExcel } from './utils/relatorioExport';
 
 interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 
@@ -167,7 +167,7 @@ export function RelatorioRentabilidade({ periodo, dataInicio, dataFim }: Props) 
       ? dados.contratos.filter((c:any) => c.data_quitacao?.startsWith(mesSelecionado))
       : dados.contratos;
 
-    exportarCSV(
+    exportarExcel(
       filtrados.map((c: any) => ({
         Tipo: c.tipo,
         Codigo: c.codigo,
@@ -222,7 +222,7 @@ export function RelatorioRentabilidade({ periodo, dataInicio, dataFim }: Props) 
               return <option key={m} value={m}>{mes}/{ano}</option>
             })}
           </select>
-          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>Excel/CSV</button>
+          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>Excel</button>
           <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
         </div>
       </div>

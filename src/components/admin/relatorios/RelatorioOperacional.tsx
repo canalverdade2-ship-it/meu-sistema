@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Download, RefreshCw, Users, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { formatarNumero, getRangeDatas, exportarCSV, formatarData } from './utils/relatorioExport';
+import { formatarNumero, getRangeDatas, exportarExcel, formatarData } from './utils/relatorioExport';
 
 interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 
@@ -61,16 +61,16 @@ export function RelatorioOperacional({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_,i)=><div key={i} className="h-24 bg-neutral-100 rounded-2xl"/>)}</div>;
 
-  const exportarColab = () => exportarCSV((dados?.colab||[]).map((c:any)=>({ nome:c.nome, status:c.status })), 'relatorio_colaboradores');
-  const exportarSol = () => exportarCSV((dados?.solExc||[]).map((s:any)=>({ tabela:s.tabela, status:s.status, data:formatarData(s.created_at) })), 'relatorio_exclusoes');
+  const exportarColab = () => exportarExcel((dados?.colab||[]).map((c:any)=>({ nome:c.nome, status:c.status })), 'relatorio_colaboradores');
+  const exportarSol = () => exportarExcel((dados?.solExc||[]).map((s:any)=>({ tabela:s.tabela, status:s.status, data:formatarData(s.created_at) })), 'relatorio_exclusoes');
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-xl font-black text-neutral-900">Relatório Operacional</h2>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={exportarColab} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all"><Download className="h-3 w-3"/>Colab. CSV</button>
-          <button onClick={exportarSol} className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition-all"><Download className="h-3 w-3"/>Excl. CSV</button>
+          <button onClick={exportarColab} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all"><Download className="h-3 w-3"/>Colab. Excel</button>
+          <button onClick={exportarSol} className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition-all"><Download className="h-3 w-3"/>Excl. Excel</button>
           <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
         </div>
       </div>
