@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { toast } from 'react-hot-toast';
-import { AdminPanel } from './AdminPanel';
+const AdminPanel = lazy(() => import('./AdminPanel').then(m => ({ default: m.AdminPanel })));
 import { callAdminRpc } from '../lib/adminRpc';
 import { supabase } from '../lib/supabase';
 import { sessionService } from '../lib/sessionService';
@@ -134,12 +134,14 @@ export function SecureAdminPanel(props: SecureAdminPanelProps) {
   }
 
   return (
-    <AdminPanel
-      onLogout={props.onLogout}
-      adminType={props.adminType}
-      colaboradorId={props.colaboradorId}
-      colaboradorNomeInicial={name}
-      colaboradorModulos={modules}
-    />
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-neutral-50"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" /></div>}>
+      <AdminPanel
+        onLogout={props.onLogout}
+        adminType={props.adminType}
+        colaboradorId={props.colaboradorId}
+        colaboradorNomeInicial={name}
+        colaboradorModulos={modules}
+      />
+    </Suspense>
   );
 }
