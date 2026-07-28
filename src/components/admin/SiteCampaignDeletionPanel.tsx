@@ -3,6 +3,8 @@ import { Archive, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import type { SiteCampaign, SiteCampaignAction, SiteCampaignAdminOverview } from '../../types/siteCampaigns';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 type MyPermissions = { allowed_actions?: SiteCampaignAction[] };
 
@@ -11,6 +13,7 @@ export function SiteCampaignDeletionPanel() {
   const [canDelete, setCanDelete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const confirmHook = useConfirm();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,9 +43,12 @@ export function SiteCampaignDeletionPanel() {
   );
 
   const remove = async (campaign: SiteCampaign) => {
-    const confirmed = window.confirm(
-      `Excluir permanentemente “${campaign.internal_name}”?\n\nO histórico da exclusão permanecerá registrado para auditoria.`,
-    );
+    const confirmed = await confirmHook.confirm({
+      title: 'Confirmar exclusão',
+      message: `Excluir permanentemente “${campaign.internal_name}”?\n\nO histórico da exclusão permanecerá registrado para auditoria.`,
+      confirmLabel: 'Excluir',
+      cancelLabel: 'Cancelar',
+    });
     if (!confirmed) return;
 
     setDeletingId(campaign.id);
@@ -62,6 +68,7 @@ export function SiteCampaignDeletionPanel() {
 
   return (
     <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+      <ConfirmDialog {...confirmHook} />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-red-700">
