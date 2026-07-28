@@ -1,40 +1,102 @@
 import { formatDate } from '../../../../lib/utils';
+import {
+  exportInstitutionalExcel,
+  exportInstitutionalPdf,
+  exportVisibleReportAsPdf,
+  type InstitutionalReportColumn,
+  type InstitutionalReportOptions,
+  type InstitutionalReportSummaryItem,
+} from '../../../../lib/institutionalFileExport';
 
-/**
- * Exporta um array de objetos para CSV e faz download automático.
- */
-export function exportarCSV(dados: Record<string, unknown>[], nomeArquivo: string) {
-  if (!dados || dados.length === 0) {
-    alert('Nenhum dado disponível para exportar.');
-    return;
-  }
-  const cabecalhos = Object.keys(dados[0]);
-  const linhas = dados.map(row =>
-    cabecalhos
-      .map(k => {
-        const val = row[k];
-        const str = val === null || val === undefined ? '' : String(val);
-        return `"${str.replace(/"/g, '""')}"`;
-      })
-      .join(';')
-  );
-  const conteudo = [cabecalhos.join(';'), ...linhas].join('\n');
-  const blob = new Blob(['\uFEFF' + conteudo], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', `${nomeArquivo}_${new Date().toISOString().slice(0, 10)}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+export interface ReportExportConfig {
+  titulo?: string;
+  subtitulo?: string;
+  planilha?: string;
+  periodo?: string;
+  filtros?: Record<string, string | number | boolean | null | undefined>;
+  colunas?: InstitutionalReportColumn[];
+  resumo?: InstitutionalReportSummaryItem[];
+  confidencialidade?: string;
+  origem?: string;
+}
+
+function humanizarNomeArquivo(nomeArquivo: string): string {
+  return nomeArquivo
+    .replace(/^relatorio[_-]?/i, '')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (caractere) => caractere.toUpperCase()) || 'Relatório';
+}
+
+function criarOpcoes(
+  dados: Record<string, unknown>[],
+  nomeArquivo: string,
+  config: ReportExportConfig = {},
+): InstitutionalReportOptions {
+  const titulo = config.titulo || `Relatório de ${humanizarNomeArquivo(nomeArquivo)}`;
+  return {
+    title: titulo,
+    subtitle: config.subtitulo || 'Relatório emitido pelo Centro de Relatórios do GSA HUB.',
+    fileName: nomeArquivo,
+    sheetName: config.planilha || humanizarNomeArquivo(nomeArquivo),
+    rows: dados,
+    columns: config.colunas,
+    period: config.periodo,
+    filters: config.filtros,
+    summary: config.resumo,
+    confidentiality: config.confidencialidade,
+    source: config.origem || 'Centro de Relatórios GSA HUB',
+  };
 }
 
 /**
- * Abre o diálogo de impressão para exportar como PDF.
+ * Gera uma planilha Excel real, com identidade institucional, metadados,
+ * cabeçalho congelado, filtros, impressão configurada e formatos numéricos.
  */
-export function exportarPDF() {
-  window.print();
+export async function exportarExcel(
+  dados: Record<string, unknown>[],
+  nomeArquivo: string,
+  config: ReportExportConfig = {},
+): Promise<void> {
+  try {
+    await exportInstitutionalExcel(criarOpcoes(dados, nomeArquivo, config));
+  } catch (error) {
+    console.error('Falha ao gerar planilha institucional:', error);
+    alert(error instanceof Error ? error.message : 'Não foi possível gerar a planilha.');
+  }
+}
+
+/**
+ * Compatibilidade com os relatórios legados: mantém a assinatura existente,
+ * mas substitui a saída CSV por uma planilha Excel institucional em .xlsx.
+ */
+export function exportarCSV(
+  dados: Record<string, unknown>[],
+  nomeArquivo: string,
+  config: ReportExportConfig = {},
+): Promise<void> {
+  return exportarExcel(dados, nomeArquivo, config);
+}
+
+/**
+ * Gera PDF institucional estruturado. Quando chamado sem dados, extrai a tabela
+ * do relatório visível para substituir o antigo uso de window.print().
+ */
+export async function exportarPDF(
+  dados?: Record<string, unknown>[],
+  nomeArquivo?: string,
+  config: ReportExportConfig = {},
+): Promise<void> {
+  try {
+    if (!dados || !nomeArquivo) {
+      await exportVisibleReportAsPdf();
+      return;
+    }
+    await exportInstitutionalPdf(criarOpcoes(dados, nomeArquivo, config));
+  } catch (error) {
+    console.error('Falha ao gerar PDF institucional:', error);
+    alert(error instanceof Error ? error.message : 'Não foi possível gerar o PDF.');
+  }
 }
 
 /**
@@ -75,6 +137,21 @@ export function getRangeDatas(periodo: string, dataInicio?: string, dataFim?: st
   }
 
   return { inicio: inicio.toISOString(), fim: fimISO };
+}
+
+export function obterRotuloPeriodo(periodo: string, dataInicio?: string, dataFim?: string): string {
+  if (periodo === 'personalizado' && dataInicio && dataFim) {
+    return `${formatarData(dataInicio)} a ${formatarData(dataFim)}`;
+  }
+  const rotulos: Record<string, string> = {
+    hoje: 'Hoje',
+    semana: 'Últimos 7 dias',
+    mes: 'Mês atual',
+    trimestre: 'Últimos 3 meses',
+    semestre: 'Últimos 6 meses',
+    ano: 'Ano atual',
+  };
+  return rotulos[periodo] || 'Período selecionado';
 }
 
 export function formatarMoeda(valor: number): string {
