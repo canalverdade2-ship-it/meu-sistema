@@ -65,3 +65,7 @@ Antes da integração, cada frente deve comprovar:
 9. ausência de `window.print()` como mecanismo de PDF;
 10. ausência de CSV como relatório humano principal;
 11. revisão visual renderizada sem cortes, sobreposições ou pontuação numérica residual.
+
+## Evidência desta implementação
+
+A amostra automatizada final foi gerada e reaberta em navegador real. A planilha apresentou cartões de resumo separados, inteiro sem pontuação residual, moeda, percentual, data e hora formatados, cabeçalho congelado, filtro automático e fórmula textual neutralizada. O PDF apresentou duas páginas, cabeçalho e rodapé repetidos, paginação, tabela sem cortes e metadados institucionais.
