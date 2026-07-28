@@ -184,7 +184,15 @@ export default function App() {
   };
 
   const handleLoginAfiliado = (clientId: string) => {
-    handleLoginClient(clientId, false, 'pf');
+    sessionService.setClientPersonType('pf');
+    setSession({ clientId, clientPersonType: 'pf' });
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get('returnTo');
+    if (returnTo) {
+      replace(decodeURIComponent(returnTo));
+    } else {
+      replace('/afiliados/dashboard');
+    }
   };
 
   const handleLogout = async () => {
@@ -221,6 +229,8 @@ export default function App() {
             const recoveryProfile = clientPersonType === 'pj' ? routes.business.profile() : routes.client.perfil();
             if (restored.precisa_trocar_senha && window.location.pathname !== recoveryProfile) {
               replace(`${recoveryProfile}?modal=alterar-senha&origem=recuperacao`);
+            } else if ((route.area === 'public' && route.module === 'affiliates' && ['login', 'acesso', 'cadastro'].includes(route.itemId || '')) || (route.area === 'login' && route.module === 'afiliado')) {
+              replace('/afiliados/dashboard');
             } else if (clientPersonType === 'pj' && route.area === 'client') {
               replace(routes.business.dashboard());
             } else if (clientPersonType === 'pf' && route.area === 'business') {
@@ -362,11 +372,19 @@ export default function App() {
             )}
 
             {((activeView === 'public' && route.module === 'affiliates' && ['login', 'acesso', 'cadastro'].includes(route.itemId || '')) || (activeView === 'login' && route.module === 'afiliado')) && (
-              <AffiliateAccessPage
-                initialMode={route.itemId === 'cadastro' || route.query.mode === 'register' ? 'register' : 'login'}
-                onLogin={(clientId) => handleLoginAfiliado(clientId)}
-                onBack={() => navigate(routes.public.affiliates())}
-              />
+              session.clientId ? (
+                <AfiliadoDashboard
+                  clientId={session.clientId}
+                  onLogout={handleLogout}
+                  activeSubRoute="dashboard"
+                />
+              ) : (
+                <AffiliateAccessPage
+                  initialMode={route.itemId === 'cadastro' || route.query.mode === 'register' ? 'register' : 'login'}
+                  onLogin={(clientId) => handleLoginAfiliado(clientId || session.clientId || '')}
+                  onBack={() => navigate(routes.public.affiliates())}
+                />
+              )
             )}
 
             {activeView === 'public' && route.module === 'affiliates' && ['dashboard', 'painel', 'links', 'comissoes', 'saques', 'perfil', 'pontos'].includes(route.itemId || '') && (
