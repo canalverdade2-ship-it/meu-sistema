@@ -12,6 +12,8 @@ Requisitos mínimos:
 
 - identidade GSA HUB em azul-marinho, marfim e dourado controlado;
 - título, subtítulo, data e hora de emissão, período, origem e filtros aplicados;
+- indicadores de resumo distribuídos em faixas mescladas, sem sobreposição ou células espremidas;
+- números inteiros sem casas decimais artificiais;
 - cabeçalho congelado e filtro automático;
 - larguras de coluna compatíveis com o conteúdo;
 - quebra de texto e alinhamento por tipo de dado;
@@ -61,4 +63,5 @@ Antes da integração, cada frente deve comprovar:
 7. abertura em leitores comuns de PDF e Excel;
 8. TypeScript e build sem regressão causada pela frente;
 9. ausência de `window.print()` como mecanismo de PDF;
-10. ausência de CSV como relatório humano principal.
+10. ausência de CSV como relatório humano principal;
+11. revisão visual renderizada sem cortes, sobreposições ou pontuação numérica residual.
