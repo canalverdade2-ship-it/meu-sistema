@@ -1,0 +1,9 @@
+﻿- **:** - MÉDIO - Trigger identificado. Revisar se causa lentidão ou poderia ser substituído por operações em lote (Verificar índices associados às funções trigger).
+- **:** - MÉDIO/BAIXO - Uso de SELECT * ao invés de projetar as colunas (Anti-padrão de manutenção, pode quebrar views/funções).
+- **:** - MÉDIO/BAIXO - Uso de SELECT * ao invés de projetar as colunas (Anti-padrão de manutenção, pode quebrar views/funções).
+- **:** - MÉDIO - Trigger identificado. Revisar se causa lentidão ou poderia ser substituído por operações em lote (Verificar índices associados às funções trigger).
+- **:** - MÉDIO - Trigger identificado. Revisar se causa lentidão ou poderia ser substituído por operações em lote (Verificar índices associados às funções trigger).
+- **:** - CRÍTICO/ALTO - Uso de EXCEPTION WHEN OTHERS genérico sem repasse do erro. Mascara falhas graves e pode corromper regras de negócio.
+- **:** - MÉDIO - Trigger identificado. Revisar se causa lentidão ou poderia ser substituído por operações em lote (Verificar índices associados às funções trigger).
+- **:** - CRÍTICO/ALTO - Uso de EXCEPTION WHEN OTHERS genérico sem repasse do erro. Mascara falhas graves e pode corromper regras de negócio.
+- **:** - CRÍTICO/ALTO - Uso de EXCEPTION WHEN OTHERS genérico sem repasse do erro. Mascara falhas graves e pode corromper regras de negócio.
