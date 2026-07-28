@@ -51,12 +51,18 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
     ano: ''
   });
 
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(0);
+
   const activeTabRef = useRef(activeTab);
   const searchRef = useRef(search);
   const filtersRef = useRef(filters);
   const selectedClienteRef = useRef(selectedCliente);
 
-  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+  useEffect(() => { 
+    activeTabRef.current = activeTab; 
+    setPage(0);
+  }, [activeTab]);
   useEffect(() => { searchRef.current = search; }, [search]);
   useEffect(() => { filtersRef.current = filters; }, [filters]);
   useEffect(() => { selectedClienteRef.current = selectedCliente; }, [selectedCliente]);
@@ -65,7 +71,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
   
   useEffect(() => {
     fetchClientes();
-  }, [activeTab, search, filters]);
+  }, [activeTab, search, filters, page]);
 
   // Navegação inteligente e destaque
   const hasAutoOpened = useRef<string | null>(null);
@@ -127,7 +133,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
   const fetchClientes = async () => {
     let query = supabase
       .from('clientes')
-      .select('*');
+      .select('id, nome, cpf, cnpj, email, telefone, status, tipo_pessoa, codigo_cliente, data_cadastro, created_at, cadastro_aprovado, bloqueado');
       
     if (activeTab === 'ativos') {
       query = query.eq('status', 'ativo');
@@ -151,12 +157,14 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
       query = query.gte('data_cadastro', startDate).lte('data_cadastro', endDate);
     }
     
-    let { data, error } = await query.order('data_cadastro', { ascending: false });
+    let { data, error } = await query
+      .order('data_cadastro', { ascending: false })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
     
     // Fallback caso a coluna bloqueado ou cadastro_aprovado causem erro (DB structure older)
     if (error) {
       console.warn('Erro na consulta principal de clientes, tentando fallback simplificado...', error.message);
-      let fallbackQuery = supabase.from('clientes').select('*');
+      let fallbackQuery = supabase.from('clientes').select('id, nome, cpf, cnpj, email, telefone, status, tipo_pessoa, codigo_cliente, data_cadastro, created_at, cadastro_aprovado, bloqueado');
       
       if (activeTab === 'ativos') {
         fallbackQuery = fallbackQuery.eq('status', 'ativo');
@@ -173,7 +181,9 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
         fallbackQuery = fallbackQuery.or(`nome.ilike.%${search}%,cpf.ilike.%${search}%,cnpj.ilike.%${search}%,codigo_cliente.ilike.%${search}%`);
       }
       
-      const fallbackResult = await fallbackQuery.order('data_cadastro', { ascending: false });
+      const fallbackResult = await fallbackQuery
+        .order('data_cadastro', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
       data = fallbackResult.data;
       error = fallbackResult.error;
     }
@@ -466,12 +476,13 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-4 px-2 mb-8">
         <GlobalFilter 
           searchValue={search}
-          onSearch={setSearch}
+          onSearch={(val) => { setSearch(val); setPage(0); }}
           currentFilters={filters}
-          onFilterChange={setFilters}
+          onFilterChange={(val) => { setFilters(val); setPage(0); }}
           onClear={() => {
             setSearch('');
             setFilters({ mes: '', ano: new Date().getFullYear().toString() });
+            setPage(0);
           }}
           options={[
             {
@@ -564,6 +575,26 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
             <p className="text-sm font-black text-neutral-300 uppercase tracking-widest">Nenhum cliente {activeTab} encontrado</p>
           </div>
         )}
+      </div>
+
+      <div className="flex items-center justify-center gap-4 py-4">
+        <button
+          onClick={() => setPage(p => Math.max(0, p - 1))}
+          disabled={page === 0}
+          className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-neutral-600 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50 disabled:opacity-50 transition-all"
+        >
+          Anterior
+        </button>
+        <span className="text-sm font-bold text-neutral-600">
+          Página {page + 1}
+        </span>
+        <button
+          onClick={() => setPage(p => p + 1)}
+          disabled={clientes.length < PAGE_SIZE}
+          className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-neutral-600 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50 disabled:opacity-50 transition-all"
+        >
+          Próxima
+        </button>
       </div>
 
       {/* Create Modal */}
@@ -788,6 +819,20 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
 
   useEffect(() => {
     setCliente(initialCliente);
+    
+    const fetchFullDetails = async () => {
+      if (!initialCliente?.id) return;
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('id', initialCliente.id)
+        .single();
+      
+      if (data && !error) {
+        setCliente(data);
+      }
+    };
+    fetchFullDetails();
   }, [initialCliente]);
 
   useEffect(() => {

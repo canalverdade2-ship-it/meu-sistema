@@ -4,6 +4,8 @@ import { Gift, ArrowRight, Save, X, Info, Tag, Layers, Star, Calendar, ShoppingB
 import { getProductDisplayCode } from '../../lib/productIdentification';
 import { toast } from 'react-hot-toast';
 import { VIP_LEVELS } from '../../constants';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 interface PromocaoQuantidadeFormProps {
   initialData?: any;
@@ -15,6 +17,7 @@ interface PromocaoQuantidadeFormProps {
 export function PromocaoQuantidadeForm({ initialData, onSuccess, onCancel, onDelete }: PromocaoQuantidadeFormProps) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const confirmHook = useConfirm();
 
   // Lists
   const [produtos, setProdutos] = useState<any[]>([]);
@@ -66,7 +69,13 @@ export function PromocaoQuantidadeForm({ initialData, onSuccess, onCancel, onDel
     const newStatus = initialData.status === 'ativa' ? 'suspensa' : 'ativa';
     const actionText = newStatus === 'ativa' ? 'reativar' : 'suspender';
     
-    if (!window.confirm(`Tem certeza que deseja ${actionText} esta promoção?`)) return;
+    const ok = await confirmHook.confirm({
+      title: 'Confirmar ação',
+      message: `Tem certeza que deseja ${actionText} esta promoção?`,
+      confirmLabel: 'Confirmar',
+      cancelLabel: 'Cancelar'
+    });
+    if (!ok) return;
     
     setIsSubmitting(true);
     try {
@@ -133,6 +142,7 @@ export function PromocaoQuantidadeForm({ initialData, onSuccess, onCancel, onDel
 
   return (
     <form onSubmit={handleSubmit} className="p-6 md:p-8 flex flex-col h-[75vh] md:h-auto">
+      <ConfirmDialog {...confirmHook} />
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8 pb-8">
         
         {/* Passo 1: Dados Básicos */}
@@ -391,8 +401,14 @@ export function PromocaoQuantidadeForm({ initialData, onSuccess, onCancel, onDel
           {initialData?.id && onDelete && (
             <button 
               type="button" 
-              onClick={() => {
-                if(window.confirm('Tem certeza que deseja excluir esta promoção? Essa ação não pode ser desfeita.')) {
+              onClick={async () => {
+                const ok = await confirmHook.confirm({
+                  title: 'Excluir promoção',
+                  message: 'Tem certeza que deseja excluir esta promoção? Essa ação não pode ser desfeita.',
+                  confirmLabel: 'Excluir',
+                  cancelLabel: 'Cancelar',
+                });
+                if (ok) {
                   onDelete();
                 }
               }}
