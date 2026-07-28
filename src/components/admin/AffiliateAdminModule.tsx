@@ -21,6 +21,7 @@ import { callAdminRpc } from '../../lib/adminRpc';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { Modal } from '../ui/Modal';
 type AffiliateAdminTab = 'programas' | 'afiliados' | 'saques';
 
 type AffiliateProgram = {
@@ -122,6 +123,7 @@ export function AffiliateAdminModule() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
+  const [selectedAffiliate, setSelectedAffiliate] = useState<AffiliateRecord | null>(null);
   const [workingId, setWorkingId] = useState<string | null>(null);
   const confirmHook = useConfirm();
 
@@ -253,12 +255,177 @@ export function AffiliateAdminModule() {
 
       {tab === 'afiliados' && (
         <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
-          <div className="border-b border-neutral-100 p-4"><label className="relative block max-w-md"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" /><span className="sr-only">Buscar afiliado</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, código ou status" className="w-full rounded-xl border border-neutral-200 py-2.5 pl-10 pr-3 text-sm" /></label></div>
-          <div className="divide-y divide-neutral-100">{filteredAffiliates.map((affiliate) => <article key={affiliate.id} className="grid gap-4 p-4 lg:grid-cols-[minmax(220px,1.4fr)_repeat(3,minmax(100px,.6fr))_auto] lg:items-center"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-neutral-950">{affiliate.nome_divulgacao}</h3><StatusBadge status={affiliate.status} /></div><p className="mt-1 text-xs font-bold text-neutral-400">Código {affiliate.codigo_publico || '—'} · {affiliate.created_at ? formatDateTime(affiliate.created_at) : '—'}</p></div><Metric label="Cliques" value={number(affiliate.cliques).toLocaleString('pt-BR')} /><Metric label="Conversões" value={number(affiliate.conversoes).toLocaleString('pt-BR')} /><Metric label="Disponível" value={formatCurrency(number(affiliate.saldo_disponivel))} /><div className="flex flex-wrap gap-2 lg:justify-end">{affiliate.status !== 'ativo' && <SmallAction disabled={workingId === affiliate.id} onClick={() => void setAffiliateStatus(affiliate, 'ativo')} tone="green" label="Ativar" />}{affiliate.status === 'ativo' && <SmallAction disabled={workingId === affiliate.id} onClick={() => void setAffiliateStatus(affiliate, 'suspenso')} tone="amber" label="Suspender" />}{affiliate.status !== 'encerrado' && <SmallAction disabled={workingId === affiliate.id} onClick={() => void setAffiliateStatus(affiliate, 'encerrado')} tone="red" label="Encerrar" />}</div></article>)}{filteredAffiliates.length === 0 && <EmptyState text="Nenhum afiliado encontrado." />}</div>
+          <div className="border-b border-neutral-100 p-4">
+            <label className="relative block max-w-md">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <span className="sr-only">Buscar afiliado</span>
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, código ou status" className="w-full rounded-xl border border-neutral-200 py-2.5 pl-10 pr-3 text-sm" />
+            </label>
+          </div>
+          <div className="divide-y divide-neutral-100">
+            {filteredAffiliates.map((affiliate) => (
+              <article 
+                key={affiliate.id} 
+                onClick={() => setSelectedAffiliate(affiliate)}
+                className="grid gap-4 p-4 lg:grid-cols-[minmax(220px,1.4fr)_repeat(3,minmax(100px,.6fr))_auto] lg:items-center cursor-pointer hover:bg-neutral-50/90 transition-colors group"
+              >
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-black text-neutral-950 group-hover:text-indigo-600 transition-colors">{affiliate.nome_divulgacao}</h3>
+                    <StatusBadge status={affiliate.status} />
+                  </div>
+                  <p className="mt-1 text-xs font-bold text-neutral-400">Código {affiliate.codigo_publico || '—'} · {affiliate.created_at ? formatDateTime(affiliate.created_at) : '—'}</p>
+                </div>
+                <Metric label="Cliques" value={number(affiliate.cliques).toLocaleString('pt-BR')} />
+                <Metric label="Conversões" value={number(affiliate.conversoes).toLocaleString('pt-BR')} />
+                <Metric label="Disponível" value={formatCurrency(number(affiliate.saldo_disponivel))} />
+                <div className="flex flex-wrap gap-2 lg:justify-end" onClick={(e) => e.stopPropagation()}>
+                  {affiliate.status !== 'ativo' && <SmallAction disabled={workingId === affiliate.id} onClick={() => void setAffiliateStatus(affiliate, 'ativo')} tone="green" label="Ativar" />}
+                  {affiliate.status === 'ativo' && <SmallAction disabled={workingId === affiliate.id} onClick={() => void setAffiliateStatus(affiliate, 'suspenso')} tone="amber" label="Suspender" />}
+                  {affiliate.status !== 'encerrado' && <SmallAction disabled={workingId === affiliate.id} onClick={() => void setAffiliateStatus(affiliate, 'encerrado')} tone="red" label="Encerrar" />}
+                </div>
+              </article>
+            ))}
+            {filteredAffiliates.length === 0 && <EmptyState text="Nenhum afiliado encontrado." />}
+          </div>
         </div>
       )}
 
       {tab === 'saques' && <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm"><div className="divide-y divide-neutral-100">{snapshot.payouts.map((payout) => <article key={payout.id} className="grid gap-4 p-4 lg:grid-cols-[1.3fr_.7fr_1fr_auto] lg:items-center"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-black text-neutral-950">{payout.afiliado_nome || 'Afiliado'}</h3><StatusBadge status={payout.status} /></div><p className="mt-1 text-xs font-bold text-neutral-400">{payout.solicitado_em ? formatDateTime(payout.solicitado_em) : '—'}</p></div><Metric label="Valor" value={formatCurrency(number(payout.valor))} /><Metric label={`PIX ${payout.pix_tipo || ''}`} value={payout.pix_chave || 'Chave protegida'} /><div className="flex flex-wrap gap-2 lg:justify-end">{payout.status === 'solicitado' && <><SmallAction disabled={workingId === payout.id} onClick={() => void decidePayout(payout, 'approve')} tone="green" label="Aprovar" icon="check" /><SmallAction disabled={workingId === payout.id} onClick={() => void decidePayout(payout, 'reject')} tone="red" label="Rejeitar" icon="x" /></>}{payout.status === 'aprovado' && <SmallAction disabled={workingId === payout.id} onClick={() => void decidePayout(payout, 'mark_paid')} tone="green" label="Confirmar PIX" icon="shield" />}</div></article>)}{snapshot.payouts.length === 0 && <EmptyState text="Nenhuma solicitação de saque." />}</div></div>}
+
+      {/* Modal de Detalhes do Afiliado */}
+      <Modal
+        isOpen={Boolean(selectedAffiliate)}
+        onClose={() => setSelectedAffiliate(null)}
+        title="Detalhes do Afiliado"
+        size="lg"
+      >
+        {selectedAffiliate && (
+          <div className="space-y-6">
+            {/* Header & Status Card */}
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Nome de Divulgação</span>
+                  <h3 className="text-xl font-black text-neutral-950 mt-0.5">{selectedAffiliate.nome_divulgacao}</h3>
+                  <p className="text-xs font-bold text-neutral-500 mt-1">
+                    Código de Indicação: <span className="font-mono text-indigo-700 font-extrabold">{selectedAffiliate.codigo_publico || '—'}</span>
+                  </p>
+                </div>
+                <StatusBadge status={selectedAffiliate.status} />
+              </div>
+              <div className="mt-4 grid gap-3 border-t border-neutral-200/80 pt-3 text-xs sm:grid-cols-2">
+                <div>
+                  <span className="text-neutral-400 font-medium">Data de Cadastro:</span>{' '}
+                  <strong className="text-neutral-800">{selectedAffiliate.created_at ? formatDateTime(selectedAffiliate.created_at) : '—'}</strong>
+                </div>
+                <div>
+                  <span className="text-neutral-400 font-medium">ID da Conta / Cliente:</span>{' '}
+                  <strong className="font-mono text-neutral-800 break-all">{selectedAffiliate.cliente_id || selectedAffiliate.id}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Performance & Financeiro */}
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-3 flex items-center gap-1.5">
+                <Banknote className="h-4 w-4 text-indigo-600" /> Desempenho & Saldo acumulado
+              </h4>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl border border-neutral-200 bg-white p-3.5 shadow-2xs">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Cliques</p>
+                  <p className="mt-1 text-lg font-black text-neutral-900">{number(selectedAffiliate.cliques).toLocaleString('pt-BR')}</p>
+                </div>
+                <div className="rounded-xl border border-neutral-200 bg-white p-3.5 shadow-2xs">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Conversões</p>
+                  <p className="mt-1 text-lg font-black text-indigo-700">{number(selectedAffiliate.conversoes).toLocaleString('pt-BR')}</p>
+                </div>
+                <div className="rounded-xl border border-neutral-200 bg-white p-3.5 shadow-2xs">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Comissão Gerada</p>
+                  <p className="mt-1 text-lg font-black text-emerald-700">{formatCurrency(number(selectedAffiliate.comissao_total))}</p>
+                </div>
+                <div className="rounded-xl border border-neutral-200 bg-white p-3.5 shadow-2xs">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">Saldo Disponível</p>
+                  <p className="mt-1 text-lg font-black text-emerald-600">{formatCurrency(number(selectedAffiliate.saldo_disponivel))}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Dados Bancários / PIX */}
+            <div className="rounded-2xl border border-neutral-200 bg-white p-4 space-y-2">
+              <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-indigo-600" /> Dados para Pagamento (PIX)
+              </h4>
+              <div className="grid gap-3 sm:grid-cols-2 text-sm">
+                <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-200/60">
+                  <span className="block text-[10px] font-black uppercase text-neutral-400">Tipo de Chave</span>
+                  <strong className="text-neutral-800 font-bold uppercase">{selectedAffiliate.pix_tipo || 'Não informado'}</strong>
+                </div>
+                <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-200/60">
+                  <span className="block text-[10px] font-black uppercase text-neutral-400">Chave PIX</span>
+                  <strong className="text-indigo-700 font-mono font-bold break-all">{selectedAffiliate.pix_chave_mascarada || 'Não informada'}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Gerenciamento de Status & Ações */}
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 space-y-3">
+              <span className="text-xs font-black uppercase tracking-wider text-neutral-500 block">Ações Administrativas</span>
+              <div className="flex flex-wrap gap-3">
+                {selectedAffiliate.status !== 'ativo' && (
+                  <button
+                    type="button"
+                    disabled={workingId === selectedAffiliate.id}
+                    onClick={async () => {
+                      const aff = selectedAffiliate;
+                      setSelectedAffiliate(null);
+                      await setAffiliateStatus(aff, 'ativo');
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> Ativar Afiliado
+                  </button>
+                )}
+                {selectedAffiliate.status === 'ativo' && (
+                  <button
+                    type="button"
+                    disabled={workingId === selectedAffiliate.id}
+                    onClick={async () => {
+                      const aff = selectedAffiliate;
+                      setSelectedAffiliate(null);
+                      await setAffiliateStatus(aff, 'suspenso');
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black text-white hover:bg-amber-600 disabled:opacity-50"
+                  >
+                    <XCircle className="h-4 w-4" /> Suspender Afiliado
+                  </button>
+                )}
+                {selectedAffiliate.status !== 'encerrado' && (
+                  <button
+                    type="button"
+                    disabled={workingId === selectedAffiliate.id}
+                    onClick={async () => {
+                      const aff = selectedAffiliate;
+                      setSelectedAffiliate(null);
+                      await setAffiliateStatus(aff, 'encerrado');
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-black text-white hover:bg-rose-700 disabled:opacity-50"
+                  >
+                    <XCircle className="h-4 w-4" /> Encerrar Afiliado
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedAffiliate(null)}
+                  className="ml-auto rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-xs font-bold text-neutral-700 hover:bg-neutral-100"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </section>
   );
 }
