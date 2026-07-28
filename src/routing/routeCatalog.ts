@@ -16,13 +16,31 @@ export const routes = {
     affiliatePayouts: () => '/afiliados/saques',
     affiliateProfile: () => '/afiliados/perfil',
     affiliatePoints: () => '/afiliados/pontos',
+export const routes = {
+  // Rotas Públicas
+  public: {
+    home: () => '/',
+    services: () => '/servicos-e-assinaturas',
+    freeTools: () => '/servicos-gratuitos',
+    systems: () => '/criacao-de-site-e-sistemas',
+    partners: () => '/parceiros',
+    partner: (slug: string) => `/parceiros/${slug}`,
+    ads: () => '/anuncios',
+    advertise: () => '/anuncie',
+    affiliates: () => '/afiliados',
+    affiliateDashboard: () => '/afiliados/dashboard',
+    affiliateLinks: () => '/afiliados/links',
+    affiliateCommissions: () => '/afiliados/comissoes',
+    affiliatePayouts: () => '/afiliados/saques',
+    affiliateProfile: () => '/afiliados/perfil',
+    affiliatePoints: () => '/afiliados/pontos',
     careers: () => '/trabalhe-conosco',
     serviceDetail: (id: string) => `/servicos-e-assinaturas/${id}`,
   },
   // Login
   login: {
     root: () => '/login',
-    client: () => '/login/pessoa-fisica',
+    client: () => '/login/pessoa-fisica', // DUPLICADO: aponta para /login/pessoa-fisica
     personal: () => '/login/pessoa-fisica',
     business: () => '/login/empresa',
     businessRegistration: () => '/login/empresa/cadastro',
@@ -41,7 +59,7 @@ export const routes = {
   // Marketplace GSA
   marketplace: {
     root: () => '/marketplace',
-    menu: () => '/marketplace',
+    menu: () => '/marketplace', // DUPLICADO: aponta para /marketplace
     travelPackages: {
       root: () => '/marketplace/menu/pacotes-viagem',
       legacy: () => '/marketplace/pacotes-viagem',
@@ -240,7 +258,7 @@ export const routes = {
   },
   // Portal do Anunciante
   advertiser: {
-    root: () => '/anuncios/login',
+    root: () => '/anuncios/login', // DUPLICADO: mesma rota de login.advertiser
     proposals: () => '/anuncios/propostas',
     campaigns: () => '/anuncios/campanhas',
     creatives: () => '/anuncios/criativos',
@@ -301,8 +319,8 @@ export const routes = {
       assessorias: () => '/admin/saude/assessorias',
       comissoes: () => '/admin/saude/comissoes',
       documentos: () => '/admin/saude/documentos',
-      assistencias: () => '/admin/saude/atendimentos',
-      sinistros: () => '/admin/saude/atendimentos',
+      assistencias: () => '/admin/saude/atendimentos', // DUPLICADO: aponta para atendimentos
+      sinistros: () => '/admin/saude/atendimentos', // DUPLICADO: aponta para atendimentos
       atendimentos: () => '/admin/saude/atendimentos',
     },
     seguros: {
@@ -325,35 +343,6 @@ export const routes = {
   provider: {
     home: () => '/prestador',
     dashboard: () => '/prestador/dashboard',
-    agenda: () => '/prestador/agenda',
-    agendamento: (id: string) => `/prestador/agenda/${id}`,
-    demands: () => '/prestador/demandas',
-    demand: (id: string) => `/prestador/demandas/${id}`,
-    documents: () => '/prestador/documentos',
-    document: (id: string) => `/prestador/documentos/${id}`,
-    financeiro: () => '/prestador/financeiro',
-    saques: () => '/prestador/financeiro/saques',
-    saque: (id: string) => `/prestador/financeiro/saques/${id}`,
-    vouchers: () => '/prestador/vouchers',
-    voucher: (id: string) => `/prestador/vouchers/${id}`,
-    promocoes: () => '/prestador/promocoes',
-    promocao: (id: string) => `/prestador/promocoes/${id}`,
-    premios: () => '/prestador/premios',
-    premio: (id: string) => `/prestador/premios/${id}`,
-    support: () => '/prestador/suporte',
-    ticket: (id: string) => `/prestador/suporte/${id}`,
-  },
-  // Portal do Fornecedor
-  supplier: {
-    home: () => '/fornecedor',
-    login: () => '/fornecedor/login',
-    access: () => '/fornecedor/login',
-    dashboard: () => '/fornecedor/dashboard',
-    products: () => '/fornecedor/produtos',
-    productRequest: () => '/fornecedor/produtos/novo',
-    orders: () => '/fornecedor/pedidos',
-    order: (id: string) => `/fornecedor/pedidos/${id}`,
-    deliveries: () => '/fornecedor/entregas',
     payables: () => '/fornecedor/financeiro',
   }
 };

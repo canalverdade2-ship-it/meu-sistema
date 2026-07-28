@@ -14,8 +14,12 @@ import { demandService } from '../../../lib/demandService';
 import { notificationService } from '../../../lib/notificationService';
 import { useFileViewer } from '../../../contexts/FileViewerContext';
 import { callAdminRpc } from '../../../lib/adminRpc';
+import { useConfirm } from '../../../hooks/useConfirm';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
 
 export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, colaboradorId }: { subTab?: string, initialItemId?: string, colaboradorNome?: string | null, colaboradorId?: string | null }) {
+  const confirmHook = useConfirm();
+  const { confirm } = confirmHook;
   const { openFile } = useFileViewer();
   const [demandas, setDemandas] = useState<any[]>([]);
   const [prestadores, setPrestadores] = useState<any[]>([]);
@@ -604,7 +608,7 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
   const handleAcceptCounterProposal = async (demanda: any) => {
     if (!demanda || isSubmitting) return;
 
-    if (!window.confirm(`Deseja aceitar a contraproposta de ${formatCurrency(demanda.valor_proposto_prestador)} feita pelo prestador?`)) {
+    if (!await confirm({ title: 'Confirmação', message: `Deseja aceitar a contraproposta de ${formatCurrency(demanda.valor_proposto_prestador)} feita pelo prestador?` })) {
       return;
     }
 
@@ -1033,7 +1037,7 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
 
   const handleDeleteDemanda = async (demanda: any) => {
     if (isSubmitting) return;
-    if (!window.confirm('Atenção: A "Exclusão" de uma demanda agora realizará o CANCELAMENTO em cascata da Demanda, OS e Orçamento para preservar os logs do sistema. Deseja prosseguir?')) return;
+    if (!await confirm({ title: 'Atenção', message: 'Atenção: A "Exclusão" de uma demanda agora realizará o CANCELAMENTO em cascata da Demanda, OS e Orçamento para preservar os logs do sistema. Deseja prosseguir?' })) return;
     
     setIsSubmitting(true);
     try {
@@ -2753,6 +2757,7 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
           </div>
         </form>
       </Modal>
+      <ConfirmDialog {...confirmHook} />
     </div>
   );
 }
