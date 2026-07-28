@@ -121,6 +121,72 @@ export default function App() {
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const isSessionActive = !!(session.clientId || session.adminAuth || session.prestadorId || session.fornecedorId);
 
+  const handleLoginClient = (clientId: string, isRecovery: boolean = false, personType?: ClientPersonType) => {
+    const resolvedType = personType || (route.area === 'business' ? 'pj' : 'pf');
+    sessionService.setClientPersonType(resolvedType);
+    setSession({ clientId, clientPersonType: resolvedType });
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get('returnTo');
+    if (isRecovery) {
+      const targetProfile = resolvedType === 'pj' ? routes.business.profile() : routes.client.perfil();
+      replace(`${targetProfile}?modal=alterar-senha&origem=recuperacao`);
+    } else if (returnTo) {
+      replace(decodeURIComponent(returnTo));
+    } else {
+      replace(resolvedType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
+    }
+  };
+
+  const handleLoginAdmin = (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => {
+    localStorage.setItem('adminType', adminDetails.type);
+    if (adminDetails.id) localStorage.setItem('colaboradorId', adminDetails.id);
+    else localStorage.removeItem('colaboradorId');
+    if (adminDetails.nome) localStorage.setItem('colaboradorNome', adminDetails.nome);
+    else localStorage.removeItem('colaboradorNome');
+
+    setSession({
+      adminAuth: true,
+      adminType: adminDetails.type,
+      colaboradorId: adminDetails.id,
+      colaboradorNome: adminDetails.nome,
+      colaboradorModulos: adminDetails.modulos,
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get('returnTo');
+    if (returnTo) {
+      replace(decodeURIComponent(returnTo));
+    } else {
+      replace(defaultAdminPath(adminDetails.type, adminDetails.modulos || []));
+    }
+  };
+
+  const handleLoginPrestador = (prestadorId: string) => {
+    setSession({ prestadorId });
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get('returnTo');
+    if (returnTo) {
+      replace(decodeURIComponent(returnTo));
+    } else {
+      replace(routes.provider.dashboard());
+    }
+  };
+
+  const handleLoginFornecedor = (fornecedorId: string) => {
+    setSession({ fornecedorId });
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get('returnTo');
+    if (returnTo) {
+      replace(decodeURIComponent(returnTo));
+    } else {
+      replace(routes.supplier.dashboard());
+    }
+  };
+
+  const handleLoginAfiliado = (clientId: string) => {
+    handleLoginClient(clientId, false, 'pf');
+  };
+
   useEffect(() => {
     const legacyRedirect = resolveLegacyRoute(window.location.pathname, window.location.search);
     if (legacyRedirect) replace(legacyRedirect);
