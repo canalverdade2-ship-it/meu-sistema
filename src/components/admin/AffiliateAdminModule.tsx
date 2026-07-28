@@ -54,6 +54,7 @@ type AffiliateRecord = {
   cliques?: number;
   conversoes?: number;
   comissao_total?: number;
+  comissao_pendente?: number;
   saldo_disponivel?: number;
   cliente_nome_completo?: string | null;
   cliente_cpf?: string | null;
@@ -133,6 +134,7 @@ export function AffiliateAdminModule() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedAffiliate, setSelectedAffiliate] = useState<AffiliateRecord | null>(null);
+  const [activeSummaryModal, setActiveSummaryModal] = useState<'carencia' | 'disponivel' | null>(null);
   const [isEditingAffiliate, setIsEditingAffiliate] = useState(false);
   const [editAffiliateForm, setEditAffiliateForm] = useState({
     nome_divulgacao: '',
@@ -278,10 +280,10 @@ export function AffiliateAdminModule() {
   }
 
   const cards = [
-    { label: 'Afiliados ativos', value: snapshot.summary.afiliados_ativos.toLocaleString('pt-BR'), icon: Users, color: 'text-indigo-600 bg-indigo-50' },
-    { label: 'Vendas atribuídas', value: snapshot.summary.vendas_atribuidas.toLocaleString('pt-BR'), icon: Link2, color: 'text-sky-600 bg-sky-50' },
-    { label: 'Em carência', value: formatCurrency(snapshot.summary.comissoes_pendentes), icon: Clock3, color: 'text-amber-600 bg-amber-50' },
-    { label: 'Disponível', value: formatCurrency(snapshot.summary.comissoes_disponiveis), icon: Banknote, color: 'text-emerald-600 bg-emerald-50' },
+    { label: 'Afiliados ativos', value: snapshot.summary.afiliados_ativos.toLocaleString('pt-BR'), icon: Users, color: 'text-indigo-600 bg-indigo-50', modalType: null },
+    { label: 'Vendas atribuídas', value: snapshot.summary.vendas_atribuidas.toLocaleString('pt-BR'), icon: Link2, color: 'text-sky-600 bg-sky-50', modalType: null },
+    { label: 'Em carência', value: formatCurrency(snapshot.summary.comissoes_pendentes), icon: Clock3, color: 'text-amber-600 bg-amber-50', modalType: 'carencia' as const },
+    { label: 'Disponível', value: formatCurrency(snapshot.summary.comissoes_disponiveis), icon: Banknote, color: 'text-emerald-600 bg-emerald-50', modalType: 'disponivel' as const },
   ];
 
   return (
@@ -294,7 +296,30 @@ export function AffiliateAdminModule() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{cards.map(({ label, value, icon: Icon, color }) => <article key={label} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}><Icon className="h-5 w-5" /></span><p className="mt-3 text-xl font-black text-neutral-950">{value}</p><p className="mt-1 text-xs font-bold text-neutral-500">{label}</p></article>)}</div>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {cards.map(({ label, value, icon: Icon, color, modalType }) => (
+          <article 
+            key={label} 
+            onClick={() => modalType && setActiveSummaryModal(modalType)}
+            className={`group rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-all ${
+              modalType ? 'cursor-pointer hover:border-indigo-500 hover:shadow-md active:scale-[0.985]' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}>
+                <Icon className="h-5 w-5" />
+              </span>
+              {modalType && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-indigo-600 opacity-80 group-hover:opacity-100 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                  Ver Afiliados
+                </span>
+              )}
+            </div>
+            <p className="mt-3 text-xl font-black text-neutral-950">{value}</p>
+            <p className="mt-1 text-xs font-bold text-neutral-500">{label}</p>
+          </article>
+        ))}
+      </div>
 
       <div className="flex flex-wrap gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm" role="tablist">
         {([
@@ -600,6 +625,118 @@ export function AffiliateAdminModule() {
                   Fechar
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal de Resumo por Categoria (Em Carência / Disponível) */}
+      <Modal
+        isOpen={Boolean(activeSummaryModal)}
+        onClose={() => setActiveSummaryModal(null)}
+        title={activeSummaryModal === 'carencia' ? "Afiliados com Comissões em Carência" : "Afiliados com Saldo Disponível"}
+        size="xl"
+      >
+        {activeSummaryModal && (
+          <div className="space-y-4">
+            <div className={`rounded-2xl border p-4.5 ${
+              activeSummaryModal === 'carencia' ? 'bg-amber-50/70 border-amber-200 text-amber-950' : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+            }`}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h4 className="font-black text-base">
+                    {activeSummaryModal === 'carencia' ? 'Relatório de Carência (Comissões Pendentes)' : 'Relatório de Saldo Disponível para Saque'}
+                  </h4>
+                  <p className="text-xs font-medium mt-0.5 opacity-80">
+                    {activeSummaryModal === 'carencia'
+                      ? 'Listagem de afiliados que possuem valores em período de retenção temporária (carência).'
+                      : 'Listagem de afiliados que possuem saldo acumulado liberado para resgate via PIX.'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-black uppercase tracking-wider block opacity-70">Total Acumulado</span>
+                  <strong className="text-xl font-black">
+                    {formatCurrency(
+                      activeSummaryModal === 'carencia'
+                        ? snapshot.summary.comissoes_pendentes
+                        : snapshot.summary.comissoes_disponiveis
+                    )}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabela / Lista de Afiliados */}
+            <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xs">
+              <div className="divide-y divide-neutral-100">
+                {snapshot.affiliates
+                  .filter((aff) =>
+                    activeSummaryModal === 'carencia'
+                      ? number(aff.comissao_pendente) > 0
+                      : number(aff.saldo_disponivel) > 0
+                  )
+                  .map((aff) => {
+                    const valor = activeSummaryModal === 'carencia' ? number(aff.comissao_pendente) : number(aff.saldo_disponivel);
+                    return (
+                      <div key={aff.id} className="flex flex-wrap items-center justify-between gap-4 p-4 hover:bg-neutral-50/80 transition-colors">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h5 className="font-black text-neutral-950">{aff.cliente_nome_completo || aff.nome_divulgacao}</h5>
+                            <StatusBadge status={aff.status} />
+                          </div>
+                          <p className="text-xs text-neutral-500 font-medium mt-1">
+                            Código <span className="font-mono font-extrabold text-indigo-700">{aff.codigo_publico || '—'}</span>
+                            {aff.cliente_nome_completo && aff.cliente_nome_completo !== aff.nome_divulgacao && (
+                              <span> · Divulgação: <strong className="text-neutral-800">{aff.nome_divulgacao}</strong></span>
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
+                              {activeSummaryModal === 'carencia' ? 'Em carência' : 'Disponível'}
+                            </span>
+                            <strong className={`text-base font-black ${
+                              activeSummaryModal === 'carencia' ? 'text-amber-600' : 'text-emerald-600'
+                            }`}>
+                              {formatCurrency(valor)}
+                            </strong>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveSummaryModal(null);
+                              setSelectedAffiliate(aff);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-indigo-600 transition-colors shadow-2xs"
+                          >
+                            <Eye className="h-4 w-4" /> Detalhes
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                {snapshot.affiliates.filter((aff) =>
+                  activeSummaryModal === 'carencia'
+                    ? number(aff.comissao_pendente) > 0
+                    : number(aff.saldo_disponivel) > 0
+                ).length === 0 && (
+                  <div className="p-8 text-center text-sm font-bold text-neutral-400">
+                    Nenhum afiliado possui valor {activeSummaryModal === 'carencia' ? 'em carência' : 'disponível'} no momento.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveSummaryModal(null)}
+                className="rounded-xl border border-neutral-300 bg-white px-4 py-2.5 text-xs font-bold text-neutral-700 hover:bg-neutral-100"
+              >
+                Fechar
+              </button>
             </div>
           </div>
         )}
