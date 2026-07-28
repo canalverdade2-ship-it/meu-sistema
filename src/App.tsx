@@ -323,29 +323,35 @@ export default function App() {
   };
 
   const activeView = route.area;
+  const isAllowed = isRouteAllowed(route.area, session, route.module, route.submodule);
 
-  if (!isRouteAllowed(route.area, session, route.module, route.submodule)) {
-    if (route.area === 'admin' && session.adminAuth) {
-      replace(defaultAdminPath(session.adminType, session.colaboradorModulos || []));
-    } else if (route.area === 'business' && session.clientId && session.clientPersonType === 'pf') {
-      replace(routes.client.dashboard());
-    } else if (route.area === 'client' && session.clientId && session.clientPersonType === 'pj') {
-      replace(routes.business.dashboard());
-    } else {
-      const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-      const loginPath = route.area === 'supplier'
-        ? routes.login.supplier()
-        : route.area === 'business'
-          ? routes.login.business()
-          : route.area === 'client'
-            ? routes.login.personal()
-            : route.area === 'admin'
-              ? routes.login.restricted()
-              : route.area === 'provider'
-                ? routes.login.provider()
-            : routes.login.root();
-      replace(`${loginPath}?returnTo=${returnTo}`);
+  useEffect(() => {
+    if (!isAllowed) {
+      if (route.area === 'admin' && session.adminAuth) {
+        replace(defaultAdminPath(session.adminType, session.colaboradorModulos || []));
+      } else if (route.area === 'business' && session.clientId && session.clientPersonType === 'pf') {
+        replace(routes.client.dashboard());
+      } else if (route.area === 'client' && session.clientId && session.clientPersonType === 'pj') {
+        replace(routes.business.dashboard());
+      } else {
+        const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+        const loginPath = route.area === 'supplier'
+          ? routes.login.supplier()
+          : route.area === 'business'
+            ? routes.login.business()
+            : route.area === 'client'
+              ? routes.login.personal()
+              : route.area === 'admin'
+                ? routes.login.restricted()
+                : route.area === 'provider'
+                  ? routes.login.provider()
+              : routes.login.root();
+        replace(`${loginPath}?returnTo=${returnTo}`);
+      }
     }
+  }, [isAllowed, route.area, route.module, route.submodule, session]);
+
+  if (!isAllowed) {
     return null;
   }
 

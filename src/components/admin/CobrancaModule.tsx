@@ -477,11 +477,23 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
 
   const confirmarGerarAcordo = async () => {
     if (!selectedCobranca || !acordoData.parcelas || !acordoData.dtPrimeiroVenc || submittingAcordo) return;
+
+    if (acordoData.desconto < 0) {
+      toast.error('O desconto não pode ser negativo');
+      return;
+    }
+
+    const valorDesconto = acordoData.tipo_desconto === 'porcentagem'
+      ? (selectedCobranca.valor_atualizado * (acordoData.desconto / 100))
+      : (acordoData.desconto || 0);
+
+    if (valorDesconto > selectedCobranca.valor_atualizado) {
+      toast.error('O desconto não pode ser maior que o valor total da fatura');
+      return;
+    }
+
     setSubmittingAcordo(true);
     try {
-      const valorDesconto = acordoData.tipo_desconto === 'porcentagem'
-        ? (selectedCobranca.valor_atualizado * (acordoData.desconto / 100))
-        : (acordoData.desconto || 0);
       const valorBase = selectedCobranca.valor_atualizado - valorDesconto;
       const valorParcela = Math.round((valorBase / acordoData.parcelas) * 100) / 100;
       const session = getAdminSessionForRpc();

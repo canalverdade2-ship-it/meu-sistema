@@ -568,9 +568,14 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   const ClientFinanceiroAny = ClientFinanceiro as any;
 
   useEffect(() => {
-    fetchCliente();
+    if (!clientId) return;
+    setCliente(null);
+    const controller = new AbortController();
+    let isMounted = true;
+
+    fetchCliente(controller.signal, () => isMounted);
     checkReferralStatus();
-    checkWelcomeBonus();
+    checkWelcomeBonus(controller.signal, () => isMounted);
     refreshCounts();
     fetchVipModuleConfig();
     verificarLiberacaoCreditoAgendada();
@@ -651,6 +656,8 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
     window.addEventListener('navigate-to-financeiro', handleNavigate);
     window.addEventListener('voucher-redeemed', handleNavigate);
     return () => {
+      isMounted = false;
+      controller.abort();
       window.removeEventListener('navigate-to-financeiro', handleNavigate);
       window.removeEventListener('voucher-redeemed', handleNavigate);
       supabase.removeChannel(clientChannel);
@@ -731,16 +738,20 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   }, []);
 
 
-  const fetchCliente = async () => {
+  const fetchCliente = async (signal?: AbortSignal, getIsMounted?: () => boolean) => {
     try {
       // First try fetching client
-      let { data, error } = await supabase
+      let query = supabase
         .from('clientes')
         .select('*, auto_level:client_levels!nivel_id(*), manual_level:client_levels!nivel_manual_id(*)')
-        .eq('id', clientId)
-        .single();
+        .eq('id', clientId);
+      if (signal) query = query.abortSignal(signal as any);
+      let { data, error } = await query.single();
         
+      if (getIsMounted && !getIsMounted()) return;
+      
       if (error) {
+        if (signal?.aborted) return;
         console.error('Error fetching cliente:', error);
         setFetchError(`Erro ao carregar dados do cliente: ${error.message}`);
         toast.error(`Erro ao carregar dados do cliente: ${error.message}`);
@@ -752,18 +763,20 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         if (data.status === 'inativo' && data.cadastro_aprovado === false) {
           navigateClientModule('dashboard', undefined, undefined, true);
         }
-      } else {
+      } else if (!error) {
         setFetchError('Não foi possível carregar os dados do cliente.');
         toast.error('Não foi possível carregar os dados do cliente.');
       }
     } catch (err: any) {
+      if (err.name === 'AbortError') return;
+      if (getIsMounted && !getIsMounted()) return;
       console.error('Exception in fetchCliente:', err);
       setFetchError(`Erro inesperado: ${err.message}`);
       toast.error(`Erro inesperado: ${err.message}`);
     }
   };
   // Always keep ref in sync with the latest fetchCliente
-  fetchClienteRef.current = fetchCliente;
+  fetchClienteRef.current = () => fetchCliente();
 
   const checkReferralStatus = async () => {
     const { data: client } = await supabase
@@ -793,19 +806,25 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
     }
   };
 
-  const checkWelcomeBonus = async () => {
+  const checkWelcomeBonus = async (signal?: AbortSignal, getIsMounted?: () => boolean) => {
     if (isCheckingBonus.current) return;
     isCheckingBonus.current = true;
 
-    if (import.meta.env.DEV) console.log('[Bonus] Verificando bônus de boas-vindas...');
+    console.log('[Bonus] Verificando bônus de boas-vindas...');
 
     try {
       // 1. Check if client has pending bonus and is active
-      const { data: clientData, error: fetchErr } = await supabase
+      let query = supabase
         .from('clientes')
         .select('status, bonus_boas_vindas_pendente, saldo_pontos, saldo_carteira, indicacao_origem_id')
-        .eq('id', clientId)
-        .single();
+        .eq('id', clientId);
+      if (signal) query = query.abortSignal(signal as any);
+      const { data: clientData, error: fetchErr } = await query.single();
+
+      if (getIsMounted && !getIsMounted()) {
+        isCheckingBonus.current = false;
+        return;
+      }
       
       if (fetchErr || !clientData) {
         isCheckingBonus.current = false;

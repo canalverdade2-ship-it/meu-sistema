@@ -320,7 +320,8 @@ export type Fatura = {
   cliente_id: string;
   valor_total: number;
   valor_pago: number;
-  status: 'pendente' | 'pago' | 'cancelado' | 'revisada' | 'vencida' | 'aguardando_link' | 'pendente_pagamento';
+  status: 'pendente' | 'pago' | 'cancelado' | 'revisada' | 'vencida' | 'aguardando_link' | 'pendente_pagamento' | 'fatura_negociada';
+  tem_cobranca?: boolean;
   data_vencimento: string;
   data_emissao?: string;
   data_pagamento?: string;
@@ -410,6 +411,7 @@ export type Saque = {
   observacoes?: string;
   motivo_cancelamento?: string;
   motivo_prorrogacao?: string;
+  clientes?: any;
 };
 
 export type Transferencia = {

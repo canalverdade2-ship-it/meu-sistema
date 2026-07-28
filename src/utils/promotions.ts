@@ -7,7 +7,7 @@ import { logService } from '../lib/logService';
  */
 export async function processPromotionUsage(faturaId: string) {
   try {
-    console.log(`[Promocoes] Iniciando processamento de uso para fatura: ${faturaId}`);
+    if (import.meta.env.DEV) console.log(`[Promocoes] Iniciando processamento de uso para fatura: ${faturaId}`);
 
     // 1. Buscar dados da fatura e vínculos com orçamentos
     const { data: fatura, error: faturaError } = await supabase
@@ -46,11 +46,11 @@ export async function processPromotionUsage(faturaId: string) {
     const promocaoId = osOrcamento?.promocao_id || ocOrcamento?.promocao_id || oaOrcamento?.promocao_id;
 
     if (!promocaoId || !orcamentoId) {
-      console.log(`[Promocoes] Fatura ${faturaId} não possui promoção vinculada ao orçamento.`);
+      if (import.meta.env.DEV) console.log(`[Promocoes] Fatura ${faturaId} não possui promoção vinculada ao orçamento.`);
       return;
     }
 
-    console.log(`[Promocoes] Promoção detectada: ${promocaoId} no orçamento: ${orcamentoId}`);
+    if (import.meta.env.DEV) console.log(`[Promocoes] Promoção detectada: ${promocaoId} no orçamento: ${orcamentoId}`);
 
     // 3. Buscar a ativação desta promoção para este cliente que esteja 'ativa'
     // Tentamos primeiro pelo orcamento_id (se já estiver vinculado)
@@ -78,7 +78,7 @@ export async function processPromotionUsage(faturaId: string) {
     if (ativacao) {
       await markAsUsed(ativacao.id, orcamentoId, fatura.cliente_id);
     } else {
-      console.log(`[Promocoes] Nenhuma ativação 'ativa' encontrada para o cliente ${fatura.cliente_id} e promoção ${promocaoId}`);
+      if (import.meta.env.DEV) console.log(`[Promocoes] Nenhuma ativação 'ativa' encontrada para o cliente ${fatura.cliente_id} e promoção ${promocaoId}`);
     }
 
   } catch (error) {
@@ -87,7 +87,7 @@ export async function processPromotionUsage(faturaId: string) {
 }
 
 async function markAsUsed(ativacaoId: string, orcamentoId: string, clienteId: string) {
-  console.log(`[Promocoes] Marcando ativação ${ativacaoId} como usada.`);
+  if (import.meta.env.DEV) console.log(`[Promocoes] Marcando ativação ${ativacaoId} como usada.`);
   
   const { error } = await supabase
     .from('cliente_promocoes')

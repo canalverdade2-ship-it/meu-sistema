@@ -37,6 +37,7 @@ export function UniversalNotificationBell({
 }: UniversalNotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasNew, setHasNew] = useState(false);
+  const [markingId, setMarkingId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const lastCountRef = useRef(unreadCount);
 
@@ -62,7 +63,12 @@ export function UniversalNotificationBell({
 
   const handleNotificationClick = async (n: StandardNotification) => {
     if (!n.lida) {
-      await onMarkAsRead(n.id);
+      setMarkingId(n.id);
+      try {
+        await onMarkAsRead(n.id);
+      } finally {
+        setMarkingId(null);
+      }
     }
     onNavigate((n.modulo as Module) || 'dashboard', n.tab, n.item_id);
     setIsOpen(false);
@@ -128,7 +134,8 @@ export function UniversalNotificationBell({
                       animate={{ opacity: 1 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => handleNotificationClick(n)}
-                      className={`flex w-full flex-col p-4 text-left transition-colors ${!n.lida ? 'bg-indigo-50/30 hover:bg-indigo-50/60' : 'hover:bg-neutral-50'}`}
+                      disabled={markingId === n.id}
+                      className={`flex w-full flex-col p-4 text-left transition-colors ${!n.lida ? 'bg-indigo-50/30 hover:bg-indigo-50/60' : 'hover:bg-neutral-50'} ${markingId === n.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <p className={`text-sm leading-tight ${!n.lida ? 'font-semibold text-neutral-900' : 'text-neutral-700'}`}>

@@ -53,13 +53,13 @@ export async function processReferralBonus(faturaId: string) {
       .single();
 
     if (indError || !indicacao) {
-      console.log(`[Referral] Indicação ${fatura.clientes.indicacao_origem_id} não encontrada para o cliente ${fatura.cliente_id}`);
+      if (import.meta.env.DEV) console.log(`[Referral] Indicação ${fatura.clientes.indicacao_origem_id} não encontrada para o cliente ${fatura.cliente_id}`);
       return;
     }
 
     // Se a indicação não estiver 'aberta', o bônus já foi pago ou cancelado
     if (indicacao.status !== 'aberta') {
-      console.log(`[Referral] Bônus ignorado. Status da indicação ${indicacao.id} é ${indicacao.status}`);
+      if (import.meta.env.DEV) console.log(`[Referral] Bônus ignorado. Status da indicação ${indicacao.id} é ${indicacao.status}`);
       return;
     }
 
