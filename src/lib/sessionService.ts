@@ -121,60 +121,6 @@ async function clearSessionPair(rpcSession?: any): Promise<void> {
       });
       if (error) console.error('Falha ao revogar a sessão GSA inconsistente:', error);
     }
-  } finally {
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-    } catch (error) {
-      console.error('Falha ao limpar a sessão Supabase Auth inconsistente:', error);
-    }
-    clearStoredSession();
-  }
-}
-
-async function synchronizeSupabaseAuth(
-  rpcSession: any,
-  useExistingAuthSession: boolean,
-): Promise<void> {
-  const sessaoId = String(rpcSession.sessao_id);
-  const atorTipo = String(rpcSession.ator_tipo);
-  const atorId = String(rpcSession.ator_id);
-  const tokenHash = rpcSession?.auth?.token_hash;
-  let authSession: any = null;
-
-  if (tokenHash) {
-    const { data, error } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'magiclink',
-    });
-    if (error || !data.session) {
-      throw new Error('Não foi possível sincronizar a sessão segura do usuário.');
-    }
-    authSession = data.session;
-  } else if (useExistingAuthSession) {
-    const { data, error } = await supabase.auth.refreshSession();
-    if (error || !data.session) {
-      throw new Error('A confirmação de identidade expirou. Solicite um novo código.');
-    }
-    authSession = data.session;
-  } else {
-    throw new Error('A autenticação não retornou o vínculo seguro da sessão.');
-  }
-
-  const { data: userData, error: userError } = await supabase.auth.getUser(authSession.access_token);
-  const appMetadata = userData.user?.app_metadata || {};
-  if (
-    userError
-    || !userData.user
-    || appMetadata.gsa_session_id !== sessaoId
-    || appMetadata.gsa_actor_type !== atorTipo
-    || appMetadata.gsa_actor_id !== atorId
-  ) {
-    throw new Error('A sessão segura não corresponde ao usuário autenticado.');
-  }
-}
-
-async function persistAuthenticatedSession(payload: any, useExistingAuthSession = false): Promise<StoredSession> {
-  const rpcSession = payload?.session || payload;
   const sessaoId = rpcSession?.sessao_id;
   const sessionToken = rpcSession?.session_token;
   const atorTipo = rpcSession?.ator_tipo;
