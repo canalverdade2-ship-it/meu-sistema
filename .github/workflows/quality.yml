@@ -45,7 +45,35 @@ jobs:
             git push origin HEAD:${GITHUB_HEAD_REF}
           fi
 
-      - name: Validar Edge Function e testes
+      - name: Capturar check e testes Deno
+        id: deno_validation
+        shell: bash
         run: |
-          deno check supabase/functions/gsa-auth-session/index.ts supabase/functions/gsa-auth-session/index_test.ts
-          deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts
+          set +e
+          deno check supabase/functions/gsa-auth-session/index.ts supabase/functions/gsa-auth-session/index_test.ts > deno-check.log 2>&1
+          check_exit=$?
+          deno test --allow-env supabase/functions/gsa-auth-session/index_test.ts > deno-test.log 2>&1
+          test_exit=$?
+          set -e
+          echo "check_exit=$check_exit" >> "$GITHUB_OUTPUT"
+          echo "test_exit=$test_exit" >> "$GITHUB_OUTPUT"
+          cat deno-check.log
+          cat deno-test.log
+
+      - name: Exportar evidência Deno
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-deno-validation
+          path: |
+            deno-check.log
+            deno-test.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Encerrar com resultado real
+        shell: bash
+        run: |
+          if [ "${{ steps.deno_validation.outputs.check_exit }}" -ne 0 ] || [ "${{ steps.deno_validation.outputs.test_exit }}" -ne 0 ]; then
+            exit 1
+          fi
