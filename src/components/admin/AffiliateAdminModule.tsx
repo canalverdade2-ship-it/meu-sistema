@@ -55,6 +55,12 @@ type AffiliateRecord = {
   conversoes?: number;
   comissao_total?: number;
   saldo_disponivel?: number;
+  cliente_nome_completo?: string | null;
+  cliente_cpf?: string | null;
+  cliente_cnpj?: string | null;
+  cliente_email?: string | null;
+  cliente_telefone?: string | null;
+  cliente_tipo_pessoa?: string | null;
 };
 
 type AffiliatePayout = {
@@ -453,6 +459,31 @@ export function AffiliateAdminModule() {
                 <div>
                   <span className="text-neutral-400 font-medium">ID da Conta / Cliente:</span>{' '}
                   <strong className="font-mono text-neutral-800 break-all">{selectedAffiliate.cliente_id || selectedAffiliate.id}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Dados Pessoais do Titular */}
+            <div className="rounded-2xl border border-neutral-200 bg-white p-4 space-y-3">
+              <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                <UserRoundCheck className="h-4 w-4 text-indigo-600" /> Dados Pessoais do Titular (Cliente)
+              </h4>
+              <div className="grid gap-3 sm:grid-cols-2 text-xs">
+                <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-200/60">
+                  <span className="block text-[10px] font-black uppercase text-neutral-400">Nome Completo</span>
+                  <strong className="text-neutral-900 font-bold text-sm">{selectedAffiliate.cliente_nome_completo || selectedAffiliate.nome_divulgacao}</strong>
+                </div>
+                <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-200/60">
+                  <span className="block text-[10px] font-black uppercase text-neutral-400">CPF / CNPJ</span>
+                  <strong className="text-indigo-700 font-mono font-bold text-sm">{selectedAffiliate.cliente_cpf || selectedAffiliate.cliente_cnpj || 'Não informado'}</strong>
+                </div>
+                <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-200/60">
+                  <span className="block text-[10px] font-black uppercase text-neutral-400">E-mail</span>
+                  <strong className="text-neutral-800 font-medium break-all">{selectedAffiliate.cliente_email || 'Não informado'}</strong>
+                </div>
+                <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-200/60">
+                  <span className="block text-[10px] font-black uppercase text-neutral-400">Telefone / WhatsApp</span>
+                  <strong className="text-neutral-800 font-medium">{selectedAffiliate.cliente_telefone || 'Não informado'}</strong>
                 </div>
               </div>
             </div>
