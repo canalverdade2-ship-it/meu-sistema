@@ -35,6 +35,8 @@ const normalizeProfile = (value: unknown): AffiliateProfile | null => {
     id: text(item.id),
     codigoPublico: text(item.codigo_publico, item.codigoPublico),
     nomeDivulgacao: text(item.nome_divulgacao, item.nomeDivulgacao),
+    nomeCompleto: text(item.nome_completo, item.nomeCompleto, item.nome) || undefined,
+    cpf: text(item.cpf, item.cpf_cnpj, item.documento) || undefined,
     status: text(item.status, 'ativo') as AffiliateProfile['status'],
     pixTipo: text(item.pix_tipo, item.pixTipo),
     pixChave: text(item.pix_chave, item.pixChave),

@@ -8,6 +8,7 @@ import {
   Link2,
   Loader2,
   Pencil,
+  PlusCircle,
   RefreshCw,
   Save,
   Search,
@@ -577,6 +578,9 @@ export function AffiliateAdminModule() {
               </div>
             </div>
 
+            {/* Lançamento / Ajuste Manual de Saldo & Pontos */}
+            <AffiliateManualAdjustmentForm affiliate={selectedAffiliate} onSaved={() => load(true)} />
+
             {/* Gerenciamento de Status & Ações */}
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 space-y-3">
               <span className="text-xs font-black uppercase tracking-wider text-neutral-500 block">Ações Administrativas</span>
@@ -1025,6 +1029,146 @@ function AffiliatePointsSettingsEditor({ summary, onSaved }: { summary: Affiliat
           Salvar Regras de Pontuação
         </button>
       </article>
+    </div>
+  );
+}
+
+function AffiliateManualAdjustmentForm({ affiliate, onSaved }: { affiliate: AffiliateRecord; onSaved: () => Promise<void> }) {
+  const [tipo, setTipo] = useState<'comissao' | 'pontos'>('comissao');
+  const [operacao, setOperacao] = useState<'credito' | 'debito'>('credito');
+  const [value, setValue] = useState('');
+  const [motivo, setMotivo] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const rawNum = Number(value.replace(',', '.'));
+    if (!Number.isFinite(rawNum) || rawNum <= 0) {
+      toast.error('Informe um valor válido maior que zero.');
+      return;
+    }
+    if (motivo.trim().length < 3) {
+      toast.error('Informe o motivo do lançamento manual (mínimo 3 caracteres).');
+      return;
+    }
+
+    const finalValue = operacao === 'debito' ? -Math.abs(rawNum) : Math.abs(rawNum);
+
+    setLoading(true);
+    try {
+      await callAdminRpc('gsa_admin_adjust_affiliate_balance', {
+        p_afiliado_id: affiliate.id,
+        p_tipo: tipo,
+        p_valor: finalValue,
+        p_motivo: motivo.trim(),
+      });
+
+      toast.success(
+        `Lançamento manual de ${operacao === 'credito' ? 'crédito' : 'débito'} em ${
+          tipo === 'pontos' ? 'pontos' : 'saldo'
+        } realizado com sucesso!`
+      );
+      setValue('');
+      setMotivo('');
+      setIsOpen(false);
+      await onSaved();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível realizar o lançamento manual.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-neutral-200 bg-white p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+          <Banknote className="h-4 w-4 text-indigo-600" /> Lançamento & Ajuste Manual
+        </h4>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-bold text-neutral-700 hover:bg-neutral-100 transition-colors"
+        >
+          <PlusCircle className="h-3.5 w-3.5 text-indigo-600" />
+          {isOpen ? 'Ocultar Formulário' : 'Novo Lançamento Manual'}
+        </button>
+      </div>
+
+      {isOpen && (
+        <form onSubmit={handleSubmit} className="mt-3 space-y-4 rounded-xl border border-neutral-200 bg-neutral-50/50 p-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="block text-xs font-bold text-neutral-700">
+              Tipo de Ajuste
+              <select
+                value={tipo}
+                onChange={(e) => setTipo(e.target.value as 'comissao' | 'pontos')}
+                className="mt-1 w-full rounded-xl border border-neutral-300 p-2.5 text-xs font-bold focus:border-indigo-600 focus:outline-none"
+              >
+                <option value="comissao">Saldo Financeiro / Comissão (R$)</option>
+                <option value="pontos">Pontos de Fidelidade (pts)</option>
+              </select>
+            </label>
+
+            <label className="block text-xs font-bold text-neutral-700">
+              Operação
+              <select
+                value={operacao}
+                onChange={(e) => setOperacao(e.target.value as 'credito' | 'debito')}
+                className="mt-1 w-full rounded-xl border border-neutral-300 p-2.5 text-xs font-bold focus:border-indigo-600 focus:outline-none"
+              >
+                <option value="credito">➕ Crédito (+ Adicionar ao saldo)</option>
+                <option value="debito">➖ Débito (- Subtrair do saldo)</option>
+              </select>
+            </label>
+
+            <label className="block text-xs font-bold text-neutral-700">
+              {tipo === 'pontos' ? 'Quantidade (pts)' : 'Valor (R$)'}
+              <input
+                type="number"
+                step={tipo === 'pontos' ? '1' : '0.01'}
+                min="0.01"
+                placeholder={tipo === 'pontos' ? '100' : '50.00'}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-neutral-300 p-2.5 font-mono text-xs font-bold focus:border-indigo-600 focus:outline-none"
+                required
+              />
+            </label>
+          </div>
+
+          <label className="block text-xs font-bold text-neutral-700">
+            Motivo / Descrição do Lançamento
+            <input
+              type="text"
+              placeholder="Ex: Bônus por meta atingida / Estorno de comissão referente à alteração"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-neutral-300 p-2.5 text-xs font-medium focus:border-indigo-600 focus:outline-none"
+              required
+            />
+          </label>
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="rounded-xl border border-neutral-300 px-4 py-2 text-xs font-bold text-neutral-700 hover:bg-neutral-100"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 px-5 py-2 text-xs font-black text-white hover:bg-indigo-600 disabled:opacity-50 transition-colors"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Confirmar Lançamento
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

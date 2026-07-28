@@ -6,6 +6,8 @@ export interface AffiliateProfile {
   id: string;
   codigoPublico: string;
   nomeDivulgacao: string;
+  nomeCompleto?: string;
+  cpf?: string;
   status: AffiliateStatus;
   pixTipo: string;
   pixChave: string;
@@ -13,6 +15,7 @@ export interface AffiliateProfile {
   termosAceitosEm?: string;
   criadoEm?: string;
 }
+
 
 export interface AffiliateProgram {
   id: string;

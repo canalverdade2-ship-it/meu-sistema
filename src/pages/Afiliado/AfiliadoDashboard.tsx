@@ -38,7 +38,8 @@ import {
   updateAffiliateProfile,
 } from '../../features/affiliates/service';
 import type { AffiliateSnapshot } from '../../features/affiliates/types';
-import { copyToClipboard, formatCurrency, formatDateTime } from '../../lib/utils';
+import { supabase } from '../../lib/supabase';
+import { copyToClipboard, formatCurrency, formatDateTime, maskCNPJ, maskCPF } from '../../lib/utils';
 import { navigate } from '../../routing/navigationService';
 import { routes } from '../../routing/routeCatalog';
 import '../../affiliates.css';
@@ -163,12 +164,21 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
   const [joinName, setJoinName] = useState('');
   const [joinPixType, setJoinPixType] = useState('cpf');
   const [joinPixKey, setJoinPixKey] = useState('');
+  const [clientDetails, setClientDetails] = useState<{ nome?: string; cpf?: string; cnpj?: string; tipo_pessoa?: string } | null>(null);
 
   const load = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
     try {
-      const data = await fetchAffiliateSnapshot();
+      const [data, clientRes] = await Promise.all([
+        fetchAffiliateSnapshot(),
+        _clientId
+          ? supabase.from('clientes').select('nome, cpf, cnpj, tipo_pessoa').eq('id', _clientId).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
       setSnapshot(data);
+      if (clientRes?.data) {
+        setClientDetails(clientRes.data);
+      }
       if (data.affiliate) {
         setProfileName(data.affiliate.nomeDivulgacao);
         setProfilePixType(data.affiliate.pixTipo || 'cpf');
@@ -184,7 +194,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [_clientId]);
 
   useEffect(() => {
     void load();
@@ -371,6 +381,16 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
   const affiliate = snapshot.affiliate;
   const activeTabMeta = TAB_ITEMS.find((item) => item.id === activeTab) || TAB_ITEMS[0];
 
+  const displayName = clientDetails?.nome || affiliate.nomeCompleto || affiliate.nomeDivulgacao || 'Afiliado';
+  const rawDocument = clientDetails?.tipo_pessoa === 'pj'
+    ? (clientDetails?.cnpj || affiliate.cpf || '')
+    : (clientDetails?.cpf || affiliate.cpf || (affiliate.pixTipo === 'cpf' ? affiliate.pixChave : ''));
+
+  const formattedDocument = rawDocument
+    ? (rawDocument.replace(/\D/g, '').length > 11 ? maskCNPJ(rawDocument) : maskCPF(rawDocument))
+    : '';
+  const docLabel = rawDocument.replace(/\D/g, '').length > 11 ? 'CNPJ' : 'CPF';
+
   return (
     <div className="affiliate-page min-h-screen bg-[#ebe7de] pb-20 text-[#142033] lg:pb-0">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1522] text-white">
@@ -418,7 +438,10 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
             <div className="mt-4 flex items-start gap-3">
               <span className="affiliate-status-dot mt-1 h-2.5 w-2.5 shrink-0 bg-[#c59a4a]" aria-hidden="true" />
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[#0b1522]">{affiliate.nomeDivulgacao}</p>
+                <p className="truncate text-sm font-semibold text-[#0b1522]" title={displayName}>{displayName}</p>
+                {formattedDocument && (
+                  <p className="mt-0.5 truncate text-xs font-medium text-[#59616c]">{docLabel}: {formattedDocument}</p>
+                )}
                 <p className="mt-1 text-xs text-[#69717c]">Status: {STATUS_LABELS[affiliate.status] || affiliate.status}</p>
               </div>
             </div>
@@ -440,7 +463,10 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
               <div className="flex h-[72px] items-center justify-between border-b border-[#c9c2b6] px-5">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Portal do Afiliado</p>
-                  <p className="mt-1 max-w-[210px] truncate text-sm font-semibold text-[#0b1522]">{affiliate.nomeDivulgacao}</p>
+                  <p className="mt-1 max-w-[210px] truncate text-sm font-semibold text-[#0b1522]" title={displayName}>{displayName}</p>
+                  {formattedDocument && (
+                    <p className="mt-0.5 max-w-[210px] truncate text-xs font-medium text-[#59616c]">{docLabel}: {formattedDocument}</p>
+                  )}
                 </div>
                 <button type="button" onClick={() => setSidebarOpen(false)} className="p-2 text-[#59616c]" aria-label="Fechar menu">
                   <X className="h-5 w-5" />
@@ -471,7 +497,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                   <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#ddc28d]">Resumo da operação</p>
-                      <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Olá, {affiliate.nomeDivulgacao}.</h2>
+                      <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Olá, {displayName}.</h2>
                       <p className="mt-3 max-w-2xl text-sm leading-6 text-white/58">
                         Acompanhe o desempenho dos links, o estágio das comissões e o saldo disponível para novas solicitações.
                       </p>

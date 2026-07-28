@@ -205,6 +205,8 @@ DECLARE
   v_points_rate numeric := 0.01;
   v_points_minimum integer := 100;
   v_points_active boolean := true;
+  v_cliente_nome text := '';
+  v_cliente_cpf text := '';
 BEGIN
   SELECT * INTO v_actor FROM public.gsa_client_session_actor(p_sessao_id, p_session_token) LIMIT 1;
   PERFORM public.gsa_affiliate_release_due_commissions();
@@ -229,8 +231,8 @@ BEGIN
   FROM public.gsa_afiliado_programas p
   WHERE p.ativo;
 
-  SELECT coalesce(c.pontos, 0), coalesce(c.saldo_carteira, 0)
-    INTO v_points, v_wallet
+  SELECT coalesce(c.pontos, 0), coalesce(c.saldo_carteira, 0), coalesce(c.nome, ''), coalesce(c.cpf, c.cnpj, '')
+    INTO v_points, v_wallet, v_cliente_nome, v_cliente_cpf
   FROM public.clientes c WHERE c.id = v_actor.cliente_id;
 
   SELECT coalesce(max(CASE WHEN key = 'afiliado_pontos_resgate_taxa' THEN value::numeric END), 0.01),
@@ -306,6 +308,8 @@ BEGIN
       'id', v_affiliate.id,
       'codigo_publico', v_affiliate.codigo_publico,
       'nome_divulgacao', v_affiliate.nome_divulgacao,
+      'nome_completo', v_cliente_nome,
+      'cpf', v_cliente_cpf,
       'status', v_affiliate.status,
       'pix_tipo', v_affiliate.pix_tipo,
       'pix_chave', v_affiliate.pix_chave,
