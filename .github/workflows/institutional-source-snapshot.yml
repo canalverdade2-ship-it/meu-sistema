@@ -1,0 +1,38 @@
+name: Institutional Source Snapshot
+
+on:
+  push:
+    branches:
+      - agent/padrao-institucional-arquivos
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    name: Empacotar fontes da auditoria
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Criar pacote técnico
+        run: |
+          mkdir -p artifacts
+          tar -czf artifacts/institutional-source-snapshot.tar.gz \
+            src \
+            scripts \
+            package.json \
+            package-lock.json \
+            tsconfig.json \
+            vite.config.ts
+
+      - name: Publicar pacote técnico
+        uses: actions/upload-artifact@v4
+        with:
+          name: institutional-source-snapshot
+          path: artifacts/institutional-source-snapshot.tar.gz
+          if-no-files-found: error
+          retention-days: 1
