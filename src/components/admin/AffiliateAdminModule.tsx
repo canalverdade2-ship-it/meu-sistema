@@ -19,7 +19,8 @@ import {
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
-
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 type AffiliateAdminTab = 'programas' | 'afiliados' | 'saques';
 
 type AffiliateProgram = {
@@ -122,6 +123,7 @@ export function AffiliateAdminModule() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [workingId, setWorkingId] = useState<string | null>(null);
+  const confirmHook = useConfirm();
 
   const load = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
@@ -154,7 +156,13 @@ export function AffiliateAdminModule() {
   const setAffiliateStatus = async (affiliate: AffiliateRecord, status: 'ativo' | 'suspenso' | 'encerrado') => {
     if (affiliate.status === status) return;
     const label = status === 'ativo' ? 'reativar' : status === 'suspenso' ? 'suspender' : 'encerrar';
-    if (!window.confirm(`Deseja ${label} o afiliado ${affiliate.nome_divulgacao}?`)) return;
+    const ok = await confirmHook.confirm({
+      title: 'Alterar status',
+      message: `Deseja ${label} o afiliado ${affiliate.nome_divulgacao}?`,
+      confirmLabel: 'Confirmar',
+      cancelLabel: 'Cancelar',
+    });
+    if (!ok) return;
     setWorkingId(affiliate.id);
     try {
       await callAdminRpc('gsa_admin_set_affiliate_status', {
@@ -173,9 +181,25 @@ export function AffiliateAdminModule() {
 
   const decidePayout = async (payout: AffiliatePayout, action: 'approve' | 'reject' | 'mark_paid') => {
     const label = action === 'approve' ? 'aprovar' : action === 'reject' ? 'rejeitar' : 'confirmar o pagamento de';
-    if (!window.confirm(`Deseja ${label} ${formatCurrency(number(payout.valor))}?`)) return;
-    const notes = action === 'reject' ? window.prompt('Informe o motivo da rejeição:')?.trim() : `Ação ${action} realizada no painel administrativo.`;
-    if (action === 'reject' && !notes) return;
+    const ok = await confirmHook.confirm({
+      title: 'Confirmar ação',
+      message: `Deseja ${label} ${formatCurrency(number(payout.valor))}?`,
+      confirmLabel: 'Confirmar',
+      cancelLabel: 'Cancelar',
+    });
+    if (!ok) return;
+
+    let notes = `Ação ${action} realizada no painel administrativo.`;
+    if (action === 'reject') {
+      const promptResult = await confirmHook.confirm({
+        title: 'Motivo da rejeição',
+        message: 'Informe o motivo da rejeição:',
+        promptLabel: 'Motivo',
+        promptRequired: true,
+      });
+      if (!promptResult) return;
+      notes = (promptResult as string).trim();
+    }
 
     setWorkingId(payout.id);
     try {
@@ -207,6 +231,7 @@ export function AffiliateAdminModule() {
 
   return (
     <section className="space-y-5" aria-labelledby="affiliate-admin-title">
+      <ConfirmDialog {...confirmHook} />
       <div className="rounded-[2rem] bg-gradient-to-br from-neutral-950 via-neutral-900 to-indigo-950 p-6 text-white shadow-xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div><p className="text-[10px] font-black uppercase tracking-[0.28em] text-indigo-300">Gestão central</p><h1 id="affiliate-admin-title" className="mt-2 text-2xl font-black">Programa de Afiliados GSA</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">Regras, afiliados e pagamentos conectados ao mesmo backend do portal do afiliado.</p></div>

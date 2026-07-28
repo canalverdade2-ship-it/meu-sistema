@@ -285,6 +285,12 @@ function buildClientRoute(module: Module, tab?: string, itemId?: string) {
 }
 
 export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', initialModule, initialStoreTab, initialStoreItemId }: ClientPortalProps) {
+  const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  if (clientId && !isValidUUID(clientId)) {
+    console.error('ID de cliente inválido na URL');
+    return null;
+  }
+
   const route = useAppLocation();
   const { levels } = useVipLevels();
   const isBusiness = portalVariant === 'business';

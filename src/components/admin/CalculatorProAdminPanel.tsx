@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 const TOOL_LABELS: Record<string, string> = {
   termination: 'Rescisão trabalhista',
@@ -215,6 +217,7 @@ export function CalculatorProAdminPanel() {
   const [voucherForm, setVoucherForm] = useState({ tool_id: 'termination', expires_at: '', observacoes: '' });
   const [issuedVoucher, setIssuedVoucher] = useState('');
   const [campaign, setCampaign] = useState({ start: '', end: '' });
+  const confirmHook = useConfirm();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -375,7 +378,13 @@ export function CalculatorProAdminPanel() {
   };
 
   const clearAllPromotions = async () => {
-    if (!window.confirm('Encerrar e remover as promoções das seis calculadoras?')) return;
+    const ok = await confirmHook.confirm({
+      title: 'Remover promoções',
+      message: 'Encerrar e remover as promoções das seis calculadoras?',
+      confirmLabel: 'Confirmar',
+      cancelLabel: 'Cancelar',
+    });
+    if (!ok) return;
     setSaving('campaign-clear');
     try {
       for (const product of products) {
@@ -434,6 +443,7 @@ export function CalculatorProAdminPanel() {
 
   return (
     <div className="space-y-5">
+      <ConfirmDialog {...confirmHook} />
       <div className="rounded-2xl border border-neutral-200 bg-[linear-gradient(135deg,#111827,#1f2937)] p-5 text-white sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>

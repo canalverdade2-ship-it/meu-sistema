@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 interface PinInputProps {
@@ -19,11 +19,10 @@ export function PinInput({ value, onChange, disabled = false, error = false, aut
   const digits = value.padEnd(4, '').split('').slice(0, 4);
   const accessibleLabel = label || 'Senha numérica';
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!autoFocus || !inputRefs.current[0]) return;
-    const timer = window.setTimeout(() => inputRefs.current[0]?.focus(), reduceMotion ? 0 : 100);
-    return () => window.clearTimeout(timer);
-  }, [autoFocus, reduceMotion]);
+    inputRefs.current[0]?.focus();
+  }, [autoFocus]);
 
   const handleChange = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
     const typedValue = event.target.value.replace(/\D/g, '');

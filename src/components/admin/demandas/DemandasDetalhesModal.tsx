@@ -56,6 +56,20 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0);
 
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'image/gif'];
+const MAX_SIZE_MB = 10;
+const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+const validateFile = (file: File): string | null => {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return `Tipo de arquivo não permitido: ${file.type}. Use: JPG, PNG, PDF, WebP`;
+  }
+  if (file.size > MAX_SIZE_BYTES) {
+    return `Arquivo muito grande: ${(file.size / 1024 / 1024).toFixed(1)}MB. Máximo: ${MAX_SIZE_MB}MB`;
+  }
+  return null;
+};
+
 export function DemandasDetalhesModal({
   demanda,
   initialTab,
@@ -113,9 +127,24 @@ export function DemandasDetalhesModal({
 
   // ─────────────────── HANDLERS ────────────────────
 
+  const checkStatusRaceCondition = async () => {
+    const { data: current } = await supabase
+      .from('prestador_demandas')
+      .select('status, updated_at')
+      .eq('id', demanda.id)
+      .single();
+
+    if (current?.status !== demanda.status) {
+      toast.error('O status desta demanda foi alterado por outro usuário. Recarregue a página.');
+      return false;
+    }
+    return true;
+  };
+
   const handleStartService = async () => {
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       await supabase.from('prestador_demandas').update({ status: 'ativa', data_inicio: new Date().toISOString() }).eq('id', demanda.id).throwOnError();
       await demandService.addDemandHistory({
         demandaId: demanda.id,
@@ -143,6 +172,7 @@ export function DemandasDetalhesModal({
   const handleAceitarDemanda = async () => {
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       await supabase.from('prestador_demandas').update({ status_aceite: 'aceito', status: 'aberta' }).eq('id', demanda.id).throwOnError();
       await demandService.addDemandHistory({
         demandaId: demanda.id,
@@ -172,6 +202,7 @@ export function DemandasDetalhesModal({
     if (!motivo) return;
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       await supabase.from('prestador_demandas').update({ status_aceite: 'recusado', motivo_recusa: motivo, colaborador_id: null, status: 'aberta' }).eq('id', demanda.id).throwOnError();
       await demandService.addDemandHistory({
         demandaId: demanda.id,
@@ -200,6 +231,7 @@ export function DemandasDetalhesModal({
   const handleAssumeAndStart = async () => {
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       // 1. Marca como ativa — sem colaborador nem prestador vinculado
       await supabase.from('prestador_demandas').update({
         status: 'ativa',
@@ -257,6 +289,7 @@ export function DemandasDetalhesModal({
   const handleAceitarProposta = async () => {
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       const valorFinal = demanda.valor_proposto_prestador;
       const { error } = await supabase
         .from('prestador_demandas')
@@ -315,6 +348,7 @@ export function DemandasDetalhesModal({
     if (!novoValorAdmin) { toast.error('Informe o novo valor.'); return; }
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       await supabase.from('prestador_demandas').update({
         status: 'contraproposta_admin_final',
         valor_proposto_admin: Number(novoValorAdmin),
@@ -364,6 +398,7 @@ export function DemandasDetalhesModal({
     if (!motivo) return;
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       await supabase.from('prestador_demandas').update({
         status: 'aguardando_atribuicao',
         prestador_id: null,
@@ -411,6 +446,7 @@ export function DemandasDetalhesModal({
 
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       const result = await callAdminRpc<{ success?: boolean }>('gsa_admin_cancelar_demanda', {
         p_demanda_id: demanda.id,
         p_motivo: motivo,
@@ -455,6 +491,7 @@ export function DemandasDetalhesModal({
 
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       const urls: string[] = [];
       if (transferFiles.length > 0) {
         for (const file of transferFiles) {
@@ -549,7 +586,9 @@ export function DemandasDetalhesModal({
 
   const handleDelivery = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       const urls: string[] = [];
       if (deliveryFiles.length > 0) {
         for (const file of deliveryFiles) {
@@ -626,6 +665,7 @@ export function DemandasDetalhesModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       await supabase.from('prestador_demandas').update({ status: 'em_ajuste', ajuste_solicitado: ajusteDesc, prazo_ajuste: ajustePrazo ? new Date(ajustePrazo).toISOString() : null, status_ajuste: 'solicitado' }).eq('id', demanda.id).throwOnError();
       await demandService.addDemandHistory({
         demandaId: demanda.id,
@@ -665,6 +705,7 @@ export function DemandasDetalhesModal({
   const handleApprove = async () => {
     setIsSubmitting(true);
     try {
+      if (!(await checkStatusRaceCondition())) return;
       // Usa concluida_interna para sinalizar que a gestão interna concluiu. 
       // A finalização oficial (status 'concluida') ocorrerá no módulo de Vendas.
       const { error: updateError } = await supabase.from('prestador_demandas').update({ 
@@ -1192,7 +1233,12 @@ export function DemandasDetalhesModal({
                     className="hidden" 
                     onChange={e => {
                       const files = Array.from(e.target.files || []);
-                      setTransferFiles(prev => [...prev, ...files].slice(0, 5));
+                      const validFiles = files.filter(f => {
+                        const err = validateFile(f);
+                        if (err) { toast.error(err); return false; }
+                        return true;
+                      });
+                      setTransferFiles(prev => [...prev, ...validFiles].slice(0, 5));
                     }} 
                   />
                   <Upload className="h-7 w-7 text-neutral-300 mb-1" />
@@ -1236,7 +1282,12 @@ export function DemandasDetalhesModal({
                     className="hidden" 
                     onChange={e => {
                       const files = Array.from(e.target.files || []);
-                      setDeliveryFiles(prev => [...prev, ...files].slice(0, 5));
+                      const validFiles = files.filter(f => {
+                        const err = validateFile(f);
+                        if (err) { toast.error(err); return false; }
+                        return true;
+                      });
+                      setDeliveryFiles(prev => [...prev, ...validFiles].slice(0, 5));
                     }} 
                   />
                   <Upload className="h-10 w-10 text-neutral-300 mb-2" />
@@ -1525,7 +1576,11 @@ function AdminOSSuporteChat({ osId, remetenteId, remetenteNome, clienteId, isCon
             <form onSubmit={handleEnviar} className="flex items-center gap-3">
               <label className={`cursor-pointer flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors ${anexoFile ? 'bg-indigo-100 text-indigo-600' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'} ${enviando ? 'opacity-50 cursor-not-allowed' : ''}`}>
                 <input type="file" className="hidden" disabled={enviando} onChange={(e) => {
-                  if (e.target.files?.[0]) setAnexoFile(e.target.files[0]);
+                  if (e.target.files?.[0]) {
+                    const f = e.target.files[0];
+                    const err = validateFile(f);
+                    if (err) { toast.error(err); } else { setAnexoFile(f); }
+                  }
                   e.target.value = '';
                 }} />
                 <Paperclip className="h-5 w-5" />

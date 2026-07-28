@@ -297,8 +297,6 @@ export const sessionService = {
         await persistAuthenticatedSession(res);
       }
       return res;
-    } finally {
-      // Garantindo a execução do finally conforme requisitado
     }
   },
 
@@ -413,8 +411,6 @@ export const sessionService = {
         await persistAuthenticatedSession(res);
       }
       return res;
-    } finally {
-      // Garantindo a execução do finally conforme requisitado
     }
   },
 
@@ -432,8 +428,6 @@ export const sessionService = {
         await persistAuthenticatedSession(res);
       }
       return res;
-    } finally {
-      // Garantindo a execução do finally conforme requisitado
     }
   },
 
@@ -451,8 +445,6 @@ export const sessionService = {
         await persistAuthenticatedSession(res);
       }
       return res;
-    } finally {
-      // Garantindo a execução do finally conforme requisitado
     }
   },
 

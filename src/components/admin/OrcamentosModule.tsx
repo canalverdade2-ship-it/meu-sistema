@@ -42,6 +42,8 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
     }
   }, [activeSubTab]);
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
+  const PAGE_SIZE = 30;
+  const [currentPage, setCurrentPage] = useState(0);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [selectedOrcamento, setSelectedOrcamento] = useState<Orcamento | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -87,7 +89,7 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
 
   useEffect(() => {
     fetchOrcamentos();
-  }, [activeTab, search, filters]);
+  }, [activeTab, search, filters, currentPage]);
 
   // Stable Realtime Subscription
   useEffect(() => {
@@ -182,7 +184,8 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
     }
     
     const { data, error } = await query
-      .order('data_criacao', { ascending: false });
+      .order('data_criacao', { ascending: false })
+      .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
     
     if (error) {
       console.error('Error fetching orcamentos:', error);
@@ -852,6 +855,14 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
           </tbody>
         </table>
       </div>
+
+      {orcamentos.length > 0 && (
+        <div className="flex gap-2 mt-4 justify-center items-center">
+          <button onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0} className="px-4 py-2 text-sm font-bold text-neutral-600 bg-white border border-neutral-200 rounded-xl hover:bg-neutral-50 disabled:opacity-50">Anterior</button>
+          <span className="text-sm font-bold text-neutral-600">Página {currentPage + 1}</span>
+          <button onClick={() => setCurrentPage(p => p + 1)} disabled={orcamentos.length < PAGE_SIZE} className="px-4 py-2 text-sm font-bold text-neutral-600 bg-white border border-neutral-200 rounded-xl hover:bg-neutral-50 disabled:opacity-50">Próximo</button>
+        </div>
+      )}
 
       <Modal isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} title="Novo Orçamento" size="full">
         <div className="max-w-6xl mx-auto py-8">

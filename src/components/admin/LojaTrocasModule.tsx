@@ -24,6 +24,9 @@ export function LojaTrocasModule({ colaboradorId, colaboradorNome }: { colaborad
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedSolicitacao, setSelectedSolicitacao] = useState<LojaSolicitacao | null>(null);
   
+  const PAGE_SIZE = 30;
+  const [page, setPage] = useState(0);
+  
   const [resolucaoInput, setResolucaoInput] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
@@ -48,7 +51,7 @@ useEffect(() => {
   }, [activeTab, search]);
 
   const fetchSolicitacoes = async () => {
-    let query = supabase.from('loja_solicitacoes').select('*, clientes(nome, email), orcamentos!orcamento_origem_id(codigo_orcamento)');
+    let query = supabase.from('loja_solicitacoes').select('id, cliente_id, tipo, status, motivo, metodo_entrega, endereco_devolucao, data_agendamento, rastreio_cliente, rastreio_admin, valor_diferenca, resposta_admin, historico_status, created_at, updated_at, descricao_detalhada, imagens_anexo, clientes(nome, email), orcamentos!orcamento_origem_id(codigo_orcamento, protocolo)');
     
     if (activeTab === 'pendentes') {
       query = query.in('status', ['pendente', 'em_analise', 'aprovado', 'aguardando_instrucoes', 'aguardando_devolucao', 'devolucao_postada', 'agendado', 'devolucao_recebida', 'novo_produto_enviado']);
@@ -62,7 +65,9 @@ useEffect(() => {
       query = query.ilike('motivo', `%${search}%`);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
     if (error) {
       console.error('Erro ao buscar loja_solicitacoes:', error);
     }
@@ -239,7 +244,7 @@ useEffect(() => {
 
       <div className="flex border-b border-neutral-200 mb-6">
         <button
-          onClick={() => setActiveTab('pendentes')}
+          onClick={() => { setActiveTab('pendentes'); setPage(0); }}
           className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${
             activeTab === 'pendentes'
               ? 'border-indigo-600 text-indigo-600'
@@ -249,7 +254,7 @@ useEffect(() => {
           Pendentes / Em Análise
         </button>
         <button
-          onClick={() => setActiveTab('historico')}
+          onClick={() => { setActiveTab('historico'); setPage(0); }}
           className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${
             activeTab === 'historico'
               ? 'border-indigo-600 text-indigo-600'
@@ -322,6 +327,26 @@ useEffect(() => {
           </p>
         </div>
       )}
+
+      <div className="flex justify-between items-center mt-6">
+        <button
+          disabled={page === 0}
+          onClick={() => setPage((p) => p - 1)}
+          className="px-4 py-2 bg-neutral-100 text-neutral-600 font-bold rounded-lg hover:bg-neutral-200 disabled:opacity-50 text-sm"
+        >
+          Anterior
+        </button>
+        <span className="text-sm font-bold text-neutral-600">
+          Página {page + 1}
+        </span>
+        <button
+          disabled={solicitacoes.length < PAGE_SIZE}
+          onClick={() => setPage((p) => p + 1)}
+          className="px-4 py-2 bg-neutral-100 text-neutral-600 font-bold rounded-lg hover:bg-neutral-200 disabled:opacity-50 text-sm"
+        >
+          Próxima
+        </button>
+      </div>
 
       <Modal isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} title="Detalhes da Solicitação" size="wide">
         {selectedSolicitacao && (

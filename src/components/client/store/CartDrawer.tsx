@@ -48,11 +48,13 @@ interface CartDrawerProps {
   onCheckout: () => void;
 }
 
+const roundMoney = (value: number): number => Math.round(value * 100) / 100;
+
 function itemSubtotal(item: CartItem): number {
   if (item.tipo === 'produto') {
-    return getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal;
+    return roundMoney(getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal);
   }
-  return Number(item.item_detalhes?.valor || 0) * Number(item.quantidade || 1);
+  return roundMoney(Number(item.item_detalhes?.valor || 0) * Number(item.quantidade || 1));
 }
 
 function itemTypeLabel(type: CartItem['tipo']) {
@@ -86,17 +88,17 @@ export default function CartDrawer({
   }, [cupomDesconto, cupomEntrega]);
 
   const subtotal = useMemo(
-    () => cartItems.reduce((total, item) => total + itemSubtotal(item), 0),
+    () => roundMoney(cartItems.reduce((total, item) => total + roundMoney(itemSubtotal(item)), 0)),
     [cartItems],
   );
 
   const promotionDiscount = useMemo(
-    () => promosAplicadas.reduce((total: number, promotion: PromoResult) => {
+    () => roundMoney(promosAplicadas.reduce((total: number, promotion: PromoResult) => {
       if (promotion.status === 'ativa' && promotion.desconto_aplicado) {
-        return total + Number(promotion.desconto_aplicado.valor_desconto || 0);
+        return total + roundMoney(Number(promotion.desconto_aplicado.valor_desconto || 0));
       }
       return total;
-    }, 0),
+    }, 0)),
     [promosAplicadas],
   );
 
@@ -111,14 +113,14 @@ export default function CartDrawer({
     }
 
     const calculated = cupomDesconto.tipo_desconto === 'porcentagem'
-      ? calculationBase * (Number(cupomDesconto.valor_desconto || 0) / 100)
-      : Number(cupomDesconto.valor_desconto || 0);
+      ? roundMoney(calculationBase * (Number(cupomDesconto.valor_desconto || 0) / 100))
+      : roundMoney(Number(cupomDesconto.valor_desconto || 0));
 
-    return Math.min(calculated, Math.max(0, subtotal - promotionDiscount));
+    return roundMoney(Math.min(calculated, Math.max(0, subtotal - promotionDiscount)));
   }, [cartItems, cupomDesconto, isGuest, promotionDiscount, subtotal]);
 
-  const totalDiscount = promotionDiscount + couponDiscount;
-  const total = Math.max(0, subtotal - totalDiscount);
+  const totalDiscount = roundMoney(promotionDiscount + couponDiscount);
+  const total = roundMoney(Math.max(0, subtotal - totalDiscount));
   const hasOutOfStockItems = cartItems.some((item) => (
     item.tipo === 'produto'
     && item.item_detalhes?.controle_estoque
@@ -189,7 +191,7 @@ export default function CartDrawer({
                   && item.item_detalhes?.controle_estoque
                   && Number(item.item_detalhes?.estoque_disponivel || 0) <= 0;
                 const subtotalForItem = itemSubtotal(item);
-                const originalSubtotal = Number(item.item_detalhes?.valor || 0) * Number(item.quantidade || 1);
+                const originalSubtotal = roundMoney(Number(item.item_detalhes?.valor || 0) * Number(item.quantidade || 1));
                 const hasDiscount = isProduct && hasActiveProductDiscount(item.item_detalhes) && subtotalForItem < originalSubtotal;
 
                 return (
