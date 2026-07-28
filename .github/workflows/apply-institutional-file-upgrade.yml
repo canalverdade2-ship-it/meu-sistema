@@ -1,0 +1,55 @@
+name: Apply Institutional File Upgrade
+
+on:
+  push:
+    branches:
+      - agent/padrao-institucional-arquivos
+    paths:
+      - 'scripts/apply-institutional-file-upgrade.py'
+      - '.github/workflows/apply-institutional-file-upgrade.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    name: Aplicar migração controlada
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout da branch isolada
+        uses: actions/checkout@v4
+        with:
+          ref: agent/padrao-institucional-arquivos
+          fetch-depth: 0
+
+      - name: Aplicar alterações determinísticas
+        run: python scripts/apply-institutional-file-upgrade.py
+
+      - name: Validar patch
+        run: |
+          git diff --check
+          test -n "$(git status --porcelain)"
+          ! grep -RInE "window\.print\(|printWindow\.print\(|type: 'text/csv" \
+            src/components/admin/FiscalModule.tsx \
+            src/components/admin/demandas/DemandasTabela.tsx \
+            src/components/admin/relatorios \
+            src/components/client/financeiro/NotasFiscaisList.tsx \
+            src/lib/freeToolsPdfReport.ts \
+            src/lib/pdf.ts
+
+      - name: Registrar alterações na branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/components/admin/FiscalModule.tsx \
+            src/components/admin/demandas/DemandasTabela.tsx \
+            src/components/admin/relatorios/Relatorio*.tsx \
+            src/components/client/financeiro/NotasFiscaisList.tsx \
+            src/lib/freeToolsPdfReport.ts \
+            src/lib/pdf.ts
+          git commit -m "Aplicar padrão institucional aos arquivos gerados"
+          git push origin HEAD:agent/padrao-institucional-arquivos
