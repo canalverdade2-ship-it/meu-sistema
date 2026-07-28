@@ -1,0 +1,38 @@
+name: Authenticated Production Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: authenticated-production-smoke
+  cancel-in-progress: false
+
+jobs:
+  client-portal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+      PRODUCTION_CLIENT_CPF: ${{ secrets.PRODUCTION_CLIENT_CPF }}
+      PRODUCTION_CLIENT_PIN: ${{ secrets.PRODUCTION_CLIENT_PIN }}
+      PRODUCTION_SMOKE: 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Exercise authenticated client portal
+        run: npm run test:e2e:production-auth
