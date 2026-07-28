@@ -36,6 +36,7 @@ export function NotasFiscaisList({ clientId, initialItemId }: { clientId: string
     return () => window.removeEventListener('open-nf-detail', handleOpenItem);
   }, [ordens]);
 
+  useEffect(() => {
     const channel = supabase
       .channel('client-nf-updates')
       .on('postgres_changes', {

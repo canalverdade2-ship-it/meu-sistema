@@ -8,8 +8,49 @@ interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 export function RelatorioFiscal({ periodo, dataInicio, dataFim }: Props) {
   const [loading, setLoading] = useState(true);
   const [dados, setDados] = useState<any>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
-  useEffect(() => { carregar(); }, [periodo, dataInicio, dataFim]);
+  useEffect(() => {
+    let isMounted = true;
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const { inicio, fim } = getRangeDatas(periodo, dataInicio, dataFim);
+        const { data: ordens } = await supabase
+          .from('ordens_fiscais')
+          .select('id, codigo_fiscal, cliente_nome, tipo_compra, valor_bruto, valor_desconto, valor_total, forma_pagamento, status_pagamento, status_emissao, numero_nota, data_emissao, data_pagamento, created_at')
+          .gte('created_at', inicio)
+          .lte('created_at', fim)
+          .order('created_at', { ascending: false });
+
+        if (!isMounted) return;
+
+        const ords = ordens || [];
+        const totalBruto = ords.reduce((s,o)=>s+(Number(o.valor_bruto)||0),0);
+        const totalDesconto = ords.reduce((s,o)=>s+(Number(o.valor_desconto)||0),0);
+        const totalLiquido = ords.reduce((s,o)=>s+(Number(o.valor_total)||0),0);
+
+        const pendEm = ords.filter(o=>o.status_emissao==='pendente_emissao').length;
+        const emitidas = ords.filter(o=>o.status_emissao==='emitida').length;
+        const cancelEm = ords.filter(o=>['cancelada','inutilizada'].includes(o.status_emissao)).length;
+
+        const pagPend = ords.filter(o=>o.status_pagamento==='pendente').length;
+        const pagPago = ords.filter(o=>o.status_pagamento==='pago').length;
+        const pagCanc = ords.filter(o=>o.status_pagamento==='cancelado').length;
+
+        const porTipo: Record<string,number> = {};
+        ords.forEach(o=>{ const t = o.tipo_compra||'outro'; porTipo[t]=(porTipo[t]||0)+1; });
+
+        const porForma: Record<string,number> = {};
+        ords.forEach(o=>{ if(o.forma_pagamento) porForma[o.forma_pagamento]=(porForma[o.forma_pagamento]||0)+(Number(o.valor_total)||0); });
+
+        if (isMounted) setDados({ totalBruto, totalDesconto, totalLiquido, pendEm, emitidas, cancelEm, pagPend, pagPago, pagCanc, porTipo, porForma, ords });
+      } catch(e) { console.error(e); }
+      finally { if (isMounted) setLoading(false); }
+    };
+    fetch();
+    return () => { isMounted = false; };
+  }, [periodo, dataInicio, dataFim]);
 
   const carregar = async () => {
     setLoading(true);
@@ -53,19 +94,37 @@ export function RelatorioFiscal({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_,i)=><div key={i} className="h-24 bg-neutral-100 rounded-2xl"/>)}</div>;
 
-  const exportar = () => exportarExcel(
-    (dados?.ords||[]).map((o:any)=>({ codigo:o.codigo_fiscal, cliente:o.cliente_nome||'—', tipo:o.tipo_compra||'—', valor_bruto:o.valor_bruto, valor_desconto:o.valor_desconto, valor_total:o.valor_total, forma_pgto:o.forma_pagamento||'—', status_pag:o.status_pagamento, status_emissao:o.status_emissao, numero_nota:o.numero_nota||'—', data_emissao:formatarData(o.data_emissao) })),
-    'relatorio_fiscal'
-  );
+  const exportar = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportarExcel(
+        (dados?.ords||[]).map((o:any)=>({ codigo:o.codigo_fiscal, cliente:o.cliente_nome||'—', tipo:o.tipo_compra||'—', valor_bruto:o.valor_bruto, valor_desconto:o.valor_desconto, valor_total:o.valor_total, forma_pgto:o.forma_pagamento||'—', status_pag:o.status_pagamento, status_emissao:o.status_emissao, numero_nota:o.numero_nota||'—', data_emissao:formatarData(o.data_emissao) })),
+        'relatorio_fiscal'
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportarPDF();
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-xl font-black text-neutral-900">Relatório Fiscal</h2>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>Excel</button>
-          <button onClick={() => void exportarPDF()} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all"><FileText className="h-3 w-3"/>Gerar PDF</button>
-          <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
+          <button onClick={exportar} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Gerando...' : 'Excel'}</button>
+          <button onClick={handleExportPDF} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all disabled:opacity-50"><FileText className="h-3 w-3"/>{isExporting ? 'Gerando...' : 'Gerar PDF'}</button>
+          <button onClick={carregar} disabled={loading} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50"><RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}/>Atualizar</button>
         </div>
       </div>
 
