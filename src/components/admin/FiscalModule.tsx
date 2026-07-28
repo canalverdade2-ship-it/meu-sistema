@@ -20,6 +20,8 @@ import { formatCurrency, formatDate, formatDateTime } from '../../lib/utils';
 import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
 import { downloadFiscalReceiptPdf } from '../../lib/fiscalReceiptPdf';
 import { SecureAttachmentButton } from '../ui/SecureAttachmentButton';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 type Props = { initialItemId?: string; colaboradorId?: string; colaboradorNome?: string };
 type Tab = 'pendentes' | 'emitidas' | 'canceladas' | 'todas';
@@ -41,6 +43,8 @@ function Overlay({ children, onClose, printable = false }: { children: React.Rea
 }
 
 export function FiscalModule({ initialItemId }: Props) {
+  const confirmHook = useConfirm();
+  const { confirm } = confirmHook;
   const [activeTab, setActiveTab] = useState<Tab>('pendentes');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -155,7 +159,7 @@ export function FiscalModule({ initialItemId }: Props) {
   };
 
   const archive = async (item: any) => {
-    if (!window.confirm(`Arquivar a ordem fiscal ${item.codigo_fiscal || String(item.id).slice(0, 8)}?`)) return;
+    if (!await confirm({ title: 'Atenção', message: `Arquivar a ordem fiscal ${item.codigo_fiscal || String(item.id).slice(0, 8)}?` })) return;
     try {
       await callAdminRpc('gsa_admin_fiscal_update', { p_ordem_id: item.id, p_action: 'arquivar', p_payload: {} });
       toast.success('Ordem fiscal arquivada.');
@@ -186,6 +190,7 @@ export function FiscalModule({ initialItemId }: Props) {
     {showUpload && selected && <Overlay onClose={() => setShowUpload(false)}><div className="flex items-center justify-between"><h2 className="text-2xl font-black">Anexar nota fiscal</h2><button type="button" onClick={() => setShowUpload(false)}><X className="h-5 w-5" /></button></div><div className="mt-6 space-y-4"><label className="block text-sm font-bold">Número da nota<input value={numeroNota} onChange={(event) => setNumeroNota(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label><label className="block text-sm font-bold">Arquivo PDF<input type="file" accept="application/pdf,.pdf" onChange={(event) => setPdfFile(event.target.files?.[0] || null)} className="mt-2 block w-full rounded-xl border border-neutral-200 p-3" /></label><label className="block text-sm font-bold">Arquivo XML<input type="file" accept="application/xml,text/xml,.xml" onChange={(event) => setXmlFile(event.target.files?.[0] || null)} className="mt-2 block w-full rounded-xl border border-neutral-200 p-3" /></label><p className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-800">Os arquivos serão privados e abertos somente por URL temporária.</p></div><div className="mt-8 flex justify-end gap-3"><button type="button" onClick={() => setShowUpload(false)} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving} onClick={() => void submitUpload()} className="rounded-xl bg-teal-600 px-6 py-3 font-black text-white disabled:opacity-50">{saving ? 'Enviando...' : 'Salvar nota fiscal'}</button></div></Overlay>}
 
     {showStatus && selected && <Overlay onClose={() => setShowStatus(false)}><div className="flex items-center justify-between"><h2 className="text-2xl font-black">Alterar status fiscal</h2><button type="button" onClick={() => setShowStatus(false)}><X className="h-5 w-5" /></button></div><div className="mt-6 space-y-4"><label className="block text-sm font-bold">Novo status<select value={newStatus} onChange={(event) => setNewStatus(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3">{statusOptions.map((status) => <option key={status} value={status}>{status.replaceAll('_', ' ')}</option>)}</select></label><label className="block text-sm font-bold">Motivo ou observação<textarea rows={4} value={statusReason} onChange={(event) => setStatusReason(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></div><div className="mt-8 flex justify-end gap-3"><button type="button" onClick={() => setShowStatus(false)} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving} onClick={() => void submitStatus()} className="rounded-xl bg-teal-600 px-6 py-3 font-black text-white disabled:opacity-50">Salvar status</button></div></Overlay>}
+    <ConfirmDialog {...confirmHook} />
   </div>;
 }
 

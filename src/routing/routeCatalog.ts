@@ -1,21 +1,4 @@
-export const routes = {
-  // Rotas Públicas
-  public: {
-    home: () => '/',
-    services: () => '/servicos-e-assinaturas',
-    freeTools: () => '/servicos-gratuitos',
-    systems: () => '/criacao-de-site-e-sistemas',
-    partners: () => '/parceiros',
-    partner: (slug: string) => `/parceiros/${slug}`,
-    ads: () => '/anuncios',
-    advertise: () => '/anuncie',
-    affiliates: () => '/afiliados',
-    affiliateDashboard: () => '/afiliados/dashboard',
-    affiliateLinks: () => '/afiliados/links',
-    affiliateCommissions: () => '/afiliados/comissoes',
-    affiliatePayouts: () => '/afiliados/saques',
-    affiliateProfile: () => '/afiliados/perfil',
-    affiliatePoints: () => '/afiliados/pontos',
+
 export const routes = {
   // Rotas Públicas
   public: {
