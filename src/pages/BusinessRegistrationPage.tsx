@@ -29,7 +29,6 @@ import {
 } from '../lib/utils';
 import { consultarCEP } from '../utils/viaCep';
 import { validarCNPJ, validarEmail } from '../utils/cpfValidator';
-import { Modal } from '../components/ui/Modal';
 
 type RegistrationStage = 'authorization' | 'company' | 'success';
 type VoucherTab = 'com-indicacao' | 'sem-indicacao';
@@ -37,7 +36,7 @@ type SubmissionStatus = 'pendente' | 'ativo';
 
 interface BusinessRegistrationPageProps {
   onBack: () => void;
-  onLogin: (cnpj?: string) => void;
+  onLogin: () => void;
 }
 
 interface RegistrationData {
@@ -112,7 +111,6 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
   const [loading, setLoading] = useState(false);
   const [loadingCep, setLoadingCep] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('pendente');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { settings, loading: settingsLoading } = usePublicRegistrationSettings(true);
 
   useEffect(() => {
@@ -231,7 +229,7 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
     if (!validarCNPJ(cleanCnpj)) nextErrors.cnpj = 'Informe um CNPJ válido.';
     if (registrationData.nome.trim().length < 3) nextErrors.nome = 'Informe a razão social da empresa.';
     if (!validarEmail(registrationData.email.trim())) nextErrors.email = 'Informe um e-mail válido.';
-    if (cleanPhone.length < 10 || cleanPhone.length > 11) nextErrors.telefone = 'Informe um telefone comercial ou celular válido com DDD.';
+    if (cleanPhone.length !== 11) nextErrors.telefone = 'Informe um celular com DDD.';
     if (cleanCep.length !== 8) nextErrors.cep = 'Informe um CEP válido.';
     if (!registrationData.numero.trim()) nextErrors.numero = 'Informe o número.';
     if (!registrationData.endereco.trim()) nextErrors.endereco = 'Informe o endereço.';
@@ -275,7 +273,6 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
 
       setSubmissionStatus(data?.status === 'pendente' ? 'pendente' : 'ativo');
       setStage('success');
-      setShowSuccessModal(true);
       window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível concluir o cadastro empresarial.');
@@ -924,45 +921,6 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
           </span>
         </footer>
       </div>
-
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border border-white/20 bg-white p-6 shadow-2xl">
-            <div className="text-center py-4 px-2">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-8 ring-emerald-50/50">
-                <CheckCircle2 className="h-10 w-10" />
-              </div>
-
-              <h3 className="mt-5 text-xl font-black text-neutral-900 sm:text-2xl">
-                Cadastro realizado com sucesso!
-              </h3>
-
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1 text-xs font-bold text-amber-900">
-                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                Entrou em análise pelo sistema
-              </div>
-
-              <p className="mt-4 text-sm leading-6 text-neutral-600">
-                Os dados da sua empresa foram recebidos. Crie agora a sua nova senha de acesso para entrar no Portal Empresas e acompanhar a liberação do seu cadastro no módulo <strong>Meu Cadastro</strong>.
-              </p>
-
-              <div className="mt-7">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSuccessModal(false);
-                    onLogin(cnpj);
-                  }}
-                  className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1828] px-6 text-sm font-black text-white shadow-lg shadow-[#0b1828]/20 transition hover:bg-[#152942] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9a742b]"
-                >
-                  Acessar agora o portal empresas
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
