@@ -8,6 +8,7 @@ interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 export function RelatorioMarketing({ periodo, dataInicio, dataFim }: Props) {
   const [loading, setLoading] = useState(true);
   const [dados, setDados] = useState<any>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => { carregar(); }, [periodo, dataInicio, dataFim]);
 
@@ -58,17 +59,33 @@ export function RelatorioMarketing({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_,i)=><div key={i} className="h-24 bg-neutral-100 rounded-2xl"/>)}</div>;
 
-  const exportarVou = () => exportarExcel((dados?.vo||[]).map((v:any)=>({ tipo:v.tipo, valor:v.valor, status:v.status, categoria:v.categoria||'—' })), 'relatorio_vouchers');
-  const exportarInd = () => exportarExcel((dados?.ind||[]).map((i:any)=>({ status:i.status, bonus_indicador:i.bonus_indicador, bonus_indicado:i.bonus_indicado })), 'relatorio_indicacoes');
+  const exportarVou = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportarExcel((dados?.vo||[]).map((v:any)=>({ tipo:v.tipo, valor:v.valor, status:v.status, categoria:v.categoria||'—' })), 'relatorio_vouchers');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+  const exportarInd = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportarExcel((dados?.ind||[]).map((i:any)=>({ status:i.status, bonus_indicador:i.bonus_indicador, bonus_indicado:i.bonus_indicado })), 'relatorio_indicacoes');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-xl font-black text-neutral-900">Marketing & Promoções</h2>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={exportarVou} className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition-all"><Download className="h-3 w-3"/>Vouchers Excel</button>
-          <button onClick={exportarInd} className="flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-cyan-700 transition-all"><Download className="h-3 w-3"/>Indicações Excel</button>
-          <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
+          <button onClick={exportarVou} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Exportando...' : 'Vouchers Excel'}</button>
+          <button onClick={exportarInd} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-cyan-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Exportando...' : 'Indicações Excel'}</button>
+          <button onClick={carregar} disabled={loading} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50"><RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}/>Atualizar</button>
         </div>
       </div>
 

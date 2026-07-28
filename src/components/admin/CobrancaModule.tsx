@@ -358,7 +358,7 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   };
 
   const confirmarWhatsApp = async () => {
-    if (!selectedCobranca) return;
+    if (!selectedCobranca || isSubmittingAcao) return;
     const phoneNum = selectedCobranca.clientes?.telefone?.replace(/\D/g, '') || '';
 
     if (!phoneNum || phoneNum.length < 10) {
@@ -367,6 +367,7 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
       return;
     }
 
+    setIsSubmittingAcao(true);
     try {
       const session = getAdminSessionForRpc();
       const { error } = await supabase.rpc('gsa_admin_registrar_cobranca_historico', {
@@ -396,6 +397,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
     } catch (err: any) {
       console.error('Erro ao registrar contato WhatsApp:', err);
       toast.error(err?.message || 'Erro ao registrar contato WhatsApp.');
+    } finally {
+      setIsSubmittingAcao(false);
     }
   };
 
@@ -427,15 +430,18 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
     } catch (err: any) {
       console.error('Erro ao mudar status de cobranca:', err);
       toast.error(err?.message || 'Erro ao mudar status.');
+    } finally {
+      setIsSubmittingAcao(false);
     }
   };
 
   const confirmarProtesto = async () => {
-    if (!selectedCobranca || !protestoData.data_protesto || !protestoData.nome_cartorio) {
-      toast.error('Preencha todos os campos do protesto.');
+    if (!selectedCobranca || !protestoData.data_protesto || !protestoData.nome_cartorio || isSubmittingAcao) {
+      if (!isSubmittingAcao) toast.error('Preencha todos os campos do protesto.');
       return;
     }
 
+    setIsSubmittingAcao(true);
     try {
       const session = getAdminSessionForRpc();
       const faturaDescricaoOriginal = selectedCobranca.faturas?.codigo_fatura || selectedCobranca.fatura_id?.substring(0, 8);
@@ -474,6 +480,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
     } catch (err: any) {
       console.error('Erro ao registrar protesto:', err);
       toast.error(err?.message || 'Erro ao registrar protesto e agrupar divida.');
+    } finally {
+      setIsSubmittingAcao(false);
     }
   };
 
@@ -626,7 +634,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   };
 
   const salvarHistoricoManual = async () => {
-    if (!selectedCobranca || !novoHistorico.descricao) return;
+    if (!selectedCobranca || !novoHistorico.descricao || isSubmittingAcao) return;
+    setIsSubmittingAcao(true);
     try {
       const session = getAdminSessionForRpc();
       const { error } = await supabase.rpc('gsa_admin_registrar_cobranca_historico', {
@@ -671,6 +680,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
     } catch (err: any) {
       console.error('Erro ao registrar historico:', err);
       toast.error(err?.message || 'Erro ao registrar historico.');
+    } finally {
+      setIsSubmittingAcao(false);
     }
   };
 
@@ -681,8 +692,9 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   };
 
   const confirmarBaixaParcela = async () => {
-    if (!parcelaSelecionada || parcelaLoading) return;
+    if (!parcelaSelecionada || parcelaLoading || isSubmittingAcao) return;
     setParcelaLoading(parcelaSelecionada.id);
+    setIsSubmittingAcao(true);
     try {
       const session = getAdminSessionForRpc();
       const { data, error } = await supabase.rpc('gsa_admin_baixar_parcela_cobranca', {
@@ -721,11 +733,13 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
       toast.error(err?.message || 'Erro ao baixar parcela.');
     } finally {
       setParcelaLoading(null);
+      setIsSubmittingAcao(false);
     }
   };
 
   const confirmarBaixaManualCobranca = async () => {
-    if (!selectedCobranca) return;
+    if (!selectedCobranca || isSubmittingAcao) return;
+    setIsSubmittingAcao(true);
     try {
       const session = getAdminSessionForRpc();
       const { data, error } = await supabase.rpc('gsa_admin_baixar_cobranca_manual', {

@@ -352,27 +352,12 @@ export function ClientAreaVIP({
         ? 'Nível VIP confirmado com seus pontos!'
         : 'Fatura gerada com sucesso! Aguarde o link de pagamento.');
       setSelectedLevelToBuy(null);
-                      }}
-                      animate={{ 
-                        top: "-20%", 
-                        left: `${Math.random() * 100}%`,
-                        rotate: 720,
-                        opacity: 0
-                      }}
-                      transition={{ 
-                        duration: Math.random() * 4 + 3, 
-                        repeat: Infinity, 
-                        delay: Math.random() * 8,
-                        ease: "easeOut"
-                      }}
-                      className={`absolute w-3 h-3 rounded-full ${['bg-amber-400', 'bg-indigo-500', 'bg-emerald-400', 'bg-rose-500', 'bg-sky-400'][Math.floor(Math.random() * 5)]} shadow-lg`}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </motion.div>
-        )}
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao processar assinatura VIP');
+    } finally {
+      setIsBuying(false);
+    }
+  };
 
         {activeTab === 'Histórico' && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">

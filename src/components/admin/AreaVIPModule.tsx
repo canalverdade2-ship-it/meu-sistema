@@ -134,10 +134,11 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
   }, [initialItemId, clients]);
 
   useEffect(() => {
-    fetchLevels();
-    fetchStats();
-    fetchClients();
-    fetchModuleConfig();
+    const isMounted = { current: true };
+    fetchLevels(isMounted);
+    fetchStats(isMounted);
+    fetchClients(isMounted);
+    fetchModuleConfig(isMounted);
 
     // Adiciona assinatura em tempo real para sincronizar dados automaticamente
     const channel = supabase
@@ -179,17 +180,18 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
       .subscribe();
 
     return () => {
+      isMounted.current = false;
       supabase.removeChannel(channel);
     };
   }, []);
 
-  const fetchModuleConfig = async () => {
+  const fetchModuleConfig = async (isMounted = { current: true }) => {
     try {
       const { data } = await supabase
         .from('system_settings')
         .select('key, value')
         .in('key', ['modulo_area_vip_ativo', 'modulo_area_vip_oculto']);
-      if (data) {
+      if (data && isMounted.current) {
         const ativo = data.find(s => s.key === 'modulo_area_vip_ativo')?.value;
         const oculto = data.find(s => s.key === 'modulo_area_vip_oculto')?.value;
         setModuloAtivo(ativo !== 'false');
@@ -268,7 +270,7 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
     }
   };
 
-  const fetchLevels = async () => {
+  const fetchLevels = async (isMounted = { current: true }) => {
     try {
       const { data, error } = await supabase
         .from('client_levels')
@@ -292,16 +294,18 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
           benefits: Array.isArray(dbLevel.benefits) ? dbLevel.benefits : [],
           exclusiveBenefits: Array.isArray(dbLevel.exclusive_benefits) ? dbLevel.exclusive_benefits : []
         }));
-        setLevels(mappedLevels);
+        if (isMounted.current) {
+          setLevels(mappedLevels);
+        }
       }
     } catch (error) {
       console.error('Error fetching levels:', error);
     }
   };
 
-  const fetchClients = async () => {
+  const fetchClients = async (isMounted = { current: true }) => {
     try {
-      setLoading(true);
+      if (isMounted.current) setLoading(true);
       // Tenta buscar com todas as colunas (incluindo as de ajuste manual e nível automático)
       const { data, error } = await supabase
         .from('clientes')
@@ -316,15 +320,15 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
           .order('nome');
         
         if (basicError) throw basicError;
-        setClients(basicData || []);
+        if (isMounted.current) setClients(basicData || []);
       } else {
-        setClients(data || []);
+        if (isMounted.current) setClients(data || []);
       }
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast.error('Erro ao carregar lista de clientes');
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -434,9 +438,9 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
     }
   };
 
-  const fetchStats = async () => {
+  const fetchStats = async (isMounted = { current: true }) => {
     try {
-      setLoading(true);
+      if (isMounted.current) setLoading(true);
       const { data: clientes, error } = await supabase
         .from('clientes')
         .select('pontos_totais, nivel_manual_id, nivel_id, auto_level:client_levels!nivel_id(*), manual_level:client_levels!nivel_manual_id(*)');
@@ -470,14 +474,16 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
         };
       });
 
-      setStats({
-        totalUsers: total,
-        distribution
-      });
+      if (isMounted.current) {
+        setStats({
+          totalUsers: total,
+          distribution
+        });
+      }
     } catch (error) {
       console.error('Error fetching VIP stats:', error);
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -1189,7 +1195,7 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
 
       {/* Manual Level Modal */}
       {manualLevelModal && selectedClient && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
