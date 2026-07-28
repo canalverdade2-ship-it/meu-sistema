@@ -511,22 +511,24 @@ function SolicitacoesTab() {
                   <Plane className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="rounded-lg bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
+                  <h2 className="text-xl font-black tracking-tight text-white">Solicitação de Viagem</h2>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
                       {detailsItem.protocolo || 'SOLICITAÇÃO'}
                     </span>
-                    <StatusBadge status={detailsItem.status} />
                   </div>
-                  <h2 className="text-xl font-black tracking-tight text-white">Solicitação de Viagem</h2>
                 </div>
               </div>
-              <button 
-                onClick={() => setDetailsItem(null)} 
-                className="rounded-xl bg-white/10 p-2.5 text-slate-300 hover:bg-white/20 hover:text-white transition-all active:scale-95 border border-white/10"
-                aria-label="Fechar modal"
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-3">
+                <StatusBadge status={detailsItem.status} />
+                <button 
+                  onClick={() => setDetailsItem(null)} 
+                  className="rounded-xl bg-white/10 p-2.5 text-slate-300 hover:bg-white/20 hover:text-white transition-all active:scale-95 border border-white/10"
+                  aria-label="Fechar modal"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-neutral-50/50">
@@ -1160,22 +1162,24 @@ function PropostasTab() {
                   <FileText className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="rounded-lg bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
+                  <h2 className="text-xl font-black tracking-tight text-white">Detalhes da Proposta</h2>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
                       {detailsProposal.protocolo || 'PROPOSTA'}
                     </span>
-                    <StatusBadge status={detailsProposal.status} />
                   </div>
-                  <h2 className="text-xl font-black tracking-tight text-white">Detalhes da Proposta</h2>
                 </div>
               </div>
-              <button 
-                onClick={() => setDetailsProposal(null)} 
-                className="rounded-xl bg-white/10 p-2.5 text-slate-300 hover:bg-white/20 hover:text-white transition-all active:scale-95 border border-white/10"
-                aria-label="Fechar modal"
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-3">
+                <StatusBadge status={detailsProposal.status} />
+                <button 
+                  onClick={() => setDetailsProposal(null)} 
+                  className="rounded-xl bg-white/10 p-2.5 text-slate-300 hover:bg-white/20 hover:text-white transition-all active:scale-95 border border-white/10"
+                  aria-label="Fechar modal"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
             </header>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-neutral-50/50">
@@ -1811,22 +1815,24 @@ function TransacoesTab() {
                   <Receipt className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="rounded-lg bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
+                  <h2 className="text-xl font-black tracking-tight text-white">Detalhamento da Transação</h2>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
                       {detailsTx.protocolo || 'TRANSAÇÃO'}
                     </span>
-                    <StatusBadge status={getRefundStatus(detailsTx)} />
                   </div>
-                  <h2 className="text-xl font-black tracking-tight text-white">Detalhamento da Transação</h2>
                 </div>
               </div>
-              <button 
-                onClick={() => setDetailsTx(null)} 
-                className="rounded-xl bg-white/10 p-2.5 text-slate-300 hover:bg-white/20 hover:text-white transition-all active:scale-95 border border-white/10"
-                aria-label="Fechar modal"
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-3">
+                <StatusBadge status={getRefundStatus(detailsTx)} />
+                <button 
+                  onClick={() => setDetailsTx(null)} 
+                  className="rounded-xl bg-white/10 p-2.5 text-slate-300 hover:bg-white/20 hover:text-white transition-all active:scale-95 border border-white/10"
+                  aria-label="Fechar modal"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
             </header>
 
             <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-slate-50/50 custom-scrollbar">
