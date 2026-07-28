@@ -1046,12 +1046,11 @@
   content: "RELAÇÃO COMERCIAL ATIVA";
   position: absolute;
   right: 30px;
-  top: 22px;
+  bottom: 26px;
   color: rgba(255, 255, 255, 0.16);
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(1.5rem, 3vw, 3rem);
   letter-spacing: 0.04em;
-  pointer-events: none;
 }
 
 .min-h-screen.bg-\[\#f5f5f2\].text-neutral-900 [class*="text-emerald-"] {

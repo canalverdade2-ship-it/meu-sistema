@@ -81,6 +81,10 @@ function parseCurrencyString(val: string): number {
   return isNaN(num) ? 0 : num;
 }
 
+function getRefundRequestId(txId: string, action: string): string {
+  return `refund-${txId}-${action}-${Date.now()}`;
+};
+
 interface PagedResult {
   items: any[];
   total: number;
