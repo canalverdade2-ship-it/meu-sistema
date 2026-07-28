@@ -217,6 +217,7 @@ export type Voucher = {
   usage_count: number;
   status: 'ativo' | 'usado' | 'cancelado';
   motivo_cancelamento?: string;
+  data_cancelamento?: string;
   categoria: 'desconto' | 'saque';
   data_uso?: string;
   tipo_uso?: string;
@@ -380,6 +381,7 @@ export type OrdemAssinatura = {
 export type Ticket = {
   id: string;
   cliente_id: string;
+  prestador_id?: string;
   assunto: string;
   descricao: string;
   status: 'aberto' | 'em andamento' | 'concluido';
