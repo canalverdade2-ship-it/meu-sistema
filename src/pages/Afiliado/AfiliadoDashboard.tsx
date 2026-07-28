@@ -232,9 +232,20 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
   const createLink = async (event: FormEvent) => {
     event.preventDefault();
     const selected = snapshot.programs.find((program) => program.codigo === programCode);
+    const targetDest = (destination || selected?.caminhoPadrao || '/').trim();
+
+    const existing = snapshot.links.find(
+      (link) => link.destino.toLowerCase() === targetDest.toLowerCase()
+    );
+
+    if (existing) {
+      toast.error(`Você já possui um link de divulgação gerado para o destino "${targetDest}". Utilize o link existente em seus links.`);
+      return;
+    }
+
     const success = await runAction(() => createAffiliateLink({
       programaCodigo: programCode,
-      destino: destination || selected?.caminhoPadrao || '/',
+      destino: targetDest,
       titulo: linkTitle.trim() || selected?.nome || 'Link GSA',
     }), 'Link de divulgação criado.');
     if (success) setLinkTitle('');
