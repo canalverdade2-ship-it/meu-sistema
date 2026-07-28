@@ -5,7 +5,6 @@ export type {
   ProdutoFornecedorConfig,
   LojaCategoria,
   Servico,
-  Produto,
   PromotionQuantityInfo,
   ProductQuantityPriceBreakdown,
   Assinatura,
@@ -43,6 +42,10 @@ export type {
   PromocaoQuantidade,
   PromocaoQuantidadeUso,
 } from './types.original';
+
+export type Produto = Legacy.Produto & {
+  tipo_cliente: 'pf' | 'pj' | 'ambos';
+};
 
 export type Cliente = Legacy.Cliente & {
   pin_bloqueado?: boolean;
