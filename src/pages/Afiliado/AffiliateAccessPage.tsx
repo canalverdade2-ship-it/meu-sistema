@@ -294,7 +294,15 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
                     </button>
                   </form>
                 ) : (
-                  <div className="space-y-7">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (pin.length === 4 && !loading) {
+                        void login();
+                      }
+                    }}
+                    className="space-y-7"
+                  >
                     <div className="flex items-start gap-4 border-b border-[#e0dacf] pb-6">
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#0b1522] text-[#ddc28d]"><LockKeyhole className="h-5 w-5" /></span>
                       <div>
@@ -306,7 +314,23 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
 
                     <div>
                       <p className="mb-4 text-center text-sm font-semibold text-[#4f5864]">Informe seu PIN de 4 dígitos</p>
-                      <div className="flex justify-center"><PinInput value={pin} onChange={setPin} disabled={loading} onComplete={login} /></div>
+                      <div className="flex justify-center">
+                        <PinInput
+                          value={pin}
+                          onChange={setPin}
+                          disabled={loading}
+                          onEnter={() => {
+                            if (pin.length === 4 && !loading) {
+                              void login();
+                            }
+                          }}
+                          onComplete={() => {
+                            if (!loading) {
+                              void login();
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
 
                     <div className="flex flex-col-reverse gap-3 border-t border-[#e0dacf] pt-6 sm:flex-row sm:items-center sm:justify-between">
@@ -314,15 +338,14 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
                         Alterar documento
                       </button>
                       <button
-                        type="button"
-                        onClick={login}
+                        type="submit"
                         disabled={pin.length !== 4 || loading}
                         className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#0b1522] px-6 text-sm font-bold text-white transition-colors hover:bg-[#24364b] disabled:cursor-not-allowed disabled:opacity-45"
                       >
                         {loading ? 'Confirmando acesso...' : 'Entrar no portal'} <ArrowRight className="h-4 w-4" />
                       </button>
                     </div>
-                  </div>
+                  </form>
                 )}
               </div>
             )}
