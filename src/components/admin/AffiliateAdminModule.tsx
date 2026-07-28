@@ -203,7 +203,7 @@ export function AffiliateAdminModule() {
     const query = search.trim().toLocaleLowerCase('pt-BR');
     if (!query) return snapshot.affiliates;
     return snapshot.affiliates.filter((affiliate) =>
-      [affiliate.nome_divulgacao, affiliate.codigo_publico, affiliate.status]
+      [affiliate.nome_divulgacao, affiliate.cliente_nome_completo, affiliate.cliente_cpf, affiliate.codigo_publico, affiliate.status]
         .some((value) => String(value || '').toLocaleLowerCase('pt-BR').includes(query)),
     );
   }, [search, snapshot.affiliates]);
@@ -324,10 +324,19 @@ export function AffiliateAdminModule() {
               >
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-black text-neutral-950 group-hover:text-indigo-600 transition-colors">{affiliate.nome_divulgacao}</h3>
+                    <h3 className="font-black text-neutral-950 group-hover:text-indigo-600 transition-colors">
+                      {affiliate.cliente_nome_completo || affiliate.nome_divulgacao}
+                    </h3>
                     <StatusBadge status={affiliate.status} />
                   </div>
-                  <p className="mt-1 text-xs font-bold text-neutral-400">Código {affiliate.codigo_publico || '—'} · {affiliate.created_at ? formatDateTime(affiliate.created_at) : '—'}</p>
+                  {affiliate.cliente_nome_completo && affiliate.cliente_nome_completo !== affiliate.nome_divulgacao && (
+                    <p className="text-[11px] font-bold text-neutral-500">
+                      Divulgação: <span className="text-neutral-700">{affiliate.nome_divulgacao}</span>
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs font-bold text-neutral-400">
+                    Código <span className="font-mono font-extrabold text-indigo-700">{affiliate.codigo_publico || '—'}</span> · {affiliate.created_at ? formatDateTime(affiliate.created_at) : '—'}
+                  </p>
                 </div>
                 <Metric label="Cliques" value={number(affiliate.cliques).toLocaleString('pt-BR')} />
                 <Metric label="Conversões" value={number(affiliate.conversoes).toLocaleString('pt-BR')} />
