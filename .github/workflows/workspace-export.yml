@@ -1,0 +1,28 @@
+name: Workspace Export
+
+on:
+  push:
+    branches:
+      - agent/personalidade-completa-sistema
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Package workspace
+        run: tar --exclude=.git -czf /tmp/gsa-hub-source.tar.gz .
+
+      - name: Upload workspace
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-source
+          path: /tmp/gsa-hub-source.tar.gz
+          if-no-files-found: error
+          retention-days: 1
