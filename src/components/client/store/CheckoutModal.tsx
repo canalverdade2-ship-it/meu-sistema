@@ -523,7 +523,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           .select('id, status, visivel_na_loja, controle_estoque, estoque_disponivel, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada')
           .in('id', productIds);
         if (productValidationError) {
-          throw new Error(`Não foi possível validar os produtos antes da compra: ${productValidationError.message}`);
+          throw new Error(`Não foi possível validar preços e estoque antes da compra: ${productValidationError.message}`);
         }
         if (!dbProducts || dbProducts.length !== new Set(productIds).size) {
           throw new Error('Não foi possível validar todos os produtos do carrinho. Atualize a loja e tente novamente.');
