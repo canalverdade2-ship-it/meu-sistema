@@ -10,7 +10,6 @@ export type {
   ProductQuantityPriceBreakdown,
   Assinatura,
   Empresa,
-  Orcamento,
   OS,
   OrdemCompra,
   OrdemAssinatura,
