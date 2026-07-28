@@ -18,6 +18,7 @@ function updateFile(path, transform) {
 function replaceExact(source, before, after, label) {
   if (after && source.includes(after)) return source;
   if (!source.includes(before)) {
+    if (!after) return source;
     throw new Error(`[audit-remediation-wave2] Padrao nao encontrado: ${label}`);
   }
   return source.replace(before, after);
