@@ -378,11 +378,13 @@ export default function App() {
 
             {((activeView === 'public' && route.module === 'affiliates' && ['login', 'acesso', 'cadastro'].includes(route.itemId || '')) || (activeView === 'login' && route.module === 'afiliado')) && (
               session.clientId ? (
-                <AfiliadoDashboard
-                  clientId={session.clientId}
-                  onLogout={handleLogout}
-                  activeSubRoute="dashboard"
-                />
+                <ClientNotificationProvider clientId={session.clientId}>
+                  <AfiliadoDashboard
+                    clientId={session.clientId}
+                    onLogout={handleLogout}
+                    activeSubRoute="dashboard"
+                  />
+                </ClientNotificationProvider>
               ) : (
                 <AffiliateAccessPage
                   initialMode={route.itemId === 'cadastro' || route.query.mode === 'register' ? 'register' : 'login'}
@@ -394,11 +396,13 @@ export default function App() {
 
             {activeView === 'public' && route.module === 'affiliates' && ['dashboard', 'painel', 'links', 'comissoes', 'saques', 'perfil', 'pontos'].includes(route.itemId || '') && (
               session.clientId ? (
-                <AfiliadoDashboard
-                  clientId={session.clientId}
-                  onLogout={handleLogout}
-                  activeSubRoute={route.itemId}
-                />
+                <ClientNotificationProvider clientId={session.clientId}>
+                  <AfiliadoDashboard
+                    clientId={session.clientId}
+                    onLogout={handleLogout}
+                    activeSubRoute={route.itemId}
+                  />
+                </ClientNotificationProvider>
               ) : (
                 <AffiliateAccessPage
                   initialMode="login"

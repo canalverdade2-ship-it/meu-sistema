@@ -524,6 +524,7 @@ DECLARE
   v_minimum numeric := 100;
   v_active boolean := true;
   v_credit numeric(14,2);
+  v_inserted_id uuid;
 BEGIN
   SELECT * INTO v_actor FROM public.gsa_client_session_actor(p_sessao_id, p_session_token) LIMIT 1;
   IF p_request_id IS NULL THEN RAISE EXCEPTION 'Identificador da operacao obrigatorio.'; END IF;
@@ -538,6 +539,12 @@ BEGIN
   IF NOT v_active THEN RAISE EXCEPTION 'O resgate de pontos esta temporariamente indisponivel.'; END IF;
   IF coalesce(p_pontos, 0) < v_minimum THEN RAISE EXCEPTION 'O minimo para resgate e % pontos.', v_minimum; END IF;
 
+  IF EXISTS (
+    SELECT 1 FROM public.gsa_afiliado_pontos_eventos WHERE request_id = p_request_id
+  ) THEN
+    RETURN jsonb_build_object('success', true, 'idempotent', true);
+  END IF;
+
   SELECT pontos INTO v_points FROM public.clientes WHERE id = v_actor.cliente_id FOR UPDATE;
   IF coalesce(v_points, 0) < p_pontos THEN RAISE EXCEPTION 'Saldo de pontos insuficiente.'; END IF;
   v_credit := round(p_pontos * v_rate, 2);
@@ -545,10 +552,14 @@ BEGIN
 
   INSERT INTO public.gsa_afiliado_pontos_eventos(cliente_id, tipo, pontos_assinados, valor_carteira, request_id)
   VALUES (v_actor.cliente_id, 'resgate_carteira', -round(p_pontos, 2), v_credit, p_request_id)
-  ON CONFLICT (request_id) DO NOTHING;
-  IF NOT FOUND THEN
+  ON CONFLICT (request_id) WHERE request_id IS NOT NULL DO NOTHING
+  RETURNING id INTO v_inserted_id;
+
+  IF v_inserted_id IS NULL THEN
     RETURN jsonb_build_object('success', true, 'idempotent', true);
   END IF;
+
+  PERFORM set_config('gsa.credit_release', 'on', true);
 
   UPDATE public.clientes
      SET pontos = pontos - round(p_pontos, 2),

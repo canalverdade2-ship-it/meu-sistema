@@ -38,10 +38,11 @@ import {
   updateAffiliateProfile,
 } from '../../features/affiliates/service';
 import type { AffiliateSnapshot } from '../../features/affiliates/types';
-import { supabase } from '../../lib/supabase';
 import { copyToClipboard, formatCurrency, formatDateTime, maskCNPJ, maskCPF } from '../../lib/utils';
 import { navigate } from '../../routing/navigationService';
 import { routes } from '../../routing/routeCatalog';
+import { UniversalNotificationBell } from '../../components/ui/UniversalNotificationBell';
+import { useClientNotifications } from '../../hooks/useClientNotifications';
 import '../../affiliates.css';
 
 interface AfiliadoDashboardProps {
@@ -148,6 +149,7 @@ function statusTone(value: string) {
 
 export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRoute }: AfiliadoDashboardProps) {
   const activeTab = resolveTabFromRoute(activeSubRoute);
+  const { notifications, unreadNotifications, markAsRead, markAllAsRead, deleteAllNotifications } = useClientNotifications();
   const [snapshot, setSnapshot] = useState<AffiliateSnapshot>(EMPTY_SNAPSHOT);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -410,6 +412,21 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
           </div>
 
           <div className="flex items-center gap-2">
+            <UniversalNotificationBell
+              variant="client"
+              notifications={notifications}
+              unreadCount={unreadNotifications}
+              onMarkAsRead={markAsRead}
+              onMarkAllAsRead={markAllAsRead}
+              onDeleteAll={deleteAllNotifications}
+              onNavigate={(mod, tab, itemId) => {
+                if (mod === 'affiliates' || mod === 'afiliados') {
+                  navigate(`/afiliados/${tab || itemId || 'dashboard'}`);
+                } else {
+                  navigate(`/cliente/dashboard`);
+                }
+              }}
+            />
             <button
               type="button"
               onClick={() => void load(true)}
