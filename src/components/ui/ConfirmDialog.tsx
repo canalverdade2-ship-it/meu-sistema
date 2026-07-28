@@ -56,7 +56,7 @@ export function ConfirmDialog({
   const confirmDisabled = hasPrompt && promptRequired && !promptValue.trim();
   const firstFocusRef = useRef<HTMLButtonElement>(null);
 
-  // Foco e trap de teclado
+  // Foco
   useEffect(() => {
     if (!isOpen) return;
     const timer = setTimeout(() => {
@@ -66,14 +66,13 @@ export function ConfirmDialog({
         firstFocusRef.current?.focus();
       }
     }, 50);
+    return () => clearTimeout(timer);
+  }, [isOpen, hasPrompt, promptInputRef]);
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleCancel();
-      if (e.key === 'Enter' && !hasPrompt) { e.preventDefault(); handleConfirm(); }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => { clearTimeout(timer); document.removeEventListener('keydown', onKeyDown); };
-  }, [isOpen, hasPrompt, handleCancel, handleConfirm, promptInputRef]);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') handleCancel();
+    if (e.key === 'Enter' && !hasPrompt) { e.preventDefault(); handleConfirm(); }
+  };
 
   if (!isOpen) return null;
 
@@ -84,6 +83,8 @@ export function ConfirmDialog({
       aria-labelledby="confirm-dialog-title"
       aria-describedby="confirm-dialog-desc"
       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
     >
       {/* Overlay */}
       <div

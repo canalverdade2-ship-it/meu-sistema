@@ -688,18 +688,19 @@ export function FaturasList({
               fat.status === 'pendente_pagamento' ? 'text-blue-600' :
               'text-amber-600'
             }`}>
-              {fat.status === 'protestado' ? (
-                <><ShieldAlert className="h-4 w-4" /> GRAVE: Protestado em Cartório</>
-              ) : fat.status === 'pago' ? (
-                <><CheckCircle className="h-4 w-4" /> Pago em {formatDate(fat.data_pagamento!)}</>
-              } else if (fat.status === 'vencida') {
-                return <><AlertCircle className="h-4 w-4" /> Vencida em {formatDateOnly(fat.data_vencimento)}</>;
-              } else if (fat.status === 'pendente_pagamento') {
-                return <><AlertCircle className="h-4 w-4" /> Aguardando Pagamento</>;
-              } else {
-                return <><AlertCircle className="h-4 w-4" /> Vence {formatDateOnly(fat.data_vencimento)}</>;
-              }
-            })()}
+              {(() => {
+                if (fat.status === 'protestado') {
+                  return <><ShieldAlert className="h-4 w-4" /> GRAVE: Protestado em Cartório</>;
+                } else if (fat.status === 'pago') {
+                  return <><CheckCircle className="h-4 w-4" /> Pago em {formatDate(fat.data_pagamento!)}</>;
+                } else if (fat.status === 'vencida') {
+                  return <><AlertCircle className="h-4 w-4" /> Vencida em {formatDateOnly(fat.data_vencimento)}</>;
+                } else if (fat.status === 'pendente_pagamento') {
+                  return <><AlertCircle className="h-4 w-4" /> Aguardando Pagamento</>;
+                } else {
+                  return <><AlertCircle className="h-4 w-4" /> Vence {formatDateOnly(fat.data_vencimento)}</>;
+                }
+              })()}
             </span>
           </div>
           <h4 className="text-xl font-black text-[#1a1a1a] tracking-tight">

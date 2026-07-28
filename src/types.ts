@@ -674,7 +674,8 @@ export type Emprestimo = {
     ted_conta?: string;
     ted_tipo_conta?: 'corrente' | 'poupanca';
   };
-  status: 'analise_inicial' | 'proposta_enviada' | 'proposta_expirada' | 'aguardando_dados_bancarios' | 'analise_final' | 'pendencia_assinatura' | 'analise_contrato' | 'pendencia_documentos' | 'aprovado' | 'ativo' | 'quitado' | 'cancelado';
+  status: 'analise_inicial' | 'proposta_enviada' | 'proposta_expirada' | 'aguardando_dados_bancarios' | 'analise_final' | 'pendencia_assinatura' | 'analise_contrato' | 'pendencia_documentos' | 'aprovado' | 'ativo' | 'quitado' | 'cancelado' | 'analise_quitacao' | 'aguardando_pagamento_quitacao';
+  valor_quitacao_acordo?: number;
   contrato_url?: string;
   assinatura_url?: string;
   data_assinatura?: string;

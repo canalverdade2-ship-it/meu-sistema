@@ -10,6 +10,8 @@ import { logService } from '../../lib/logService';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { getAdminProductSupplierConfig, upsertAdminProductSupplierConfig, setAdminProductDiscount } from '../../lib/adminRpc';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { maskPhone } from '../../lib/utils';
 import { ProdutoFornecedorConfig } from '../../types';
 import { productUrlImportService, ParsedProductData } from '../../lib/productUrlImportService';
@@ -44,6 +46,8 @@ const mapColumnsToGallery = (item: any) => {
 
 
 export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, colaboradorNome }: { activeSubTab?: 'ativos' | 'inativos', initialItemId?: string, colaboradorId?: string, colaboradorNome?: string }) {
+  const confirmHook = useConfirm();
+  const { confirm } = confirmHook;
   const [activeTab, setActiveTab] = useState<'ativos' | 'inativos'>('ativos');
   const [tipoClienteFilter, setTipoClienteFilter] = useState<'todos' | 'pf' | 'pj' | 'ambos'>('todos');
   const [categoriaFilter, setCategoriaFilter] = useState<string>('todos');
@@ -332,7 +336,7 @@ const handleBulkDelete = async () => {
       return;
     }
 
-    if (!window.confirm(`Deseja inativar ${selectedIds.size} produto(s)? Eles deixarão de aparecer na loja e poderão ser reativados posteriormente.`)) {
+    if (!await confirm({ title: 'Atenção', message: `Deseja inativar ${selectedIds.size} produto(s)? Eles deixarão de aparecer na loja e poderão ser reativados posteriormente.` })) {
       return;
     }
 
@@ -1601,7 +1605,7 @@ const handleBulkDelete = async () => {
           </div>
         </div>
       )}
-      
+      <ConfirmDialog {...confirmHook} />
     </div>
   );
 }

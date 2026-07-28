@@ -593,7 +593,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         fetchClienteRef.current();
         
         if (newData.status === 'ativo' && (clientStatusRef.current === 'inativo' || !clientStatusRef.current)) {
-          console.log('[Realtime] Cadastro aprovado detectado. Forçando verificação de bônus...');
+          if (import.meta.env.DEV) console.log('[Realtime] Cadastro aprovado detectado. Forçando verificação de bônus...');
           toast.success('Seu cadastro foi aprovado! Todos os módulos foram liberados.');
           navigateClientModule('dashboard', undefined, undefined, true);
           
@@ -797,7 +797,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
     if (isCheckingBonus.current) return;
     isCheckingBonus.current = true;
 
-    console.log('[Bonus] Verificando bônus de boas-vindas...');
+    if (import.meta.env.DEV) console.log('[Bonus] Verificando bônus de boas-vindas...');
 
     try {
       // 1. Check if client has pending bonus and is active
@@ -813,7 +813,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       }
       
       if (clientData.status !== 'ativo') {
-        console.log('[Bonus] Cliente ainda inativo. Aguardando aprovação.');
+        if (import.meta.env.DEV) console.log('[Bonus] Cliente ainda inativo. Aguardando aprovação.');
         isCheckingBonus.current = false;
         return;
       }
@@ -821,7 +821,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       // Clientes indicados NÃO recebem o bônus de boas-vindas padrão —
       // eles já recebem o "Bônus de indicação" específico no momento do cadastro.
       if (clientData.indicacao_origem_id) {
-        console.log('[Bonus] Cliente indicado — bônus de boas-vindas padrão suprimido.');
+        if (import.meta.env.DEV) console.log('[Bonus] Cliente indicado — bônus de boas-vindas padrão suprimido.');
         // Garante que a flag fica limpa para não reprocessar
         if (clientData.bonus_boas_vindas_pendente) {
           await supabase.from('clientes').update({
@@ -833,11 +833,11 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       }
       
       if (!clientData.bonus_boas_vindas_pendente) {
-        console.log('[Bonus] Flag de bônus pendente é false. Nada a processar.');
+        if (import.meta.env.DEV) console.log('[Bonus] Flag de bônus pendente é false. Nada a processar.');
         return;
       }
 
-      console.log('[Bonus] Bônus pendente detectado. Processando...');
+      if (import.meta.env.DEV) console.log('[Bonus] Bônus pendente detectado. Processando...');
 
       // 1.1 Verificação de Idempotência: Checar se o bônus já foi lançado no extrato (segurança extra)
       const { data: existingBonusCheck } = await supabase
@@ -848,7 +848,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         .maybeSingle();
 
       if (existingBonusCheck) {
-        console.log('[Bonus] Bônus já existe no extrato. Limpando flag e exibindo.');
+        if (import.meta.env.DEV) console.log('[Bonus] Bônus já existe no extrato. Limpando flag e exibindo.');
         await supabase.from('clientes').update({ 
           bonus_boas_vindas_pendente: false
         }).eq('id', clientId).throwOnError();
@@ -899,7 +899,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         return;
       }
 
-      console.log('[Bonus] Bônus processado com sucesso:', rpcData);
+      if (import.meta.env.DEV) console.log('[Bonus] Bônus processado com sucesso:', rpcData);
       
       // 4. Atualizar UI e mostrar modal
       setShowWelcomeBonusModal(true);
