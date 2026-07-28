@@ -47,6 +47,7 @@ export type {
 
 export type Cliente = Legacy.Cliente & {
   pin_bloqueado?: boolean;
+  pin_tentativas?: number;
   saldo?: number;
   pontos?: number;
 };
@@ -101,7 +102,7 @@ export type LojaSolicitacao = Omit<Legacy.LojaSolicitacao, 'status'> & {
   data_agendamento?: string;
   rastreio_cliente?: string;
   rastreio_admin?: string;
-  historico_status?: Record<string, unknown>[];
+  historico_status?: Record<string, string>;
 };
 
 export type LojaCreditoSolicitacao = Legacy.LojaCreditoSolicitacao & {

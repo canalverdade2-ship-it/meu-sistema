@@ -625,7 +625,7 @@ function VoucherForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, on
 
   const fetchClientes = async () => {
     const { data } = await supabase.from('clientes').select('id, nome, codigo_cliente').eq('status', 'ativo');
-    if (data) setClientes(data);
+    if (data) setClientes(data as unknown as Cliente[]);
   };
 
   return (

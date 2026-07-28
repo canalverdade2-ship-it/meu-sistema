@@ -541,7 +541,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
   };
 
   const handleRejeitarSaque = async (saque: Saque) => {
-    setConfirmModalSaque({ isOpen: true, saque, type: 'reject', reason: '' });
+    setConfirmModalSaque({ isOpen: true, saque, type: 'reject', reason: '', dataPagamento: confirmModalSaque.dataPagamento });
   };
 
   const confirmRejeitarSaque = async () => {
@@ -925,7 +925,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
   const openCreateModal = async () => {
     setIsCreateModalOpen(true);
     const { data } = await supabase.from('clientes').select('id, nome, cpf, cnpj').eq('status', 'ativo').order('nome');
-    if (data) setAvailableClients(data);
+    if (data) setAvailableClients(data as unknown as Cliente[]);
   };
 
   const fetchOrdersForClient = async (cliente_id: string) => {
