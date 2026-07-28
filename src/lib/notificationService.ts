@@ -229,8 +229,12 @@ export const notificationService = {
       itemId?: string;
       prioridade?: Prioridade;
       contexto?: Record<string, any>;
-    }
+    } | string
   ): Promise<void> {
+    const normalizedOptions = typeof options === 'string'
+      ? { tab: acaoOrigem, itemId: options }
+      : options;
+
     if (!clienteId) {
       console.warn('[NotificationService] notifyClient chamado sem clienteId');
       return;
@@ -243,10 +247,10 @@ export const notificationService = {
       mensagem,
       modulo,
       acaoOrigem,
-      tab: options?.tab,
-      itemId: options?.itemId,
-      prioridade: options?.prioridade || 'normal',
-      contexto: options?.contexto,
+      tab: normalizedOptions?.tab,
+      itemId: normalizedOptions?.itemId,
+      prioridade: normalizedOptions?.prioridade || 'normal',
+      contexto: normalizedOptions?.contexto,
       tipo: 'sistema'
     });
   },

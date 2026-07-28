@@ -29,7 +29,7 @@ interface Premio {
   motivo_cancelamento?: string;
   forma_resgate?: 'online' | 'fisico' | null;
   instrucoes_resgate?: string | null;
-  clientes?: { nome: string; codigo_cliente: string };
+  clientes?: { nome: string; codigo_cliente: string; telefone?: string };
 }
 
 interface Cliente {

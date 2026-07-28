@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, MoreHorizontal, Ticket, Trash2, Calendar, User, ShoppingBag, Package, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { CupomLoja, Cliente, Produto } from '../../types';
+
+type ClienteCupom = Pick<Cliente, 'id' | 'nome' | 'email'>;
+type ProdutoCupom = Pick<Produto, 'id' | 'nome' | 'valor'>;
 import { Modal } from '../ui/Modal';
 import { formatCurrency, formatDate, generateCode } from '../../lib/utils';
 import { toast } from 'react-hot-toast';
@@ -17,8 +20,8 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
   const [isDeleting, setIsDeleting] = useState(false);
   
   // Data for selects
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [clientes, setClientes] = useState<ClienteCupom[]>([]);
+  const [produtos, setProdutos] = useState<ProdutoCupom[]>([]);
 
   useEffect(() => {
     fetchCupons();
@@ -374,7 +377,7 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
   );
 }
 
-function CupomForm({ onSubmit, onCancel, clientes, produtos }: { onSubmit: (data: any) => Promise<boolean>, onCancel: () => void, clientes: Cliente[], produtos: Produto[] }) {
+function CupomForm({ onSubmit, onCancel, clientes, produtos }: { onSubmit: (data: any) => Promise<boolean>, onCancel: () => void, clientes: ClienteCupom[], produtos: ProdutoCupom[] }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<any>({
     nome_cupom: '',

@@ -67,7 +67,7 @@ requireTokens('src/main.tsx', [
   '<SiteCampaignBootstrap />',
 ]);
 requireTokens('src/pages/AdminPanel.tsx', [
-  "import { SiteCampaignAdminPage } from '../components/admin/SiteCampaignAdminPage';",
+  "const SiteCampaignAdminPage = lazy(() => import('../components/admin/SiteCampaignAdminPage').then((module) => ({ default: module.SiteCampaignAdminPage })));",
   "id: 'avisos-campanhas'",
   "normalizedActive === 'avisos-campanhas'",
 ]);

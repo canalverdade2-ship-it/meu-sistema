@@ -8,7 +8,7 @@ import { useVipLevels } from '../../hooks/useVipLevels';
 
 interface MenuItem {
   id: string;
-  label: string;
+  label: React.ReactNode;
   icon: any;
   count: number;
   locked?: boolean;

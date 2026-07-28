@@ -1547,6 +1547,18 @@ function TransacoesTab() {
     setRefundNote('Reembolso aprovado e processado pelo financeiro GSA.');
   };
 
+  const refundRequestIdsRef = useRef<Map<string, string>>(new Map());
+
+  const getRefundRequestId = (transactionId: string, action: 'approve' | 'complete' | 'deny'): string => {
+    const key = `${transactionId}:${action}`;
+    const existing = refundRequestIdsRef.current.get(key);
+    if (existing) return existing;
+
+    const requestId = generateUUID();
+    refundRequestIdsRef.current.set(key, requestId);
+    return requestId;
+  };
+
   const getRefundStatus = (item: any): string => String(item?.cancelamento_status || item?.status || '');
 
   const getAdminNote = (item: any): string | null => {

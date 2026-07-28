@@ -23,22 +23,31 @@ type PendingServiceRequest = {
 };
 
 interface DadosPessoais {
-  nome: string;
+  nome_completo: string;
+  data_nascimento: string;
+  rg: string;
   cpf: string;
   telefone: string;
+  cep: string;
+  numero_casa: string;
+  endereco_rua: string;
+  endereco_bairro: string;
+  endereco_cidade: string;
+  endereco_uf: string;
   email: string;
 }
 
 interface DadosEmprestimo {
-  valor: number;
-  prazo: string;
-  motivo: string;
+  valor_desejado: string;
+  parcelas_desejadas: number;
+  data_desejada: string;
 }
 
 interface DocFiles {
-  identidade: File | null;
-  comprovanteRenda: File | null;
-  comprovanteResidencia: File | null;
+  cnh: File | null;
+  comprovante_endereco: File | null;
+  holerite: File | null;
+  foto_perfil: File | null;
 }
 
 export function ClientOrcamentos({ 
@@ -141,7 +150,7 @@ export function ClientOrcamentos({
           }
         }, 500);
       } else {
-        if (initialTab && initialTab !== activeTab) {
+        if ((initialTab === 'abertos' || initialTab === 'aprovados') && initialTab !== activeTab) {
           setActiveTab(initialTab);
         }
       }

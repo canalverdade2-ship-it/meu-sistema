@@ -183,7 +183,7 @@ useEffect(() => {
   };
 
   const handleRejeitarSaque = async (saque: any) => {
-    setConfirmModal({ isOpen: true, saque, type: 'reject', reason: '' });
+    setConfirmModal({ isOpen: true, saque, type: 'reject', reason: '', paymentDate: confirmModal.paymentDate });
   };
 
   const confirmRejeitarSaque = async () => {

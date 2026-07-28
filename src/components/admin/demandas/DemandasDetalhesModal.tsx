@@ -523,9 +523,9 @@ export function DemandasDetalhesModal({
       }
 
       toast.success(
-        transferTarget === 'admin' ? 'Enviado para análise!' :
-        transferTarget === 'prestador' ? '📤 Proposta enviada ao prestador! Aguardando resposta.' :
-        'Transferido com sucesso!'
+        transferTarget === 'prestador'
+          ? '📤 Proposta enviada ao prestador! Aguardando resposta.'
+          : 'Transferido com sucesso!'
       );
 
       // Log Action
@@ -1201,10 +1201,11 @@ export function DemandasDetalhesModal({
                 disabled={isSubmitting}
                 className={`w-full rounded-2xl py-4 text-sm font-black uppercase tracking-widest text-white transition-all disabled:opacity-60 ${transferTarget === 'prestador' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-indigo-600 hover:bg-indigo-700'}`}
               >
-                {isSubmitting ? 'Processando...' :
-                  transferTarget === 'prestador' ? '📤 Enviar Proposta ao Prestador' :
-                  transferTarget === 'admin' ? 'Enviar para Análise' :
-                  'Confirmar Transferência'}
+                {isSubmitting
+                  ? 'Processando...'
+                  : transferTarget === 'prestador'
+                    ? '📤 Enviar Proposta ao Prestador'
+                    : 'Confirmar Transferência'}
               </button>
             </form>
           )}

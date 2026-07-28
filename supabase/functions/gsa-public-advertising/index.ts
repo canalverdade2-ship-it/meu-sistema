@@ -29,9 +29,8 @@ function configuredOrigins() {
 }
 
 function corsHeaders(origin: string | null) {
-  const allowed = origin || '*';
   return {
-    'access-control-allow-origin': allowed,
+    ...(origin ? { 'access-control-allow-origin': origin } : {}),
     'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type, x-custom-header',
     'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'access-control-max-age': '86400',
@@ -224,28 +223,30 @@ function clientIp(request: Request) {
 
 export async function handleRequest(request: Request) {
   const origin = request.headers.get('origin');
-  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) });
-  if (request.method !== 'POST') return json(405, { error: 'method_not_allowed' }, origin, { allow: 'POST, OPTIONS' });
+  const allowedOrigin = origin && configuredOrigins().includes(origin) ? origin : null;
+  if (origin && !allowedOrigin) return json(403, { error: 'origin_not_allowed' }, null);
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(allowedOrigin) });
+  if (request.method !== 'POST') return json(405, { error: 'method_not_allowed' }, allowedOrigin, { allow: 'POST, OPTIONS' });
 
   const contentLength = Number(request.headers.get('content-length') || 0);
-  if (contentLength > MAX_BODY_BYTES) return json(413, { error: 'payload_too_large' }, origin);
+  if (contentLength > MAX_BODY_BYTES) return json(413, { error: 'payload_too_large' }, allowedOrigin);
   const contentType = request.headers.get('content-type') || '';
-  if (!contentType.toLowerCase().includes('application/json')) return json(415, { error: 'unsupported_media_type' }, origin);
+  if (!contentType.toLowerCase().includes('application/json')) return json(415, { error: 'unsupported_media_type' }, allowedOrigin);
 
   let raw: unknown;
   try {
     raw = await readJsonWithinLimit(request, MAX_BODY_BYTES);
   } catch (error) {
-    if (error instanceof RangeError) return json(413, { error: 'payload_too_large' }, origin);
-    return json(400, { error: 'invalid_json' }, origin);
+    if (error instanceof RangeError) return json(413, { error: 'payload_too_large' }, allowedOrigin);
+    return json(400, { error: 'invalid_json' }, allowedOrigin);
   }
 
   const payload = normalizePayload(raw);
-  if (!payload) return json(400, { error: 'invalid_request' }, origin);
+  if (!payload) return json(400, { error: 'invalid_request' }, allowedOrigin);
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!supabaseUrl || !serviceRoleKey) return json(503, { error: 'server_not_configured' }, origin);
+  if (!supabaseUrl || !serviceRoleKey) return json(503, { error: 'server_not_configured' }, allowedOrigin);
 
   const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }) as any;
   const ipHash = await digest(clientIp(request));
@@ -257,10 +258,10 @@ export async function handleRequest(request: Request) {
     p_window_seconds: 3600,
     p_block_seconds: 7200,
   });
-  if (ipLimitError) return json(503, { error: 'rate_limit_unavailable' }, origin);
+  if (ipLimitError) return json(503, { error: 'rate_limit_unavailable' }, allowedOrigin);
   if (ipLimit?.allowed === false) {
     const retryAfter = Number(ipLimit.retry_after || 3600);
-    return json(429, { error: 'too_many_attempts', retry_after: retryAfter }, origin, { 'retry-after': String(retryAfter) });
+    return json(429, { error: 'too_many_attempts', retry_after: retryAfter }, allowedOrigin, { 'retry-after': String(retryAfter) });
   }
 
   const { data: identityLimit, error: identityLimitError } = await admin.rpc('gsa_auth_rate_limit_check', {
@@ -269,19 +270,19 @@ export async function handleRequest(request: Request) {
     p_window_seconds: 86400,
     p_block_seconds: 86400,
   });
-  if (identityLimitError) return json(503, { error: 'rate_limit_unavailable' }, origin);
+  if (identityLimitError) return json(503, { error: 'rate_limit_unavailable' }, allowedOrigin);
   if (identityLimit?.allowed === false) {
     const retryAfter = Number(identityLimit.retry_after || 3600);
-    return json(429, { error: 'too_many_attempts', retry_after: retryAfter }, origin, { 'retry-after': String(retryAfter) });
+    return json(429, { error: 'too_many_attempts', retry_after: retryAfter }, allowedOrigin, { 'retry-after': String(retryAfter) });
   }
 
   const { data, error } = await admin.rpc('gsa_public_submit_advertising_request', { p_payload: payload });
   if (error || !data?.success) {
     console.error('Advertising request failed', error);
-    return json(500, { error: 'request_failed' }, origin);
+    return json(500, { error: 'request_failed' }, allowedOrigin);
   }
 
-  return json(201, { success: true, protocol: data.protocol, status: data.status }, origin);
+  return json(201, { success: true, protocol: data.protocol, status: data.status }, allowedOrigin);
 }
 
 if (import.meta.main) Deno.serve(handleRequest);
