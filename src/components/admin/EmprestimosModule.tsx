@@ -241,7 +241,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
       });
       if (error) throw error;
 
-      await notificationService.notifyClient(selected.cliente_id, 'Proposta de Emprestimo', 'Sua proposta esta disponivel. Acesse Meus Emprestimos para ver.', 'emprestimos', 'propostas', selected.id);
+      await notificationService.notifyClient(selected.cliente_id, 'Proposta de Emprestimo', 'Sua proposta esta disponivel. Acesse Meus Emprestimos para ver.', 'emprestimos', 'propostas', { itemId: selected.id });
       toast.success('Proposta enviada!');
       await logService.logAction({ acao: 'ACAO_SISTEMA', detalhes: JSON.stringify({}), ator_tipo: 'admin', ator_nome: 'Administrador' });
 
