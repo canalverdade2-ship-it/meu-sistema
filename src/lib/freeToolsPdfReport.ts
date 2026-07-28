@@ -46,8 +46,8 @@ function generatedAt() {
 }
 
 export function createCalculatorPdfDocument(report: CalculatorPdfReport) {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true, putOnlyUsedFonts: true });
-  const modeLabel = report.mode === 'pro' ? 'RELATÓRIO COMPLETO — MODO PRO' : 'RELATÓRIO SIMPLES — MODO FREE';
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const modeLabel = report.mode === 'pro' ? 'RELATORIO COMPLETO - MODO PRO' : 'RELATORIO SIMPLES - MODO FREE';
   let y = 0;
 
   const drawPageHeader = (firstPage: boolean) => {
@@ -169,7 +169,7 @@ export function createCalculatorPdfDocument(report: CalculatorPdfReport) {
 
   writeSectionTitle('Aviso importante');
   writeParagraph(report.disclaimer, { muted: true });
-  writeParagraph('Este PDF foi criado localmente no navegador apenas para download. O arquivo e os dados do relatório não foram enviados nem armazenados no sistema ou no banco de dados da GSA.', { bold: true, size: 8.5 });
+  writeParagraph('Este PDF foi criado localmente no navegador apenas para download. O arquivo e os dados do relatorio nao foram enviados nem armazenados no sistema ou no banco de dados da GSA.', { bold: true, size: 8.5 });
 
   const pageCount = doc.getNumberOfPages();
   for (let page = 1; page <= pageCount; page += 1) {
@@ -179,16 +179,15 @@ export function createCalculatorPdfDocument(report: CalculatorPdfReport) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(110, 118, 124);
-    doc.text('GSA HUB — Ferramentas públicas', MARGIN, FOOTER_Y + 2);
-    doc.text(`Página ${page} de ${pageCount}`, PAGE_WIDTH - MARGIN, FOOTER_Y + 2, { align: 'right' });
+    doc.text('GSA HUB - Ferramentas publicas', MARGIN, FOOTER_Y + 2);
+    doc.text(`Pagina ${page} de ${pageCount}`, PAGE_WIDTH - MARGIN, FOOTER_Y + 2, { align: 'right' });
   }
 
   doc.setProperties({
     title: `${report.calculator} - ${modeLabel}`,
-    subject: 'Relatório educativo gerado pelas calculadoras públicas da GSA HUB',
+    subject: 'Relatorio educativo gerado pelas calculadoras publicas da GSA HUB',
     author: 'GSA HUB',
     creator: 'GSA HUB',
-    keywords: 'GSA HUB, calculadora, relatório educativo, ferramentas públicas',
   });
 
   return doc;

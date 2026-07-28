@@ -3,7 +3,6 @@ import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Eye, Flag, U
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { isPast, differenceInDays } from 'date-fns';
-import { exportInstitutionalExcel } from '../../../lib/institutionalFileExport';
 
 interface Props {
   demandas: any[];
@@ -110,19 +109,24 @@ export function DemandasTabela({ demandas, onVerDetalhes }: Props) {
     return sortDir === 'asc' ? <ChevronUp className="h-3 w-3 text-indigo-500" /> : <ChevronDown className="h-3 w-3 text-indigo-500" />;
   };
 
+<<<<<<< HEAD
   const exportExcel = async () => {
     if (isExporting) return;
     setIsExporting(true);
+=======
+  const exportCSV = () => {
+>>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
     const rows = filtradas.map(d => ({
       id: d.id.slice(0, 8).toUpperCase(),
       titulo: d.titulo || d.descricao?.slice(0, 50) || '—',
-      status: STATUS_LABELS[d.status]?.label || d.status || '—',
-      prioridade: PRIO_CONFIG[d.prioridade || 'normal']?.label || d.prioridade || 'Normal',
+      status: d.status,
+      prioridade: d.prioridade || 'normal',
       cliente: d.ordem_servico?.cliente?.nome || '—',
-      responsavel: d.colaborador?.nome || d.prestador?.nome_razao || 'Pool central',
+      responsavel: d.colaborador?.nome || d.prestador?.nome_razao || 'Pool',
       prazo: d.prazo_limite ? format(new Date(d.prazo_limite), 'dd/MM/yyyy HH:mm') : '—',
       criado_em: format(new Date(d.created_at), 'dd/MM/yyyy'),
     }));
+<<<<<<< HEAD
 
     try {
       await exportInstitutionalExcel({
@@ -160,6 +164,16 @@ export function DemandasTabela({ demandas, onVerDetalhes }: Props) {
     } finally {
       setIsExporting(false);
     }
+=======
+    const headers = Object.keys(rows[0] || {});
+    const csv = [headers.join(';'), ...rows.map(r => headers.map(h => `"${(r as any)[h]}"`).join(';'))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `demandas_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+>>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
   };
 
   return (
@@ -206,8 +220,13 @@ export function DemandasTabela({ demandas, onVerDetalhes }: Props) {
             <option value="semana">📅 Esta semana</option>
           </select>
 
+<<<<<<< HEAD
           <button onClick={() => void exportExcel()} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50">
             <Download className="h-3 w-3" /> Excel
+=======
+          <button onClick={exportCSV} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-widest hover:bg-emerald-700 transition-all">
+            <Download className="h-3 w-3" /> CSV
+>>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
           </button>
         </div>
         <p className="text-[10px] text-neutral-400 mt-2 font-medium">{filtradas.length} demanda(s) encontrada(s)</p>

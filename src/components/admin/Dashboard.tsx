@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type React from 'react';
 import {
   AlertCircle,
-  ArrowRight,
   Banknote,
   CheckCircle2,
   Clock,
@@ -79,18 +78,18 @@ function KpiCard({
     <button
       type="button"
       onClick={onClick}
-      className="group bg-white p-5 text-left transition hover:bg-[#faf8f2] sm:p-6"
+      className="group rounded-[1.75rem] bg-white p-6 text-left shadow-sm ring-1 ring-neutral-100 transition hover:-translate-y-0.5 hover:shadow-lg"
     >
       <div className="mb-4 flex items-start justify-between gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#ddd6c8] bg-[#f8f5ee] text-[#806329]">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
           <Icon className="h-6 w-6" />
         </span>
-        <span className="border-l border-[#ddd6c8] pl-3 text-[9px] font-black uppercase tracking-[0.12em] text-[#737a80]">
+        <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-neutral-500">
           {caption}
         </span>
       </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#737a80]">{label}</p>
-      <p className="mt-2 text-2xl font-black tabular-nums tracking-[-0.035em] text-[#111b24]">{value}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-400">{label}</p>
+      <p className="mt-1 text-2xl font-black tabular-nums text-neutral-900">{value}</p>
     </button>
   );
 }
@@ -111,16 +110,16 @@ function ListCard({
   onOpen?: () => void;
 }) {
   return (
-    <section className="border border-[#d9ddd9] bg-white p-5 sm:p-7">
-      <header className="mb-5 flex items-center justify-between gap-3 border-b border-[#dde1dd] pb-4">
+    <section className="rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-neutral-100 sm:p-7">
+      <header className="mb-5 flex items-center justify-between gap-3 border-b border-neutral-100 pb-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#d9ddd9] bg-[#f6f7f5] text-[#526069]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700">
             <Icon className="h-5 w-5" />
           </span>
           <h3 className="font-black text-neutral-900">{title}</h3>
         </div>
         {onOpen && (
-          <button type="button" onClick={onOpen} className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#806329] hover:text-[#5e471c]">
+          <button type="button" onClick={onOpen} className="text-xs font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-800">
             Abrir módulo
           </button>
         )}
@@ -143,7 +142,7 @@ function Row({
   key?: React.Key;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-[#e2e5e2] py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-2xl border border-neutral-100 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <p className="truncate text-sm font-black text-neutral-900">{title}</p>
         {subtitle && <p className="mt-1 text-xs text-neutral-500">{subtitle}</p>}
@@ -314,68 +313,134 @@ export function Dashboard({
     onClick: () => void;
   }>;
 
-  const criticalCount = Number(pendencies.financeiro_faturas_pendentes || 0)
-    + Number(pendencies.financeiro_faturas_vencidas || 0)
-    + Number(pendencies.vendas_orcamentos_pendentes || 0)
-    + Number(pendencies.suporte_tickets_abertos || 0);
-
   return (
-    <div className="space-y-7 pb-12 text-[#111b24]">
-      <header className="relative overflow-hidden border border-[#2a343c] bg-[#101820] p-7 text-white shadow-[0_24px_70px_rgba(16,24,32,0.18)] md:p-10">
-        <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border border-[#d8bd73]/12" />
-        <div className="relative grid gap-8 lg:grid-cols-[1fr_330px] lg:items-end">
+    <div className="space-y-8 pb-12">
+      <header className="relative overflow-hidden rounded-[2.5rem] bg-[#0F0F0F] p-8 text-white shadow-xl md:p-10">
+        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#d8bd73]">Central de comando operacional</p>
-            <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl">Decisões, filas críticas e dinheiro em risco no mesmo painel.</h1>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-white/55">Olá, {adminType === 'admin' ? 'Administrador' : colaboradorNome || 'Colaborador'}. Os dados são calculados no servidor e respeitam as permissões da sua sessão.</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Painel administrativo seguro</p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight">
+              Olá, {adminType === 'admin' ? 'Administrador' : colaboradorNome || 'Colaborador'}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-white/55">
+              Os indicadores abaixo são calculados no servidor e limitados aos módulos autorizados para sua sessão.
+            </p>
           </div>
-          <div className="border-l border-white/12 pl-6">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">Ocorrências abertas</p>
-            <div className="mt-3 flex items-end justify-between gap-4"><strong className="text-5xl font-black tracking-[-0.06em] text-[#d8bd73]">{criticalCount}</strong><button type="button" onClick={() => void refresh()} disabled={refreshing} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/15 bg-white/[0.05] px-4 text-xs font-black text-white disabled:opacity-60"><RefreshCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />Atualizar</button></div>
-            <p className="mt-3 text-xs leading-5 text-white/45">Faturas, orçamentos e tickets aguardando ação.</p>
-          </div>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            disabled={refreshing}
+            className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 transition hover:bg-neutral-100 disabled:opacity-60"
+          >
+            <RefreshCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Atualizar
+          </button>
         </div>
       </header>
 
-      {cards.length > 0 && (
-        <section>
-          <div className="flex flex-col gap-3 border-b border-[#d6dbd7] pb-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806329]">Scorecard executivo</p><h2 className="mt-2 text-2xl font-black tracking-[-0.035em]">Indicadores que exigem leitura diária</h2></div><p className="text-xs text-[#697279]">Clique em um indicador para abrir o módulo responsável.</p></div>
-          <div className="mt-5 grid overflow-hidden border border-[#d9ddd9] bg-[#d9ddd9] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{cards.map((card) => <KpiCard key={card.label} {...card} />)}</div>
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        {cards.map((card) => <KpiCard key={card.label} {...card} />)}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        {snapshot.permissions.financeiro && (
+          <ListCard title="Faturas que exigem atenção" icon={Landmark} onOpen={() => onNavigate?.('financeiro', 'faturas')}>
+            <div className="space-y-3">
+              {(snapshot.lists.faturas || []).length === 0 ? <EmptyState text="Nenhuma fatura pendente." /> : (snapshot.lists.faturas || []).map((invoice) => (
+                <Row
+                  key={invoice.id}
+                  title={invoice.cliente_nome || invoice.codigo_fatura || 'Fatura'}
+                  subtitle={`${invoice.codigo_fatura || 'Sem código'} · vencimento ${formatDate(invoice.data_vencimento)}`}
+                  value={formatCurrency(invoice.valor_final_pendente ?? invoice.valor_total)}
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => void markInvoicePaid(invoice)}
+                      disabled={processingId === invoice.id}
+                      className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-black text-white disabled:opacity-50"
+                    >
+                      {processingId === invoice.id ? 'Processando' : 'Dar baixa'}
+                    </button>
+                  }
+                />
+              ))}
+            </div>
+          </ListCard>
+        )}
+
+        {snapshot.permissions.financeiro && (
+          <ListCard title="Saques pendentes" icon={Wallet} onOpen={() => onNavigate?.('financeiro', 'saques')}>
+            <div className="space-y-3">
+              {(snapshot.lists.saques || []).length === 0 ? <EmptyState text="Nenhum saque pendente." /> : (snapshot.lists.saques || []).map((withdrawal) => (
+                <Row
+                  key={withdrawal.id}
+                  title={withdrawal.cliente_nome || 'Cliente'}
+                  subtitle={`Solicitado em ${formatDate(withdrawal.data_solicitacao)}`}
+                  value={formatCurrency(withdrawal.valor)}
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => void approveWithdrawal(withdrawal)}
+                      disabled={processingId === withdrawal.id}
+                      className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-black text-white disabled:opacity-50"
+                    >
+                      {processingId === withdrawal.id ? 'Processando' : 'Aprovar'}
+                    </button>
+                  }
+                />
+              ))}
+            </div>
+          </ListCard>
+        )}
+
+        {snapshot.permissions.operacoes && (
+          <ListCard title="Orçamentos recentes" icon={Clock} onOpen={() => onNavigate?.('operacoes', 'orcamentos')}>
+            <div className="space-y-3">
+              {(snapshot.lists.orcamentos || []).length === 0 ? <EmptyState text="Nenhum orçamento pendente." /> : (snapshot.lists.orcamentos || []).map((quote) => (
+                <Row
+                  key={quote.id}
+                  title={quote.cliente_nome || quote.codigo_orcamento || 'Orçamento'}
+                  subtitle={`${quote.codigo_orcamento || 'Sem código'} · ${formatDate(quote.data_criacao)}`}
+                  value={String(quote.status || '').replace(/_/g, ' ')}
+                />
+              ))}
+            </div>
+          </ListCard>
+        )}
+
+        {snapshot.permissions.atendimento && (
+          <ListCard title="Tickets abertos" icon={MessageSquare} onOpen={() => onNavigate?.('atendimento')}>
+            <div className="space-y-3">
+              {(snapshot.lists.tickets || []).length === 0 ? <EmptyState text="Nenhum ticket aberto." /> : (snapshot.lists.tickets || []).map((ticket) => (
+                <Row
+                  key={ticket.id}
+                  title={ticket.titulo || ticket.cliente_nome || 'Ticket'}
+                  subtitle={`${ticket.cliente_nome || 'Cliente'} · ${formatDate(ticket.data_abertura)}`}
+                  value={String(ticket.status || '').replace(/_/g, ' ')}
+                />
+              ))}
+            </div>
+          </ListCard>
+        )}
+      </div>
+
+      {cards.length === 0 && (
+        <section className="rounded-[2rem] bg-white p-10 text-center shadow-sm ring-1 ring-neutral-100">
+          <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-500" />
+          <h2 className="mt-4 text-xl font-black text-neutral-900">Acesso administrativo ativo</h2>
+          <p className="mt-2 text-sm text-neutral-500">Use o menu lateral para acessar os módulos liberados para sua conta.</p>
         </section>
       )}
 
-      <section>
-        <div className="flex flex-col gap-3 border-b border-[#d6dbd7] pb-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806329]">Filas operacionais</p><h2 className="mt-2 text-2xl font-black tracking-[-0.035em]">O que precisa ser resolvido agora</h2></div><p className="max-w-md text-xs leading-5 text-[#697279]">Ações rápidas permanecem disponíveis, mas cada decisão continua registrada nos fluxos oficiais.</p></div>
-        <div className="mt-5 grid gap-5 xl:grid-cols-2">
-          {snapshot.permissions.financeiro && (
-            <ListCard title="Faturas que exigem atenção" icon={Landmark} onOpen={() => onNavigate?.('financeiro', 'faturas')}>
-              <div>{(snapshot.lists.faturas || []).length === 0 ? <EmptyState text="Nenhuma fatura pendente." /> : (snapshot.lists.faturas || []).map((invoice) => <Row key={invoice.id} title={invoice.cliente_nome || invoice.codigo_fatura || 'Fatura'} subtitle={`${invoice.codigo_fatura || 'Sem código'} · vencimento ${formatDate(invoice.data_vencimento)}`} value={formatCurrency(invoice.valor_final_pendente ?? invoice.valor_total)} action={<button type="button" onClick={() => void markInvoicePaid(invoice)} disabled={processingId === invoice.id} className="rounded-lg bg-[#137a5d] px-3 py-2 text-xs font-black text-white disabled:opacity-50">{processingId === invoice.id ? 'Processando' : 'Dar baixa'}</button>} />)}</div>
-            </ListCard>
-          )}
-
-          {snapshot.permissions.financeiro && (
-            <ListCard title="Saques pendentes" icon={Wallet} onOpen={() => onNavigate?.('financeiro', 'saques')}>
-              <div>{(snapshot.lists.saques || []).length === 0 ? <EmptyState text="Nenhum saque pendente." /> : (snapshot.lists.saques || []).map((withdrawal) => <Row key={withdrawal.id} title={withdrawal.cliente_nome || 'Cliente'} subtitle={`Solicitado em ${formatDate(withdrawal.data_solicitacao)}`} value={formatCurrency(withdrawal.valor)} action={<button type="button" onClick={() => void approveWithdrawal(withdrawal)} disabled={processingId === withdrawal.id} className="rounded-lg bg-[#1d4d72] px-3 py-2 text-xs font-black text-white disabled:opacity-50">{processingId === withdrawal.id ? 'Processando' : 'Aprovar'}</button>} />)}</div>
-            </ListCard>
-          )}
-
-          {snapshot.permissions.operacoes && (
-            <ListCard title="Orçamentos recentes" icon={Clock} onOpen={() => onNavigate?.('operacoes', 'orcamentos')}>
-              <div>{(snapshot.lists.orcamentos || []).length === 0 ? <EmptyState text="Nenhum orçamento pendente." /> : (snapshot.lists.orcamentos || []).map((quote) => <Row key={quote.id} title={quote.cliente_nome || quote.codigo_orcamento || 'Orçamento'} subtitle={`${quote.codigo_orcamento || 'Sem código'} · ${formatDate(quote.data_criacao)}`} value={String(quote.status || '').replace(/_/g, ' ')} />)}</div>
-            </ListCard>
-          )}
-
-          {snapshot.permissions.atendimento && (
-            <ListCard title="Tickets abertos" icon={MessageSquare} onOpen={() => onNavigate?.('atendimento')}>
-              <div>{(snapshot.lists.tickets || []).length === 0 ? <EmptyState text="Nenhum ticket aberto." /> : (snapshot.lists.tickets || []).map((ticket) => <Row key={ticket.id} title={ticket.titulo || ticket.cliente_nome || 'Ticket'} subtitle={`${ticket.cliente_nome || 'Cliente'} · ${formatDate(ticket.data_abertura)}`} value={String(ticket.status || '').replace(/_/g, ' ')} />)}</div>
-            </ListCard>
-          )}
-        </div>
-      </section>
-
-      {cards.length === 0 && <section className="border border-[#d9ddd9] bg-white p-10 text-center"><CheckCircle2 className="mx-auto h-10 w-10 text-[#137a5d]" /><h2 className="mt-4 text-xl font-black">Acesso administrativo ativo</h2><p className="mt-2 text-sm text-[#697279]">Use o menu lateral para acessar os módulos liberados para sua conta.</p></section>}
-
-      {adminType === 'admin' && <button type="button" onClick={() => onNavigate?.('acessos')} className="group flex w-full items-center justify-between border border-[#cfc7b7] bg-[#f8f5ee] px-6 py-5 text-left"><span className="flex items-center gap-4"><UserPlus className="h-5 w-5 text-[#806329]" /><span><strong className="block text-sm">Gestão de colaboradores e permissões</strong><span className="mt-1 block text-xs text-[#697279]">Controle acessos sem misturar esta fila com a operação diária.</span></span></span><ArrowRight className="h-4 w-4 text-[#806329] transition group-hover:translate-x-1" /></button>}
+      {adminType === 'admin' && (
+        <button
+          type="button"
+          onClick={() => onNavigate?.('acessos')}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-neutral-300 bg-white px-5 py-4 text-sm font-black text-neutral-600 hover:border-indigo-300 hover:text-indigo-700"
+        >
+          <UserPlus className="h-5 w-5" /> Gerenciar colaboradores e permissões
+        </button>
+      )}
     </div>
   );
 }

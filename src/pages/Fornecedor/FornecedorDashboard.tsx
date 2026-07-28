@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowRight,
   Building2,
-  CheckCircle2,
-  Clock3,
   FileCheck2,
   FileUp,
   LayoutDashboard,
@@ -198,15 +195,15 @@ export function FornecedorDashboard({ fornecedorId, onLogout }: { fornecedorId: 
   };
 
   return (
-    <div className="min-h-screen bg-[#eef0ed] text-[#14222a]">
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[#d3d7d2] bg-[#f8f8f5]/95 px-4 backdrop-blur lg:px-8">
+    <div className="min-h-screen bg-[#f5f5f2] text-neutral-900">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-neutral-200 bg-white/95 px-4 backdrop-blur lg:px-8">
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setSidebar(true)} className="rounded-xl p-2 lg:hidden" aria-label="Abrir menu">
             <Menu className="h-5 w-5" />
           </button>
           <LogoGSA size="sm" variant="dark" />
           <div>
-            <p className="text-sm font-black">Central de Suprimentos GSA</p>
+            <p className="text-sm font-black">Portal do Fornecedor</p>
             <p className="max-w-48 truncate text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
               {snapshot.supplier?.nome_fantasia || snapshot.supplier?.razao_social || 'GSA Produtos'}
             </p>
@@ -231,7 +228,7 @@ export function FornecedorDashboard({ fornecedorId, onLogout }: { fornecedorId: 
       </header>
 
       <div className="mx-auto flex max-w-[1500px]">
-        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-72 shrink-0 border-r border-white/10 bg-[#10212a] p-5 text-white lg:block">
+        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 border-r border-neutral-200 bg-white p-4 lg:block">
           <Navigation active={active} onNavigate={navigate} />
         </aside>
         <main className="min-w-0 flex-1 p-4 lg:p-8">
@@ -361,7 +358,7 @@ function Navigation({ active, onNavigate }: { active: string; onNavigate: (path:
             type="button"
             key={item.id}
             onClick={() => onNavigate(item.path)}
-            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-bold transition ${active === item.id ? 'bg-[#c59a4a] text-[#10212a]' : 'text-white/60 hover:bg-white/[0.06] hover:text-white'}`}
+            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-bold ${active === item.id ? 'bg-neutral-950 text-white shadow-lg' : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900'}`}
           >
             <Icon className="h-5 w-5" />{item.label}
           </button>
@@ -378,76 +375,32 @@ function Dashboard({ snapshot, pendingOrders, pendingDeliveries, receivable, onN
   receivable: number;
   onNavigate: (path: string) => void;
 }) {
-  const supplierName = snapshot.supplier?.nome_fantasia || snapshot.supplier?.razao_social || 'Fornecedor';
-  const approvedDeliveries = snapshot.deliveries.filter((item) => ['aprovado', 'concluido'].includes(item.status)).length;
-  const paidItems = snapshot.payables.filter((item) => item.status === 'pago').length;
-  const pipeline = [
-    { label: 'Catálogo homologado', value: snapshot.products.length, icon: Package },
-    { label: 'Pedidos emitidos', value: pendingOrders, icon: ShoppingCart },
-    { label: 'Entregas em conferência', value: pendingDeliveries, icon: Truck },
-    { label: 'Entregas aprovadas', value: approvedDeliveries, icon: CheckCircle2 },
-    { label: 'Pagamentos concluídos', value: paidItems, icon: WalletCards },
-  ];
-
   return (
-    <div className="space-y-7">
-      <section className="overflow-hidden rounded-2xl border border-[#d1d5cf] bg-white shadow-[0_18px_50px_rgba(20,34,42,0.07)]">
-        <div className="grid lg:grid-cols-[1.25fr_0.75fr]">
-          <div className="relative overflow-hidden bg-[#10212a] px-6 py-8 text-white sm:px-8 sm:py-10">
-            <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border border-[#c59a4a]/18" />
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#d8bd73]">Central de cadeia de fornecimento</p>
-            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.03] tracking-[-0.045em]">{supplierName}, acompanhe cada pedido da emissão ao pagamento.</h1>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-white/60">Produtos homologados, saldos de pedido, entregas, notas fiscais e valores a receber organizados no mesmo fluxo.</p>
-          </div>
-          <div className="flex flex-col justify-between bg-[#f7f5ef] p-6 sm:p-8">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806329]">Próxima ação recomendada</p>
-              <h2 className="mt-3 text-2xl font-black tracking-[-0.03em]">{pendingOrders > 0 ? 'Revisar pedidos em aberto' : pendingDeliveries > 0 ? 'Acompanhar conferências' : 'Manter catálogo atualizado'}</h2>
-              <p className="mt-3 text-xs leading-5 text-[#667078]">{pendingOrders > 0 ? `${pendingOrders} pedido(s) aguardam avanço operacional.` : pendingDeliveries > 0 ? `${pendingDeliveries} entrega(s) estão em análise.` : 'Não há pedidos pendentes no momento.'}</p>
-            </div>
-            <button type="button" onClick={() => onNavigate(pendingOrders > 0 ? routes.supplier.orders() : routes.supplier.products())} className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#c59a4a] px-5 text-sm font-black text-[#10212a]">Abrir etapa <ArrowRight className="h-4 w-4" /></button>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <section className="rounded-[2rem] bg-neutral-950 p-7 text-white">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Bem-vindo</p>
+        <h1 className="mt-2 text-3xl font-black">{snapshot.supplier?.nome_fantasia || snapshot.supplier?.razao_social || 'Fornecedor'}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-white/60">Acompanhe produtos aprovados, pedidos de compra, entregas, notas fiscais e pagamentos.</p>
       </section>
-
-      <section className="grid overflow-hidden rounded-2xl border border-[#d1d5cf] bg-[#d1d5cf] sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Metric label="Produtos aprovados" value={snapshot.products.length} icon={Package} />
         <Metric label="Pedidos em aberto" value={pendingOrders} icon={ShoppingCart} />
         <Metric label="Entregas em análise" value={pendingDeliveries} icon={Truck} />
         <Metric label="Valores pendentes" value={formatCurrency(receivable)} icon={WalletCards} />
-      </section>
-
-      <section className="rounded-2xl border border-[#d1d5cf] bg-[#f8f8f5] p-6 sm:p-7">
-        <div className="flex flex-col gap-3 border-b border-[#d9ddd7] pb-5 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806329]">Fluxo operacional</p><h2 className="mt-2 text-2xl font-black tracking-[-0.03em]">Visão da cadeia de suprimentos</h2></div>
-          <p className="text-xs text-[#6a7379]">Os números representam o estágio atual da sua operação.</p>
+      </div>
+      <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-black">Pedidos recentes</h2>
+          <button type="button" onClick={() => onNavigate(routes.supplier.orders())} className="text-xs font-black text-emerald-700">Ver todos</button>
         </div>
-        <div className="mt-6 grid gap-3 lg:grid-cols-5">
-          {pipeline.map(({ label, value, icon: Icon }, index) => (
-            <button key={label} type="button" onClick={() => onNavigate(index <= 0 ? routes.supplier.products() : index <= 1 ? routes.supplier.orders() : index <= 3 ? routes.supplier.deliveries() : routes.supplier.payables())} className="group relative rounded-xl border border-[#d5d9d3] bg-white p-4 text-left hover:border-[#b18a3d]">
-              <span className="text-[10px] font-black tracking-[0.16em] text-[#9b7c33]">{String(index + 1).padStart(2, '0')}</span>
-              <Icon className="mt-5 h-5 w-5 text-[#806329]" />
-              <p className="mt-4 text-2xl font-black">{value}</p>
-              <p className="mt-1 text-[11px] leading-5 text-[#687178]">{label}</p>
-              {index < pipeline.length - 1 && <ArrowRight className="absolute right-3 top-1/2 hidden h-4 w-4 -translate-y-1/2 text-[#c9c2b7] lg:block" />}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-[#d1d5cf] bg-white p-6">
-        <div className="flex items-center justify-between border-b border-[#e0e3df] pb-4">
-          <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#806329]">Movimento recente</p><h2 className="mt-2 font-black">Pedidos de compra</h2></div>
-          <button type="button" onClick={() => onNavigate(routes.supplier.orders())} className="inline-flex items-center gap-2 text-xs font-black text-[#806329]">Ver todos <ArrowRight className="h-4 w-4" /></button>
-        </div>
-        <div className="mt-4 divide-y divide-[#e1e4e0]">
+        <div className="mt-4 space-y-2">
           {snapshot.orders.slice(0, 5).map((order) => (
-            <button type="button" key={order.id} onClick={() => onNavigate(routes.supplier.order(order.id))} className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-4 text-left">
-              <div className="min-w-0"><p className="truncate font-black">{order.codigo}</p><p className="mt-1 text-xs text-[#6c747a]">{order.items?.length || 0} produto(s) · previsão {order.previsao_entrega ? formatDate(order.previsao_entrega) : 'não informada'}</p></div>
+            <button type="button" key={order.id} onClick={() => onNavigate(routes.supplier.order(order.id))} className="flex w-full items-center justify-between rounded-xl bg-neutral-50 p-4 text-left">
+              <div><p className="font-black">{order.codigo}</p><p className="text-xs text-neutral-500">{order.items?.length || 0} produto(s)</p></div>
               <Status value={order.status} />
             </button>
           ))}
-          {snapshot.orders.length === 0 && <div className="py-10 text-center"><Clock3 className="mx-auto h-6 w-6 text-[#a1a7a3]" /><p className="mt-3 text-sm text-[#7b8388]">Nenhum pedido recebido.</p></div>}
+          {snapshot.orders.length === 0 && <p className="py-8 text-center text-sm text-neutral-400">Nenhum pedido recebido.</p>}
         </div>
       </section>
     </div>
@@ -863,7 +816,7 @@ function DeliveryModal({ order, supplierId, saving, onClose, onSubmit }: {
 function Page({ title, description, action, children }: { title: string; description: string; action?: React.ReactNode; children: React.ReactNode }) {
   return <div className="space-y-6"><header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"><div><h1 className="text-2xl font-black">{title}</h1><p className="mt-1 text-sm text-neutral-500">{description}</p></div>{action}</header>{children}</div>;
 }
-function Metric({ label, value, icon: Icon }: { label: string; value: string | number; icon: typeof Package }) { return <article className="bg-white p-5 sm:p-6"><div className="flex items-center gap-2 text-[#6a7379]"><Icon className="h-4 w-4 text-[#806329]" /><p className="text-[10px] font-black uppercase tracking-[0.14em]">{label}</p></div><p className="mt-3 text-2xl font-black tracking-[-0.03em]">{value}</p></article>; }
+function Metric({ label, value, icon: Icon }: { label: string; value: string | number; icon: typeof Package }) { return <article className="rounded-2xl border border-neutral-200 bg-white p-5"><div className="flex justify-between"><div><p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-2 text-2xl font-black">{value}</p></div><Icon className="h-6 w-6 text-emerald-600" /></div></article>; }
 function Small({ label, value }: { label: string; value: string | number }) { return <div className="rounded-xl bg-neutral-50 p-3"><p className="text-[9px] font-black uppercase text-neutral-400">{label}</p><p className="mt-1 text-sm font-black">{value}</p></div>; }
 function Status({ value }: { value: string }) { const good = ['ativo', 'aprovado', 'pago', 'concluido'].includes(value); const bad = ['reprovado', 'cancelado', 'suspenso'].includes(value); return <span className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-black uppercase ${good ? 'bg-emerald-50 text-emerald-700' : bad ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>{String(value || '').replaceAll('_', ' ')}</span>; }
 function Empty({ text }: { text: string }) { return <div className="col-span-full rounded-2xl border border-dashed border-neutral-200 p-12 text-center text-sm text-neutral-400">{text}</div>; }

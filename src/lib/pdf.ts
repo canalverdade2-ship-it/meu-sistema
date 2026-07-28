@@ -48,9 +48,9 @@ export interface PdfFaturaItem {
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 const COLOR = {
-  primary:     [11,  31,  58]  as [number, number, number],  // azul-marinho GSA
-  accent:      [198, 161, 91]  as [number, number, number],  // dourado institucional
-  accentLight: [247, 243, 234] as [number, number, number],  // marfim institucional
+  primary:     [15,  23,  42]  as [number, number, number],  // slate-900
+  accent:      [79,  70,  229] as [number, number, number],  // indigo-600
+  accentLight: [238,242,255]   as [number, number, number],  // indigo-50
   success:     [22,  163,  74] as [number, number, number],  // emerald-600
   successBg:   [240,253,244]   as [number, number, number],  // emerald-50
   warning:     [217,119,  6]   as [number, number, number],  // amber-600
@@ -60,7 +60,7 @@ const COLOR = {
   dark:        [30,  30,  30]  as [number, number, number],
   gray:        [100,116,139]   as [number, number, number],  // slate-500
   grayLight:   [226,232,240]   as [number, number, number],  // slate-200
-  rowAlt:      [247,249,252]   as [number, number, number],
+  rowAlt:      [248,250,252]   as [number, number, number],  // slate-50
   white:       [255,255,255]   as [number, number, number],
 };
 
@@ -70,17 +70,6 @@ const MARGIN = 14;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-
-function configureDocumentMetadata(doc: jsPDF, title: string, subject: string) {
-  doc.setProperties({
-    title,
-    subject,
-    author: 'GSA HUB',
-    creator: 'GSA HUB',
-    keywords: 'GSA HUB, documento institucional, gestão de serviços',
-  });
-}
 
 function hexRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.replace('#', ''), 16);
@@ -194,7 +183,7 @@ function drawFooter(doc: jsPDF, empresa: PdfEmpresa | null | undefined) {
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...COLOR.gray);
-    doc.text(empresa?.razao_social || empresa?.nome || 'GSA HUB', MARGIN, PAGE_H - 9);
+    doc.text(empresa?.razao_social || '', MARGIN, PAGE_H - 9);
     doc.text(`Emitido em: ${formatDateTime(new Date().toISOString())}`, 105, PAGE_H - 9, { align: 'center' });
     doc.text(`Pág. ${i} / ${pages}`, PAGE_W - MARGIN, PAGE_H - 9, { align: 'right' });
   }
@@ -310,8 +299,7 @@ function drawTotalBlock(doc: jsPDF, rows: [string, string, boolean?][], y: numbe
 // ─── Geradores ────────────────────────────────────────────────────────────────
 
 export async function generateOrcamentoPDF(orcamento: Orcamento, cliente: PdfCliente | null | undefined, item: PdfItem | null | undefined, options: { returnDoc?: boolean } = {}) {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true, putOnlyUsedFonts: true });
-  configureDocumentMetadata(doc, `Orçamento ${orcamento.codigo_orcamento}`, 'Orçamento institucional emitido pelo GSA HUB.');
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const { data: empresa } = await supabase.from('empresa').select('*').limit(1).single();
 
   let y = drawHeader(doc, empresa, 'Orçamento', `N.º ${orcamento.codigo_orcamento}  •  ${formatDate(orcamento.data_criacao)}`);
@@ -389,12 +377,11 @@ export async function generateOrcamentoPDF(orcamento: Orcamento, cliente: PdfCli
   drawFooter(doc, empresa);
 
   if (options.returnDoc) return doc;
-  doc.save(`gsa-orcamento-${orcamento.codigo_orcamento}.pdf`);
+  doc.save(`orcamento_${orcamento.codigo_orcamento}.pdf`);
 }
 
 export async function generateOSPDF(os: OS, cliente: PdfCliente | null | undefined, orcamento: PdfOrcamento | null | undefined, options: { returnDoc?: boolean } = {}) {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true, putOnlyUsedFonts: true });
-  configureDocumentMetadata(doc, `Ordem de Serviço ${os.codigo_os}`, 'Ordem de serviço institucional emitida pelo GSA HUB.');
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const { data: empresa } = await supabase.from('empresa').select('*').limit(1).single();
 
   let y = drawHeader(doc, empresa, 'Ordem de Serviço', `OS: ${os.codigo_os}  •  Início: ${formatDate(os.data_inicio)}`);
@@ -462,12 +449,11 @@ export async function generateOSPDF(os: OS, cliente: PdfCliente | null | undefin
   drawFooter(doc, empresa);
 
   if (options.returnDoc) return doc;
-  doc.save(`gsa-os-${os.codigo_os}.pdf`);
+  doc.save(`os_${os.codigo_os}.pdf`);
 }
 
 export async function generateFaturaPDF(fatura: Fatura, cliente: PdfCliente | null | undefined, os: PdfOS | null | undefined, options: { returnDoc?: boolean } = {}) {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true, putOnlyUsedFonts: true });
-  configureDocumentMetadata(doc, `Fatura ${fatura.codigo_fatura}`, 'Fatura ou recibo de pagamento institucional emitido pelo GSA HUB.');
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const { data: empresa } = await supabase.from('empresa').select('*').limit(1).single();
   const orcamento = os?.orcamentos;
 
@@ -584,5 +570,5 @@ export async function generateFaturaPDF(fatura: Fatura, cliente: PdfCliente | nu
   drawFooter(doc, empresa);
 
   if (options.returnDoc) return doc;
-  doc.save(`gsa-fatura-${fatura.codigo_fatura}.pdf`);
+  doc.save(`fatura_${fatura.codigo_fatura}.pdf`);
 }

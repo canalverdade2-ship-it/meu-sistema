@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Download, RefreshCw } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { formatarMoeda, formatarNumero, getRangeDatas, exportarExcel } from './utils/relatorioExport';
+import { formatarMoeda, formatarNumero, getRangeDatas, exportarCSV } from './utils/relatorioExport';
 
 interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 
@@ -65,6 +65,7 @@ export function RelatorioPrestadores({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_,i)=><div key={i} className="h-28 bg-neutral-100 rounded-2xl"/>)}</div>;
 
+<<<<<<< HEAD
   const exportar = async () => {
     if (isExporting) return;
     setIsExporting(true);
@@ -77,14 +78,25 @@ export function RelatorioPrestadores({ periodo, dataInicio, dataFim }: Props) {
       setIsExporting(false);
     }
   };
+=======
+  const exportar = () => exportarCSV(
+    (dados?.prest||[]).map((p:any)=>({ nome: p.nome_razao, status: p.status, area: p.area_servico||'—' })),
+    'relatorio_prestadores'
+  );
+>>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-neutral-900">Relatório de Prestadores</h2>
         <div className="flex gap-2">
+<<<<<<< HEAD
           <button onClick={exportar} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Exportando...' : 'Excel'}</button>
           <button onClick={carregar} disabled={loading} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50"><RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}/>Atualizar</button>
+=======
+          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>CSV</button>
+          <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
+>>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
         </div>
       </div>
 

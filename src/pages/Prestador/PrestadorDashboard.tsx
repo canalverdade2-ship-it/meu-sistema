@@ -141,16 +141,16 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
   }, [prestadorId, pendencies.moduleDemandas, pendencies.moduleFinanceiro, pendencies.moduleDocumentos, pendencies.moduleAgenda]);
 
   const menuItems = useMemo<MenuItem[]>(() => [
-    { id: 'dashboard', label: 'Início', icon: LayoutDashboard, count: 0, locked: false, path: routes.provider.dashboard(), accent: 'text-[#d8bd73]' },
-    { id: 'demandas', label: 'Demandas', icon: Briefcase, count: pendencies.moduleDemandas, locked: blocked, path: routes.provider.demands(), accent: 'text-[#1aa67a]' },
-    { id: 'agenda', label: 'Agenda', icon: Calendar, count: pendencies.moduleAgenda, locked: blocked, path: routes.provider.agenda(), accent: 'text-[#1aa67a]' },
-    { id: 'financeiro', label: 'Financeiro', icon: DollarSign, count: pendencies.moduleFinanceiro, locked: blocked, path: routes.provider.financeiro(), accent: 'text-[#1aa67a]' },
-    { id: 'vouchers', label: 'Vouchers', icon: Ticket, count: pendencies.moduleVouchers, locked: blocked, path: routes.provider.vouchers(), accent: 'text-[#d8bd73]' },
-    { id: 'premios', label: 'Prêmios', icon: Gift, count: pendencies.modulePremios, locked: blocked, path: routes.provider.premios(), accent: 'text-[#d8bd73]' },
-    { id: 'promocoes', label: 'Promoções', icon: Tag, count: pendencies.modulePromocoes, locked: blocked, path: routes.provider.promocoes(), accent: 'text-[#d8bd73]' },
-    { id: 'perfil', label: 'Perfil', icon: User, count: 0, locked: false, path: '/prestador/perfil', accent: 'text-[#7a8b91]' },
-    { id: 'documentos', label: 'Documentos', icon: FileText, count: pendencies.moduleDocumentos, locked: false, path: routes.provider.documents(), accent: 'text-[#7a8b91]' },
-    { id: 'suporte', label: 'Suporte', icon: LifeBuoy, count: pendencies.moduleSuporte, locked: false, path: routes.provider.support(), accent: 'text-[#7a8b91]' },
+    { id: 'dashboard', label: 'Início', icon: LayoutDashboard, count: 0, locked: false, path: routes.provider.dashboard(), accent: 'text-neutral-700' },
+    { id: 'demandas', label: 'Demandas', icon: Briefcase, count: pendencies.moduleDemandas, locked: blocked, path: routes.provider.demands(), accent: 'text-blue-600' },
+    { id: 'agenda', label: 'Agenda', icon: Calendar, count: pendencies.moduleAgenda, locked: blocked, path: routes.provider.agenda(), accent: 'text-indigo-600' },
+    { id: 'financeiro', label: 'Financeiro', icon: DollarSign, count: pendencies.moduleFinanceiro, locked: blocked, path: routes.provider.financeiro(), accent: 'text-emerald-600' },
+    { id: 'vouchers', label: 'Vouchers', icon: Ticket, count: pendencies.moduleVouchers, locked: blocked, path: routes.provider.vouchers(), accent: 'text-pink-600' },
+    { id: 'premios', label: 'Prêmios', icon: Gift, count: pendencies.modulePremios, locked: blocked, path: routes.provider.premios(), accent: 'text-rose-600' },
+    { id: 'promocoes', label: 'Promoções', icon: Tag, count: pendencies.modulePromocoes, locked: blocked, path: routes.provider.promocoes(), accent: 'text-fuchsia-600' },
+    { id: 'perfil', label: 'Perfil', icon: User, count: 0, locked: false, path: '/prestador/perfil', accent: 'text-violet-600' },
+    { id: 'documentos', label: 'Documentos', icon: FileText, count: pendencies.moduleDocumentos, locked: false, path: routes.provider.documents(), accent: 'text-orange-600' },
+    { id: 'suporte', label: 'Suporte', icon: LifeBuoy, count: pendencies.moduleSuporte, locked: false, path: routes.provider.support(), accent: 'text-sky-600' },
   ], [blocked, pendencies]);
 
   const currentMenu = menuItems.find((item) => item.id === activeTab) || menuItems[0];
@@ -252,12 +252,12 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
   };
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center bg-[#edf3ef]"><div className="h-9 w-9 animate-spin rounded-full border-4 border-neutral-900 border-t-transparent" /></div>;
+    return <div className="flex min-h-screen items-center justify-center bg-[#f8f7f5]"><div className="h-9 w-9 animate-spin rounded-full border-4 border-neutral-900 border-t-transparent" /></div>;
   }
 
   if (!prestador) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#edf3ef] p-6">
+      <div className="flex min-h-screen items-center justify-center bg-[#f8f7f5] p-6">
         <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-black/5">
           <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
           <h1 className="mt-4 text-xl font-black">Cadastro não encontrado</h1>
@@ -269,21 +269,21 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
   }
 
   return (
-    <div className="flex min-h-screen overflow-hidden bg-[#edf3ef] text-[#10252a]">
+    <div className="flex min-h-screen overflow-hidden bg-[#f8f7f5]">
       <AnimatePresence>
         {isMobileMenuOpen && <motion.button aria-label="Fechar menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMobileMenuOpen(false)} className="fixed inset-0 z-40 bg-black/40 lg:hidden" />}
       </AnimatePresence>
 
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/10 bg-[#0b2026] text-white transition-transform lg:relative lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-black/5 bg-white transition-transform lg:relative lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex h-20 items-center justify-between px-7">
-          <div><p className="text-lg font-black">GSA HUB</p><p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#79d9b5]">Central do Prestador</p></div>
+          <div><p className="text-lg font-black">Grupo GSA</p><p className="text-[10px] font-bold uppercase tracking-[0.24em] text-neutral-400">Portal do Prestador</p></div>
           <button aria-label="Fechar menu" onClick={() => setIsMobileMenuOpen(false)} className="rounded-full p-2 hover:bg-neutral-100 lg:hidden"><X className="h-5 w-5" /></button>
         </div>
 
-        <div className="mx-5 rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+        <div className="mx-5 rounded-2xl bg-neutral-50 p-4 ring-1 ring-black/5">
           <p className="truncate font-bold">{prestador.nome_razao}</p>
           <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white/45">Prestador</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Prestador</span>
             <span className={`rounded-full px-2 py-1 text-[9px] font-black uppercase ${prestador.status === 'ativo' ? 'bg-emerald-100 text-emerald-700' : pending ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{providerStatusLabel(prestador.status)}</span>
           </div>
         </div>
@@ -293,22 +293,22 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
             const Icon = item.icon;
             const active = activeTab === item.id;
             return (
-              <button key={item.id} onClick={() => openTab(item)} aria-current={active ? 'page' : undefined} className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition ${active ? 'bg-[#1aa67a] text-[#071a1f]' : item.locked ? 'cursor-not-allowed text-white/25' : 'text-white/65 hover:bg-white/[0.06] hover:text-white'}`}>
-                <span className="flex items-center gap-3"><Icon className={`h-4 w-4 ${active ? 'text-[#071a1f]' : item.locked ? 'text-white/25' : item.accent}`} />{item.label}</span>
-                <span className="flex items-center gap-2">{item.count > 0 && !item.locked && <span className={`rounded-full px-2 py-0.5 text-[10px] ${active ? 'bg-[#071a1f] text-white' : 'bg-[#d8bd73] text-[#071a1f]'}`}>{item.count}</span>}{item.locked && <Lock className="h-4 w-4" />}</span>
+              <button key={item.id} onClick={() => openTab(item)} aria-current={active ? 'page' : undefined} className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition ${active ? 'bg-neutral-900 text-white' : item.locked ? 'cursor-not-allowed text-neutral-300' : 'text-neutral-600 hover:bg-neutral-100'}`}>
+                <span className="flex items-center gap-3"><Icon className={`h-4 w-4 ${active ? 'text-white' : item.locked ? 'text-neutral-300' : item.accent}`} />{item.label}</span>
+                <span className="flex items-center gap-2">{item.count > 0 && !item.locked && <span className={`rounded-full px-2 py-0.5 text-[10px] ${active ? 'bg-white text-neutral-900' : 'bg-red-500 text-white'}`}>{item.count}</span>}{item.locked && <Lock className="h-4 w-4" />}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="border-t border-white/10 p-4"><button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-white/55 hover:bg-white/[0.06] hover:text-white"><LogOut className="h-4 w-4" />Sair do portal</button></div>
+        <div className="border-t border-neutral-100 p-4"><button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50"><LogOut className="h-4 w-4" />Sair do portal</button></div>
       </aside>
 
       <main id="provider-main-scroll" className="h-screen flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-[#d4dfd8] bg-[#edf3ef]/92 px-5 backdrop-blur lg:px-10">
+        <header className="sticky top-0 z-30 flex h-20 items-center justify-between bg-[#f8f7f5]/90 px-5 backdrop-blur lg:px-10">
           <div className="flex items-center gap-3">
             <button aria-label="Abrir menu" onClick={() => setIsMobileMenuOpen(true)} className="rounded-full bg-white p-2.5 shadow-sm ring-1 ring-black/5 lg:hidden"><Menu className="h-5 w-5" /></button>
-            <div><h1 className="text-2xl font-black tracking-tight">{currentMenu.label}</h1><p className="hidden text-xs text-[#667b78] sm:block">Execução, evidências e repasses em ambiente seguro</p></div>
+            <div><h1 className="text-2xl font-black tracking-tight">{currentMenu.label}</h1><p className="hidden text-xs text-neutral-400 sm:block">Área segura do prestador</p></div>
           </div>
           <UniversalNotificationBell variant="provider" notifications={notifications} unreadCount={unreadNotifications} onMarkAsRead={markAsRead} onMarkAllAsRead={markAllAsRead} onNavigate={handleNotificationNavigation} />
         </header>
@@ -327,56 +327,20 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
 
           <motion.section key={`${activeTab}-${activeItemId || ''}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
             {activeTab === 'dashboard' && (
-              <div className="space-y-7">
-                <section className="overflow-hidden rounded-2xl border border-[#cddbd3] bg-white shadow-[0_18px_50px_rgba(10,42,38,0.07)]">
-                  <div className="grid lg:grid-cols-[1.25fr_0.75fr]">
-                    <div className="relative overflow-hidden bg-[#0b2026] px-6 py-8 text-white sm:px-8 sm:py-10">
-                      <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full border border-[#79d9b5]/15" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#79d9b5]">Central de execução profissional</p>
-                      <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-[-0.045em]">Olá, {prestador.nome_razao.split(' ')[0]}. Organize o trabalho antes de iniciar a próxima entrega.</h2>
-                      <p className="mt-5 max-w-xl text-sm leading-7 text-white/60">Demandas, agenda, documentos e repasses seguem a mesma linha operacional para reduzir atrasos e retrabalho.</p>
-                    </div>
-                    <div className="flex flex-col justify-between bg-[#f7faf8] p-6 sm:p-8">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#397866]">Situação profissional</p>
-                        <p className="mt-3 text-2xl font-black">{providerStatusLabel(prestador.status)}</p>
-                        <p className="mt-2 text-xs leading-5 text-[#647672]">{pending ? 'Conclua as informações pendentes para liberar a operação completa.' : blocked ? 'Consulte o suporte para regularizar o acesso.' : 'Cadastro liberado para receber e executar demandas.'}</p>
-                      </div>
-                      <button type="button" onClick={() => openTab(menuItems.find((item) => item.id === 'demandas')!)} disabled={blocked} className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#1aa67a] px-5 text-sm font-black text-[#071a1f] disabled:opacity-50">Abrir demandas <ArrowLeft className="h-4 w-4 rotate-180" /></button>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="grid overflow-hidden rounded-2xl border border-[#cddbd3] bg-[#cddbd3] sm:grid-cols-2 xl:grid-cols-4">
+              <div className="space-y-8">
+                <div><p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-500">Bem-vindo</p><h2 className="mt-2 text-3xl font-black">Olá, {prestador.nome_razao.split(' ')[0]}!</h2><p className="mt-2 text-neutral-500">Acompanhe seus serviços, pagamentos e pendências em um único lugar.</p></div>
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                   <MetricCard label="A receber" value={saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} icon={DollarSign} />
                   <MetricCard label="Demandas concluídas" value={String(metrics.demandasConcluidas)} icon={CheckCircle2} />
                   <MetricCard label="Agenda concluída" value={String(metrics.agendamentosConcluidos)} icon={Calendar} />
                   <MetricCard label="Documentos aprovados" value={String(metrics.documentosAprovados)} icon={FileText} />
-                </section>
-
-                <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-                  <div className="rounded-2xl border border-[#cddbd3] bg-[#f7faf8] p-6">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#397866]">Fila de atenção</p>
-                    <h3 className="mt-3 text-2xl font-black tracking-[-0.03em]">Pendências antes da próxima execução</h3>
-                    <div className="mt-6 space-y-2">
-                      {menuItems.filter((item) => item.id !== 'dashboard' && item.count > 0).slice(0, 5).map((item) => {
-                        const Icon = item.icon;
-                        return <button key={item.id} type="button" disabled={item.locked} onClick={() => openTab(item)} className="flex w-full items-center justify-between rounded-xl border border-[#d5e0da] bg-white px-4 py-3 text-left disabled:opacity-45"><span className="flex items-center gap-3"><Icon className={`h-4 w-4 ${item.accent}`} /><span className="text-sm font-bold">{item.label}</span></span><span className="rounded-full bg-[#0b2026] px-2.5 py-1 text-[10px] font-black text-white">{item.count}</span></button>;
-                      })}
-                      {menuItems.filter((item) => item.id !== 'dashboard' && item.count > 0).length === 0 && <div className="rounded-xl border border-dashed border-[#bfcfc6] bg-white/60 p-5"><CheckCircle2 className="h-5 w-5 text-[#1a8b69]" /><p className="mt-3 font-black">Nenhuma pendência destacada.</p><p className="mt-2 text-xs leading-5 text-[#647672]">Sua fila operacional está organizada.</p></div>}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="border-b border-[#cddbd3] pb-5"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#397866]">Áreas de trabalho</p><h3 className="mt-2 text-2xl font-black tracking-[-0.03em]">Continue pela etapa da sua operação</h3></div>
-                    <div className="divide-y divide-[#d4dfd8] border-b border-[#d4dfd8]">
-                      {menuItems.filter((item) => item.id !== 'dashboard').map((item) => {
-                        const Icon = item.icon;
-                        return <button key={item.id} type="button" disabled={item.locked} onClick={() => openTab(item)} className="group grid w-full grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-4 py-4 text-left disabled:opacity-40"><span className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#cddbd3] bg-white"><Icon className={`h-5 w-5 ${item.accent}`} /></span><span><strong className="block text-sm">{item.label}</strong><span className="mt-1 block text-xs text-[#647672]">{item.id === 'demandas' ? 'Recebimento, aceite e execução.' : item.id === 'agenda' ? 'Compromissos e horários confirmados.' : item.id === 'financeiro' ? 'Repasses, valores e comprovantes.' : item.id === 'documentos' ? 'Evidências e documentos da operação.' : 'Acesso ao módulo profissional.'}</span></span><span>{item.locked ? <Lock className="h-4 w-4 text-[#71807c]" /> : <ArrowLeft className="h-4 w-4 rotate-180 text-[#397866] transition group-hover:translate-x-1" />}</span></button>;
-                      })}
-                    </div>
-                  </div>
-                </section>
+                </div>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+                  {menuItems.filter((item) => item.id !== 'dashboard').map((item) => {
+                    const Icon = item.icon;
+                    return <button key={item.id} onClick={() => openTab(item)} className={`relative flex min-h-32 flex-col items-start justify-between rounded-3xl bg-white p-5 text-left shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-md ${item.locked ? 'cursor-not-allowed opacity-50 grayscale' : ''}`}><span className="flex w-full items-start justify-between"><span className="rounded-2xl bg-neutral-50 p-3"><Icon className={`h-6 w-6 ${item.accent}`} /></span>{item.locked ? <Lock className="h-4 w-4 text-neutral-400" /> : item.count > 0 ? <span className="rounded-full bg-red-500 px-2 py-1 text-[10px] font-black text-white">{item.count}</span> : null}</span><span className="font-black">{item.label}</span></button>;
+                  })}
+                </div>
               </div>
             )}
 
@@ -420,7 +384,7 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
 }
 
 function MetricCard({ label, value, icon: Icon }: { label: string; value: string; icon: typeof LayoutDashboard }) {
-  return <div className="bg-white p-5 sm:p-6"><div className="flex items-center gap-2 text-[#61736e]"><Icon className="h-4 w-4 text-[#1a8b69]" /><span className="text-[10px] font-black uppercase tracking-[0.14em]">{label}</span></div><p className="mt-3 truncate text-2xl font-black tracking-[-0.03em] text-[#10252a]">{value}</p></div>;
+  return <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-black/5"><div className="flex items-center gap-2 text-neutral-400"><Icon className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-widest">{label}</span></div><p className="mt-3 truncate text-xl font-black text-neutral-900 sm:text-2xl">{value}</p></div>;
 }
 
 function ReadField({ label, value }: { label: string; value: string }) {

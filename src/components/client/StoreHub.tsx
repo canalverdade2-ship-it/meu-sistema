@@ -47,6 +47,7 @@ import { notifyWhatsAppModal } from '../ui/WhatsAppButton';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { uploadMultipleFiles } from '../../lib/uploadHelper';
 import { callClientRpc } from '../../lib/clientRpc';
+import { MarketplaceSubmoduleCard } from './marketplace/MarketplaceSubmoduleCard';
 
 interface StoreHubProps {
   clientId?: string;
@@ -1347,10 +1348,6 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
     },
   ].filter((card) => card.visible);
 
-  const storePrimary = storeHubCards.find((card) => card.id === 'loja')!;
-  const benefitCards = storeHubCards.filter((card) => ['cupons', 'promocoes'].includes(card.id));
-  const operationCards = storeHubCards.filter((card) => !['loja', 'cupons', 'promocoes'].includes(card.id));
-
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-20 max-w-6xl mx-auto md:space-y-8">
       {(onBackToSite || onBackToMarketplace || onRequireAuth) && (
@@ -1383,56 +1380,40 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
           )}
         </div>
       )}
-      <section className="relative mx-2 overflow-hidden rounded-2xl bg-[#11120f] text-white shadow-[0_24px_70px_rgba(17,18,15,0.22)] md:mx-0">
-        <img src={storePrimary.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-32" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,18,15,0.98)_0%,rgba(17,18,15,0.86)_52%,rgba(17,18,15,0.38)_100%)]" />
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="relative px-6 py-10 sm:px-9 sm:py-14 lg:px-12 lg:py-16">
-          <p className="text-[10px] font-black uppercase tracking-[0.26em] text-[#d8bd73]">GSA Store · Vitrine e relacionamento</p>
-          <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-6xl">Compre, acompanhe e resolva sua experiência de loja em um só lugar.</h1>
-          <p className="mt-5 max-w-xl text-sm leading-7 text-white/60 sm:text-base">Produtos, assinaturas, benefícios e pós-venda organizados como uma jornada de compra — não como um menu de sistema.</p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button type="button" onClick={storePrimary.onClick} className="inline-flex min-h-13 items-center justify-center gap-2 rounded-lg bg-[#d8bd73] px-6 text-sm font-black text-[#171810]">Explorar a loja <ShoppingBag className="h-4 w-4" /></button>
-            <button type="button" onClick={() => navigate(routes.marketplace.store.promocoes())} className="inline-flex min-h-13 items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/[0.05] px-6 text-sm font-black text-white hover:bg-white/[0.1]">Ver ofertas atuais <Megaphone className="h-4 w-4" /></button>
-          </div>
-          <div className="mt-10 grid max-w-2xl grid-cols-3 border-y border-white/15 py-4 text-center sm:text-left">
-            <div><strong className="block text-xl font-black text-[#d8bd73]">Produtos</strong><span className="mt-1 block text-[9px] uppercase tracking-wider text-white/40">Compra direta</span></div>
-            <div className="border-l border-white/15 pl-3 sm:pl-6"><strong className="block text-xl font-black text-[#d8bd73]">Assinaturas</strong><span className="mt-1 block text-[9px] uppercase tracking-wider text-white/40">Recorrência</span></div>
-            <div className="border-l border-white/15 pl-3 sm:pl-6"><strong className="block text-xl font-black text-[#d8bd73]">Pós-venda</strong><span className="mt-1 block text-[9px] uppercase tracking-wider text-white/40">Acompanhamento</span></div>
-          </div>
+      {/* Título Luxuoso e Elegante */}
+      <div className="text-center pt-2 md:pt-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-[#1a1a1a] leading-none mb-4 md:mb-6">
+            Bem Vindo ao <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-gradient-x italic">GSA STORE HUB</span>
+          </h2>
+          <div className="h-1 w-20 bg-gradient-to-r from-indigo-500 to-purple-500 mx-auto rounded-full mb-6 md:mb-8"></div>
         </motion.div>
-      </section>
+      </div>
 
-      <section className="mx-2 grid gap-5 md:mx-0 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-          <div className="border-b border-neutral-200 px-6 py-5"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806329]">Benefícios disponíveis</p><h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-[#171810]">Economize antes de finalizar a compra</h2></div>
-          <div className="grid sm:grid-cols-2">
-            {benefitCards.map((card, index) => {
-              const Icon = card.icon;
-              return <button key={card.id} type="button" onClick={card.onClick} className={`group relative p-6 text-left ${index > 0 ? 'border-t border-neutral-200 sm:border-l sm:border-t-0' : ''}`}><span className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f3eddd] text-[#806329]"><Icon className="h-5 w-5" /></span>{card.badge}</span><strong className="mt-6 block text-lg text-[#171810]">{card.title}</strong><span className="mt-2 block text-xs leading-5 text-neutral-500">{card.description}</span><span className="mt-5 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-[#806329]">{card.actionLabel}<ChevronRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></button>;
-            })}
-          </div>
-        </div>
-
-        <aside className="rounded-2xl border border-neutral-200 bg-[#f7f5ef] p-6">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806329]">Sua experiência</p>
-          <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-[#171810]">{clientId ? 'Conta conectada à loja' : 'Navegação pública'}</h2>
-          <p className="mt-3 text-xs leading-6 text-neutral-600">{clientId ? 'Compras, crédito, trocas e reembolsos ficam vinculados ao seu portal.' : 'Você pode explorar produtos e benefícios. Para comprar e acompanhar pedidos, entre na sua conta.'}</p>
-          {!clientId && onRequireAuth && <button type="button" onClick={onRequireAuth} className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#171810] px-5 text-sm font-black text-white"><User className="h-4 w-4" />Entrar para comprar</button>}
-          {clientId && <button type="button" onClick={() => navigate(routes.marketplace.store.compras())} className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#171810] px-5 text-sm font-black text-white"><History className="h-4 w-4" />Acompanhar compras</button>}
-        </aside>
-      </section>
-
-      {operationCards.length > 0 && (
-        <section className="mx-2 md:mx-0">
-          <div className="flex flex-col gap-3 border-b border-neutral-300 pb-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806329]">Depois da compra</p><h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-[#171810]">Pedidos, crédito e atendimento</h2></div><p className="max-w-md text-xs leading-5 text-neutral-500">Acesse a etapa exata do seu relacionamento com a loja.</p></div>
-          <div className="divide-y divide-neutral-200 border-b border-neutral-200">
-            {operationCards.map((card) => {
-              const Icon = card.icon;
-              return <button key={card.id} type="button" onClick={card.onClick} className="group grid w-full grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-4 py-5 text-left"><span className="flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-200 bg-white text-[#806329]"><Icon className="h-5 w-5" /></span><span><strong className="block text-sm text-[#171810]">{card.title}</strong><span className="mt-1 block text-xs leading-5 text-neutral-500">{card.description}</span></span><ChevronRight className="h-4 w-4 text-[#806329] transition group-hover:translate-x-1" /></button>;
-            })}
-          </div>
-        </section>
-      )}
+      {/* Módulos da Loja */}
+      <div className="grid grid-cols-1 gap-4 px-2 sm:grid-cols-2 md:gap-5 md:px-0 lg:grid-cols-4">
+        {storeHubCards.map((card, index) => (
+          <MarketplaceSubmoduleCard
+            key={card.id}
+            icon={card.icon}
+            title={card.title}
+            description={card.description}
+            actionLabel={card.actionLabel}
+            image={card.image}
+            imageAlt={card.imageAlt}
+            categoryLabel={card.categoryLabel}
+            onClick={card.onClick}
+            accentColor={card.accentColor}
+            badge={card.badge}
+            index={index}
+          />
+        ))}
+      </div>
       {/* Modais */}
       
       {/* Modal de Cupons */}
