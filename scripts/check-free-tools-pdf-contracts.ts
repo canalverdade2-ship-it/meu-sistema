@@ -63,9 +63,9 @@ assert.match(simple, /Calculadora de férias/, 'As férias Free precisam possuir
 
 const advanced = read('src/components/public/FreeToolsAdvancedCalculators.tsx');
 assert.match(advanced, /mode: 'pro'/, 'As calculadoras avançadas precisam gerar relatórios Pro.');
-assert.match(advanced, /Memória do cálculo/, 'A rescisão Pro deve incluir memória detalhada no relatório.');
-assert.match(advanced, /Comparação das regras/, 'A aposentadoria Pro deve incluir comparação das regras.');
-assert.match(advanced, /Composição do resultado/, 'As férias Pro devem incluir composição completa.');
+assert.match(advanced, /Memória detalhada de verbas/, 'A rescisão Pro deve incluir memória detalhada no relatório.');
+assert.match(advanced, /Análise detalhada das 5 regras de transição/, 'A aposentadoria Pro deve incluir a análise completa das regras.');
+assert.match(advanced, /Composição das verbas e isenções/, 'As férias Pro devem incluir a composição completa.');
 
 const additional = read('src/components/public/FreeToolsAdditionalCalculators.tsx');
 assert.match(additional, /Calculadora de 13º salário/, 'O 13º Free e Pro precisa possuir relatório.');
