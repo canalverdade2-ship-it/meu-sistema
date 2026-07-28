@@ -50,22 +50,26 @@ export async function fetchSiteCampaigns(input: {
   audience: SiteCampaignViewerAudience;
   actorId?: string | null;
 }): Promise<SiteCampaign[]> {
-  const identity = getSiteCampaignIdentity();
-  const { data, error } = await supabase.rpc('gsa_public_site_campaigns', {
-    p_page: input.page || '/',
-    p_device: input.device,
-    p_audience: input.audience,
-    p_viewer_hash: identity.viewerId,
-    p_session_hash: identity.sessionId,
-    p_actor_id: input.actorId || null,
-  });
+  try {
+    const identity = getSiteCampaignIdentity();
+    const { data, error } = await supabase.rpc('gsa_public_site_campaigns', {
+      p_page: input.page || '/',
+      p_device: input.device,
+      p_audience: input.audience,
+      p_viewer_hash: identity.viewerId,
+      p_session_hash: identity.sessionId,
+      p_actor_id: input.actorId || null,
+    });
 
-  if (error) throw error;
-  if (Array.isArray(data)) return data as SiteCampaign[];
-  if (data && typeof data === 'object' && Array.isArray((data as { campaigns?: unknown[] }).campaigns)) {
-    return (data as { campaigns: SiteCampaign[] }).campaigns;
+    if (error) return [];
+    if (Array.isArray(data)) return data as SiteCampaign[];
+    if (data && typeof data === 'object' && Array.isArray((data as { campaigns?: unknown[] }).campaigns)) {
+      return (data as { campaigns: SiteCampaign[] }).campaigns;
+    }
+    return [];
+  } catch {
+    return [];
   }
-  return [];
 }
 
 export async function trackSiteCampaignEvent(input: {
@@ -77,18 +81,20 @@ export async function trackSiteCampaignEvent(input: {
   actorId?: string | null;
   metadata?: Record<string, unknown>;
 }) {
-  const identity = getSiteCampaignIdentity();
-  const { error } = await supabase.rpc('gsa_public_site_campaign_event', {
-    p_campaign_id: input.campaignId,
-    p_event_type: input.eventType,
-    p_page: input.page || '/',
-    p_device: input.device,
-    p_audience: input.audience,
-    p_viewer_hash: identity.viewerId,
-    p_session_hash: identity.sessionId,
-    p_actor_id: input.actorId || null,
-    p_metadata: input.metadata || {},
-  });
-
-  if (error) throw error;
+  try {
+    const identity = getSiteCampaignIdentity();
+    await supabase.rpc('gsa_public_site_campaign_event', {
+      p_campaign_id: input.campaignId,
+      p_event_type: input.eventType,
+      p_page: input.page || '/',
+      p_device: input.device,
+      p_audience: input.audience,
+      p_viewer_hash: identity.viewerId,
+      p_session_hash: identity.sessionId,
+      p_actor_id: input.actorId || null,
+      p_metadata: input.metadata || {},
+    });
+  } catch {
+    // Falha silenciosa de telemetria
+  }
 }
