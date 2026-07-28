@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { 
   ArrowLeft, Tags, Building2, Car, Boxes, Clock, 
@@ -8,7 +8,6 @@ import {
 import { LogoGSA } from '../../ui/LogoGSA';
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
-import { MarketplaceSubmoduleCard } from './MarketplaceSubmoduleCard';
 import { AdvertisingSlot } from '../../ads/AdvertisingSlot';
 
 interface ClassifiedsHubPageProps {
@@ -64,6 +63,8 @@ const CONTACT_EMAIL = 'gsa.doc.adm@gmail.com';
 export function ClassifiedsHubPage({ onBack, isPublic = false }: ClassifiedsHubPageProps) {
   const headerRef = useRef(null);
   const headerInView = useInView(headerRef, { once: true });
+  const [searchTerm, setSearchTerm] = useState('');
+  const filteredCategories = categories.filter((category) => `${category.title} ${category.sub} ${category.categoryLabel}`.toLocaleLowerCase('pt-BR').includes(searchTerm.trim().toLocaleLowerCase('pt-BR')));
 
   const handleRequireAuth = (actionRoute: string) => {
     if (isPublic) {
@@ -102,10 +103,13 @@ export function ClassifiedsHubPage({ onBack, isPublic = false }: ClassifiedsHubP
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-              <input 
-                type="text" 
-                placeholder="Buscar anúncios..." 
-                className="pl-9 pr-4 py-2 w-64 bg-white/50 border border-black/5 rounded-full text-sm outline-none focus:ring-2 focus:ring-[#e8a838]/30 transition-all"
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Buscar categoria..."
+                aria-label="Buscar categoria de classificados"
+                className="pl-9 pr-4 py-2 w-64 bg-white/70 border border-black/5 rounded-full text-sm outline-none focus:ring-2 focus:ring-[#e8a838]/30 transition-all"
               />
             </div>
 
@@ -203,22 +207,27 @@ export function ClassifiedsHubPage({ onBack, isPublic = false }: ClassifiedsHubP
           </div>
         </div>
 
-        <div className="mx-auto grid w-full grid-cols-1 gap-4 px-2 sm:grid-cols-2 md:grid-cols-3 md:gap-5 md:px-0">
-          {categories.map((cat, i) => (
-            <MarketplaceSubmoduleCard
-              key={cat.id}
-              icon={cat.icon}
-              title={cat.title}
-              description={cat.sub}
-              actionLabel="Ver anúncios"
-              image={cat.image}
-              imageAlt={cat.imageAlt}
-              categoryLabel={cat.categoryLabel}
-              onClick={() => navigate(cat.route)}
-              accentColor={cat.accentColor}
-              index={i}
-            />
-          ))}
+        <div className="space-y-4">
+          {filteredCategories.map((cat, index) => {
+            const Icon = cat.icon;
+            return (
+              <motion.button
+                key={cat.id}
+                type="button"
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.06 }}
+                onClick={() => navigate(cat.route)}
+                className="group grid w-full overflow-hidden rounded-2xl border border-black/8 bg-white text-left shadow-[0_10px_30px_rgba(0,0,0,0.06)] transition hover:-translate-y-0.5 hover:border-[#e8a838]/55 hover:shadow-[0_18px_45px_rgba(0,0,0,0.1)] md:grid-cols-[270px_minmax(0,1fr)_160px] md:items-stretch"
+              >
+                <span className="relative min-h-48 overflow-hidden md:min-h-44"><img src={cat.image} alt={cat.imageAlt} className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" /><span className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/45" /><span className="absolute left-4 top-4 rounded-full bg-black/75 px-3 py-1 text-[10px] font-black uppercase tracking-[0.13em] text-[#e8a838]">{cat.categoryLabel}</span></span>
+                <span className="flex flex-col justify-center p-6 sm:p-7"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a1a1a] text-[#e8a838]"><Icon className="h-5 w-5" /></span><strong className="mt-5 text-2xl text-[#1a1a1a]">{cat.title}</strong><span className="mt-3 max-w-2xl text-sm leading-6 text-neutral-500">{cat.sub}</span></span>
+                <span className="flex items-center justify-between border-t border-black/5 bg-[#f8f5ed] px-6 py-5 md:flex-col md:items-start md:justify-center md:border-l md:border-t-0"><span><span className="block text-[9px] font-black uppercase tracking-[0.15em] text-neutral-400">Acesso direto</span><strong className="mt-2 block text-sm text-[#1a1a1a]">Ver anúncios</strong></span><ChevronRight className="h-5 w-5 text-[#e8a838] transition group-hover:translate-x-1 md:mt-5" /></span>
+              </motion.button>
+            );
+          })}
+          {filteredCategories.length === 0 && <div className="rounded-2xl border border-dashed border-black/15 bg-white/60 p-10 text-center"><Search className="mx-auto h-7 w-7 text-neutral-400" /><h3 className="mt-4 text-lg font-black">Nenhuma categoria encontrada</h3><p className="mt-2 text-sm text-neutral-500">Tente buscar por imóveis, veículos ou produtos.</p><button type="button" onClick={() => setSearchTerm('')} className="mt-5 rounded-full bg-[#1a1a1a] px-5 py-2.5 text-sm font-black text-[#e8a838]">Limpar busca</button></div>}
         </div>
       </section>
 

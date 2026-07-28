@@ -1524,20 +1524,18 @@ function OverviewSection({ snapshot, metrics, stage, nextAction, pendingProposal
 
   return (
     <div className="space-y-6">
-      <section className={`border-l-4 bg-white px-5 py-6 shadow-[0_12px_36px_rgba(25,38,48,0.06)] sm:px-7 ${toneBorder(nextAction.tone)}`}>
-        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#806128]">{nextAction.eyebrow}</p>
-            <h2 className="mt-3 text-2xl font-black tracking-[-0.025em]">{nextAction.title}</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#65717a]">{nextAction.description}</p>
+      <section className="overflow-hidden border border-[#243d4d] bg-[#112838] text-white shadow-[0_18px_55px_rgba(17,40,56,0.16)]">
+        <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+          <div className={`border-l-4 px-6 py-7 sm:px-8 sm:py-9 ${toneBorder(nextAction.tone)}`}>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#d2b66f]">{nextAction.eyebrow}</p>
+            <h2 className="mt-4 max-w-2xl text-3xl font-black tracking-[-0.035em]">{nextAction.title}</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">{nextAction.description}</p>
+            <button type="button" onClick={() => nextAction.cta === 'Conhecer formatos' ? navigate(routes.public.advertise()) : onSelectTab(nextAction.tab)} className="adv-btn-primary mt-6">{nextAction.cta} <ArrowRight className="h-4 w-4" /></button>
           </div>
-          <button
-            type="button"
-            onClick={() => nextAction.cta === 'Conhecer formatos' ? navigate(routes.public.advertise()) : onSelectTab(nextAction.tab)}
-            className="adv-btn-primary shrink-0"
-          >
-            {nextAction.cta} <ArrowRight className="h-4 w-4" />
-          </button>
+          <aside className="border-t border-white/10 bg-[#172f40] p-6 lg:border-l lg:border-t-0 sm:p-8">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#d2b66f]">Campanha em foco</p>
+            {activeCampaign ? <><h3 className="mt-4 text-2xl font-black">{activeCampaign.name}</h3><div className="mt-5 space-y-3 border-y border-white/10 py-4"><InlineDefinition dark compact label="Situação" value={CAMPAIGN_LABELS[activeCampaign.status] || activeCampaign.status} /><InlineDefinition dark compact label="Período" value={`${date(activeCampaign.starts_at)} até ${date(activeCampaign.ends_at)}`} /><InlineDefinition dark compact label="Materiais" value={`${(activeCampaign.creatives || []).length} cadastrado(s)`} /></div><button type="button" onClick={() => onSelectTab('campaigns')} className="mt-5 inline-flex items-center gap-2 text-sm font-extrabold text-[#e1c77d]">Abrir campanha <ChevronRight className="h-4 w-4" /></button></> : <><Megaphone className="mt-5 h-8 w-8 text-[#d2b66f]" /><h3 className="mt-4 text-xl font-black">Nenhuma campanha ativa</h3><p className="mt-3 text-xs leading-6 text-slate-400">A campanha aparecerá aqui após o aceite da proposta e a conclusão das etapas anteriores.</p></>}
+          </aside>
         </div>
       </section>
 
