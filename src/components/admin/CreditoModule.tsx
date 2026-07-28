@@ -1605,7 +1605,7 @@ const enviarOfertaQuitacao = async () => {
 
                               <button
                                 type="button"
-                                disabled={submitting}
+                                disabled={loading || submitting}
                                 onClick={handleAprovarAumentoDireto}
                                 className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-wider shadow-md shadow-emerald-150"
                               >
@@ -1704,7 +1704,7 @@ const enviarOfertaQuitacao = async () => {
 
                               <button
                                 type="button"
-                                disabled={submitting}
+                                disabled={loading || submitting}
                                 onClick={handlePreAprovar}
                                 className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-wider shadow-md shadow-emerald-150"
                               >
@@ -1839,7 +1839,7 @@ const enviarOfertaQuitacao = async () => {
                       </button>
                       <button
                         type="button"
-                        disabled={submitting || !selectedRequest.contrato_assinado_url}
+                        disabled={loading || submitting || !selectedRequest.contrato_assinado_url}
                         onClick={handleAprovarContratoELiberar}
                         className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-wider hover:scale-[1.02] transition-all shadow-md shadow-indigo-150"
                       >
