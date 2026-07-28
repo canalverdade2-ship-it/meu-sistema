@@ -71,6 +71,9 @@ try {
 }
 
 git('commit', '-m', 'fix(audit): alinhar contrato lazy e registrar testes de anúncios');
+// O npx pode deixar alterações transitórias no lockfile depois que o commit foi criado.
+// Limpa somente o que não faz parte do commit já registrado antes de reconciliar a branch.
+git('reset', '--hard', 'HEAD');
 for (let attempt = 1; attempt <= 5; attempt += 1) {
   try {
     git('fetch', 'origin', BRANCH);
