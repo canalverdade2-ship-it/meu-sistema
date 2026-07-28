@@ -27,6 +27,8 @@ import { MyNegotiationsPage } from './classifieds/MyNegotiationsPage';
 import { ClassifiedsClientDashboard } from './classifieds/ClassifiedsClientDashboard';
 import { MyClassifiedSalesPage } from './classifieds/MyClassifiedSalesPage';
 import { MyClassifiedCommissionsPage } from './classifieds/MyClassifiedCommissionsPage';
+import { HealthMarketplaceLandingPage } from './protection/HealthMarketplaceLandingPage';
+import { InsuranceMarketplaceLandingPage } from './protection/InsuranceMarketplaceLandingPage';
 import { ProtectionMarketplace } from './protection/ProtectionMarketplace';
 
 interface MarketplaceGSAStoreProps {
@@ -73,10 +75,43 @@ export function MarketplaceGSAStore({
   const currentSubmodule = route.submodule;
   const currentModule = route.module;
 
-  if (currentModule === 'saude' || currentModule === 'seguros') {
+  if (currentModule === 'saude') {
+    if (!currentSubmodule || currentSubmodule === 'home') {
+      return (
+        <HealthMarketplaceLandingPage
+          clientId={clientId}
+          onRequireAuth={onRequireAuth}
+          onBackToMarketplace={backToMarketplace}
+        />
+      );
+    }
+
     return (
       <ProtectionMarketplace
-        domain={currentModule}
+        domain="saude"
+        submodule={currentSubmodule}
+        itemId={route.itemId}
+        clientId={clientId}
+        onRequireAuth={onRequireAuth}
+        onBackToMarketplace={backToMarketplace}
+      />
+    );
+  }
+
+  if (currentModule === 'seguros') {
+    if (!currentSubmodule || currentSubmodule === 'home') {
+      return (
+        <InsuranceMarketplaceLandingPage
+          clientId={clientId}
+          onRequireAuth={onRequireAuth}
+          onBackToMarketplace={backToMarketplace}
+        />
+      );
+    }
+
+    return (
+      <ProtectionMarketplace
+        domain="seguros"
         submodule={currentSubmodule}
         itemId={route.itemId}
         clientId={clientId}
