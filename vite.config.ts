@@ -14,9 +14,8 @@ export default defineConfig(({mode}) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
-        // O entry ESM do ExcelJS usa APIs exclusivas do Node. No navegador,
-        // o pacote publica um bundle document-based próprio para esse ambiente.
-        'exceljs': path.resolve(__dirname, 'node_modules/exceljs/dist/exceljs.min.js'),
+        // Mantém o contrato do exportador institucional sem carregar APIs exclusivas do Node no navegador.
+        'exceljs': path.resolve(__dirname, 'src/lib/exceljsBrowserAdapter.ts'),
       },
     },
     server: {
@@ -35,7 +34,7 @@ export default defineConfig(({mode}) => {
             if (id.includes('framer-motion') || id.includes('/motion/')) return 'vendor-motion';
             if (id.includes('lucide-react')) return 'vendor-icons';
             if (id.includes('recharts')) return 'vendor-charts';
-            if (id.includes('exceljs') || id.includes('xlsx') || id.includes('jspdf')) return 'vendor-documents';
+            if (id.includes('@redoper1/xlsx-js-style') || id.includes('xlsx') || id.includes('jspdf')) return 'vendor-documents';
             return undefined;
           },
         },
