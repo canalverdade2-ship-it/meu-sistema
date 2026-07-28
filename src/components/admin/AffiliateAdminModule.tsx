@@ -4,6 +4,7 @@ import {
   Banknote,
   CheckCircle2,
   Clock3,
+  Eye,
   Link2,
   Loader2,
   RefreshCw,
@@ -279,10 +280,14 @@ export function AffiliateAdminModule() {
                 <Metric label="Cliques" value={number(affiliate.cliques).toLocaleString('pt-BR')} />
                 <Metric label="Conversões" value={number(affiliate.conversoes).toLocaleString('pt-BR')} />
                 <Metric label="Disponível" value={formatCurrency(number(affiliate.saldo_disponivel))} />
-                <div className="flex flex-wrap gap-2 lg:justify-end" onClick={(e) => e.stopPropagation()}>
-                  {affiliate.status !== 'ativo' && <SmallAction disabled={workingId === affiliate.id} onClick={() => void setAffiliateStatus(affiliate, 'ativo')} tone="green" label="Ativar" />}
-                  {affiliate.status === 'ativo' && <SmallAction disabled={workingId === affiliate.id} onClick={() => void setAffiliateStatus(affiliate, 'suspenso')} tone="amber" label="Suspender" />}
-                  {affiliate.status !== 'encerrado' && <SmallAction disabled={workingId === affiliate.id} onClick={() => void setAffiliateStatus(affiliate, 'encerrado')} tone="red" label="Encerrar" />}
+                <div className="flex flex-wrap gap-2 lg:justify-end">
+                  <button 
+                    type="button" 
+                    onClick={(e) => { e.stopPropagation(); setSelectedAffiliate(affiliate); }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-3.5 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-indigo-600 transition-colors shadow-2xs"
+                  >
+                    <Eye className="h-4 w-4" /> Detalhes
+                  </button>
                 </div>
               </article>
             ))}
