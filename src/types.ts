@@ -473,7 +473,7 @@ export type Promocao = {
   data_inicio_divulgacao: string;
   data_fim_divulgacao: string;
   prazo_validade_meses: number;
-  status: 'ativa' | 'suspensa' | 'encerrada' | 'usada' | 'cancelada';
+  status: 'ativa' | 'suspensa' | 'encerrada' | 'usada' | 'cancelada' | 'cancelado' | 'disponivel';
   created_at: string;
 };
 
@@ -483,7 +483,7 @@ export type ClientePromocao = {
   promocao_id: string;
   data_ativacao: string;
   data_expiracao: string;
-  status: 'ativa' | 'usada' | 'suspensa' | 'cancelado';
+  status: 'ativa' | 'usada' | 'suspensa' | 'cancelado' | 'cancelada' | 'encerrada' | 'disponivel';
   orcamento_id?: string;
   data_uso?: string;
   motivo_cancelamento?: string;
