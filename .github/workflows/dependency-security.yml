@@ -23,7 +23,7 @@ jobs:
           cache: npm
       - name: Instalar estado atual
         run: npm ci
-      - name: Preparar fork mantido e bundle de navegador
+      - name: Preparar fork mantido e entrypoint Workbook
         shell: bash
         run: |
           npm install 'exceljs@npm:@excel.js/exceljs@^0.9.0' --save
@@ -31,13 +31,17 @@ jobs:
           from pathlib import Path
           path = Path('src/lib/institutionalExcelExport.ts')
           source = path.read_text()
-          source = source.replace("await import('exceljs')", "await import('exceljs/dist/exceljs.min.js')")
+          source = source.replace(
+              "  const ExcelJSImport = await import('exceljs');\n  const ExcelJS = ExcelJSImport.default;\n  const workbook = new ExcelJS.Workbook();",
+              "  const ExcelJSImport = await import('exceljs/workbook');\n  const Workbook = ExcelJSImport.Workbook || ExcelJSImport.default;\n  const workbook = new Workbook();",
+          )
           path.write_text(source)
           PY
-          cat > src/types/exceljs-browser.d.ts <<'TYPEDEF'
-          declare module 'exceljs/dist/exceljs.min.js' {
-            import ExcelJS from 'exceljs';
-            export default ExcelJS;
+          cat > src/types/exceljs-workbook.d.ts <<'TYPEDEF'
+          declare module 'exceljs/workbook' {
+            import { Workbook } from 'exceljs';
+            export { Workbook };
+            export default Workbook;
           }
           TYPEDEF
       - name: Capturar cada validação
@@ -48,14 +52,15 @@ jobs:
           npm audit --audit-level=high > dependency-audit.log 2>&1
           audit_exit=$?
           node --input-type=module > exceljs-smoke.log 2>&1 <<'NODE'
-          const imported = await import('exceljs/dist/exceljs.min.js');
-          const ExcelJS = imported.default;
-          const workbook = new ExcelJS.Workbook();
+          const imported = await import('exceljs/workbook');
+          console.log(`Exports: ${Object.keys(imported).join(', ')}`);
+          const Workbook = imported.Workbook || imported.default;
+          const workbook = new Workbook();
           const worksheet = workbook.addWorksheet('Auditoria');
           worksheet.getCell('A1').value = 'GSA HUB';
           worksheet.getCell('A1').font = { bold: true };
           const buffer = await workbook.xlsx.writeBuffer();
-          if (!buffer || buffer.byteLength < 100) throw new Error('Falha ao gerar planilha com o bundle de navegador.');
+          if (!buffer || buffer.byteLength < 100) throw new Error('Falha ao gerar planilha pelo entrypoint Workbook.');
           console.log(`Planilha de compatibilidade gerada: ${buffer.byteLength} bytes.`);
           NODE
           smoke_exit=$?
@@ -76,7 +81,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: maintained-exceljs-browser-validation
+          name: maintained-exceljs-workbook-validation
           path: |
             dependency-audit.log
             exceljs-smoke.log
