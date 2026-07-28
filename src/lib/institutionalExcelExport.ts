@@ -16,6 +16,10 @@ import {
   type InstitutionalReportOptions,
 } from './institutionalReportCore';
 
+function preserveIntegerNumberFormat(cell: { numFmt?: string }, type: string, value: unknown): void {
+  if (type === 'number' && typeof value === 'number' && Number.isInteger(value)) cell.numFmt = '#,##0';
+}
+
 export async function exportInstitutionalExcel(options: InstitutionalReportOptions): Promise<void> {
   assertInstitutionalRows(options.rows);
   const ExcelJSImport = await import('exceljs');
@@ -143,6 +147,7 @@ export async function exportInstitutionalExcel(options: InstitutionalReportOptio
       valueCell.font = { name: 'Aptos Display', size: 12, bold: true, color: { argb: INSTITUTIONAL_BRAND.navy } };
       valueCell.alignment = { vertical: 'middle', horizontal: defaultInstitutionalAlignment(itemType), wrapText: true };
       applyExcelNumberFormat(valueCell, itemType);
+      preserveIntegerNumberFormat(valueCell, itemType, item.value);
       startColumn = endColumn + 1;
     });
 
@@ -170,8 +175,9 @@ export async function exportInstitutionalExcel(options: InstitutionalReportOptio
     const excelRow = worksheet.getRow(headerRowNumber + rowIndex + 1);
     columns.forEach((column, columnIndex) => {
       const type = column.type || inferInstitutionalColumnType(column.key, sourceRow[column.key]);
+      const sourceValue = sourceRow[column.key];
       const cell = excelRow.getCell(columnIndex + 1);
-      cell.value = normalizeInstitutionalValue(sourceRow[column.key], type);
+      cell.value = normalizeInstitutionalValue(sourceValue, type);
       cell.font = { name: 'Aptos', size: 9, color: { argb: INSTITUTIONAL_BRAND.ink } };
       cell.alignment = { vertical: 'top', horizontal: column.align || defaultInstitutionalAlignment(type), wrapText: true };
       cell.border = {
@@ -181,6 +187,7 @@ export async function exportInstitutionalExcel(options: InstitutionalReportOptio
       };
       if (rowIndex % 2 === 1) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: INSTITUTIONAL_BRAND.stripe } };
       applyExcelNumberFormat(cell, type);
+      preserveIntegerNumberFormat(cell, type, sourceValue);
     });
     excelRow.height = 22;
   });
