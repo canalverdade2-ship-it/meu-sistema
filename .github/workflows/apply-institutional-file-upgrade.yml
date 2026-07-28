@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: institutional-file-upgrade
+  cancel-in-progress: false
+
 jobs:
   apply:
     name: Aplicar migração controlada
