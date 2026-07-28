@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "node scripts/capture-pr-merge-build.mjs && tsc --noEmit && node scripts/audit-production-real.mjs --enforce",
+    "lint": "tsc --noEmit && node scripts/audit-production-real.mjs --enforce",
     "typecheck:strict": "tsc --noEmit -p tsconfig.strict.json",
     "test:unit": "vitest run src/tests",
     "backup": "node backup.cjs",
