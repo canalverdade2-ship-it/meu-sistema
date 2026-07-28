@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentType } from 'react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,7 +21,9 @@ import {
   LockKeyhole,
   Palmtree,
   Percent,
+  Search,
   ShieldCheck,
+  SlidersHorizontal,
   SunMedium,
   TrendingUp,
   Users,
@@ -77,79 +79,127 @@ const AVAILABLE_TOOLS = TOOLS.filter((tool) => tool.available);
 
 export function FreeToolsPage({ onBack, onServices, onClientLogin }: FreeToolsPageProps) {
   const [activeTool, setActiveTool] = useState<FreeToolId | null>(null);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('Todas');
 
   useEffect(() => {
     const paymentReturn = readInfinitePayReturn();
     if (paymentReturn) setActiveTool(paymentReturn.tool);
   }, []);
 
+  const categories = useMemo(() => [
+    'Todas',
+    ...Array.from(new Set(AVAILABLE_TOOLS.map((tool) => tool.category))).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+  ], []);
+
+  const filteredTools = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase('pt-BR');
+    return AVAILABLE_TOOLS.filter((tool) => {
+      const matchesCategory = category === 'Todas' || tool.category === category;
+      const haystack = [tool.title, tool.description, tool.category, tool.useCase, ...tool.includes]
+        .join(' ')
+        .toLocaleLowerCase('pt-BR');
+      return matchesCategory && (!term || haystack.includes(term));
+    });
+  }, [category, search]);
+
+  const featuredTools = AVAILABLE_TOOLS.slice(0, 3);
+
   return (
-    <div className="min-h-screen bg-[#eee9df] text-[#17202a]">
+    <div className="min-h-screen bg-[#eef1ee] text-[#132128]">
       <PublicHeader currentPage="free-tools" onClientLogin={onClientLogin} />
       <main className="overflow-x-clip pt-16">
-      <section className="relative overflow-hidden border-b border-[#d4ccbe] bg-[linear-gradient(135deg,#faf7f0_0%,#f3ede2_56%,#e9dfcf_100%)]">
-        <div className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full border border-[#b8903e]/15" />
-        <div className="pointer-events-none absolute right-10 top-12 h-64 w-64 rounded-full bg-[#d8bd73]/14 blur-3xl" />
-        <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-          <button type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#cfc5b5] bg-white/65 px-4 py-2 text-sm font-black text-[#52606a] transition hover:border-[#9f8140] hover:bg-white hover:text-[#17202a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9f8140]"><ArrowLeft className="h-4 w-4" /> Voltar ao início</button>
-          <div className="mt-10 grid items-stretch gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
-            <div className="flex flex-col justify-center border-l-2 border-[#c7a458] pl-5 sm:pl-7">
-              <p className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.22em] text-[#806128] sm:text-xs"><span className="h-px w-8 bg-[#b8903e]" />Serviços públicos GSA</p>
-              <h1 className="mt-5 max-w-[14ch] text-4xl font-black leading-[1.03] tracking-[-0.045em] text-[#111820] sm:text-5xl lg:text-[3.8rem]">Ferramentas para orientar decisões com mais clareza.</h1>
-              <p className="mt-6 max-w-2xl text-base leading-8 text-[#5b6570] sm:text-lg">Use o cálculo simples gratuitamente ou avance para o modo Pro quando precisar de mais campos, regras e detalhamento.</p>
-              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs font-bold text-[#56616a]">{['Free sem cadastro', 'Pro com liberação segura', 'Acesso imediato'].map((item) => <span key={item} className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#8a6e2f]" />{item}</span>)}</div>
+        <section className="relative overflow-hidden bg-[#071820] text-white">
+          <div className="pointer-events-none absolute -right-32 -top-28 h-[34rem] w-[34rem] rounded-full border border-[#65d6ac]/12" />
+          <div className="pointer-events-none absolute right-10 top-32 h-64 w-64 rounded-full bg-[#65d6ac]/8 blur-3xl" />
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8 lg:py-20">
+            <div>
+              <button type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-black text-white/75 transition hover:border-[#65d6ac]/50 hover:text-white"><ArrowLeft className="h-4 w-4" /> Voltar ao início</button>
+              <p className="mt-10 text-[10px] font-black uppercase tracking-[0.25em] text-[#65d6ac]">Laboratório de utilidades GSA</p>
+              <h1 className="mt-5 max-w-[13ch] text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-6xl">Encontre a ferramenta certa antes de preencher qualquer dado.</h1>
+              <p className="mt-6 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">Pesquise pelo assunto, filtre por área e abra somente a simulação que ajuda na sua decisão.</p>
+              <div className="mt-8 flex flex-wrap gap-4 text-xs font-bold text-white/55">
+                <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#65d6ac]" />Uso Free sem cadastro</span>
+                <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#65d6ac]" />Dados permanecem no dispositivo</span>
+                <span className="inline-flex items-center gap-2"><Calculator className="h-4 w-4 text-[#65d6ac]" />{AVAILABLE_TOOLS.length} ferramentas ativas</span>
+              </div>
             </div>
-            <aside className="overflow-hidden rounded-2xl border border-[#d8bd73]/30 bg-[linear-gradient(180deg,#172635_0%,#0d1924_100%)] text-white shadow-[inset_0_3px_0_#d8bd73,0_30px_70px_rgba(18,27,36,0.2)]">
-              <div className="border-b border-white/10 px-5 py-6 sm:px-7"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d8bd73]">Dois níveis de consulta</p><h2 className="mt-3 text-2xl font-black leading-tight">Comece simples. Aprofunde somente quando precisar.</h2><p className="mt-3 text-sm leading-6 text-white/55">O Free orienta rapidamente. O Pro organiza uma análise mais detalhada dentro da mesma ferramenta.</p></div>
-              <div className="divide-y divide-white/10 px-5 sm:px-7">{[['01','Modo Free','Poucos campos e resultado básico, sem login.'],['02','Modo Pro','Cálculo avançado por pagamento, voucher ou benefício.'],['03','Confirmação segura','Pagamento e elegibilidade são verificados no servidor.']].map(([number,title,text]) => <div key={number} className="grid grid-cols-[36px_1fr] gap-3 py-5"><span className="text-[10px] font-black tracking-[0.18em] text-[#d8bd73]">{number}</span><div><strong className="block text-sm">{title}</strong><span className="mt-1 block text-xs leading-5 text-white/50">{text}</span></div></div>)}</div>
+
+            <aside className="overflow-hidden rounded-2xl border border-white/12 bg-white/[0.045] shadow-2xl shadow-black/20 backdrop-blur">
+              <div className="border-b border-white/10 p-5 sm:p-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#65d6ac]">Busca rápida</p>
+                <label className="mt-4 flex min-h-14 items-center gap-3 rounded-xl border border-white/15 bg-[#0d252d] px-4 focus-within:border-[#65d6ac]/65">
+                  <Search className="h-5 w-5 text-[#65d6ac]" />
+                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Ex.: férias, MEI, pensão, juros..." className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30" />
+                  {search && <button type="button" onClick={() => setSearch('')} className="text-xs font-black text-white/45 hover:text-white">Limpar</button>}
+                </label>
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-white/10">
+                <div className="p-5"><strong className="block text-2xl font-black text-[#65d6ac]">{AVAILABLE_TOOLS.length}</strong><span className="mt-1 block text-[10px] uppercase tracking-wider text-white/40">Ferramentas</span></div>
+                <div className="p-5"><strong className="block text-2xl font-black text-[#65d6ac]">Free</strong><span className="mt-1 block text-[10px] uppercase tracking-wider text-white/40">Entrada simples</span></div>
+                <div className="p-5"><strong className="block text-2xl font-black text-[#65d6ac]">Pro</strong><span className="mt-1 block text-[10px] uppercase tracking-wider text-white/40">Análise ampliada</span></div>
+              </div>
+              <div className="border-t border-white/10 p-5 sm:p-6">
+                <p className="text-xs leading-6 text-white/50"><LockKeyhole className="mr-2 inline h-4 w-4 text-[#65d6ac]" />Pagamento, voucher e elegibilidade Pro são confirmados de forma segura no servidor.</p>
+              </div>
             </aside>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="py-14 sm:py-20" aria-labelledby="free-tools-title">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 border-b border-[#d4ccbe] pb-8 lg:grid-cols-[1fr_0.7fr] lg:items-end">
-            <div className="max-w-3xl"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806128]">Ferramentas disponíveis</p><h2 id="free-tools-title" className="mt-3 text-3xl font-black tracking-[-0.035em] text-[#111820] sm:text-5xl">Escolha a consulta que precisa iniciar.</h2><p className="mt-4 max-w-2xl text-sm leading-7 text-[#606a73] sm:text-base">Cada ferramenta abre com o nível Free. A opção Pro fica disponível no mesmo modal.</p></div>
-            <div className="flex items-start gap-3 border-l-2 border-[#c7a458] pl-5 text-sm leading-6 text-[#626c75]"><LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-[#8a6e2f]" />O Free não solicita identificação. Pagamento e voucher Pro também podem ser usados sem cadastro.</div>
+        <section className="border-b border-[#d2d9d4] bg-[#f8faf8] py-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#42665b]"><SlidersHorizontal className="h-4 w-4" />Filtrar por assunto</div>
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+              {categories.map((item) => <button key={item} type="button" onClick={() => setCategory(item)} aria-pressed={category === item} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black transition ${category === item ? 'border-[#153f38] bg-[#153f38] text-white' : 'border-[#ccd6d0] bg-white text-[#52625d] hover:border-[#6b8d82]'}`}>{item}</button>)}
+            </div>
           </div>
+        </section>
 
-          <div className="mt-8 grid gap-5 lg:grid-cols-3">
-            {AVAILABLE_TOOLS.map(({ id, icon: Icon, number, title, description, category, useCase, includes }) => (
-              <button key={id} type="button" onClick={() => setActiveTool(id as FreeToolId)} className="group relative flex min-h-[390px] flex-col overflow-hidden rounded-2xl border border-[#d4cdc2] bg-[#fbf9f4] p-6 text-left shadow-[0_12px_32px_rgba(24,32,40,0.055)] transition duration-200 hover:-translate-y-1 hover:border-[#ad8b42] hover:bg-white hover:shadow-[0_22px_48px_rgba(24,32,40,0.11)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9f8140] focus-visible:ring-offset-2 focus-visible:ring-offset-[#eee9df] sm:p-7">
-                <span className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#8a6b2f,#d8bd73,transparent)] opacity-80" />
-                <div className="flex items-start justify-between gap-4"><span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#172433] text-[#d8bd73]"><Icon className="h-5 w-5" /></span><div className="text-right"><span className="block text-[10px] font-black tracking-[0.2em] text-[#9b7c33]">{number}</span><span className="mt-2 inline-flex rounded-full border border-[#d7c69e] bg-[#f7efd9] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-[#715721]">Free + Pro</span></div></div>
-                <p className="mt-7 text-[10px] font-black uppercase tracking-[0.17em] text-[#806128]">{category}</p><h3 className="mt-3 text-2xl font-black leading-tight tracking-[-0.025em] text-[#111820]">{title}</h3><p className="mt-4 text-sm leading-6 text-[#616b74]">{description}</p>
-                <div className="mt-6 border-t border-[#ded8ce] pt-5"><p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#858c91]">Indicado para</p><p className="mt-2 text-xs leading-5 text-[#4f5a63]">{useCase}</p></div>
-                <ul className="mt-5 grid grid-cols-2 gap-x-3 gap-y-2 text-[11px] leading-4 text-[#5d6770]">{includes.map((item) => <li key={item} className="flex items-start gap-2"><Check className="mt-0.5 h-3 w-3 shrink-0 text-[#8a6e2f]" strokeWidth={3} />{item}</li>)}</ul>
-                <div className="mt-auto flex items-center justify-between gap-4 border-t border-[#ded8ce] pt-5"><span className="text-[10px] font-bold text-[#838a90]">Free simples · Pro avançado</span><span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-[#765b25]">Abrir ferramenta <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span></div>
-              </button>
-            ))}
+        {!search && category === 'Todas' && (
+          <section className="py-12 sm:py-16">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col gap-4 border-b border-[#cfd7d2] pb-6 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#397866]">Comece por aqui</p><h2 className="mt-2 text-3xl font-black tracking-[-0.04em]">Consultas mais procuradas</h2></div><p className="max-w-md text-sm leading-6 text-[#64716d]">Acesso direto às ferramentas que normalmente iniciam uma decisão trabalhista ou previdenciária.</p></div>
+              <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                {featuredTools.map(({ id, icon: Icon, number, title, description, category: toolCategory }) => <button key={id} type="button" onClick={() => setActiveTool(id)} className="group grid min-h-48 grid-cols-[52px_minmax(0,1fr)] gap-5 rounded-2xl border border-[#cfd7d2] bg-white p-6 text-left transition hover:-translate-y-0.5 hover:border-[#4f8272] hover:shadow-lg"><span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#12342f] text-[#65d6ac]"><Icon className="h-5 w-5" /></span><span><span className="text-[10px] font-black tracking-[0.18em] text-[#397866]">{number} · {toolCategory}</span><strong className="mt-3 block text-xl text-[#132128]">{title}</strong><span className="mt-3 block text-sm leading-6 text-[#66736f]">{description}</span><span className="mt-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.09em] text-[#285f52]">Abrir agora <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></span></button>)}
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section className="border-y border-[#d3dad6] bg-white py-12 sm:py-16" aria-labelledby="free-tools-title">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-6 border-b border-[#d3dad6] pb-7 lg:grid-cols-[1fr_auto] lg:items-end">
+              <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#397866]">Índice de ferramentas</p><h2 id="free-tools-title" className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-5xl">{filteredTools.length} {filteredTools.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}</h2><p className="mt-4 max-w-2xl text-sm leading-7 text-[#64716d]">Cada item abre primeiro no modo Free. O aprofundamento Pro permanece dentro da mesma experiência.</p></div>
+              <div className="rounded-xl border border-[#cfd7d2] bg-[#f3f7f4] px-4 py-3 text-xs font-bold text-[#49615a]">Categoria: <strong>{category}</strong></div>
+            </div>
+
+            <div className="mt-4 divide-y divide-[#d8dfdb] border-y border-[#d8dfdb]">
+              {filteredTools.map(({ id, icon: Icon, number, title, description, category: toolCategory, useCase, includes }) => (
+                <button key={id} type="button" onClick={() => setActiveTool(id)} className="group grid w-full gap-4 py-6 text-left md:grid-cols-[56px_minmax(0,1fr)_minmax(220px,0.65fr)_auto] md:items-center">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#cbd5cf] bg-[#f5f8f6] text-[#285f52]"><Icon className="h-5 w-5" /></span>
+                  <span className="min-w-0"><span className="text-[9px] font-black uppercase tracking-[0.17em] text-[#397866]">{number} · {toolCategory}</span><strong className="mt-1 block text-lg text-[#132128]">{title}</strong><span className="mt-2 block text-xs leading-5 text-[#697672]">{description}</span></span>
+                  <span className="hidden border-l border-[#d8dfdb] pl-5 md:block"><span className="text-[9px] font-black uppercase tracking-[0.15em] text-[#7c8984]">Indicado para</span><span className="mt-2 block text-xs leading-5 text-[#586661]">{useCase}</span><span className="mt-3 flex flex-wrap gap-1.5">{includes.slice(0, 2).map((item) => <span key={item} className="rounded-full bg-[#eef3f0] px-2 py-1 text-[9px] font-bold text-[#53645e]">{item}</span>)}</span></span>
+                  <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.08em] text-[#285f52]">Free + Pro <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span>
+                </button>
+              ))}
+              {filteredTools.length === 0 && <div className="py-16 text-center"><Search className="mx-auto h-8 w-8 text-[#9eaaa5]" /><h3 className="mt-4 text-lg font-black">Nenhuma ferramenta corresponde à busca</h3><p className="mt-2 text-sm text-[#6b7773]">Tente outro termo ou selecione a categoria “Todas”.</p><button type="button" onClick={() => { setSearch(''); setCategory('Todas'); }} className="mt-5 rounded-lg bg-[#153f38] px-5 py-3 text-sm font-black text-white">Limpar filtros</button></div>}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="border-y border-[#d7d1c6] bg-[#f8f5ef] py-12 sm:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-<div className="grid gap-6 rounded-2xl border border-[#d4cdc2] bg-white p-6 shadow-[0_14px_36px_rgba(24,32,40,0.06)] sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
-  <div>
-    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#806128]">Área ampliada</p>
-    <h2 className="mt-3 text-2xl font-black tracking-[-0.03em] text-[#111820] sm:text-3xl">As seis ferramentas já estão disponíveis.</h2>
-    <p className="mt-3 max-w-3xl text-sm leading-6 text-[#667078]">13º salário, Benefícios do INSS e BPC / LOAS agora possuem consulta Free e análise Pro, juntamente com Rescisão, Aposentadoria e Férias.</p>
-  </div>
-  <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-[0.1em] text-[#6d5727]">
-    {['13º', 'INSS', 'BPC'].map((label) => <span key={label} className="rounded-xl border border-[#d6c79e] bg-[#f7f0dc] px-4 py-3">{label}</span>)}
-  </div>
-</div>
-        </div>
-      </section>
+        <section className="bg-[#10262c] py-14 text-white sm:py-16">
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+            <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#65d6ac]">Princípios da consulta</p><h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">Resultado útil é resultado explicado.</h2><p className="mt-4 text-sm leading-7 text-white/55">Cada ferramenta informa composição, limites e situações em que uma análise individual é necessária.</p></div>
+            <div className="grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-3">{[{ icon: ShieldCheck, title: 'Privacidade preservada', text: 'Os valores digitados não são armazenados pela GSA.' }, { icon: Calculator, title: 'Composição visível', text: 'A consulta mostra como o resultado foi formado.' }, { icon: Info, title: 'Limites informados', text: 'Exceções e hipóteses não consideradas ficam claras.' }].map(({ icon: Icon, title, text }) => <article key={title} className="bg-[#16333a] p-6"><Icon className="h-6 w-6 text-[#65d6ac]" /><h3 className="mt-5 font-black">{title}</h3><p className="mt-3 text-xs leading-5 text-white/55">{text}</p></article>)}</div>
+          </div>
+        </section>
 
-      <section className="border-b border-white/10 bg-[#111d29] py-14 text-white sm:py-16"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:gap-14"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d8bd73]">Compromisso da plataforma</p><h2 className="mt-4 text-3xl font-black leading-tight tracking-[-0.03em] sm:text-4xl">Clareza antes de qualquer conclusão.</h2><p className="mt-4 text-sm leading-7 text-white/55">A área foi estruturada para informar sem esconder limites, condições ou situações que exigem análise individual.</p></div><div className="grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-3">{[{ icon: ShieldCheck, title: 'Privacidade preservada', text: 'Os valores digitados permanecem no dispositivo e não são armazenados pela GSA.' },{ icon: Calculator, title: 'Cálculo explicado', text: 'O resultado apresenta a composição utilizada, não apenas um número isolado.' },{ icon: Info, title: 'Limites visíveis', text: 'Cada ferramenta informa o que não foi considerado e quando buscar confirmação.' }].map(({ icon: Icon, title, text }) => <article key={title} className="bg-[#172433] p-6"><Icon className="h-6 w-6 text-[#d8bd73]" /><h3 className="mt-5 font-black">{title}</h3><p className="mt-3 text-xs leading-5 text-white/55">{text}</p></article>)}</div></div></div></section>
+        <section className="py-14 sm:py-20">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8"><div className="grid overflow-hidden rounded-2xl border border-[#b9c9c1] bg-[#dce7e1] lg:grid-cols-[1fr_340px]"><div className="p-7 sm:p-10 lg:p-12"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#285f52]">Quando a simulação não basta</p><h2 className="mt-4 max-w-3xl text-3xl font-black leading-tight tracking-[-0.03em] sm:text-4xl">Documentos, períodos especiais e regras específicas merecem uma análise completa.</h2><p className="mt-4 max-w-2xl text-sm leading-7 text-[#52635d]">Conheça os serviços da GSA quando a situação exigir conferência individual ou acompanhamento.</p></div><div className="flex flex-col justify-center border-t border-[#b9c9c1] bg-[#c9d9d1] p-7 lg:border-l lg:border-t-0"><button type="button" onClick={onServices} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#12342f] px-5 py-3 text-sm font-black text-white">Conhecer serviços GSA <ArrowRight className="h-4 w-4" /></button><p className="mt-4 text-center text-[11px] leading-5 text-[#52635d]">Atendimento por WhatsApp, e-mail ou Portal do Cliente.</p></div></div><p className="mx-auto mt-8 max-w-3xl text-center text-xs leading-5 text-[#697672]">As ferramentas fornecem estimativas educativas e não comprovam direitos nem substituem cálculos oficiais ou orientação profissional.</p></div>
+        </section>
 
-      <section className="py-14 sm:py-20"><div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8"><div className="grid overflow-hidden rounded-2xl border border-[#cbbd9f] bg-[#d8c28d] lg:grid-cols-[1fr_340px]"><div className="p-7 sm:p-10 lg:p-12"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#624d20]">Quando a simulação não basta</p><h2 className="mt-4 max-w-3xl text-3xl font-black leading-tight tracking-[-0.03em] text-[#17202a] sm:text-4xl">Documentos, períodos especiais e regras específicas merecem uma análise completa.</h2><p className="mt-4 max-w-2xl text-sm leading-7 text-[#5c4d31]">Conheça os serviços da GSA quando a situação exigir conferência individual, organização documental ou acompanhamento.</p></div><div className="flex flex-col justify-center border-t border-[#b69e69] bg-[#c8ad70] p-7 lg:border-l lg:border-t-0"><button type="button" onClick={onServices} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#172433] px-5 py-3 text-sm font-black text-white transition hover:bg-[#223449] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Conhecer os serviços GSA <ArrowRight className="h-4 w-4" /></button><p className="mt-4 text-center text-[11px] leading-5 text-[#584721]">Atendimento por WhatsApp, e-mail ou Portal do Cliente.</p></div></div><p className="mx-auto mt-8 max-w-3xl text-center text-xs leading-5 text-[#69727a]">As ferramentas fornecem estimativas educativas e não comprovam direitos, não substituem o cálculo oficial dos órgãos competentes nem a orientação de profissional habilitado.</p></div></section>
-
-      <FreeToolsTieredCalculatorDialog tool={activeTool} onClose={() => setActiveTool(null)} onToolChange={setActiveTool} onServices={() => { setActiveTool(null); onServices(); }} onClientLogin={onClientLogin} />
-    </main>
+        <FreeToolsTieredCalculatorDialog tool={activeTool} onClose={() => setActiveTool(null)} onToolChange={setActiveTool} onServices={() => { setActiveTool(null); onServices(); }} onClientLogin={onClientLogin} />
+      </main>
     </div>
   );
 }

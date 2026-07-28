@@ -1,0 +1,42 @@
+name: Page Personality Quality
+
+on:
+  pull_request:
+    paths:
+      - 'src/components/client/ClientDashboard.tsx'
+      - 'src/pages/Prestador/PrestadorDashboard.tsx'
+      - 'src/pages/Fornecedor/FornecedorDashboard.tsx'
+      - 'src/components/public/FreeToolsPage.tsx'
+      - 'src/components/client/StoreHub.tsx'
+      - 'src/components/client/marketplace/travel/TravelHubMenu.tsx'
+      - 'src/components/admin/Dashboard.tsx'
+      - 'src/pages/AdvertiserPortal.tsx'
+      - 'src/components/client/marketplace/ClassifiedsHubPage.tsx'
+      - 'scripts/check-page-personality-contracts.mjs'
+      - '.github/workflows/page-personality-quality.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate page personality contracts
+        run: node scripts/check-page-personality-contracts.mjs
+
+      - name: Build application
+        run: npm run build
