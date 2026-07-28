@@ -282,7 +282,7 @@ export const sessionService = {
     const cleanDoc = documento.replace(/\D/g, '');
     const cleanPin = pin.trim();
 
-    // Tentar primeiro via RPC direta para evitar bloqueios de CORS/500 em Edge Functions
+    // Prioriza RPC nativa gsa_login_pin para evitar o erro HTTP 500 / CORS da Edge Function
     try {
       const { data, error } = await supabase.rpc('gsa_login_pin', {
         p_documento: cleanDoc,
@@ -296,8 +296,8 @@ export const sessionService = {
         }
         return res;
       }
-    } catch {
-      // Se a RPC falhar ou não existir, tenta o Gateway via Edge Function
+    } catch (err) {
+      console.warn('[sessionService] RPC gsa_login_pin falhou, tentando via Edge Function:', err);
     }
 
     return await authenticate('login_pin', { documento: cleanDoc, pin: cleanPin, tipo });
