@@ -1,19 +1,21 @@
-name: Auditoria Completa - Correcao Estrutural
+name: Auditoria Completa - TypeScript
 
 on:
   push:
     branches:
       - audit/full-system-remediation-20260727
+    paths-ignore:
+      - audit-status/**
 
 permissions:
   contents: write
 
 concurrency:
   group: audit-full-system-remediation
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
-  repair-and-validate:
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -33,24 +35,43 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Aplicar correcoes estruturais idempotentes
-        run: node scripts/apply-full-audit-type-fixes.mjs
-
-      - name: Validar integridade do diff
-        run: git diff --check
-
-      - name: Registrar correcoes na branch de auditoria
+      - name: Executar TypeScript e auditoria de producao
+        id: validation
         shell: bash
         run: |
-          if git diff --quiet; then
-            echo "Nenhuma alteracao adicional a registrar."
-            exit 0
+          mkdir -p audit-status
+          set +e
+          npm run lint 2>&1 | tee audit-status/typecheck.log
+          exit_code=${PIPESTATUS[0]}
+          set -e
+
+          if [ "$exit_code" -eq 0 ]; then
+            status="success"
+          else
+            status="failure"
           fi
+
+          node -e "const fs=require('fs'); fs.writeFileSync('audit-status/typecheck.json', JSON.stringify({status: process.argv[1], exit_code: Number(process.argv[2]), validated_sha: process.env.GITHUB_SHA, validated_at_utc: new Date().toISOString(), command: 'npm run lint'}, null, 2) + '\n')" "$status" "$exit_code"
+          echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
+
+      - name: Registrar evidencia na branch de auditoria
+        shell: bash
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/types.ts
-          git commit -m "fix(audit): alinhar tipos aos fluxos operacionais"
-          git push origin HEAD:audit/full-system-remediation-20260727
+          git add audit-status/typecheck.json audit-status/typecheck.log
+          if git diff --cached --quiet; then
+            echo "Evidencia sem alteracoes."
+          else
+            git commit -m "Registrar resultado do TypeScript da auditoria"
+            git push origin HEAD:audit/full-system-remediation-20260727
+          fi
 
-      - name: Executar TypeScript e auditoria de producao
-        run: npm run lint
+      - name: Encerrar com o resultado real
+        shell: bash
+        run: |
+          if [ "${{ steps.validation.outputs.exit_code }}" -ne 0 ]; then
+            echo "A validacao TypeScript ainda possui falhas."
+            exit 1
+          fi
+          echo "Validacao TypeScript concluida sem falhas."
