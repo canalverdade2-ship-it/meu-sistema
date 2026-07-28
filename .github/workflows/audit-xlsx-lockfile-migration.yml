@@ -18,6 +18,9 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      VITE_SUPABASE_URL: http://127.0.0.1:54321
+      VITE_SUPABASE_ANON_KEY: ci-anon-key-not-for-production
 
     steps:
       - uses: actions/checkout@v4
@@ -37,17 +40,17 @@ jobs:
           npm install --package-lock-only --ignore-scripts
           npm ci --ignore-scripts
 
-      - name: Validate secure browser XLSX replacement
-        shell: bash
-        env:
-          VITE_SUPABASE_URL: http://127.0.0.1:54321
-          VITE_SUPABASE_ANON_KEY: ci-anon-key-not-for-production
-        run: |
-          set -euo pipefail
-          npm audit --omit=dev --audit-level=high
-          npm run test:gsa-store
-          npm run typecheck:strict
-          npm run build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Validate XLSX content and styles
+        run: npm run test:gsa-store
+
+      - name: Validate strict TypeScript
+        run: npm run typecheck:strict
+
+      - name: Validate browser production bundle
+        run: npm run build
 
       - name: Remove temporary diagnostics and migration workflow
         shell: bash
