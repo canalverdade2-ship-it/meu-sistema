@@ -346,6 +346,10 @@ export type Fatura = {
   historico_pagamentos?: Record<string, unknown>[];
   observacoes?: string;
   emprestimo_id?: string;
+  orcamento_id?: string;
+  is_amortizacao_credito?: boolean;
+  ordens_compra?: any;
+  match?: any;
 };
 
 export type OrdemCompra = {
