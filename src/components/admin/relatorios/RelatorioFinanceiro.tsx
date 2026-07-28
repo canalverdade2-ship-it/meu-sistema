@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Download, RefreshCw, DollarSign, TrendingUp, TrendingDown, CreditCard, ArrowUpCircle, ArrowDownCircle, Repeat } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { formatarMoeda, formatarNumero, getRangeDatas, exportarCSV } from './utils/relatorioExport';
+import { formatarMoeda, formatarNumero, getRangeDatas, exportarExcel } from './utils/relatorioExport';
 
 interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 
@@ -84,7 +84,7 @@ export function RelatorioFinanceiro({ periodo, dataInicio, dataFim }: Props) {
 
   const exportar = () => {
     if (!dados?.fat) return;
-    exportarCSV(dados.fat.map((f: any) => ({
+    exportarExcel(dados.fat.map((f: any) => ({
       status: f.status, tipo: f.tipo || '—', valor_total: f.valor_total, valor_pago: f.valor_pago,
     })), 'relatorio_financeiro');
   };
@@ -94,7 +94,7 @@ export function RelatorioFinanceiro({ periodo, dataInicio, dataFim }: Props) {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-neutral-900">Relatório Financeiro</h2>
         <div className="flex gap-2">
-          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/> CSV</button>
+          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/> Excel</button>
           <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/> Atualizar</button>
         </div>
       </div>

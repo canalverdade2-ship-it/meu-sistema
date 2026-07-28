@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Download, RefreshCw, FileText } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { formatarMoeda, formatarNumero, getRangeDatas, exportarCSV, exportarPDF, formatarData } from './utils/relatorioExport';
+import { formatarMoeda, formatarNumero, getRangeDatas, exportarExcel, exportarPDF, formatarData } from './utils/relatorioExport';
 
 interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 
@@ -53,7 +53,7 @@ export function RelatorioFiscal({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_,i)=><div key={i} className="h-24 bg-neutral-100 rounded-2xl"/>)}</div>;
 
-  const exportar = () => exportarCSV(
+  const exportar = () => exportarExcel(
     (dados?.ords||[]).map((o:any)=>({ codigo:o.codigo_fiscal, cliente:o.cliente_nome||'—', tipo:o.tipo_compra||'—', valor_bruto:o.valor_bruto, valor_desconto:o.valor_desconto, valor_total:o.valor_total, forma_pgto:o.forma_pagamento||'—', status_pag:o.status_pagamento, status_emissao:o.status_emissao, numero_nota:o.numero_nota||'—', data_emissao:formatarData(o.data_emissao) })),
     'relatorio_fiscal'
   );
@@ -63,8 +63,8 @@ export function RelatorioFiscal({ periodo, dataInicio, dataFim }: Props) {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-xl font-black text-neutral-900">Relatório Fiscal</h2>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>CSV</button>
-          <button onClick={exportarPDF} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all"><FileText className="h-3 w-3"/>Imprimir PDF</button>
+          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>Excel</button>
+          <button onClick={() => void exportarPDF()} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all"><FileText className="h-3 w-3"/>Gerar PDF</button>
           <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
         </div>
       </div>
@@ -161,7 +161,7 @@ export function RelatorioFiscal({ periodo, dataInicio, dataFim }: Props) {
             </table>
           )
         }
-        {(dados?.ords?.length||0) > 20 && <p className="text-xs text-neutral-400 mt-3">Exibindo 20 de {dados?.ords?.length} registros. Exporte CSV para ver todos.</p>}
+        {(dados?.ords?.length||0) > 20 && <p className="text-xs text-neutral-400 mt-3">Exibindo 20 de {dados?.ords?.length} registros. Exporte Excel para ver todos.</p>}
       </div>
     </div>
   );

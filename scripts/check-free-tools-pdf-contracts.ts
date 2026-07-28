@@ -37,7 +37,7 @@ assert.match(generator, /doc\.output\('blob'\)/, 'O PDF deve ser materializado a
 assert.match(generator, /URL\.createObjectURL/, 'O download deve usar uma URL temporária do navegador.');
 assert.match(generator, /URL\.revokeObjectURL/, 'A URL temporária deve ser descartada após o download.');
 assert.match(generator, /link\.download/, 'O fluxo deve iniciar o download do arquivo.');
-assert.match(generator, /nao foram enviados nem armazenados no sistema ou no banco de dados/i, 'O relatório deve declarar a política de não armazenamento.');
+assert.match(generator, /n[aã]o foram enviados nem armazenados no sistema ou no banco de dados/i, 'O relatório deve declarar a política de não armazenamento.');
 assert.doesNotMatch(generator, /supabase|functions\.invoke|\.rpc\(|fetch\(|localStorage|sessionStorage/i, 'O gerador não pode enviar ou persistir o PDF e os dados.');
 
 const button = read('src/components/public/CalculatorPdfReportButton.tsx');
@@ -63,15 +63,16 @@ assert.match(simple, /Calculadora de férias/, 'As férias Free precisam possuir
 
 const advanced = read('src/components/public/FreeToolsAdvancedCalculators.tsx');
 assert.match(advanced, /mode: 'pro'/, 'As calculadoras avançadas precisam gerar relatórios Pro.');
-assert.match(advanced, /Memória do cálculo/, 'A rescisão Pro deve incluir memória detalhada no relatório.');
-assert.match(advanced, /Comparação das regras/, 'A aposentadoria Pro deve incluir comparação das regras.');
-assert.match(advanced, /Composição do resultado/, 'As férias Pro devem incluir composição completa.');
+assert.match(advanced, /Memória detalhada de verbas/, 'A rescisão Pro deve incluir memória detalhada no relatório.');
+assert.match(advanced, /Análise detalhada das 5 regras de transição/, 'A aposentadoria Pro deve incluir a análise completa das regras.');
+assert.match(advanced, /Composição das verbas e isenções/, 'As férias Pro devem incluir a composição completa.');
 
 const additional = read('src/components/public/FreeToolsAdditionalCalculators.tsx');
 assert.match(additional, /Calculadora de 13º salário/, 'O 13º Free e Pro precisa possuir relatório.');
 assert.match(additional, /Triagem de benefícios do INSS/, 'Benefícios Free e Pro precisam possuir relatório.');
 assert.match(additional, /Triagem BPC \/ LOAS/, 'BPC Free e Pro precisa possuir relatório.');
-assert.match(additional, /Documentos iniciais para separar/, 'Benefícios Pro deve incluir documentos no PDF completo.');
-assert.match(additional, /Análise detalhada dos critérios/, 'BPC Pro deve incluir todos os critérios no PDF completo.');
+assert.match(additional, /Checklist detalhado de requisitos/, 'Benefícios Pro deve incluir o checklist completo de requisitos no PDF.');
+assert.match(additional, /Análise dos Limites Legais em 2026/, 'BPC Pro deve incluir a análise detalhada dos limites legais no PDF.');
+assert.match(additional, /Requisitos Cadastrais e Legais/, 'BPC Pro deve incluir os requisitos cadastrais e legais no PDF.');
 
 console.log('Relatórios PDF locais das seis calculadoras, nos modos Free e Pro, validados com sucesso.');

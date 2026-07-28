@@ -1,0 +1,108 @@
+name: Institutional File Quality
+
+on:
+  push:
+    branches:
+      - agent/padrao-institucional-arquivos
+  pull_request:
+    paths:
+      - 'src/lib/institutional*Export.ts'
+      - 'src/lib/institutionalReportCore.ts'
+      - 'src/lib/fiscalReceiptPdf.ts'
+      - 'src/lib/freeToolsPdfReport.ts'
+      - 'src/lib/pdf.ts'
+      - 'src/components/admin/FiscalModule.tsx'
+      - 'src/components/admin/demandas/DemandasTabela.tsx'
+      - 'src/components/admin/relatorios/**'
+      - 'src/components/client/financeiro/NotasFiscaisList.tsx'
+      - 'scripts/check-institutional-file-exports.mjs'
+      - 'scripts/check-free-tools-pdf-contracts.ts'
+      - 'scripts/validate-institutional-file-runtime.mjs'
+      - '.github/workflows/institutional-file-quality.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validar arquivos institucionais
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar contratos institucionais
+        run: node scripts/check-institutional-file-exports.mjs
+
+      - name: Validar PDFs das seis calculadoras
+        run: npx tsx scripts/check-free-tools-pdf-contracts.ts
+
+      - name: Validar sintaxe dos componentes alterados
+        run: >-
+          npx esbuild
+          src/components/admin/FiscalModule.tsx
+          src/components/admin/demandas/DemandasTabela.tsx
+          src/components/admin/relatorios/Relatorio*.tsx
+          src/components/client/financeiro/NotasFiscaisList.tsx
+          --outdir=/tmp/institutional-file-syntax
+          --format=esm
+          --platform=browser
+          --jsx=automatic
+          --log-level=warning
+
+      - name: Validar TypeScript isolado
+        run: >-
+          npx tsc --noEmit --skipLibCheck
+          --target ES2022
+          --module ESNext
+          --moduleResolution Bundler
+          --lib ES2022,DOM,DOM.Iterable
+          src/lib/institutionalReportCore.ts
+          src/lib/institutionalExcelExport.ts
+          src/lib/institutionalPdfExport.ts
+          src/lib/institutionalFileExport.ts
+          src/lib/fiscalReceiptPdf.ts
+          src/lib/freeToolsPdfReport.ts
+          src/lib/pdf.ts
+          src/components/admin/relatorios/utils/relatorioExport.ts
+
+      - name: Instalar navegador de validação
+        run: npx playwright install --with-deps chromium
+
+      - name: Gerar e validar arquivos reais
+        run: |
+          cat > runtime-export-test.html <<'HTML'
+          <!doctype html>
+          <html lang="pt-BR">
+            <head><meta charset="UTF-8"><title>Validação de arquivos institucionais</title></head>
+            <body><main>Validação automatizada GSA HUB</main></body>
+          </html>
+          HTML
+          npx vite --host 127.0.0.1 --port 4173 > /tmp/institutional-vite.log 2>&1 &
+          VITE_PID=$!
+          trap 'kill "$VITE_PID" 2>/dev/null || true' EXIT
+          node scripts/validate-institutional-file-runtime.mjs
+
+      - name: Gerar inventário
+        run: node scripts/audit-institutional-exports.mjs
+
+      - name: Publicar evidências
+        uses: actions/upload-artifact@v4
+        with:
+          name: institutional-file-runtime-evidence
+          path: |
+            artifacts/institutional-runtime/**
+            artifacts/institutional-export-inventory.json
+          if-no-files-found: error
+          retention-days: 7

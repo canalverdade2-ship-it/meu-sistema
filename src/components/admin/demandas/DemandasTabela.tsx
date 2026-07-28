@@ -3,6 +3,7 @@ import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Eye, Flag, U
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { isPast, differenceInDays } from 'date-fns';
+import { exportInstitutionalExcel } from '../../../lib/institutionalFileExport';
 
 interface Props {
   demandas: any[];
@@ -108,25 +109,52 @@ export function DemandasTabela({ demandas, onVerDetalhes }: Props) {
     return sortDir === 'asc' ? <ChevronUp className="h-3 w-3 text-indigo-500" /> : <ChevronDown className="h-3 w-3 text-indigo-500" />;
   };
 
-  const exportCSV = () => {
+  const exportExcel = async () => {
     const rows = filtradas.map(d => ({
       id: d.id.slice(0, 8).toUpperCase(),
       titulo: d.titulo || d.descricao?.slice(0, 50) || '—',
-      status: d.status,
-      prioridade: d.prioridade || 'normal',
+      status: STATUS_LABELS[d.status]?.label || d.status || '—',
+      prioridade: PRIO_CONFIG[d.prioridade || 'normal']?.label || d.prioridade || 'Normal',
       cliente: d.ordem_servico?.cliente?.nome || '—',
-      responsavel: d.colaborador?.nome || d.prestador?.nome_razao || 'Pool',
+      responsavel: d.colaborador?.nome || d.prestador?.nome_razao || 'Pool central',
       prazo: d.prazo_limite ? format(new Date(d.prazo_limite), 'dd/MM/yyyy HH:mm') : '—',
       criado_em: format(new Date(d.created_at), 'dd/MM/yyyy'),
     }));
-    const headers = Object.keys(rows[0] || {});
-    const csv = [headers.join(';'), ...rows.map(r => headers.map(h => `"${(r as any)[h]}"`).join(';'))].join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `demandas_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+    try {
+      await exportInstitutionalExcel({
+        title: 'Relatório de Demandas',
+        subtitle: 'Demandas exportadas com os filtros e a ordenação atualmente aplicados no painel administrativo.',
+        fileName: 'demandas',
+        sheetName: 'Demandas',
+        rows,
+        columns: [
+          { key: 'id', label: 'Código', type: 'text', width: 14 },
+          { key: 'titulo', label: 'Título', type: 'text', width: 36 },
+          { key: 'status', label: 'Status', type: 'text', width: 24 },
+          { key: 'prioridade', label: 'Prioridade', type: 'text', width: 16 },
+          { key: 'cliente', label: 'Cliente', type: 'text', width: 28 },
+          { key: 'responsavel', label: 'Responsável', type: 'text', width: 28 },
+          { key: 'prazo', label: 'Prazo', type: 'text', width: 20 },
+          { key: 'criado_em', label: 'Criada em', type: 'text', width: 16 },
+        ],
+        filters: {
+          busca: busca || 'Sem filtro',
+          status: statusFiltro,
+          prioridade: prioFiltro,
+          responsavel: responsavelFiltro,
+          prazo: prazoFiltro,
+          ordenacao: `${sortKey} (${sortDir})`,
+        },
+        summary: [
+          { label: 'Demandas exportadas', value: rows.length, type: 'number' },
+        ],
+        source: 'Gestão de Demandas GSA HUB',
+      });
+    } catch (error) {
+      console.error('Falha ao exportar demandas:', error);
+      alert(error instanceof Error ? error.message : 'Não foi possível gerar a planilha de demandas.');
+    }
   };
 
   return (
@@ -173,8 +201,8 @@ export function DemandasTabela({ demandas, onVerDetalhes }: Props) {
             <option value="semana">📅 Esta semana</option>
           </select>
 
-          <button onClick={exportCSV} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-widest hover:bg-emerald-700 transition-all">
-            <Download className="h-3 w-3" /> CSV
+          <button onClick={() => void exportExcel()} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-widest hover:bg-emerald-700 transition-all">
+            <Download className="h-3 w-3" /> Excel
           </button>
         </div>
         <p className="text-[10px] text-neutral-400 mt-2 font-medium">{filtradas.length} demanda(s) encontrada(s)</p>

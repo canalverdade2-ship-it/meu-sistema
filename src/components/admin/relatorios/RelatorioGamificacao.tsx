@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Download, RefreshCw } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { formatarNumero, getRangeDatas, exportarCSV } from './utils/relatorioExport';
+import { formatarNumero, getRangeDatas, exportarExcel } from './utils/relatorioExport';
 
 interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 
@@ -61,7 +61,7 @@ export function RelatorioGamificacao({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_,i)=><div key={i} className="h-24 bg-neutral-100 rounded-2xl"/>)}</div>;
 
-  const exportar = () => exportarCSV((dados?.mov||[]).map((m:any)=>({ tipo:m.tipo, pontos:m.pontos, valor_convertido:m.valor_convertido||'—', data:m.data_movimentacao })),'relatorio_gamificacao');
+  const exportar = () => exportarExcel((dados?.mov||[]).map((m:any)=>({ tipo:m.tipo, pontos:m.pontos, valor_convertido:m.valor_convertido||'—', data:m.data_movimentacao })),'relatorio_gamificacao');
   const totalNivel = Object.values(dados?.porNivel||{}).reduce((s:any,v:any)=>s+v.total,0) as number;
 
   return (
@@ -69,7 +69,7 @@ export function RelatorioGamificacao({ periodo, dataInicio, dataFim }: Props) {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-neutral-900">Gamificação & Pontos</h2>
         <div className="flex gap-2">
-          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>CSV</button>
+          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>Excel</button>
           <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
         </div>
       </div>
