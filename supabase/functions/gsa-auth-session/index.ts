@@ -256,6 +256,113 @@ function tooManyAttempts(
   retryAfter: number,
   origin: string | null,
 ) {
+export function normalizePayload(
+  action: AuthAction,
+  payload: Record<string, unknown>,
+): Record<string, string> | null {
+  if (action === 'login_pin') {
+    const documento = digits(payload.documento);
+    const pin = digits(payload.pin);
+    const tipo = payload.tipo === 'cliente' || payload.tipo === 'prestador' || payload.tipo === 'fornecedor' ? payload.tipo : '';
+    if (![11, 14].includes(documento.length) || pin.length !== 4 || !tipo) return null;
+    return { documento, pin, tipo };
+  }
+
+  if (action === 'request_client_recovery' || action === 'request_client_first_access') {
+    const documento = digits(payload.documento);
+    const email = text(payload.email, 254).toLowerCase();
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (![11, 14].includes(documento.length) || !validEmail) return null;
+    return { documento, email };
+  }
+
+  if (action === 'complete_client_recovery' || action === 'complete_client_first_access') {
+    const challengeId = text(payload.challenge_id || payload.recovery_id, 36).toLowerCase();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(challengeId)) return null;
+    if (action === 'complete_client_first_access') {
+      const newPin = digits(payload.new_pin);
+      if (newPin.length !== 4) return null;
+      return { challenge_id: challengeId, new_pin: newPin };
+    }
+    return { challenge_id: challengeId };
+  }
+
+  const code = text(payload.code, 128);
+  if (!code) return null;
+  return { code };
+}
+
+function subjectFor(action: AuthAction, payload: Record<string, string>) {
+  if (action === 'login_admin' || action === 'login_colaborador') return payload.code;
+  return payload.documento || payload.challenge_id;
+}
+
+export function subjectRateLimitMode(action: AuthAction): 'before' | 'invalid-only' {
+  return action === 'request_client_recovery'
+      || action === 'complete_client_recovery'
+      || action === 'request_client_first_access'
+      || action === 'complete_client_first_access'
+    ? 'before'
+    : 'invalid-only';
+}
+
+function clientIp(request: Request) {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const firstIp = forwarded.split(',')[0].trim();
+    if (firstIp) return firstIp;
+  }
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) return realIp.trim();
+  const cfIp = request.headers.get('cf-connecting-ip');
+  if (cfIp) return cfIp.trim();
+  return 'unknown';
+}
+
+async function hashBucket(secret: string, category: string, rawValue: string) {
+  const source = `${category}:${rawValue}:${secret}`;
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(source));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function checkRateLimit(
+  admin: any,
+  bucketKey: string,
+  rule: RateLimitRule,
+): Promise<RateLimitResult> {
+  const { data, error } = await admin.rpc('gsa_consume_auth_rate_limit', {
+    p_bucket_key: bucketKey,
+    p_limit: rule.limit,
+    p_window_seconds: rule.windowSeconds,
+    p_block_seconds: rule.blockSeconds,
+  });
+
+  if (error || !data) {
+    console.error('Falha ao consultar o limitador de autenticação:', error);
+    throw new Error('rate_limit_unavailable');
+  }
+
+  return data as RateLimitResult;
+}
+
+async function clearSubjectRateLimit(
+  admin: any,
+  bucketKey: string,
+) {
+  const { error } = await admin
+    .from('gsa_auth_rate_limits')
+    .delete()
+    .eq('bucket_key', bucketKey);
+
+  if (error) console.error('Não foi possível limpar o limitador após autenticação válida.', error);
+}
+
+function tooManyAttempts(
+  retryAfter: number,
+  origin: string | null,
+) {
   return json(
     { valid: false, success: false, error: 'too_many_attempts', retry_after: retryAfter },
     429,
@@ -266,7 +373,8 @@ function tooManyAttempts(
 
 export async function handleRequest(request: Request) {
   const requestOrigin = request.headers.get('origin');
-  const allowedOrigin = requestOrigin && configuredOrigins().has(requestOrigin) ? requestOrigin : null;
+  const isLocalOrigin = requestOrigin && /^http:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(requestOrigin);
+  const allowedOrigin = requestOrigin && (configuredOrigins().has(requestOrigin) || isLocalOrigin) ? requestOrigin : null;
 
   if (requestOrigin && !allowedOrigin) {
     return json({ error: 'origin_not_allowed' }, 403);
@@ -296,205 +404,6 @@ export async function handleRequest(request: Request) {
         allowedOrigin,
       );
     }
-
-    const supportedActions = new Set<AuthAction>([
-      'login_pin',
-      'login_admin',
-      'login_colaborador',
-      'request_client_first_access',
-      'complete_client_first_access',
-      'request_client_recovery',
-      'complete_client_recovery',
-    ]);
-    if (!body.action || !supportedActions.has(body.action)) return json({ error: 'invalid_action' }, 400, allowedOrigin);
-
-    const normalizedPayload = normalizePayload(body.action, body.payload || {});
-    if (!normalizedPayload) return json({ error: 'invalid_payload' }, 400, allowedOrigin);
-
-    const admin = createClient<any>(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    const rules = rateLimits[body.action];
-    const ipBucket = await hashBucket(serviceRoleKey, `${body.action}:ip`, clientIp(request));
-    const ipLimit = await checkRateLimit(admin, ipBucket, rules.ip);
-    if (!ipLimit.allowed) {
-      const retryAfter = Math.max(1, Number(ipLimit.retry_after || rules.ip.blockSeconds));
-      return tooManyAttempts(retryAfter, allowedOrigin);
-    }
-
-    const subjectBucket = await hashBucket(
-      serviceRoleKey,
-      `${body.action}:subject`,
-      subjectFor(body.action, normalizedPayload),
-    );
-
-    if (subjectRateLimitMode(body.action) === 'before') {
-      const subjectLimit = await checkRateLimit(admin, subjectBucket, rules.subject);
-      if (!subjectLimit.allowed) {
-        const retryAfter = Math.max(1, Number(subjectLimit.retry_after || rules.subject.blockSeconds));
-        return tooManyAttempts(retryAfter, allowedOrigin);
-      }
-    }
-
-    if (
-      body.action === 'request_client_recovery'
-      || body.action === 'request_client_first_access'
-    ) {
-      const challengeId = crypto.randomUUID();
-      const isFirstAccess = body.action === 'request_client_first_access';
-      const { data: beginData, error: beginError } = await admin.rpc(
-        isFirstAccess ? 'gsa_begin_client_first_access' : 'gsa_begin_client_recovery',
-        {
-        p_documento: normalizedPayload.documento,
-        p_email: normalizedPayload.email,
-          p_challenge_id: challengeId,
-        },
-      );
-
-      let delivered = false;
-      const challengeCreated = beginData?.challenge_created === true
-        || (beginData?.challenge_created === undefined && beginData?.success === true);
-      if (!beginError && challengeCreated) {
-        const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-        if (!anonKey) return json({ error: 'server_not_configured' }, 500, allowedOrigin);
-        const publicClient = createClient<any>(supabaseUrl, anonKey, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        });
-        const { error: otpError } = await publicClient.auth.signInWithOtp({
-          email: normalizedPayload.email,
-          options: { shouldCreateUser: true },
-        });
-        delivered = !otpError;
-        if (otpError) console.error('Falha ao enviar o código de confirmação.', otpError);
-      } else if (beginError) {
-        console.error('Falha ao iniciar o desafio de confirmação.', beginError);
-      }
-
-      // Resposta uniforme para não revelar se documento/e-mail existem.
-      return json({
-        success: true,
-        challenge_id: challengeId,
-        recovery_id: isFirstAccess ? undefined : challengeId,
-        expires_in: 600,
-      }, 200, allowedOrigin);
-    }
-
-    if (
-      body.action === 'complete_client_recovery'
-      || body.action === 'complete_client_first_access'
-    ) {
-      const authorization = request.headers.get('authorization') || '';
-      const accessToken = authorization.toLowerCase().startsWith('bearer ')
-        ? authorization.slice(7).trim()
-        : '';
-      if (!accessToken) return json({ error: 'recovery_verification_required' }, 401, allowedOrigin);
-
-      const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-      if (!anonKey) return json({ error: 'server_not_configured' }, 500, allowedOrigin);
-      const userClient = createClient<any>(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: `Bearer ${accessToken}` } },
-        auth: { autoRefreshToken: false, persistSession: false },
-      });
-
-      const isFirstAccess = body.action === 'complete_client_first_access';
-      const { data: completionData, error: completionError } = await userClient.rpc(
-        isFirstAccess ? 'gsa_complete_client_first_access' : 'gsa_complete_client_recovery',
-        isFirstAccess
-          ? {
-            p_challenge_id: normalizedPayload.challenge_id,
-            p_new_pin: normalizedPayload.new_pin,
-          }
-          : {
-            p_challenge_id: normalizedPayload.challenge_id,
-          },
-      );
-      const rpcSession = completionData?.session || completionData;
-      if (
-        completionError
-        || !completionData?.success
-        || !rpcSession?.sessao_id
-        || !rpcSession?.session_token
-      ) {
-        console.error('Falha ao concluir a confirmação de identidade.', completionError);
-        const denied = completionError?.code === '42501'
-          || completionError?.code === 'P0002'
-          || completionData?.error;
-        return json(
-          denied ? 400 : 500,
-          { error: denied ? 'invalid_or_expired_challenge' : 'identity_completion_failed' },
-          allowedOrigin,
-        );
-      }
-
-      return json({
-        ...completionData,
-        success: true,
-        valid: true,
-        id: completionData.id || rpcSession.ator_id,
-        nome: completionData.nome || rpcSession.ator_nome,
-        session: {
-          ...rpcSession,
-          metadata: {
-            ...(rpcSession.metadata || {}),
-            ...(isFirstAccess ? {} : { precisa_trocar_senha: true }),
-          },
-        },
-      }, 200, allowedOrigin);
-    }
-
-    const mapping = rpcByAction[body.action];
-    if (!mapping) return json({ error: 'invalid_action' }, 400, allowedOrigin);
-
-    const { data, error } = await admin.rpc(mapping.name, mapping.params(normalizedPayload));
-    if (error) {
-      console.error(`Erro ao executar RPC ${mapping.name}:`, error);
-      return json({ valid: false, success: false, error: 'authentication_failed' }, 400, allowedOrigin);
-    }
-
-    const isSuccess = Boolean(data?.valid || data?.success);
-    if (isSuccess) {
-      const authObj = data?.session?.auth || data?.auth;
-      if (!authObj?.email) {
-        console.error('Sessão GSA criada sem identidade Supabase Auth.');
-        await admin.rpc('gsa_end_session', {
-          p_sessao_id: data?.session?.sessao_id || data?.sessao_id,
-          p_session_token: data?.session?.session_token || data?.session_token,
-        });
-        return json({ valid: false, success: false, error: 'auth_sync_unavailable' }, 503, allowedOrigin);
-      }
-
-      const linkRes = await admin.auth.admin.generateLink({
-        type: 'magiclink',
-        email: authObj.email,
-      });
-      const hashedToken = linkRes.data?.properties?.hashed_token;
-      if (!hashedToken || linkRes.error) {
-        console.error('Falha ao gerar token de ativação Supabase Auth:', linkRes.error);
-        await admin.rpc('gsa_end_session', {
-          p_sessao_id: data?.session?.sessao_id || data?.sessao_id,
-          p_session_token: data?.session?.session_token || data?.session_token,
-        });
-        return json({ valid: false, success: false, error: 'auth_sync_unavailable' }, 503, allowedOrigin);
-      }
-
-      authObj.token_hash = hashedToken;
-      await clearSubjectRateLimit(admin, subjectBucket);
-    } else if (subjectRateLimitMode(body.action) === 'invalid-only') {
-      const subjectLimit = await checkRateLimit(admin, subjectBucket, rules.subject);
-      if (!subjectLimit.allowed) {
-        const retryAfter = Math.max(1, Number(subjectLimit.retry_after || rules.subject.blockSeconds));
-        return tooManyAttempts(retryAfter, allowedOrigin);
-      }
-    }
-
-    return json(data, 200, allowedOrigin);
-  } catch (err: any) {
-    console.error('Erro na Edge Function gsa-auth-session:', err);
-    return json({ error: 'internal_error' }, 500, allowedOrigin);
-  }
-}
-
 if (import.meta.main) {
   Deno.serve(handleRequest);
 }
