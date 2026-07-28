@@ -26,11 +26,11 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
     // Fetch dependencies for form
     supabase.from('clientes').select('id, nome, email').order('nome').then(({ data, error }) => {
       if (error) console.error("Erro clientes cupons:", error);
-      if (data) setClientes(data);
+      if (data) setClientes(data as any);
     });
     supabase.from('produtos').select('id, nome, valor').order('nome').then(({ data, error }) => {
       if (error) console.error("Erro produtos cupons:", error);
-      if (data) setProdutos(data);
+      if (data) setProdutos(data as any);
     });
 
     const channel = supabase
