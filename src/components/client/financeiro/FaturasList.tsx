@@ -192,7 +192,13 @@ export function FaturasList({
   }, [initialItemId, faturas.length]);
 
   useEffect(() => {
-    fetchFaturas();
+    let isMounted = true;
+    
+    const fetchLocal = async () => {
+      await fetchFaturas(isMounted);
+    };
+
+    fetchLocal();
 
     const channel = supabase
       .channel('client-faturas-updates')
@@ -202,12 +208,13 @@ export function FaturasList({
         table: 'faturas',
         filter: `cliente_id=eq.${clientId}`
       }, () => {
-        fetchFaturas();
+        fetchLocal();
         onRefresh();
       })
       .subscribe();
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
   }, [clientId, statusFilter]);
@@ -452,7 +459,7 @@ export function FaturasList({
     }
   }, [selectedFatura, clientId]);
 
-  const fetchFaturas = async () => {
+  const fetchFaturas = async (isMounted = true) => {
     let query = supabase
       .from('faturas')
       .select(`
@@ -581,7 +588,7 @@ export function FaturasList({
         return orderA - orderB;
       });
 
-      setFaturas(updatedData);
+      if (isMounted) setFaturas(updatedData);
     }
   };
 
@@ -1135,7 +1142,7 @@ export function FaturasList({
                   <tbody className="divide-y divide-black/5">
                     {(selectedFatura.itens_faturados && selectedFatura.itens_faturados.length > 0) ? (
                       selectedFatura.itens_faturados.map((item: any, index: number) => (
-                        <tr key={index}>
+                        <tr key={item.id || item.codigo || `item-${index}`}>
                           <td className="px-6 py-5 align-top">
                             <div className="flex flex-col gap-1">
                               {item.codigo && (

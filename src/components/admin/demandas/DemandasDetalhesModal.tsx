@@ -494,14 +494,16 @@ export function DemandasDetalhesModal({
       if (!(await checkStatusRaceCondition())) return;
       const urls: string[] = [];
       if (transferFiles.length > 0) {
-        for (const file of transferFiles) {
+        const uploadPromises = transferFiles.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `transferencias/${demanda.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const { error } = await supabase.storage.from('entregas_demandas').upload(path, file);
           if (error) throw error;
           const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
-          urls.push(publicUrl);
-        }
+          return publicUrl;
+        });
+        const uploadedUrls = await Promise.all(uploadPromises);
+        urls.push(...uploadedUrls);
       }
 
       const existingTransfer = Array.isArray(demanda.arquivos_transferencia) ? demanda.arquivos_transferencia : [];
@@ -591,14 +593,16 @@ export function DemandasDetalhesModal({
       if (!(await checkStatusRaceCondition())) return;
       const urls: string[] = [];
       if (deliveryFiles.length > 0) {
-        for (const file of deliveryFiles) {
+        const uploadPromises = deliveryFiles.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `entregas/${demanda.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const { error } = await supabase.storage.from('entregas_demandas').upload(path, file);
           if (error) throw error;
           const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
-          urls.push(publicUrl);
-        }
+          return publicUrl;
+        });
+        const uploadedUrls = await Promise.all(uploadPromises);
+        urls.push(...uploadedUrls);
       }
       // Usa concluida_interna para sinalizar que a gestão interna concluiu mas a finalização oficial fica no módulo Demandas
       const { error: updateError } = await supabase.from('prestador_demandas').update({ 
@@ -1402,22 +1406,22 @@ function AdminOSSuporteChat({ osId, remetenteId, remetenteNome, clienteId, isCon
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const { openFile } = useFileViewer();
 
-  const fetchMensagens = async () => {
-    const { data } = await supabase
-      .from('os_suporte_mensagens')
-      .select('*')
-      .eq('os_id', osId)
-      .order('created_at', { ascending: true });
-    if (data) {
-      setMensagens(data);
-      setTimeout(() => {
-        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }, 100);
-    }
-  };
-
   React.useEffect(() => {
-    fetchMensagens();
+    let isMounted = true;
+    const fetchMensagensLocal = async () => {
+      const { data } = await supabase
+        .from('os_suporte_mensagens')
+        .select('*')
+        .eq('os_id', osId)
+        .order('created_at', { ascending: true });
+      if (data && isMounted) {
+        setMensagens(data);
+        setTimeout(() => {
+          if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }, 100);
+      }
+    };
+    fetchMensagensLocal();
 
     const channel = supabase
       .channel('admin-os-suporte-chat-detalhes')
@@ -1438,6 +1442,7 @@ function AdminOSSuporteChat({ osId, remetenteId, remetenteNome, clienteId, isCon
       .subscribe();
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
   }, [osId]);

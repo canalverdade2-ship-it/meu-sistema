@@ -70,6 +70,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   // Modal Protesto
   const [isProtestoModalOpen, setIsProtestoModalOpen] = useState(false);
   const [protestoData, setProtestoData] = useState({ data_protesto: new Date().toISOString().split('T')[0], nome_cartorio: '' });
+  const [isSubmittingAcao, setIsSubmittingAcao] = useState(false);
+
 
 // Fix #3: Reagir a mudanças no initialTab
   useEffect(() => {
@@ -77,8 +79,12 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   }, [initialTab]);
 
   useEffect(() => {
-    fetchConfigs();
-    fetchDados();
+    let isMounted = true;
+    const loadInit = async () => {
+      await fetchConfigs(isMounted);
+      await fetchDados(isMounted);
+    };
+    loadInit();
 
     let timeoutId: NodeJS.Timeout;
     const debouncedFetch = () => {
@@ -96,14 +102,15 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
       .subscribe();
 
     return () => {
+      isMounted = false;
       clearTimeout(timeoutId);
       supabase.removeChannel(channelCobrancas);
     };
   }, []);
 
-  const fetchConfigs = async () => {
+  const fetchConfigs = async (isMounted = true) => {
     const { data } = await supabase.from('system_settings').select('*');
-    if (data) {
+    if (data && isMounted) {
       const parsed = data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
       setConfigs(parsed);
       setEditingConfigs(parsed);
@@ -111,8 +118,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   };
 
   // Fix #7: Recalcular dias_atraso e valor_atualizado dinamicamente
-  const fetchDados = async () => {
-    setLoading(true);
+  const fetchDados = async (isMounted = true) => {
+    if (isMounted) setLoading(true);
     const { data: configData } = await supabase.from('system_settings').select('key, value');
     const settings = (configData || []).reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
     const multaPct = Number(settings.cobranca_multa_porcentagem) || 2;
@@ -158,9 +165,9 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
           score_risco: score
         };
       });
-      setCobrancas(updated);
+      if (isMounted) setCobrancas(updated);
     }
-    setLoading(false);
+    if (isMounted) setLoading(false);
   };
 
   const fetchFaturasElegiveisCobranca = async () => {

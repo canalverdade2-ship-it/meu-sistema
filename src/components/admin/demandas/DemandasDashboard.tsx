@@ -86,11 +86,11 @@ export function DemandasDashboard({ adminType, colaboradorId }: Props) {
         <h2 className="text-xl font-black text-neutral-900">📊 Performance da Equipe</h2>
         <div className="flex items-center gap-2">
           {(['semana', 'mes', 'trimestre'] as const).map(p => (
-            <button key={p} onClick={() => setPeriodo(p)} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${periodo === p ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+            <button key={p} onClick={() => setPeriodo(p)} disabled={loading} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all disabled:opacity-50 ${periodo === p ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
               {p === 'semana' ? 'Semana' : p === 'mes' ? 'Mês' : 'Trimestre'}
             </button>
           ))}
-          <button onClick={carregar} className="h-9 w-9 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-500 hover:bg-neutral-200 transition-all">
+          <button onClick={carregar} disabled={loading} className="h-9 w-9 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-500 hover:bg-neutral-200 transition-all disabled:opacity-50">
             <RefreshCw className="h-4 w-4" />
           </button>
         </div>

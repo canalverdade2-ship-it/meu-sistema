@@ -110,8 +110,8 @@ export function RelatorioExecutivo({ periodo, dataInicio, dataFim }: Props) {
         <h2 className="text-xl font-black text-neutral-900">Visão Executiva</h2>
         <div className="flex items-center gap-3">
           <span className="text-xs text-neutral-400">Atualizado às {ultimaAtt.toLocaleTimeString('pt-BR')}</span>
-          <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all">
-            <RefreshCw className="h-3 w-3" /> Atualizar
+          <button onClick={carregar} disabled={loading} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50">
+            <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} /> Atualizar
           </button>
         </div>
       </div>

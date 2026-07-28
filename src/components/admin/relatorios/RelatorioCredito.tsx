@@ -8,6 +8,7 @@ interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 export function RelatorioCredito({ periodo, dataInicio, dataFim }: Props) {
   const [loading, setLoading] = useState(true);
   const [dados, setDados] = useState<any>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => { carregar(); }, [periodo, dataInicio, dataFim]);
 
@@ -57,24 +58,32 @@ export function RelatorioCredito({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(4)].map((_,i)=><div key={i} className="h-28 bg-neutral-100 rounded-2xl"/>)}</div>;
 
-  const exportar = () => exportarExcel(
-    (dados?.cli || []).map((c: any) => ({
-      ID: c.id,
-      Nome: c.nome,
-      Limite_Total: c.limite_credito_total,
-      Limite_Disponivel: c.limite_credito_disponivel,
-      Limite_Utilizado: (c.limite_credito_total || 0) - (c.limite_credito_disponivel || 0)
-    })),
-    'relatorio_credito_concedido'
-  );
+  const exportar = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportarExcel(
+        (dados?.cli || []).map((c: any) => ({
+          ID: c.id,
+          Nome: c.nome,
+          Limite_Total: c.limite_credito_total,
+          Limite_Disponivel: c.limite_credito_disponivel,
+          Limite_Utilizado: (c.limite_credito_total || 0) - (c.limite_credito_disponivel || 0)
+        })),
+        'relatorio_credito_concedido'
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-neutral-900">Relatório de Crédito da Loja</h2>
         <div className="flex gap-2">
-          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>Excel Carteira</button>
-          <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
+          <button onClick={exportar} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Exportando...' : 'Excel Carteira'}</button>
+          <button onClick={carregar} disabled={loading} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50"><RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}/>Atualizar</button>
         </div>
       </div>
 

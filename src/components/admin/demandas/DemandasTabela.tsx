@@ -46,6 +46,7 @@ export function DemandasTabela({ demandas, onVerDetalhes }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [pagina, setPagina] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
 
   const agora = new Date();
 
@@ -110,6 +111,8 @@ export function DemandasTabela({ demandas, onVerDetalhes }: Props) {
   };
 
   const exportExcel = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
     const rows = filtradas.map(d => ({
       id: d.id.slice(0, 8).toUpperCase(),
       titulo: d.titulo || d.descricao?.slice(0, 50) || '—',
@@ -154,6 +157,8 @@ export function DemandasTabela({ demandas, onVerDetalhes }: Props) {
     } catch (error) {
       console.error('Falha ao exportar demandas:', error);
       alert(error instanceof Error ? error.message : 'Não foi possível gerar a planilha de demandas.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -201,7 +206,7 @@ export function DemandasTabela({ demandas, onVerDetalhes }: Props) {
             <option value="semana">📅 Esta semana</option>
           </select>
 
-          <button onClick={() => void exportExcel()} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-widest hover:bg-emerald-700 transition-all">
+          <button onClick={() => void exportExcel()} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50">
             <Download className="h-3 w-3" /> Excel
           </button>
         </div>
