@@ -1127,8 +1127,8 @@ function AffiliateManualAdjustmentForm({ affiliate, onSaved }: { affiliate: Affi
               {tipo === 'pontos' ? 'Quantidade (pts)' : 'Valor (R$)'}
               <input
                 type="number"
-                step={tipo === 'pontos' ? '1' : '0.01'}
-                min="0.01"
+                step="any"
+                min="0"
                 placeholder={tipo === 'pontos' ? '100' : '50.00'}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
