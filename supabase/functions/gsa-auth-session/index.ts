@@ -421,8 +421,8 @@ export async function handleRequest(request: Request) {
           || completionError?.code === 'P0002'
           || completionData?.error;
         return json(
-          denied ? 400 : 500,
           { error: denied ? 'invalid_or_expired_challenge' : 'identity_completion_failed' },
+          denied ? 400 : 500,
           allowedOrigin,
         );
       }
