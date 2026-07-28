@@ -8,7 +8,6 @@ interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 export function RelatorioOperacional({ periodo, dataInicio, dataFim }: Props) {
   const [loading, setLoading] = useState(true);
   const [dados, setDados] = useState<any>(null);
-  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => { carregar(); }, [periodo, dataInicio, dataFim]);
 
@@ -62,44 +61,17 @@ export function RelatorioOperacional({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_,i)=><div key={i} className="h-24 bg-neutral-100 rounded-2xl"/>)}</div>;
 
-<<<<<<< HEAD
-  const exportarColab = async () => {
-    if (isExporting) return;
-    setIsExporting(true);
-    try {
-      await exportarExcel((dados?.colab||[]).map((c:any)=>({ nome:c.nome, status:c.status })), 'relatorio_colaboradores');
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  const exportarSol = async () => {
-    if (isExporting) return;
-    setIsExporting(true);
-    try {
-      await exportarExcel((dados?.solExc||[]).map((s:any)=>({ tabela:s.tabela, status:s.status, data:formatarData(s.created_at) })), 'relatorio_exclusoes');
-    } finally {
-      setIsExporting(false);
-    }
-  };
-=======
   const exportarColab = () => exportarCSV((dados?.colab||[]).map((c:any)=>({ nome:c.nome, status:c.status })), 'relatorio_colaboradores');
   const exportarSol = () => exportarCSV((dados?.solExc||[]).map((s:any)=>({ tabela:s.tabela, status:s.status, data:formatarData(s.created_at) })), 'relatorio_exclusoes');
->>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-xl font-black text-neutral-900">Relatório Operacional</h2>
         <div className="flex gap-2 flex-wrap">
-<<<<<<< HEAD
-          <button onClick={exportarColab} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Exportando...' : 'Colab. Excel'}</button>
-          <button onClick={exportarSol} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Exportando...' : 'Excl. Excel'}</button>
-          <button onClick={carregar} disabled={loading} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50"><RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}/>Atualizar</button>
-=======
           <button onClick={exportarColab} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all"><Download className="h-3 w-3"/>Colab. CSV</button>
           <button onClick={exportarSol} className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition-all"><Download className="h-3 w-3"/>Excl. CSV</button>
           <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
->>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
         </div>
       </div>
 

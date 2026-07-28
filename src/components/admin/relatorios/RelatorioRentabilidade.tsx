@@ -8,7 +8,6 @@ interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 export function RelatorioRentabilidade({ periodo, dataInicio, dataFim }: Props) {
   const [loading, setLoading] = useState(true);
   const [dados, setDados] = useState<any>(null);
-  const [isExporting, setIsExporting] = useState(false);
 
   // Filtro de mês de quitação
   const [mesSelecionado, setMesSelecionado] = useState<string>('');
@@ -162,35 +161,12 @@ export function RelatorioRentabilidade({ periodo, dataInicio, dataFim }: Props) 
     }
   };
 
-  const exportar = async () => {
-    if (isExporting) return;
+  const exportar = () => {
     if (!dados) return;
-    setIsExporting(true);
-    try {
-      const filtrados = mesSelecionado 
-        ? dados.contratos.filter((c:any) => c.data_quitacao?.startsWith(mesSelecionado))
-        : dados.contratos;
+    const filtrados = mesSelecionado 
+      ? dados.contratos.filter((c:any) => c.data_quitacao?.startsWith(mesSelecionado))
+      : dados.contratos;
 
-<<<<<<< HEAD
-      await exportarExcel(
-        filtrados.map((c: any) => ({
-          Tipo: c.tipo,
-          Codigo: c.codigo,
-          Cliente: c.cliente,
-          Data_Quitacao: c.data_quitacao ? new Date(c.data_quitacao).toLocaleDateString() : '',
-          Custo_Principal: c.custo_base,
-          Valor_Projetado: c.projetado,
-          Valor_Recebido: c.recebido,
-          Lucro_Projetado: c.lucro_projetado,
-          Lucro_Real: c.lucro_real,
-          Margem_Real_Pct: c.margem_real.toFixed(2) + '%'
-        })),
-        `rentabilidade_real_${mesSelecionado || 'todos'}`
-      );
-    } finally {
-      setIsExporting(false);
-    }
-=======
     exportarCSV(
       filtrados.map((c: any) => ({
         Tipo: c.tipo,
@@ -206,7 +182,6 @@ export function RelatorioRentabilidade({ periodo, dataInicio, dataFim }: Props) 
       })),
       `rentabilidade_real_${mesSelecionado || 'todos'}`
     );
->>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
   };
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(4)].map((_,i)=><div key={i} className="h-28 bg-neutral-100 rounded-2xl"/>)}</div>;
@@ -247,13 +222,8 @@ export function RelatorioRentabilidade({ periodo, dataInicio, dataFim }: Props) 
               return <option key={m} value={m}>{mes}/{ano}</option>
             })}
           </select>
-<<<<<<< HEAD
-          <button onClick={exportar} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Exportando...' : 'Excel'}</button>
-          <button onClick={carregar} disabled={loading} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50"><RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}/>Atualizar</button>
-=======
           <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>Excel/CSV</button>
           <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
->>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
         </div>
       </div>
 

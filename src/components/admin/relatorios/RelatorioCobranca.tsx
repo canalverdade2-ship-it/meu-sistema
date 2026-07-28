@@ -8,52 +8,8 @@ interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 export function RelatorioCobranca({ periodo, dataInicio, dataFim }: Props) {
   const [loading, setLoading] = useState(true);
   const [dados, setDados] = useState<any>(null);
-  const [isExporting, setIsExporting] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        const { inicio, fim } = getRangeDatas(periodo, dataInicio, dataFim);
-        const { data: cobrancas, error } = await supabase
-          .from('cobrancas')
-          .select(`id, status, valor_original, valor_atualizado, dias_atraso, created_at, updated_at`)
-          .gte('created_at', inicio)
-          .lte('created_at', fim);
-
-        if (error) throw error;
-        if (!isMounted) return;
-
-        const cobr = cobrancas || [];
-        const totalInadimplencia = cobr.filter(c => !['quitado', 'cancelado', 'perdoado'].includes(c.status)).reduce((acc, c) => acc + (Number(c.valor_atualizado) || 0), 0);
-        const totalQuitado = cobr.filter(c => c.status === 'quitado').reduce((acc, c) => acc + (Number(c.valor_atualizado) || 0), 0);
-        const qtdCobrancas = cobr.length;
-        const qtdAcordos = cobr.filter(c => ['acordo', 'acordo_quebrado'].includes(c.status)).length;
-        const qtdAcordosQuebrados = cobr.filter(c => c.status === 'acordo_quebrado').length;
-        const valorAcordos = cobr.filter(c => ['acordo', 'acordo_quebrado'].includes(c.status)).reduce((acc, c) => acc + (Number(c.valor_atualizado) || 0), 0);
-        const emCartorio = cobr.filter(c => ['cartorio_enviado', 'cartorio_protestado'].includes(c.status)).length;
-        const negativados = cobr.filter(c => c.status === 'negativado').length;
-
-        const statusCounts: Record<string, number> = {};
-        cobr.forEach(c => {
-          const s = c.status;
-          statusCounts[s] = (statusCounts[s] || 0) + 1;
-        });
-
-        if (isMounted) {
-          setDados({
-            totalInadimplencia, totalQuitado, qtdCobrancas,
-            qtdAcordos, qtdAcordosQuebrados, valorAcordos,
-            emCartorio, negativados, statusCounts, cobr
-          });
-        }
-      } catch(e) { console.error(e); }
-      finally { if (isMounted) setLoading(false); }
-    };
-    fetch();
-    return () => { isMounted = false; };
-  }, [periodo, dataInicio, dataFim]);
+  useEffect(() => { carregar(); }, [periodo, dataInicio, dataFim]);
 
   const carregar = async () => {
     setLoading(true);
@@ -104,28 +60,6 @@ export function RelatorioCobranca({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(4)].map((_,i)=><div key={i} className="h-28 bg-neutral-100 rounded-2xl"/>)}</div>;
 
-<<<<<<< HEAD
-  const exportar = async () => {
-    if (isExporting) return;
-    setIsExporting(true);
-    try {
-      await exportarExcel(
-        (dados?.cobr || []).map((c: any) => ({
-          ID: c.id,
-          Status: c.status,
-          Valor_Original: c.valor_original,
-          Valor_Atualizado: c.valor_atualizado,
-          Dias_Atraso: c.dias_atraso,
-          Acordo_Ativo: ['acordo', 'acordo_quebrado'].includes(c.status) ? 'Sim' : 'Não',
-          Data_Criacao: c.created_at
-        })),
-        'relatorio_cobranca'
-      );
-    } finally {
-      setIsExporting(false);
-    }
-  };
-=======
   const exportar = () => exportarCSV(
     (dados?.cobr || []).map((c: any) => ({
       ID: c.id,
@@ -138,20 +72,14 @@ export function RelatorioCobranca({ periodo, dataInicio, dataFim }: Props) {
     })),
     'relatorio_cobranca'
   );
->>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-neutral-900">Relatório de Cobrança</h2>
         <div className="flex gap-2">
-<<<<<<< HEAD
-          <button onClick={exportar} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Exportando...' : 'Excel'}</button>
-          <button onClick={carregar} disabled={loading} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50"><RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}/>Atualizar</button>
-=======
           <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>CSV</button>
           <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
->>>>>>> parent of 4f5ad8b1 (Elevar PDFs e planilhas ao padrão institucional (#350))
         </div>
       </div>
 
