@@ -35,6 +35,21 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Aplicar e registrar segunda onda
+        shell: bash
+        run: |
+          node scripts/apply-audit-remediation-wave2.mjs
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src
+          if git diff --cached --quiet; then
+            echo "Segunda onda ja aplicada."
+          else
+            git commit -m "fix(audit): corrigir segunda onda de tipagem e fluxos"
+            git push origin HEAD:audit/full-system-remediation-20260727
+          fi
+
       - name: Executar TypeScript e auditoria de producao
         id: validation
         shell: bash
