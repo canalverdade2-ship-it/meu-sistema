@@ -22,12 +22,14 @@ export function usePublicRegistrationSettings(enabled: boolean) {
   const refresh = useCallback(async () => {
     if (!enabled) return;
     setLoading(true);
+    // Em dev local com servidor remoto instável, usa os valores padrão para evitar erros 522/CORS no console
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      setSettings(DEFAULT_SETTINGS);
+      setLoading(false);
+      return;
+    }
     try {
-      const rpcPromise = supabase.rpc('gsa_public_registration_settings');
-      const timeoutPromise = new Promise<{ data: null; error: Error }>((resolve) =>
-        setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 2500)
-      );
-      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
+      const { data, error } = await supabase.rpc('gsa_public_registration_settings');
       if (error) throw error;
       setSettings({
         ativo: Boolean(data?.ativo),
