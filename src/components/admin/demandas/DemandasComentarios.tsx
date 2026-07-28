@@ -22,22 +22,31 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchComentarios();
+    let isMounted = true;
+    const fetchComentariosLocal = async () => {
+      const { data } = await supabase
+        .from('demanda_comentarios')
+        .select('*')
+        .eq('demanda_id', demandaId)
+        .order('created_at', { ascending: true });
+      if (isMounted) setComentarios(data || []);
+    };
+    
+    fetchComentariosLocal();
 
     const channel = supabase
       .channel(`demanda-comentarios-${demandaId}`)
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'demanda_comentarios',
         filter: `demanda_id=eq.${demandaId}`
-      }, () => { fetchComentarios(); })
+      }, () => { fetchComentariosLocal(); })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      isMounted = false;
+      supabase.removeChannel(channel); 
+    };
   }, [demandaId]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [comentarios]);
 
   const fetchComentarios = async () => {
     const { data } = await supabase
@@ -50,19 +59,22 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
 
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (enviando) return;
     if (!mensagem.trim() && arquivos.length === 0) return;
     setEnviando(true);
     try {
       const urls: string[] = [];
       if (arquivos.length > 0) {
-        for (const file of arquivos) {
+        const uploadPromises = arquivos.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `comentarios/${demandaId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const { error } = await supabase.storage.from('entregas_demandas').upload(path, file);
           if (error) throw error;
           const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
-          urls.push(publicUrl);
-        }
+          return publicUrl;
+        });
+        const uploadedUrls = await Promise.all(uploadPromises);
+        urls.push(...uploadedUrls);
       }
 
       const { error: insertError } = await supabase.from('demanda_comentarios').insert({
