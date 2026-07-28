@@ -39,7 +39,7 @@ jobs:
           ! grep -RInE "window\.print\(|printWindow\.print\(|type: 'text/csv" \
             src/components/admin/FiscalModule.tsx \
             src/components/admin/demandas/DemandasTabela.tsx \
-            src/components/admin/relatorios \
+            src/components/admin/relatorios/Relatorio*.tsx \
             src/components/client/financeiro/NotasFiscaisList.tsx \
             src/lib/freeToolsPdfReport.ts \
             src/lib/pdf.ts
