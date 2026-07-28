@@ -505,24 +505,27 @@ function SolicitacoesTab() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsItem(null)}>
           <div className="flex w-full max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <header className="relative flex items-center justify-between border-b border-neutral-100 bg-slate-900 p-6 text-white">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 backdrop-blur-md">
+            <header className="relative flex items-center justify-between border-b border-indigo-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-6 py-5 text-white">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/30">
                   <Plane className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold tracking-wider text-indigo-300 uppercase">{detailsItem.protocolo || 'SOLICITAÇÃO'}</span>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="rounded-lg bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
+                      {detailsItem.protocolo || 'SOLICITAÇÃO'}
+                    </span>
                     <StatusBadge status={detailsItem.status} />
                   </div>
-                  <h2 className="text-xl font-black text-white mt-0.5">Solicitação de Viagem</h2>
+                  <h2 className="text-xl font-black tracking-tight text-white">Solicitação de Viagem</h2>
                 </div>
               </div>
               <button 
                 onClick={() => setDetailsItem(null)} 
-                className="rounded-full bg-white/10 p-2 text-neutral-300 hover:bg-white/20 hover:text-white transition-colors"
+                className="rounded-xl bg-white/10 p-2.5 text-slate-300 hover:bg-white/20 hover:text-white transition-all active:scale-95 border border-white/10"
+                aria-label="Fechar modal"
               >
-                <XCircle className="h-6 w-6" />
+                <XCircle className="h-5 w-5" />
               </button>
             </header>
 
@@ -1151,21 +1154,27 @@ function PropostasTab() {
       {detailsProposal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsProposal(null)}>
           <div className="flex w-full max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
-            <header className="flex items-center justify-between border-b border-neutral-100 bg-slate-900 p-6 text-white">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 backdrop-blur-md">
+            <header className="relative flex items-center justify-between border-b border-indigo-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-6 py-5 text-white">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/30">
                   <FileText className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="rounded-lg bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
+                      {detailsProposal.protocolo || 'PROPOSTA'}
+                    </span>
                     <StatusBadge status={detailsProposal.status} />
-                    <span className="text-xs font-mono font-bold tracking-wider text-indigo-300 uppercase">{detailsProposal.protocolo || 'PROPOSTA'}</span>
                   </div>
-                  <h2 className="text-xl font-black text-white mt-0.5">Detalhes da Proposta</h2>
+                  <h2 className="text-xl font-black tracking-tight text-white">Detalhes da Proposta</h2>
                 </div>
               </div>
-              <button onClick={() => setDetailsProposal(null)} className="rounded-full bg-white/10 p-2 text-neutral-300 hover:bg-white/20 hover:text-white transition-colors">
-                <XCircle className="h-6 w-6" />
+              <button 
+                onClick={() => setDetailsProposal(null)} 
+                className="rounded-xl bg-white/10 p-2.5 text-slate-300 hover:bg-white/20 hover:text-white transition-all active:scale-95 border border-white/10"
+                aria-label="Fechar modal"
+              >
+                <XCircle className="h-5 w-5" />
               </button>
             </header>
 
@@ -1796,24 +1805,24 @@ function TransacoesTab() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-2 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsTx(null)}>
           <div className="flex w-full max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[85vh] flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl border border-neutral-200" onClick={(e) => e.stopPropagation()}>
             {/* Header Compacto */}
-            <header className="flex items-center justify-between border-b border-indigo-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-5 py-4 text-white">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 backdrop-blur-md">
-                  <Receipt className="h-5 w-5" />
+            <header className="relative flex items-center justify-between border-b border-indigo-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-6 py-5 text-white">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/30">
+                  <Receipt className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <StatusBadge status={getRefundStatus(detailsTx)} />
-                    <span className="rounded-lg bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-300 uppercase border border-indigo-500/30">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="rounded-lg bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
                       {detailsTx.protocolo || 'TRANSAÇÃO'}
                     </span>
+                    <StatusBadge status={getRefundStatus(detailsTx)} />
                   </div>
-                  <h2 className="text-base font-black text-white tracking-tight">Detalhamento da Transação</h2>
+                  <h2 className="text-xl font-black tracking-tight text-white">Detalhamento da Transação</h2>
                 </div>
               </div>
               <button 
                 onClick={() => setDetailsTx(null)} 
-                className="rounded-xl bg-white/10 p-2 text-neutral-300 hover:bg-white/20 hover:text-white transition-all active:scale-95"
+                className="rounded-xl bg-white/10 p-2.5 text-slate-300 hover:bg-white/20 hover:text-white transition-all active:scale-95 border border-white/10"
                 aria-label="Fechar modal"
               >
                 <XCircle className="h-5 w-5" />
