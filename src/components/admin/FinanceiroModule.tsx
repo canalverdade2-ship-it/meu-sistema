@@ -530,7 +530,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
         ator_id: colaboradorId || 'admin',
         ator_nome: colaboradorNome || 'Administrador',
         acao: 'APROVAR_SAQUE_CLIENTE',
-        detalhes: `Aprovou saque de ${formatCurrency(saque.valor)} para o cliente ${saque.clientes?.nome}`
+        detalhes: `Aprovou saque de ${formatCurrency(saque.valor)} para o cliente ${(saque as any).clientes?.nome}`
       });
     } catch (error: any) {
       console.error('Erro ao aprovar saque:', error);
