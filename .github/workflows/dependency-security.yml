@@ -3,20 +3,13 @@ name: Dependency Security
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
-    paths:
-      - package.json
-      - package-lock.json
-      - .github/workflows/dependency-security.yml
-  schedule:
-    - cron: '17 8 * * 1'
 
 permissions:
   contents: read
 
 jobs:
   audit:
+    if: github.head_ref == 'audit/full-system-remediation-continuation-20260727'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -26,4 +19,33 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=high
+      - name: Capturar auditoria completa
+        id: audit
+        shell: bash
+        run: |
+          set +e
+          npm audit --json > npm-audit.json 2> npm-audit-json.stderr
+          json_exit=$?
+          npm audit --audit-level=high > npm-audit.txt 2>&1
+          threshold_exit=$?
+          set -e
+          echo "json_exit=$json_exit" >> "$GITHUB_OUTPUT"
+          echo "threshold_exit=$threshold_exit" >> "$GITHUB_OUTPUT"
+          cat npm-audit.txt
+      - name: Exportar evidência de dependências
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-security-audit
+          path: |
+            npm-audit.json
+            npm-audit.txt
+            npm-audit-json.stderr
+          if-no-files-found: error
+          retention-days: 7
+      - name: Encerrar com resultado real
+        shell: bash
+        run: |
+          if [ "${{ steps.audit.outputs.threshold_exit }}" -ne 0 ]; then
+            exit 1
+          fi
