@@ -25,6 +25,13 @@ import { createNotification } from '../../../lib/notifications';
 import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
 import { PaymentModal } from './PaymentModal';
 
+// Evita o problema de UTC vs BRT
+const formatDateOnly = (dateStr: string) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('T')[0].split('-');
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+};
+
 export const getFaturaDetails = (fat: any) => {
   // 1. Se houver itens_faturados já salvos (novo padrão para faturas manuais), priorizar
   if (Array.isArray(fat.itens_faturados) && fat.itens_faturados.length > 0) {
@@ -685,13 +692,14 @@ export function FaturasList({
                 <><ShieldAlert className="h-4 w-4" /> GRAVE: Protestado em Cartório</>
               ) : fat.status === 'pago' ? (
                 <><CheckCircle className="h-4 w-4" /> Pago em {formatDate(fat.data_pagamento!)}</>
-              ) : fat.status === 'vencida' ? (
-                <><AlertCircle className="h-4 w-4" /> Vencida em {formatDate(fat.data_vencimento)}</>
-              ) : fat.status === 'pendente_pagamento' ? (
-                <><AlertCircle className="h-4 w-4" /> Aguardando Pagamento</>
-              ) : (
-                <><AlertCircle className="h-4 w-4" /> Vence {formatDate(fat.data_vencimento)}</>
-              )}
+              } else if (fat.status === 'vencida') {
+                return <><AlertCircle className="h-4 w-4" /> Vencida em {formatDateOnly(fat.data_vencimento)}</>;
+              } else if (fat.status === 'pendente_pagamento') {
+                return <><AlertCircle className="h-4 w-4" /> Aguardando Pagamento</>;
+              } else {
+                return <><AlertCircle className="h-4 w-4" /> Vence {formatDateOnly(fat.data_vencimento)}</>;
+              }
+            })()}
             </span>
           </div>
           <h4 className="text-xl font-black text-[#1a1a1a] tracking-tight">
@@ -845,10 +853,8 @@ export function FaturasList({
                     selectedFatura.status === 'vencida' ? 'bg-red-50 ring-red-200' : 'bg-neutral-50 ring-neutral-200'
                   }`}>
                     <p className="text-[10px] font-semibold tracking-widest text-[#1a1a1a]/40 uppercase mb-1">Data de Vencimento</p>
-                    <p className={`text-sm font-bold ${
-                      selectedFatura.status === 'vencida' ? 'text-red-600' : 'text-neutral-700'
-                    }`}>
-                      {selectedFatura.data_vencimento ? formatDate(selectedFatura.data_vencimento) : '—'}
+                    <p className="font-bold text-[#1a1a1a]">
+                      {selectedFatura.data_vencimento ? formatDateOnly(selectedFatura.data_vencimento) : '—'}
                     </p>
                   </div>
                 </div>
@@ -1105,10 +1111,8 @@ export function FaturasList({
                 selectedFatura.status === 'vencida' ? 'bg-red-50 ring-red-200' : 'bg-neutral-50 ring-neutral-200'
               }`}>
                 <p className="text-[10px] font-semibold tracking-widest text-[#1a1a1a]/40 uppercase mb-1">Data de Vencimento</p>
-                <p className={`text-sm font-bold ${
-                  selectedFatura.status === 'vencida' ? 'text-red-600' : 'text-neutral-700'
-                }`}>
-                  {selectedFatura.data_vencimento ? formatDate(selectedFatura.data_vencimento) : '—'}
+                <p className="font-bold text-[#1a1a1a]">
+                  {selectedFatura.data_vencimento ? formatDateOnly(selectedFatura.data_vencimento) : '—'}
                 </p>
               </div>
             </div>
@@ -1580,7 +1584,7 @@ export function FaturasList({
                         placeholder="Descreva com detalhes o motivo da sua contestação..."
                         className="w-full rounded-xl border border-orange-200 bg-white px-4 py-3 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all resize-none"
                       />
-                      <p className="text-right text-[10px] text-neutral-400 mt-1">{contestacaoDescricao.length} / 20 mín.</p>
+                      <p className="text-right text-[10px] text-neutral-400 mt-1">{contestacaoDescricao.trim().length} / 20 mín.</p>
                     </div>
                     <div className="flex gap-3">
                       <button

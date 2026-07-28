@@ -676,9 +676,9 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     }
 
     try {
-      console.log('[GSAStore] Tentando adicionar ao carrinho:', { clientId, itemId: item.id, tipo });
+      if (import.meta.env.DEV) console.log('[GSAStore] Tentando adicionar ao carrinho:', { clientId, itemId: item.id, tipo });
       const { data: authUser } = await supabase.auth.getUser();
-      console.log('[GSAStore] Usuário autenticado:', authUser?.user?.id);
+      if (import.meta.env.DEV) console.log('[GSAStore] Usuário autenticado:', authUser?.user?.id);
 
       await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', { 
         item_id: item.id, 
@@ -732,9 +732,9 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       .maybeSingle();
 
     try {
-      console.log('[GSAStore] Confirmando adição ao carrinho:', { clientId, itemId: item.id, qty });
+      if (import.meta.env.DEV) console.log('[GSAStore] Confirmando adição ao carrinho:', { clientId, itemId: item.id, qty });
       const { data: authUser } = await supabase.auth.getUser();
-      console.log('[GSAStore] Usuário autenticado:', authUser?.user?.id);
+      if (import.meta.env.DEV) console.log('[GSAStore] Usuário autenticado:', authUser?.user?.id);
 
       if (currentCart) {
         const updateData: any = { quantidade: qty, updated_at: new Date().toISOString() };

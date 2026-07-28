@@ -62,7 +62,7 @@ export function GlobalFilter({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const hasActiveFilters = searchValue.length > 0 || Object.values(currentFilters).some(v => v !== '' && v !== null);
+  const hasActiveFilters = (searchValue?.length ?? 0) > 0 || Object.values(currentFilters).some(v => v !== '' && v !== null);
 
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
