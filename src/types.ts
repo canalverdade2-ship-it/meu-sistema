@@ -790,6 +790,7 @@ export type LojaSolicitacao = {
   status: 'em_analise' | 'aprovado' | 'rejeitado' | 'concluido';
   resposta_admin?: string;
   novo_orcamento_id?: string;
+  historico_status?: any;
   created_at: string;
   updated_at: string;
   // joins
