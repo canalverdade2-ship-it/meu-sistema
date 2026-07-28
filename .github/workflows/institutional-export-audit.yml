@@ -26,6 +26,16 @@ jobs:
       - name: Gerar inventário
         run: node scripts/audit-institutional-exports.mjs
 
+      - name: Criar snapshot técnico
+        run: |
+          tar --ignore-failed-read -czf artifacts/institutional-source-snapshot.tar.gz \
+            src \
+            scripts \
+            package.json \
+            package-lock.json \
+            tsconfig.json \
+            vite.config.*
+
       - name: Publicar inventário
         uses: actions/upload-artifact@v4
         with:
@@ -33,3 +43,11 @@ jobs:
           path: artifacts/institutional-export-inventory.json
           if-no-files-found: error
           retention-days: 7
+
+      - name: Publicar snapshot técnico
+        uses: actions/upload-artifact@v4
+        with:
+          name: institutional-source-snapshot
+          path: artifacts/institutional-source-snapshot.tar.gz
+          if-no-files-found: error
+          retention-days: 1
