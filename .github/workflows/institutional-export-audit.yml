@@ -14,50 +14,6 @@ permissions:
   contents: read
 
 jobs:
-  apply-upgrade:
-    name: Aplicar migração controlada
-    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout da branch isolada
-        uses: actions/checkout@v4
-        with:
-          ref: agent/padrao-institucional-arquivos
-          fetch-depth: 0
-
-      - name: Aplicar alterações determinísticas
-        run: python scripts/apply-institutional-file-upgrade.py
-
-      - name: Validar patch
-        run: |
-          git diff --check
-          test -n "$(git status --porcelain)"
-          ! grep -RInE "window\.print\(|printWindow\.print\(|type: 'text/csv" \
-            src/components/admin/FiscalModule.tsx \
-            src/components/admin/demandas/DemandasTabela.tsx \
-            src/components/admin/relatorios/Relatorio*.tsx \
-            src/components/client/financeiro/NotasFiscaisList.tsx \
-            src/lib/freeToolsPdfReport.ts \
-            src/lib/pdf.ts
-
-      - name: Registrar alterações na branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            src/components/admin/FiscalModule.tsx \
-            src/components/admin/demandas/DemandasTabela.tsx \
-            src/components/admin/relatorios/Relatorio*.tsx \
-            src/components/client/financeiro/NotasFiscaisList.tsx \
-            src/lib/freeToolsPdfReport.ts \
-            src/lib/pdf.ts
-          git commit -m "Aplicar padrão institucional aos arquivos gerados"
-          git push origin HEAD:agent/padrao-institucional-arquivos
-
   inventory:
     name: Mapear exportações
     runs-on: ubuntu-latest
@@ -70,16 +26,6 @@ jobs:
       - name: Gerar inventário
         run: node scripts/audit-institutional-exports.mjs
 
-      - name: Criar snapshot técnico
-        run: |
-          tar --ignore-failed-read -czf artifacts/institutional-source-snapshot.tar.gz \
-            src \
-            scripts \
-            package.json \
-            package-lock.json \
-            tsconfig.json \
-            vite.config.*
-
       - name: Publicar inventário
         uses: actions/upload-artifact@v4
         with:
@@ -87,11 +33,3 @@ jobs:
           path: artifacts/institutional-export-inventory.json
           if-no-files-found: error
           retention-days: 7
-
-      - name: Publicar snapshot técnico
-        uses: actions/upload-artifact@v4
-        with:
-          name: institutional-source-snapshot
-          path: artifacts/institutional-source-snapshot.tar.gz
-          if-no-files-found: error
-          retention-days: 1
