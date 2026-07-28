@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
@@ -58,6 +58,7 @@ const report = {
     ? run('deno', ['test', '-A', ...advertisingTests])
     : { command: null, status: null, stdout: '', stderr: 'Nenhum teste de publicidade encontrado.', error: null },
 };
+mkdirSync('audit-control', { recursive: true });
 writeFileSync(REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 
 const packageJson = JSON.parse(readFileSync(PACKAGE_PATH, 'utf8'));
