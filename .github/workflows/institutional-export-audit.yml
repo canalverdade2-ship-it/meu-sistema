@@ -8,41 +8,12 @@ on:
     paths:
       - 'src/**'
       - 'scripts/audit-institutional-exports.mjs'
-      - 'scripts/apply-calculator-pdf-content-fix.py'
       - '.github/workflows/institutional-export-audit.yml'
 
 permissions:
   contents: read
 
 jobs:
-  apply-calculator-pdf-content:
-    name: Aplicar conteúdo completo dos PDFs Pro
-    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout da branch isolada
-        uses: actions/checkout@v4
-        with:
-          ref: agent/padrao-institucional-arquivos
-          fetch-depth: 0
-
-      - name: Aplicar correção determinística
-        run: python scripts/apply-calculator-pdf-content-fix.py
-
-      - name: Validar e registrar
-        run: |
-          git diff --check
-          npx tsx scripts/check-free-tools-pdf-contracts.ts
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/components/public/FreeToolsAdditionalCalculators.tsx scripts/check-free-tools-pdf-contracts.ts
-          git commit -m "Completar conteúdo dos PDFs Pro das calculadoras"
-          git push origin HEAD:agent/padrao-institucional-arquivos
-
   inventory:
     name: Mapear exportações
     runs-on: ubuntu-latest
