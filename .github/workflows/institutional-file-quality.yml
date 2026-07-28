@@ -41,11 +41,22 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      - name: Preparar diretório de evidências
+        run: mkdir -p artifacts/institutional-runtime
+
       - name: Validar contratos institucionais
         run: node scripts/check-institutional-file-exports.mjs
 
       - name: Validar PDFs das seis calculadoras
-        run: npx tsx scripts/check-free-tools-pdf-contracts.ts
+        id: calculator_pdf_contracts
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          npx tsx scripts/check-free-tools-pdf-contracts.ts 2>&1 | tee artifacts/institutional-runtime/calculator-pdf-contracts.log
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
 
       - name: Validar sintaxe dos componentes alterados
         run: >-
@@ -94,6 +105,7 @@ jobs:
         run: node scripts/audit-institutional-exports.mjs
 
       - name: Publicar evidências
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: institutional-file-runtime-evidence
@@ -102,3 +114,9 @@ jobs:
             artifacts/institutional-export-inventory.json
           if-no-files-found: error
           retention-days: 7
+
+      - name: Confirmar contrato dos PDFs das calculadoras
+        if: steps.calculator_pdf_contracts.outputs.status != '0'
+        run: |
+          cat artifacts/institutional-runtime/calculator-pdf-contracts.log
+          exit 1
