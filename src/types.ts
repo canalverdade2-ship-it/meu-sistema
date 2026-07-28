@@ -320,8 +320,7 @@ export type Fatura = {
   cliente_id: string;
   valor_total: number;
   valor_pago: number;
-  status: 'pendente' | 'pago' | 'cancelado' | 'revisada' | 'vencida' | 'aguardando_link' | 'pendente_pagamento' | 'fatura_negociada';
-  tem_cobranca?: boolean;
+  status: 'pendente' | 'pago' | 'cancelado' | 'revisada' | 'vencida' | 'aguardando_link' | 'pendente_pagamento';
   data_vencimento: string;
   data_emissao?: string;
   data_pagamento?: string;
@@ -411,7 +410,6 @@ export type Saque = {
   observacoes?: string;
   motivo_cancelamento?: string;
   motivo_prorrogacao?: string;
-  clientes?: any;
 };
 
 export type Transferencia = {
@@ -676,8 +674,7 @@ export type Emprestimo = {
     ted_conta?: string;
     ted_tipo_conta?: 'corrente' | 'poupanca';
   };
-  status: 'analise_inicial' | 'proposta_enviada' | 'proposta_expirada' | 'aguardando_dados_bancarios' | 'analise_final' | 'pendencia_assinatura' | 'analise_contrato' | 'pendencia_documentos' | 'aprovado' | 'ativo' | 'quitado' | 'cancelado' | 'analise_quitacao' | 'aguardando_pagamento_quitacao';
-  valor_quitacao_acordo?: number;
+  status: 'analise_inicial' | 'proposta_enviada' | 'proposta_expirada' | 'aguardando_dados_bancarios' | 'analise_final' | 'pendencia_assinatura' | 'analise_contrato' | 'pendencia_documentos' | 'aprovado' | 'ativo' | 'quitado' | 'cancelado';
   contrato_url?: string;
   assinatura_url?: string;
   data_assinatura?: string;
@@ -790,7 +787,6 @@ export type LojaSolicitacao = {
   status: 'em_analise' | 'aprovado' | 'rejeitado' | 'concluido';
   resposta_admin?: string;
   novo_orcamento_id?: string;
-  historico_status?: any;
   created_at: string;
   updated_at: string;
   // joins
