@@ -18,7 +18,7 @@ const PROTECTED_ROUTES: ProtectedRouteCase[] = [
   { protectedRoute: '/fornecedor/dashboard', expectedLoginPath: '/fornecedor/login' },
   { protectedRoute: '/fornecedor/pedidos', expectedLoginPath: '/fornecedor/login' },
   { protectedRoute: '/anuncios/campanhas', expectedLoginPath: '/login' },
-] as const;
+];
 
 test.describe('Proteção das áreas autenticadas', () => {
   test.beforeEach(async ({ page }) => {
