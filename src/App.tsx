@@ -235,8 +235,13 @@ export default function App() {
               replace(routes.business.dashboard());
             } else if (clientPersonType === 'pf' && route.area === 'business') {
               replace(routes.client.dashboard());
-            } else if (route.area === 'login' && ['cliente', 'pessoa-fisica', 'empresa'].includes(route.module)) {
-              replace(clientPersonType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
+            } else if (route.area === 'login') {
+              const returnTo = route.query.returnTo;
+              if (returnTo) {
+                replace(decodeURIComponent(returnTo));
+              } else {
+                replace(clientPersonType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
+              }
             }
           } else if (restored.atorTipo === 'admin' || restored.atorTipo === 'colaborador') {
             setSession({
