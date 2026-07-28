@@ -284,20 +284,19 @@ export const sessionService = {
 
     // 1. Tenta RPC nativa gsa_login_pin
     try {
-      const { data, error } = await supabase.rpc('gsa_login_pin', {
-        p_documento: cleanDoc,
-        p_pin: cleanPin,
-        p_tipo: tipo,
-      });
-      if (!error && data) {
-        const res = data as any;
+      const rpcResult = await Promise.race([
+        supabase.rpc('gsa_login_pin', { p_documento: cleanDoc, p_pin: cleanPin, p_tipo: tipo }),
+        new Promise<{ data: null; error: Error }>((resolve) => setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 2500))
+      ]);
+      if (!rpcResult.error && rpcResult.data) {
+        const res = rpcResult.data as any;
         if (res?.valid || res?.success) {
           await persistAuthenticatedSession(res);
         }
         return res;
       }
-    } catch (err) {
-      console.warn('[sessionService] RPC gsa_login_pin indisponível:', err);
+    } catch {
+      // Ignora silenciosamente erros de CORS/Timeout do backend
     }
 
     // 2. Tenta Edge Function
