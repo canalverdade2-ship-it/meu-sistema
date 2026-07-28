@@ -449,17 +449,17 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         return toast.error('Você precisa ativar este cupom primeiro. Vá em Meus Cupons e clique em "Ativar Cupom" antes de usar no checkout.', { duration: 5000 });
       }
 
-      // Verifica se já foi usado
+      // Verifica se já atingiu o limite de usos do cliente
       const { data: orcUsados } = await supabase
         .from('orcamentos')
         .select('id')
         .eq('cliente_id', clientId)
         .neq('status', 'cancelado')
-        .or(`cupom_desconto_id.eq.${cupom.id},cupom_entrega_id.eq.${cupom.id}`)
-        .limit(1);
+        .or(`cupom_desconto_id.eq.${cupom.id},cupom_entrega_id.eq.${cupom.id}`);
 
-      if (orcUsados && orcUsados.length > 0) {
-        return toast.error('Você já utilizou este cupom em outro pedido.');
+      const limiteCliente = cupom.limite_usos_por_cliente || 1;
+      if (orcUsados && orcUsados.length >= limiteCliente) {
+        return toast.error(`Você já atingiu o limite de ${limiteCliente} uso(s) deste cupom.`);
       }
       
       // Validação de tipo

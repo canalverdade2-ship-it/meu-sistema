@@ -24,7 +24,7 @@ import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Modal } from '../ui/Modal';
-type AffiliateAdminTab = 'programas' | 'afiliados' | 'saques';
+type AffiliateAdminTab = 'programas' | 'afiliados' | 'saques' | 'regras_pontos';
 
 type AffiliateProgram = {
   id: string;
@@ -86,6 +86,11 @@ type AffiliateSummary = {
   comissoes_pendentes: number;
   comissoes_disponiveis: number;
   saques_pendentes: number;
+  pontos_taxa?: number;
+  pontos_minimo?: number;
+  pontos_ativo?: boolean;
+  welcome_ativo?: boolean;
+  welcome_valor?: number;
 };
 
 type AffiliateAdminSnapshot = {
@@ -103,6 +108,11 @@ const EMPTY_SUMMARY: AffiliateSummary = {
   comissoes_pendentes: 0,
   comissoes_disponiveis: 0,
   saques_pendentes: 0,
+  pontos_taxa: 0.01,
+  pontos_minimo: 100,
+  pontos_ativo: true,
+  welcome_ativo: true,
+  welcome_valor: 100,
 };
 
 function number(value: unknown) {
@@ -326,8 +336,11 @@ export function AffiliateAdminModule() {
           ['programas', 'Programas e regras', BadgePercent],
           ['afiliados', 'Afiliados', UserRoundCheck],
           ['saques', `Saques${snapshot.summary.saques_pendentes ? ` (${snapshot.summary.saques_pendentes})` : ''}`, Banknote],
+          ['regras_pontos', 'Bônus e Pontuação', ShieldCheck],
         ] as const).map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-black sm:flex-none ${tab === id ? 'bg-neutral-950 text-white shadow' : 'text-neutral-600 hover:bg-neutral-50'}`}><Icon className="h-4 w-4" />{label}</button>)}
       </div>
+
+      {tab === 'regras_pontos' && <AffiliatePointsSettingsEditor summary={snapshot.summary} onSaved={() => load(true)} />}
 
       {tab === 'programas' && <div className="grid gap-4 xl:grid-cols-2">{snapshot.programs.map((program) => <ProgramEditor key={program.id} program={program} onSaved={() => load(true)} />)}{snapshot.programs.length === 0 && <EmptyState text="Nenhum programa cadastrado." />}</div>}
 
@@ -837,4 +850,181 @@ function SmallAction({ label, onClick, disabled, tone, icon }: { label: string; 
 
 function EmptyState({ text }: { text: string }) {
   return <div className="col-span-full flex min-h-40 items-center justify-center p-8 text-center text-sm font-bold text-neutral-400">{text}</div>;
+}
+
+function AffiliatePointsSettingsEditor({ summary, onSaved }: { summary: AffiliateSummary; onSaved: () => Promise<void> }) {
+  const [welcomeActive, setWelcomeActive] = useState(summary.welcome_ativo ?? true);
+  const [welcomeValor, setWelcomeValor] = useState(summary.welcome_valor ?? 100);
+  const [pontosAtivo, setPontosAtivo] = useState(summary.pontos_ativo ?? true);
+  const [pontosMinimo, setPontosMinimo] = useState(summary.pontos_minimo ?? 100);
+  const [pontosTaxa, setPontosTaxa] = useState(summary.pontos_taxa ?? 0.01);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setWelcomeActive(summary.welcome_ativo ?? true);
+    setWelcomeValor(summary.welcome_valor ?? 100);
+    setPontosAtivo(summary.pontos_ativo ?? true);
+    setPontosMinimo(summary.pontos_minimo ?? 100);
+    setPontosTaxa(summary.pontos_taxa ?? 0.01);
+  }, [summary]);
+
+  const saveSettings = async () => {
+    if (welcomeValor < 0) {
+      toast.error('Informe um valor de bônus válido.');
+      return;
+    }
+    if (pontosMinimo < 1) {
+      toast.error('Informe um mínimo de pontos para resgate válido.');
+      return;
+    }
+    if (pontosTaxa <= 0) {
+      toast.error('Informe uma taxa de conversão válida.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await callAdminRpc('gsa_admin_update_affiliate_points_settings', {
+        p_rate: pontosTaxa,
+        p_minimum: pontosMinimo,
+        p_active: pontosAtivo,
+        p_welcome_active: welcomeActive,
+        p_welcome_value: welcomeValor,
+      });
+      toast.success('Configurações de pontuação e bônus salvas com sucesso.');
+      await onSaved();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível salvar as configurações de pontuação.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Bônus de Boas-Vindas */}
+      <article className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-neutral-100 pb-5">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Cadastro de Afiliado</span>
+            <h3 className="mt-1 text-xl font-black text-neutral-950">Bônus de Boas-Vindas</h3>
+            <p className="mt-1 text-xs text-neutral-500">
+              Pontuação creditada automaticamente na conta do afiliado no momento em que ele ativa o seu perfil.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setWelcomeActive(!welcomeActive)}
+            className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-black transition-colors ${
+              welcomeActive ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-500'
+            }`}
+          >
+            {welcomeActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+            {welcomeActive ? 'Bônus Ativo' : 'Bônus Desativado'}
+          </button>
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <label className="block text-xs font-bold text-neutral-700">
+            Status da Pontuação de Boas-Vindas
+            <select
+              value={welcomeActive ? 'true' : 'false'}
+              onChange={(e) => setWelcomeActive(e.target.value === 'true')}
+              className="mt-1.5 w-full rounded-xl border border-neutral-200 p-3 text-sm font-bold text-neutral-800"
+            >
+              <option value="true">Ativo (Creditar pontos ao se cadastrar)</option>
+              <option value="false">Desativado (Não conceder bônus no cadastro)</option>
+            </select>
+          </label>
+
+          <label className="block text-xs font-bold text-neutral-700">
+            Quantidade de Pontos de Boas-Vindas
+            <input
+              type="number"
+              min={0}
+              max={100000}
+              value={welcomeValor}
+              onChange={(e) => setWelcomeValor(number(e.target.value))}
+              className="mt-1.5 w-full rounded-xl border border-neutral-200 p-3 text-sm font-bold text-indigo-700"
+            />
+          </label>
+        </div>
+      </article>
+
+      {/* Regras de Resgate de Pontos */}
+      <article className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-neutral-100 pb-5">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Conversão e Resgate</span>
+            <h3 className="mt-1 text-xl font-black text-neutral-950">Regras de Resgate para Carteira</h3>
+            <p className="mt-1 text-xs text-neutral-500">
+              Defina a taxa de conversão e os requisitos mínimos para os afiliados resgatarem pontos em saldo na carteira.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPontosAtivo(!pontosAtivo)}
+            className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-black transition-colors ${
+              pontosAtivo ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-500'
+            }`}
+          >
+            {pontosAtivo ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+            {pontosAtivo ? 'Resgate Ativo' : 'Resgate Pausado'}
+          </button>
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <label className="block text-xs font-bold text-neutral-700">
+            Resgate de Pontos
+            <select
+              value={pontosAtivo ? 'true' : 'false'}
+              onChange={(e) => setPontosAtivo(e.target.value === 'true')}
+              className="mt-1.5 w-full rounded-xl border border-neutral-200 p-3 text-sm font-bold text-neutral-800"
+            >
+              <option value="true">Permitir Resgate</option>
+              <option value="false">Bloquear Resgate</option>
+            </select>
+          </label>
+
+          <label className="block text-xs font-bold text-neutral-700">
+            Pontos Mínimos para Resgate
+            <input
+              type="number"
+              min={1}
+              max={1000000}
+              value={pontosMinimo}
+              onChange={(e) => setPontosMinimo(number(e.target.value))}
+              className="mt-1.5 w-full rounded-xl border border-neutral-200 p-3 text-sm font-bold text-neutral-800"
+            />
+          </label>
+
+          <label className="block text-xs font-bold text-neutral-700">
+            Taxa de Conversão (R$ / Ponto)
+            <input
+              type="number"
+              step={0.001}
+              min={0.001}
+              max={100}
+              value={pontosTaxa}
+              onChange={(e) => setPontosTaxa(number(e.target.value))}
+              className="mt-1.5 w-full rounded-xl border border-neutral-200 p-3 text-sm font-bold text-emerald-700"
+            />
+            <span className="mt-1.5 block text-[11px] font-bold text-neutral-400">
+              Exemplo: {pontosMinimo} pts = {formatCurrency(pontosMinimo * pontosTaxa)}
+            </span>
+          </label>
+        </div>
+
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => void saveSettings()}
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-5 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-indigo-600 transition-colors disabled:opacity-60"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          Salvar Regras de Pontuação
+        </button>
+      </article>
+    </div>
+  );
 }

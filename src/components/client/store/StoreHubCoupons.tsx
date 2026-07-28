@@ -47,7 +47,7 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
       if (error) throw error;
 
       const ativadosSet = new Set<string>();
-      const usadosSet = new Set<string>();
+      const clienteUsosCount: Record<string, number> = {};
 
       if (clientId) {
         const { data: ativacoes } = await supabase
@@ -66,8 +66,12 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
           .neq('status', 'cancelado');
 
         (orcamentos || []).forEach((orc: any) => {
-          if (orc.cupom_desconto_id) usadosSet.add(orc.cupom_desconto_id);
-          if (orc.cupom_entrega_id) usadosSet.add(orc.cupom_entrega_id);
+          if (orc.cupom_desconto_id) {
+            clienteUsosCount[orc.cupom_desconto_id] = (clienteUsosCount[orc.cupom_desconto_id] || 0) + 1;
+          }
+          if (orc.cupom_entrega_id) {
+            clienteUsosCount[orc.cupom_entrega_id] = (clienteUsosCount[orc.cupom_entrega_id] || 0) + 1;
+          }
         });
       } else {
         try {
@@ -85,8 +89,11 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
 
       const cuponsProcessados = (cuponsData || [])
         .map((c: any) => {
-          let localStatus = usadosSet.has(c.id) ? 'usado' : 'ativo';
-          // só marca esgotado se limite_usos for um número positivo
+          const clienteUsos = clienteUsosCount[c.id] || 0;
+          const limiteCliente = c.limite_usos_por_cliente || 1;
+          let localStatus = clienteUsos >= limiteCliente ? 'usado' : 'ativo';
+
+          // só marca esgotado globalmente se limite_usos for um número positivo
           if (localStatus !== 'usado' && (c.limite_usos > 0) && (c.total_usos || 0) >= c.limite_usos) {
             localStatus = 'esgotado';
           }
@@ -95,7 +102,7 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
             const expiryDate = new Date(year, month - 1, day, 23, 59, 59);
             if (expiryDate < new Date()) localStatus = 'expirado';
           }
-          return { ...c, status_local: localStatus };
+          return { ...c, status_local: localStatus, cliente_usos: clienteUsos, limite_cliente: limiteCliente };
         });
 
       setCupons(cuponsProcessados);
@@ -279,9 +286,14 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
                             <><Copy className="w-4 h-4 text-neutral-400" /> {cupom.codigo_cupom}</>
                           )}
                         </button>
-                        <span className="text-[10px] font-bold text-neutral-400 uppercase shrink-0">
-                          Válido até: {cupom.data_validade ? formatDate(cupom.data_validade) : 'Uso Único'}
-                        </span>
+                        <div className="flex flex-col items-end shrink-0">
+                          <span className="text-[10px] font-bold text-neutral-400 uppercase">
+                            {cupom.data_validade ? `Válido até: ${formatDate(cupom.data_validade)}` : 'Sem validade'}
+                          </span>
+                          <span className="text-[10px] font-semibold text-indigo-600">
+                            {cupom.limite_cliente > 1 ? `Seus usos: ${cupom.cliente_usos || 0} de ${cupom.limite_cliente}` : `Limite: ${cupom.limite_cliente} uso por conta`}
+                          </span>
+                        </div>
                       </div>
 
                       {cuponsTab === 'ativos' && !isAtivado && !isUsado && !isExpirado && (
