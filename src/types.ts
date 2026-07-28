@@ -52,6 +52,11 @@ export type Cliente = Legacy.Cliente & {
   pontos?: number;
 };
 
+export type Orcamento = Omit<Legacy.Orcamento, 'status' | 'categoria'> & {
+  status: Legacy.Orcamento['status'] | 'pendente' | 'produção' | 'em separação';
+  categoria: Legacy.Orcamento['categoria'] | 'loja';
+};
+
 export type Voucher = Legacy.Voucher & {
   data_cancelamento?: string;
 };

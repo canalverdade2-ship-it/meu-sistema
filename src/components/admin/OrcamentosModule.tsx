@@ -987,7 +987,7 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
     servico_id: '',
     produto_id: '',
     assinatura_id: '',
-    categoria: 'servico' as 'servico' | 'emprestimo',
+    categoria: 'servico' as 'servico' | 'produto' | 'assinatura' | 'emprestimo',
     observacoes_servico: '',
     valor_servico: 0,
     valor_adicional: 0,

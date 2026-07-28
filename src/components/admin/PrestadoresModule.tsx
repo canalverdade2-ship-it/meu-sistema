@@ -80,7 +80,7 @@ export function PrestadoresModule({ initialTab, initialItemId, colaboradorId, co
             {MAIN_TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = mainTab === tab.id;
-              const badgeCount = tab.id === 'cadastro' ? pendencies.prestadoresPendentes : 0;
+              const badgeCount = tab.id === 'cadastro' ? pendencies.cadastro_prestadores_pendentes : 0;
 
               return (
                 <div key={tab.id} className="relative flex-none font-black translate-y-0 active:translate-y-1 transition-transform">

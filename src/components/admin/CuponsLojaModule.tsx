@@ -377,7 +377,7 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
   );
 }
 
-function CupomForm({ onSubmit, onCancel, clientes, produtos }: { onSubmit: (data: any) => Promise<boolean>, onCancel: () => void, clientes: Cliente[], produtos: Produto[] }) {
+function CupomForm({ onSubmit, onCancel, clientes, produtos }: { onSubmit: (data: any) => Promise<boolean>, onCancel: () => void, clientes: ClienteCupom[], produtos: ProdutoCupom[] }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<any>({
     nome_cupom: '',
