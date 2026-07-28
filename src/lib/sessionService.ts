@@ -281,22 +281,26 @@ export const sessionService = {
   async loginWithPin(documento: string, pin: string, tipo: 'cliente' | 'prestador' | 'fornecedor') {
     const cleanDoc = documento.replace(/\D/g, '');
     const cleanPin = pin.trim();
+
+    // Tentar primeiro via RPC direta para evitar bloqueios de CORS/500 em Edge Functions
     try {
-      return await authenticate('login_pin', { documento: cleanDoc, pin: cleanPin, tipo });
-    } catch (edgeError: any) {
-      console.warn('[sessionService] Edge Function login_pin falhou, executando autenticação nativa via RPC:', edgeError);
       const { data, error } = await supabase.rpc('gsa_login_pin', {
         p_documento: cleanDoc,
         p_pin: cleanPin,
         p_tipo: tipo,
       });
-      if (error) throw error;
-      const res = data as any;
-      if (res?.valid || res?.success) {
-        await persistAuthenticatedSession(res);
+      if (!error && data) {
+        const res = data as any;
+        if (res?.valid || res?.success) {
+          await persistAuthenticatedSession(res);
+        }
+        return res;
       }
-      return res;
+    } catch {
+      // Se a RPC falhar ou não existir, tenta o Gateway via Edge Function
     }
+
+    return await authenticate('login_pin', { documento: cleanDoc, pin: cleanPin, tipo });
   },
 
   async requestClientRecovery(documento: string, email: string) {
