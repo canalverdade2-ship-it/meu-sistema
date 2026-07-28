@@ -140,7 +140,15 @@ export function PartnersAdminModule() {
   };
 
   const changeStatus = async (partner: Partner, status: PartnerStatus) => {
-    if (status === 'excluido' && !window.confirm(`Deseja realmente excluir ${partner.name} da operação?`)) return;
+    if (status === 'excluido') {
+      const ok = await confirmHook.confirm({
+        title: 'Excluir parceiro',
+        message: `Deseja realmente excluir ${partner.name} da operação?`,
+        confirmLabel: 'Confirmar',
+        cancelLabel: 'Cancelar',
+      });
+      if (!ok) return;
+    }
     try {
       await setPartnerStatus(partner.id, status);
       toast.success(`Parceiro alterado para ${PARTNER_STATUS_LABELS[status]}.`);
