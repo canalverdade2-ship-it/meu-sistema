@@ -1507,7 +1507,7 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
                 variant="icon"
               />
               {selectedCobranca.status !== 'acordo' && selectedCobranca.status !== 'quitado' && selectedCobranca.status !== 'cartorio' && selectedCobranca.status !== 'protestado' && (
-                <button onClick={() => { setIsHistoricoModalOpen(false); setAcordoData({ parcelas: 1, dtPrimeiroVenc: '', desconto: 0, observacoes: '' }); setIsAcordoModalOpen(true); }} className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                <button onClick={() => { setIsHistoricoModalOpen(false); setAcordoData({ parcelas: 1, dtPrimeiroVenc: '', desconto: 0, tipo_desconto: 'fixo', observacoes: '' }); setIsAcordoModalOpen(true); }} className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
                   Gerar Acordo / Parcelamento
                 </button>
               )}
