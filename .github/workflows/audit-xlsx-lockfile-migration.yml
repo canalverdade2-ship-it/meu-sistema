@@ -1,0 +1,72 @@
+name: Audit XLSX Lockfile Migration
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: audit-xlsx-lockfile-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  migrate-lockfile:
+    if: >-
+      github.event.pull_request.head.ref == 'audit/full-system-remediation-20260727' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Reconcile dependency lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --package-lock-only --ignore-scripts
+          npm ci --ignore-scripts
+
+      - name: Validate secure browser XLSX replacement
+        shell: bash
+        env:
+          VITE_SUPABASE_URL: http://127.0.0.1:54321
+          VITE_SUPABASE_ANON_KEY: ci-anon-key-not-for-production
+        run: |
+          set -euo pipefail
+          npm audit --omit=dev --audit-level=high
+          npm run test:gsa-store
+          npm run typecheck:strict
+          npm run build
+
+      - name: Remove temporary diagnostics and migration workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f scripts/diagnose-excel-browser-build.mjs
+          rm -f scripts/test-xlsx-style-candidate.mjs
+          rm -f .github/workflows/audit-xlsx-lockfile-migration.yml
+
+      - name: Commit reconciled lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "gsa-hub-audit-bot"
+          git config user.email "gsa-hub-audit-bot@users.noreply.github.com"
+          git add package-lock.json scripts .github/workflows
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração pendente no lockfile."
+            exit 0
+          fi
+          git commit -m "fix(exports): concluir migração segura do motor XLSX"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
