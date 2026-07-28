@@ -7,6 +7,7 @@ import {
   Eye,
   Link2,
   Loader2,
+  Pencil,
   RefreshCw,
   Save,
   Search,
@@ -126,8 +127,52 @@ export function AffiliateAdminModule() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedAffiliate, setSelectedAffiliate] = useState<AffiliateRecord | null>(null);
+  const [isEditingAffiliate, setIsEditingAffiliate] = useState(false);
+  const [editAffiliateForm, setEditAffiliateForm] = useState({
+    nome_divulgacao: '',
+    codigo_publico: '',
+    pix_tipo: 'cpf',
+    pix_chave: '',
+  });
+  const [savingAffiliateDetails, setSavingAffiliateDetails] = useState(false);
   const [workingId, setWorkingId] = useState<string | null>(null);
   const confirmHook = useConfirm();
+
+  const startEditingAffiliate = (affiliate: AffiliateRecord) => {
+    setEditAffiliateForm({
+      nome_divulgacao: affiliate.nome_divulgacao || '',
+      codigo_publico: affiliate.codigo_publico || '',
+      pix_tipo: affiliate.pix_tipo || 'cpf',
+      pix_chave: affiliate.pix_chave || affiliate.pix_chave_mascarada || '',
+    });
+    setIsEditingAffiliate(true);
+  };
+
+  const saveAffiliateDetails = async () => {
+    if (!selectedAffiliate) return;
+    if (!editAffiliateForm.nome_divulgacao.trim()) {
+      toast.error('Informe o nome de divulgação.');
+      return;
+    }
+    setSavingAffiliateDetails(true);
+    try {
+      await callAdminRpc('gsa_admin_update_affiliate_details', {
+        p_affiliate_id: selectedAffiliate.id,
+        p_nome_divulgacao: editAffiliateForm.nome_divulgacao.trim(),
+        p_codigo_publico: editAffiliateForm.codigo_publico.trim() || null,
+        p_pix_tipo: editAffiliateForm.pix_tipo || null,
+        p_pix_chave: editAffiliateForm.pix_chave.trim() || null,
+      });
+      toast.success('Cadastro do afiliado atualizado com sucesso.');
+      setIsEditingAffiliate(false);
+      setSelectedAffiliate(null);
+      await load(true);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível atualizar o cadastro do afiliado.');
+    } finally {
+      setSavingAffiliateDetails(false);
+    }
+  };
 
   const load = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
@@ -302,11 +347,91 @@ export function AffiliateAdminModule() {
       {/* Modal de Detalhes do Afiliado */}
       <Modal
         isOpen={Boolean(selectedAffiliate)}
-        onClose={() => setSelectedAffiliate(null)}
-        title="Detalhes do Afiliado"
+        onClose={() => {
+          setSelectedAffiliate(null);
+          setIsEditingAffiliate(false);
+        }}
+        title={isEditingAffiliate ? "Editar Cadastro do Afiliado" : "Detalhes do Afiliado"}
         size="lg"
       >
-        {selectedAffiliate && (
+        {selectedAffiliate && isEditingAffiliate && (
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-4">
+              <h4 className="text-sm font-black text-indigo-900 mb-1 flex items-center gap-2">
+                <Pencil className="h-4 w-4 text-indigo-600" /> Edição Cadastral do Afiliado
+              </h4>
+              <p className="text-xs text-indigo-700">Edite as informações cadastrais e de pagamento abaixo. As alterações serão salvas no sistema.</p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-xs font-bold text-neutral-700">
+                Nome de Divulgação
+                <input
+                  type="text"
+                  value={editAffiliateForm.nome_divulgacao}
+                  onChange={(e) => setEditAffiliateForm(prev => ({ ...prev, nome_divulgacao: e.target.value }))}
+                  className="mt-1.5 w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-sm font-bold focus:border-indigo-600 focus:outline-none"
+                />
+              </label>
+
+              <label className="block text-xs font-bold text-neutral-700">
+                Código de Indicação
+                <input
+                  type="text"
+                  value={editAffiliateForm.codigo_publico}
+                  onChange={(e) => setEditAffiliateForm(prev => ({ ...prev, codigo_publico: e.target.value }))}
+                  className="mt-1.5 w-full rounded-xl border border-neutral-300 px-3 py-2.5 font-mono text-sm font-bold text-indigo-700 focus:border-indigo-600 focus:outline-none"
+                />
+              </label>
+
+              <label className="block text-xs font-bold text-neutral-700">
+                Tipo da Chave PIX
+                <select
+                  value={editAffiliateForm.pix_tipo}
+                  onChange={(e) => setEditAffiliateForm(prev => ({ ...prev, pix_tipo: e.target.value }))}
+                  className="mt-1.5 w-full rounded-xl border border-neutral-300 px-3 py-2.5 text-sm font-bold focus:border-indigo-600 focus:outline-none"
+                >
+                  <option value="cpf">CPF</option>
+                  <option value="cnpj">CNPJ</option>
+                  <option value="email">E-mail</option>
+                  <option value="telefone">Telefone</option>
+                  <option value="aleatoria">Chave Aleatória</option>
+                </select>
+              </label>
+
+              <label className="block text-xs font-bold text-neutral-700">
+                Chave PIX (Completa)
+                <input
+                  type="text"
+                  value={editAffiliateForm.pix_chave}
+                  onChange={(e) => setEditAffiliateForm(prev => ({ ...prev, pix_chave: e.target.value }))}
+                  className="mt-1.5 w-full rounded-xl border border-neutral-300 px-3 py-2.5 font-mono text-sm font-bold focus:border-indigo-600 focus:outline-none"
+                />
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-neutral-200 pt-4">
+              <button
+                type="button"
+                onClick={() => setIsEditingAffiliate(false)}
+                className="rounded-xl border border-neutral-300 px-4 py-2.5 text-xs font-bold text-neutral-700 hover:bg-neutral-100"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={savingAffiliateDetails}
+                onClick={() => void saveAffiliateDetails()}
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-black text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {savingAffiliateDetails ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Salvar Alterações
+              </button>
+            </div>
+          </div>
+        )}
+
+        {selectedAffiliate && !isEditingAffiliate && (
           <div className="space-y-6">
             {/* Header & Status Card */}
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-5">
@@ -378,6 +503,13 @@ export function AffiliateAdminModule() {
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 space-y-3">
               <span className="text-xs font-black uppercase tracking-wider text-neutral-500 block">Ações Administrativas</span>
               <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => startEditingAffiliate(selectedAffiliate)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-black text-white hover:bg-indigo-700"
+                >
+                  <Pencil className="h-4 w-4" /> Editar Cadastro
+                </button>
                 {selectedAffiliate.status !== 'ativo' && (
                   <button
                     type="button"
