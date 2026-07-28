@@ -10,8 +10,9 @@ import {
   fetchAdminServiceCatalog,
   importDefaultServiceCatalog,
   saveAdminServicePackage,
-} from '../../lib/serviceCatalog';
 import { logService } from '../../lib/logService';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 type PackageFormValue = {
   title: string;
@@ -55,6 +56,8 @@ export function ServicePackagesModule({
   const [editing, setEditing] = useState<CatalogPackage | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<PackageFormValue>(emptyForm);
+  const confirmHook = useConfirm();
+  const { confirm } = confirmHook;
   const status = activeSubTab === 'inativos' ? 'inativo' : 'ativo';
 
   const load = async () => {
@@ -126,7 +129,7 @@ export function ServicePackagesModule({
   };
 
   const remove = async (item: CatalogPackage) => {
-    if (!window.confirm(`Excluir o pacote “${item.title}”?`)) return;
+    if (!await confirm({ title: 'Atenção', message: `Excluir o pacote “${item.title}”?` })) return;
     try {
       await deleteAdminServicePackage(item.id);
       toast.success('Pacote excluído.');
@@ -233,6 +236,7 @@ export function ServicePackagesModule({
           <div className="flex gap-3 pt-3"><button type="button" onClick={() => setModalOpen(false)} className="flex-1 rounded-xl border border-neutral-200 py-3 font-bold text-neutral-600">Cancelar</button><button type="button" onClick={() => void submit()} disabled={saving} className="flex-1 rounded-xl bg-indigo-600 py-3 font-bold text-white disabled:opacity-50">{saving ? 'Salvando...' : 'Salvar pacote'}</button></div>
         </div>
       </Modal>
+      <ConfirmDialog {...confirmHook} />
     </div>
   );
 }
