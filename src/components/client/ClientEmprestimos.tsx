@@ -14,6 +14,8 @@ import { StepDadosPessoais, StepValorCondicoes, StepDocumentos, StepConfirmacao 
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import type { DadosPessoais, DadosEmprestimo, DocFiles } from './emprestimo/EmprestimoFormSteps';
 import { callClientRpc } from '../../lib/clientRpc';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavigate }: { clientId: string, initialTab?: string, initialItemId?: string, onNavigate?: (mod: any, tab?: string, itemId?: string) => void }) {
   const { openFile } = useFileViewer();
@@ -38,6 +40,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
   const [loading, setLoading] = useState(true);
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<EmprestimoParcela | null>(null);
+  const confirmHook = useConfirm();
 
   // ── Solicitação de Alteração Cadastral (Tickets) ──
   const [hasPendingEditTicket, setHasPendingEditTicket] = useState(false);
@@ -392,7 +395,13 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
 
   const solicitarQuitacao = async () => {
     if (!selected || loadingPay) return;
-    if (!window.confirm('Deseja solicitar a quitação antecipada deste empréstimo? Ele entrará em análise pelo administrador.')) return;
+    const ok = await confirmHook.confirm({
+      title: 'Quitação Antecipada',
+      message: 'Deseja solicitar a quitação antecipada deste empréstimo? Ele entrará em análise pelo administrador.',
+      confirmLabel: 'Solicitar',
+      cancelLabel: 'Cancelar',
+    });
+    if (!ok) return;
     
     setLoadingPay(true);
     try {
@@ -428,7 +437,13 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
 
   const recusarOfertaQuitacao = async () => {
     if (!selected) return;
-    if (!window.confirm('Deseja recusar esta oferta de quitação? O empréstimo voltará ao status ativo normal.')) return;
+    const ok = await confirmHook.confirm({
+      title: 'Recusar Quitação',
+      message: 'Deseja recusar esta oferta de quitação? O empréstimo voltará ao status ativo normal.',
+      confirmLabel: 'Recusar',
+      cancelLabel: 'Cancelar',
+    });
+    if (!ok) return;
     
     await callClientRpc('gsa_client_reject_loan_settlement', {
       p_emprestimo_id: selected.id,
@@ -443,6 +458,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
 
   return (
     <div className="space-y-6 animate-in fade-in">
+      <ConfirmDialog {...confirmHook} />
       {/* Cabeçalho com CTA */}
       <div className="flex items-center justify-between">
         <div>

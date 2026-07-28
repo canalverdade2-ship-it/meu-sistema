@@ -13,8 +13,8 @@ for (const file of files) {
     for (let i = 1; i < parts.length; i++) {
         let block = 'CREATE OR REPLACE FUNCTION ' + parts[i];
         
-        let endIdx = block.indexOf(';');
-        if (endIdx === -1) endIdx = block.indexOf(' ;');
+        let endIdx = block.indexOf('$$;');
+        if (endIdx === -1) endIdx = block.indexOf('$$ ;');
         if (endIdx === -1) {
             const endMatch = block.match(/END\s*[\$\w]+;/i);
             if (endMatch) endIdx = endMatch.index + endMatch[0].length;
@@ -34,16 +34,18 @@ for (const file of files) {
                 if (lowerP1.includes('v_failed :=') || lowerP1.includes('array_append(v_failed')) {
                      return "EXCEPTION WHEN OTHERS THEN\n            " + p1.trim() + "\n            RAISE EXCEPTION 'Erro em " + funcName + ": %', SQLERRM;\n        ";
                 }
-                if (lowerP1.includes('insert into auditoria') || lowerP1.includes('insert into gsa_auditoria') || lowerP1.includes('insert into system_logs')) {
+                if (lowerP1.includes('insert into auditoria') || lowerP1.includes('insert into gsa_auditoria') || lowerP1.includes('insert into system_logs') || lowerP1.includes('v_headers :=')) {
                      return "EXCEPTION WHEN OTHERS THEN\n            RAISE WARNING 'Falha em operação opcional (" + funcName + "): %', SQLERRM;\n            " + p1.trim() + "\n        ";
                 }
-                if (p1.trim().match(/v_\w+\s*:=\s*null;/i)) {
+                if (p1.trim().match(/v_\w+\s*:=\s*(null|NULL);/i) || p1.trim().match(/v_\w+\s*:=\s*\{\}::jsonb;/i) || p1.trim().match(/RETURN\s+NULL;/i) || p1.trim() === 'NULL;' || p1.trim() === 'v_valor:=NULL;') {
                      return "EXCEPTION WHEN OTHERS THEN\n            RAISE EXCEPTION 'Erro em " + funcName + ": %', SQLERRM;\n        ";
                 }
+                // Default fallback
                 return "EXCEPTION WHEN OTHERS THEN\n            RAISE EXCEPTION 'Erro em " + funcName + ": %', SQLERRM;\n        ";
             });
-            output += -- File: \n-- Function: \n\n\n;
+            output += `-- File: ${file}\n-- Function: ${funcName}\n${fixedText}\n\n`;
         }
     }
 }
-fs.writeFileSync('scratch_functions.sql', output, 'utf-8');
+fs.writeFileSync('supabase/migrations/20260728040000_fix_exception_handlers.sql', output, 'utf-8');
+console.log('Done!');
