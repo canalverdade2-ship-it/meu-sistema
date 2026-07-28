@@ -1,10 +1,10 @@
 {
-  "generated_at_utc": "2026-07-28T12:42:20.664Z",
-  "validated_sha": "949fed907363e2b20f585271af23bcd584bbd8b4",
+  "generated_at_utc": "2026-07-28T19:25:28.346Z",
+  "validated_sha": "ea255426d95cebeddf19b1112ba26bbfed2e0df5",
   "install_exit_code": 0,
   "test_exit_code": 127,
   "result": "failure",
-  "install_log_sha256": "b6a5f7d7b1fdec05f1531030671dcae2e8ea79e5814a4e9e5c733c009cd5d28f",
+  "install_log_sha256": "57c596a52579c4c0b7ff3625efc4d750f15438a0630d517060896f84fcb48a48",
   "test_log_sha256": "2ac0d95567172d3d39e0fda9e3927cae456239104d792a6deb567ce05f2cbf4e",
   "failed_markers": [
     "Contratos públicos ativos da Home validados com sucesso.",
