@@ -1,0 +1,58 @@
+name: Institutional File Quality
+
+on:
+  push:
+    branches:
+      - agent/padrao-institucional-arquivos
+  pull_request:
+    paths:
+      - 'src/lib/institutionalFileExport.ts'
+      - 'src/components/admin/relatorios/**'
+      - 'scripts/check-institutional-file-exports.mjs'
+      - '.github/workflows/institutional-file-quality.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validar arquivos institucionais
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar contratos
+        run: node scripts/check-institutional-file-exports.mjs
+
+      - name: Validar TypeScript isolado
+        run: >-
+          npx tsc --noEmit --skipLibCheck
+          --target ES2022
+          --module ESNext
+          --moduleResolution Bundler
+          --lib ES2022,DOM,DOM.Iterable
+          src/lib/institutionalFileExport.ts
+          src/components/admin/relatorios/utils/relatorioExport.ts
+
+      - name: Gerar inventário
+        run: node scripts/audit-institutional-exports.mjs
+
+      - name: Publicar inventário
+        uses: actions/upload-artifact@v4
+        with:
+          name: institutional-file-quality-inventory
+          path: artifacts/institutional-export-inventory.json
+          if-no-files-found: error
+          retention-days: 7
