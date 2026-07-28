@@ -15,6 +15,7 @@ on:
       - 'src/components/admin/relatorios/**'
       - 'src/components/client/financeiro/NotasFiscaisList.tsx'
       - 'scripts/check-institutional-file-exports.mjs'
+      - 'scripts/check-free-tools-pdf-contracts.ts'
       - 'scripts/validate-institutional-file-runtime.mjs'
       - '.github/workflows/institutional-file-quality.yml'
 
@@ -43,8 +44,8 @@ jobs:
       - name: Validar contratos institucionais
         run: node scripts/check-institutional-file-exports.mjs
 
-      - name: Validar contratos das calculadoras
-        run: npm run test:free-tools
+      - name: Validar PDFs das seis calculadoras
+        run: npx tsx scripts/check-free-tools-pdf-contracts.ts
 
       - name: Validar sintaxe dos componentes alterados
         run: >-
