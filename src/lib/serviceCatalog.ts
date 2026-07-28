@@ -58,13 +58,16 @@ function normalizeCatalog(value: unknown): ServiceCatalogSnapshot {
 
 export async function fetchPublicServiceCatalog(audience?: 'PF' | 'PJ') {
   try {
-    const { data, error } = await supabase.rpc('gsa_public_service_catalog', {
+    const rpcPromise = supabase.rpc('gsa_public_service_catalog', {
       p_audience: audience?.toLowerCase() || null,
     });
+    const timeoutPromise = new Promise<{ data: null; error: Error }>((resolve) =>
+      setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 2500)
+    );
+    const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
     if (error) throw error;
     return normalizeCatalog(data);
-  } catch (err) {
-    console.warn('gsa_public_service_catalog RPC indisponível no momento:', err);
+  } catch {
     return normalizeCatalog(null);
   }
 }

@@ -23,7 +23,11 @@ export function usePublicRegistrationSettings(enabled: boolean) {
     if (!enabled) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('gsa_public_registration_settings');
+      const rpcPromise = supabase.rpc('gsa_public_registration_settings');
+      const timeoutPromise = new Promise<{ data: null; error: Error }>((resolve) =>
+        setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 2500)
+      );
+      const { data, error } = await Promise.race([rpcPromise, timeoutPromise]);
       if (error) throw error;
       setSettings({
         ativo: Boolean(data?.ativo),
@@ -31,8 +35,7 @@ export function usePublicRegistrationSettings(enabled: boolean) {
         tipo: data?.tipo === 'credito' ? 'credito' : 'pontos',
         valor: Number(data?.valor || 0),
       });
-    } catch (error) {
-      console.error('Não foi possível carregar as configurações públicas de cadastro.', error);
+    } catch {
       setSettings(DEFAULT_SETTINGS);
     } finally {
       setLoading(false);
