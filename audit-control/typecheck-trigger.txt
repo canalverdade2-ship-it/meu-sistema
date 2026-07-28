@@ -1,1 +1,0 @@
-Disparo controlado da validacao TypeScript da auditoria completa.

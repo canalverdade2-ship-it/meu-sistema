@@ -1,1 +1,0 @@
-Validacao da segunda onda persistida no commit 61cd841608786d7433f4cf1bb5dc5aaae7d32942.
