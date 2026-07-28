@@ -23,8 +23,23 @@ jobs:
           cache: npm
       - name: Instalar estado atual
         run: npm ci
-      - name: Substituir ExcelJS pelo fork mantido
-        run: npm install 'exceljs@npm:@excel.js/exceljs@^0.9.0' --save
+      - name: Preparar fork mantido e bundle de navegador
+        shell: bash
+        run: |
+          npm install 'exceljs@npm:@excel.js/exceljs@^0.9.0' --save
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/lib/institutionalExcelExport.ts')
+          source = path.read_text()
+          source = source.replace("await import('exceljs')", "await import('exceljs/dist/exceljs.min.js')")
+          path.write_text(source)
+          PY
+          cat > src/types/exceljs-browser.d.ts <<'TYPEDEF'
+          declare module 'exceljs/dist/exceljs.min.js' {
+            import ExcelJS from 'exceljs';
+            export default ExcelJS;
+          }
+          TYPEDEF
       - name: Capturar cada validação
         id: validation
         shell: bash
@@ -33,14 +48,14 @@ jobs:
           npm audit --audit-level=high > dependency-audit.log 2>&1
           audit_exit=$?
           node --input-type=module > exceljs-smoke.log 2>&1 <<'NODE'
-          const imported = await import('exceljs');
+          const imported = await import('exceljs/dist/exceljs.min.js');
           const ExcelJS = imported.default;
           const workbook = new ExcelJS.Workbook();
           const worksheet = workbook.addWorksheet('Auditoria');
           worksheet.getCell('A1').value = 'GSA HUB';
           worksheet.getCell('A1').font = { bold: true };
           const buffer = await workbook.xlsx.writeBuffer();
-          if (!buffer || buffer.byteLength < 100) throw new Error('Falha ao gerar planilha com o fork mantido.');
+          if (!buffer || buffer.byteLength < 100) throw new Error('Falha ao gerar planilha com o bundle de navegador.');
           console.log(`Planilha de compatibilidade gerada: ${buffer.byteLength} bytes.`);
           NODE
           smoke_exit=$?
@@ -61,7 +76,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: maintained-exceljs-validation
+          name: maintained-exceljs-browser-validation
           path: |
             dependency-audit.log
             exceljs-smoke.log
