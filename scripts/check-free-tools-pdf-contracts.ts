@@ -37,7 +37,7 @@ assert.match(generator, /doc\.output\('blob'\)/, 'O PDF deve ser materializado a
 assert.match(generator, /URL\.createObjectURL/, 'O download deve usar uma URL temporária do navegador.');
 assert.match(generator, /URL\.revokeObjectURL/, 'A URL temporária deve ser descartada após o download.');
 assert.match(generator, /link\.download/, 'O fluxo deve iniciar o download do arquivo.');
-assert.match(generator, /nao foram enviados nem armazenados no sistema ou no banco de dados/i, 'O relatório deve declarar a política de não armazenamento.');
+assert.match(generator, /n[aã]o foram enviados nem armazenados no sistema ou no banco de dados/i, 'O relatório deve declarar a política de não armazenamento.');
 assert.doesNotMatch(generator, /supabase|functions\.invoke|\.rpc\(|fetch\(|localStorage|sessionStorage/i, 'O gerador não pode enviar ou persistir o PDF e os dados.');
 
 const button = read('src/components/public/CalculatorPdfReportButton.tsx');
