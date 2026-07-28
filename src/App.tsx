@@ -213,120 +213,11 @@ export default function App() {
     restore();
   }, [route.area]);
 
-  useAutoLogout(() => {
-    handleLogout(true);
-  }, isSessionActive);
-
-  if (isLoadingSession) {
-    return <div className="min-h-screen flex items-center justify-center bg-neutral-50">Carregando sessão...</div>;
-  }
-
-  const handleLoginClient = (
-    clientId: string,
-    isRecovery: boolean = false,
-    hintedPersonType?: ClientPersonType,
-  ) => {
-    const clientPersonType: ClientPersonType = hintedPersonType || 'pf';
-    sessionService.setClientPersonType(clientPersonType);
-    setSession({ clientId, clientPersonType });
-
-    // Migra carrinho em background sem travar o redirecionamento da tela
-    migrateGuestCartToAccount(clientId).then((cartMigrated) => {
-      if (cartMigrated) {
-        window.dispatchEvent(new CustomEvent('gsa-cart-migrated'));
-      }
-    });
-
-    // Atualiza tipo de pessoa em background se houver divergência
-    sessionService.resolveAuthenticatedClientPersonType(clientId).then((resolved) => {
-      if (resolved && resolved !== clientPersonType) {
-        setSession((prev) => ({ ...prev, clientPersonType: resolved }));
-      }
-    });
-
-    const returnTo = readSafeReturnTo(
-      window.location.search,
-      clientPersonType === 'pj'
-        ? ['/empresa', '/marketplace', '/loja', '/loja-assinaturas']
-        : ['/cliente', '/marketplace', '/loja', '/loja-assinaturas'],
-    );
-
-    if (isRecovery) {
-      const profilePath = clientPersonType === 'pj' ? routes.business.profile() : routes.client.perfil();
-      replace(`${profilePath}?modal=alterar-senha&origem=recuperacao`);
-    } else if (returnTo) {
-      replace(returnTo);
-    } else {
-      replace(clientPersonType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
-    }
-  };
-
-  const handleLoginAdmin = (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => {
-    setSession({
-      adminAuth: true,
-      adminType: adminDetails.type,
-      colaboradorId: adminDetails.id,
-      colaboradorNome: adminDetails.nome,
-      colaboradorModulos: adminDetails.modulos,
-    });
-
-    const returnTo = readSafeReturnTo(window.location.search, ['/admin']);
-    replace(returnTo || defaultAdminPath(adminDetails.type, adminDetails.modulos || []));
-  };
-
-  const handleLoginPrestador = (prestadorId: string) => {
-    setSession({ prestadorId });
-    const returnTo = readSafeReturnTo(window.location.search, ['/prestador']);
-    replace(returnTo || routes.provider.dashboard());
-  };
-
-  const handleLoginFornecedor = (fornecedorId: string) => {
-    setSession({ fornecedorId });
-    const returnTo = readSafeReturnTo(window.location.search, ['/fornecedor']);
-    replace(returnTo || routes.supplier.dashboard());
-  };
-
-  const handleLoginAfiliado = (clientId?: string) => {
-    const sessionData = sessionService.getCurrentSession();
-    const id = clientId || sessionData?.atorId || session.clientId || '';
-    sessionService.setClientPersonType('pf');
-    setSession({ clientId: id, clientPersonType: 'pf' });
-    const returnTo = readSafeReturnTo(window.location.search, ['/afiliados']);
-    replace(returnTo || routes.public.affiliateDashboard());
-  };
-
-  const handleLogout = async (isAuto = false) => {
-    if (session.adminAuth) {
-      await logService.logAction({ ator_tipo: session.adminType || 'admin', ator_id: session.colaboradorId, acao: 'LOGOUT', detalhes: isAuto ? 'Logout automático por inatividade (10min)' : 'Logout efetuado com sucesso' });
-    } else if (session.clientId) {
-      await logService.logAction({ ator_tipo: 'cliente', ator_id: session.clientId, acao: 'LOGOUT', detalhes: isAuto ? 'Logout automático por inatividade (10min)' : 'Logout efetuado com sucesso' });
-    } else if (session.prestadorId) {
-      await logService.logAction({ ator_tipo: 'prestador', ator_id: session.prestadorId, acao: 'LOGOUT', detalhes: isAuto ? 'Logout automático por inatividade (10min)' : 'Logout efetuado com sucesso' });
-    } else if (session.fornecedorId) {
-      await logService.logAction({ ator_tipo: 'fornecedor', ator_id: session.fornecedorId, acao: 'LOGOUT', detalhes: isAuto ? 'Logout automático por inatividade (10min)' : 'Logout efetuado com sucesso' });
-    }
-
-    await sessionService.endSession();
-    for (const key of ['adminType', 'colaboradorId', 'colaboradorNome', 'colaboradorModulos']) {
-      localStorage.removeItem(key);
-      sessionStorage.removeItem(key);
-    }
-    const logoutDestination = session.fornecedorId
-      ? routes.login.supplier()
-      : session.prestadorId
-        ? routes.provider.home()
-        : session.adminAuth
-          ? routes.login.restricted()
-          : routes.public.home();
-    setSession({});
-    replace(logoutDestination);
-  };
-
   const activeView = route.area;
   const isAllowed = isRouteAllowed(route.area, session, route.module, route.submodule);
 
   useEffect(() => {
-    if (!isAllowed) {
+    if (!isLoadingSession && !isAllowed) {
       if (route.area === 'admin' && session.adminAuth) {
         replace(defaultAdminPath(session.adminType, session.colaboradorModulos || []));
       } else if (route.area === 'business' && session.clientId && session.clientPersonType === 'pf') {
@@ -349,7 +240,11 @@ export default function App() {
         replace(`${loginPath}?returnTo=${returnTo}`);
       }
     }
-  }, [isAllowed, route.area, route.module, route.submodule, session]);
+  }, [isLoadingSession, isAllowed, route.area, route.module, route.submodule, session]);
+
+  if (isLoadingSession) {
+    return <div className="min-h-screen flex items-center justify-center bg-neutral-50">Carregando sessão...</div>;
+  }
 
   if (!isAllowed) {
     return null;
