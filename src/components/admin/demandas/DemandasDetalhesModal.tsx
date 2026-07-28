@@ -14,6 +14,8 @@ import { demandService } from '../../../lib/demandService';
 import { callAdminRpc } from '../../../lib/adminRpc';
 import { DemandasComentarios } from './DemandasComentarios';
 import { useFileViewer } from '../../../contexts/FileViewerContext';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
+import { useConfirm } from '../../../hooks/useConfirm';
 
 interface Props {
   demanda: any;
@@ -68,6 +70,7 @@ export function DemandasDetalhesModal({
   onRefreshHistorico
 }: Props) {
   const { openFile } = useFileViewer();
+  const confirmHook = useConfirm();
   type AbaType = 'detalhes' | 'transferir' | 'entregar' | 'ajuste' | 'comentarios' | 'negociacao' | 'suporte_cliente';
   const [aba, setAba] = useState<AbaType>((initialTab as AbaType) || 'detalhes');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -164,8 +167,17 @@ export function DemandasDetalhesModal({
   };
 
   const handleRecusarDemanda = async () => {
-    const motivo = prompt('Informe o motivo da recusa:');
-    if (!motivo) return;
+    const reason = await confirmHook.confirm({
+      title: 'Recusar demanda interna',
+      message: 'A demanda voltará ao pool central. Informe o motivo da recusa para manter a rastreabilidade.',
+      confirmLabel: 'Recusar demanda',
+      variant: 'danger',
+      promptLabel: 'Motivo da recusa',
+      promptPlaceholder: 'Descreva o motivo da recusa...',
+      promptRequired: true,
+    });
+    if (!reason || typeof reason !== 'string') return;
+    const motivo = reason.trim();
     setIsSubmitting(true);
     try {
       await supabase.from('prestador_demandas').update({ status_aceite: 'recusado', motivo_recusa: motivo, colaborador_id: null, status: 'aberta' }).eq('id', demanda.id).throwOnError();
@@ -356,8 +368,17 @@ export function DemandasDetalhesModal({
 
   // Admin recusa a contraproposta e cancela a demanda com o prestador (volta para pool)
   const handleRecusarContrapropostaAdmin = async () => {
-    const motivo = prompt('Motivo para recusar a contraproposta do prestador:');
-    if (!motivo) return;
+    const reason = await confirmHook.confirm({
+      title: 'Recusar contraproposta do prestador',
+      message: 'A demanda será devolvida ao pool central. Informe o motivo que será registrado no histórico.',
+      confirmLabel: 'Recusar contraproposta',
+      variant: 'danger',
+      promptLabel: 'Motivo da recusa',
+      promptPlaceholder: 'Explique por que a contraproposta foi recusada...',
+      promptRequired: true,
+    });
+    if (!reason || typeof reason !== 'string') return;
+    const motivo = reason.trim();
     setIsSubmitting(true);
     try {
       await supabase.from('prestador_demandas').update({
@@ -400,10 +421,17 @@ export function DemandasDetalhesModal({
   };
 
   const handleCancelDemanda = async () => {
-    const motivo = prompt('Por que deseja cancelar esta demanda?');
-    if (!motivo) return;
-
-    if (!confirm('TEM CERTEZA? O cancelamento é irreversível e cancelará a OS e Orçamento vinculados.')) return;
+    const reason = await confirmHook.confirm({
+      title: 'Cancelar demanda definitivamente',
+      message: 'Esta ação é irreversível e também cancelará a ordem de serviço e o orçamento vinculados. Informe o motivo para confirmar.',
+      confirmLabel: 'Cancelar definitivamente',
+      variant: 'danger',
+      promptLabel: 'Motivo do cancelamento',
+      promptPlaceholder: 'Descreva o motivo do cancelamento...',
+      promptRequired: true,
+    });
+    if (!reason || typeof reason !== 'string') return;
+    const motivo = reason.trim();
 
     setIsSubmitting(true);
     try {
@@ -735,6 +763,7 @@ export function DemandasDetalhesModal({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end md:items-center justify-center">
+      <ConfirmDialog {...confirmHook} />
       <div className="absolute inset-0 bg-neutral-900/80 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-4xl bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
 

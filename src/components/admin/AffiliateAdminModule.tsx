@@ -19,6 +19,8 @@ import {
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { useConfirm } from '../../hooks/useConfirm';
 
 type AffiliateAdminTab = 'programas' | 'afiliados' | 'saques';
 
@@ -116,6 +118,7 @@ function normalizeSnapshot(payload: AffiliateAdminSnapshot | null) {
 }
 
 export function AffiliateAdminModule() {
+  const confirmHook = useConfirm();
   const [tab, setTab] = useState<AffiliateAdminTab>('programas');
   const [snapshot, setSnapshot] = useState(() => ({ summary: EMPTY_SUMMARY, programs: [] as AffiliateProgram[], affiliates: [] as AffiliateRecord[], payouts: [] as AffiliatePayout[] }));
   const [loading, setLoading] = useState(true);
@@ -154,7 +157,13 @@ export function AffiliateAdminModule() {
   const setAffiliateStatus = async (affiliate: AffiliateRecord, status: 'ativo' | 'suspenso' | 'encerrado') => {
     if (affiliate.status === status) return;
     const label = status === 'ativo' ? 'reativar' : status === 'suspenso' ? 'suspender' : 'encerrar';
-    if (!window.confirm(`Deseja ${label} o afiliado ${affiliate.nome_divulgacao}?`)) return;
+    const confirmed = await confirmHook.confirm({
+      title: `${label.charAt(0).toUpperCase()}${label.slice(1)} afiliado`,
+      message: `Deseja ${label} o afiliado ${affiliate.nome_divulgacao}?`,
+      confirmLabel: `${label.charAt(0).toUpperCase()}${label.slice(1)}`,
+      variant: status === 'ativo' ? 'info' : 'warning',
+    });
+    if (!confirmed) return;
     setWorkingId(affiliate.id);
     try {
       await callAdminRpc('gsa_admin_set_affiliate_status', {
@@ -173,9 +182,29 @@ export function AffiliateAdminModule() {
 
   const decidePayout = async (payout: AffiliatePayout, action: 'approve' | 'reject' | 'mark_paid') => {
     const label = action === 'approve' ? 'aprovar' : action === 'reject' ? 'rejeitar' : 'confirmar o pagamento de';
-    if (!window.confirm(`Deseja ${label} ${formatCurrency(number(payout.valor))}?`)) return;
-    const notes = action === 'reject' ? window.prompt('Informe o motivo da rejeição:')?.trim() : `Ação ${action} realizada no painel administrativo.`;
-    if (action === 'reject' && !notes) return;
+    let notes = `Ação ${action} realizada no painel administrativo.`;
+
+    if (action === 'reject') {
+      const reason = await confirmHook.confirm({
+        title: 'Rejeitar solicitação de saque',
+        message: `Informe o motivo para rejeitar o saque de ${formatCurrency(number(payout.valor))}.`,
+        confirmLabel: 'Rejeitar saque',
+        variant: 'danger',
+        promptLabel: 'Motivo da rejeição',
+        promptPlaceholder: 'Descreva de forma objetiva o motivo da rejeição...',
+        promptRequired: true,
+      });
+      if (!reason || typeof reason !== 'string') return;
+      notes = reason.trim();
+    } else {
+      const confirmed = await confirmHook.confirm({
+        title: action === 'approve' ? 'Aprovar solicitação de saque' : 'Confirmar pagamento do saque',
+        message: `Deseja ${label} ${formatCurrency(number(payout.valor))}?`,
+        confirmLabel: action === 'approve' ? 'Aprovar saque' : 'Confirmar pagamento',
+        variant: 'info',
+      });
+      if (!confirmed) return;
+    }
 
     setWorkingId(payout.id);
     try {
@@ -207,6 +236,7 @@ export function AffiliateAdminModule() {
 
   return (
     <section className="space-y-5" aria-labelledby="affiliate-admin-title">
+      <ConfirmDialog {...confirmHook} />
       <div className="rounded-[2rem] bg-gradient-to-br from-neutral-950 via-neutral-900 to-indigo-950 p-6 text-white shadow-xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div><p className="text-[10px] font-black uppercase tracking-[0.28em] text-indigo-300">Gestão central</p><h1 id="affiliate-admin-title" className="mt-2 text-2xl font-black">Programa de Afiliados GSA</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">Regras, afiliados e pagamentos conectados ao mesmo backend do portal do afiliado.</p></div>

@@ -1,0 +1,30 @@
+src/components/admin/AssinaturasModule.tsx:10:import { canDeleteRecord } from '../../lib/deleteRequest';
+src/components/admin/AssinaturasModule.tsx:569:const canProceed = await canDeleteRecord('assinaturas', selectedAssinatura.id);
+src/components/admin/ClientesModule.tsx:6:import { canDeleteRecord } from '../../lib/deleteRequest';
+src/components/admin/ClientesModule.tsx:344:const canProceed = await canDeleteRecord('clientes', clienteToDelete.id);
+src/components/admin/CobrancaModule.tsx:19:import { canDeleteRecord } from '../../lib/deleteRequest';
+src/components/admin/CobrancaModule.tsx:570:const canProceed = await canDeleteRecord('cobrancas', c.id);
+src/components/admin/OrdensServicoModule.tsx:16:import { canDeleteRecord } from '../../lib/deleteRequest';
+src/components/admin/OrdensServicoModule.tsx:419:const canProceed = await canDeleteRecord('os_notas', id);
+src/components/admin/ProdutosModule.tsx:8:import { canDeleteRecord } from '../../lib/deleteRequest';
+src/components/admin/ProdutosModule.tsx:1409:const canProceed = await canDeleteRecord('produtos', selectedProduto.id);
+src/components/admin/PromocoesModule.tsx:12:import { canDeleteRecord } from '../../lib/deleteRequest';
+src/components/admin/PromocoesModule.tsx:213:const canProceed = await canDeleteRecord('promocoes', id);
+src/components/admin/ServicosModule.tsx:8:import { canDeleteRecord } from '../../lib/deleteRequest';
+src/components/admin/ServicosModule.tsx:489:const canProceed = await canDeleteRecord('servicos', selectedServico.id);
+src/components/admin/VouchersModule.tsx:11:import { canDeleteRecord } from '../../lib/deleteRequest';
+src/components/admin/VouchersModule.tsx:275:const canProceed = await canDeleteRecord('vouchers', id);
+src/components/admin/clientes/AdminClienteDocumentos.tsx:9:import { canDeleteRecord } from '../../../lib/deleteRequest';
+src/components/admin/clientes/AdminClienteDocumentos.tsx:211:const canProceed = await canDeleteRecord('cliente_documentos', id);
+src/components/admin/prestadores/AdminPrestadorDocumentos.tsx:7:import { canDeleteRecord } from '../../../lib/deleteRequest';
+src/components/admin/prestadores/AdminPrestadorDocumentos.tsx:191:const canProceed = await canDeleteRecord('prestador_documentos', id);
+src/components/admin/prestadores/AdminPrestadorPremios.tsx:6:import { canDeleteRecord } from '../../../lib/deleteRequest';
+src/components/admin/prestadores/AdminPrestadorPremios.tsx:93:const canProceed = await canDeleteRecord('prestador_premios', id);
+src/components/admin/prestadores/AdminPrestadorPromocoes.tsx:6:import { canDeleteRecord } from '../../../lib/deleteRequest';
+src/components/admin/prestadores/AdminPrestadorPromocoes.tsx:146:const canProceed = await canDeleteRecord('prestador_promocoes', id);
+src/components/admin/prestadores/AdminPrestadorVouchers.tsx:7:import { canDeleteRecord } from '../../../lib/deleteRequest';
+src/components/admin/prestadores/AdminPrestadorVouchers.tsx:95:const canProceed = await canDeleteRecord('prestador_vouchers', id);
+src/components/admin/prestadores/PrestadoresCadastro.tsx:12:import { canDeleteRecord } from '../../../lib/deleteRequest';
+src/components/admin/prestadores/PrestadoresCadastro.tsx:209:// O utilitário canDeleteRecord verificará o papel e criará uma solicitação de exclusão se necessário.
+src/components/admin/prestadores/PrestadoresCadastro.tsx:210:const canProceed = await canDeleteRecord('prestadores', prestadorToDelete.id);
+src/lib/deleteRequest.ts:10:export async function canDeleteRecord(tabela: string, registro_id: string): Promise<boolean> {
