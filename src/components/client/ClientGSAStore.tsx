@@ -21,6 +21,8 @@ import { useAppLocation } from '../../routing/useAppLocation';
 import { navigate, updateRouteQuery } from '../../routing/navigationService';
 import { routes } from '../../routing/routeCatalog';
 
+const roundMoney = (value: number): number => Math.round(value * 100) / 100;
+
 const QuantityModal = React.lazy(() => import('./store/QuantityModal'));
 const StoreItemCard = React.lazy(() => import('./store/StoreItemCard'));
 const CartDrawer = React.lazy(() => import('./store/CartDrawer'));
@@ -852,7 +854,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       }
 
       const temProdutosNoCarrinho = cartItems.some((c: CartItem) => c.tipo === 'produto');
-      const subtotalCarrinho = cartItems.reduce((acc: number, cur: CartItem) => acc + (cur.item_detalhes?.valor || 0) * cur.quantidade, 0);
+      const subtotalCarrinho = roundMoney(cartItems.reduce((acc: number, cur: CartItem) => acc + roundMoney((cur.item_detalhes?.valor || 0) * cur.quantidade), 0));
 
       if (tipo === 'entrega') {
         if (!temProdutosNoCarrinho) return toast.error('Voce nao tem produtos fisicos no carrinho para usar cupom de entrega.');

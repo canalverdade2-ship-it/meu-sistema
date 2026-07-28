@@ -16,6 +16,9 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  const PAGE_SIZE = 50;
+  const [currentPage, setCurrentPage] = useState(0);
+  
   // Data for selects
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -43,7 +46,7 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeTab, search]);
+  }, [activeTab, search, currentPage]);
 
   const fetchCupons = async () => {
     let query = supabase.from('cupons_loja').select('*, clientes(nome), produtos(nome)');
@@ -58,7 +61,9 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
       query = query.ilike('nome_cupom', `%${search}%`);
     }
 
-    const { data } = await query.order('created_at', { ascending: false });
+    const { data } = await query
+      .order('created_at', { ascending: false })
+      .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
     if (data) setCupons(data);
   };
 
@@ -248,6 +253,14 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
           <p className="text-neutral-500 mt-2 max-w-sm">
             Nenhum cupom com os filtros atuais.
           </p>
+        </div>
+      )}
+
+      {cupons.length > 0 && (
+        <div className="flex gap-2 mt-4 justify-center items-center">
+          <button onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0} className="px-4 py-2 text-sm font-bold text-neutral-600 bg-white border border-neutral-200 rounded-xl hover:bg-neutral-50 disabled:opacity-50">Anterior</button>
+          <span className="text-sm font-bold text-neutral-600">Página {currentPage + 1}</span>
+          <button onClick={() => setCurrentPage(p => p + 1)} disabled={cupons.length < PAGE_SIZE} className="px-4 py-2 text-sm font-bold text-neutral-600 bg-white border border-neutral-200 rounded-xl hover:bg-neutral-50 disabled:opacity-50">Próximo</button>
         </div>
       )}
 

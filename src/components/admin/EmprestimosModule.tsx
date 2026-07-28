@@ -16,6 +16,8 @@ import { sessionService } from '../../lib/sessionService';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 
+const roundMoney = (value: number): number => Math.round(value * 100) / 100;
+
 const getAdminSessionForRpc = () => {
   const session = sessionService.getCurrentSession();
   if (!session?.sessaoId || !session?.sessionToken) {
@@ -95,7 +97,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
         calcularPerfilRisco(emp.cliente_id),
         supabase.from('emprestimo_historico').select('*').eq('emprestimo_id', emp.id).order('created_at', { ascending: false }),
         supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', emp.id).order('created_at'),
-        supabase.from('emprestimo_parcelas').select('*').eq('emprestimo_id', emp.id).order('numero_parcela'),
+        supabase.from('emprestimo_parcelas').select('id, valor, status, data_vencimento, numero_parcela, data_pagamento').eq('emprestimo_id', emp.id).order('numero_parcela'),
         supabase.from('emprestimo_documentos').select('*').eq('emprestimo_id', emp.id)
       ]);
       setSelected({ ...emp, perfil_risco: perf } as any);
@@ -128,9 +130,9 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
     const d = ativos.data || [];
     const p = parcelas.data || [];
     const vencidas = p.filter(x => x.status === 'vencida').length;
-    const receita = (taxa.data || []).reduce((s: number, x: any) => s + (x.taxa_servico || 0), 0);
+    const receita = roundMoney((taxa.data || []).reduce((s: number, x: any) => s + (x.taxa_servico || 0), 0));
     setStats({
-      total: d.filter((x: any) => ['aprovado','ativo','analise_quitacao','aguardando_pagamento_quitacao'].includes(x.status)).reduce((s: number, x: any) => s + (x.valor_aprovado || 0), 0),
+      total: roundMoney(d.filter((x: any) => ['aprovado','ativo','analise_quitacao','aguardando_pagamento_quitacao'].includes(x.status)).reduce((s: number, x: any) => s + (x.valor_aprovado || 0), 0)),
       ativos: d.filter((x: any) => ['aprovado','ativo','analise_quitacao','aguardando_pagamento_quitacao'].includes(x.status)).length,
       quitados: d.filter((x: any) => x.status === 'quitado').length,
       pendentes: d.filter((x: any) => x.status === 'analise_inicial').length,
@@ -151,7 +153,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
         calcularPerfilRisco(emp.cliente_id),
         supabase.from('emprestimo_historico').select('*').eq('emprestimo_id', emp.id).order('created_at', { ascending: false }),
         supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', emp.id).order('created_at'),
-        supabase.from('emprestimo_parcelas').select('*').eq('emprestimo_id', emp.id).order('numero_parcela'),
+        supabase.from('emprestimo_parcelas').select('id, valor, status, data_vencimento, numero_parcela, data_pagamento').eq('emprestimo_id', emp.id).order('numero_parcela'),
         supabase.from('emprestimo_documentos').select('*').eq('emprestimo_id', emp.id)
       ]);
       
@@ -1020,7 +1022,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
                         <p className="text-sm font-bold text-neutral-300">O cliente deseja quitar o empréstimo. Avalie e informe o valor final com desconto (se houver).</p>
                         <div className="mt-4">
                           <p className="text-[9px] font-black text-neutral-500 uppercase tracking-widest mb-1">Valor Restante (Original)</p>
-                          <p className="text-xl font-black text-white">{formatCurrency(parcelas.filter(p => p.status !== 'paga').reduce((sum, p) => sum + p.valor, 0))}</p>
+                          <p className="text-xl font-black text-white">{formatCurrency(roundMoney(parcelas.filter(p => p.status !== 'paga').reduce((sum, p) => sum + (p.valor || 0), 0)))}</p>
                         </div>
                       </div>
                       <div className="space-y-2">
