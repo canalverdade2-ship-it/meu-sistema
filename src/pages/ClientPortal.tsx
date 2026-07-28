@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { 
   User, 
@@ -33,12 +33,10 @@ import {
   Minimize,
   Landmark,
   Store,
-  Tags,
-  Building2
+  Tags
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Cliente, Module, Notificacao } from '../types';
 import { formatCurrency, playPremiumBeep } from '../lib/utils';
 
@@ -50,40 +48,36 @@ import { routes } from '../routing/routeCatalog';
 // Modules
 import { VIPLevel } from '../constants';
 import { useVipLevels } from '../hooks/useVipLevels';
-const ClientDashboard = lazy(() => import('../components/client/ClientDashboard').then(m => ({ default: m.ClientDashboard })));
-const ClientProfile = lazy(() => import('../components/client/ClientProfile').then(m => ({ default: m.ClientProfile })));
-const ClientOrcamentos = lazy(() => import('../components/client/ClientOrcamentos').then(m => ({ default: m.ClientOrcamentos })));
-const ClientServicos = lazy(() => import('../components/client/ClientServicos').then(m => ({ default: m.ClientServicos })));
-const ClientFinanceiro = lazy(() => import('../components/client/ClientFinanceiro').then(m => ({ default: m.ClientFinanceiro })));
-const ClientFidelidade = lazy(() => import('../components/client/ClientFidelidade').then(m => ({ default: m.ClientFidelidade })));
-const ClientServicosAssinaturas = lazy(() => import('../components/client/ClientServicosAssinaturas').then(m => ({ default: m.ClientServicosAssinaturas })));
-const ClientVouchers = lazy(() => import('../components/client/ClientVouchers').then(m => ({ default: m.ClientVouchers })));
-const ClientSuporte = lazy(() => import('../components/client/ClientSuporte').then(m => ({ default: m.ClientSuporte })));
-const ClientAreaVIP = lazy(() => import('../components/client/ClientAreaVIP').then(m => ({ default: m.ClientAreaVIP })));
-const ClientIndiqueGanhe = lazy(() => import('../components/client/ClientIndiqueGanhe').then(m => ({ default: m.ClientIndiqueGanhe })));
-const ClientPontos = lazy(() => import('../components/client/ClientPontos').then(m => ({ default: m.ClientPontos })));
-const ClientProdutos = lazy(() => import('../components/client/ClientProdutos').then(m => ({ default: m.ClientProdutos })));
-const ClientTransferencias = lazy(() => import('../components/client/ClientTransferencias').then(m => ({ default: m.ClientTransferencias })));
-const ClientAssinaturas = lazy(() => import('../components/client/ClientAssinaturas').then(m => ({ default: m.ClientAssinaturas })));
-const ClientPromocoes = lazy(() => import('../components/client/ClientPromocoes').then(m => ({ default: m.ClientPromocoes })));
-const ClientPremios = lazy(() => import('../components/client/ClientPremios'));
-const ClientGSAStore = lazy(() => import('../components/client/ClientGSAStore').then(m => ({ default: m.ClientGSAStore })));
+import { ClientDashboard } from '../components/client/ClientDashboard';
+import { ClientProfile } from '../components/client/ClientProfile';
+import { ClientOrcamentos } from '../components/client/ClientOrcamentos';
+import { ClientServicos } from '../components/client/ClientServicos';
+import { ClientFinanceiro } from '../components/client/ClientFinanceiro';
+import { ClientFidelidade } from '../components/client/ClientFidelidade';
+import { ClientServicosAssinaturas } from '../components/client/ClientServicosAssinaturas';
+import { ClientVouchers } from '../components/client/ClientVouchers';
+import { ClientSuporte } from '../components/client/ClientSuporte';
+import { ClientAreaVIP } from '../components/client/ClientAreaVIP';
+import { ClientIndiqueGanhe } from '../components/client/ClientIndiqueGanhe';
+import { ClientPontos } from '../components/client/ClientPontos';
+import { ClientProdutos } from '../components/client/ClientProdutos';
+import { ClientTransferencias } from '../components/client/ClientTransferencias';
+import { ClientAssinaturas } from '../components/client/ClientAssinaturas';
+import { ClientPromocoes } from '../components/client/ClientPromocoes';
+import ClientPremios from '../components/client/ClientPremios';
+import { ClientGSAStore } from '../components/client/ClientGSAStore';
 import { UniversalNotificationBell } from '../components/ui/UniversalNotificationBell';
 import { processGamificationPointsManual } from '../utils/gamification';
 import { useClientNotifications } from '../hooks/useClientNotifications';
 import { createNotification, createWelcomeSequence } from '../lib/notifications';
-const ClientEmprestimos = lazy(() => import('../components/client/ClientEmprestimos').then(m => ({ default: m.ClientEmprestimos })));
+import { ClientEmprestimos } from '../components/client/ClientEmprestimos';
 import { logService } from '../lib/logService';
-const MarketplaceGSAStore = lazy(() => import('../components/client/marketplace/MarketplaceGSAStore').then(m => ({ default: m.MarketplaceGSAStore })));
-const ClientMeuCredito = lazy(() => import('../components/client/ClientMeuCredito').then(m => ({ default: m.ClientMeuCredito })));
-import { callClientRpc } from '../lib/clientRpc';
-const BusinessDashboard = lazy(() => import('../components/business/BusinessDashboard').then(m => ({ default: m.BusinessDashboard })));
-import { LogoGSA } from '../components/ui/LogoGSA';
+import { MarketplaceGSAStore } from '../components/client/marketplace/MarketplaceGSAStore';
+import { ClientMeuCredito } from '../components/client/ClientMeuCredito';
 
 interface ClientPortalProps {
   clientId: string;
   onLogout: () => void;
-  portalVariant?: 'personal' | 'business';
   initialModule?: string;
   initialStoreTab?: string;
   initialStoreItemId?: string;
@@ -122,7 +116,6 @@ const CLIENT_ROUTE_MODULES: Record<string, Module> = {
   promocoes: 'fidelidade',
   premios: 'fidelidade',
   'indique-ganhe': 'fidelidade',
-  afiliados: 'fidelidade',
   'area-vip': 'fidelidade',
   transferencias: 'financeiro',
   emprestimos: 'financeiro',
@@ -170,7 +163,6 @@ const FIDELIDADE_ROUTE_TABS: Record<string, string> = {
   promocoes: 'promocoes',
   premios: 'premios',
   'indique-ganhe': 'indique-ganhe',
-  afiliados: 'afiliados',
   'area-vip': 'area-vip',
   area_vip: 'area-vip'
 };
@@ -284,18 +276,9 @@ function buildClientRoute(module: Module, tab?: string, itemId?: string) {
   return query ? `${path}?${query}` : path;
 }
 
-export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', initialModule, initialStoreTab, initialStoreItemId }: ClientPortalProps) {
-  const isValidUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-  if (clientId && !isValidUUID(clientId)) {
-    console.error('ID de cliente inválido na URL');
-    return null;
-  }
-
+export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTab, initialStoreItemId }: ClientPortalProps) {
   const route = useAppLocation();
   const { levels } = useVipLevels();
-  const isBusiness = portalVariant === 'business';
-  const sidebarCollapsedKey = isBusiness ? 'business_sidebar_collapsed' : 'client_sidebar_collapsed';
-  const sidebarPinnedKey = isBusiness ? 'business_sidebar_pinned' : 'client_sidebar_pinned';
   
   // O estado do módulo e abas é diretamente derivado da URL reativa
   const activeModule = (route.area === 'marketplace' 
@@ -317,11 +300,11 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   const [vipModuleConfig, setVipModuleConfig] = useState({ ativo: true, oculto: false });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem(sidebarCollapsedKey);
+    const saved = localStorage.getItem('client_sidebar_collapsed');
     return saved ? JSON.parse(saved) : false;
   });
   const [isSidebarPinned, setIsSidebarPinned] = useState(() => {
-    const saved = localStorage.getItem(sidebarPinnedKey);
+    const saved = localStorage.getItem('client_sidebar_pinned');
     return saved ? JSON.parse(saved) : true;
   });
   const [isSidebarHovered, setIsSidebarHovered] = useState(false);
@@ -353,76 +336,9 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   const nameRef = useRef<HTMLParagraphElement>(null);
 
   const navigateClientModule = (module: Module, tab?: string, itemId?: string, replaceFlag = false) => {
-    const isUnderAnalysis = (
-      ['em_analise', 'pendente'].includes(String(cliente?.status || '').toLowerCase())
-      || cliente?.cadastro_aprovado === false
-    );
-
-    if (isUnderAnalysis && module !== 'dashboard' && module !== 'perfil' && module !== 'suporte' && (module as string) !== 'gsa_store') {
-      toast.error('Módulo bloqueado: Seu cadastro está em análise pelo sistema. Acompanhe a liberação no módulo Meu Cadastro.', {
-        icon: '🔒',
-        duration: 5000,
-      });
-      return;
-    }
-
     let path = routes.client.dashboard();
 
-    if (isBusiness) {
-      if (module === 'dashboard') {
-        path = routes.business.dashboard();
-      } else if (module === 'perfil') {
-        path = routes.business.profile();
-      } else if (module === 'servicos_assinaturas' || module === 'orcamentos' || module === 'servicos' || module === 'produtos' || module === 'assinaturas') {
-        const operationTab = tab || (
-          module === 'orcamentos' || module === 'servicos' || module === 'produtos' || module === 'assinaturas'
-            ? module
-            : undefined
-        );
-        if (operationTab === 'orcamentos') path = itemId ? routes.business.operations.budget(itemId) : routes.business.operations.budgets();
-        else if (operationTab === 'servicos') path = itemId ? routes.business.operations.service(itemId) : routes.business.operations.services();
-        else if (operationTab === 'produtos') path = itemId ? routes.business.operations.product(itemId) : routes.business.operations.products();
-        else if (operationTab === 'assinaturas') path = itemId ? routes.business.operations.subscription(itemId) : routes.business.operations.subscriptions();
-        else path = routes.business.operations.root();
-      } else if (module === 'financeiro' || module === 'transferencias' || module === 'emprestimos' || module === 'credito_loja') {
-        const financeTab = tab || (
-          module === 'transferencias' ? 'transferencias'
-            : module === 'emprestimos' ? 'emprestimos'
-              : module === 'credito_loja' ? 'credito'
-                : undefined
-        );
-        if (financeTab === 'faturas') path = itemId ? routes.business.finance.invoice(itemId) : routes.business.finance.invoices();
-        else if (financeTab === 'nf' || financeTab === 'notas-fiscais') path = itemId ? routes.business.finance.taxDocument(itemId) : routes.business.finance.taxDocuments();
-        else if (financeTab === 'extrato') path = itemId ? routes.business.finance.transaction(itemId) : routes.business.finance.statement();
-        else if (financeTab === 'saques') path = itemId ? routes.business.finance.withdrawal(itemId) : routes.business.finance.withdrawals();
-        else if (financeTab === 'transferencias') path = itemId ? routes.business.finance.transfer(itemId) : routes.business.finance.transfers();
-        else if (financeTab === 'credito' || financeTab === 'credito_loja') path = itemId ? routes.business.finance.creditRequest(itemId) : routes.business.finance.credit();
-        else if (financeTab === 'emprestimos') path = itemId ? routes.business.finance.loan(itemId) : routes.business.finance.loans();
-        else path = routes.business.finance.root();
-      } else if (module === 'fidelidade' || module === 'vouchers' || module === 'pontos' || module === 'promocoes' || module === 'premios' || module === 'indique-ganhe' || module === 'area_vip') {
-        const benefitsTab = tab || (
-          module === 'indique-ganhe' ? 'indique-ganhe'
-            : module === 'area_vip' ? 'area-vip'
-              : module !== 'fidelidade' ? String(module)
-                : undefined
-        );
-        if (benefitsTab === 'pontos') path = routes.business.benefits.points();
-        else if (benefitsTab === 'vouchers') path = itemId ? routes.business.benefits.voucher(itemId) : routes.business.benefits.vouchers();
-        else if (benefitsTab === 'promocoes') path = itemId ? routes.business.benefits.promotion(itemId) : routes.business.benefits.promotions();
-        else if (benefitsTab === 'premios') path = itemId ? routes.business.benefits.reward(itemId) : routes.business.benefits.rewards();
-        else if (benefitsTab === 'indique-ganhe') path = routes.business.benefits.referrals();
-        else if (benefitsTab === 'area-vip') path = routes.business.benefits.vip();
-        else path = routes.business.benefits.root();
-      } else if (module === 'suporte') {
-        path = itemId ? routes.business.ticket(itemId) : routes.business.support();
-      } else if ((module as string) === 'gsa_store' || (module as string) === 'classificados') {
-        const marketplaceTab = tab && tab !== 'home' ? `/${encodeURIComponent(tab)}` : '';
-        const marketplaceItem = itemId ? `/${encodeURIComponent(itemId)}` : '';
-        path = `${routes.business.marketplace()}${marketplaceTab}${marketplaceItem}`;
-      } else {
-        path = routes.business.dashboard();
-      }
-    } else if (module === 'dashboard') {
+    if (module === 'dashboard') {
       path = routes.client.dashboard();
     } else if (module === 'perfil') {
       path = routes.client.perfil();
@@ -433,23 +349,9 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       else if (tab === 'assinaturas') path = routes.client.services.assinaturas();
       else path = routes.client.services.root();
     } else if (module === 'financeiro') {
-      if (tab === 'faturas') path = itemId ? routes.client.finance.invoice(itemId) : routes.client.finance.faturas();
-      else if (tab === 'nf' || tab === 'notas-fiscais') path = itemId ? routes.client.finance.nota(itemId) : routes.client.finance.notas();
-      else if (tab === 'extrato') path = itemId ? routes.client.finance.movimentacao(itemId) : routes.client.finance.extrato();
-      else if (tab === 'saques') path = itemId ? routes.client.finance.saque(itemId) : routes.client.finance.saques();
-      else if (tab === 'transferencias') path = itemId ? routes.client.finance.transferencia(itemId) : routes.client.finance.transferencias();
-      else if (tab === 'credito' || tab === 'credito_loja') path = itemId ? routes.client.finance.solicitacaoCredito(itemId) : routes.client.finance.credito();
-      else if (tab === 'emprestimos') path = itemId ? routes.client.finance.emprestimo(itemId) : routes.client.finance.emprestimos();
-      else path = routes.client.finance.root();
+      path = routes.client.finance.root();
     } else if (module === 'fidelidade') {
-      if (tab === 'pontos') path = routes.client.loyalty.pontos();
-      else if (tab === 'vouchers') path = itemId ? routes.client.loyalty.voucher(itemId) : routes.client.loyalty.vouchers();
-      else if (tab === 'promocoes') path = itemId ? routes.client.loyalty.promocao(itemId) : routes.client.loyalty.promocoes();
-      else if (tab === 'premios') path = itemId ? routes.client.loyalty.premio(itemId) : routes.client.loyalty.premios();
-      else if (tab === 'indique-ganhe' || tab === 'indique_ganhe') path = itemId ? routes.client.loyalty.indicacao(itemId) : routes.client.loyalty.indiqueGanhe();
-      else if (tab === 'afiliados') path = routes.client.loyalty.affiliates();
-      else if (tab === 'area-vip' || tab === 'area_vip') path = routes.client.loyalty.vip();
-      else path = routes.client.loyalty.root();
+      path = routes.client.loyalty.root();
     } else if (module === 'suporte') {
       path = routes.client.support();
     } else if ((module as string) === 'gsa_store') {
@@ -457,26 +359,25 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         path = routes.marketplace.travelPackages.root();
       } else if (tab === 'classificados') {
         path = routes.marketplace.classifieds.root();
-      } else if (tab === 'loja' || tab === 'shop' || (tab && tab.startsWith('loja-'))) {
+      } else if (tab === 'loja' || (tab && tab.startsWith('loja-'))) {
         const sub = tab.replace('loja-', '');
         if (sub === 'produtos') path = routes.marketplace.store.product(itemId || '');
         else if (sub === 'assinaturas') path = routes.marketplace.store.subscription(itemId || '');
-        else path = routes.marketplace.store.products();
+        else path = routes.marketplace.store.root();
       } else {
-        path = routes.marketplace.store.products();
+        path = routes.marketplace.menu();
       }
     } else if ((module as string) === 'classificados') {
       path = routes.marketplace.classifieds.meusAnuncios();
     }
 
-    if (replaceFlag) replace(path);
-    else navigate(path);
+    navigate(path);
     setModuleKey(prev => prev + 1);
 
     // Auto collapse sidebar if not pinned on desktop
     if (!isSidebarPinned && window.innerWidth >= 1024) {
       setIsSidebarCollapsed(true);
-      localStorage.setItem(sidebarCollapsedKey, JSON.stringify(true));
+      localStorage.setItem('client_sidebar_collapsed', JSON.stringify(true));
     }
   };
 
@@ -574,14 +475,9 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   const ClientFinanceiroAny = ClientFinanceiro as any;
 
   useEffect(() => {
-    if (!clientId) return;
-    setCliente(null);
-    const controller = new AbortController();
-    let isMounted = true;
-
-    fetchCliente(controller.signal, () => isMounted);
+    fetchCliente();
     checkReferralStatus();
-    checkWelcomeBonus(controller.signal, () => isMounted);
+    checkWelcomeBonus();
     refreshCounts();
     fetchVipModuleConfig();
     verificarLiberacaoCreditoAgendada();
@@ -604,7 +500,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         fetchClienteRef.current();
         
         if (newData.status === 'ativo' && (clientStatusRef.current === 'inativo' || !clientStatusRef.current)) {
-          if (import.meta.env.DEV) console.log('[Realtime] Cadastro aprovado detectado. Forçando verificação de bônus...');
+          console.log('[Realtime] Cadastro aprovado detectado. Forçando verificação de bônus...');
           toast.success('Seu cadastro foi aprovado! Todos os módulos foram liberados.');
           navigateClientModule('dashboard', undefined, undefined, true);
           
@@ -653,7 +549,8 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
 
     const pendingStoreCheckout = localStorage.getItem('gsa_pending_store_checkout');
     if (pendingStoreCheckout) {
-      navigateClientModule('gsa_store' as Module, 'loja-produtos', undefined, true);
+      localStorage.removeItem('gsa_pending_store_checkout');
+      navigateClientModule('gsa_store' as Module, 'shop', undefined, true);
     }
 
     const handleNavigate = () => { 
@@ -662,8 +559,6 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
     window.addEventListener('navigate-to-financeiro', handleNavigate);
     window.addEventListener('voucher-redeemed', handleNavigate);
     return () => {
-      isMounted = false;
-      controller.abort();
       window.removeEventListener('navigate-to-financeiro', handleNavigate);
       window.removeEventListener('voucher-redeemed', handleNavigate);
       supabase.removeChannel(clientChannel);
@@ -744,20 +639,16 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   }, []);
 
 
-  const fetchCliente = async (signal?: AbortSignal, getIsMounted?: () => boolean) => {
+  const fetchCliente = async () => {
     try {
       // First try fetching client
-      let query = supabase
+      let { data, error } = await supabase
         .from('clientes')
         .select('*, auto_level:client_levels!nivel_id(*), manual_level:client_levels!nivel_manual_id(*)')
-        .eq('id', clientId);
-      if (signal) query = query.abortSignal(signal as any);
-      let { data, error } = await query.single();
+        .eq('id', clientId)
+        .single();
         
-      if (getIsMounted && !getIsMounted()) return;
-      
       if (error) {
-        if (signal?.aborted) return;
         console.error('Error fetching cliente:', error);
         setFetchError(`Erro ao carregar dados do cliente: ${error.message}`);
         toast.error(`Erro ao carregar dados do cliente: ${error.message}`);
@@ -769,20 +660,18 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         if (data.status === 'inativo' && data.cadastro_aprovado === false) {
           navigateClientModule('dashboard', undefined, undefined, true);
         }
-      } else if (!error) {
+      } else {
         setFetchError('Não foi possível carregar os dados do cliente.');
         toast.error('Não foi possível carregar os dados do cliente.');
       }
     } catch (err: any) {
-      if (err.name === 'AbortError') return;
-      if (getIsMounted && !getIsMounted()) return;
       console.error('Exception in fetchCliente:', err);
       setFetchError(`Erro inesperado: ${err.message}`);
       toast.error(`Erro inesperado: ${err.message}`);
     }
   };
   // Always keep ref in sync with the latest fetchCliente
-  fetchClienteRef.current = () => fetchCliente();
+  fetchClienteRef.current = fetchCliente;
 
   const checkReferralStatus = async () => {
     const { data: client } = await supabase
@@ -812,7 +701,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
     }
   };
 
-  const checkWelcomeBonus = async (signal?: AbortSignal, getIsMounted?: () => boolean) => {
+  const checkWelcomeBonus = async () => {
     if (isCheckingBonus.current) return;
     isCheckingBonus.current = true;
 
@@ -820,17 +709,11 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
 
     try {
       // 1. Check if client has pending bonus and is active
-      let query = supabase
+      const { data: clientData, error: fetchErr } = await supabase
         .from('clientes')
         .select('status, bonus_boas_vindas_pendente, saldo_pontos, saldo_carteira, indicacao_origem_id')
-        .eq('id', clientId);
-      if (signal) query = query.abortSignal(signal as any);
-      const { data: clientData, error: fetchErr } = await query.single();
-
-      if (getIsMounted && !getIsMounted()) {
-        isCheckingBonus.current = false;
-        return;
-      }
+        .eq('id', clientId)
+        .single();
       
       if (fetchErr || !clientData) {
         isCheckingBonus.current = false;
@@ -838,7 +721,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       }
       
       if (clientData.status !== 'ativo') {
-        if (import.meta.env.DEV) console.log('[Bonus] Cliente ainda inativo. Aguardando aprovação.');
+        console.log('[Bonus] Cliente ainda inativo. Aguardando aprovação.');
         isCheckingBonus.current = false;
         return;
       }
@@ -846,23 +729,23 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       // Clientes indicados NÃO recebem o bônus de boas-vindas padrão —
       // eles já recebem o "Bônus de indicação" específico no momento do cadastro.
       if (clientData.indicacao_origem_id) {
-        if (import.meta.env.DEV) console.log('[Bonus] Cliente indicado — bônus de boas-vindas padrão suprimido.');
+        console.log('[Bonus] Cliente indicado — bônus de boas-vindas padrão suprimido.');
         // Garante que a flag fica limpa para não reprocessar
         if (clientData.bonus_boas_vindas_pendente) {
           await supabase.from('clientes').update({
             bonus_boas_vindas_pendente: false
-          }).eq('id', clientId).throwOnError();
+          }).eq('id', clientId);
         }
         isCheckingBonus.current = false;
         return;
       }
       
       if (!clientData.bonus_boas_vindas_pendente) {
-        if (import.meta.env.DEV) console.log('[Bonus] Flag de bônus pendente é false. Nada a processar.');
+        console.log('[Bonus] Flag de bônus pendente é false. Nada a processar.');
         return;
       }
 
-      if (import.meta.env.DEV) console.log('[Bonus] Bônus pendente detectado. Processando...');
+      console.log('[Bonus] Bônus pendente detectado. Processando...');
 
       // 1.1 Verificação de Idempotência: Checar se o bônus já foi lançado no extrato (segurança extra)
       const { data: existingBonusCheck } = await supabase
@@ -873,10 +756,10 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         .maybeSingle();
 
       if (existingBonusCheck) {
-        if (import.meta.env.DEV) console.log('[Bonus] Bônus já existe no extrato. Limpando flag e exibindo.');
+        console.log('[Bonus] Bônus já existe no extrato. Limpando flag e exibindo.');
         await supabase.from('clientes').update({ 
           bonus_boas_vindas_pendente: false
-        }).eq('id', clientId).throwOnError();
+        }).eq('id', clientId);
 
         const { data: settings } = await supabase
           .from('system_settings')
@@ -924,7 +807,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
         return;
       }
 
-      if (import.meta.env.DEV) console.log('[Bonus] Bônus processado com sucesso:', rpcData);
+      console.log('[Bonus] Bônus processado com sucesso:', rpcData);
       
       // 4. Atualizar UI e mostrar modal
       setShowWelcomeBonusModal(true);
@@ -939,10 +822,93 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
 
   const verificarLiberacaoCreditoAgendada = async () => {
     try {
-      const result = await callClientRpc<{ released?: number }>('gsa_client_process_scheduled_credit_release');
-      if (Number(result?.released || 0) > 0) await fetchCliente();
-    } catch (error) {
-      console.error('Erro ao solicitar a liberação segura de crédito:', error);
+      const hojeStr = new Date().toISOString().split('T')[0];
+      const { data: sols, error } = await supabase
+        .from('loja_credito_solicitacoes')
+        .select('*')
+        .eq('cliente_id', clientId)
+        .in('status', ['contrato_assinado', 'pre_aprovado'])
+        .lte('data_liberacao_credito', hojeStr);
+
+      if (error) throw error;
+
+      if (sols && sols.length > 0) {
+        for (const sol of sols) {
+          if (sol.status === 'contrato_assinado') {
+            const limiteAprovado = sol.limite_aprovado || 0;
+            
+            const { data: cliData } = await supabase
+              .from('clientes')
+              .select('limite_credito_total, limite_credito_disponivel')
+              .eq('id', clientId)
+              .single();
+
+            if (cliData) {
+              const limiteTotalAtual = cliData.limite_credito_total || 0;
+              const limiteDispAtual = cliData.limite_credito_disponivel || 0;
+              
+              let novoLimiteTotal = limiteAprovado;
+              let novoLimiteDisp = limiteDispAtual;
+              let variacao = limiteAprovado;
+              let tipoMov: 'concessao_inicial' | 'solicitacao_aumento_aprovada' = 'concessao_inicial';
+
+              if (sol.tipo_solicitacao === 'adesao') {
+                novoLimiteDisp = limiteAprovado;
+              } else {
+                const diff = limiteAprovado - limiteTotalAtual;
+                novoLimiteDisp = limiteDispAtual + diff;
+                variacao = diff;
+                tipoMov = 'solicitacao_aumento_aprovada';
+              }
+
+              // Atualiza o cliente
+              await supabase
+                .from('clientes')
+                .update({
+                  limite_credito_total: novoLimiteTotal,
+                  limite_credito_disponivel: novoLimiteDisp,
+                  opcao_pagamento_parcelado: sol.opcao_pagamento_parcelado
+                })
+                .eq('id', clientId);
+
+              // Insere movimentacao
+              await supabase
+                .from('loja_credito_movimentacoes')
+                .insert({
+                  cliente_id: clientId,
+                  solicitacao_id: sol.id,
+                  tipo: tipoMov,
+                  valor: variacao,
+                  limite_total_anterior: limiteTotalAtual,
+                  limite_total_novo: novoLimiteTotal,
+                  limite_disponivel_anterior: limiteDispAtual,
+                  limite_disponivel_novo: novoLimiteDisp,
+                  descricao: sol.tipo_solicitacao === 'adesao' 
+                    ? 'Ativação automática de limite de crédito pré-aprovado e assinado' 
+                    : `Ajuste automático de limite: alteração para ${limiteAprovado}`
+                });
+
+              // Atualiza a solicitacao
+              await supabase
+                .from('loja_credito_solicitacoes')
+                .update({ status: 'liberado', updated_at: new Date().toISOString() })
+                .eq('id', sol.id);
+
+              // Envia notificacao
+              await supabase.from('notificacoes').insert({
+                cliente_id: clientId,
+                titulo: 'Crédito Ativo! 💳',
+                mensagem: `Seu limite de crédito de R$ ${limiteAprovado.toFixed(2)} foi liberado e já está disponível para uso na loja!`,
+                link_modulo: 'credito_loja',
+                tipo: 'sistema'
+              });
+            }
+          }
+        }
+        fetchCliente();
+      }
+    } catch (err) {
+      console.error('Erro ao processar liberação programada de crédito:', err);
     }
   };
 
@@ -978,60 +944,33 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   
   const isVip = currentLevelName !== 'Básico';
 
-  const isBlocked = (
-    ['bloqueado', 'inativo', 'excluido'].includes(String(cliente?.status || '').toLowerCase())
-    || cliente?.cadastro_aprovado === false
-    || cliente?.bloqueado === true
-  );
-  const restrictedModules = new Set(['dashboard', 'perfil', 'suporte', 'gsa_store']);
+  const isBlocked = ((cliente?.status === 'inativo' && cliente?.cadastro_aprovado === false) || cliente?.bloqueado === true) && !isVip;
 
-  useEffect(() => {
-    if (cliente && isBlocked && !restrictedModules.has(String(activeModule))) {
-      toast.error('Este módulo não está disponível para um cadastro restrito.');
-      navigateClientModule('dashboard', undefined, undefined, true);
-    }
-  }, [activeModule, cliente?.id, isBlocked]);
-
-  let menuItems: MenuItem[] = isBusiness
-    ? [
-        { id: 'dashboard', label: 'Visão executiva', icon: LayoutDashboard, count: 0, locked: false },
-        { id: 'perfil', label: 'Cadastro da empresa', icon: User, count: pendencies.modulePerfil, locked: false },
-        {
-          id: 'servicos_assinaturas',
-          label: 'Operações e contratos',
-          icon: Briefcase,
-          count: pendencies.moduleOrcamentos + pendencies.moduleServicos + pendencies.moduleProdutos + pendencies.moduleAssinaturas,
-          locked: isBlocked,
-        },
-        { id: 'financeiro', label: 'Financeiro corporativo', icon: CreditCard, count: pendencies.moduleFinanceiro, locked: isBlocked },
-        { id: 'fidelidade', label: 'Benefícios GSA', icon: Gift, count: pendencies.moduleVouchers + pendencies.moduleIndiqueGanhe + pendencies.modulePromocoes, locked: isBlocked },
-        { id: 'gsa_store' as Module, label: 'Soluções e marketplace', icon: Store, count: 0, locked: isBlocked },
-        { id: 'suporte', label: 'Atendimento executivo', icon: MessageSquare, count: pendencies.moduleSuporte, locked: false },
-      ]
-    : [
-        { id: 'perfil', label: 'Meu Perfil', icon: User, count: pendencies.modulePerfil, locked: false },
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, count: 0, locked: false },
-        { id: 'gsa_store' as Module, label: 'Marketplace GSA', icon: Store, count: 0, locked: isBlocked },
-        { id: 'classificados' as Module, label: 'Meus Classificados', icon: Tags, count: 0, locked: isBlocked },
-        { id: 'credito_loja' as Module, label: 'Meu Crédito', icon: Landmark, count: 0, locked: isBlocked },
-        { id: 'servicos_assinaturas', label: 'Serviços e Assinaturas', icon: Briefcase, count: pendencies.moduleOrcamentos + pendencies.moduleServicos + pendencies.moduleProdutos + pendencies.moduleAssinaturas, locked: isBlocked },
-        { id: 'orcamentos', label: 'Meus Orçamentos', icon: FileText, count: pendencies.moduleOrcamentos, locked: isBlocked },
-        { id: 'servicos', label: 'Meus Serviços', icon: Briefcase, count: pendencies.moduleServicos, locked: isBlocked },
-        { id: 'produtos', label: 'Meus Produtos', icon: Package, count: pendencies.moduleProdutos, locked: isBlocked },
-        { id: 'assinaturas', label: 'Minhas Assinaturas', icon: Calendar, count: pendencies.moduleAssinaturas, locked: isBlocked },
-        { id: 'emprestimos', label: 'Meus Empréstimos', icon: Landmark, count: pendencies.moduleEmprestimos, locked: isBlocked },
-        { id: 'transferencias', label: 'Transferências', icon: ArrowLeftRight, count: 0, locked: isBlocked },
-        { id: 'financeiro', label: 'Financeiro', icon: CreditCard, count: pendencies.moduleFinanceiro, locked: isBlocked },
-        { id: 'fidelidade', label: 'Fidelidade', icon: Gift, count: pendencies.moduleVouchers + pendencies.moduleIndiqueGanhe + pendencies.modulePromocoes, locked: isBlocked },
-        { id: 'promocoes', label: 'Promoções', icon: Megaphone, count: pendencies.modulePromocoes, locked: isBlocked },
-        { id: 'premios', label: 'Meus Prêmios', icon: Gift, count: 0, locked: isBlocked },
-        { id: 'vouchers', label: 'Vouchers', icon: Ticket, count: pendencies.moduleVouchers, locked: isBlocked },
-        { id: 'indique-ganhe', label: 'Indique e Ganhe', icon: Users, count: pendencies.moduleIndiqueGanhe, locked: isBlocked },
-        { id: 'pontos', label: 'Meus Pontos', icon: Star, count: 0, locked: isBlocked },
-        ...(!vipModuleConfig.oculto ? [{ id: 'area_vip' as Module, label: 'Área VIP', icon: Crown, count: 0, locked: isBlocked || !vipModuleConfig.ativo }] : []),
-        { id: 'suporte', label: 'Suporte', icon: MessageSquare, count: pendencies.moduleSuporte, locked: false },
-      ];
-  menuItems = menuItems.filter(item => !['classificados', 'credito_loja', 'emprestimos', 'transferencias', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'vouchers', 'pontos', 'promocoes', 'premios', 'indique-ganhe', 'area_vip'].includes(String(item.id)));
+  let menuItems: MenuItem[] = [
+    { id: 'perfil', label: 'Meu Perfil', icon: User, count: pendencies.modulePerfil, locked: false },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, count: 0, locked: false },
+    { id: 'gsa_store' as Module, label: 'Marketplace GSA', icon: Store, count: 0, locked: isBlocked },
+    { id: 'classificados' as Module, label: 'Meus Classificados', icon: Tags, count: 0, locked: isBlocked },
+    { id: 'credito_loja' as Module, label: 'Meu Crédito', icon: Landmark, count: 0, locked: isBlocked },
+    { id: 'servicos_assinaturas', label: 'Serviços e Assinaturas', icon: Briefcase, count: pendencies.moduleOrcamentos + pendencies.moduleServicos + pendencies.moduleProdutos + pendencies.moduleAssinaturas, locked: isBlocked },
+    { id: 'orcamentos', label: 'Meus Orçamentos', icon: FileText, count: pendencies.moduleOrcamentos, locked: isBlocked },
+    { id: 'servicos', label: 'Meus Serviços', icon: Briefcase, count: pendencies.moduleServicos, locked: isBlocked },
+    { id: 'produtos', label: 'Meus Produtos', icon: Package, count: pendencies.moduleProdutos, locked: isBlocked },
+    { id: 'assinaturas', label: 'Minhas Assinaturas', icon: Calendar, count: pendencies.moduleAssinaturas, locked: isBlocked },
+    { id: 'emprestimos', label: 'Meus Empréstimos', icon: Landmark, count: pendencies.moduleEmprestimos, locked: isBlocked },
+    { id: 'transferencias', label: 'Transferências', icon: ArrowLeftRight, count: 0, locked: isBlocked },
+    { id: 'financeiro', label: 'Financeiro', icon: CreditCard, count: pendencies.moduleFinanceiro, locked: isBlocked },
+    { id: 'fidelidade', label: 'Fidelidade', icon: Gift, count: pendencies.moduleVouchers + pendencies.moduleIndiqueGanhe + pendencies.modulePromocoes, locked: isBlocked },
+    { id: 'promocoes', label: 'Promoções', icon: Megaphone, count: pendencies.modulePromocoes, locked: isBlocked },
+    { id: 'premios', label: 'Meus Prêmios', icon: Gift, count: 0, locked: isBlocked },
+    { id: 'vouchers', label: 'Vouchers', icon: Ticket, count: pendencies.moduleVouchers, locked: isBlocked },
+    { id: 'indique-ganhe', label: 'Indique e Ganhe', icon: Users, count: pendencies.moduleIndiqueGanhe, locked: isBlocked },
+    { id: 'pontos', label: 'Meus Pontos', icon: Star, count: 0, locked: isBlocked },
+    // Área VIP: só inclui no menu se não estiver oculto
+    ...(!vipModuleConfig.oculto ? [{ id: 'area_vip' as Module, label: 'Área VIP', icon: Crown, count: 0, locked: isBlocked || !vipModuleConfig.ativo }] : []),
+    { id: 'suporte', label: 'Suporte', icon: MessageSquare, count: pendencies.moduleSuporte, locked: false },
+  ];
+  menuItems = menuItems.filter(item => !['credito_loja', 'emprestimos', 'transferencias', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'vouchers', 'pontos', 'promocoes', 'premios', 'indique-ganhe', 'area_vip'].includes(String(item.id)));
 
   const handleOpenTicket = async (assunto: string, descricao: string) => {
     try {
@@ -1105,7 +1044,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
 
   if (!cliente) {
     return (
-      <div className={`flex h-screen flex-col items-center justify-center ${isBusiness ? 'bg-[#07111f] text-white' : 'bg-[#f8f7f5]'}`}>
+      <div className="flex h-screen flex-col items-center justify-center bg-[#f8f7f5]">
         {fetchError ? (
           <div className="text-center">
             <p className="text-red-600 font-medium mb-4">{fetchError}</p>
@@ -1118,8 +1057,8 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
           </div>
         ) : (
           <div className="flex flex-col items-center">
-            <div className={`mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-transparent ${isBusiness ? 'border-[#d8bd73]' : 'border-[#1a1a1a]'}`}></div>
-            <p className={`font-medium ${isBusiness ? 'text-white/60' : 'text-[#1a1a1a]/60'}`}>Carregando ambiente...</p>
+            <div className="w-8 h-8 border-4 border-[#1a1a1a] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-[#1a1a1a]/60 font-medium">Carregando...</p>
           </div>
         )}
       </div>
@@ -1129,13 +1068,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
   const isEffectiveExpanded = isSidebarPinned || !isSidebarCollapsed || isSidebarHovered;
 
   return (
-    <div className={`flex min-h-screen overflow-hidden font-sans ${isBusiness ? 'bg-[#eef2f5]' : 'bg-[#f8f7f5]'}`}>
-      <a
-        href="#portal-main-content"
-        className="fixed left-4 top-4 z-[120] -translate-y-24 rounded-lg bg-white px-4 py-3 text-sm font-bold text-[#0b1522] shadow-xl focus:translate-y-0"
-      >
-        Ir para o conteúdo principal
-      </a>
+    <div className="flex min-h-screen bg-[#f8f7f5] overflow-hidden font-sans">
       {/* Mobile Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
@@ -1144,7 +1077,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsMobileMenuOpen(false)}
-            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
           />
         )}
       </AnimatePresence>
@@ -1153,9 +1086,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       <aside 
         onMouseEnter={() => !isMobile && setIsSidebarHovered(true)}
         onMouseLeave={() => !isMobile && setIsSidebarHovered(false)}
-        className={`fixed inset-y-0 left-0 z-[70] flex flex-col border-r transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 ${
-          isBusiness ? 'border-white/8 bg-[#081522] text-white shadow-2xl shadow-black/20' : 'border-black/5 bg-[#fdfcfb]'
-        } ${
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-black/5 bg-[#fdfcfb] transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 ${
           isMobileMenuOpen ? 'translate-x-0 w-72' : (isMobile ? '-translate-x-full w-72' : '')
         } ${
           !isMobile ? (isEffectiveExpanded ? 'lg:w-72' : 'lg:w-20') : ''
@@ -1163,16 +1094,9 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
       >
         <div className="flex h-24 items-center justify-between px-6">
           {isEffectiveExpanded ? (
-            isBusiness ? (
-              <div className="min-w-0">
-                <LogoGSA size="xs" variant="light" showText />
-                <span className="ml-8 mt-1 block text-[8px] font-black uppercase tracking-[0.24em] text-[#edcf83]">Empresas</span>
-              </div>
-            ) : (
-              <span className="text-xl tracking-tight text-[#1a1a1a] font-medium truncate">Grupo GSA</span>
-            )
+            <span className="text-xl tracking-tight text-[#1a1a1a] font-medium truncate">Grupo GSA</span>
           ) : (
-            <LogoGSA size="xs" variant={isBusiness ? 'light' : 'dark'} />
+            <span className="text-xl font-bold tracking-tight text-[#1a1a1a] mx-auto">GSA</span>
           )}
           
           {!isMobile && (
@@ -1181,17 +1105,13 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                 onClick={() => {
                   const newPinned = !isSidebarPinned;
                   setIsSidebarPinned(newPinned);
-                  localStorage.setItem(sidebarPinnedKey, JSON.stringify(newPinned));
+                  localStorage.setItem('client_sidebar_pinned', JSON.stringify(newPinned));
                   if (newPinned) {
                     setIsSidebarCollapsed(false);
-                    localStorage.setItem(sidebarCollapsedKey, JSON.stringify(false));
+                    localStorage.setItem('client_sidebar_collapsed', JSON.stringify(false));
                   }
                 }}
-                className={`rounded-full p-1.5 transition-colors ${
-                  isBusiness
-                    ? `${isSidebarPinned ? 'text-[#edcf83]' : 'text-white/25'} hover:bg-white/8`
-                    : `${isSidebarPinned ? 'text-indigo-600' : 'text-[#1a1a1a]/30'} hover:bg-black/5`
-                }`}
+                className={`rounded-full p-1.5 hover:bg-black/5 transition-colors ${isSidebarPinned ? 'text-indigo-600' : 'text-[#1a1a1a]/30'}`}
                 title={isSidebarPinned ? "Desafixar menu" : "Fixar menu"}
               >
                 <Pin className="h-3.5 w-3.5" style={{ transform: isSidebarPinned ? 'rotate(0deg)' : 'rotate(45deg)', transition: 'transform 0.2s' }} />
@@ -1200,13 +1120,13 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                 onClick={() => {
                   const newCollapsed = !isSidebarCollapsed;
                   setIsSidebarCollapsed(newCollapsed);
-                  localStorage.setItem(sidebarCollapsedKey, JSON.stringify(newCollapsed));
+                  localStorage.setItem('client_sidebar_collapsed', JSON.stringify(newCollapsed));
                   if (newCollapsed) {
                     setIsSidebarPinned(false);
-                    localStorage.setItem(sidebarPinnedKey, JSON.stringify(false));
+                    localStorage.setItem('client_sidebar_pinned', JSON.stringify(false));
                   }
                 }}
-                className={`rounded-full p-1.5 transition-colors ${isBusiness ? 'text-white/45 hover:bg-white/8 hover:text-white' : 'text-[#1a1a1a]/60 hover:bg-black/5'}`}
+                className="rounded-full p-1.5 hover:bg-black/5 transition-colors text-[#1a1a1a]/60"
                 title={isSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
               >
                 {isSidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
@@ -1214,8 +1134,8 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
             </div>
           )}
 
-          <button onClick={() => setIsMobileMenuOpen(false)} className={`rounded-full p-2 transition-colors lg:hidden ${isBusiness ? 'hover:bg-white/8' : 'hover:bg-black/5'}`}>
-            <X className={`h-5 w-5 ${isBusiness ? 'text-white/60' : 'text-[#1a1a1a]/60'}`} />
+          <button onClick={() => setIsMobileMenuOpen(false)} className="rounded-full p-2 hover:bg-black/5 transition-colors lg:hidden">
+            <X className="h-5 w-5 text-[#1a1a1a]/60" />
           </button>
         </div>
 
@@ -1226,28 +1146,22 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
               setIsMobileMenuOpen(false);
               if (!isSidebarPinned && !isMobile) {
                 setIsSidebarCollapsed(true);
-                localStorage.setItem(sidebarCollapsedKey, JSON.stringify(true));
+                localStorage.setItem('client_sidebar_collapsed', JSON.stringify(true));
               }
             }}
-            className={`mb-8 flex cursor-pointer items-center rounded-2xl ring-1 shadow-sm transition-all ${
-              isBusiness
-                ? 'bg-white/[0.055] ring-white/10 hover:bg-white/[0.085]'
-                : 'bg-white ring-black/5 hover:bg-neutral-50'
-            } ${
+            className={`mb-8 flex items-center rounded-2xl bg-white ring-1 ring-black/5 shadow-sm cursor-pointer hover:bg-neutral-50 transition-all ${
               isEffectiveExpanded ? 'p-4 gap-4 w-full' : 'p-2 justify-center mx-auto w-12 h-12'
             }`}
-            title={!isEffectiveExpanded ? (cliente.nome_razao || cliente.nome) : undefined}
+            title={!isEffectiveExpanded ? cliente.nome : undefined}
           >
-            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-              isBusiness ? 'bg-[#d8bd73]/12 text-[#edcf83] ring-1 ring-[#d8bd73]/25' : 'bg-[#1a1a1a] text-white'
-            }`}>
-              {isBusiness ? <Building2 className="h-5 w-5" /> : <User className="h-5 w-5" />}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a1a1a] text-white">
+              <User className="h-5 w-5" />
             </div>
             {isEffectiveExpanded && (
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p ref={nameRef} className={`truncate whitespace-nowrap text-sm font-medium ${isBusiness ? 'text-white' : 'text-[#1a1a1a]'}`}>{isBusiness ? (cliente.nome_razao || cliente.nome) : cliente.nome}</p>
+                <p ref={nameRef} className="font-medium text-[#1a1a1a] whitespace-nowrap text-sm truncate">{cliente.nome}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className={`text-[10px] font-medium uppercase tracking-widest ${isBusiness ? 'text-white/35' : 'text-[#1a1a1a]/40'}`}>{cliente.codigo_cliente}</p>
+                  <p className="text-[10px] font-medium tracking-widest text-[#1a1a1a]/40 uppercase">{cliente.codigo_cliente}</p>
                   <span className={`px-1.5 py-0.5 text-[8px] font-bold rounded-full uppercase tracking-wider ${
                     cliente.status === 'ativo' ? 'bg-emerald-100 text-emerald-700' :
                     cliente.status === 'inativo' ? 'bg-amber-100 text-amber-700' :
@@ -1279,30 +1193,18 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                 className={`group relative flex items-center justify-between rounded-full transition-all ${
                   isEffectiveExpanded ? 'w-full px-5 py-3.5 text-sm font-medium' : 'w-12 h-12 px-0 justify-center mx-auto'
                 } ${
-                  isBusiness
-                    ? activeModule === item.id
-                      ? 'bg-[#d8bd73] text-[#07111f] shadow-lg shadow-black/20'
-                      : item.locked
-                        ? 'cursor-not-allowed text-white/25'
-                        : 'text-white/58 hover:bg-white/[0.07] hover:text-white'
-                    : activeModule === item.id 
-                      ? 'bg-[#1a1a1a] text-white shadow-md' 
-                      : item.locked 
-                        ? 'text-[#1a1a1a]/40 cursor-not-allowed'
-                        : 'text-[#1a1a1a]/60 hover:bg-black/5 hover:text-[#1a1a1a]'
+                  activeModule === item.id 
+                    ? 'bg-[#1a1a1a] text-white shadow-md' 
+                    : item.locked 
+                      ? 'text-[#1a1a1a]/40 cursor-not-allowed'
+                      : 'text-[#1a1a1a]/60 hover:bg-black/5 hover:text-[#1a1a1a]'
                 }`}
                 title={!isEffectiveExpanded ? String(item.label) : undefined}
               >
                 <div className="flex items-center gap-3">
                   <item.icon className={`h-4 w-4 shrink-0 ${
-                    isBusiness
-                      ? activeModule === item.id
-                        ? 'text-[#07111f]'
-                        : item.locked
-                          ? 'text-white/20'
-                          : 'text-[#d8bd73]'
-                      : activeModule === item.id 
-                        ? 'text-white' 
+                    activeModule === item.id 
+                      ? 'text-white' 
                       : item.locked 
                         ? 'text-neutral-400'
                         : item.id === 'orcamentos' ? 'text-blue-600' :
@@ -1331,11 +1233,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                     ) : (
                       <>
                         {item.count > 0 && (
-                          <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
-                            isBusiness
-                              ? activeModule === item.id ? 'bg-[#07111f] text-white' : 'bg-[#d8bd73] text-[#07111f]'
-                              : activeModule === item.id ? 'bg-white text-[#1a1a1a]' : 'bg-[#1a1a1a] text-white'
-                          }`}>
+                          <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${activeModule === item.id ? 'bg-white text-[#1a1a1a]' : 'bg-[#1a1a1a] text-white'}`}>
                             {item.count}
                           </span>
                         )}
@@ -1355,29 +1253,23 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
           </nav>
         </div>
 
-        <div className="p-4 border-t border-black/5">
+        <div className="p-4">
           <button 
             onClick={onLogout}
-            className={`flex items-center gap-3 rounded-xl text-xs font-black transition-all shadow-sm ${
-              isBusiness 
-                ? 'border border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white' 
-                : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white'
-            } ${
-              isEffectiveExpanded ? 'w-full px-4 py-3' : 'w-11 h-11 px-0 justify-center mx-auto'
+            className={`flex items-center gap-3 rounded-full text-sm font-medium text-red-600/80 transition-all hover:bg-red-50 hover:text-red-600 ${
+              isEffectiveExpanded ? 'w-full px-5 py-3.5' : 'w-12 h-12 px-0 justify-center mx-auto'
             }`}
-            title={!isEffectiveExpanded ? (isBusiness ? 'Sair do GSA HUB Empresas' : 'Sair do Portal') : undefined}
+            title={!isEffectiveExpanded ? "Sair do Portal" : undefined}
           >
             <LogOut className="h-4 w-4 shrink-0" />
-            {isEffectiveExpanded && <span>{isBusiness ? 'Sair do ambiente' : 'Sair do Portal'}</span>}
+            {isEffectiveExpanded && <span>Sair do Portal</span>}
           </button>
         </div>
       </aside>
 
       {/* Content */}
-      <main id="portal-main-content" className="flex-1 overflow-y-auto">
-        <header className={`sticky top-0 z-30 flex h-24 items-center justify-between border-b px-6 backdrop-blur-md lg:px-12 ${
-          isBusiness ? 'border-[#d9e0e6]/80 bg-[#eef2f5]/90' : 'border-transparent bg-[#f8f7f5]/80'
-        }`}>
+      <main className="flex-1 overflow-y-auto">
+        <header className="sticky top-0 z-30 flex h-24 items-center justify-between bg-[#f8f7f5]/80 px-6 backdrop-blur-md lg:px-12">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
@@ -1385,14 +1277,11 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
             >
               <Menu className="h-5 w-5 text-[#1a1a1a]" />
             </button>
-            <div>
-              {isBusiness && <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8a651f]">GSA HUB Empresas</p>}
-              <h1 className={`tracking-tight ${isBusiness ? 'mt-1 text-xl font-black text-[#102033] lg:text-2xl' : 'text-2xl text-[#1a1a1a] lg:text-3xl'}`}>
-                {menuItems.find(i => i.id === activeModule)?.label}
-              </h1>
-            </div>
+            <h1 className="text-2xl tracking-tight text-[#1a1a1a] lg:text-3xl">
+              {menuItems.find(i => i.id === activeModule)?.label}
+            </h1>
           </div>
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-4">
             <button
               onClick={toggleFullscreen}
               className="group hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-black/5"
@@ -1414,22 +1303,9 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                 navigateClientModule(mod, tab, itemId);
               }}
             />
-            <button
-              type="button"
-              onClick={onLogout}
-              className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 text-xs font-black transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 ${
-                isBusiness
-                  ? 'border border-red-500/40 bg-red-950/20 text-red-400 hover:bg-red-600 hover:text-white focus-visible:ring-red-400'
-                  : 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white focus-visible:ring-red-500'
-              }`}
-              title={isBusiness ? 'Sair do GSA HUB Empresas' : 'Sair do Portal'}
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">{isBusiness ? 'Sair do ambiente' : 'Sair do Portal'}</span>
-            </button>
           </div>
         </header>
-        <div className={`${activeModule === 'area_vip' ? '' : (activeModule as string) === 'gsa_store' ? 'p-4 lg:px-6 lg:pt-2 lg:pb-12' : 'p-4 sm:p-6 lg:p-10 xl:p-12'} ${isBusiness ? 'mx-auto w-full max-w-[1680px]' : ''}`}>
+        <div className={activeModule === 'area_vip' ? '' : (activeModule as string) === 'gsa_store' ? 'p-4 lg:px-6 lg:pt-2 lg:pb-12' : 'p-6 lg:p-12'}>
           {activeModule !== 'dashboard' && (activeModule as string) !== 'gsa_store' && (activeModule as string) !== 'classificados' && activeModule !== 'financeiro' && activeModule !== 'fidelidade' && activeModule !== 'servicos_assinaturas' && (
             <button 
               onClick={() => {
@@ -1472,202 +1348,128 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
             </div>
           )}
 
-          <ErrorBoundary>
-            <motion.div 
-              key={`${activeModule}-${moduleKey}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className={
-                activeModule === 'dashboard' || activeModule === 'area_vip'
-                  ? ''
-                  : (activeModule as string) === 'gsa_store' || (activeModule as string) === 'classificados'
-                    ? ''
-                    : 'rounded-3xl bg-white p-6 sm:p-8 shadow-sm ring-1 ring-black/5'
-              }
-            >
-              <Suspense fallback={
-                <div className="flex h-64 flex-col items-center justify-center">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1a1a1a] border-t-transparent" />
-                  <p className="mt-3 text-sm text-[#1a1a1a]/60 font-medium">Carregando módulo...</p>
-                </div>
-              }>
-                {activeModule === 'dashboard' && (
-                  isBusiness ? (
-                    <BusinessDashboard
-                      clientId={cliente.id}
-                      cliente={cliente}
-                      onNavigate={(mod, tab, itemId) => navigateClientModule(mod as Module, tab, itemId)}
-                    />
-                  ) : (
-                    <ClientDashboard
-                      clientId={cliente.id}
-                      cliente={cliente}
-                      onNavigate={(mod, tab, itemId) => navigateClientModule(mod as Module, tab, itemId)}
-                    />
-                  )
-                )}
-                {activeModule === 'perfil' && (
-                  <ClientProfile
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    onUpdate={fetchCliente}
-                  />
-                )}
-                {activeModule === 'orcamentos' && (
-                  <ClientOrcamentosAny
-                    clientId={cliente.id}
-                    initialTab={activeSubTab}
-                    initialItemId={activeItemId}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'servicos' && (
-                  <ClientServicosAny
-                    clientId={cliente.id}
-                    initialTab={activeSubTab}
-                    initialItemId={activeItemId}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'produtos' && (
-                  <ClientProdutosAny
-                    clientId={cliente.id}
-                    initialTab={activeSubTab}
-                    initialItemId={activeItemId}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'assinaturas' && (
-                  <ClientAssinaturasAny
-                    clientId={cliente.id}
-                    initialTab={activeSubTab}
-                    initialItemId={activeItemId}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'servicos_assinaturas' && (
-                  <ClientServicosAssinaturas
-                    clientId={cliente.id}
-                    initialTab={activeSubTab}
-                    initialItemId={activeItemId}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'transferencias' && (
-                  <ClientTransferenciasAny
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'financeiro' && (
-                  <ClientFinanceiroAny
-                    clientId={cliente.id}
-                    initialTab={activeSubTab}
-                    initialItemId={activeItemId}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'fidelidade' && (
-                  <ClientFidelidade
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    initialTab={activeSubTab}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'promocoes' && (
-                  <ClientPromocoes
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'premios' && (
-                  <ClientPremios
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'vouchers' && (
-                  <ClientVouchers
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'indique-ganhe' && (
-                  <ClientIndiqueGanhe
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'pontos' && (
-                  <ClientPontos
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    animateBonus={animateBonus}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {(activeModule as string) === 'area_vip' && (
-                  <ClientAreaVIP
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                  />
-                )}
-                {activeModule === 'suporte' && (
-                  <ClientSuporte
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    initialTab={activeSubTab}
-                    initialItemId={activeItemId}
-                  />
-                )}
-                {(activeModule as string) === 'gsa_store' && (
-                  <ClientGSAStore
-                    clientId={cliente.id}
-                    initialTab={activeSubTab || 'home'}
-                    initialItemId={activeItemId}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                    onBackToSite={() => navigate(routes.public.home())}
-                  />
-                )}
-                {(activeModule as string) === 'classificados' && (
-                  <MarketplaceGSAStore
-                    clientId={cliente.id}
-                    initialTab="classificados"
-                    initialItemId={activeItemId}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                    onBackToSite={() => navigate(routes.public.home())}
-                  />
-                )}
-                {(activeModule as string) === 'credito_loja' && (
-                  <ClientMeuCredito
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                    onRefresh={fetchCliente}
-                  />
-                )}
-                {activeModule === 'emprestimos' && (
-                  <ClientEmprestimos
-                    clientId={cliente.id}
-                    cliente={cliente}
-                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
-                    onRefresh={fetchCliente}
-                  />
-                )}
-              </Suspense>
-            </motion.div>
-          </ErrorBoundary>
+          <motion.div 
+            key={`${activeModule}-${moduleKey}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className={activeModule === 'dashboard' ? '' : activeModule === 'area_vip' ? '' : 'card-refined'}
+          >
+            {activeModule === 'dashboard' && (
+              <ClientDashboard 
+                menuItems={menuItems} 
+                onNavigate={(mod) => {
+                  const item = menuItems.find(i => i.id === mod);
+                  if (item?.locked) {
+                    if (!vipModuleConfig.ativo && mod === 'area_vip') {
+                      toast.error('Área VIP desativada por tempo indeterminado.');
+                    } else {
+                      toast.error('Módulo bloqueado. Seu cadastro está em análise.');
+                    }
+                    return;
+                  }
+                  navigateClientModule(mod as Module);
+                }} 
+                cliente={cliente}
+                vipModuleConfig={vipModuleConfig}
+              />
+            )}
+            {activeModule === 'perfil' && <ClientProfile cliente={cliente} onOpenTicket={handleOpenTicket} initialTab={activeTab} initialItemId={activeItemId} />}
+            {activeModule === 'orcamentos' && (
+              <ClientOrcamentosAny 
+                clientId={clientId} 
+                initialTab={activeTab} 
+                initialItemId={activeItemId} 
+                onNavigate={(mod: Module, tab?: string, itemId?: string) => {
+                  navigateClientModule(mod, tab, itemId);
+                }}
+              />
+            )}
+            {activeModule === 'servicos' && <ClientServicosAny clientId={clientId} initialTab={activeTab} initialItemId={activeItemId} onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)} />}
+            {activeModule === 'produtos' && <ClientProdutosAny clientId={clientId} initialTab={activeTab} initialItemId={activeItemId} onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)} />}
+            {activeModule === 'assinaturas' && <ClientAssinaturasAny clientId={clientId} initialTab={activeTab} initialItemId={activeItemId} onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)} />}
+            {activeModule === 'transferencias' && <ClientTransferenciasAny clientId={clientId} initialTab={activeTab} initialItemId={activeItemId} cliente={cliente} />}
+            {activeModule === 'financeiro' && (
+              <ClientFinanceiroAny
+                clientId={clientId}
+                initialTab={activeTab}
+                initialItemId={activeItemId}
+                animateOnMount={animateBonus}
+                cliente={cliente}
+                onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+              />
+            )}
+            {activeModule === 'servicos_assinaturas' && (
+              <ClientServicosAssinaturas
+                clientId={clientId}
+                initialTab={activeTab}
+                initialItemId={activeItemId}
+                onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+              />
+            )}
+            {activeModule === 'fidelidade' && (
+              <ClientFidelidade
+                clientId={clientId}
+                cliente={cliente}
+                initialTab={activeTab}
+                initialItemId={activeItemId}
+                animateOnMount={animateBonus}
+                vipModuleConfig={vipModuleConfig}
+                onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+              />
+            )}
+            {activeModule === 'vouchers' && <ClientVouchers clientId={clientId} initialItemId={activeItemId} />}
+            {activeModule === 'pontos' && <ClientPontos clienteId={clientId} animateOnMount={animateBonus} initialCliente={cliente} initialTab={activeTab} initialItemId={activeItemId} />}
+            {activeModule === 'indique-ganhe' && <ClientIndiqueGanhe clientId={clientId} initialTab={activeTab} initialItemId={activeItemId} />}
+            {activeModule === 'promocoes' && <ClientPromocoes clientId={clientId} initialTab={activeTab} initialItemId={activeItemId} />}
+            {activeModule === 'premios' && <ClientPremios clientId={clientId} initialTab={activeTab} initialItemId={activeItemId} />}
+            {((activeModule as string) === 'gsa_store' || (activeModule as string) === 'classificados') && (
+              <MarketplaceGSAStore 
+                clientId={clientId} 
+                initialTab={activeTab}
+                initialItemId={activeItemId}
+                onNavigate={(mod, tab, itemId) => navigateClientModule(mod as Module, tab, itemId)} 
+              />
+            )}
+            {activeModule === 'area_vip' && (
+              vipModuleConfig.ativo
+                ? <ClientAreaVIP cliente={cliente} initialTab={activeTab} initialItemId={activeItemId} />
+                : (
+                  <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+                    <div className="h-20 w-20 rounded-3xl bg-neutral-100 flex items-center justify-center mb-6">
+                      <Crown className="h-10 w-10 text-neutral-300" />
+                    </div>
+                    <h2 className="text-2xl font-black text-neutral-900 mb-3">Área VIP Indisponível</h2>
+                    <p className="text-neutral-500 max-w-sm leading-relaxed">
+                      O módulo Área VIP encontra-se <strong>desativado por tempo indeterminado</strong>. 
+                      Para mais informações, entre em contato com o nosso suporte.
+                    </p>
+                    <button
+                      onClick={() => navigateClientModule('suporte')}
+                      className="mt-8 px-6 py-3 bg-[#1a1a1a] text-white text-sm font-bold rounded-2xl hover:bg-black transition-all shadow-lg"
+                    >
+                      Ir para o Suporte
+                    </button>
+                  </div>
+                )
+            )}
+            {activeModule === 'suporte' && <ClientSuporte clientId={clientId} initialItemId={activeItemId} />}
+            {activeModule === 'emprestimos' && <ClientEmprestimos clientId={clientId} initialTab={activeTab} initialItemId={activeItemId} onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)} />}
+            {activeModule === 'credito_loja' && (
+              <ClientMeuCredito 
+                clientId={clientId} 
+                cliente={cliente}
+                onRefreshCliente={fetchCliente}
+                initialTab={activeTab}
+                initialItemId={activeItemId}
+                onNavigate={(mod, tab, itemId) => navigateClientModule(mod as Module, tab, itemId)}
+              />
+            )}
+          </motion.div>
         </div>
       </main>
 
+      {/* Referral Onboarding Modal */}
       <AnimatePresence>
         {showReferralModal && modalIndicacaoConfig.ativo && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
