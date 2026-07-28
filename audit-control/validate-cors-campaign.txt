@@ -1,0 +1,1 @@
+Validação limpa da Central de Avisos e do CORS da publicidade pública.
