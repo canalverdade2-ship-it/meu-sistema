@@ -235,12 +235,13 @@ async function checkRateLimit(
 
     if (error || !data) {
       console.warn('Rate limiter indisponível:', error);
-      return { allowed: true };
+      return { allowed: false, retry_after: 60 };
     }
 
     return data as RateLimitResult;
-  } catch {
-    return { allowed: true };
+  } catch (error) {
+    console.warn('Rate limiter indisponível:', error);
+    return { allowed: false, retry_after: 60 };
   }
 }
 

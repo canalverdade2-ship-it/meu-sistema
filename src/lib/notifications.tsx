@@ -150,53 +150,50 @@ export async function createWelcomeSequence(clientId: string, bonusValue: number
   try {
     const now = new Date();
     
-    // 4º Parabéns Upgrade de Nivel (Oldest)
-    await supabase.from('notificacoes').insert([{
-      cliente_id: clientId,
-      titulo: '⭐🏆 PARABÉNS!',
-      mensagem: `Você acaba de subir para o nível ${levelName.toUpperCase()}! Agora você ganha pontos para cada R$1 gasto no sistema.`,
-      modulo: 'dashboard',
-      tipo: 'sistema',
-      destinatario_tipo: 'cliente',
-      prioridade: 'normal',
-      data_criacao: new Date(now.getTime() - 3000).toISOString()
-    }]);
+    const notifications = [
+      {
+        cliente_id: clientId,
+        titulo: '⭐🏆 PARABÉNS!',
+        mensagem: `Você acaba de subir para o nível ${levelName.toUpperCase()}! Agora você ganha pontos para cada R$1 gasto no sistema.`,
+        modulo: 'dashboard',
+        tipo: 'sistema',
+        destinatario_tipo: 'cliente',
+        prioridade: 'normal',
+        data_criacao: new Date(now.getTime() - 3000).toISOString()
+      },
+      {
+        cliente_id: clientId,
+        titulo: '⭐🏆 Pontos Ganhos',
+        mensagem: `Você ganhou ${bonusValue} pontos de boas-vindas! 🎉`,
+        modulo: 'dashboard',
+        tipo: 'sistema',
+        destinatario_tipo: 'cliente',
+        prioridade: 'normal',
+        data_criacao: new Date(now.getTime() - 2000).toISOString()
+      },
+      {
+        cliente_id: clientId,
+        titulo: '✅✅ Cadastro Aprovado',
+        mensagem: 'Seu cadastro foi analisado e aprovado! Todos os módulos estão liberados. 🚀',
+        modulo: 'dashboard',
+        tipo: 'sistema',
+        destinatario_tipo: 'cliente',
+        prioridade: 'alta',
+        data_criacao: new Date(now.getTime() - 1000).toISOString()
+      },
+      {
+        cliente_id: clientId,
+        titulo: '👋 Bem-vindo(a)!',
+        mensagem: 'Seu cadastro foi criado com sucesso. Bem-vindo(a) ao portal! 🎉',
+        modulo: 'dashboard',
+        tipo: 'sistema',
+        destinatario_tipo: 'cliente',
+        prioridade: 'normal',
+        data_criacao: now.toISOString()
+      }
+    ];
 
-    // 3º Pontos Ganhos
-    await supabase.from('notificacoes').insert([{
-      cliente_id: clientId,
-      titulo: '⭐🏆 Pontos Ganhos',
-      mensagem: `Você ganhou ${bonusValue} pontos de boas-vindas! 🎉`,
-      modulo: 'dashboard',
-      tipo: 'sistema',
-      destinatario_tipo: 'cliente',
-      prioridade: 'normal',
-      data_criacao: new Date(now.getTime() - 2000).toISOString()
-    }]);
-
-    // 2º Cadastro Aprovado
-    await supabase.from('notificacoes').insert([{
-      cliente_id: clientId,
-      titulo: '✅✅ Cadastro Aprovado',
-      mensagem: 'Seu cadastro foi analisado e aprovado! Todos os módulos estão liberados. 🚀',
-      modulo: 'dashboard',
-      tipo: 'sistema',
-      destinatario_tipo: 'cliente',
-      prioridade: 'alta',
-      data_criacao: new Date(now.getTime() - 1000).toISOString()
-    }]);
-
-    // 1º Bem Vindo (Latest/Top)
-    await supabase.from('notificacoes').insert([{
-      cliente_id: clientId,
-      titulo: '👋 Bem-vindo(a)!',
-      mensagem: 'Seu cadastro foi criado com sucesso. Bem-vindo(a) ao portal! 🎉',
-      modulo: 'dashboard',
-      tipo: 'sistema',
-      destinatario_tipo: 'cliente',
-      prioridade: 'normal',
-      data_criacao: now.toISOString()
-    }]);
+    await supabase.from('notificacoes').insert(notifications);
 
   } catch (err) {
     console.error('Erro ao criar sequência de boas-vindas:', err);
