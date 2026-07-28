@@ -1937,7 +1937,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
                           p_cliente_id: cliente.id
                         });
                         if (error) throw error;
-                        setCliente({ ...cliente, pin_bloqueado: false, pin_tentativas: 0 });
+                        setCliente({ ...cliente, pin_bloqueado: false, pin_tentativas: 0 } as any);
                         toast.success('Acesso desbloqueado com sucesso!');
                       } catch (err: any) {
                         toast.error('Erro ao desbloquear: ' + (err.message || ''));
