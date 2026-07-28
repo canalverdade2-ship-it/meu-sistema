@@ -5,47 +5,53 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   audit:
     if: github.head_ref == 'audit/full-system-remediation-continuation-20260727'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout da branch isolada
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - name: Capturar auditoria completa
-        id: audit
+      - name: Instalar dependências atuais
+        run: npm ci
+      - name: Confirmar que ExcelJS não é usado pelo sistema
         shell: bash
         run: |
-          set +e
-          npm audit --json > npm-audit.json 2> npm-audit-json.stderr
-          json_exit=$?
-          npm audit --audit-level=high > npm-audit.txt 2>&1
-          threshold_exit=$?
-          set -e
-          echo "json_exit=$json_exit" >> "$GITHUB_OUTPUT"
-          echo "threshold_exit=$threshold_exit" >> "$GITHUB_OUTPUT"
-          cat npm-audit.txt
-      - name: Exportar evidência de dependências
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-security-audit
-          path: |
-            npm-audit.json
-            npm-audit.txt
-            npm-audit-json.stderr
-          if-no-files-found: error
-          retention-days: 7
-      - name: Encerrar com resultado real
-        shell: bash
-        run: |
-          if [ "${{ steps.audit.outputs.threshold_exit }}" -ne 0 ]; then
+          matches=$(grep -RIni --exclude='package.json' --exclude='package-lock.json' --exclude-dir='node_modules' --exclude-dir='.git' 'exceljs' src scripts supabase tests 2>/dev/null || true)
+          if [ -n "$matches" ]; then
+            echo "$matches"
+            echo "ExcelJS ainda é usado e não pode ser removido automaticamente."
             exit 1
+          fi
+          echo "Nenhum uso de ExcelJS encontrado no código executável ou nos testes."
+      - name: Remover dependência vulnerável sem uso
+        run: npm uninstall exceljs --save
+      - name: Validar segurança e regressão
+        run: |
+          npm audit --audit-level=high
+          npx tsc --noEmit --pretty false
+          npm run test:unit
+          npm run build
+      - name: Persistir remoção validada
+        shell: bash
+        run: |
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "Dependência já removida."
+          else
+            git commit -m "fix(security): remover ExcelJS vulnerável e sem uso"
+            git push origin HEAD:${GITHUB_HEAD_REF}
           fi
