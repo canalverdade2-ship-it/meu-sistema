@@ -785,7 +785,7 @@ export function DemandasDetalhesModal({
   return (
     <div className="fixed inset-0 z-[80] flex items-end md:items-center justify-center">
       <div className="absolute inset-0 bg-neutral-900/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-4xl bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+      <div className="relative w-full max-w-[96vw] sm:max-w-4xl md:max-w-6xl lg:max-w-7xl bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
 
         {/* Banner de negociação em andamento */}
         {isInNegociation && (

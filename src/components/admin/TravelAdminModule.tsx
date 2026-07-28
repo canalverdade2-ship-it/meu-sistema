@@ -503,7 +503,7 @@ function SolicitacoesTab() {
 
       {detailsItem && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsItem(null)}>
-          <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
+          <div className="flex w-full max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <header className="relative flex items-center justify-between border-b border-neutral-100 bg-slate-900 p-6 text-white">
               <div className="flex items-center gap-3">
@@ -1150,7 +1150,7 @@ function PropostasTab() {
       {/* Modal Detalhes da Proposta */}
       {detailsProposal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsProposal(null)}>
-          <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
+          <div className="flex w-full max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-neutral-100" onClick={(e) => e.stopPropagation()}>
             <header className="flex items-center justify-between border-b border-neutral-100 bg-slate-900 p-6 text-white">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 backdrop-blur-md">
@@ -1794,7 +1794,7 @@ function TransacoesTab() {
       {/* Modal Detalhes da Transação */}
       {detailsTx && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-2 sm:p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setDetailsTx(null)}>
-          <div className="flex w-full max-w-[92vw] sm:max-w-2xl md:max-w-3xl max-h-[85vh] flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl border border-neutral-200" onClick={(e) => e.stopPropagation()}>
+          <div className="flex w-full max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[85vh] flex-col overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-2xl border border-neutral-200" onClick={(e) => e.stopPropagation()}>
             {/* Header Compacto */}
             <header className="flex items-center justify-between border-b border-indigo-500/20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-5 py-4 text-white">
               <div className="flex items-center gap-3">

@@ -82,7 +82,7 @@ function statusOptions(tab: Tab) {
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8">{children}</div>
+      <div role="dialog" aria-modal="true" className="max-h-[92vh] w-full max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8">{children}</div>
     </div>
   );
 }

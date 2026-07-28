@@ -13,20 +13,31 @@ interface ModalProps {
 export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
   const generatedId = useId().replace(/:/g, '');
   const titleId = `modal-title-${generatedId}`;
+
+  /*
+   * Sizes are designed to feel proportional at every breakpoint:
+   *   Mobile  (< 640px)  → 96vw (quase tela toda)
+   *   Tablet  (640-1023) → tailwind's named max-w values
+   *   Desktop (1024px+)  → amplified so panels never look "pinched"
+   *
+   * Equivalent pixel reference (Tailwind defaults):
+   *   sm=384  md=448  lg=512  xl=576  2xl=672  3xl=768
+   *   4xl=896 5xl=1024 6xl=1152 7xl=1280
+   */
   const sizes = {
-    sm: 'w-full max-w-[95vw] sm:max-w-sm',
-    md: 'w-full max-w-[95vw] sm:max-w-md',
-    lg: 'w-full max-w-[95vw] sm:max-w-lg md:max-w-xl',
-    xl: 'w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-3xl',
-    '2xl': 'w-full max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl',
-    '3xl': 'w-full max-w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl',
-    '4xl': 'w-full max-w-[95vw] sm:max-w-4xl md:max-w-5xl lg:max-w-6xl',
-    '5xl': 'w-full max-w-[95vw] sm:max-w-5xl md:max-w-6xl lg:max-w-7xl',
-    '6xl': 'w-full max-w-[95vw] sm:max-w-6xl md:max-w-7xl',
-    '7xl': 'w-full max-w-[95vw] md:max-w-[90vw]',
+    sm:   'w-full max-w-[96vw] sm:max-w-sm    md:max-w-md    lg:max-w-lg',
+    md:   'w-full max-w-[96vw] sm:max-w-md    md:max-w-xl    lg:max-w-2xl',
+    lg:   'w-full max-w-[96vw] sm:max-w-lg    md:max-w-2xl   lg:max-w-3xl   xl:max-w-4xl',
+    xl:   'w-full max-w-[96vw] sm:max-w-xl    md:max-w-3xl   lg:max-w-4xl   xl:max-w-5xl',
+    '2xl':'w-full max-w-[96vw] sm:max-w-2xl   md:max-w-4xl   lg:max-w-5xl   xl:max-w-6xl',
+    '3xl':'w-full max-w-[96vw] sm:max-w-3xl   md:max-w-5xl   lg:max-w-6xl   xl:max-w-7xl',
+    '4xl':'w-full max-w-[96vw] sm:max-w-4xl   md:max-w-6xl   lg:max-w-7xl   xl:max-w-[90vw]',
+    '5xl':'w-full max-w-[96vw] sm:max-w-5xl   md:max-w-7xl   lg:max-w-[88vw] xl:max-w-[88vw]',
+    '6xl':'w-full max-w-[96vw] sm:max-w-6xl   md:max-w-[88vw] lg:max-w-[88vw] xl:max-w-[90vw]',
+    '7xl':'w-full max-w-[96vw] md:max-w-[90vw] lg:max-w-[92vw]',
     full: 'w-full max-w-[98vw]',
-    wide: 'w-full max-w-[95vw] md:max-w-[90vw]',
-    auto: 'w-full md:w-auto md:min-w-[500px] max-w-[95vw]',
+    wide: 'w-full max-w-[96vw] md:max-w-[90vw] lg:max-w-[92vw]',
+    auto: 'w-full md:w-auto md:min-w-[560px] lg:min-w-[640px] max-w-[96vw]',
   };
 
   useEffect(() => {
@@ -42,8 +53,8 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       onClose={onClose}
       ariaLabelledBy={titleId}
       zIndexClassName="z-[100]"
-      overlayClassName="items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
-      panelClassName={`${sizes[size]} max-h-[95vh] overflow-y-auto rounded-t-[1.5rem] bg-white p-4 shadow-2xl ring-1 ring-black/5 sm:max-h-[90vh] sm:rounded-[2rem] sm:p-6 custom-scrollbar`}
+      overlayClassName="items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4 lg:p-6"
+      panelClassName={`${sizes[size]} max-h-[95vh] overflow-y-auto rounded-t-[1.5rem] bg-white p-4 shadow-2xl ring-1 ring-black/5 sm:max-h-[90vh] sm:rounded-[2rem] sm:p-6 lg:p-7 custom-scrollbar`}
     >
       <div className="sticky top-0 z-10 mb-5 flex items-center justify-between border-b border-neutral-100 bg-white pb-4">
         <h2 id={titleId} className="text-lg font-black uppercase tracking-tight text-neutral-900 sm:text-xl">{title}</h2>

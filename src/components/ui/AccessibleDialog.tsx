@@ -160,8 +160,8 @@ export function AccessibleDialog({
   children,
   ariaLabel,
   ariaLabelledBy,
-  panelClassName = 'max-w-4xl rounded-2xl bg-white p-6 shadow-2xl',
-  overlayClassName = 'items-center justify-center overflow-y-auto bg-black/65 p-4 backdrop-blur-sm',
+  panelClassName = 'w-full max-w-[96vw] md:max-w-4xl lg:max-w-5xl xl:max-w-6xl rounded-2xl bg-white p-6 shadow-2xl',
+  overlayClassName = 'items-center justify-center overflow-y-auto bg-black/65 p-4 lg:p-6 backdrop-blur-sm',
   zIndexClassName = 'z-[110]',
   closeOnBackdrop = true,
 }: AccessibleDialogProps) {

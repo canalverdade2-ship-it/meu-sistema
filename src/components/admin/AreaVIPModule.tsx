@@ -1208,7 +1208,7 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg bg-white rounded-[3rem] p-6 md:p-10 shadow-2xl max-h-[90vh] flex flex-col"
+            className="w-full max-w-[96vw] sm:max-w-lg md:max-w-2xl lg:max-w-3xl bg-white rounded-[3rem] p-6 md:p-10 shadow-2xl max-h-[90vh] flex flex-col"
           >
             <div className="flex-shrink-0">
               <h3 className="text-2xl font-black text-neutral-900 mb-2">Ajustar Nível VIP</h3>

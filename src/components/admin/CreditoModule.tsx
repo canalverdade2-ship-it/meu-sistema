@@ -1363,7 +1363,7 @@ const enviarOfertaQuitacao = async () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2.5rem] border border-black/5 shadow-2xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col"
+              className="bg-white rounded-[2.5rem] border border-black/5 shadow-2xl w-full max-w-[96vw] sm:max-w-4xl md:max-w-6xl lg:max-w-7xl overflow-hidden max-h-[90vh] flex flex-col"
             >
               {/* Header */}
               <div className="p-6 md:p-8 border-b border-neutral-100 flex justify-between items-center shrink-0">
@@ -1861,7 +1861,7 @@ const enviarOfertaQuitacao = async () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2.5rem] border border-black/5 shadow-2xl w-full max-w-md overflow-hidden"
+              className="bg-white rounded-[2.5rem] border border-black/5 shadow-2xl w-full max-w-[96vw] sm:max-w-md md:max-w-xl lg:max-w-2xl overflow-hidden"
             >
               {/* Header */}
               <div className="p-6 border-b border-neutral-100 flex justify-between items-center">
@@ -1942,7 +1942,7 @@ const enviarOfertaQuitacao = async () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2.5rem] border border-black/5 shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white rounded-[2.5rem] border border-black/5 shadow-2xl w-full max-w-[96vw] sm:max-w-5xl md:max-w-7xl lg:max-w-[88vw] overflow-hidden flex flex-col max-h-[90vh]"
             >
               {/* Header */}
               <div className="p-6 md:p-8 border-b border-neutral-100 flex justify-between items-center shrink-0">
@@ -2092,7 +2092,7 @@ const enviarOfertaQuitacao = async () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2.5rem] border border-black/5 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col"
+              className="bg-white rounded-[2.5rem] border border-black/5 shadow-2xl w-full max-w-[96vw] sm:max-w-lg md:max-w-2xl lg:max-w-3xl overflow-hidden flex flex-col"
             >
               {/* Header */}
               <div className="p-6 border-b border-neutral-100 flex justify-between items-center shrink-0">

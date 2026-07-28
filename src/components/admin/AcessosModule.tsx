@@ -100,7 +100,7 @@ const emptyCollaborator = {
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8">
+      <div role="dialog" aria-modal="true" className="max-h-[92vh] w-full max-w-[96vw] sm:max-w-3xl md:max-w-5xl lg:max-w-6xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8">
         {children}
       </div>
     </div>

@@ -183,7 +183,7 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-neutral-900/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-3xl max-h-[95vh] overflow-hidden rounded-[2.5rem] bg-white shadow-2xl flex flex-col">
+      <div className="relative w-full max-w-[96vw] sm:max-w-3xl md:max-w-5xl lg:max-w-6xl max-h-[95vh] overflow-hidden rounded-[2.5rem] bg-white shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-8 border-b border-neutral-100 shrink-0">
           <div>

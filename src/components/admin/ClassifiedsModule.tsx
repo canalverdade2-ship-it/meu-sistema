@@ -157,7 +157,7 @@ export function ClassifiedsModule({ initialTab = 'anuncios', initialItemId }: Cl
 
       {detailsItem && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setDetailsItem(null)}>
-          <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="flex w-full max-w-[96vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <header className="flex items-center justify-between border-b border-neutral-100 p-6">
               <h2 className="text-xl font-black text-neutral-900">Detalhes do Anúncio</h2>
               <button onClick={() => setDetailsItem(null)} className="rounded-full bg-neutral-100 p-2 text-neutral-500 hover:bg-neutral-200 transition-colors"><XCircle className="h-5 w-5" /></button>

@@ -36,7 +36,7 @@ const statusByTab: Record<Tab, string | null> = {
 const statusOptions = ['pendente_emissao', 'emitida', 'cancelada', 'inutilizada', 'arquivada'];
 
 function Overlay({ children, onClose, printable = false }: { children: React.ReactNode; onClose: () => void; printable?: boolean }) {
-  return <div className={`fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 ${printable ? 'print:static print:block print:bg-white print:p-0' : ''}`} onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div role="dialog" aria-modal="true" className={`max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8 ${printable ? 'print:max-h-none print:max-w-none print:overflow-visible print:rounded-none print:shadow-none' : ''}`}>{children}</div></div>;
+  return <div className={`fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 ${printable ? 'print:static print:block print:bg-white print:p-0' : ''}`} onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div role="dialog" aria-modal="true" className={`max-h-[92vh] w-full max-w-[96vw] sm:max-w-3xl md:max-w-5xl lg:max-w-6xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl sm:p-8 ${printable ? 'print:max-h-none print:max-w-none print:overflow-visible print:rounded-none print:shadow-none' : ''}`}>{children}</div></div>;
 }
 
 export function FiscalModule({ initialItemId }: Props) {
