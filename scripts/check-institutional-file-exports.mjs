@@ -6,10 +6,12 @@ const executable = (source) => source
   .replace(/\/\*[\s\S]*?\*\//g, '')
   .replace(/\/\/.*$/gm, '');
 
-const institutionalPath = 'src/lib/institutionalFileExport.ts';
+const institutionalCore = read('src/lib/institutionalReportCore.ts');
+const institutionalExcel = read('src/lib/institutionalExcelExport.ts');
+const institutionalPdf = read('src/lib/institutionalPdfExport.ts');
+const institutional = [institutionalCore, institutionalExcel, institutionalPdf].join('\n');
 const legacyPath = 'src/components/admin/relatorios/utils/relatorioExport.ts';
 const reportsDirectory = 'src/components/admin/relatorios';
-const institutional = read(institutionalPath);
 const legacy = read(legacyPath);
 const legacyExecutable = executable(legacy);
 const demandas = executable(read('src/components/admin/demandas/DemandasTabela.tsx'));
@@ -26,19 +28,22 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-assert(institutional.includes("import('exceljs')"), 'O gerador deve usar ExcelJS para criar planilhas reais.');
-assert(institutional.includes("import('jspdf')"), 'O gerador deve usar jsPDF para criar PDFs reais.');
-assert(institutional.includes("import('jspdf-autotable')"), 'O PDF deve usar tabelas paginadas e estruturadas.');
-assert(institutional.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'), 'A planilha deve usar o MIME oficial do formato XLSX.');
-assert(institutional.includes('worksheet.autoFilter'), 'A planilha deve habilitar filtros no cabeçalho.');
-assert(institutional.includes("state: 'frozen'"), 'A planilha deve congelar o cabeçalho.');
-assert(institutional.includes('printTitlesRow'), 'A planilha deve repetir o cabeçalho durante a impressão.');
-assert(institutional.includes('headerFooter'), 'A planilha deve possuir cabeçalho e rodapé institucionais.');
-assert(institutional.includes('document.setProperties'), 'O PDF deve possuir metadados institucionais.');
-assert(institutional.includes('didDrawPage'), 'O PDF deve repetir cabeçalho e rodapé nas páginas.');
-assert(institutional.includes('sanitizeExcelText'), 'A planilha deve neutralizar fórmulas injetadas por conteúdo textual.');
-assert(institutional.includes('URL.revokeObjectURL'), 'URLs temporárias de download devem ser revogadas.');
-assert(institutional.includes("currency: 'BRL'"), 'Moedas devem usar o padrão brasileiro BRL.');
+assert(institutionalExcel.includes("import('exceljs')"), 'O gerador deve usar ExcelJS para criar planilhas reais.');
+assert(institutionalPdf.includes("import('jspdf')"), 'O gerador deve usar jsPDF para criar PDFs reais.');
+assert(institutionalPdf.includes("import('jspdf-autotable')"), 'O PDF deve usar tabelas paginadas e estruturadas.');
+assert(institutionalExcel.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'), 'A planilha deve usar o MIME oficial do formato XLSX.');
+assert(institutionalExcel.includes('worksheet.autoFilter'), 'A planilha deve habilitar filtros no cabeçalho.');
+assert(institutionalExcel.includes("state: 'frozen'"), 'A planilha deve congelar o cabeçalho.');
+assert(institutionalExcel.includes('printTitlesRow'), 'A planilha deve repetir o cabeçalho durante a impressão.');
+assert(institutionalExcel.includes('headerFooter'), 'A planilha deve possuir cabeçalho e rodapé institucionais.');
+assert(institutionalExcel.includes('worksheet.mergeCells(summaryStart'), 'Os indicadores do resumo devem ocupar cartões mesclados sem sobreposição.');
+assert(institutionalCore.includes('\"R$\" #,##0.00'), 'O formato monetário do Excel deve usar o literal BRL compatível.');
+assert(institutionalCore.includes("cell.numFmt = '#,##0.##'"), 'Números inteiros não devem receber casas decimais artificiais.');
+assert(institutionalPdf.includes('document.setProperties'), 'O PDF deve possuir metadados institucionais.');
+assert(institutionalPdf.includes('didDrawPage'), 'O PDF deve repetir cabeçalho e rodapé nas páginas.');
+assert(institutionalCore.includes('sanitizeExcelText'), 'A planilha deve neutralizar fórmulas injetadas por conteúdo textual.');
+assert(institutionalCore.includes('URL.revokeObjectURL'), 'URLs temporárias de download devem ser revogadas.');
+assert(institutionalCore.includes("currency: 'BRL'"), 'Moedas devem usar o padrão brasileiro BRL.');
 
 assert(!legacyExecutable.includes('window.print()'), 'O legado não pode continuar usando window.print() como geração de PDF.');
 assert(!legacyExecutable.includes("type: 'text/csv"), 'O legado não pode continuar produzindo CSV como relatório principal.');
