@@ -287,7 +287,7 @@ function getRpcProxy(client: SupabaseClient) {
     ) {
       const path = privateReferencePath(args.p_contrato_url);
       if (path) {
-        await client.storage.from(PRIVATE_ADMIN_BUCKET).remove([path]).catch(() => undefined);
+        await client.storage.from(PRIVATE_ADMIN_BUCKET).remove([path]).catch((err) => console.warn('Falha ao remover arquivo do storage:', err));
       }
     }
 

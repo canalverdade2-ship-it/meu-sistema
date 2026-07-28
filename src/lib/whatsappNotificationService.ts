@@ -315,7 +315,7 @@ export const whatsappNotificationService = {
           `${tipoEmoji} *DADOS DE LOGIN*`,
           formatList([
             `*Usuário/E-mail:* ${contexto.detalhesExtras}`,
-            `*Senha Temporária:* ${contexto.titulo}` // Using titulo for temporary password
+            `*Senha Temporária:* Acesse o sistema pelo link enviado por e-mail para criar sua senha segura.`
           ])
         ].join('\n');
         tituloAcao = `▶️ *MUITO IMPORTANTE*`;
