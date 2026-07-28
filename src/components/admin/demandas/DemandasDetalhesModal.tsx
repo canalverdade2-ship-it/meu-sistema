@@ -14,6 +14,8 @@ import { demandService } from '../../../lib/demandService';
 import { callAdminRpc } from '../../../lib/adminRpc';
 import { DemandasComentarios } from './DemandasComentarios';
 import { useFileViewer } from '../../../contexts/FileViewerContext';
+import { useConfirm } from '../../../hooks/useConfirm';
+import { ConfirmDialog } from '../../ui/ConfirmDialog';
 
 interface Props {
   demanda: any;
@@ -67,6 +69,8 @@ export function DemandasDetalhesModal({
   onRefresh,
   onRefreshHistorico
 }: Props) {
+  const confirmHook = useConfirm();
+  const { confirm } = confirmHook;
   const { openFile } = useFileViewer();
   type AbaType = 'detalhes' | 'transferir' | 'entregar' | 'ajuste' | 'comentarios' | 'negociacao' | 'suporte_cliente';
   const [aba, setAba] = useState<AbaType>((initialTab as AbaType) || 'detalhes');
@@ -403,7 +407,7 @@ export function DemandasDetalhesModal({
     const motivo = prompt('Por que deseja cancelar esta demanda?');
     if (!motivo) return;
 
-    if (!confirm('TEM CERTEZA? O cancelamento é irreversível e cancelará a OS e Orçamento vinculados.')) return;
+    if (!await confirm({ title: 'Atenção', message: 'TEM CERTEZA? O cancelamento é irreversível e cancelará a OS e Orçamento vinculados.' })) return;
 
     setIsSubmitting(true);
     try {
@@ -1334,6 +1338,7 @@ export function DemandasDetalhesModal({
           )}
         </div>
       </div>
+      <ConfirmDialog {...confirmHook} />
     </div>
   );
 }
