@@ -67,6 +67,7 @@ async function runTests() {
   assertEqual(res2.nome_fornecedor, "LojaTop", "OG: Site name");
 
   console.log(`\nTests finished: ${passed} passed, ${failed} failed.`);
+  if (failed > 0) throw new Error(`HTML Parser: ${failed} teste(s) falharam.`);
 }
 
-runTests();
+await runTests();

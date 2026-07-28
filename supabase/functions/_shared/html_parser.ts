@@ -12,6 +12,35 @@ export interface ParsedProduct {
   origem_campos: Record<string, string>;
 }
 
+function parsePriceAmount(value: unknown): number | null {
+  const raw = String(value ?? '').trim().replace(/\s+/g, '').replace(/[^0-9,.-]/g, '');
+  if (!raw) return null;
+
+  const commaIndex = raw.lastIndexOf(',');
+  const dotIndex = raw.lastIndexOf('.');
+  let normalized = raw;
+
+  if (commaIndex >= 0 && dotIndex >= 0) {
+    const decimalSeparator = commaIndex > dotIndex ? ',' : '.';
+    const thousandsSeparator = decimalSeparator === ',' ? /\./g : /,/g;
+    normalized = raw.replace(thousandsSeparator, '').replace(decimalSeparator, '.');
+  } else if (commaIndex >= 0) {
+    const decimalDigits = raw.length - commaIndex - 1;
+    normalized = decimalDigits === 1 || decimalDigits === 2
+      ? raw.replace(/\./g, '').replace(',', '.')
+      : raw.replace(/,/g, '');
+  } else if (dotIndex >= 0) {
+    const decimalDigits = raw.length - dotIndex - 1;
+    const dotCount = (raw.match(/\./g) || []).length;
+    normalized = dotCount === 1 && (decimalDigits === 1 || decimalDigits === 2)
+      ? raw
+      : raw.replace(/\./g, '');
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 export function parseProductHtml(html: string, originalUrl: string): ParsedProduct {
   const doc = new DOMParser().parseFromString(html, "text/html");
   if (!doc) {
@@ -93,8 +122,8 @@ export function parseProductHtml(html: string, originalUrl: string): ParsedProdu
             for (const offer of offerList) {
               const price = offer.price || offer.lowPrice;
               if (price !== undefined && price !== null) {
-                const numPrice = parseFloat(String(price).replace(/[^0-9.]/g, ''));
-                if (!isNaN(numPrice) && numPrice > 0) {
+                const numPrice = parsePriceAmount(price);
+                if (numPrice !== null) {
                   result.preco = numPrice;
                   result.moeda = offer.priceCurrency || 'BRL';
                   result.origem_campos['preco'] = 'json_ld';
@@ -142,8 +171,8 @@ export function parseProductHtml(html: string, originalUrl: string): ParsedProdu
     const ogPrice = doc.querySelector('meta[property="product:price:amount"]');
     const ogCurrency = doc.querySelector('meta[property="product:price:currency"]');
     if (ogPrice && ogPrice.getAttribute('content')) {
-      const p = parseFloat(ogPrice.getAttribute('content')!.replace(/[^0-9.]/g, ''));
-      if (!isNaN(p) && p > 0) {
+      const p = parsePriceAmount(ogPrice.getAttribute('content'));
+      if (p !== null) {
         result.preco = p;
         result.origem_campos['preco'] = 'open_graph';
         if (ogCurrency && ogCurrency.getAttribute('content')) {
@@ -329,8 +358,8 @@ export function parseProductsHtml(html: string, originalUrl: string): ParsedProd
             for (const offer of offerList) {
               const price = offer.price || offer.lowPrice;
               if (price !== undefined && price !== null) {
-                const numPrice = parseFloat(String(price).replace(/[^0-9.]/g, ''));
-                if (!isNaN(numPrice) && numPrice > 0) {
+                const numPrice = parsePriceAmount(price);
+                if (numPrice !== null) {
                   p.preco = numPrice;
                   p.moeda = offer.priceCurrency || 'BRL';
                   p.origem_campos!['preco'] = 'json_ld';
