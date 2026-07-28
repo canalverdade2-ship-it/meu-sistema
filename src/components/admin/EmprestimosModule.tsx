@@ -499,7 +499,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
       if (error) throw error;
 
       if (!data?.already_processed) {
-        await notificationService.notifyClient(selected.cliente_id, 'Oferta de Quitacao', 'O valor para quitacao total foi aprovado.', 'emprestimos', 'ativos', selected.id);
+        await notificationService.notifyClient(selected.cliente_id, 'Oferta de Quitacao', 'O valor para quitacao total foi aprovado.', 'emprestimos', 'ativos', { itemId: selected.id });
       }
 
       toast.success(data?.already_processed ? 'Esta quitacao ja possui uma oferta enviada.' : 'Oferta enviada!');
