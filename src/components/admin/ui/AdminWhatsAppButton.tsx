@@ -125,7 +125,7 @@ export function AdminWhatsAppButton({
               {/* Header do preview */}
               <div className="flex items-center gap-2 px-4 py-3 bg-[#202c33] border-b border-white/5">
               <div className="w-7 h-7 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                {React.cloneElement(whatsappIcon as React.ReactElement, { width: '14', height: '14' })}
+                {React.cloneElement(whatsappIcon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { width: '14', height: '14' })}
               </div>
               <div>
                 <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Pré-visualização</p>

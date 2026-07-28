@@ -2,6 +2,37 @@ import { supabase } from './supabase';
 import { sessionService } from './sessionService';
 import { toast } from 'react-hot-toast';
 
+export const DELETE_REASON_REQUEST_EVENT = 'gsa:request-delete-reason';
+
+export interface DeleteReasonRequestDetail {
+  tabela: string;
+  registroId: string;
+  handled: boolean;
+  resolve: (reason: string | null) => void;
+}
+
+function requestDeletionReason(tabela: string, registroId: string): Promise<string | null> {
+  if (typeof window === 'undefined') return Promise.resolve(null);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const safeResolve = (reason: string | null) => {
+      if (settled) return;
+      settled = true;
+      resolve(reason);
+    };
+    const detail: DeleteReasonRequestDetail = {
+      tabela,
+      registroId,
+      handled: false,
+      resolve: safeResolve,
+    };
+
+    window.dispatchEvent(new CustomEvent<DeleteReasonRequestDetail>(DELETE_REASON_REQUEST_EVENT, { detail }));
+    if (!detail.handled) safeResolve(null);
+  });
+}
+
 /**
  * Intercepta exclusões administrativas.
  * Atores que não são colaboradores podem excluir diretamente.
@@ -39,7 +70,7 @@ export async function canDeleteRecord(tabela: string, registro_id: string): Prom
       return false;
     }
 
-    const motivo = window.prompt('Exclusão restrita: qual o motivo para solicitar a exclusão deste registro? Sua solicitação será enviada para aprovação administrativa.');
+    const motivo = await requestDeletionReason(tabela, registro_id);
 
     if (!motivo || motivo.trim() === '') {
       toast.error('Solicitação cancelada. É obrigatório informar o motivo.');

@@ -1,0 +1,62 @@
+name: Authenticated Production Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: authenticated-production-smoke
+  cancel-in-progress: false
+
+jobs:
+  authenticated-portals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+      PRODUCTION_CLIENT_CPF: ${{ secrets.PRODUCTION_CLIENT_CPF }}
+      PRODUCTION_CLIENT_PIN: ${{ secrets.PRODUCTION_CLIENT_PIN }}
+      PRODUCTION_ADMIN_CODE: ${{ secrets.PRODUCTION_ADMIN_CODE }}
+      PRODUCTION_PROVIDER_DOCUMENT: ${{ secrets.PRODUCTION_PROVIDER_DOCUMENT }}
+      PRODUCTION_PROVIDER_PIN: ${{ secrets.PRODUCTION_PROVIDER_PIN }}
+      PRODUCTION_SUPPLIER_DOCUMENT: ${{ secrets.PRODUCTION_SUPPLIER_DOCUMENT }}
+      PRODUCTION_SUPPLIER_PIN: ${{ secrets.PRODUCTION_SUPPLIER_PIN }}
+      PRODUCTION_SMOKE: 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Exercise authenticated client portal
+        run: npm run test:e2e:production-auth
+
+      - name: Exercise authenticated management portal
+        env:
+          PRODUCTION_ACTOR_TYPE: admin
+        run: npm run test:e2e:production-roles
+
+      - name: Exercise authenticated provider portal
+        env:
+          PRODUCTION_ACTOR_TYPE: provider
+          PRODUCTION_ACTOR_DOCUMENT: ${{ env.PRODUCTION_PROVIDER_DOCUMENT }}
+          PRODUCTION_ACTOR_PIN: ${{ env.PRODUCTION_PROVIDER_PIN }}
+        run: npm run test:e2e:production-roles
+
+      - name: Exercise authenticated supplier portal
+        env:
+          PRODUCTION_ACTOR_TYPE: supplier
+          PRODUCTION_ACTOR_DOCUMENT: ${{ env.PRODUCTION_SUPPLIER_DOCUMENT }}
+          PRODUCTION_ACTOR_PIN: ${{ env.PRODUCTION_SUPPLIER_PIN }}
+        run: npm run test:e2e:production-roles

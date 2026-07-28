@@ -2,6 +2,36 @@ import { NavigationOptions } from './types';
 
 type RouteChangeListener = (location: { pathname: string; search: string; hash: string }) => void;
 
+const AUTH_ENTRY_PATHS = new Set([
+  '/login',
+  '/login/pessoa-fisica',
+  '/login/empresa',
+  '/login/acesso-restrito',
+  '/login/admin',
+  '/login/colaborador',
+  '/login/prestador',
+  '/fornecedor/login',
+]);
+
+function normalizeNestedReturnTo(path: string): string {
+  const target = new URL(path, window.location.origin);
+  let returnTo = target.searchParams.get('returnTo');
+  const originalReturnTo = returnTo;
+
+  for (let depth = 0; returnTo && depth < 5; depth += 1) {
+    const nested = new URL(returnTo, window.location.origin);
+    const nestedReturnTo = nested.searchParams.get('returnTo');
+    if (!AUTH_ENTRY_PATHS.has(nested.pathname) || !nestedReturnTo) break;
+    returnTo = nestedReturnTo;
+  }
+
+  if (returnTo && returnTo !== originalReturnTo) {
+    target.searchParams.set('returnTo', returnTo);
+  }
+
+  return `${target.pathname}${target.search}${target.hash}`;
+}
+
 class NavigationService {
   private listeners: Set<RouteChangeListener> = new Set();
 
@@ -26,7 +56,7 @@ class NavigationService {
     const loc = {
       pathname: window.location.pathname,
       search: window.location.search,
-      hash: window.location.hash
+      hash: window.location.hash,
     };
     this.listeners.forEach((listener) => listener(loc));
   }
@@ -35,10 +65,14 @@ class NavigationService {
   navigate(path: string, options?: NavigationOptions) {
     if (typeof window === 'undefined') return;
 
+    const normalizedPath = normalizeNestedReturnTo(path);
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (normalizedPath === currentPath && options?.state === undefined) return;
+
     if (options?.replace) {
-      window.history.replaceState(options?.state || {}, '', path);
+      window.history.replaceState(options?.state || {}, '', normalizedPath);
     } else {
-      window.history.pushState(options?.state || {}, '', path);
+      window.history.pushState(options?.state || {}, '', normalizedPath);
     }
     this.notify();
   }
@@ -51,7 +85,7 @@ class NavigationService {
   // Voltar no histórico de forma segura
   navigateBack(fallbackPath?: string) {
     if (typeof window === 'undefined') return;
-    
+
     // Se há histórico anterior no nosso app, volta
     if (window.history.length > 1) {
       window.history.back();

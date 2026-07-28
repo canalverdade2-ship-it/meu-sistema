@@ -899,7 +899,7 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
 
                   <button
                     type="button"
-                    onClick={onLogin}
+                    onClick={() => onLogin()}
                     className="mt-9 inline-flex min-h-14 w-full max-w-md items-center justify-center gap-2 rounded-xl bg-[#0b1828] px-6 text-sm font-black text-white shadow-[0_12px_30px_rgba(11,24,40,.18)] transition hover:bg-[#142a43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9a742b] focus-visible:ring-offset-2"
                   >
                     Ir para o login empresarial

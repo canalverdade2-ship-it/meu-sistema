@@ -988,7 +988,7 @@ export function FaturasList({
                         <p className="text-2xl font-black tracking-tight text-[#1a1a1a] mt-1">{formatCurrency(total)}</p>
                       </div>
                       <div className="text-center sm:text-right">
-                        <p className="text-[10px] font-semibold tracking-widest text-[#1a1a1a]/40 uppercase">Esta Parcela ({selectedFatura.itens_faturados?.[0]?.descricao?.match(/Parcela \d+\/\d+/)?.[0] || '1/1'})</p>
+                        <p className="text-[10px] font-semibold tracking-widest text-[#1a1a1a]/40 uppercase">Esta Parcela ({String(selectedFatura.itens_faturados?.[0]?.descricao || '').match(/Parcela \d+\/\d+/)?.[0] || '1/1'})</p>
                         <p className="text-2xl font-black tracking-tight text-indigo-600 mt-1">{formatCurrency(selectedFatura.valor_total)}</p>
                       </div>
                       <div className="text-right">

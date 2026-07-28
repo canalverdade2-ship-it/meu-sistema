@@ -40,6 +40,7 @@ import { LogoGSA } from '../components/ui/LogoGSA';
 import { useAdminNotifications } from '../hooks/useAdminNotifications';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { SystemStatusIndicator } from '../components/admin/SystemStatusIndicator';
+import { DeleteRequestDialogHost } from '../components/admin/DeleteRequestDialogHost';
 import {
   adminPathFor,
   hasAdminModuleAccess,
@@ -232,6 +233,7 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
         <div className="shrink-0 px-3 py-4 border-t border-white/5">{sidebarOpen && <div className="mb-2 flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-xs font-black text-white">{adminType === 'admin' ? 'AD' : 'CO'}</div><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-white">{adminType === 'admin' ? 'Administrador' : colaboradorNome || 'Colaborador'}</p><p className="text-[10px] font-semibold uppercase tracking-wider text-white/30">{adminType === 'admin' ? 'Acesso total' : 'Acesso restrito'}</p></div><span className="h-2 w-2 rounded-full bg-emerald-400" /></div>}<button onClick={onLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-white/30 hover:bg-red-500/10 hover:text-red-400"><LogOut className="h-[18px] w-[18px]" />{sidebarOpen && <span className="text-sm font-semibold">Sair com Segurança</span>}</button></div>
       </>}
     >
+      <DeleteRequestDialogHost />
       <div className="p-3 lg:p-5"><div className="min-h-[calc(100vh-140px)] rounded-[2rem] bg-white p-3 lg:p-4 shadow-sm ring-1 ring-neutral-100">
         <Suspense fallback={<ModuleLoadingState />}>
         {normalizedActive === 'dashboard' && (adminType === 'colaborador' ? <CollaboratorDashboard colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || undefined} colaboradorModulos={internalModulos} onNavigate={commonNavigate} /> : <Dashboard adminType="admin" colaboradorNome="Administrador" colaboradorModulos={internalModulos} onNavigate={commonNavigate} />)}

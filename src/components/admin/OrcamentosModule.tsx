@@ -987,7 +987,7 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
     servico_id: '',
     produto_id: '',
     assinatura_id: '',
-    categoria: 'servico' as 'servico' | 'emprestimo',
+    categoria: 'servico' as 'servico' | 'produto' | 'assinatura' | 'emprestimo',
     observacoes_servico: '',
     valor_servico: 0,
     valor_adicional: 0,
@@ -1161,7 +1161,7 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
   const fetchData = async () => {
     const { data: c } = await supabase.from('clientes').select('id, nome, codigo_cliente, tipo_pessoa').eq('status', 'ativo');
     const { data: s } = await supabase.from('servicos').select('*').eq('status', 'ativo');
-    if (c) setClientes(c);
+    if (c) setClientes(c as unknown as Cliente[]);
     if (s) setServicos(s);
   };
 
@@ -1695,6 +1695,7 @@ function OrcamentoDetails({
       valor_adicional: orcamento.valor_adicional || 0,
       acrescimo: orcamento.acrescimo || 0,
       desconto: orcamento.desconto || 0,
+      promocao_desconto_manual: orcamento.promocao_desconto_manual || 0,
       observacoes_servico: orcamento.observacoes_servico || '',
       categoria: orcamento.categoria || 'servico',
       servico_id: orcamento.servico_id || '',

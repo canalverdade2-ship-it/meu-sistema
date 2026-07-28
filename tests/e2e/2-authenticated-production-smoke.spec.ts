@@ -4,6 +4,16 @@ const productionUrl = process.env.PLAYWRIGHT_BASE_URL?.trim();
 const productionCpf = (process.env.PRODUCTION_CLIENT_CPF || '').replace(/\D/g, '');
 const productionPin = (process.env.PRODUCTION_CLIENT_PIN || '').replace(/\D/g, '');
 
+const AUTHENTICATED_CLIENT_ROUTES = [
+  '/cliente/dashboard',
+  '/cliente/perfil',
+  '/cliente/servicos-e-assinaturas',
+  '/cliente/financeiro',
+  '/cliente/fidelidade',
+  '/cliente/suporte',
+  '/marketplace',
+] as const;
+
 function requireProductionConfiguration() {
   if (!productionUrl) throw new Error('PLAYWRIGHT_BASE_URL não configurada.');
   const parsedUrl = new URL(productionUrl);
@@ -21,11 +31,19 @@ async function openClientLogin(page: Page) {
   }).toPass({ timeout: 20_000 });
 }
 
+async function assertHealthyAuthenticatedPage(page: Page, route: string): Promise<void> {
+  await page.goto(new URL(route, productionUrl).toString(), { waitUntil: 'domcontentloaded' });
+  await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe(route);
+  await expect(page.locator('body')).toBeVisible();
+  await expect(page.locator('main, #root, [role="main"]').first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/Algo deu errado|Erro inesperado|Falha inesperada/i).first()).toHaveCount(0);
+}
+
 test.describe('Smoke autenticado de produção', () => {
   test.beforeAll(() => requireProductionConfiguration());
 
-  test('cliente existente entra no portal sem erro de aplicação', async ({ page }) => {
-    test.setTimeout(90_000);
+  test('cliente existente entra e percorre os principais módulos sem erro de aplicação', async ({ page }) => {
+    test.setTimeout(180_000);
 
     const pageErrors: string[] = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));
@@ -65,7 +83,11 @@ test.describe('Smoke autenticado de produção', () => {
     await expect(dialog).toBeHidden({ timeout: 30_000 });
     const portalMarker = page.getByText(/Meus Atendimentos|Minha Conta|Bem-vindo/i).first();
     await expect(portalMarker).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(/Algo deu errado|Erro inesperado|Falha inesperada/i).first()).toHaveCount(0);
+
+    for (const route of AUTHENTICATED_CLIENT_ROUTES) {
+      await assertHealthyAuthenticatedPage(page, route);
+    }
+
     expect(pageErrors, `Erros não tratados no navegador: ${pageErrors.join(' | ')}`).toEqual([]);
   });
 });

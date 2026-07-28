@@ -28,8 +28,13 @@ function configuredOrigins() {
     .filter(Boolean);
 }
 
+function isAllowedOrigin(origin: string | null) {
+  if (!origin) return true;
+  return configuredOrigins().includes(origin);
+}
+
 function corsHeaders(origin: string | null) {
-  const allowed = origin || '*';
+  const allowed = origin && isAllowedOrigin(origin) ? origin : '*';
   return {
     'access-control-allow-origin': allowed,
     'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type, x-custom-header',
@@ -224,6 +229,7 @@ function clientIp(request: Request) {
 
 export async function handleRequest(request: Request) {
   const origin = request.headers.get('origin');
+  if (origin && !isAllowedOrigin(origin)) return json(403, { error: 'origin_not_allowed' }, origin);
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) });
   if (request.method !== 'POST') return json(405, { error: 'method_not_allowed' }, origin, { allow: 'POST, OPTIONS' });
 
