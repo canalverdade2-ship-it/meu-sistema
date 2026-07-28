@@ -94,8 +94,10 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
   useEffect(() => { selectedPremioRef.current = selectedPremio; }, [selectedPremio]);
 
   useEffect(() => {
-    fetchPremios();
-    fetchClientes();
+    let isMounted = true;
+    fetchPremios(isMounted);
+    fetchClientes(isMounted);
+    return () => { isMounted = false; };
   }, [activeTab, search, filters]);
 
   // Stable Realtime Subscription
@@ -126,8 +128,8 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
     };
   }, []); // Empty dependency array for stability
 
-  const fetchPremios = async () => {
-    setLoading(true);
+  const fetchPremios = async (isMounted = true) => {
+    if (isMounted) setLoading(true);
     try {
       // Primeiro, verifica e cancela os expirados
       const { data: expirados } = await supabase
@@ -179,24 +181,28 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
       const { data, error } = await query.order('data_cadastro', { ascending: false });
 
       if (error) throw error;
-      if (data) setPremios(data as Premio[]);
+      if (isMounted && data) setPremios(data as Premio[]);
     } catch (error) {
       console.error('Error fetching premios:', error);
     } finally {
-      setLoading(false);
+      if (isMounted) setLoading(false);
     }
   };
 
-  const fetchClientes = async () => {
+  const fetchClientes = async (isMounted = true) => {
     const { data } = await supabase.from('clientes').select('id, nome, codigo_cliente').order('nome');
-    if (data) setClientes(data);
+    if (isMounted && data) setClientes(data);
   };
+
+  const [isSubmittingForm, setIsSubmittingForm] = useState(false);
 
   const handleCreatePremio = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingForm) return;
     if (!newPremio.cliente_id || !newPremio.nome || !newPremio.descricao) {
       return toast.error('Preencha todos os campos obrigatórios.');
     }
+    setIsSubmittingForm(true);
 
     let dataValidade = new Date();
     if (newPremio.validade_tipo === 'dias') {
@@ -258,11 +264,16 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
     } catch (error: any) {
       console.error('Error creating premio:', error);
       toast.error(error.message || 'Erro ao cadastrar prêmio.');
+    } finally {
+      setIsSubmittingForm(false);
     }
   };
 
+  const [isCanceling, setIsCanceling] = useState(false);
+
   const handleCancelPremio = async () => {
-    if (!selectedPremio || !cancelMotivo) return;
+    if (!selectedPremio || !cancelMotivo || isCanceling) return;
+    setIsCanceling(true);
 
     try {
       const { error } = await supabase
@@ -303,11 +314,16 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
       fetchPremios();
     } catch (error) {
       toast.error('Erro ao cancelar prêmio.');
+    } finally {
+      setIsCanceling(false);
     }
   };
 
+  const [isSendingInstrucoes, setIsSendingInstrucoes] = useState(false);
+
   const handleEnviarInstrucoes = async () => {
-    if (!selectedPremio || !instrucoesResgate) return;
+    if (!selectedPremio || !instrucoesResgate || isSendingInstrucoes) return;
+    setIsSendingInstrucoes(true);
 
     try {
       const { error } = await supabase
@@ -347,6 +363,8 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
       fetchPremios();
     } catch (error) {
       toast.error('Erro ao enviar instruções.');
+    } finally {
+      setIsSendingInstrucoes(false);
     }
   };
 
@@ -675,10 +693,10 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
             </button>
             <button
               onClick={handleEnviarInstrucoes}
-              disabled={!instrucoesResgate}
+              disabled={!instrucoesResgate || isSendingInstrucoes}
               className="rounded-2xl bg-indigo-600 px-10 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-30 transition-all hover:-translate-y-0.5"
             >
-              {selectedPremio?.instrucoes_resgate ? 'Atualizar Instruções' : 'Enviar agora para o Cliente'}
+              {isSendingInstrucoes ? 'Enviando...' : (selectedPremio?.instrucoes_resgate ? 'Atualizar Instruções' : 'Enviar agora para o Cliente')}
             </button>
           </div>
         </div>
@@ -785,9 +803,10 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
             </button>
             <button
               type="submit"
-              className="rounded-2xl bg-[#1a1a1a] px-12 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-black/10 hover:bg-indigo-600 transition-all hover:-translate-y-0.5"
+              disabled={isSubmittingForm}
+              className="rounded-2xl bg-[#1a1a1a] px-12 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-black/10 hover:bg-indigo-600 transition-all hover:-translate-y-0.5 disabled:opacity-50"
             >
-              Confirmar Cadastro
+              {isSubmittingForm ? 'Confirmando...' : 'Confirmar Cadastro'}
             </button>
           </div>
         </form>
@@ -826,10 +845,10 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
             </button>
             <button
               onClick={handleCancelPremio}
-              disabled={!cancelMotivo}
+              disabled={!cancelMotivo || isCanceling}
               className="rounded-2xl bg-red-600 px-10 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-red-200 hover:bg-red-700 disabled:opacity-30 transition-all hover:-translate-y-0.5"
             >
-              Confirmar Anulação
+              {isCanceling ? 'Confirmando...' : 'Confirmar Anulação'}
             </button>
           </div>
         </div>

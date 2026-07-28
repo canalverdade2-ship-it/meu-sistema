@@ -82,17 +82,23 @@ export function SaquesList({
   }, [shouldOpenModal]);
 
   useEffect(() => {
-    fetchSaques();
+    let isMounted = true;
+    fetchSaques(isMounted);
     const channel = supabase
       .channel('client-saques-updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'saques', filter: `cliente_id=eq.${clientId}` }, () => fetchSaques())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'saques', filter: `cliente_id=eq.${clientId}` }, () => {
+        fetchSaques(isMounted);
+      })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      isMounted = false;
+      supabase.removeChannel(channel); 
+    };
   }, [clientId]);
 
-  const fetchSaques = async () => {
+  const fetchSaques = async (isMounted = true) => {
     const { data } = await supabase.from('saques').select('*').eq('cliente_id', clientId).order('data_solicitacao', { ascending: false });
-    if (data) setSaques(data);
+    if (data && isMounted) setSaques(data);
   };
 
     const isPixValid = () => {

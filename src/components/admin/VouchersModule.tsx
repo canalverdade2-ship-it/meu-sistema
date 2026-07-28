@@ -301,11 +301,15 @@ export function VouchersModule({ activeSubTab, initialItemId, colaboradorId, col
   const handleCancelClick = (id: string) => {
     setSelectedVoucherId(id);
     setCancelReason('');
+    setIsCanceling(false);
     setIsCancelModalOpen(true);
   };
 
+  const [isCanceling, setIsCanceling] = useState(false);
+
   const confirmCancel = async () => {
-    if (!selectedVoucherId || !cancelReason) return;
+    if (!selectedVoucherId || !cancelReason || isCanceling) return;
+    setIsCanceling(true);
     
     const voucherToCancel = vouchers.find(v => v.id === selectedVoucherId);
 
@@ -346,6 +350,7 @@ export function VouchersModule({ activeSubTab, initialItemId, colaboradorId, col
       refreshVouchers();
       setIsCancelModalOpen(false);
     }
+    setIsCanceling(false);
   };
 
   return (
@@ -594,10 +599,10 @@ export function VouchersModule({ activeSubTab, initialItemId, colaboradorId, col
             <button onClick={() => setIsCancelModalOpen(false)} className="flex-1 rounded-xl border border-neutral-200 py-3 font-bold text-neutral-600 hover:bg-neutral-50">Voltar</button>
             <button 
               onClick={confirmCancel}
-              disabled={!cancelReason}
+              disabled={!cancelReason || isCanceling}
               className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white shadow-lg shadow-red-600/20 hover:bg-red-700 disabled:opacity-50"
             >
-              Confirmar Cancelamento
+              {isCanceling ? 'Cancelando...' : 'Confirmar Cancelamento'}
             </button>
           </div>
         </div>
@@ -606,7 +611,8 @@ export function VouchersModule({ activeSubTab, initialItemId, colaboradorId, col
   );
 }
 
-function VoucherForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, onCancel: () => void }) {
+function VoucherForm({ onSubmit, onCancel }: { onSubmit: (data: any) => Promise<void>, onCancel: () => void }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     nome: '',
     scope: 'geral',
@@ -620,24 +626,34 @@ function VoucherForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, on
   const [clientes, setClientes] = useState<Cliente[]>([]);
 
   useEffect(() => {
+    let isMounted = true;
+    const fetchClientes = async () => {
+      const { data } = await supabase.from('clientes').select('id, nome, codigo_cliente').eq('status', 'ativo');
+      if (isMounted && data) setClientes(data);
+    };
     fetchClientes();
+    return () => { isMounted = false; };
   }, []);
 
-  const fetchClientes = async () => {
-    const { data } = await supabase.from('clientes').select('id, nome, codigo_cliente').eq('status', 'ativo');
-    if (data) setClientes(data);
-  };
-
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit({
-      nome: formData.nome,
-      tipo: formData.categoria === 'saque' ? 'valor' : formData.tipo_valor,
-      categoria: formData.categoria,
-      valor: parseFloat(formData.valor) || 0,
-      usage_limit: parseInt(formData.usage_limit) || 1,
-      cliente_id: formData.scope === 'geral' ? null : formData.cliente_id,
-      validade: formData.validade || null
-    }); }} className="space-y-6">
+    <form onSubmit={async (e) => { 
+      e.preventDefault(); 
+      if (isSubmitting) return;
+      setIsSubmitting(true);
+      try {
+        await onSubmit({
+          nome: formData.nome,
+          tipo: formData.categoria === 'saque' ? 'valor' : formData.tipo_valor,
+          categoria: formData.categoria,
+          valor: parseFloat(formData.valor) || 0,
+          usage_limit: parseInt(formData.usage_limit) || 1,
+          cliente_id: formData.scope === 'geral' ? null : formData.cliente_id,
+          validade: formData.validade || null
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    }} className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className="mb-1 block text-sm font-bold text-neutral-700">Nome do Voucher *</label>
@@ -771,7 +787,7 @@ function VoucherForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, on
       </div>
       <div className="flex gap-4 pt-4">
         <button type="button" onClick={onCancel} className="flex-1 rounded-xl border border-neutral-200 py-3 font-bold text-neutral-600 hover:bg-neutral-50">Cancelar</button>
-        <button type="submit" className="flex-1 rounded-xl bg-indigo-600 py-3 font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700">Salvar Voucher</button>
+        <button type="submit" disabled={isSubmitting} className="flex-1 rounded-xl bg-indigo-600 py-3 font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50">{isSubmitting ? 'Salvando...' : 'Salvar Voucher'}</button>
       </div>
     </form>
   );

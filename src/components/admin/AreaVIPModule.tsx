@@ -101,6 +101,7 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
   const [manualLevelModal, setManualLevelModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'painel' | 'niveis' | 'controle'>('painel');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // --- Estado de controle do módulo ---
   const [moduloAtivo, setModuloAtivo] = useState(true);
@@ -333,6 +334,8 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
   };
 
   const handleManualLevelUpdate = async (clientId: string, levelId: string | null) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const levelName = levelId ? levels.find(l => l.id === levelId)?.name : null;
       const auditTag = colaboradorNome ? ` [POR: ${colaboradorNome}]` : '';
@@ -435,6 +438,8 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
     } catch (error: any) {
       console.error('Erro ao ajustar nível:', error);
       toast.error(error.message || 'Erro ao ajustar nível');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -488,7 +493,8 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
   };
 
   const handleSaveLevel = async () => {
-    if (!editingLevel) return;
+    if (!editingLevel || isSubmitting) return;
+    setIsSubmitting(true);
     
     try {
       const { error } = await supabase
@@ -525,6 +531,8 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
       toast.success('Nível VIP atualizado com sucesso!');
     } catch (error: any) {
       toast.error('Erro ao salvar nível: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1172,7 +1180,8 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
 
                 <button 
                   onClick={handleSaveLevel}
-                  className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Save size={18} />
                   Salvar Alterações
@@ -1212,7 +1221,8 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
             <div className="flex-1 overflow-y-auto pr-2 space-y-3">
               <button
                 onClick={() => handleManualLevelUpdate(selectedClient.id, null)}
-                className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${!selectedClient.nivel_manual_id ? 'border-indigo-600 bg-indigo-50' : 'border-neutral-100 hover:border-neutral-200'}`}
+                disabled={isSubmitting}
+                className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between disabled:opacity-50 ${!selectedClient.nivel_manual_id ? 'border-indigo-600 bg-indigo-50' : 'border-neutral-100 hover:border-neutral-200'}`}
               >
                 <div className="flex items-center gap-3">
                   <div className="h-4 w-4 rounded-full bg-neutral-200"></div>
@@ -1246,7 +1256,8 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
                   <button
                     key={level.id}
                     onClick={() => handleManualLevelUpdate(selectedClient.id, level.id)}
-                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${isCurrent ? 'border-indigo-600 bg-indigo-50' : 'border-neutral-100 hover:border-neutral-200'}`}
+                    disabled={isSubmitting}
+                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between disabled:opacity-50 ${isCurrent ? 'border-indigo-600 bg-indigo-50' : 'border-neutral-100 hover:border-neutral-200'}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-4 w-4 rounded-full" style={{ backgroundColor: level.color }}></div>

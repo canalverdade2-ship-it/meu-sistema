@@ -28,25 +28,29 @@ export function AdminPrestadorVouchers({
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    fetchVouchers();
+    let isMounted = true;
+    const fetchVouchersLocal = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase.from('prestador_vouchers').select('*').eq('prestador_id', prestadorId).order('created_at', { ascending: false });
+        if (error) throw error;
+        if (isMounted) setVouchers(data || []);
+      } catch (e) {
+        toast.error('Erro ao carregar vouchers.');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    
+    fetchVouchersLocal();
     const sub = supabase.channel(`admin-vouchers-${prestadorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers' }, fetchVouchers)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers' }, fetchVouchersLocal)
       .subscribe();
-    return () => { supabase.removeChannel(sub); };
+    return () => { 
+      isMounted = false;
+      supabase.removeChannel(sub); 
+    };
   }, [prestadorId]);
-
-  const fetchVouchers = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.from('prestador_vouchers').select('*').eq('prestador_id', prestadorId).order('created_at', { ascending: false });
-      if (error) throw error;
-      setVouchers(data || []);
-    } catch (e) {
-      toast.error('Erro ao carregar vouchers.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +68,15 @@ export function AdminPrestadorVouchers({
       toast.success('Voucher criado com sucesso.');
       setIsModalOpen(false);
       setFormData({ valor: '', descricao: '' });
-      fetchVouchers();
+      setVouchers(prev => [{
+        id: 'temp-' + Date.now(),
+        prestador_id: prestadorId,
+        codigo,
+        valor: parseFloat(formData.valor),
+        descricao: formData.descricao,
+        status: 'ativo',
+        created_at: new Date().toISOString()
+      }, ...prev]);
 
       // Notificar Prestador
       await notificationService.notifyProvider(
@@ -96,11 +108,12 @@ export function AdminPrestadorVouchers({
     if (!canProceed) return;
 
     if (!confirm('Excluir este voucher?')) return;
+    setActionLoading(true);
     try {
       const { error } = await supabase.from('prestador_vouchers').delete().eq('id', id);
       if (error) throw error;
       toast.success('Excluído.');
-      fetchVouchers();
+      setVouchers(prev => prev.filter(v => v.id !== id));
 
       // Log action
       await logService.logAction({
@@ -112,17 +125,20 @@ export function AdminPrestadorVouchers({
       });
     } catch (e) {
       toast.error('Erro ao excluir.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handlePagar = async (id: string) => {
     if (!confirm('Confirmar o pagamento/transferência deste voucher saquado?')) return;
+    setActionLoading(true);
     try {
       // In a real flow, you might want to create a transaction here or just mark as pago.
       const { error } = await supabase.from('prestador_vouchers').update({ status: 'pago' }).eq('id', id);
       if (error) throw error;
       toast.success('Voucher marcado como pago.');
-      fetchVouchers();
+      setVouchers(prev => prev.map(v => v.id === id ? { ...v, status: 'pago' } : v));
 
       // Notificar Prestador do pagamento
       await notificationService.notifyProvider(
@@ -144,6 +160,8 @@ export function AdminPrestadorVouchers({
       });
     } catch (e) {
       toast.error('Erro ao processar.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -156,7 +174,7 @@ export function AdminPrestadorVouchers({
           <h4 className="font-bold text-indigo-900">Vouchers do Prestador</h4>
           <p className="text-sm text-indigo-700">Gerencie os bônus concedidos para este profissional.</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="btn-primary bg-indigo-600 hover:bg-indigo-700 text-sm">
+        <button onClick={() => setIsModalOpen(true)} disabled={actionLoading} className="btn-primary bg-indigo-600 hover:bg-indigo-700 text-sm disabled:opacity-50">
           <Plus className="w-4 h-4 mr-1"/> Adicionar Voucher
         </button>
       </div>
@@ -189,12 +207,12 @@ export function AdminPrestadorVouchers({
             </div>
             <div className="flex gap-2">
               {v.status === 'resgatado' && (
-                <button onClick={() => handlePagar(v.id)} className="p-2 text-emerald-600 bg-emerald-50 rounded" title="Confirmar Pagamento">
+                <button onClick={() => handlePagar(v.id)} disabled={actionLoading} className="p-2 text-emerald-600 bg-emerald-50 rounded disabled:opacity-50" title="Confirmar Pagamento">
                   <CheckCircle className="w-5 h-5"/>
                 </button>
               )}
               {v.status === 'ativo' && (
-                <button onClick={() => handleDelete(v.id)} className="p-2 text-red-600 bg-red-50 rounded" title="Excluir">
+                <button onClick={() => handleDelete(v.id)} disabled={actionLoading} className="p-2 text-red-600 bg-red-50 rounded disabled:opacity-50" title="Excluir">
                   <Trash2 className="w-5 h-5"/>
                 </button>
               )}

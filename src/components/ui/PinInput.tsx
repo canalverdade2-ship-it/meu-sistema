@@ -72,7 +72,7 @@ export function PinInput({ value, onChange, disabled = false, error = false, aut
       <div className="flex items-center gap-3" onPaste={handlePaste}>
         {[0, 1, 2, 3].map((index) => (
           <motion.div
-            key={index}
+            key={`pin-input-digit-${index}`}
             animate={reduceMotion ? undefined : {
               scale: focusedIndex === index ? 1.05 : 1,
               borderColor: error ? 'rgba(239, 68, 68, 0.7)' : focusedIndex === index ? 'rgba(0, 0, 0, 0.4)' : digits[index]?.trim() ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.08)',

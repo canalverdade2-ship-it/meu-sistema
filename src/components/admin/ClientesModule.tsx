@@ -635,7 +635,8 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
   );
 }
 
-function ClienteForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, onCancel: () => void }) {
+function ClienteForm({ onSubmit, onCancel }: { onSubmit: (data: any) => Promise<void> | void, onCancel: () => void }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -673,7 +674,15 @@ function ClienteForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, on
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="space-y-6">
+    <form onSubmit={async (e) => { 
+      e.preventDefault(); 
+      setIsSubmitting(true);
+      try {
+        await onSubmit(formData);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }} className="space-y-6">
       {referralInfo && (
         <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200 animate-pulse">
           <div className="flex items-center gap-2 text-amber-800 mb-1">
@@ -769,7 +778,9 @@ function ClienteForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, on
       </div>
       <div className="flex gap-4 pt-4">
         <button type="button" onClick={onCancel} className="flex-1 rounded-xl border border-neutral-200 py-3 font-bold text-neutral-600 hover:bg-neutral-50">Cancelar</button>
-        <button type="submit" className="flex-1 rounded-xl bg-indigo-600 py-3 font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700">Finalizar Cadastro</button>
+        <button type="submit" disabled={isSubmitting} className="flex-1 rounded-xl bg-indigo-600 py-3 font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50">
+          {isSubmitting ? 'Salvando...' : 'Finalizar Cadastro'}
+        </button>
       </div>
     </form>
   );
@@ -820,6 +831,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
   useEffect(() => {
     setCliente(initialCliente);
     
+    let isMounted = true;
     const fetchFullDetails = async () => {
       if (!initialCliente?.id) return;
       const { data, error } = await supabase
@@ -828,11 +840,12 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
         .eq('id', initialCliente.id)
         .single();
       
-      if (data && !error) {
+      if (isMounted && data && !error) {
         setCliente(data);
       }
     };
     fetchFullDetails();
+    return () => { isMounted = false; };
   }, [initialCliente]);
 
   useEffect(() => {

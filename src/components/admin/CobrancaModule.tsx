@@ -1496,7 +1496,7 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
             onChange={(e) => setWpMessage(e.target.value)}
             className="w-full h-32 rounded-2xl bg-neutral-50 border border-neutral-200 p-4 font-medium text-sm focus:ring-2 focus:ring-green-500 outline-none resize-none"
           />
-          <button onClick={confirmarWhatsApp} className="w-full bg-green-500 hover:bg-green-600 py-4 rounded-xl text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all">
+          <button onClick={confirmarWhatsApp} disabled={isSubmittingAcao} className="w-full bg-green-500 hover:bg-green-600 py-4 rounded-xl text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all disabled:opacity-50">
             <Send className="h-4 w-4" /> Enviar para o Cliente
           </button>
         </div>
@@ -1591,7 +1591,7 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
                       <input type="date" value={novoHistorico.data_promessa} onChange={e => setNovoHistorico({...novoHistorico, data_promessa: e.target.value})} className="ml-2 rounded-lg border border-neutral-200 bg-neutral-50 p-1 text-xs text-neutral-800 outline-none" />
                     )}
                   </div>
-                  <button onClick={salvarHistoricoManual} disabled={!novoHistorico.descricao} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50">
+                  <button onClick={salvarHistoricoManual} disabled={!novoHistorico.descricao || isSubmittingAcao} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50">
                     Salvar Log
                   </button>
                 </div>
@@ -1701,8 +1701,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
               <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Observações do Acordo</label>
               <textarea rows={2} value={acordoData.observacoes} onChange={e => setAcordoData({...acordoData, observacoes: e.target.value})} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-800 focus:ring-2 focus:ring-indigo-500 outline-none resize-none" />
             </div>
-            <button onClick={confirmarGerarAcordo} disabled={!acordoData.parcelas || !acordoData.dtPrimeiroVenc || submittingAcordo} className="w-full bg-indigo-600 hover:bg-indigo-700 py-4 rounded-xl text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 mt-4 disabled:opacity-50 transition-all">
-              {submittingAcordo ? <><Activity className="h-4 w-4 animate-spin" /> Processando...</> : 'Confirmar Acordo'}
+            <button onClick={confirmarGerarAcordo} disabled={!acordoData.parcelas || !acordoData.dtPrimeiroVenc || submittingAcordo || isSubmittingAcao} className="w-full bg-indigo-600 hover:bg-indigo-700 py-4 rounded-xl text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 mt-4 disabled:opacity-50 transition-all">
+              {submittingAcordo || isSubmittingAcao ? <><Activity className="h-4 w-4 animate-spin" /> Processando...</> : 'Confirmar Acordo'}
             </button>
           </div>
         )}
@@ -1830,10 +1830,10 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
 
           <button 
             onClick={confirmarBaixaManualCobranca} 
-            disabled={!baixaCobrancaData.data_pagamento || baixaCobrancaData.valor_pago <= 0} 
+            disabled={!baixaCobrancaData.data_pagamento || baixaCobrancaData.valor_pago <= 0 || isSubmittingAcao} 
             className="w-full bg-emerald-600 hover:bg-emerald-700 py-4 rounded-xl text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
           >
-            <CheckCircle className="h-4 w-4" /> Confirmar Baixa
+            <CheckCircle className="h-4 w-4" /> {isSubmittingAcao ? 'Aguarde...' : 'Confirmar Baixa'}
           </button>
         </div>
       </Modal>
@@ -1870,10 +1870,10 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
 
           <button 
             onClick={confirmarProtesto} 
-            disabled={!protestoData.data_protesto || !protestoData.nome_cartorio} 
+            disabled={!protestoData.data_protesto || !protestoData.nome_cartorio || isSubmittingAcao} 
             className="w-full bg-rose-600 hover:bg-rose-700 py-4 rounded-xl text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-lg shadow-rose-600/20"
           >
-            <Gavel className="h-4 w-4" /> Confirmar e Enviar para Protesto
+            <Gavel className="h-4 w-4" /> {isSubmittingAcao ? 'Aguarde...' : 'Confirmar e Enviar para Protesto'}
           </button>
         </div>
       </Modal>

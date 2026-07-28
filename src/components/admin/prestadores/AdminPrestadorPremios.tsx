@@ -28,25 +28,29 @@ export function AdminPrestadorPremios({
   const [formData, setFormData] = useState({ titulo: '', descricao: '' });
 
   useEffect(() => {
-    fetchPremios();
+    let isMounted = true;
+    const fetchPremiosLocal = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase.from('prestador_premios').select('*').eq('prestador_id', prestadorId).order('created_at', { ascending: false });
+        if (error) throw error;
+        if (isMounted) setPremios(data || []);
+      } catch (e) {
+        toast.error('Erro ao carregar prêmios.');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    
+    fetchPremiosLocal();
     const sub = supabase.channel(`admin-premios-${prestadorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, fetchPremios)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, fetchPremiosLocal)
       .subscribe();
-    return () => { supabase.removeChannel(sub); };
+    return () => { 
+      isMounted = false;
+      supabase.removeChannel(sub); 
+    };
   }, [prestadorId]);
-
-  const fetchPremios = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.from('prestador_premios').select('*').eq('prestador_id', prestadorId).order('created_at', { ascending: false });
-      if (error) throw error;
-      setPremios(data || []);
-    } catch (e) {
-      toast.error('Erro ao carregar prêmios.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +66,14 @@ export function AdminPrestadorPremios({
       toast.success('Prêmio adicionado com sucesso.');
       setIsModalOpen(false);
       setFormData({ titulo: '', descricao: '' });
-      fetchPremios();
+      setPremios(prev => [{
+        id: 'temp-' + Date.now(),
+        prestador_id: prestadorId,
+        titulo: formData.titulo,
+        descricao: formData.descricao,
+        status: 'disponivel',
+        created_at: new Date().toISOString()
+      }, ...prev]);
 
       // Notificar Prestador
       await notificationService.notifyProvider(
@@ -94,11 +105,14 @@ export function AdminPrestadorPremios({
     if (!canProceed) return;
 
     if (!confirm('Excluir este prêmio?')) return;
+    setActionLoading(true);
     try {
       const { error } = await supabase.from('prestador_premios').delete().eq('id', id);
       if (error) throw error;
       toast.success('Excluído.');
-      fetchPremios();
+      
+      // Update state directly for optimistic UI since fetchPremios doesn't exist anymore
+      setPremios(prev => prev.filter(p => p.id !== id));
 
       // Log action
       await logService.logAction({
@@ -110,6 +124,8 @@ export function AdminPrestadorPremios({
       });
     } catch (e) {
       toast.error('Erro ao excluir.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -146,7 +162,7 @@ export function AdminPrestadorPremios({
                 <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 border border-rose-100">
                   <Gift className="w-6 h-6" />
                 </div>
-                <button onClick={() => handleDelete(p.id)} className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors" title="Excluir">
+                <button onClick={() => handleDelete(p.id)} disabled={actionLoading} className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors disabled:opacity-50" title="Excluir">
                   <Trash2 className="w-5 h-5"/>
                 </button>
               </div>

@@ -21,53 +21,57 @@ export function AdminPrestadorPromocoes() {
   const [formData, setFormData] = useState({ titulo: '', descricao: '', regras: '', data_fim: '' });
 
   useEffect(() => {
-    fetchPromocoes();
-    const sub = supabase.channel('admin-promocoes-global')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, fetchPromocoes)
-      .subscribe();
-    return () => { supabase.removeChannel(sub); };
-  }, [activeTab]);
-
-  const fetchPromocoes = async () => {
-    try {
-      setLoading(true);
-      
-      // Auto-update expired promotions
-      const now = new Date().toISOString();
-      const { data: expiredPromos } = await supabase
-        .from('prestador_promocoes')
-        .select('id')
-        .eq('status', 'ativa')
-        .lt('data_fim', now);
-
-      if (expiredPromos && expiredPromos.length > 0) {
-        await supabase
+    let isMounted = true;
+    const fetchPromocoesLocal = async () => {
+      try {
+        setLoading(true);
+        
+        // Auto-update expired promotions
+        const now = new Date().toISOString();
+        const { data: expiredPromos } = await supabase
           .from('prestador_promocoes')
-          .update({ status: 'encerrada' })
-          .in('id', expiredPromos.map(p => p.id))
-          .throwOnError();
-      }
+          .select('id')
+          .eq('status', 'ativa')
+          .lt('data_fim', now);
 
-      const { data, error } = await supabase
-        .from('prestador_promocoes')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        if (error.code === '42P01') {
-          console.warn('Tabela prestador_promocoes não existe ainda.');
-          setPromocoes([]);
-          return;
+        if (expiredPromos && expiredPromos.length > 0) {
+          await supabase
+            .from('prestador_promocoes')
+            .update({ status: 'encerrada' })
+            .in('id', expiredPromos.map(p => p.id))
+            .throwOnError();
         }
-        throw error;
+
+        const { data, error } = await supabase
+          .from('prestador_promocoes')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          if (error.code === '42P01') {
+            console.warn('Tabela prestador_promocoes não existe ainda.');
+            if (isMounted) setPromocoes([]);
+            return;
+          }
+          throw error;
+        }
+        if (isMounted) setPromocoes(data || []);
+      } catch (e) {
+        toast.error('Erro ao carregar promoções.');
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      setPromocoes(data || []);
-    } catch (e) {
-      toast.error('Erro ao carregar promoções.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    
+    fetchPromocoesLocal();
+    const sub = supabase.channel('admin-promocoes-global')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, fetchPromocoesLocal)
+      .subscribe();
+    return () => { 
+      isMounted = false;
+      supabase.removeChannel(sub); 
+    };
+  }, [activeTab]);
 
   const getFilteredPromocoes = () => {
     return promocoes.filter(p => {
@@ -125,7 +129,15 @@ export function AdminPrestadorPromocoes() {
       toast.success('Promoção criada com sucesso.');
       setIsModalOpen(false);
       setFormData({ titulo: '', descricao: '', regras: '', data_fim: '' });
-      fetchPromocoes();
+      setPromocoes(prev => [{
+        id: 'temp-' + Date.now(),
+        titulo: formData.titulo,
+        descricao: formData.descricao,
+        regras: formData.regras,
+        data_fim: formData.data_fim || null,
+        status: 'ativa',
+        created_at: new Date().toISOString()
+      }, ...prev]);
 
       // Notificar todos os prestadores sobre a nova promoção
       await notificationService.broadcastProviders(
@@ -147,13 +159,16 @@ export function AdminPrestadorPromocoes() {
     if (!canProceed) return;
 
     if (!confirm('Excluir esta promoção? Todos os prestadores que participam perderão o acesso.')) return;
+    setActionLoading(true);
     try {
       const { error } = await supabase.from('prestador_promocoes').delete().eq('id', id);
       if (error) throw error;
       toast.success('Excluída.');
-      fetchPromocoes();
+      setPromocoes(prev => prev.filter(p => p.id !== id));
     } catch (e) {
       toast.error('Erro ao excluir.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -171,7 +186,7 @@ export function AdminPrestadorPromocoes() {
           <h4 className="font-bold text-fuchsia-900">Promoções e Campanhas</h4>
           <p className="text-sm text-fuchsia-700">Gerencie campanhas de incentivo globais para os prestadores.</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="btn-primary bg-fuchsia-600 hover:bg-fuchsia-700 text-sm">
+        <button onClick={() => setIsModalOpen(true)} disabled={actionLoading} className="btn-primary bg-fuchsia-600 hover:bg-fuchsia-700 text-sm disabled:opacity-50">
           <Plus className="w-4 h-4 mr-1"/> Nova Campanha
         </button>
       </div>
@@ -228,7 +243,7 @@ export function AdminPrestadorPromocoes() {
                   <span className="bg-neutral-100 px-2 py-1 rounded-lg">Sem prazo definido</span>
                 )}
                 
-                <button onClick={() => handleDelete(p.id)} className="p-1.5 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors" title="Excluir">
+                <button onClick={() => handleDelete(p.id)} disabled={actionLoading} className="p-1.5 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50" title="Excluir">
                   <Trash2 className="w-4 h-4"/>
                 </button>
               </div>

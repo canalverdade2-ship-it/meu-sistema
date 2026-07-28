@@ -440,17 +440,19 @@ export function ClientProfile({
     if (!confirm(`Deseja realmente excluir o documento "${nome}"?`)) return;
     try {
       if (urls && Array.isArray(urls)) {
+        const pathsToRemove = [];
         for (const url of urls) {
           try {
             const urlObj = new URL(url);
             const pathSegments = urlObj.pathname.split('/');
             const storagePath = pathSegments.slice(pathSegments.indexOf('documentos_cliente') + 1).join('/');
-            if (storagePath) {
-              await supabase.storage.from('documentos_cliente').remove([storagePath]);
-            }
+            if (storagePath) pathsToRemove.push(storagePath);
           } catch (storageErr) {
             console.error('Erro ao excluir arquivo do storage:', storageErr);
           }
+        }
+        if (pathsToRemove.length > 0) {
+          await supabase.storage.from('documentos_cliente').remove(pathsToRemove);
         }
       }
       await clientOperationalWrite(cliente.id, 'cliente_documentos', 'delete', {}, { id });

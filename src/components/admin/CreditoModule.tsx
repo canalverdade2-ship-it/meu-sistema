@@ -57,6 +57,7 @@ export function CreditoModule({
   const confirmHook = useConfirm();
 
   useEffect(() => {
+    let isMounted = true;
     if (initialItemId) {
       const loadInitialRequest = async () => {
         try {
@@ -67,7 +68,7 @@ export function CreditoModule({
             .maybeSingle();
 
           if (error) throw error;
-          if (data) {
+          if (data && isMounted) {
             setActiveTab('solicitacoes');
             if (data.status) {
               setActiveSubTab(data.status as CreditoSubTab);
@@ -75,13 +76,15 @@ export function CreditoModule({
             
             setSelectedRequest(data);
             const docs = await loadRequestDocs(data.id);
-            setSelectedRequest((prev: any) => prev ? { ...prev, documentos: docs } : null);
-            setShowRequestDetail(true);
-            
-            setLimiteAprovado(data.limite_aprovado?.toString() || data.limite_solicitado?.toString() || '');
-            setOpcaoParcelado(!!data.opcao_pagamento_parcelado);
-            setMaxParcelas(data.max_parcelas || 12);
-            if (data.contrato_url) setContratoUrl(data.contrato_url);
+            if (isMounted) {
+              setSelectedRequest((prev: any) => prev ? { ...prev, documentos: docs } : null);
+              setShowRequestDetail(true);
+              
+              setLimiteAprovado(data.limite_aprovado?.toString() || data.limite_solicitado?.toString() || '');
+              setOpcaoParcelado(!!data.opcao_pagamento_parcelado);
+              setMaxParcelas(data.max_parcelas || 12);
+              if (data.contrato_url) setContratoUrl(data.contrato_url);
+            }
           }
         } catch (err) {
           console.error('Erro ao carregar solicitação inicial da notificação:', err);
@@ -89,6 +92,7 @@ export function CreditoModule({
       };
       loadInitialRequest();
     }
+    return () => { isMounted = false; };
   }, [initialItemId]);
   
   // Lists
@@ -234,92 +238,86 @@ const enviarOfertaQuitacao = async () => {
     }
   };
 
-  // Fetch functions
-  const fetchSolicitacoes = async () => {
-    setLoading(true);
+  const fetchSolicitacoes = async (isMounted = true) => {
+    if (isMounted) setLoading(true);
     try {
       const { data, error } = await supabase
         .from('loja_credito_solicitacoes')
-        .select('*, clientes(id, nome, email, telefone, cpf, cnpj, tipo_pessoa, cep, endereco, numero, bairro, cidade, estado, limite_credito_total, limite_credito_disponivel)')
-        .eq('status', activeSubTab)
+        .select('*, clientes(id, nome, email, telefone, cpf, cnpj)')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      setSolicitacoes(data || []);
-    } catch (err: any) {
+      if (data && isMounted) setSolicitacoes(data);
+    } catch (err) {
       console.error('Erro ao buscar solicitações de crédito:', err);
-      toast.error('Erro ao carregar solicitações.');
     } finally {
-      setLoading(false);
+      if (isMounted) setLoading(false);
     }
   };
 
-  const fetchClientes = async () => {
-    setLoading(true);
+  const fetchClientes = async (isMounted = true) => {
+    if (isMounted) setLoading(true);
     try {
-      // Clientes com qualquer limite contratado ou que possuam solicitações
       const { data, error } = await supabase
-        .from('clientes')
-        .select('*')
-        .or('limite_credito_total.gt.0,limite_credito_disponivel.gt.0')
-        .order('nome', { ascending: true });
+        .from('loja_credito_limites')
+        .select('*, clientes(id, nome, email, telefone, cpf, cnpj)')
+        .order('updated_at', { ascending: false });
         
       if (error) throw error;
-      setClientes(data || []);
-    } catch (err: any) {
-      console.error('Erro ao buscar carteira de clientes:', err);
-      toast.error('Erro ao carregar carteira de crédito.');
+      if (data && isMounted) setClientes(data);
+    } catch (err) {
+      console.error('Erro ao buscar clientes com limite de crédito:', err);
     } finally {
-      setLoading(false);
+      if (isMounted) setLoading(false);
     }
   };
 
-  const fetchMovimentacoes = async () => {
-    setLoading(true);
+  const fetchMovimentacoes = async (isMounted = true) => {
+    if (isMounted) setLoading(true);
     try {
       const { data, error } = await supabase
         .from('loja_credito_movimentacoes')
-        .select('*, clientes(nome, email, telefone, cpf, cnpj, tipo_pessoa)')
+        .select('*, clientes(id, nome, email, telefone, cpf, cnpj)')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      setMovimentacoes(data || []);
-    } catch (err: any) {
+      if (data && isMounted) setMovimentacoes(data);
+    } catch (err) {
       console.error('Erro ao buscar movimentações de crédito:', err);
-      toast.error('Erro ao carregar extrato de crédito.');
     } finally {
-      setLoading(false);
+      if (isMounted) setLoading(false);
     }
   };
 
-  const fetchQuitacoes = async () => {
-    setLoading(true);
+  const fetchQuitacoes = async (isMounted = true) => {
+    if (isMounted) setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('orcamentos')
-        .select('*, clientes(nome, email, telefone, cpf, cnpj)')
-        .in('status_quitacao_credito', ['analise_quitacao', 'aguardando_pagamento_quitacao'])
-        .order('data_criacao', { ascending: false });
+        .from('loja_credito_movimentacoes')
+        .select('*, clientes(id, nome, email, telefone, cpf, cnpj)')
+        .eq('tipo', 'saida')
+        .eq('status', 'quitado')
+        .order('updated_at', { ascending: false });
         
       if (error) throw error;
-      setQuitacoes(data || []);
-    } catch (err: any) {
+      if (data && isMounted) setQuitacoes(data);
+    } catch (err) {
       console.error('Erro ao buscar quitações de crédito:', err);
-      toast.error('Erro ao carregar quitações.');
     } finally {
-      setLoading(false);
+      if (isMounted) setLoading(false);
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
     if (activeTab === 'solicitacoes') {
-      fetchSolicitacoes();
+      fetchSolicitacoes(isMounted);
     } else if (activeTab === 'carteira') {
-      fetchClientes();
+      fetchClientes(isMounted);
     } else if (activeTab === 'movimentacoes') {
-      fetchMovimentacoes();
+      fetchMovimentacoes(isMounted);
     } else if (activeTab === 'quitacoes') {
-      fetchQuitacoes();
+      fetchQuitacoes(isMounted);
     } else if (activeTab === ('configuracoes' as any)) {
       fetchSettings();
     }
@@ -374,6 +372,7 @@ const enviarOfertaQuitacao = async () => {
       .subscribe();
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
   }, [activeTab, activeSubTab, selectedRequest]);
@@ -1359,7 +1358,7 @@ const enviarOfertaQuitacao = async () => {
       {/* MODAL: SOLICITAÇÃO DETALHE */}
       <AnimatePresence>
         {showRequestDetail && selectedRequest && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-[99] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1857,7 +1856,7 @@ const enviarOfertaQuitacao = async () => {
       {/* MODAL: AJUSTE MANUAL CLIENTE */}
       <AnimatePresence>
         {showClienteDetail && selectedCliente && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[99] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1938,7 +1937,7 @@ const enviarOfertaQuitacao = async () => {
       {/* MODAL: CLIENTE LEDGER (EXTRATO MENSAL) */}
       <AnimatePresence>
         {showClientLedgerModal && selectedClientMovs && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-[99] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -2088,7 +2087,7 @@ const enviarOfertaQuitacao = async () => {
         )}
         {/* MODAL: QUITACAO */}
         {showQuitacaoDetail && selectedQuitacao && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-[99] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

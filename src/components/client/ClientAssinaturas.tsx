@@ -96,6 +96,17 @@ export function ClientAssinaturas({
   }, [initialItemId, minhasAssinaturas.length, initialTab]);
 
   useEffect(() => {
+    let isMounted = true;
+    const fetchMinhasAssinaturas = async () => {
+      const { data } = await supabase
+        .from('ordens_assinatura')
+        .select('*, assinaturas(nome, valor), faturas(*), orcamentos(*)')
+        .eq('cliente_id', clientId)
+        .order('data_criacao', { ascending: false });
+      
+      if (data && isMounted) setMinhasAssinaturas(data);
+    };
+
     fetchMinhasAssinaturas();
 
     const channel = supabase
@@ -111,6 +122,7 @@ export function ClientAssinaturas({
       .subscribe();
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
   }, [clientId, minhasTab]);

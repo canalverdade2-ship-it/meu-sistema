@@ -28,7 +28,23 @@ export function SupportConversationModal({ isOpen, onClose, suporte, onUpdate, a
 
   useEffect(() => {
     if (isOpen && currentSuporte) {
-      fetchMensagens();
+      let isMounted = true;
+      const fetchMensagensSafe = async () => {
+        if (!currentSuporte) return;
+        const { data, error } = await supabase
+          .from('suporte_mensagens')
+          .select('*')
+          .eq('suporte_id', currentSuporte.id)
+          .order('created_at', { ascending: true });
+        
+        if (error) {
+          console.error('Erro ao buscar mensagens:', error);
+          return;
+        }
+        if (isMounted) setMensagens(data || []);
+      };
+
+      fetchMensagensSafe();
       
       const messagesChannel = supabase
         .channel(`suporte_mensagens_${currentSuporte.id}`)
@@ -38,10 +54,12 @@ export function SupportConversationModal({ isOpen, onClose, suporte, onUpdate, a
           table: 'suporte_mensagens',
           filter: `suporte_id=eq.${currentSuporte.id}`
         }, (payload) => {
-          setMensagens((prev) => {
-            if (prev.some(m => m.id === payload.new.id)) return prev;
-            return [...prev, payload.new];
-          });
+          if (isMounted) {
+            setMensagens((prev) => {
+              if (prev.some(m => m.id === payload.new.id)) return prev;
+              return [...prev, payload.new];
+            });
+          }
         })
         .subscribe();
 
@@ -53,14 +71,17 @@ export function SupportConversationModal({ isOpen, onClose, suporte, onUpdate, a
           table: 'prestador_suporte_demandas',
           filter: `id=eq.${currentSuporte.id}`
         }, (payload) => {
-          setCurrentSuporte(payload.new);
-          if (payload.new.status === 'fechado') {
-            toast.success('Este suporte foi finalizado.');
+          if (isMounted) {
+            setCurrentSuporte(payload.new);
+            if (payload.new.status === 'fechado') {
+              toast.success('Este suporte foi finalizado.');
+            }
           }
         })
         .subscribe();
 
       return () => {
+        isMounted = false;
         supabase.removeChannel(messagesChannel);
         supabase.removeChannel(statusChannel);
       };
@@ -113,6 +134,8 @@ export function SupportConversationModal({ isOpen, onClose, suporte, onUpdate, a
   };
 
   const confirmConcluirSuporte = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const { data, error } = await supabase
         .from('prestador_suporte_demandas')
@@ -132,6 +155,8 @@ export function SupportConversationModal({ isOpen, onClose, suporte, onUpdate, a
     } catch (error) {
       console.error('Erro ao concluir suporte:', error);
       toast.error('Erro ao concluir suporte. Verifique o console.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -198,8 +223,9 @@ export function SupportConversationModal({ isOpen, onClose, suporte, onUpdate, a
               Cancelar
             </button>
             <button
+              disabled={isSubmitting}
               onClick={confirmConcluirSuporte}
-              className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white shadow-lg shadow-red-600/20 transition-all hover:bg-red-700"
+              className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white shadow-lg shadow-red-600/20 transition-all hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Confirmar
             </button>

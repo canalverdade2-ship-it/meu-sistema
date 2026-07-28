@@ -27,21 +27,27 @@ export function ConfiguracoesModule() {
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [methodForm, setMethodForm] = useState<any | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (isMounted = { current: true }) => {
+    if (isMounted.current) setLoading(true);
     try {
       const data = await callAdminRpc<SettingsSnapshot>('gsa_admin_settings_snapshot');
-      setCompany(data?.company || { razao_social: '', cnpj: '', telefone: '', responsavel: '' });
-      setMethods(Array.isArray(data?.payment_methods) ? data.payment_methods : []);
-      setSettings(data?.settings || {});
+      if (isMounted.current) {
+        setCompany(data?.company || { razao_social: '', cnpj: '', telefone: '', responsavel: '' });
+        setMethods(Array.isArray(data?.payment_methods) ? data.payment_methods : []);
+        setSettings(data?.settings || {});
+      }
     } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível carregar as configurações.');
+      if (isMounted.current) toast.error(error?.message || 'Não foi possível carregar as configurações.');
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const isMounted = { current: true };
+    void load(isMounted);
+    return () => { isMounted.current = false; };
+  }, [load]);
 
   const value = (key: string, fallback = '') => settings[key] ?? fallback;
   const setValue = (key: string, next: string) => setSettings((current) => ({ ...current, [key]: next }));
@@ -88,11 +94,15 @@ export function ConfiguracoesModule() {
   };
 
   const toggleMethod = async (method: any) => {
+    if (saving) return;
+    setSaving(true);
     try {
       await callAdminRpc('gsa_admin_save_payment_method', { p_id: method.id, p_payload: { ...method, ativo: !method.ativo } });
       await load();
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível alterar a forma de pagamento.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -109,13 +119,13 @@ export function ConfiguracoesModule() {
   if (loading) return <div className="flex min-h-[420px] items-center justify-center"><RefreshCw className="h-9 w-9 animate-spin text-indigo-600" /></div>;
 
   return <div className="space-y-6 pb-10">
-    <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Allowlist administrativa</p><h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><Settings className="h-6 w-6 text-indigo-400" /> Configurações Globais</h1><p className="mt-2 text-sm text-white/55">Somente chaves e produtos conhecidos podem ser lidos ou alterados por este painel.</p></div><button type="button" onClick={() => void load()} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900"><RefreshCw className="h-4 w-4" /> Atualizar</button></div></header>
+    <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Allowlist administrativa</p><h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><Settings className="h-6 w-6 text-indigo-400" /> Configurações Globais</h1><p className="mt-2 text-sm text-white/55">Somente chaves e produtos conhecidos podem ser lidos ou alterados por este painel.</p></div><button type="button" disabled={loading || saving} onClick={() => void load()} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-50"><RefreshCw className="h-4 w-4" /> Atualizar</button></div></header>
 
     <div className="grid grid-cols-2 gap-2 rounded-2xl border border-neutral-200 bg-white p-2 sm:grid-cols-3 lg:grid-cols-7">{tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setActiveTab(id)} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold ${activeTab === id ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-neutral-500 hover:bg-neutral-50'}`}><Icon className="h-4 w-4" />{label}</button>)}</div>
 
     {activeTab === 'empresa' && <section className="space-y-6"><Card title="Dados da empresa" icon={Building2}><div className="grid gap-4 sm:grid-cols-2"><TextField label="Razão social" value={company.razao_social || ''} onChange={(next) => setCompany({ ...company, razao_social: next })} /><TextField label="CNPJ" value={company.cnpj || ''} onChange={(next) => setCompany({ ...company, cnpj: next })} /><TextField label="Telefone" value={company.telefone || ''} onChange={(next) => setCompany({ ...company, telefone: next })} /><TextField label="Responsável" value={company.responsavel || ''} onChange={(next) => setCompany({ ...company, responsavel: next })} /></div><SaveButton saving={saving} onClick={() => void saveCompany()} label="Salvar dados da empresa" /></Card><Card title="Cadastro padrão" icon={Users}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><SelectField label="Status do código" value={value('codigo_cadastro_padrao_ativo', 'false')} onChange={(next) => setValue('codigo_cadastro_padrao_ativo', next)} options={[["true", "Ativo"], ["false", "Desativado"]]} /><TextField label="Código" value={value('codigo_cadastro_padrao', 'BEMVINDO')} onChange={(next) => setValue('codigo_cadastro_padrao', next.toUpperCase())} /><SelectField label="Tipo de bônus" value={value('bonus_cadastro_tipo', 'pontos')} onChange={(next) => setValue('bonus_cadastro_tipo', next)} options={[["pontos", "Pontos"], ["carteira", "Carteira"]]} /><NumberField label="Valor do bônus" value={value('bonus_cadastro_valor', '100')} onChange={(next) => setValue('bonus_cadastro_valor', next)} /></div><SaveButton saving={saving} onClick={() => void saveSettings(['codigo_cadastro_padrao_ativo', 'codigo_cadastro_padrao', 'bonus_cadastro_tipo', 'bonus_cadastro_valor'], 'Configurações de cadastro salvas.')} /></Card></section>}
 
-    {activeTab === 'financeiro' && <section className="space-y-6"><Card title="Parâmetros financeiros" icon={Wallet}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><NumberField label="Valor mínimo para saque" value={value('valor_minimo_saque', '50')} onChange={(next) => setValue('valor_minimo_saque', next)} /><NumberField label="Vencimento de serviços" value={value('vencimento_padrao_servicos', '10')} onChange={(next) => setValue('vencimento_padrao_servicos', next)} /><NumberField label="Vencimento de produtos" value={value('vencimento_padrao_produtos', '10')} onChange={(next) => setValue('vencimento_padrao_produtos', next)} /><NumberField label="Taxa de entrega" value={value('loja_taxa_entrega_padrao', '0')} onChange={(next) => setValue('loja_taxa_entrega_padrao', next)} /></div><SaveButton saving={saving} onClick={() => void saveSettings(['valor_minimo_saque', 'vencimento_padrao_servicos', 'vencimento_padrao_produtos', 'loja_taxa_entrega_padrao'], 'Parâmetros financeiros salvos.')} /></Card><Card title="Formas de pagamento" icon={CreditCard}><div className="flex justify-end"><button type="button" onClick={() => setMethodForm({ nome: '', slug: '', tipo: 'manual', instrucoes: '', ativo: true })} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white"><Plus className="h-4 w-4" /> Nova forma</button></div><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{methods.map((method) => <article key={method.id} className="rounded-2xl border border-neutral-200 p-4"><div className="flex items-start justify-between"><div><h3 className="font-black">{method.nome}</h3><p className="mt-1 text-xs uppercase text-neutral-400">{method.tipo}</p></div><button type="button" onClick={() => void toggleMethod(method)} className={`relative h-6 w-11 rounded-full ${method.ativo ? 'bg-indigo-600' : 'bg-neutral-300'}`}><span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${method.ativo ? 'translate-x-5' : ''}`} /></button></div><p className="mt-3 line-clamp-3 text-sm text-neutral-500">{method.instrucoes || 'Sem instruções.'}</p><button type="button" onClick={() => setMethodForm({ ...method })} className="mt-4 w-full rounded-xl border border-neutral-200 px-3 py-2 text-xs font-black">Editar</button></article>)}</div></Card></section>}
+    {activeTab === 'financeiro' && <section className="space-y-6"><Card title="Parâmetros financeiros" icon={Wallet}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><NumberField label="Valor mínimo para saque" value={value('valor_minimo_saque', '50')} onChange={(next) => setValue('valor_minimo_saque', next)} /><NumberField label="Vencimento de serviços" value={value('vencimento_padrao_servicos', '10')} onChange={(next) => setValue('vencimento_padrao_servicos', next)} /><NumberField label="Vencimento de produtos" value={value('vencimento_padrao_produtos', '10')} onChange={(next) => setValue('vencimento_padrao_produtos', next)} /><NumberField label="Taxa de entrega" value={value('loja_taxa_entrega_padrao', '0')} onChange={(next) => setValue('loja_taxa_entrega_padrao', next)} /></div><SaveButton saving={saving} onClick={() => void saveSettings(['valor_minimo_saque', 'vencimento_padrao_servicos', 'vencimento_padrao_produtos', 'loja_taxa_entrega_padrao'], 'Parâmetros financeiros salvos.')} /></Card><Card title="Formas de pagamento" icon={CreditCard}><div className="flex justify-end"><button type="button" onClick={() => setMethodForm({ nome: '', slug: '', tipo: 'manual', instrucoes: '', ativo: true })} className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white"><Plus className="h-4 w-4" /> Nova forma</button></div><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{methods.map((method) => <article key={method.id} className="rounded-2xl border border-neutral-200 p-4"><div className="flex items-start justify-between"><div><h3 className="font-black">{method.nome}</h3><p className="mt-1 text-xs uppercase text-neutral-400">{method.tipo}</p></div><button type="button" disabled={saving} onClick={() => void toggleMethod(method)} className={`relative h-6 w-11 rounded-full disabled:opacity-50 ${method.ativo ? 'bg-indigo-600' : 'bg-neutral-300'}`}><span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition-transform ${method.ativo ? 'translate-x-5' : ''}`} /></button></div><p className="mt-3 line-clamp-3 text-sm text-neutral-500">{method.instrucoes || 'Sem instruções.'}</p><button type="button" disabled={saving} onClick={() => setMethodForm({ ...method })} className="mt-4 w-full rounded-xl border border-neutral-200 px-3 py-2 text-xs font-black disabled:opacity-50">Editar</button></article>)}</div></Card></section>}
 
     {activeTab === 'calculadoras' && <section className="space-y-5"><CalculatorProPaymentConfiguration /><CalculatorProAdminPanel /></section>}
 

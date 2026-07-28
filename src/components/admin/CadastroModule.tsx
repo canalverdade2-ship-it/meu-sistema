@@ -281,7 +281,7 @@ export function CadastroModule({
               const isActive = activeTab === tab.id;
 
               return (
-                <div key={tab.id} className={`relative flex-none font-black translate-y-0 active:translate-y-1 transition-transform ${isActive ? 'z-[100]' : 'z-10'}`}>
+                <div key={tab.id} className={`relative flex-none font-black translate-y-0 active:translate-y-1 transition-transform ${isActive ? 'z-40' : 'z-10'}`}>
                   <button
                     onClick={() => handleTabClick(tab.id as MainTab)}
                     className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 md:px-4 rounded-xl transition-all text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-widest border
@@ -299,7 +299,7 @@ export function CadastroModule({
                   </button>
 
                   {isActive && showSubTabs && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 mt-4 z-[110] w-[280px] max-w-[calc(100vw-2rem)] animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 mt-4 z-50 w-[280px] max-w-[calc(100vw-2rem)] animate-in fade-in zoom-in-95 duration-200">
                       <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-2 flex flex-col gap-1 border border-neutral-100">
                         <div className="px-4 py-2 text-[7px] font-black text-neutral-400 uppercase tracking-[0.2em] border-b border-neutral-100 mb-1">
                           Selecione uma opção

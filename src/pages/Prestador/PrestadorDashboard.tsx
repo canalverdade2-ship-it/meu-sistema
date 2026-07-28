@@ -120,11 +120,12 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
   }, [prestador]);
 
   useEffect(() => {
+    let isMounted = true;
     let cancelled = false;
     const load = async () => {
       try {
         const snapshot = await providerOperations.dashboardSnapshot();
-        if (cancelled) return;
+        if (cancelled || !isMounted) return;
         setSaldo(Number(snapshot?.saldo || 0));
         setMetrics({
           demandasConcluidas: Number(snapshot?.demandas_concluidas || 0),
@@ -136,7 +137,7 @@ export function PrestadorDashboard({ prestadorId, onLogout }: PrestadorDashboard
       }
     };
     void load();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; isMounted = false; };
   }, [prestadorId, pendencies.moduleDemandas, pendencies.moduleFinanceiro, pendencies.moduleDocumentos, pendencies.moduleAgenda]);
 
   const menuItems = useMemo<MenuItem[]>(() => [

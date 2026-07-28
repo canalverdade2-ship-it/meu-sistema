@@ -86,20 +86,24 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
   const [loadingDetailConfig, setLoadingDetailConfig] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     if (isDetailOpen && selectedProduto?.id) {
       setLoadingDetailConfig(true);
       getAdminProductSupplierConfig(selectedProduto.id)
         .then(data => {
-          setDetailSupplierConfig(data || null);
+          if (isMounted) setDetailSupplierConfig(data || null);
         })
         .catch(err => {
           console.error('Erro ao carregar configurações de fornecedor', err);
-          setDetailSupplierConfig(null);
+          if (isMounted) setDetailSupplierConfig(null);
         })
-        .finally(() => setLoadingDetailConfig(false));
+        .finally(() => {
+          if (isMounted) setLoadingDetailConfig(false);
+        });
     } else {
       setDetailSupplierConfig(null);
     }
+    return () => { isMounted = false; };
   }, [isDetailOpen, selectedProduto?.id]);
 
   const [isDeleting, setIsDeleting] = useState(false);
@@ -156,12 +160,14 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
   const [categorias, setCategorias] = useState<any[]>([]);
 
   useEffect(() => {
+    let isMounted = true;
     fetchProdutos();
     const fetchCategorias = async () => {
       const { data } = await supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['produto', 'todos']).order('ordem');
-      if (data) setCategorias(data);
+      if (isMounted && data) setCategorias(data);
     };
     fetchCategorias();
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {
@@ -1377,7 +1383,7 @@ const handleBulkDelete = async () => {
                   <p className="text-xs font-bold text-neutral-400 uppercase mb-4">Galeria de Imagens</p>
                   <div className="grid grid-cols-5 gap-3">
                     {mapColumnsToGallery(selectedProduto).map((url, idx) => (
-                      <div key={idx} className="aspect-square rounded-xl border border-neutral-200 bg-neutral-50 overflow-hidden flex items-center justify-center">
+                      <div key={url} className="aspect-square rounded-xl border border-neutral-200 bg-neutral-50 overflow-hidden flex items-center justify-center">
                         <img src={url} alt="" className="w-full h-full object-contain" />
                       </div>
                     ))}
@@ -1782,11 +1788,12 @@ function ProdutoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
   };
 
   useEffect(() => {
+    let isMounted = true;
     if (initialData?.id) {
       setLoadingConfig(true);
       getAdminProductSupplierConfig(initialData.id)
         .then(data => {
-          if (data) {
+          if (isMounted && data) {
             setFornecedorConfig({
               fornecimento_externo_ativo: data.fornecimento_externo_ativo || false,
               tipo_fornecedor: data.tipo_fornecedor || null,
@@ -1803,8 +1810,11 @@ function ProdutoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
         .catch(err => {
           console.error("Erro ao carregar configuração de fornecedor:", err);
         })
-        .finally(() => setLoadingConfig(false));
+        .finally(() => {
+          if (isMounted) setLoadingConfig(false);
+        });
     }
+    return () => { isMounted = false; };
   }, [initialData?.id]);
 
   const handleCustoChange = (custo: string) => {
@@ -2282,7 +2292,7 @@ const removeGalleryImage = (index: number) => {
                                           });
                                         };
                                         return (
-                                          <div key={i} onClick={toggleImg} className={`relative aspect-square cursor-pointer rounded-lg border-2 bg-neutral-100 transition-all ${isSelected ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-transparent hover:border-indigo-300'}`}>
+                                          <div key={img} onClick={toggleImg} className={`relative aspect-square cursor-pointer rounded-lg border-2 bg-neutral-100 transition-all ${isSelected ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-transparent hover:border-indigo-300'}`}>
                                             <img src={img} alt="" className="h-full w-full object-cover rounded-md" />
                                             {isSelected && <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-sm"><Check className="h-3 w-3" /></div>}
                                           </div>
@@ -2585,23 +2595,25 @@ function AjusteEstoqueModal({ isOpen, onClose, produto, onSuccess, colaboradorNo
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    const fetchHistorico = async () => {
+      const { data } = await supabase
+        .from('loja_estoque_historico')
+        .select('*')
+        .eq('produto_id', produto.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      if (isMounted && data) setHistorico(data);
+    };
+
     if (isOpen) {
       fetchHistorico();
       setAjuste('');
       setMotivo('');
       setTipoAjuste('entrada');
     }
+    return () => { isMounted = false; };
   }, [isOpen]);
-
-  const fetchHistorico = async () => {
-    const { data } = await supabase
-      .from('loja_estoque_historico')
-      .select('*')
-      .eq('produto_id', produto.id)
-      .order('created_at', { ascending: false })
-      .limit(3);
-    if (data) setHistorico(data);
-  };
 
 const handleAjuste = async (e: React.FormEvent) => {
   e.preventDefault();
