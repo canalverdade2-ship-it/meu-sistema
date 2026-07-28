@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-28T04:28:59.450Z",
+  "generated_at": "2026-07-28T04:30:00.759Z",
   "scope": [
     "src",
     "supabase/functions"
@@ -22,7 +22,7 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
-      "line": 167,
+      "line": 171,
       "excerpt": "const motivo = prompt('Informe o motivo da recusa:');"
     },
     {
@@ -30,7 +30,7 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
-      "line": 359,
+      "line": 363,
       "excerpt": "const motivo = prompt('Motivo para recusar a contraproposta do prestador:');"
     },
     {
@@ -38,7 +38,7 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
-      "line": 403,
+      "line": 407,
       "excerpt": "const motivo = prompt('Por que deseja cancelar esta demanda?');"
     },
     {
