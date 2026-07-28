@@ -512,11 +512,13 @@ function SolicitacoesTab() {
                 </div>
                 <div>
                   <h2 className="text-xl font-black tracking-tight text-white">Solicitação de Viagem</h2>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
-                      {detailsItem.protocolo || 'SOLICITAÇÃO'}
-                    </span>
-                  </div>
+                  {detailsItem.protocolo && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
+                        {detailsItem.protocolo}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -1163,11 +1165,13 @@ function PropostasTab() {
                 </div>
                 <div>
                   <h2 className="text-xl font-black tracking-tight text-white">Detalhes da Proposta</h2>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
-                      {detailsProposal.protocolo || 'PROPOSTA'}
-                    </span>
-                  </div>
+                  {detailsProposal.protocolo && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
+                        {detailsProposal.protocolo}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -1816,11 +1820,13 @@ function TransacoesTab() {
                 </div>
                 <div>
                   <h2 className="text-xl font-black tracking-tight text-white">Detalhamento da Transação</h2>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
-                      {detailsTx.protocolo || 'TRANSAÇÃO'}
-                    </span>
-                  </div>
+                  {detailsTx.protocolo && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider text-indigo-200 border border-indigo-400/30">
+                        {detailsTx.protocolo}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3">
