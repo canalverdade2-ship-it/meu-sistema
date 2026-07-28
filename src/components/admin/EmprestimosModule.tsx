@@ -276,7 +276,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
       });
       if (rpcError) throw rpcError;
 
-      await notificationService.notifyClient(selected.cliente_id, 'Contrato Disponivel', 'Seu contrato de emprestimo esta disponivel para assinatura.', 'emprestimos', 'ativos', selected.id);
+      await notificationService.notifyClient(selected.cliente_id, 'Contrato Disponivel', 'Seu contrato de emprestimo esta disponivel para assinatura.', 'emprestimos', 'ativos', { itemId: selected.id });
       toast.success('Contrato enviado!');
       await logService.logAction({ acao: 'ACAO_SISTEMA', detalhes: JSON.stringify({}), ator_tipo: 'admin', ator_nome: 'Administrador' });
 
@@ -330,7 +330,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
       });
       if (error) throw error;
 
-      await notificationService.notifyClient(selected.cliente_id, 'Emprestimo Ativo!', 'Seu emprestimo foi ativado e as parcelas estao disponiveis no financeiro.', 'emprestimos', 'ativos', selected.id);
+      await notificationService.notifyClient(selected.cliente_id, 'Emprestimo Ativo!', 'Seu emprestimo foi ativado e as parcelas estao disponiveis no financeiro.', 'emprestimos', 'ativos', { itemId: selected.id });
       toast.success('Emprestimo ativado com sucesso!');
       await logService.logAction({ acao: 'ACAO_SISTEMA', detalhes: JSON.stringify({}), ator_tipo: 'admin', ator_nome: 'Administrador' });
       setShowModal(false);
