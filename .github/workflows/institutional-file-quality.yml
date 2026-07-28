@@ -7,7 +7,13 @@ on:
   pull_request:
     paths:
       - 'src/lib/institutionalFileExport.ts'
+      - 'src/lib/fiscalReceiptPdf.ts'
+      - 'src/lib/freeToolsPdfReport.ts'
+      - 'src/lib/pdf.ts'
+      - 'src/components/admin/FiscalModule.tsx'
+      - 'src/components/admin/demandas/DemandasTabela.tsx'
       - 'src/components/admin/relatorios/**'
+      - 'src/components/client/financeiro/NotasFiscaisList.tsx'
       - 'scripts/check-institutional-file-exports.mjs'
       - '.github/workflows/institutional-file-quality.yml'
 
@@ -44,6 +50,9 @@ jobs:
           --moduleResolution Bundler
           --lib ES2022,DOM,DOM.Iterable
           src/lib/institutionalFileExport.ts
+          src/lib/fiscalReceiptPdf.ts
+          src/lib/freeToolsPdfReport.ts
+          src/lib/pdf.ts
           src/components/admin/relatorios/utils/relatorioExport.ts
 
       - name: Gerar inventário
