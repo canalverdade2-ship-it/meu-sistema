@@ -32,7 +32,11 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
   const fetchCupons = async () => {
     setLoading(true);
     try {
-      let query = supabase.from('cupons_loja').select('*').order('created_at', { ascending: false });
+      let query = supabase
+        .from('cupons_loja')
+        .select('*')
+        .eq('status', 'ativo')  // só cupons ativos chegam ao cliente
+        .order('created_at', { ascending: false });
 
       // O cliente vê cupons públicos e os direcionados a ele.
       query = clientId
@@ -80,10 +84,12 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
       setCuponsAtivados(ativadosSet);
 
       const cuponsProcessados = (cuponsData || [])
-        .filter((c: any) => c.status !== 'cancelado')
         .map((c: any) => {
-          let localStatus = c.status === 'usado' || usadosSet.has(c.id) ? 'usado' : 'ativo';
-          if (localStatus !== 'usado' && (c.total_usos || 0) >= (c.limite_usos || 0)) localStatus = 'esgotado';
+          let localStatus = usadosSet.has(c.id) ? 'usado' : 'ativo';
+          // só marca esgotado se limite_usos for um número positivo
+          if (localStatus !== 'usado' && (c.limite_usos > 0) && (c.total_usos || 0) >= c.limite_usos) {
+            localStatus = 'esgotado';
+          }
           if (c.data_validade) {
             const [year, month, day] = String(c.data_validade).split('T')[0].split('-').map(Number);
             const expiryDate = new Date(year, month - 1, day, 23, 59, 59);

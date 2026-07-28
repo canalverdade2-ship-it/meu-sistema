@@ -6,8 +6,8 @@ import { sessionService } from '../lib/sessionService';
 import { callClientRpc } from '../lib/clientRpc';
 
 // Constantes de reconexão
-const HEARTBEAT_INTERVAL_MS = 60000; // 30s polling de fallback
-const RECONNECT_DELAY_MS = 3000;     // 3s delay para reconexão
+const HEARTBEAT_INTERVAL_MS = 120000; // 120s polling de fallback (reduzido para evitar flood)
+const RECONNECT_DELAY_MS = 15000;     // 15s delay para reconexão (backoff para evitar cascata)
 
 export interface ClientPendencyCounts {
   financeiro_faturas_pendentes: number;

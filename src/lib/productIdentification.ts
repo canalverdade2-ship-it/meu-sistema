@@ -92,7 +92,8 @@ export function validateBarcode(value: string, type?: BarcodeType): { isValid: b
 /**
  * Retorna o código que deve ser exibido visualmente.
  */
-export function getProductDisplayCode(product: Partial<Produto>): string {
+export function getProductDisplayCode(product?: Partial<Produto> | null): string {
+  if (!product) return '';
   if (product.identificador_preferencial === 'codigo_barras' && product.codigo_barras) {
     return product.codigo_barras;
   }
@@ -102,7 +103,8 @@ export function getProductDisplayCode(product: Partial<Produto>): string {
 /**
  * Retorna o rótulo do código que está sendo exibido.
  */
-export function getProductDisplayCodeLabel(product: Partial<Produto>): string {
+export function getProductDisplayCodeLabel(product?: Partial<Produto> | null): string {
+  if (!product) return 'Código interno';
   if (product.identificador_preferencial === 'codigo_barras' && product.codigo_barras) {
     return product.tipo_codigo_barras && product.tipo_codigo_barras !== 'OUTRO' 
       ? product.tipo_codigo_barras 

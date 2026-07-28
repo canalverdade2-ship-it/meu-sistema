@@ -55,7 +55,7 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
     if (activeTab === 'ativos') {
       query = query.in('status', ['ativo']);
     } else {
-      query = query.in('status', ['usado', 'expirado', 'cancelado']);
+      query = query.in('status', ['inativo', 'usado', 'expirado', 'cancelado']);
     }
 
     if (search) {
@@ -66,6 +66,40 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
       .order('created_at', { ascending: false })
       .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
     if (data) setCupons(data);
+  };
+
+  const [editingCupom, setEditingCupom] = useState<CupomLoja | null>(null);
+
+  const handleSaveCupom = async (formData: any) => {
+    if (editingCupom) {
+      const { error } = await supabase.from('cupons_loja').update({
+        ...formData,
+      }).eq('id', editingCupom.id);
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.error('Já existe um cupom com este código.');
+        } else {
+          toast.error(error.message || 'Erro ao atualizar cupom.');
+        }
+        return false;
+      } else {
+        toast.success('Cupom atualizado com sucesso.');
+        await logService.logAction({
+          acao: 'EDITAR_CUPOM_LOJA',
+          ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+          ator_nome: colaboradorNome || 'Administrador',
+          ator_id: colaboradorId,
+          detalhes: `Editou o cupom da loja: ${formData.nome_cupom} (${formData.codigo_cupom})`
+        });
+        setEditingCupom(null);
+        setIsDetailOpen(false);
+        fetchCupons();
+        return true;
+      }
+    } else {
+      return handleCreate(formData);
+    }
   };
 
   const handleCreate = async (formData: any) => {
@@ -96,25 +130,53 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
     }
   };
 
-  const handleCancel = async () => {
+  const handleInativar = async () => {
     if (!selectedCupom || isSubmittingAction) return;
     setIsSubmittingAction(true);
     try {
       const { error } = await supabase.from('cupons_loja').update({ 
-        status: 'cancelado',
-        motivo_cancelamento: `Cancelado administrativamente por ${colaboradorNome || 'Admin'}`
+        status: 'inativo',
+        motivo_cancelamento: `Inativado administrativamente por ${colaboradorNome || 'Admin'}`
       }).eq('id', selectedCupom.id);
 
       if (error) {
-        toast.error('Erro ao cancelar cupom.');
+        toast.error('Erro ao inativar cupom.');
       } else {
-        toast.success('Cupom cancelado com sucesso.');
+        toast.success('Cupom inativado com sucesso. Pode ser reativado a qualquer momento.');
         await logService.logAction({
-          acao: 'CANCELAR_CUPOM_LOJA',
+          acao: 'INATIVAR_CUPOM_LOJA',
           ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
           ator_nome: colaboradorNome || 'Administrador',
           ator_id: colaboradorId,
-          detalhes: `Cancelou o cupom da loja: ${selectedCupom.nome_cupom}`
+          detalhes: `Inativou o cupom da loja: ${selectedCupom.nome_cupom}`
+        });
+        setIsDetailOpen(false);
+        fetchCupons();
+      }
+    } finally {
+      setIsSubmittingAction(false);
+    }
+  };
+
+  const handleReativar = async () => {
+    if (!selectedCupom || isSubmittingAction) return;
+    setIsSubmittingAction(true);
+    try {
+      const { error } = await supabase.from('cupons_loja').update({ 
+        status: 'ativo',
+        motivo_cancelamento: null
+      }).eq('id', selectedCupom.id);
+
+      if (error) {
+        toast.error('Erro ao reativar cupom.');
+      } else {
+        toast.success('Cupom reativado com sucesso!');
+        await logService.logAction({
+          acao: 'REATIVAR_CUPOM_LOJA',
+          ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+          ator_nome: colaboradorNome || 'Administrador',
+          ator_id: colaboradorId,
+          detalhes: `Reativou o cupom da loja: ${selectedCupom.nome_cupom}`
         });
         setIsDetailOpen(false);
         fetchCupons();
@@ -280,70 +342,80 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
         <CupomForm onSubmit={handleCreate} onCancel={() => setIsModalOpen(false)} clientes={clientes} produtos={produtos} />
       </Modal>
 
-      <Modal isOpen={isDetailOpen} onClose={() => { setIsDetailOpen(false); setIsDeleting(false); }} title="Detalhes do Cupom" size="wide">
+      <Modal isOpen={isDetailOpen} onClose={() => { setIsDetailOpen(false); setIsDeleting(false); }} title="Detalhes do Cupom" size="2xl">
         {selectedCupom && (
           <div className="space-y-6">
-            <div className="rounded-2xl bg-neutral-50 p-6 ring-1 ring-neutral-200">
-              <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                    <Ticket className="h-6 w-6" />
+            <div className="rounded-2xl bg-neutral-50 p-6 ring-1 ring-neutral-200/80 shadow-sm">
+              <div className="flex items-center justify-between border-b border-neutral-200/60 pb-5">
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20">
+                    <Ticket className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-neutral-900">{selectedCupom.nome_cupom}</h3>
-                    <span className="font-mono text-sm font-bold text-neutral-500">{selectedCupom.codigo_cupom}</span>
+                    <h3 className="text-lg font-black text-neutral-900 leading-tight">{selectedCupom.nome_cupom}</h3>
+                    <span className="font-mono text-xs font-bold text-neutral-500 tracking-wider">{selectedCupom.codigo_cupom}</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className={`inline-block rounded-full px-3 py-1 text-xs font-black uppercase ${
-                    selectedCupom.status === 'ativo' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                  }`}>
-                    {selectedCupom.status}
-                  </span>
-                </div>
+                <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider ${
+                  selectedCupom.status === 'ativo' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {selectedCupom.status}
+                </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-6 mt-6">
-                <div>
-                  <p className="text-xs font-bold text-neutral-400 uppercase">Categoria</p>
-                  <p className="text-sm font-bold text-neutral-900 uppercase">{selectedCupom.categoria_cupom}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-5">
+                <div className="bg-white p-3.5 rounded-xl border border-neutral-200/60 shadow-2xs">
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-0.5">Categoria</p>
+                  <p className="text-xs font-black text-neutral-800 uppercase">{selectedCupom.categoria_cupom}</p>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-neutral-400 uppercase">Benefício</p>
-                  <p className="text-sm font-bold text-indigo-600">
+
+                <div className="bg-white p-3.5 rounded-xl border border-neutral-200/60 shadow-2xs">
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-0.5">Benefício</p>
+                  <p className="text-xs font-black text-indigo-600">
                     {selectedCupom.categoria_cupom === 'desconto' || selectedCupom.categoria_cupom === 'reembolso' ? (
                       selectedCupom.tipo_desconto === 'valor' ? formatCurrency(selectedCupom.valor_desconto || 0) : `${selectedCupom.valor_desconto}% OFF`
                     ) : (
                       selectedCupom.tipo_entrega === 'frete_gratis' ? 'Frete Grátis' : 
-                      selectedCupom.tipo_entrega === 'frete_gratis_minimo' ? `Frete Grátis Acima de ${formatCurrency(selectedCupom.valor_minimo_compra || 0)}` :
-                      `Taxa Fixa de Entrega: ${formatCurrency(selectedCupom.taxa_fixa_entrega || 0)}`
+                      selectedCupom.tipo_entrega === 'frete_gratis_minimo' ? `Frete Grátis > ${formatCurrency(selectedCupom.valor_minimo_compra || 0)}` :
+                      `Taxa Fixa: ${formatCurrency(selectedCupom.taxa_fixa_entrega || 0)}`
                     )}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-neutral-400 uppercase">Utilização</p>
-                  <p className="text-sm font-bold text-neutral-900">{selectedCupom.total_usos} de {selectedCupom.limite_usos} usos</p>
+
+                <div className="bg-white p-3.5 rounded-xl border border-neutral-200/60 shadow-2xs">
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-0.5">Utilização Global</p>
+                  <p className="text-xs font-black text-neutral-800">{selectedCupom.total_usos} de {selectedCupom.limite_usos} usos</p>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-neutral-400 uppercase">Validade</p>
-                  <p className="text-sm font-bold text-neutral-900">
+
+                <div className="bg-white p-3.5 rounded-xl border border-neutral-200/60 shadow-2xs">
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-0.5">Limite p/ Cliente</p>
+                  <p className="text-xs font-black text-indigo-600">
+                    {selectedCupom.limite_usos_por_cliente ? `${selectedCupom.limite_usos_por_cliente} uso(s)` : 'Sem limite'}
+                  </p>
+                </div>
+
+                <div className="bg-white p-3.5 rounded-xl border border-neutral-200/60 shadow-2xs">
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-0.5">Validade</p>
+                  <p className="text-xs font-black text-neutral-800">
                     {selectedCupom.data_validade ? formatDate(selectedCupom.data_validade) : 'Sem validade'}
                   </p>
                 </div>
+
                 {selectedCupom.cliente_id && (
-                  <div className="col-span-2">
-                    <p className="text-xs font-bold text-neutral-400 uppercase">Cliente Específico</p>
-                    <p className="text-sm font-bold text-neutral-900 flex items-center gap-2 mt-1">
-                      <User className="w-4 h-4 text-indigo-500" />
+                  <div className="col-span-2 bg-white p-3.5 rounded-xl border border-neutral-200/60 shadow-2xs">
+                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-0.5">Cliente Específico</p>
+                    <p className="text-xs font-bold text-neutral-800 flex items-center gap-1.5 mt-0.5">
+                      <User className="w-3.5 h-3.5 text-indigo-500" />
                       {(selectedCupom as any).clientes?.nome || selectedCupom.cliente_id}
                     </p>
                   </div>
                 )}
+
                 {selectedCupom.produto_id && (
-                  <div className="col-span-2">
-                    <p className="text-xs font-bold text-neutral-400 uppercase">Produto Específico</p>
-                    <p className="text-sm font-bold text-neutral-900 flex items-center gap-2 mt-1">
-                      <Package className="w-4 h-4 text-purple-500" />
+                  <div className="col-span-2 bg-white p-3.5 rounded-xl border border-neutral-200/60 shadow-2xs">
+                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-0.5">Produto Específico</p>
+                    <p className="text-xs font-bold text-neutral-800 flex items-center gap-1.5 mt-0.5">
+                      <Package className="w-3.5 h-3.5 text-purple-500" />
                       {(selectedCupom as any).produtos?.nome || selectedCupom.produto_id}
                     </p>
                   </div>
@@ -351,69 +423,117 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
               </div>
 
               {selectedCupom.motivo_cancelamento && (
-                <div className="mt-6 rounded-xl bg-red-50 p-4 border border-red-100">
-                  <p className="text-xs font-bold text-red-800 uppercase mb-1">Motivo do Cancelamento</p>
-                  <p className="text-sm text-red-900">{selectedCupom.motivo_cancelamento}</p>
+                <div className="mt-4 rounded-xl bg-red-50 p-3 border border-red-100">
+                  <p className="text-[10px] font-bold text-red-800 uppercase mb-0.5">Motivo do Cancelamento</p>
+                  <p className="text-xs text-red-900 font-medium">{selectedCupom.motivo_cancelamento}</p>
                 </div>
               )}
             </div>
             
             {isDeleting ? (
               <div className="rounded-2xl bg-red-50 p-6 ring-1 ring-red-200 flex flex-col items-center text-center">
-                <Trash2 className="h-8 w-8 text-red-500 mb-2" />
-                <h4 className="text-lg font-bold text-red-900 mb-1">Confirmar Exclusão</h4>
-                <p className="text-sm text-red-700 mb-6">
+                <Trash2 className="h-7 w-7 text-red-500 mb-2" />
+                <h4 className="text-base font-bold text-red-900 mb-1">Confirmar Exclusão</h4>
+                <p className="text-xs text-red-700 mb-5">
                   Tem certeza que deseja excluir este cupom permanentemente?
                 </p>
-                <div className="flex w-full gap-4">
-                  <button onClick={() => setIsDeleting(false)} disabled={isSubmittingAction} className="flex-1 rounded-xl bg-white py-3 font-bold text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50 disabled:opacity-50">
+                <div className="flex w-full gap-3">
+                  <button onClick={() => setIsDeleting(false)} disabled={isSubmittingAction} className="flex-1 rounded-xl bg-white py-2.5 text-xs font-bold text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50 disabled:opacity-50">
                     Cancelar
                   </button>
-                  <button onClick={handleDelete} disabled={isSubmittingAction} className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 disabled:opacity-50">
+                  <button onClick={handleDelete} disabled={isSubmittingAction} className="flex-1 rounded-xl bg-red-600 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50">
                     {isSubmittingAction ? 'Aguarde...' : 'Sim, Excluir'}
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-4">
-                {selectedCupom.status === 'ativo' && (
-                  <button onClick={handleCancel} disabled={isSubmittingAction} className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-50 py-3 font-bold text-amber-600 hover:bg-amber-100 disabled:opacity-50">
-                    {isSubmittingAction ? 'Aguarde...' : 'Inativar / Cancelar Cupom'}
-                  </button>
-                )}
-                <div className="flex gap-4">
-                  <button onClick={() => setIsDetailOpen(false)} disabled={isSubmittingAction} className="flex-1 rounded-xl bg-neutral-900 py-4 font-bold text-white hover:bg-black transition-all disabled:opacity-50">
-                    Fechar
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <div className="flex items-center gap-2">
+                  {selectedCupom.status === 'ativo' && (
+                    <>
+                      <button 
+                        onClick={() => {
+                          setEditingCupom(selectedCupom);
+                          setIsDetailOpen(false);
+                        }} 
+                        disabled={isSubmittingAction} 
+                        className="px-5 py-2.5 rounded-xl bg-indigo-600 text-xs font-bold text-white hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-md shadow-indigo-600/10"
+                      >
+                        Editar Cupom
+                      </button>
+                      <button 
+                        onClick={handleInativar} 
+                        disabled={isSubmittingAction} 
+                        className="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200/80 text-xs font-bold text-amber-700 hover:bg-amber-100 transition-all disabled:opacity-50"
+                      >
+                        {isSubmittingAction ? 'Aguarde...' : 'Inativar Cupom'}
+                      </button>
+                    </>
+                  )}
+                  {selectedCupom.status === 'inativo' && (
+                    <button 
+                      onClick={handleReativar} 
+                      disabled={isSubmittingAction} 
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700 transition-all disabled:opacity-50 shadow-md shadow-emerald-600/10"
+                    >
+                      {isSubmittingAction ? 'Aguarde...' : '✓ Reativar Cupom'}
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setIsDeleting(true)} 
+                    disabled={isSubmittingAction} 
+                    className="p-2.5 rounded-xl bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition-all disabled:opacity-50"
+                    title="Excluir Permanentemente"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <button onClick={() => setIsDeleting(true)} disabled={isSubmittingAction} className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-50 py-3 font-bold text-red-600 hover:bg-red-100 disabled:opacity-50">
-                  <Trash2 className="h-5 w-5" />
-                  Excluir Permanentemente
+
+                <button 
+                  onClick={() => setIsDetailOpen(false)} 
+                  disabled={isSubmittingAction} 
+                  className="px-6 py-2.5 rounded-xl bg-neutral-900 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50"
+                >
+                  Fechar
                 </button>
               </div>
             )}
           </div>
         )}
       </Modal>
+
+      {/* Modal de Editar Cupom */}
+      <Modal isOpen={!!editingCupom} onClose={() => setEditingCupom(null)} title="EDITAR CUPOM DA LOJA">
+        {editingCupom && (
+          <CupomForm 
+            initialData={editingCupom}
+            onSubmit={handleSaveCupom} 
+            onCancel={() => setEditingCupom(null)} 
+            clientes={clientes}
+            produtos={produtos}
+          />
+        )}
+      </Modal>
     </div>
   );
 }
 
-function CupomForm({ onSubmit, onCancel, clientes, produtos }: { onSubmit: (data: any) => Promise<boolean>, onCancel: () => void, clientes: Cliente[], produtos: Produto[] }) {
+function CupomForm({ onSubmit, onCancel, clientes, produtos, initialData }: { onSubmit: (data: any) => Promise<boolean>, onCancel: () => void, clientes: Cliente[], produtos: Produto[], initialData?: CupomLoja | null }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<any>({
-    nome_cupom: '',
-    codigo_cupom: '',
-    categoria_cupom: 'desconto',
-    tipo_desconto: 'porcentagem',
-    valor_desconto: '',
-    tipo_entrega: 'frete_gratis',
-    valor_minimo_compra: '',
-    taxa_fixa_entrega: '',
-    cliente_id: '',
-    produto_id: '',
-    limite_usos: 1,
-    data_validade: ''
+    nome_cupom: initialData?.nome_cupom || '',
+    codigo_cupom: initialData?.codigo_cupom || '',
+    categoria_cupom: initialData?.categoria_cupom || 'desconto',
+    tipo_desconto: initialData?.tipo_desconto || 'porcentagem',
+    valor_desconto: initialData?.valor_desconto ?? '',
+    tipo_entrega: initialData?.tipo_entrega || 'frete_gratis',
+    valor_minimo_compra: initialData?.valor_minimo_compra ?? '',
+    taxa_fixa_entrega: initialData?.taxa_fixa_entrega ?? '',
+    cliente_id: initialData?.cliente_id || '',
+    produto_id: initialData?.produto_id || '',
+    limite_usos: initialData?.limite_usos ?? 1,
+    limite_usos_por_cliente: initialData?.limite_usos_por_cliente ?? 1,
+    data_validade: initialData?.data_validade ? initialData.data_validade.split('T')[0] : ''
   });
 
   return (
@@ -427,7 +547,8 @@ function CupomForm({ onSubmit, onCancel, clientes, produtos }: { onSubmit: (data
         codigo_cupom: formData.codigo_cupom.trim().toUpperCase(),
         categoria_cupom: formData.categoria_cupom,
         limite_usos: parseInt(formData.limite_usos) || 1,
-        total_usos: 0,
+        limite_usos_por_cliente: parseInt(formData.limite_usos_por_cliente) || 1,
+        total_usos: initialData?.total_usos ?? 0,
       };
 
       if (!payload.codigo_cupom) {
@@ -473,7 +594,16 @@ function CupomForm({ onSubmit, onCancel, clientes, produtos }: { onSubmit: (data
           <label className="mb-1 block text-sm font-bold text-neutral-700">Código *</label>
           <div className="flex">
             <input type="text" required value={formData.codigo_cupom} onChange={e => setFormData({...formData, codigo_cupom: e.target.value.toUpperCase()})} className="w-full rounded-l-xl border border-neutral-200 bg-neutral-50 px-4 py-3 font-mono focus:border-indigo-500 focus:outline-none uppercase" placeholder="BLACK20" />
-            <button type="button" onClick={() => setFormData({...formData, codigo_cupom: generateCode('')})} className="bg-neutral-900 text-white px-4 rounded-r-xl font-bold text-xs hover:bg-black transition-colors">GERAR</button>
+            <button type="button" onClick={() => {
+              const nome = formData.nome_cupom || '';
+              const codigo = nome
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+                .toUpperCase()
+                .replace(/[^A-Z0-9\s]/g, '')   // remove caracteres especiais
+                .trim()
+                .replace(/\s+/g, '_');           // espaços viram underscore
+              setFormData({...formData, codigo_cupom: codigo || generateCode('')});
+            }} className="bg-neutral-900 text-white px-4 rounded-r-xl font-bold text-xs hover:bg-black transition-colors">GERAR</button>
           </div>
         </div>
 
@@ -533,12 +663,18 @@ function CupomForm({ onSubmit, onCancel, clientes, produtos }: { onSubmit: (data
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 border-t border-neutral-100 pt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-neutral-100 pt-4">
         <div>
-          <label className="mb-1 block text-sm font-bold text-neutral-700 flex justify-between">
+          <label className="mb-1 block text-sm font-bold text-neutral-700">
             Limite de Usos Globais *
           </label>
           <input type="number" required min="1" value={formData.limite_usos} onChange={e => setFormData({...formData, limite_usos: e.target.value})} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none" />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-bold text-neutral-700">
+            Usos por Cliente *
+          </label>
+          <input type="number" required min="1" value={formData.limite_usos_por_cliente} onChange={e => setFormData({...formData, limite_usos_por_cliente: e.target.value})} className="w-full rounded-xl border border-indigo-200 bg-indigo-50/40 px-4 py-3 focus:border-indigo-500 focus:outline-none" placeholder="Ex: 1" />
         </div>
         <div>
           <label className="mb-1 block text-sm font-bold text-neutral-700">Data de Validade (Opcional)</label>
@@ -579,7 +715,7 @@ function CupomForm({ onSubmit, onCancel, clientes, produtos }: { onSubmit: (data
         <button type="button" onClick={onCancel} disabled={isSubmitting} className="flex-1 rounded-xl border border-neutral-200 py-3 font-bold text-neutral-600 hover:bg-neutral-50">Cancelar</button>
         <button type="submit" disabled={isSubmitting} className="flex-1 rounded-xl bg-indigo-600 py-3 font-bold text-white shadow-lg hover:bg-indigo-700 disabled:opacity-50 flex justify-center items-center gap-2">
           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ticket className="w-4 h-4" />}
-          Cadastrar Cupom
+          {initialData ? 'Salvar Alterações' : 'Cadastrar Cupom'}
         </button>
       </div>
     </form>

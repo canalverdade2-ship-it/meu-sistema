@@ -262,8 +262,13 @@ const fetchProdutos = async () => {
       }
     }
 
-    const { data } = await query.order('codigo_produto', { ascending: false });
-    if (data) setProdutos(data);
+    const { data, error } = await query.order('codigo_produto', { ascending: false });
+    if (error) {
+      console.error('Erro ao consultar produtos no Supabase:', error);
+      toast.error(`Falha na conexão com o banco de dados: ${error.message || 'Timeout de Conexão'}`);
+    } else if (data) {
+      setProdutos(data);
+    }
   };
 
 const handleCreate = async (formData: any) => {

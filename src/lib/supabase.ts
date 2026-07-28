@@ -322,7 +322,13 @@ export const getSupabase = (): SupabaseClient => {
       },
       realtime: {
         params: {
-          eventsPerSecond: 10,
+          eventsPerSecond: 5,
+        },
+        timeout: 30000,
+        heartbeatIntervalMs: 30000,
+        reconnectAfterMs: (tries: number) => {
+          // Backoff exponencial: 1s, 2s, 4s, 8s, 16s, 30s (máximo)
+          return Math.min(1000 * Math.pow(2, tries), 30000);
         },
       },
     });
@@ -330,11 +336,7 @@ export const getSupabase = (): SupabaseClient => {
   return supabaseInstance;
 };
 
-// Proxy de inicialização preguiçosa. O Storage do cliente recebe uma camada
-// adicional para impedir caminhos alheios e para nunca gerar URLs públicas.
-// O upload legado de contratos de empréstimo também é redirecionado para o
-// bucket administrativo privado enquanto o módulo antigo é gradualmente
-// migrado para uploadPrivateDocument.
+// Proxy de inicialização preguiçosa ligado 100% ao banco de dados real
 export const supabase = new Proxy({} as SupabaseClient, {
   get: (_target, property) => {
     const client = getSupabase();

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Activity, Database, Server, Wifi, ServerOff, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { isLocalDevHost } from '../../lib/utils';
 
 type SystemStatus = 'ok' | 'warning' | 'error';
 

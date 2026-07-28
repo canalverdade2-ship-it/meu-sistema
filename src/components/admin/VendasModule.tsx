@@ -99,6 +99,8 @@ export function VendasModule({
       'ordens-assinatura': 'assinaturas',
       'credito-loja': 'credito',
       credito_loja: 'credito',
+      pedidos: 'produtos',
+      produtos: 'produtos',
     };
     if (legacyMainTabs[initialTab] && isAllowedTab(legacyMainTabs[initialTab])) {
       const main = legacyMainTabs[initialTab];

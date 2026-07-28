@@ -3,6 +3,7 @@ import { Modal } from '../../ui/Modal';
 import { Loader2, X, AlertCircle, CheckCircle2, Camera, RefreshCw, Zap, ZapOff } from 'lucide-react';
 import { mapNativeFormat, mapZXingFormat, processBarcodeValue, ProcessedBarcodeResult } from '../../../lib/barcodeScanner';
 import { toast } from 'react-hot-toast';
+import { isLocalDevHost } from '../../../lib/utils';
 
 interface BarcodeScannerModalProps {
   isOpen: boolean;
@@ -95,7 +96,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onDetected }: BarcodeScan
 
   const checkContextAndInit = async () => {
     // Verificar HTTPS ou localhost
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isLocalhost = isLocalDevHost();
     if (!window.isSecureContext && !isLocalhost) {
       setIsHttpsSecure(false);
       setErrorMsg('A câmera só pode ser utilizada em uma conexão segura HTTPS ou em localhost.');

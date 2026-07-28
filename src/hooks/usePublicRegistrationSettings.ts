@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { isLocalDevHost } from '../lib/utils';
 
 export interface PublicRegistrationSettings {
   ativo: boolean;
@@ -23,7 +24,7 @@ export function usePublicRegistrationSettings(enabled: boolean) {
     if (!enabled) return;
     setLoading(true);
     // Em dev local com servidor remoto instável, usa os valores padrão para evitar erros 522/CORS no console
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    if (isLocalDevHost()) {
       setSettings(DEFAULT_SETTINGS);
       setLoading(false);
       return;

@@ -1527,12 +1527,27 @@ function TransacoesTab() {
 
       const displayVal = externalVal > 0 ? externalVal : total;
 
+      const isCompleted = ['concluido', 'reembolsada'].includes(String(item?.cancelamento_status || item?.status || ''));
+      const paymentDate = item?.updated_at || item?.data_pagamento_reembolso || item?.comprovante_data;
+      const formaReembolso = item?.forma_reembolso || rawForma.includes('pix') ? 'Pix' : (rawForma.includes('cartao') ? 'Estorno / Cartão' : 'Transferência');
+
+      let statusBadgeLabel = 'Pendente (Aguardando Confirmação)';
+      if (isCompleted) {
+        const dateStr = paymentDate ? formatDateTime(paymentDate) : 'Confirmado';
+        statusBadgeLabel = `Confirmado em ${dateStr} via ${formaReembolso}`;
+      } else {
+        statusBadgeLabel = `Pendente de Confirmação (Prazo até 72h) - ${formaReembolso}`;
+      }
+
       breakdown.push({
         tipo: 'externo',
         titulo: nomeExterno,
         valorDisplay: formatCurrency(displayVal),
-        prazo: 'Prazo de até 72 horas',
+        prazo: statusBadgeLabel,
         isSystem: false,
+        isCompleted: isCompleted,
+        dataConfirmacao: paymentDate ? formatDateTime(paymentDate) : null,
+        formaReembolso: formaReembolso,
       });
     }
 
@@ -1910,34 +1925,39 @@ function TransacoesTab() {
                 </h4>
 
                 <div className="grid gap-2 sm:grid-cols-1">
-                  {getPaymentBreakdown(detailsTx).map((part, idx) => (
-                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-slate-50 p-3 border border-slate-200/80">
-                      <div className="flex items-center gap-2.5">
-                        {part.isSystem ? (
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">
-                            <Zap className="h-4 w-4" />
+                  {getPaymentBreakdown(detailsTx).map((part, idx) => {
+                    const isDone = part.isSystem || part.isCompleted;
+                    return (
+                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-slate-50 p-3 border border-slate-200/80">
+                        <div className="flex items-center gap-2.5">
+                          {isDone ? (
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="h-4 w-4" />
+                            </div>
+                          ) : (
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 border border-amber-200">
+                              <Clock className="h-4 w-4" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-xs font-black text-slate-900">{part.titulo}</p>
+                            <p className="text-[11px] font-bold text-slate-500">{part.valorDisplay}</p>
                           </div>
-                        ) : (
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 border border-amber-200">
-                            <Clock className="h-4 w-4" />
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-xs font-black text-slate-900">{part.titulo}</p>
-                          <p className="text-[11px] font-bold text-slate-500">{part.valorDisplay}</p>
+                        </div>
+
+                        <div className="flex flex-col sm:items-end">
+                          <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
+                            isDone
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-amber-100 text-amber-800 border border-amber-300'
+                          }`}>
+                            {isDone ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                            {part.prazo}
+                          </span>
                         </div>
                       </div>
-
-                      <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
-                        part.isSystem
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : 'bg-amber-100 text-amber-800 border border-amber-300'
-                      }`}>
-                        {part.isSystem ? <Zap className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                        {part.prazo}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

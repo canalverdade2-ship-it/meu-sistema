@@ -5,7 +5,7 @@ import { showAnimatedToast } from '../lib/notifications';
 import { providerOperations } from '../lib/providerOperations';
 import { isProviderRevoked } from '../lib/providerStatus';
 
-const HEARTBEAT_INTERVAL_MS = 60_000;
+const HEARTBEAT_INTERVAL_MS = 120_000; // 120s polling (reduzido para evitar flood no Supabase)
 
 type ProviderProfile = {
   id: string;

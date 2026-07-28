@@ -60,7 +60,11 @@ function getOrderStatus(order: any): string {
 
 function getPresentation(order: any): OrderPresentation {
   const status = getOrderStatus(order);
-  const isCredit = Boolean(order.descricao_adicional?.includes('Crédito GSA'));
+  const isCredit = Boolean(
+    order.forma_pagamento_loja === 'credito_loja' ||
+    order.descricao_adicional?.includes('Credito GSA') ||
+    order.descricao_adicional?.includes('Crédito GSA')
+  );
   const isSubscription = order.ordens_items?.[0]?.tipo === 'assinatura';
   const createdAt = new Date(order.data_criacao);
   const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
@@ -72,8 +76,8 @@ function getPresentation(order: any): OrderPresentation {
     && ['aberto', 'em_analise'].includes(status);
   const isCancelled = status === 'cancelado';
   const isExpired = isCancelled || expiredPending;
-  const isPaid = ['pago', 'em_expedicao', 'em_transporte', 'concluido'].includes(status) || isCredit;
-  const isAwaiting = ['aberto', 'aprovado', 'em_analise'].includes(status) && !isCredit && !isExpired;
+  const isPaid = ['pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(status) || isCredit;
+  const isAwaiting = ['aberto', 'em_analise'].includes(status) && !isCredit && !isExpired;
 
   let label = 'Em análise';
   let tone = 'border-amber-200 bg-amber-50 text-amber-800';

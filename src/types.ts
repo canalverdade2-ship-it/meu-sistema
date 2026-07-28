@@ -775,9 +775,10 @@ export type CupomLoja = {
   cliente_id?: string;
   produto_id?: string;
   limite_usos: number;
+  limite_usos_por_cliente?: number;
   total_usos: number;
   data_validade?: string;
-  status: 'ativo' | 'usado' | 'expirado' | 'cancelado';
+  status: 'ativo' | 'inativo' | 'usado' | 'expirado' | 'cancelado';
   motivo_cancelamento?: string;
   created_at: string;
   updated_at: string;

@@ -4,7 +4,7 @@ import { LojaCategoria } from '../../types';
 import { Plus, Edit2, Trash2, Search, Loader2, Tag, Check, X, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
-import { generateCode } from '../../lib/utils';
+import { generateCode, isLocalDevHost } from '../../lib/utils';
 
 export function LojaCategoriasModule() {
   const [categorias, setCategorias] = useState<LojaCategoria[]>([]);

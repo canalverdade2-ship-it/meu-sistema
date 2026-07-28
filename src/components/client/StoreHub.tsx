@@ -425,7 +425,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
 
       return {
         id: item.id,
-        codigo: itemData?.codigo_assinatura || itemData?.codigo_servico || (itemType === 'produto' ? getProductDisplayCode(itemData as any) : itemData?.codigo_produto) || item.codigo || itemType.toUpperCase(),
+        codigo: itemData?.codigo_assinatura || itemData?.codigo_servico || (itemType === 'produto' && itemData ? getProductDisplayCode(itemData as any) : itemData?.codigo_produto) || item.codigo || itemType.toUpperCase(),
         descricao: itemData?.nome || item.nome || item.descricao || item.descricao_solicitacao?.split(' x')[0] || item.titulo_solicitacao || 'Item do Pedido',
         valor_unitario: valorUnitario,
         quantidade,

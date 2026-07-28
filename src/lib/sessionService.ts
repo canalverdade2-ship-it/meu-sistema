@@ -1,14 +1,11 @@
 import { supabase } from './supabase';
 
-export type ClientPersonType = 'pf' | 'pj';
-
 type StoredSession = {
   sessaoId: string;
   sessionToken?: string;
   atorTipo: string;
   atorId: string;
   atorNome: string;
-  clientPersonType?: ClientPersonType;
   [key: string]: any;
 };
 
@@ -21,10 +18,9 @@ export type AuthGatewayError = Error & {
 const SESSION_STORAGE_KEY = '_gsa_session';
 let restoreSessionPromise: Promise<StoredSession | null> | null = null;
 let endSessionPromise: Promise<void> | null = null;
-let loginQueue: Promise<void> = Promise.resolve();
 
 function getSessionStorage() {
-  return typeof window === 'undefined' ? null : window.localStorage;
+  return typeof window === 'undefined' ? null : window.sessionStorage;
 }
 
 function readStoredSession(): StoredSession | null {
@@ -38,18 +34,16 @@ function readStoredSession(): StoredSession | null {
 }
 
 function writeStoredSession(sessionData: StoredSession) {
-  const storage = getSessionStorage();
-  storage?.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
-  storage?.removeItem('sessaoId');
-  storage?.removeItem('_gsa_sess');
+  getSessionStorage()?.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+  localStorage.removeItem('sessaoId');
+  localStorage.removeItem('_gsa_sess');
 }
 
 function clearStoredSession() {
-  const storage = getSessionStorage();
-  storage?.removeItem(SESSION_STORAGE_KEY);
-  storage?.removeItem('sessaoId');
-  storage?.removeItem('_gsa_sess');
-  storage?.removeItem('lastPing');
+  getSessionStorage()?.removeItem(SESSION_STORAGE_KEY);
+  localStorage.removeItem('sessaoId');
+  localStorage.removeItem('_gsa_sess');
+  localStorage.removeItem('lastPing');
 }
 
 function gatewayErrorMessage(code: string, retryAfter: number) {
@@ -60,11 +54,7 @@ function gatewayErrorMessage(code: string, retryAfter: number) {
   if (code === 'origin_not_allowed') {
     return 'Este endereço não está autorizado para acessar o sistema.';
   }
-  if (
-    code === 'server_not_configured'
-    || code === 'rate_limit_unavailable'
-    || code === 'auth_sync_unavailable'
-  ) {
+  if (code === 'server_not_configured' || code === 'rate_limit_unavailable') {
     return 'O acesso está temporariamente indisponível. Tente novamente mais tarde.';
   }
   return 'Não foi possível concluir a autenticação.';
@@ -100,63 +90,6 @@ async function invokeAuthGateway(action: string, payload: Record<string, unknown
   return data as any;
 }
 
-function serializeLogin<T>(operation: () => Promise<T>): Promise<T> {
-  const current = loginQueue.then(operation, operation);
-  loginQueue = current.then(
-    () => undefined,
-    () => undefined,
-  );
-  return current;
-}
-
-async function clearSessionPair(rpcSession?: any): Promise<void> {
-  const sessaoId = rpcSession?.sessao_id;
-  const sessionToken = rpcSession?.session_token;
-
-  try {
-    if (sessaoId && sessionToken) {
-      const { error } = await supabase.rpc('gsa_end_session', {
-        p_sessao_id: sessaoId,
-        p_session_token: sessionToken,
-      });
-      if (error) console.error('Falha ao revogar a sessão GSA inconsistente:', error);
-    }
-  } finally {
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-    } catch (error) {
-      console.error('Falha ao limpar a sessão Supabase Auth inconsistente:', error);
-    }
-    clearStoredSession();
-  }
-}
-
-async function synchronizeSupabaseAuth(
-  rpcSession: any,
-  useExistingAuthSession: boolean,
-): Promise<void> {
-  const tokenHash = rpcSession?.auth?.token_hash;
-  if (tokenHash) {
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type: 'magiclink',
-      });
-      if (error || !data.session) {
-        console.warn('[sessionService] Supabase Auth verifyOtp aviso:', error?.message);
-      }
-    } catch (e) {
-      console.warn('[sessionService] Falha ao sincronizar Supabase Auth em background:', e);
-    }
-  } else if (useExistingAuthSession) {
-    try {
-      await supabase.auth.refreshSession();
-    } catch (e) {
-      console.warn('[sessionService] Refresh de sessão Supabase Auth:', e);
-    }
-  }
-}
-
 async function persistAuthenticatedSession(payload: any, useExistingAuthSession = false): Promise<StoredSession> {
   const rpcSession = payload?.session || payload;
   const sessaoId = rpcSession?.sessao_id;
@@ -166,6 +99,53 @@ async function persistAuthenticatedSession(payload: any, useExistingAuthSession 
   const atorNome = rpcSession?.ator_nome;
   if (!sessaoId || !sessionToken || !atorTipo || !atorId) {
     throw new Error('A autenticação não retornou uma sessão válida.');
+  }
+
+  let authSession: any = null;
+
+  if (useExistingAuthSession) {
+    const { data: refreshedData, error: refreshError } = await supabase.auth.refreshSession();
+    authSession = refreshedData.session;
+    if (refreshError || !authSession?.user) {
+      await supabase.rpc('gsa_end_session', {
+        p_sessao_id: sessaoId,
+        p_session_token: sessionToken,
+      });
+      throw new Error(refreshError?.message || 'Não foi possível confirmar a sessão de recuperação.');
+    }
+  } else {
+    const tokenHash = rpcSession?.auth?.token_hash;
+    if (!tokenHash) {
+      throw new Error('A autenticação não retornou o token de ativação.');
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'magiclink',
+    });
+
+    if (authError || !authData.session || !authData.user) {
+      await supabase.rpc('gsa_end_session', {
+        p_sessao_id: sessaoId,
+        p_session_token: sessionToken,
+      });
+      throw new Error(authError?.message || 'Não foi possível ativar a sessão segura do Supabase.');
+    }
+    authSession = authData.session;
+  }
+
+  const appMetadata = authSession.user.app_metadata || {};
+  if (
+    appMetadata.gsa_session_id !== sessaoId ||
+    appMetadata.gsa_actor_type !== atorTipo ||
+    appMetadata.gsa_actor_id !== atorId
+  ) {
+    await supabase.auth.signOut({ scope: 'local' });
+    await supabase.rpc('gsa_end_session', {
+      p_sessao_id: sessaoId,
+      p_session_token: sessionToken,
+    });
+    throw new Error('A identidade autenticada não corresponde à sessão GSA.');
   }
 
   const metadata = rpcSession?.metadata || {};
@@ -178,22 +158,14 @@ async function persistAuthenticatedSession(payload: any, useExistingAuthSession 
     ...metadata,
   };
 
-  try {
-    await synchronizeSupabaseAuth(rpcSession, useExistingAuthSession);
-    writeStoredSession(sessionData);
-    return sessionData;
-  } catch {
-    writeStoredSession(sessionData);
-    return sessionData;
-  }
+  writeStoredSession(sessionData);
+  return sessionData;
 }
 
 async function authenticate(action: string, payload: Record<string, unknown>) {
-  return serializeLogin(async () => {
-    const data = await invokeAuthGateway(action, payload);
-    if (data?.valid || data?.success) await persistAuthenticatedSession(data);
-    return data;
-  });
+  const data = await invokeAuthGateway(action, payload);
+  if (data?.valid || data?.success) await persistAuthenticatedSession(data);
+  return data;
 }
 
 async function endStoredSession(): Promise<void> {
@@ -213,12 +185,9 @@ async function endStoredSession(): Promise<void> {
       console.error('Falha ao encerrar a sessão:', error);
     } finally {
       try {
-        const { data: authData } = await supabase.auth.getSession();
-        if (authData?.session) {
-          await supabase.auth.signOut({ scope: 'local' });
-        }
-      } catch {
-        // Ignora silenciosamente se não houver sessão do Supabase Auth
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (error) {
+        console.warn('Não foi possível confirmar o logout local no Supabase:', error);
       }
       clearStoredSession();
     }
@@ -237,9 +206,31 @@ async function restoreStoredSession(): Promise<StoredSession | null> {
       return null;
     }
 
-    const { data: authData } = await supabase.auth.getSession();
-    if (!authData?.session) {
-      await supabase.auth.refreshSession().catch(() => {});
+    const { data: authData, error: authError } = await supabase.auth.getSession();
+    const authSession = authData.session;
+    const appMetadata = authSession?.user?.app_metadata || {};
+    if (
+      authError ||
+      !authSession ||
+      appMetadata.gsa_session_id !== sessionData.sessaoId ||
+      appMetadata.gsa_actor_type !== sessionData.atorTipo ||
+      appMetadata.gsa_actor_id !== sessionData.atorId
+    ) {
+      await endStoredSession();
+      return null;
+    }
+
+    // O proxy RPC do projeto resolve a chamada imediatamente e devolve o
+    // resultado final. Portanto, não se pode encadear .single() neste ponto.
+    const { data, error } = await supabase.rpc('gsa_validate_session', {
+      p_sessao_id: sessionData.sessaoId,
+      p_session_token: sessionData.sessionToken,
+    });
+    const validation = Array.isArray(data) ? data[0] : data;
+
+    if (error || !(validation as any)?.is_valid) {
+      await endStoredSession();
+      return null;
     }
 
     if (sessionData.atorTipo === 'cliente') {
@@ -268,6 +259,8 @@ async function restoreStoredSession(): Promise<StoredSession | null> {
 
     return sessionData;
   } catch (error) {
+    // Uma falha inesperada de implementação ou rede não deve apagar uma
+    // sessão recém-criada nem disparar logout concorrente no Strict Mode.
     console.error('Falha ao restaurar a sessão:', error);
     return null;
   }
@@ -279,103 +272,17 @@ export const sessionService = {
   },
 
   async loginWithPin(documento: string, pin: string, tipo: 'cliente' | 'prestador' | 'fornecedor') {
-    const cleanDoc = documento.replace(/\D/g, '');
-    const cleanPin = pin.trim();
-
-    // 1. Tenta RPC nativa gsa_login_pin
-    try {
-      const rpcResult = await Promise.race([
-        supabase.rpc('gsa_login_pin', { p_documento: cleanDoc, p_pin: cleanPin, p_tipo: tipo }),
-        new Promise<{ data: null; error: Error }>((resolve) => setTimeout(() => resolve({ data: null, error: new Error('timeout') }), 2500))
-      ]);
-      if (!rpcResult.error && rpcResult.data) {
-        const res = rpcResult.data as any;
-        if (res?.valid || res?.success) {
-          await persistAuthenticatedSession(res);
-        }
-        return res;
-      }
-    } catch {
-      // Ignora silenciosamente erros de CORS/Timeout do backend
-    }
-
-    // 2. Tenta Edge Function
-    try {
-      return await authenticate('login_pin', { documento: cleanDoc, pin: cleanPin, tipo });
-    } catch (edgeErr) {
-      console.warn('[sessionService] Edge Function login_pin indisponível:', edgeErr);
-    }
-
-    // 3. Fallback de cliente para continuar a navegação caso o backend esteja com instabilidade de CORS/Network
-    if (tipo === 'cliente' && cleanDoc) {
-      try {
-        const { data: cliente } = await supabase
-          .from('clientes')
-          .select('id, nome, cpf, cnpj, status, tipo_pessoa')
-          .or(`cpf.eq.${cleanDoc},cnpj.eq.${cleanDoc}`)
-          .maybeSingle();
-
-        if (cliente) {
-          const fallbackRes = {
-            valid: true,
-            success: true,
-            id: cliente.id,
-            nome: cliente.nome,
-            tipo_pessoa: cliente.tipo_pessoa || 'pf',
-            atorTipo: 'cliente',
-            sessaoId: `fallback-${Date.now()}`,
-            sessionToken: `token-${Date.now()}`,
-          };
-          await persistAuthenticatedSession(fallbackRes);
-          return fallbackRes;
-        }
-      } catch (dbErr) {
-        console.warn('[sessionService] Consulta à tabela clientes indisponível:', dbErr);
-      }
-
-      // Em ambiente local de desenvolvimento com rede offline/CORS bloqueado, autoriza a sessão local
-      const mockSession = {
-        valid: true,
-        success: true,
-        id: `local-client-${cleanDoc}`,
-        nome: 'Cliente GSA',
-        tipo_pessoa: cleanDoc.length > 11 ? 'pj' : 'pf',
-        atorTipo: 'cliente',
-        sessaoId: `local-sessao-${Date.now()}`,
-        sessionToken: `local-token-${Date.now()}`,
-      };
-      await persistAuthenticatedSession(mockSession);
-      return mockSession;
-    }
-
-    return { valid: false, error: 'service_unavailable' };
+    return authenticate('login_pin', { documento, pin, tipo });
   },
 
   async requestClientRecovery(documento: string, email: string) {
     return invokeAuthGateway('request_client_recovery', { documento, email });
   },
 
-  async requestClientFirstAccess(documento: string, email: string) {
-    return invokeAuthGateway('request_client_first_access', { documento, email });
-  },
-
-  async completeClientFirstAccess(challengeId: string, newPin: string) {
-    return serializeLogin(async () => {
-      const data = await invokeAuthGateway('complete_client_first_access', {
-        challenge_id: challengeId,
-        new_pin: newPin,
-      });
-      if (data?.success) await persistAuthenticatedSession(data, true);
-      return data;
-    });
-  },
-
   async completeClientRecovery(recoveryId: string) {
-    return serializeLogin(async () => {
-      const data = await invokeAuthGateway('complete_client_recovery', { challenge_id: recoveryId });
-      if (data?.success) await persistAuthenticatedSession(data, true);
-      return data;
-    });
+    const data = await invokeAuthGateway('complete_client_recovery', { recovery_id: recoveryId });
+    if (data?.success) await persistAuthenticatedSession(data, true);
+    return data;
   },
 
   async updateClientPin(newPin: string) {
@@ -407,96 +314,21 @@ export const sessionService = {
     return data as any;
   },
 
-  async resolveAuthenticatedClientPersonType(clientId: string): Promise<ClientPersonType | null> {
-    const sessionData = readStoredSession();
-    if (sessionData?.atorTipo !== 'cliente' || sessionData.atorId !== clientId) return null;
-
-    const { data, error } = await supabase
-      .from('clientes')
-      .select('tipo_pessoa')
-      .eq('id', clientId)
-      .maybeSingle();
-
-    if (error || !data) return null;
-    const personType: ClientPersonType = data.tipo_pessoa === 'pj' ? 'pj' : 'pf';
-    sessionData.clientPersonType = personType;
-    writeStoredSession(sessionData);
-    return personType;
-  },
-
-  setClientPersonType(personType: ClientPersonType) {
-    const sessionData = readStoredSession();
-    if (sessionData?.atorTipo !== 'cliente') return;
-    sessionData.clientPersonType = personType;
-    writeStoredSession(sessionData);
-  },
-
   async setPinAndLogin(
     documento: string,
     telefone: string,
     pin: string,
     tipo: 'cliente' | 'prestador',
   ) {
-    const cleanDoc = documento.replace(/\D/g, '');
-    const cleanContact = telefone.trim();
-
-    try {
-      return await authenticate('set_pin_and_login', {
-        documento: cleanDoc,
-        telefone: cleanContact,
-        pin: pin.trim(),
-        tipo,
-      });
-    } catch (edgeError: any) {
-      console.warn('[sessionService] Edge Function set_pin_and_login retornou erro, tentando via RPC gsa_set_pin_and_login:', edgeError);
-      // TODO: Remover fallback após Rate Limiting ser implementado nas RPCs
-      const { data, error } = await supabase.rpc('gsa_set_pin_and_login', {
-        p_documento: cleanDoc,
-        p_telefone: cleanContact,
-        p_pin: pin.trim(),
-        p_tipo: tipo,
-      });
-      if (error) throw error;
-      const res = data as any;
-      if (res?.valid || res?.success) {
-        await persistAuthenticatedSession(res);
-      }
-      return res;
-    }
+    return authenticate('set_pin_and_login', { documento, telefone, pin, tipo });
   },
 
   async loginAdmin(code: string) {
-    const cleanCode = code.trim();
-    try {
-      return await authenticate('login_admin', { code: cleanCode });
-    } catch (edgeError: any) {
-      console.warn('[sessionService] Edge Function login_admin falhou, tentando via RPC gsa_login_admin:', edgeError);
-      // TODO: Remover fallback após Rate Limiting ser implementado nas RPCs
-      const { data, error } = await supabase.rpc('gsa_login_admin', { p_code: cleanCode });
-      if (error) throw error;
-      const res = data as any;
-      if (res?.valid || res?.success) {
-        await persistAuthenticatedSession(res);
-      }
-      return res;
-    }
+    return authenticate('login_admin', { code });
   },
 
   async loginColaborador(code: string) {
-    const cleanCode = code.trim();
-    try {
-      return await authenticate('login_colaborador', { code: cleanCode });
-    } catch (edgeError: any) {
-      console.warn('[sessionService] Edge Function login_colaborador falhou, tentando via RPC gsa_login_colaborador:', edgeError);
-      // TODO: Remover fallback após Rate Limiting ser implementado nas RPCs
-      const { data, error } = await supabase.rpc('gsa_login_colaborador', { p_code: cleanCode });
-      if (error) throw error;
-      const res = data as any;
-      if (res?.valid || res?.success) {
-        await persistAuthenticatedSession(res);
-      }
-      return res;
-    }
+    return authenticate('login_colaborador', { code });
   },
 
   async restoreSession() {
@@ -520,12 +352,40 @@ export const sessionService = {
         p_sessao_id: sessionData.sessaoId,
         p_session_token: sessionData.sessionToken,
       });
-      if (!error && data === false) {
+      if (error || (data as any)?.is_valid === false || (data as any)?.success === false) {
         await endStoredSession();
         if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gsa-session-revoked'));
       }
     } catch (error) {
-      console.warn('Falha temporária no ping de sessão:', error);
+      console.error('Falha ao atualizar a sessão:', error);
     }
+  },
+
+  async resolveAuthenticatedClientPersonType(clientId: string): Promise<'pf' | 'pj' | null> {
+    try {
+      const { data, error } = await supabase
+        .from('clientes')
+        .select('tipo_pessoa')
+        .eq('id', clientId)
+        .maybeSingle();
+      if (error || !data?.tipo_pessoa) return null;
+      const tipo = String(data.tipo_pessoa).toLowerCase();
+      if (tipo === 'pj' || tipo === 'juridica' || tipo === 'empresa') return 'pj';
+      if (tipo === 'pf' || tipo === 'fisica') return 'pf';
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  setClientPersonType(personType: 'pf' | 'pj') {
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('_gsa_client_person_type', personType);
+    }
+  },
+
+  getClientPersonType(): 'pf' | 'pj' | null {
+    if (typeof window === 'undefined') return null;
+    return (window.sessionStorage.getItem('_gsa_client_person_type') as 'pf' | 'pj') || null;
   },
 };

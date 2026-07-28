@@ -10,7 +10,7 @@ import {
   fetchAdminServiceCatalog,
   importDefaultServiceCatalog,
   saveAdminServicePackage,
-} from '../../lib/adminRpc';
+} from '../../lib/serviceCatalog';
 import { logService } from '../../lib/logService';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';

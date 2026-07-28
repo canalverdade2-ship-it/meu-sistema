@@ -16,7 +16,10 @@ type ClientErrorPayload = {
 };
 
 function createReferenceId() {
-  return `GSA-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  const randomPart = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID().slice(0, 8)
+    : Math.random().toString(36).substring(2, 10);
+  return `GSA-${Date.now().toString(36).toUpperCase()}-${randomPart.toUpperCase()}`;
 }
 
 function sanitize(value: string | undefined, maxLength: number) {

@@ -158,6 +158,7 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
   if (original === 'credito_loja') return parts('admin', 'financeiro', 'credito', itemId);
   if (original === 'afiliados') return parts('admin', 'financeiro', 'afiliados', itemId);
   if (['trabalhe-conosco', 'trabalhe_conosco', 'careers'].includes(original)) return parts('admin', 'trabalhe-conosco', tab, itemId);
+  if (original === 'vendas') return parts('admin', 'operacoes', tab || 'pedidos', itemId);
   if (['avisos-campanhas', 'avisos_campanhas', 'avisos', 'campanhas'].includes(original)) return parts('admin', 'avisos-campanhas', tab, itemId);
 
   switch (normalized) {

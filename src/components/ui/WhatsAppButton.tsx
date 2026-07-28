@@ -35,7 +35,7 @@ export function WhatsAppButton() {
         }));
       }
     } catch (err) {
-      console.error('Erro ao buscar settings do WhatsApp:', err);
+      console.warn('[WhatsAppButton] Usando configurações padrão do WhatsApp (modo local/offline)');
     }
   };
 

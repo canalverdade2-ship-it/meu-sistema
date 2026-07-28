@@ -230,3 +230,24 @@ export const handleCurrencyInputChange = (value: string, callback: (num: number)
   const numericValue = parseInt(digits, 10) / 100;
   callback(numericValue);
 };
+
+export const isLocalDevHost = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  if (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '[::1]' ||
+    host === '::1' ||
+    host.endsWith('.local') ||
+    host.endsWith('.lan')
+  ) {
+    return true;
+  }
+  return (
+    /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) ||
+    /^192\.168\.\d{1,3}\.\d{1,3}$/.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(host)
+  );
+};
+

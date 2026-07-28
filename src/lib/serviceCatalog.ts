@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { callAdminRpc } from './adminRpc';
 import { callClientRpc } from './clientRpc';
+import { isLocalDevHost } from './utils';
 
 export type CatalogAudience = 'PF' | 'PJ' | 'AMBOS';
 
@@ -57,7 +58,7 @@ function normalizeCatalog(value: unknown): ServiceCatalogSnapshot {
 }
 
 export async function fetchPublicServiceCatalog(audience?: 'PF' | 'PJ') {
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+  if (isLocalDevHost()) {
     return normalizeCatalog(null);
   }
   try {

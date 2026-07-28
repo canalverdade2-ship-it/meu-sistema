@@ -4,7 +4,7 @@ import { Plus, Search, Filter, MoreHorizontal, User as UserIcon, Wallet, FileTex
 import { supabase } from '../../lib/supabase';
 import { safeSupabaseQuery } from '../../lib/supabaseWrapper';
 import { canDeleteRecord } from '../../lib/deleteRequest';
-import { formatCurrency, formatDate, maskCPF, maskCNPJ, maskPhone, generateCode, formatDateTime, handleError } from '../../lib/utils';
+import { formatCurrency, formatDate, maskCPF, maskCNPJ, maskPhone, generateCode, formatDateTime, handleError, isLocalDevHost } from '../../lib/utils';
 import { validarCPF, validarCNPJ, validarEmail } from '../../utils/cpfValidator';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
@@ -133,7 +133,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
   const fetchClientes = async () => {
     let query = supabase
       .from('clientes')
-      .select('id, nome, cpf, cnpj, email, telefone, status, tipo_pessoa, codigo_cliente, data_cadastro, created_at, cadastro_aprovado, bloqueado');
+      .select('id, nome, cpf, cnpj, email, telefone, status, tipo_pessoa, codigo_cliente, data_cadastro, cadastro_aprovado, carteira_bloqueada');
       
     if (activeTab === 'ativos') {
       query = query.eq('status', 'ativo');
@@ -143,7 +143,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
       // Para pendentes, mostramos inativos que não foram aprovados (false ou null)
       query = query.eq('status', 'inativo').or('cadastro_aprovado.is.null,cadastro_aprovado.eq.false');
     } else if (activeTab === 'bloqueados') {
-      query = query.eq('bloqueado', true);
+      query = query.eq('carteira_bloqueada', true);
     }
 
     if (search) {
@@ -157,46 +157,20 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
       query = query.gte('data_cadastro', startDate).lte('data_cadastro', endDate);
     }
     
-    let { data, error } = await query
+    const { data, error } = await query
       .order('data_cadastro', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
     
-    // Fallback caso a coluna bloqueado ou cadastro_aprovado causem erro (DB structure older)
     if (error) {
-      console.warn('Erro na consulta principal de clientes, tentando fallback simplificado...', error.message);
-      let fallbackQuery = supabase.from('clientes').select('id, nome, cpf, cnpj, email, telefone, status, tipo_pessoa, codigo_cliente, data_cadastro, created_at, cadastro_aprovado, bloqueado');
-      
-      if (activeTab === 'ativos') {
-        fallbackQuery = fallbackQuery.eq('status', 'ativo');
-      } else if (activeTab === 'inativos') {
-        fallbackQuery = fallbackQuery.eq('status', 'inativo'); // Fallback: mostra todos inativos
-      } else if (activeTab === 'pendentes') {
-        fallbackQuery = fallbackQuery.eq('status', 'inativo'); // Fallback: igual ao inativo para garantir visibilidade
-      } else if (activeTab === 'bloqueados') {
-        setClientes([]);
-        return;
-      }
-      
-      if (search) {
-        fallbackQuery = fallbackQuery.or(`nome.ilike.%${search}%,cpf.ilike.%${search}%,cnpj.ilike.%${search}%,codigo_cliente.ilike.%${search}%`);
-      }
-      
-      const fallbackResult = await fallbackQuery
-        .order('data_cadastro', { ascending: false })
-        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
-      data = fallbackResult.data;
-      error = fallbackResult.error;
-    }
-    
-    if (error) {
-      console.error('Error fetching clientes:', error);
+      console.warn('Error fetching clientes:', error.message);
       toast.error(`Erro ao buscar clientes: ${error.message}`);
-    }
-    
-    if (data) {
+      setClientes([]);
+    } else if (data) {
       setClientes(data);
     }
   };
+
+
 
 
 

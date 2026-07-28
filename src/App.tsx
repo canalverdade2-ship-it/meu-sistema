@@ -187,6 +187,19 @@ export default function App() {
     handleLoginClient(clientId, false, 'pf');
   };
 
+  const handleLogout = async () => {
+    try {
+      await sessionService.endSession();
+    } catch {
+      // Falha silenciosa no logout
+    }
+    setSession({});
+    localStorage.removeItem('adminType');
+    localStorage.removeItem('colaboradorId');
+    localStorage.removeItem('colaboradorNome');
+    replace(routes.home.index());
+  };
+
   useEffect(() => {
     const legacyRedirect = resolveLegacyRoute(window.location.pathname, window.location.search);
     if (legacyRedirect) replace(legacyRedirect);
