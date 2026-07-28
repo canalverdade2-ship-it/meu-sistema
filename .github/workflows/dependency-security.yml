@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   audit:
@@ -25,11 +25,14 @@ jobs:
         run: npm ci
       - name: Substituir ExcelJS pelo fork mantido
         run: npm install 'exceljs@npm:@excel.js/exceljs@^0.9.0' --save
-      - name: Validar segurança e compatibilidade
+      - name: Capturar cada validação
+        id: validation
         shell: bash
         run: |
-          npm audit --audit-level=high
-          node --input-type=module <<'NODE'
+          set +e
+          npm audit --audit-level=high > dependency-audit.log 2>&1
+          audit_exit=$?
+          node --input-type=module > exceljs-smoke.log 2>&1 <<'NODE'
           const imported = await import('exceljs');
           const ExcelJS = imported.default;
           const workbook = new ExcelJS.Workbook();
@@ -40,24 +43,40 @@ jobs:
           if (!buffer || buffer.byteLength < 100) throw new Error('Falha ao gerar planilha com o fork mantido.');
           console.log(`Planilha de compatibilidade gerada: ${buffer.byteLength} bytes.`);
           NODE
-          npx tsc --noEmit --pretty false
-          npm run test:unit
-          npm run build
-      - name: Persistir somente os manifests validados
+          smoke_exit=$?
+          npx tsc --noEmit --pretty false > typescript.log 2>&1
+          tsc_exit=$?
+          npm run test:unit > unit-tests.log 2>&1
+          unit_exit=$?
+          npm run build > build.log 2>&1
+          build_exit=$?
+          set -e
+          echo "audit_exit=$audit_exit" >> "$GITHUB_OUTPUT"
+          echo "smoke_exit=$smoke_exit" >> "$GITHUB_OUTPUT"
+          echo "tsc_exit=$tsc_exit" >> "$GITHUB_OUTPUT"
+          echo "unit_exit=$unit_exit" >> "$GITHUB_OUTPUT"
+          echo "build_exit=$build_exit" >> "$GITHUB_OUTPUT"
+          printf 'audit=%s smoke=%s tsc=%s unit=%s build=%s\n' "$audit_exit" "$smoke_exit" "$tsc_exit" "$unit_exit" "$build_exit"
+      - name: Exportar evidência completa
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maintained-exceljs-validation
+          path: |
+            dependency-audit.log
+            exceljs-smoke.log
+            typescript.log
+            unit-tests.log
+            build.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Encerrar com resultado real
         shell: bash
         run: |
-          mkdir -p /tmp/gsa-validated-package
-          cp package.json package-lock.json /tmp/gsa-validated-package/
-          git fetch origin audit/full-system-remediation-continuation-20260727
-          git checkout -B audit/full-system-remediation-continuation-20260727 origin/audit/full-system-remediation-continuation-20260727
-          cp /tmp/gsa-validated-package/package.json /tmp/gsa-validated-package/package-lock.json .
-          git diff --check
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json
-          if git diff --cached --quiet; then
-            echo "Manifests já estão atualizados."
-          else
-            git commit -m "fix(security): usar fork mantido do ExcelJS"
-            git push origin HEAD:audit/full-system-remediation-continuation-20260727
+          if [ "${{ steps.validation.outputs.audit_exit }}" -ne 0 ] \
+            || [ "${{ steps.validation.outputs.smoke_exit }}" -ne 0 ] \
+            || [ "${{ steps.validation.outputs.tsc_exit }}" -ne 0 ] \
+            || [ "${{ steps.validation.outputs.unit_exit }}" -ne 0 ] \
+            || [ "${{ steps.validation.outputs.build_exit }}" -ne 0 ]; then
+            exit 1
           fi
