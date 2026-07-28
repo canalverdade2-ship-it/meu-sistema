@@ -15,6 +15,7 @@ on:
       - 'src/components/admin/relatorios/**'
       - 'src/components/client/financeiro/NotasFiscaisList.tsx'
       - 'scripts/check-institutional-file-exports.mjs'
+      - 'scripts/validate-institutional-file-runtime.mjs'
       - '.github/workflows/institutional-file-quality.yml'
 
 permissions:
@@ -24,7 +25,7 @@ jobs:
   validate:
     name: Validar arquivos institucionais
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -55,13 +56,32 @@ jobs:
           src/lib/pdf.ts
           src/components/admin/relatorios/utils/relatorioExport.ts
 
+      - name: Instalar navegador de validação
+        run: npx playwright install --with-deps chromium
+
+      - name: Gerar e validar arquivos reais
+        run: |
+          cat > runtime-export-test.html <<'HTML'
+          <!doctype html>
+          <html lang="pt-BR">
+            <head><meta charset="UTF-8"><title>Validação de arquivos institucionais</title></head>
+            <body><main>Validação automatizada GSA HUB</main></body>
+          </html>
+          HTML
+          npx vite --host 127.0.0.1 --port 4173 > /tmp/institutional-vite.log 2>&1 &
+          VITE_PID=$!
+          trap 'kill "$VITE_PID" 2>/dev/null || true' EXIT
+          node scripts/validate-institutional-file-runtime.mjs
+
       - name: Gerar inventário
         run: node scripts/audit-institutional-exports.mjs
 
-      - name: Publicar inventário
+      - name: Publicar evidências
         uses: actions/upload-artifact@v4
         with:
-          name: institutional-file-quality-inventory
-          path: artifacts/institutional-export-inventory.json
+          name: institutional-file-runtime-evidence
+          path: |
+            artifacts/institutional-runtime/**
+            artifacts/institutional-export-inventory.json
           if-no-files-found: error
           retention-days: 7
