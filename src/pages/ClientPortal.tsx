@@ -1475,12 +1475,199 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
           <ErrorBoundary>
             <motion.div 
               key={`${activeModule}-${moduleKey}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={
-              activeModule === 'dashboard' || activeModule === 'area_vip'
-                ? ''
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className={
+                activeModule === 'dashboard' || activeModule === 'area_vip'
+                  ? ''
+                  : (activeModule as string) === 'gsa_store' || (activeModule as string) === 'classificados'
+                    ? ''
+                    : 'rounded-3xl bg-white p-6 sm:p-8 shadow-sm ring-1 ring-black/5'
+              }
+            >
+              <Suspense fallback={
+                <div className="flex h-64 flex-col items-center justify-center">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1a1a1a] border-t-transparent" />
+                  <p className="mt-3 text-sm text-[#1a1a1a]/60 font-medium">Carregando módulo...</p>
+                </div>
+              }>
+                {activeModule === 'dashboard' && (
+                  isBusiness ? (
+                    <BusinessDashboard
+                      clientId={cliente.id}
+                      cliente={cliente}
+                      onNavigate={(mod, tab, itemId) => navigateClientModule(mod as Module, tab, itemId)}
+                    />
+                  ) : (
+                    <ClientDashboard
+                      clientId={cliente.id}
+                      cliente={cliente}
+                      onNavigate={(mod, tab, itemId) => navigateClientModule(mod as Module, tab, itemId)}
+                    />
+                  )
+                )}
+                {activeModule === 'perfil' && (
+                  <ClientProfile
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    onUpdate={fetchCliente}
+                  />
+                )}
+                {activeModule === 'orcamentos' && (
+                  <ClientOrcamentosAny
+                    clientId={cliente.id}
+                    initialTab={activeSubTab}
+                    initialItemId={activeItemId}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'servicos' && (
+                  <ClientServicosAny
+                    clientId={cliente.id}
+                    initialTab={activeSubTab}
+                    initialItemId={activeItemId}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'produtos' && (
+                  <ClientProdutosAny
+                    clientId={cliente.id}
+                    initialTab={activeSubTab}
+                    initialItemId={activeItemId}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'assinaturas' && (
+                  <ClientAssinaturasAny
+                    clientId={cliente.id}
+                    initialTab={activeSubTab}
+                    initialItemId={activeItemId}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'servicos_assinaturas' && (
+                  <ClientServicosAssinaturas
+                    clientId={cliente.id}
+                    initialTab={activeSubTab}
+                    initialItemId={activeItemId}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'transferencias' && (
+                  <ClientTransferenciasAny
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'financeiro' && (
+                  <ClientFinanceiroAny
+                    clientId={cliente.id}
+                    initialTab={activeSubTab}
+                    initialItemId={activeItemId}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'fidelidade' && (
+                  <ClientFidelidade
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    initialTab={activeSubTab}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'promocoes' && (
+                  <ClientPromocoes
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'premios' && (
+                  <ClientPremios
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'vouchers' && (
+                  <ClientVouchers
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'indique-ganhe' && (
+                  <ClientIndiqueGanhe
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'pontos' && (
+                  <ClientPontos
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    animateBonus={animateBonus}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {(activeModule as string) === 'area_vip' && (
+                  <ClientAreaVIP
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                  />
+                )}
+                {activeModule === 'suporte' && (
+                  <ClientSuporte
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    initialTab={activeSubTab}
+                    initialItemId={activeItemId}
+                  />
+                )}
+                {(activeModule as string) === 'gsa_store' && (
+                  <ClientGSAStore
+                    clientId={cliente.id}
+                    initialTab={activeSubTab || 'home'}
+                    initialItemId={activeItemId}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                    onBackToSite={() => navigate(routes.public.home())}
+                  />
+                )}
+                {(activeModule as string) === 'classificados' && (
+                  <MarketplaceGSAStore
+                    clientId={cliente.id}
+                    initialTab="classificados"
+                    initialItemId={activeItemId}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                    onBackToSite={() => navigate(routes.public.home())}
+                  />
+                )}
+                {(activeModule as string) === 'credito_loja' && (
+                  <ClientMeuCredito
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                    onRefresh={fetchCliente}
+                  />
+                )}
+                {activeModule === 'emprestimos' && (
+                  <ClientEmprestimos
+                    clientId={cliente.id}
+                    cliente={cliente}
+                    onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)}
+                    onRefresh={fetchCliente}
+                  />
+                )}
+              </Suspense>
+            </motion.div>
+          </ErrorBoundary>
+        </div>
+      </main>
+
       <AnimatePresence>
         {showReferralModal && modalIndicacaoConfig.ativo && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">

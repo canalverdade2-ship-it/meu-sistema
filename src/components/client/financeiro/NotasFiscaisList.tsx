@@ -13,8 +13,12 @@ export function NotasFiscaisList({ clientId, initialItemId }: { clientId: string
   const [selectedOrdem, setSelectedOrdem] = useState<OrdemFiscal | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
+  const [isPrinting, setIsPrinting] = useState(false);
+
   useEffect(() => {
-    fetchOrdens();
+    let isMounted = true;
+    fetchOrdens(isMounted);
+    return () => { isMounted = false; };
   }, [clientId]);
 
   useEffect(() => {
@@ -32,7 +36,6 @@ export function NotasFiscaisList({ clientId, initialItemId }: { clientId: string
     return () => window.removeEventListener('open-nf-detail', handleOpenItem);
   }, [ordens]);
 
-  useEffect(() => {
     const channel = supabase
       .channel('client-nf-updates')
       .on('postgres_changes', {
@@ -48,9 +51,9 @@ export function NotasFiscaisList({ clientId, initialItemId }: { clientId: string
     return () => { supabase.removeChannel(channel); };
   }, [clientId]);
 
-  const fetchOrdens = async () => {
+  const fetchOrdens = async (isMounted = true) => {
     try {
-      setLoading(true);
+      if (isMounted) setLoading(true);
       const { data, error } = await supabase
         .from('ordens_fiscais')
         .select('*')
@@ -59,11 +62,11 @@ export function NotasFiscaisList({ clientId, initialItemId }: { clientId: string
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrdens(data || []);
+      if (isMounted) setOrdens(data || []);
     } catch (err) {
       console.error('Erro ao buscar ordens fiscais:', err);
     } finally {
-      setLoading(false);
+      if (isMounted) setLoading(false);
     }
   };
 
@@ -73,8 +76,14 @@ export function NotasFiscaisList({ clientId, initialItemId }: { clientId: string
     o.numero_nota?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handlePrintReceipt = (ordem: OrdemFiscal) => {
-    void downloadFiscalReceiptPdf(ordem as OrdemFiscal & Record<string, unknown>);
+  const handlePrintReceipt = async (ordem: OrdemFiscal) => {
+    if (isPrinting) return;
+    setIsPrinting(true);
+    try {
+      await downloadFiscalReceiptPdf(ordem as OrdemFiscal & Record<string, unknown>);
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   return (
@@ -246,12 +255,13 @@ export function NotasFiscaisList({ clientId, initialItemId }: { clientId: string
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={() => handlePrintReceipt(selectedOrdem)}
-                  className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white border-2 border-neutral-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
+                  disabled={isPrinting}
+                  className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white border-2 border-neutral-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all group disabled:opacity-50"
                 >
                   <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 group-hover:bg-indigo-100 group-hover:text-indigo-600 mb-2 transition-all">
-                    <Printer className="h-5 w-5" />
+                    {isPrinting ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" /> : <Printer className="h-5 w-5" />}
                   </div>
-                  <span className="text-sm font-bold text-neutral-900 group-hover:text-indigo-700">Baixar Recibo</span>
+                  <span className="text-sm font-bold text-neutral-900 group-hover:text-indigo-700">{isPrinting ? 'Baixando...' : 'Baixar Recibo'}</span>
                   <span className="text-[10px] text-neutral-500 mt-1">Sempre disponível</span>
                 </button>
 

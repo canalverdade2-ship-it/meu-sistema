@@ -44,15 +44,19 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
   const [prestadores, setPrestadores] = useState<any[]>([]);
 
   useEffect(() => {
+    let isMounted = true;
     Promise.all([
       supabase.from('ordens_servico').select('id, codigo_os, cliente:clientes(nome), orcamentos:orcamento_id(anexos)').eq('status', 'andamento').order('data_inicio', { ascending: false }),
       supabase.from('colaboradores').select('id, nome').eq('status', 'ativo'),
       supabase.from('prestadores').select('id, nome_razao').eq('status', 'ativo'),
     ]).then(([os, colab, prest]) => {
-      setOss(os.data || []);
-      setColaboradores(colab.data || []);
-      setPrestadores(prest.data || []);
+      if (isMounted) {
+        setOss(os.data || []);
+        setColaboradores(colab.data || []);
+        setPrestadores(prest.data || []);
+      }
     });
+    return () => { isMounted = false; };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,15 +73,16 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
     try {
       const arquivosUrls: any[] = [];
       if (arquivos.length > 0) {
-        for (const file of arquivos) {
+        const uploadPromises = arquivos.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `briefings/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const { error: uErr } = await supabase.storage.from('entregas_demandas').upload(path, file);
-          if (!uErr) {
-            const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
-            arquivosUrls.push(publicUrl);
-          }
-        }
+          if (uErr) return null;
+          const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
+          return publicUrl;
+        });
+        const uploadedUrls = await Promise.all(uploadPromises);
+        arquivosUrls.push(...uploadedUrls.filter(url => url !== null));
       }
       
       // Buscar anexos do orçamento se houver OS selecionada
@@ -185,7 +190,7 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
             <h2 className="text-2xl font-black text-neutral-900 uppercase tracking-tight">Nova Demanda Interna</h2>
             <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1">Etapa {step} de 2</p>
           </div>
-          <button onClick={onClose} className="h-10 w-10 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-400 hover:bg-neutral-200 transition-all">
+          <button onClick={onClose} disabled={isSubmitting} className="h-10 w-10 rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-400 hover:bg-neutral-200 transition-all disabled:opacity-50">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -433,7 +438,7 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
           {/* Footer */}
           <div className="p-8 border-t border-neutral-100 flex justify-between shrink-0">
             {step > 1 ? (
-              <button type="button" onClick={() => setStep(s => s - 1)} className="px-6 py-3 rounded-2xl bg-neutral-100 text-neutral-600 font-bold text-sm hover:bg-neutral-200 transition-all">
+              <button type="button" onClick={() => setStep(s => s - 1)} disabled={isSubmitting} className="px-6 py-3 rounded-2xl bg-neutral-100 text-neutral-600 font-bold text-sm hover:bg-neutral-200 transition-all disabled:opacity-50">
                 ← Voltar
               </button>
             ) : <div />}
