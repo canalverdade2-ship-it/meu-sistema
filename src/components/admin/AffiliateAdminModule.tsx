@@ -47,6 +47,7 @@ type AffiliateRecord = {
   codigo_publico?: string;
   status: string;
   pix_tipo?: string | null;
+  pix_chave?: string | null;
   pix_chave_mascarada?: string | null;
   created_at?: string;
   cliques?: number;
@@ -368,7 +369,7 @@ export function AffiliateAdminModule() {
                 </div>
                 <div className="rounded-xl bg-neutral-50 p-3 border border-neutral-200/60">
                   <span className="block text-[10px] font-black uppercase text-neutral-400">Chave PIX</span>
-                  <strong className="text-indigo-700 font-mono font-bold break-all">{selectedAffiliate.pix_chave_mascarada || 'Não informada'}</strong>
+                  <strong className="text-indigo-700 font-mono font-bold break-all">{selectedAffiliate.pix_chave || selectedAffiliate.pix_chave_mascarada || 'Não informada'}</strong>
                 </div>
               </div>
             </div>
