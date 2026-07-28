@@ -13,6 +13,8 @@ import type {
   SiteCampaignFrequency, SiteCampaignPayload, SiteCampaignStatus,
   SiteCampaignTemplate,
 } from '../../types/siteCampaigns';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 const EMPTY: SiteCampaignAdminOverview = {
   campaigns: [], history: [], analytics: { by_device: [], by_page: [], by_day: [] },
@@ -100,6 +102,7 @@ export function SiteCampaignAdminModule() {
   const [saving, setSaving] = useState(false);
   const [working, setWorking] = useState<string | null>(null);
   const [uploading, setUploading] = useState<'desktop' | 'mobile' | null>(null);
+  const confirmHook = useConfirm();
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -151,7 +154,15 @@ export function SiteCampaignAdminModule() {
   };
 
   const changeStatus = async (c: SiteCampaign, action: 'publish' | 'pause' | 'resume' | 'end' | 'archive') => {
-    if (action === 'archive' && !window.confirm(`Arquivar “${c.internal_name}”?`)) return;
+    if (action === 'archive') {
+      const ok = await confirmHook.confirm({
+        title: 'Arquivar campanha',
+        message: `Arquivar “${c.internal_name}”?`,
+        confirmLabel: 'Arquivar',
+        cancelLabel: 'Cancelar'
+      });
+      if (!ok) return;
+    }
     setWorking(c.id);
     try { await callAdminRpc('gsa_admin_set_site_campaign_status', { p_campaign_id: c.id, p_action: action }); toast.success('Situação atualizada.'); await load(true); }
     catch (error) { toast.error(message(error, 'Não foi possível atualizar a campanha.')); }
@@ -167,6 +178,7 @@ export function SiteCampaignAdminModule() {
   if (loading) return <Box className="p-12 text-center text-sm font-bold text-neutral-500">Carregando Central de Avisos e Campanhas...</Box>;
 
   return <section className="space-y-6">
+    <ConfirmDialog {...confirmHook} />
     <header className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.2em] text-amber-700">Comunicação no site</p><h1 className="mt-1 text-2xl font-black">Central de Avisos e Campanhas</h1><p className="mt-1 max-w-3xl text-sm leading-6 text-neutral-500">Comunicados, promoções e alertas com segmentação, agendamento, frequência, métricas e auditoria.</p></div><div className="flex gap-2"><button onClick={() => void load()} className="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold"><RefreshCw className="h-4 w-4"/>Atualizar</button><button onClick={openNew} className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 px-4 py-2.5 text-sm font-black text-white"><Plus className="h-4 w-4"/>Nova campanha</button></div></header>
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5"><Metric icon={BellRing} label="Campanhas" value={overview.totals.all}/><Metric icon={CheckCircle2} label="Ativas" value={overview.totals.active}/><Metric icon={CalendarClock} label="Agendadas" value={overview.totals.scheduled}/><Metric icon={Eye} label="Visualizações" value={overview.totals.impressions}/><Metric icon={MousePointerClick} label="CTR" value={`${Number(overview.totals.click_through_rate || 0).toFixed(2)}%`}/></div>
     <Box className="flex gap-2 overflow-x-auto p-2">{([['campaigns', BellRing, 'Campanhas'], ['templates', ImagePlus, 'Modelos visuais'], ['results', BarChart3, 'Resultados'], ['history', History, 'Histórico']] as const).map(([id, Icon, label]) => <button key={id} onClick={() => setTab(id)} className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black ${tab === id ? 'bg-neutral-950 text-white' : 'text-neutral-600 hover:bg-neutral-100'}`}><Icon className="h-4 w-4"/>{label}</button>)}</Box>

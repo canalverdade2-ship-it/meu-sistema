@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { toast } from 'react-hot-toast';
 import { 
   User, 
@@ -50,34 +50,34 @@ import { routes } from '../routing/routeCatalog';
 // Modules
 import { VIPLevel } from '../constants';
 import { useVipLevels } from '../hooks/useVipLevels';
-import { ClientDashboard } from '../components/client/ClientDashboard';
-import { ClientProfile } from '../components/client/ClientProfile';
-import { ClientOrcamentos } from '../components/client/ClientOrcamentos';
-import { ClientServicos } from '../components/client/ClientServicos';
-import { ClientFinanceiro } from '../components/client/ClientFinanceiro';
-import { ClientFidelidade } from '../components/client/ClientFidelidade';
-import { ClientServicosAssinaturas } from '../components/client/ClientServicosAssinaturas';
-import { ClientVouchers } from '../components/client/ClientVouchers';
-import { ClientSuporte } from '../components/client/ClientSuporte';
-import { ClientAreaVIP } from '../components/client/ClientAreaVIP';
-import { ClientIndiqueGanhe } from '../components/client/ClientIndiqueGanhe';
-import { ClientPontos } from '../components/client/ClientPontos';
-import { ClientProdutos } from '../components/client/ClientProdutos';
-import { ClientTransferencias } from '../components/client/ClientTransferencias';
-import { ClientAssinaturas } from '../components/client/ClientAssinaturas';
-import { ClientPromocoes } from '../components/client/ClientPromocoes';
-import ClientPremios from '../components/client/ClientPremios';
-import { ClientGSAStore } from '../components/client/ClientGSAStore';
+const ClientDashboard = lazy(() => import('../components/client/ClientDashboard').then(m => ({ default: m.ClientDashboard })));
+const ClientProfile = lazy(() => import('../components/client/ClientProfile').then(m => ({ default: m.ClientProfile })));
+const ClientOrcamentos = lazy(() => import('../components/client/ClientOrcamentos').then(m => ({ default: m.ClientOrcamentos })));
+const ClientServicos = lazy(() => import('../components/client/ClientServicos').then(m => ({ default: m.ClientServicos })));
+const ClientFinanceiro = lazy(() => import('../components/client/ClientFinanceiro').then(m => ({ default: m.ClientFinanceiro })));
+const ClientFidelidade = lazy(() => import('../components/client/ClientFidelidade').then(m => ({ default: m.ClientFidelidade })));
+const ClientServicosAssinaturas = lazy(() => import('../components/client/ClientServicosAssinaturas').then(m => ({ default: m.ClientServicosAssinaturas })));
+const ClientVouchers = lazy(() => import('../components/client/ClientVouchers').then(m => ({ default: m.ClientVouchers })));
+const ClientSuporte = lazy(() => import('../components/client/ClientSuporte').then(m => ({ default: m.ClientSuporte })));
+const ClientAreaVIP = lazy(() => import('../components/client/ClientAreaVIP').then(m => ({ default: m.ClientAreaVIP })));
+const ClientIndiqueGanhe = lazy(() => import('../components/client/ClientIndiqueGanhe').then(m => ({ default: m.ClientIndiqueGanhe })));
+const ClientPontos = lazy(() => import('../components/client/ClientPontos').then(m => ({ default: m.ClientPontos })));
+const ClientProdutos = lazy(() => import('../components/client/ClientProdutos').then(m => ({ default: m.ClientProdutos })));
+const ClientTransferencias = lazy(() => import('../components/client/ClientTransferencias').then(m => ({ default: m.ClientTransferencias })));
+const ClientAssinaturas = lazy(() => import('../components/client/ClientAssinaturas').then(m => ({ default: m.ClientAssinaturas })));
+const ClientPromocoes = lazy(() => import('../components/client/ClientPromocoes').then(m => ({ default: m.ClientPromocoes })));
+const ClientPremios = lazy(() => import('../components/client/ClientPremios'));
+const ClientGSAStore = lazy(() => import('../components/client/ClientGSAStore').then(m => ({ default: m.ClientGSAStore })));
 import { UniversalNotificationBell } from '../components/ui/UniversalNotificationBell';
 import { processGamificationPointsManual } from '../utils/gamification';
 import { useClientNotifications } from '../hooks/useClientNotifications';
 import { createNotification, createWelcomeSequence } from '../lib/notifications';
-import { ClientEmprestimos } from '../components/client/ClientEmprestimos';
+const ClientEmprestimos = lazy(() => import('../components/client/ClientEmprestimos').then(m => ({ default: m.ClientEmprestimos })));
 import { logService } from '../lib/logService';
-import { MarketplaceGSAStore } from '../components/client/marketplace/MarketplaceGSAStore';
-import { ClientMeuCredito } from '../components/client/ClientMeuCredito';
+const MarketplaceGSAStore = lazy(() => import('../components/client/marketplace/MarketplaceGSAStore').then(m => ({ default: m.MarketplaceGSAStore })));
+const ClientMeuCredito = lazy(() => import('../components/client/ClientMeuCredito').then(m => ({ default: m.ClientMeuCredito })));
 import { callClientRpc } from '../lib/clientRpc';
-import { BusinessDashboard } from '../components/business/BusinessDashboard';
+const BusinessDashboard = lazy(() => import('../components/business/BusinessDashboard').then(m => ({ default: m.BusinessDashboard })));
 import { LogoGSA } from '../components/ui/LogoGSA';
 
 interface ClientPortalProps {
@@ -1486,6 +1486,7 @@ export function ClientPortal({ clientId, onLogout, portalVariant = 'personal', i
                   : 'card-refined'
             }
           >
+            <Suspense fallback={<div className="flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neutral-900" /></div>}>
             {activeModule === 'dashboard' && (
               isBusiness ? (
                 <BusinessDashboard

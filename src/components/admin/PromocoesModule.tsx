@@ -213,7 +213,13 @@ export function PromocoesModule({ activeSubTab, initialItemId, colaboradorId, co
     const canProceed = await canDeleteRecord('promocoes', id);
     if (!canProceed) return;
 
-    if (!window.confirm('Excluir esta promoção?')) return;
+    const ok = await confirmHook.confirm({
+      title: 'Excluir promoção',
+      message: 'Excluir esta promoção?',
+      confirmLabel: 'Excluir',
+      cancelLabel: 'Cancelar',
+    });
+    if (!ok) return;
     // confirmHook is used for other confirms in this component
 
     setLoading(true);
