@@ -28,16 +28,39 @@ export function ExtratoList({ clientId, initialItemId }: ExtratoListProps) {
   const [monthFilter, setMonthFilter] = useState<string>(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+interface ExtratoListProps {
+  clientId: string;
+  initialItemId?: string;
+}
+
+export function ExtratoList({ clientId, initialItemId }: ExtratoListProps) {
+  const [extrato, setExtrato] = useState<any[]>([]);
+  const [monthFilter, setMonthFilter] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [selectedTransferencia, setSelectedTransferencia] = useState<any>(null);
   const [isTransferenciaModalOpen, setIsTransferenciaModalOpen] = useState(false);
   const [isEstornando, setIsEstornando] = useState(false);
   const [isEstornoModalOpen, setIsEstornoModalOpen] = useState(false);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
 
   useEffect(() => {
-    fetchExtrato();
-    const channel = supabase.channel('extrato-upd').on('postgres_changes', { event: '*', schema: 'public', table: 'extrato_financeiro', filter: `cliente_id=eq.${clientId}` }, () => fetchExtrato()).subscribe();
-    return () => { supabase.removeChannel(channel); };
+    let isMounted = true;
+    const fetchLocal = async () => {
+      let { data } = await supabase.from('extrato_financeiro').select('*').eq('cliente_id', clientId).order('data', { ascending: false });
+      if (data && monthFilter) {
+        data = data.filter(item => String(item.data).includes(monthFilter));
+      }
+      if (isMounted) setExtrato(data || []);
+    };
+    fetchLocal();
+    const channel = supabase.channel('extrato-upd').on('postgres_changes', { event: '*', schema: 'public', table: 'extrato_financeiro', filter: `cliente_id=eq.${clientId}` }, () => fetchLocal()).subscribe();
+    return () => { 
+      isMounted = false;
+      supabase.removeChannel(channel); 
+    };
   }, [clientId, monthFilter]);
 
   const fetchExtrato = async () => {
@@ -57,53 +80,6 @@ export function ExtratoList({ clientId, initialItemId }: ExtratoListProps) {
         p_transferencia_id: selectedTransferencia.id,
       });
       toast.success('Transferência estornada com sucesso!');
-
-      setIsEstornoModalOpen(false);
-      setIsTransferenciaModalOpen(false);
-      fetchExtrato();
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao estornar transferência.');
-    } finally {
-      setIsEstornando(false);
-    }
-  };
-
-  const fetchTransferDetails = async (item: any) => {
-    const { data } = await supabase.from('transferencias').select('*, cliente_origem:clientes!cliente_origem_id(nome), cliente_destino:clientes!cliente_destino_id(nome)').eq('id', item.referencia_id).maybeSingle();
-    if (data) {
-      setSelectedTransferencia(data);
-      setIsTransferenciaModalOpen(true);
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="bg-white p-4 rounded-2xl ring-1 ring-neutral-300 shadow-md">
-        <input type="month" value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="w-full rounded-xl border p-2 text-sm" />
-      </div>
-
-      <div className="rounded-2xl bg-white p-6 shadow-md ring-1 ring-neutral-300">
-        {extrato.map(item => (
-          <div key={item.id} className="flex items-center justify-between border-b border-neutral-100 py-4 last:border-0">
-            <div className="flex items-center gap-4">
-              <div className={`h-10 w-10 flex items-center justify-center rounded-full ${item.tipo === 'entrada' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                {item.tipo === 'entrada' ? <ArrowDownCircle className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
-              </div>
-              <div>
-                <p className="font-medium text-neutral-900">{item.descricao}</p>
-                <p className="text-xs text-neutral-500">{formatDateTime(item.data)}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className={`font-bold ${item.tipo === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>{item.tipo === 'entrada' ? '+' : '-'} {formatCurrency(item.valor)}</p>
-              {(item.modulo_referencia === 'transferencias' || item.descricao?.includes('Transferência')) && (
-                <button onClick={() => fetchTransferDetails(item)} className="text-[10px] font-bold text-indigo-600 uppercase">Detalhes</button>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
       <Modal 
         isOpen={isTransferenciaModalOpen} 
         onClose={() => setIsTransferenciaModalOpen(false)} 

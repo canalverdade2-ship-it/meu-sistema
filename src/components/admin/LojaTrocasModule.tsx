@@ -403,7 +403,7 @@ useEffect(() => {
                   <p className="text-xs font-bold text-neutral-400 uppercase mb-4 flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Anexos do Cliente</p>
                   <div className="flex gap-4 overflow-x-auto pb-4">
                     {selectedSolicitacao.imagens_anexo.map((img, idx) => (
-                      <a key={idx} href={img} target="_blank" rel="noopener noreferrer" className="block w-24 h-24 shrink-0 rounded-xl overflow-hidden border border-neutral-200 hover:opacity-80 transition-opacity">
+                      <a key={img} href={img} target="_blank" rel="noopener noreferrer" className="block w-24 h-24 shrink-0 rounded-xl overflow-hidden border border-neutral-200 hover:opacity-80 transition-opacity">
                         <img src={img} alt={`Anexo ${idx + 1}`} className="w-full h-full object-cover" />
                       </a>
                     ))}

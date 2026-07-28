@@ -8,6 +8,7 @@ interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 export function RelatorioClientes({ periodo, dataInicio, dataFim }: Props) {
   const [loading, setLoading] = useState(true);
   const [dados, setDados] = useState<any>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => { carregar(); }, [periodo, dataInicio, dataFim]);
 
@@ -61,10 +62,18 @@ export function RelatorioClientes({ periodo, dataInicio, dataFim }: Props) {
 
   if (loading) return <div className="animate-pulse space-y-4">{[...Array(4)].map((_,i)=><div key={i} className="h-28 bg-neutral-100 rounded-2xl"/>)}</div>;
 
-  const exportar = () => exportarExcel(
-    (dados?.cli || []).map((c: any) => ({ nome: c.nome, status: c.status, tipo: c.tipo_pessoa, saldo_carteira: c.saldo_carteira, saldo_pontos: c.saldo_pontos })),
-    'relatorio_clientes'
-  );
+  const exportar = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportarExcel(
+        (dados?.cli || []).map((c: any) => ({ nome: c.nome, status: c.status, tipo: c.tipo_pessoa, saldo_carteira: c.saldo_carteira, saldo_pontos: c.saldo_pontos })),
+        'relatorio_clientes'
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const totalNivel = Object.values(dados?.porNivel || {}).reduce((s: any, v: any) => s + v.total, 0) as number;
 
@@ -73,8 +82,8 @@ export function RelatorioClientes({ periodo, dataInicio, dataFim }: Props) {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-neutral-900">Relatório de Clientes</h2>
         <div className="flex gap-2">
-          <button onClick={exportar} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all"><Download className="h-3 w-3"/>Excel</button>
-          <button onClick={carregar} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all"><RefreshCw className="h-3 w-3"/>Atualizar</button>
+          <button onClick={exportar} disabled={isExporting} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all disabled:opacity-50"><Download className="h-3 w-3"/>{isExporting ? 'Exportando...' : 'Excel'}</button>
+          <button onClick={carregar} disabled={loading} className="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2 text-xs font-bold text-white hover:bg-black transition-all disabled:opacity-50"><RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`}/>Atualizar</button>
         </div>
       </div>
 

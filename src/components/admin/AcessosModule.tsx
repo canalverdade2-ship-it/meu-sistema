@@ -113,6 +113,7 @@ export function AcessosModule(_props: AcessosModuleProps) {
   const [snapshot, setSnapshot] = useState<AccessSnapshot>({ functions: [], collaborators: [], deletion_requests: [], sessions: [] });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [collaboratorForm, setCollaboratorForm] = useState(emptyCollaborator);
   const [showCollaboratorModal, setShowCollaboratorModal] = useState(false);
   const [functionForm, setFunctionForm] = useState({ id: '', nome: '', descricao: '' });
@@ -122,29 +123,35 @@ export function AcessosModule(_props: AcessosModuleProps) {
   const confirmHook = useConfirm();
   const { confirm } = confirmHook;
 
-  const load = useCallback(async (silent = false) => {
+  const load = useCallback(async (silent = false, isMounted = { current: true }) => {
     if (!silent) setLoading(true);
     try {
       const data = await callAdminRpc<AccessSnapshot>('gsa_admin_access_snapshot', { p_limit: 1000 });
-      setSnapshot({
-        functions: Array.isArray(data?.functions) ? data.functions : [],
-        collaborators: Array.isArray(data?.collaborators) ? data.collaborators : [],
-        deletion_requests: Array.isArray(data?.deletion_requests) ? data.deletion_requests : [],
-        sessions: Array.isArray(data?.sessions) ? data.sessions : [],
-      });
+      if (isMounted.current) {
+        setSnapshot({
+          functions: Array.isArray(data?.functions) ? data.functions : [],
+          collaborators: Array.isArray(data?.collaborators) ? data.collaborators : [],
+          deletion_requests: Array.isArray(data?.deletion_requests) ? data.deletion_requests : [],
+          sessions: Array.isArray(data?.sessions) ? data.sessions : [],
+        });
+      }
     } catch (error: any) {
-      toast.error(error?.message || 'Não foi possível carregar a gestão de acessos.');
+      if (isMounted.current) toast.error(error?.message || 'Não foi possível carregar a gestão de acessos.');
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void load();
+    const isMounted = { current: true };
+    void load(false, isMounted);
     const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void load(true);
+      if (document.visibilityState === 'visible' && isMounted.current) void load(true, isMounted);
     }, 60_000);
-    return () => window.clearInterval(interval);
+    return () => {
+      isMounted.current = false;
+      window.clearInterval(interval);
+    };
   }, [load]);
 
   const pendingRequests = useMemo(
@@ -201,6 +208,8 @@ export function AcessosModule(_props: AcessosModuleProps) {
   };
 
   const toggleStatus = async (collaborator: Colaborador) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const nextStatus = collaborator.status === 'ativo' ? 'suspenso' : 'ativo';
     try {
       await callAdminRpc('gsa_admin_set_collaborator_status', {
@@ -211,11 +220,15 @@ export function AcessosModule(_props: AcessosModuleProps) {
       await load(true);
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível alterar o status.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const rotateCredential = async (collaborator: Colaborador) => {
+    if (isSubmitting) return;
     if (!await confirm({ title: 'Atenção', message: `Gerar uma nova credencial para ${collaborator.nome}? Todas as sessões atuais serão encerradas.` })) return;
+    setIsSubmitting(true);
     try {
       const result = await callAdminRpc<{ initial_credential: string }>('gsa_admin_rotate_collaborator_credential', {
         p_colaborador_id: collaborator.id,
@@ -224,14 +237,18 @@ export function AcessosModule(_props: AcessosModuleProps) {
       toast.success('Nova credencial criada e sessões anteriores revogadas.');
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível gerar uma nova credencial.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const reviewDeletion = async (request: SolicitacaoExclusao, decision: 'aprovar' | 'rejeitar') => {
+    if (isSubmitting) return;
     const message = decision === 'aprovar'
       ? `Aprovar a exclusão permanente do registro em ${request.tabela}?`
       : 'Rejeitar esta solicitação de exclusão?';
     if (!await confirm({ title: 'Confirmação', message })) return;
+    setIsSubmitting(true);
     try {
       await callAdminRpc('gsa_admin_review_deletion_request', {
         p_request_id: request.id,
@@ -241,6 +258,8 @@ export function AcessosModule(_props: AcessosModuleProps) {
       await Promise.all([load(true), refreshCounts()]);
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível processar a solicitação.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -276,7 +295,7 @@ export function AcessosModule(_props: AcessosModuleProps) {
             <h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><Shield className="h-6 w-6 text-indigo-400" /> Gestão de Acessos</h1>
             <p className="mt-2 text-sm text-white/55">Permissões, credenciais e sessões são processadas no servidor e registradas em auditoria.</p>
           </div>
-          <button type="button" onClick={() => void load(true)} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900">
+          <button type="button" onClick={() => void load(true)} disabled={loading || isSubmitting} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-50">
             <RefreshCcw className="h-4 w-4" /> Atualizar
           </button>
         </div>
@@ -317,9 +336,9 @@ export function AcessosModule(_props: AcessosModuleProps) {
                   {(collaborator.modulos || []).length === 0 && <span className="text-xs text-neutral-400">Somente dashboard.</span>}
                 </div>
                 <div className="mt-5 grid grid-cols-3 gap-2 border-t border-neutral-100 pt-4">
-                  <button type="button" onClick={() => editCollaborator(collaborator)} className="rounded-xl bg-neutral-100 px-3 py-2 text-xs font-black text-neutral-700">Editar</button>
-                  <button type="button" onClick={() => void rotateCredential(collaborator)} className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-black text-amber-700">Credencial</button>
-                  <button type="button" onClick={() => void toggleStatus(collaborator)} className={`rounded-xl px-3 py-2 text-xs font-black ${collaborator.status === 'ativo' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>{collaborator.status === 'ativo' ? 'Suspender' : 'Ativar'}</button>
+                  <button type="button" onClick={() => editCollaborator(collaborator)} disabled={isSubmitting} className="rounded-xl bg-neutral-100 px-3 py-2 text-xs font-black text-neutral-700 disabled:opacity-50">Editar</button>
+                  <button type="button" onClick={() => void rotateCredential(collaborator)} disabled={isSubmitting} className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-black text-amber-700 disabled:opacity-50">Credencial</button>
+                  <button type="button" onClick={() => void toggleStatus(collaborator)} disabled={isSubmitting} className={`rounded-xl px-3 py-2 text-xs font-black disabled:opacity-50 ${collaborator.status === 'ativo' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>{collaborator.status === 'ativo' ? 'Suspender' : 'Ativar'}</button>
                 </div>
               </article>
             ))}
@@ -355,7 +374,7 @@ export function AcessosModule(_props: AcessosModuleProps) {
                   <p className="mt-1 text-sm text-neutral-500">{request.motivo || 'Sem motivo informado.'}</p>
                   <p className="mt-1 text-xs text-neutral-400">Solicitado por {request.colaborador_nome || 'colaborador'}</p>
                 </div>
-                {request.status === 'pendente' && <div className="flex gap-2"><button type="button" onClick={() => void reviewDeletion(request, 'rejeitar')} className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-xs font-black text-red-700"><XCircle className="h-4 w-4" /> Rejeitar</button><button type="button" onClick={() => void reviewDeletion(request, 'aprovar')} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white"><CheckCircle className="h-4 w-4" /> Aprovar</button></div>}
+                {request.status === 'pendente' && <div className="flex gap-2"><button type="button" onClick={() => void reviewDeletion(request, 'rejeitar')} disabled={isSubmitting} className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-xs font-black text-red-700 disabled:opacity-50"><XCircle className="h-4 w-4" /> Rejeitar</button><button type="button" onClick={() => void reviewDeletion(request, 'aprovar')} disabled={isSubmitting} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white disabled:opacity-50"><CheckCircle className="h-4 w-4" /> Aprovar</button></div>}
               </div>
             </article>
           ))}

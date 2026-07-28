@@ -15,6 +15,7 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
   const [selectedCupom, setSelectedCupom] = useState<CupomLoja | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   
   const PAGE_SIZE = 50;
   const [currentPage, setCurrentPage] = useState(0);
@@ -96,45 +97,56 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
   };
 
   const handleCancel = async () => {
-    if (!selectedCupom) return;
-    const { error } = await supabase.from('cupons_loja').update({ 
-      status: 'cancelado',
-      motivo_cancelamento: `Cancelado administrativamente por ${colaboradorNome || 'Admin'}`
-    }).eq('id', selectedCupom.id);
+    if (!selectedCupom || isSubmittingAction) return;
+    setIsSubmittingAction(true);
+    try {
+      const { error } = await supabase.from('cupons_loja').update({ 
+        status: 'cancelado',
+        motivo_cancelamento: `Cancelado administrativamente por ${colaboradorNome || 'Admin'}`
+      }).eq('id', selectedCupom.id);
 
-    if (error) {
-      toast.error('Erro ao cancelar cupom.');
-    } else {
-      toast.success('Cupom cancelado com sucesso.');
-      await logService.logAction({
-        acao: 'CANCELAR_CUPOM_LOJA',
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-        ator_nome: colaboradorNome || 'Administrador',
-        ator_id: colaboradorId,
-        detalhes: `Cancelou o cupom da loja: ${selectedCupom.nome_cupom}`
-      });
-      setIsDetailOpen(false);
-      fetchCupons();
+      if (error) {
+        toast.error('Erro ao cancelar cupom.');
+      } else {
+        toast.success('Cupom cancelado com sucesso.');
+        await logService.logAction({
+          acao: 'CANCELAR_CUPOM_LOJA',
+          ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+          ator_nome: colaboradorNome || 'Administrador',
+          ator_id: colaboradorId,
+          detalhes: `Cancelou o cupom da loja: ${selectedCupom.nome_cupom}`
+        });
+        setIsDetailOpen(false);
+        fetchCupons();
+      }
+    } finally {
+      setIsSubmittingAction(false);
     }
   };
 
+
   const handleDelete = async () => {
-    if (!selectedCupom) return;
-    const { error } = await supabase.from('cupons_loja').delete().eq('id', selectedCupom.id);
-    if (error) {
-      toast.error('Erro ao excluir cupom.');
-    } else {
-      toast.success('Cupom excluído com sucesso.');
-      await logService.logAction({
-        acao: 'EXCLUIR_CUPOM_LOJA',
-        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-        ator_nome: colaboradorNome || 'Administrador',
-        ator_id: colaboradorId,
-        detalhes: `Excluiu o cupom da loja: ${selectedCupom.nome_cupom}`
-      });
-      setIsDetailOpen(false);
-      setIsDeleting(false);
-      fetchCupons();
+    if (!selectedCupom || isSubmittingAction) return;
+    setIsSubmittingAction(true);
+    try {
+      const { error } = await supabase.from('cupons_loja').delete().eq('id', selectedCupom.id);
+      if (error) {
+        toast.error('Erro ao excluir cupom.');
+      } else {
+        toast.success('Cupom excluído com sucesso.');
+        await logService.logAction({
+          acao: 'EXCLUIR_CUPOM_LOJA',
+          ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+          ator_nome: colaboradorNome || 'Administrador',
+          ator_id: colaboradorId,
+          detalhes: `Excluiu o cupom da loja: ${selectedCupom.nome_cupom}`
+        });
+        setIsDetailOpen(false);
+        setIsDeleting(false);
+        fetchCupons();
+      }
+    } finally {
+      setIsSubmittingAction(false);
     }
   };
 
@@ -354,27 +366,27 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
                   Tem certeza que deseja excluir este cupom permanentemente?
                 </p>
                 <div className="flex w-full gap-4">
-                  <button onClick={() => setIsDeleting(false)} className="flex-1 rounded-xl bg-white py-3 font-bold text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50">
+                  <button onClick={() => setIsDeleting(false)} disabled={isSubmittingAction} className="flex-1 rounded-xl bg-white py-3 font-bold text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50 disabled:opacity-50">
                     Cancelar
                   </button>
-                  <button onClick={handleDelete} className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700">
-                    Sim, Excluir
+                  <button onClick={handleDelete} disabled={isSubmittingAction} className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 disabled:opacity-50">
+                    {isSubmittingAction ? 'Aguarde...' : 'Sim, Excluir'}
                   </button>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col gap-4">
                 {selectedCupom.status === 'ativo' && (
-                  <button onClick={handleCancel} className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-50 py-3 font-bold text-amber-600 hover:bg-amber-100">
-                    Inativar / Cancelar Cupom
+                  <button onClick={handleCancel} disabled={isSubmittingAction} className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-50 py-3 font-bold text-amber-600 hover:bg-amber-100 disabled:opacity-50">
+                    {isSubmittingAction ? 'Aguarde...' : 'Inativar / Cancelar Cupom'}
                   </button>
                 )}
                 <div className="flex gap-4">
-                  <button onClick={() => setIsDetailOpen(false)} className="flex-1 rounded-xl bg-neutral-900 py-4 font-bold text-white hover:bg-black transition-all">
+                  <button onClick={() => setIsDetailOpen(false)} disabled={isSubmittingAction} className="flex-1 rounded-xl bg-neutral-900 py-4 font-bold text-white hover:bg-black transition-all disabled:opacity-50">
                     Fechar
                   </button>
                 </div>
-                <button onClick={() => setIsDeleting(true)} className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-50 py-3 font-bold text-red-600 hover:bg-red-100">
+                <button onClick={() => setIsDeleting(true)} disabled={isSubmittingAction} className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-50 py-3 font-bold text-red-600 hover:bg-red-100 disabled:opacity-50">
                   <Trash2 className="h-5 w-5" />
                   Excluir Permanentemente
                 </button>
