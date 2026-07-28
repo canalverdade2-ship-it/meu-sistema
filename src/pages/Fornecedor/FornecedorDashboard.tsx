@@ -105,7 +105,7 @@ export function FornecedorDashboard({ fornecedorId, onLogout }: { fornecedorId: 
     return () => {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
-      supabase.removeChannel(channel).catch(console.error);
+      void supabase.removeChannel(channel);
     };
   }, [fornecedorId, load]);
 
