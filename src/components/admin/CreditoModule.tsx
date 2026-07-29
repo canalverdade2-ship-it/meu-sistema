@@ -259,12 +259,13 @@ const enviarOfertaQuitacao = async () => {
     if (isMounted) setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('loja_credito_limites')
-        .select('*, clientes(id, nome, email, telefone, cpf, cnpj)')
-        .order('updated_at', { ascending: false });
+        .from('clientes')
+        .select('id, nome, email, telefone, cpf, cnpj, tipo_pessoa, limite_credito_total, limite_credito_disponivel, opcao_pagamento_parcelado, max_parcelas')
+        .or('limite_credito_total.gt.0,limite_credito_disponivel.gt.0')
+        .order('nome', { ascending: true });
         
       if (error) throw error;
-      if (data && isMounted) setClientes(data);
+      if (data && isMounted) setClientes(data || []);
     } catch (err) {
       console.error('Erro ao buscar clientes com limite de crédito:', err);
     } finally {
