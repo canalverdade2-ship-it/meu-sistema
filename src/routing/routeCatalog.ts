@@ -17,6 +17,7 @@ export const routes = {
     affiliatePayouts: () => '/afiliados/saques',
     affiliateProfile: () => '/afiliados/perfil',
     affiliatePoints: () => '/afiliados/pontos',
+    affiliateSupport: () => '/afiliados/suporte',
     careers: () => '/trabalhe-conosco',
     serviceDetail: (id: string) => `/servicos-e-assinaturas/${id}`,
   },

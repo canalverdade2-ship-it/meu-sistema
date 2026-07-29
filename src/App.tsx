@@ -412,7 +412,7 @@ export default function App() {
               )
             )}
 
-            {activeView === 'public' && route.module === 'affiliates' && ['dashboard', 'painel', 'links', 'comissoes', 'saques', 'perfil', 'pontos'].includes(route.itemId || '') && (
+            {activeView === 'public' && route.module === 'affiliates' && ['dashboard', 'painel', 'links', 'comissoes', 'saques', 'perfil', 'pontos', 'suporte'].includes(route.itemId || '') && (
               session.clientId ? (
                 <ClientNotificationProvider clientId={session.clientId}>
                   <AfiliadoDashboard

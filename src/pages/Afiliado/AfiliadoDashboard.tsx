@@ -12,6 +12,7 @@ import {
   Copy,
   ExternalLink,
   FileText,
+  Headset,
   LayoutDashboard,
   Link2,
   Loader2,
@@ -26,6 +27,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
+import { ClientSuporte } from '../../components/client/ClientSuporte';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../../components/ui/Modal';
 import { LogoGSA } from '../../components/ui/LogoGSA';
@@ -53,7 +55,7 @@ interface AfiliadoDashboardProps {
   activeSubRoute?: string;
 }
 
-type TabType = 'dashboard' | 'links' | 'comissoes' | 'saques' | 'perfil' | 'pontos';
+type TabType = 'dashboard' | 'links' | 'comissoes' | 'saques' | 'perfil' | 'pontos' | 'suporte';
 
 type KeyedProps = { key?: string };
 
@@ -86,6 +88,7 @@ const TAB_ITEMS: Array<{ id: TabType; label: string; shortLabel: string; icon: L
   { id: 'saques', label: 'Saques PIX', shortLabel: 'Saques', icon: Banknote },
   { id: 'pontos', label: 'Pontos e carteira', shortLabel: 'Pontos', icon: Star },
   { id: 'perfil', label: 'Perfil e recebimento', shortLabel: 'Perfil', icon: User },
+  { id: 'suporte', label: 'Suporte e chamados', shortLabel: 'Suporte', icon: Headset },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -106,7 +109,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function resolveTabFromRoute(subroute?: string): TabType {
-  return ['links', 'comissoes', 'saques', 'perfil', 'pontos'].includes(subroute || '')
+  return ['links', 'comissoes', 'saques', 'perfil', 'pontos', 'suporte'].includes(subroute || '')
     ? subroute as TabType
     : 'dashboard';
 }
@@ -117,6 +120,7 @@ function resolvePathFromTab(tab: TabType): string {
   if (tab === 'saques') return routes.public.affiliatePayouts();
   if (tab === 'perfil') return routes.public.affiliateProfile();
   if (tab === 'pontos') return routes.public.affiliatePoints();
+  if (tab === 'suporte') return routes.public.affiliateSupport();
   return routes.public.affiliateDashboard();
 }
 
@@ -149,7 +153,7 @@ function statusTone(value: string) {
   return 'border-amber-200 bg-amber-50 text-amber-700';
 }
 
-export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRoute }: AfiliadoDashboardProps) {
+export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: AfiliadoDashboardProps) {
   const activeTab = resolveTabFromRoute(activeSubRoute);
   const { notifications, unreadNotifications, markAsRead, markAllAsRead } = useClientNotifications();
   const [snapshot, setSnapshot] = useState<AffiliateSnapshot>(EMPTY_SNAPSHOT);
@@ -178,8 +182,8 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
     try {
       const [data, clientRes] = await Promise.all([
         fetchAffiliateSnapshot(),
-        _clientId
-          ? supabase.from('clientes').select('nome, cpf, cnpj, tipo_pessoa').eq('id', _clientId).maybeSingle()
+        clientId
+          ? supabase.from('clientes').select('nome, cpf, cnpj, tipo_pessoa').eq('id', clientId).maybeSingle()
           : Promise.resolve({ data: null, error: null }),
       ]);
       setSnapshot(data);
@@ -1040,6 +1044,12 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                     </p>
                   </div>
                 </aside>
+              </div>
+            )}
+
+            {activeTab === 'suporte' && (
+              <div className="bg-white rounded-2xl p-4 sm:p-6 border border-[#c9c2b6] shadow-sm">
+                <ClientSuporte clientId={clientId} />
               </div>
             )}
           </div>
