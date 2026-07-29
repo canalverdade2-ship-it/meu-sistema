@@ -187,7 +187,10 @@ async function endStoredSession(): Promise<void> {
       console.error('Falha ao encerrar a sessão:', error);
     } finally {
       try {
-        await supabase.auth.signOut({ scope: 'local' });
+        const { data: authData } = await supabase.auth.getSession();
+        if (authData?.session) {
+          await supabase.auth.signOut({ scope: 'local' });
+        }
       } catch (error) {
         console.warn('Não foi possível confirmar o logout local no Supabase:', error);
       }
@@ -218,7 +221,10 @@ async function restoreStoredSession(): Promise<StoredSession | null> {
       appMetadata.gsa_actor_type !== sessionData.atorTipo ||
       appMetadata.gsa_actor_id !== sessionData.atorId
     ) {
-      await endStoredSession();
+      clearStoredSession();
+      if (authSession) {
+        await endStoredSession();
+      }
       return null;
     }
 
