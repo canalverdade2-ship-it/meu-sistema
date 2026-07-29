@@ -12,7 +12,7 @@ import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
 import { SecureAttachmentButton } from '../ui/SecureAttachmentButton';
 
-export function ClientSuporte({ clientId, initialItemId }: { clientId: string, initialItemId?: string }) {
+export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: { clientId: string, initialItemId?: string, modulo?: 'cliente' | 'afiliado' }) {
   const { containerRef: suporteTabsRef, setButtonRef: setSuporteTabButtonRef } = useAutoFitTabs(16, 10);
   const [activeTab, setActiveTab] = useState<'aberto' | 'concluido'>('aberto');
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -75,7 +75,7 @@ export function ClientSuporte({ clientId, initialItemId }: { clientId: string, i
     window.addEventListener('open-stock-ticket', handleOpenStockTicket);
 
     const channel = supabase
-      .channel('tickets-updates')
+      .channel(`tickets-updates-${modulo}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -90,7 +90,7 @@ export function ClientSuporte({ clientId, initialItemId }: { clientId: string, i
       supabase.removeChannel(channel);
       window.removeEventListener('open-stock-ticket', handleOpenStockTicket);
     };
-  }, [activeTab, clientId]);
+  }, [activeTab, clientId, modulo]);
 
   useEffect(() => {
     if (selectedTicket?.id && isChatOpen) {
@@ -135,7 +135,13 @@ export function ClientSuporte({ clientId, initialItemId }: { clientId: string, i
       .select('*')
       .eq('cliente_id', clientId)
       .order('data_abertura', { ascending: false });
-      
+
+    if (modulo === 'afiliado') {
+      query = query.eq('modulo', 'afiliado');
+    } else {
+      query = query.or('modulo.eq.cliente,modulo.is.null');
+    }
+
     if (activeTab === 'aberto') {
       query = query.in('status', ['aberto', 'em andamento']);
     } else {
@@ -250,6 +256,7 @@ export function ClientSuporte({ clientId, initialItemId }: { clientId: string, i
       try {
         ticket = await clientOperationalWrite<{ id: string }>(clientId, 'tickets', 'insert', {
           ...formData,
+          modulo: modulo,
           status: 'aberto'
         });
       } catch (error: any) {
@@ -266,8 +273,9 @@ export function ClientSuporte({ clientId, initialItemId }: { clientId: string, i
         return;
       }
         // Notify Admin com notifyAdmin para gerar badge no sininho
+        const moduloTag = modulo === 'afiliado' ? ' [Afiliado]' : '';
         await notificationService.notifyAdmin(
-          '🎟️ Novo Ticket de Suporte',
+          `🎟️ Novo Ticket de Suporte${moduloTag}`,
           `${clientId} abriu um ticket: "${formData.assunto}"`,
           'suporte',
           'ticket_aberto_cliente',

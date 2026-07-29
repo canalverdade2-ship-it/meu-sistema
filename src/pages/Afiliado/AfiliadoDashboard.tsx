@@ -211,7 +211,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
       setLoading(false);
       setRefreshing(false);
     }
-  }, [_clientId]);
+  }, [clientId]);
 
   useEffect(() => {
     void load();
@@ -1049,7 +1049,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
 
             {activeTab === 'suporte' && (
               <div className="bg-white rounded-2xl p-4 sm:p-6 border border-[#c9c2b6] shadow-sm">
-                <ClientSuporte clientId={clientId} />
+                <ClientSuporte clientId={clientId} modulo="afiliado" />
               </div>
             )}
           </div>

@@ -1453,7 +1453,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
                   </div>
                 )
             )}
-            {activeModule === 'suporte' && <ClientSuporte clientId={clientId} initialItemId={activeItemId} />}
+            {activeModule === 'suporte' && <ClientSuporte clientId={clientId} initialItemId={activeItemId} modulo="cliente" />}
             {activeModule === 'emprestimos' && <ClientEmprestimos clientId={clientId} initialTab={activeTab} initialItemId={activeItemId} onNavigate={(mod: Module, tab?: string, itemId?: string) => navigateClientModule(mod, tab, itemId)} />}
             {activeModule === 'credito_loja' && (
               <ClientMeuCredito 

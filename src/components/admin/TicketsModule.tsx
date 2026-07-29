@@ -568,6 +568,13 @@ export function TicketsModule({ initialTab, initialItemId, adminType, colaborado
                     <span className="text-[10px] font-black text-neutral-400 flex items-center gap-2 uppercase tracking-widest bg-neutral-50 px-3 py-1.5 rounded-lg ring-1 ring-neutral-100">
                       ID: #{ticket.id.slice(0, 8)}
                     </span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg ring-1 ${
+                      ticket.modulo === 'afiliado' 
+                        ? 'bg-amber-50 text-amber-700 ring-amber-200' 
+                        : 'bg-sky-50 text-sky-700 ring-sky-200'
+                    }`}>
+                      {ticket.modulo === 'afiliado' ? 'Afiliado' : 'Cliente'}
+                    </span>
                   </div>
                 </div>
               </div>

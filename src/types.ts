@@ -387,6 +387,7 @@ export type Ticket = {
   status: 'aberto' | 'em andamento' | 'concluido';
   data_abertura: string;
   data_fechamento?: string;
+  modulo?: 'cliente' | 'afiliado';
 };
 
 export type TicketMensagem = {
