@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, Info, Trash2, X } from 'lucide-react';
 import type { useConfirm } from '../../hooks/useConfirm';
 
@@ -31,16 +32,6 @@ const variantConfig = {
 /**
  * Componente de diálogo de confirmação que substitui window.confirm e window.prompt.
  * Deve ser renderizado uma vez no componente pai que usa `useConfirm()`.
- *
- * @example
- * const confirmHook = useConfirm();
- * // ...
- * return (
- *   <>
- *     <ConfirmDialog {...confirmHook} />
- *     {/ * resto do JSX * /}
- *   </>
- * );
  */
 export function ConfirmDialog({
   confirmState,
@@ -74,15 +65,15 @@ export function ConfirmDialog({
     if (e.key === 'Enter' && !hasPrompt) { e.preventDefault(); handleConfirm(); }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
       aria-describedby="confirm-dialog-desc"
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       onKeyDown={handleKeyDown}
       tabIndex={-1}
     >
@@ -164,6 +155,7 @@ export function ConfirmDialog({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
