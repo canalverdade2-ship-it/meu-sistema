@@ -134,6 +134,68 @@ function currencyInputToNumber(value: string) {
   return Number(value.replace(/\./g, '').replace(',', '.')) || 0;
 }
 
+interface SpecificOption {
+  label: string;
+  path: string;
+  category?: string;
+}
+
+function getSpecificOptionsForProgram(programCode: string, storeProducts: any[] = []): SpecificOption[] {
+  switch (programCode) {
+    case 'loja': {
+      const defaultOptions: SpecificOption[] = [
+        { label: 'Todos os Produtos da Loja', path: '/marketplace/loja/produtos', category: 'Seção' },
+        { label: 'Assinaturas & Recorrência', path: '/marketplace/loja/assinaturas', category: 'Seção' },
+        { label: 'Cupons & Ofertas da Loja', path: '/marketplace/loja/cupons', category: 'Seção' },
+      ];
+      
+      const productOptions: SpecificOption[] = storeProducts.map(p => ({
+        label: `${p.nome} (R$ ${Number(p.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`,
+        path: `/marketplace/loja/produtos?produtoId=${p.id}`,
+        category: 'Produto Individual'
+      }));
+
+      return [...defaultOptions, ...productOptions];
+    }
+
+    case 'classificados':
+      return [
+        { label: 'Classificados - Imóveis', path: '/marketplace/menu/classificados/imoveis', category: 'Categoria' },
+        { label: 'Classificados - Veículos', path: '/marketplace/menu/classificados/veiculos', category: 'Categoria' },
+        { label: 'Classificados - Serviços e Geral', path: '/marketplace/menu/classificados/geral', category: 'Categoria' },
+        { label: 'Anunciar no Classificados', path: '/marketplace/menu/classificados/anunciar', category: 'Página' },
+      ];
+
+    case 'viagens':
+      return [
+        { label: 'Todos os Pacotes de Viagem', path: '/marketplace/menu/pacotes-viagem', category: 'Seção' },
+        { label: 'Passagens Aéreas e Hospedagem', path: '/marketplace/menu/pacotes-viagem?categoria=hospedagem', category: 'Categoria' },
+        { label: 'Pacotes Promocionais', path: '/marketplace/menu/pacotes-viagem?promocao=true', category: 'Categoria' },
+      ];
+
+    case 'saude':
+      return [
+        { label: 'Planos de Saúde & Consultas', path: '/marketplace/menu/saude', category: 'Seção' },
+        { label: 'Rede Credenciada de Saúde', path: '/marketplace/menu/saude?aba=rede', category: 'Página' },
+      ];
+
+    case 'seguros':
+      return [
+        { label: 'Seguros & Proteções Veiculares', path: '/marketplace/menu/seguros', category: 'Seção' },
+        { label: 'Cotação Rápida de Seguro', path: '/marketplace/menu/seguros?acao=cotacao', category: 'Página' },
+      ];
+
+    case 'servicos':
+      return [
+        { label: 'Criação de Sites e Sistemas', path: '/criacao-de-site-e-sistemas', category: 'Serviço' },
+        { label: 'Serviços Especializados & Assinaturas', path: '/servicos-e-assinaturas', category: 'Serviço' },
+      ];
+
+    default:
+      return [];
+  }
+}
+
 function formatCurrencyInput(value: string) {
   const digits = value.replace(/\D/g, '');
   if (!digits) return '';
@@ -176,6 +238,26 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
   const [isMovementsModalOpen, setIsMovementsModalOpen] = useState(false);
   const [movementFilter, setMovementFilter] = useState<'todos' | 'comissoes' | 'saques' | 'pontos'>('todos');
   const [selectedCommission, setSelectedCommission] = useState<AffiliateCommission | null>(null);
+  const [destinationType, setDestinationType] = useState<'geral' | 'especifico'>('geral');
+  const [specificChoice, setSpecificChoice] = useState('');
+  const [storeProducts, setStoreProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchStoreProducts = async () => {
+      try {
+        const { data } = await supabase
+          .from('produtos')
+          .select('id, nome, codigo_produto, valor')
+          .eq('status', 'ativo')
+          .order('nome', { ascending: true })
+          .limit(50);
+        if (data) setStoreProducts(data);
+      } catch (err) {
+        console.error('Erro ao carregar produtos da loja para links:', err);
+      }
+    };
+    fetchStoreProducts();
+  }, []);
 
   const load = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
@@ -730,7 +812,11 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
                             const code = event.target.value;
                             const program = snapshot.programs.find((item) => item.codigo === code);
                             setProgramCode(code);
+                            setDestinationType('geral');
                             setDestination(program?.caminhoPadrao || '');
+                            if (program) {
+                              setLinkTitle(`Link Geral - ${program.nome}`);
+                            }
                           }}
                           className="affiliate-input mt-2"
                         >
@@ -745,8 +831,99 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
                         <input value={linkTitle} onChange={(event) => setLinkTitle(event.target.value)} placeholder={selectedProgram?.nome || 'Link GSA'} className="affiliate-input mt-2" />
                       </label>
 
+                      {/* Modalidade de Destino: Link Geral vs Link Específico */}
+                      <div className="sm:col-span-2 space-y-2.5 pt-1">
+                        <span className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                          Modalidade do Destino
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDestinationType('geral');
+                              const program = snapshot.programs.find((item) => item.codigo === programCode);
+                              const path = program?.caminhoPadrao || '';
+                              setDestination(path);
+                              setLinkTitle(`Link Geral - ${program?.nome || ''}`);
+                            }}
+                            className={`flex flex-col items-start p-4 text-left border transition-all ${
+                              destinationType === 'geral'
+                                ? 'border-[#0b1522] bg-[#0b1522] text-white shadow-md'
+                                : 'border-[#c9c2b6] bg-white text-[#0b1522] hover:border-[#8d6829]'
+                            }`}
+                          >
+                            <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                              🌐 Link Geral do Programa
+                            </span>
+                            <span className={`text-[11px] mt-1.5 leading-relaxed ${destinationType === 'geral' ? 'text-white/80' : 'text-[#69717c]'}`}>
+                              Redireciona para a página principal deste programa.
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDestinationType('especifico');
+                              const options = getSpecificOptionsForProgram(programCode, storeProducts);
+                              const firstOpt = options[0];
+                              if (firstOpt) {
+                                setSpecificChoice(firstOpt.path);
+                                setDestination(firstOpt.path);
+                                const cleanLabel = firstOpt.label.split(' (')[0];
+                                setLinkTitle(`${cleanLabel} - ${selectedProgram?.nome || ''}`);
+                              }
+                            }}
+                            className={`flex flex-col items-start p-4 text-left border transition-all ${
+                              destinationType === 'especifico'
+                                ? 'border-[#0b1522] bg-[#0b1522] text-white shadow-md'
+                                : 'border-[#c9c2b6] bg-white text-[#0b1522] hover:border-[#8d6829]'
+                            }`}
+                          >
+                            <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                              🎯 Link Específico (Item / Produto / Seção)
+                            </span>
+                            <span className={`text-[11px] mt-1.5 leading-relaxed ${destinationType === 'especifico' ? 'text-white/80' : 'text-[#69717c]'}`}>
+                              Escolha uma seção, produto ou página específica do programa.
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Dropdown de Destinos Específicos se selecionado */}
+                      {destinationType === 'especifico' && (
+                        <div className="sm:col-span-2 space-y-2 bg-[#f8f3e8] p-4 border border-[#d8c9aa]">
+                          <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#8d6829]">
+                            Selecione o Destino Específico
+                            <select
+                              value={specificChoice}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setSpecificChoice(val);
+                                setDestination(val);
+                                const options = getSpecificOptionsForProgram(programCode, storeProducts);
+                                const found = options.find(o => o.path === val);
+                                if (found) {
+                                  const cleanLabel = found.label.split(' (')[0];
+                                  setLinkTitle(`${cleanLabel} - ${selectedProgram?.nome || ''}`);
+                                }
+                              }}
+                              className="affiliate-input mt-2 bg-white text-[#0b1522]"
+                            >
+                              {getSpecificOptionsForProgram(programCode, storeProducts).map((opt) => (
+                                <option key={opt.path} value={opt.path}>
+                                  {opt.category ? `[${opt.category}] ` : ''}{opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <p className="text-[11px] text-[#66583e] mt-1">
+                            💡 O link será direcionado exclusivamente para a página ou produto selecionado acima.
+                          </p>
+                        </div>
+                      )}
+
                       <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864] sm:col-span-2">
-                        Destino permitido
+                        Destino permitido (Caminho final)
                         <input required value={destination} onChange={(event) => setDestination(event.target.value)} className="affiliate-input mt-2 font-mono text-sm" />
                         <span className="mt-2 block text-[11px] normal-case tracking-normal text-[#7a828c]">
                           Utilize páginas e rotas relacionadas ao programa selecionado.
@@ -758,7 +935,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
                         Links fora dos destinos autorizados são recusados para proteger a atribuição da comissão.
                       </div>
 
-                      <button disabled={working || !programCode} className="inline-flex min-h-[52px] items-center justify-center gap-2 bg-[#0b1522] px-6 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45 sm:col-span-2">
+                      <button disabled={working || !programCode} className="inline-flex min-h-[52px] items-center justify-center gap-2 bg-[#0b1522] px-6 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45 sm:col-span-2 transition-all hover:bg-[#16273b]">
                         {working ? 'Criando link...' : 'Criar link exclusivo'} <ArrowRight className="h-4 w-4" />
                       </button>
                     </form>
