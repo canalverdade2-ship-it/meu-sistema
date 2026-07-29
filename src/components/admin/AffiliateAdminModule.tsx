@@ -313,6 +313,9 @@ export function AffiliateAdminModule() {
           ? `Carência de ${affiliateName} antecipada com sucesso!`
           : 'Carência de todas as comissões pendentes liberada com sucesso!'
       );
+      if (!isSingle) {
+        setActiveSummaryModal(null);
+      }
       await load(true);
     } catch (error: any) {
       toast.error(error?.message || 'Erro ao liberar carência.');

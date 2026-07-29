@@ -71,19 +71,29 @@ export function useConfirm() {
 
   const handleConfirm = useCallback(() => {
     if (!state.resolve) return;
-    if (state.promptLabel !== undefined) {
-      if (state.promptRequired && !state.promptValue.trim()) return;
-      state.resolve(state.promptValue.trim() || null);
-    } else {
-      state.resolve(true);
-    }
+    const resolver = state.resolve;
+    const isPrompt = state.promptLabel !== undefined;
+    const promptVal = state.promptValue.trim();
+
+    if (isPrompt && state.promptRequired && !promptVal) return;
+
+    const valueToResolve = isPrompt ? (promptVal || null) : true;
+
     setState(DEFAULT_STATE);
+    setTimeout(() => {
+      resolver(valueToResolve);
+    }, 0);
   }, [state]);
 
   const handleCancel = useCallback(() => {
     if (!state.resolve) return;
-    state.resolve(state.promptLabel !== undefined ? null : false);
+    const resolver = state.resolve;
+    const valueToResolve = state.promptLabel !== undefined ? null : false;
+
     setState(DEFAULT_STATE);
+    setTimeout(() => {
+      resolver(valueToResolve);
+    }, 0);
   }, [state]);
 
   const handlePromptChange = useCallback((value: string) => {
