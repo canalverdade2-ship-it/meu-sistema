@@ -499,15 +499,21 @@ export function CompraDetails({
 
   useEffect(() => {
     const fetchFaturasCredito = async () => {
-      if (!orcamento?.codigo_orcamento) return;
+      if (!orcamento?.codigo_orcamento && !orcamento?.id) return;
       try {
+        const codOrc = orcamento?.codigo_orcamento || '';
         const { data } = await supabase
           .from('faturas')
           .select('*')
           .eq('cliente_id', ordem.cliente_id)
-          .eq('is_amortizacao_credito', true)
-          .contains('itens_faturados', [{ codigo: `CRE-${orcamento.codigo_orcamento}` }]);
-        setFaturasCredito(data || []);
+          .eq('is_amortizacao_credito', true);
+        
+        const filtered = (data || []).filter((f: any) => {
+          if (!codOrc) return true;
+          const jsonStr = JSON.stringify(f.itens_faturados || []);
+          return f.codigo_fatura?.includes(codOrc) || (f.observacoes && f.observacoes.includes(codOrc)) || jsonStr.includes(codOrc);
+        });
+        setFaturasCredito(filtered.length > 0 ? filtered : (data || []));
       } catch (err) {
         console.error('Erro ao buscar faturas de crédito:', err);
       }
@@ -852,83 +858,113 @@ export function CompraDetails({
                     <span className="text-2xl font-black text-indigo-600">{formatCurrency(total)}</span>
                   </div>
 
-                  {faturasCredito && faturasCredito.length > 0 ? (
-                    <div className="mt-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
-                      <div className="flex items-center justify-between text-xs font-black text-emerald-800 uppercase tracking-wider">
-                        <span>Forma de Pagamento:</span>
-                        <span className="bg-emerald-100 px-2 py-0.5 rounded text-[10px]">Crédito GSA Store</span>
-                      </div>
-                      
-                      <div className="text-[11px] text-emerald-700 leading-normal font-semibold">
-                        ✨ O pagamento via <strong>Crédito GSA Store</strong> foi aprovado instantaneamente.
-                        Foram geradas <strong>{faturasCredito.length} faturas</strong> de amortização para este crédito.
-                      </div>
+                  {(() => {
+                    const isCreditoLoja = orcamento?.forma_pagamento_loja === 'credito_loja'
+                      || orcamento?.descricao_adicional?.includes('Credito GSA')
+                      || (faturasCredito && faturasCredito.length > 0);
 
-                      <div className="space-y-2.5 pt-2 border-t border-emerald-100/50">
-                        <span className="text-[9px] font-black text-emerald-900 uppercase tracking-wider block mb-3">Faturas de Amortização Geradas</span>
-                        {faturasCredito.map((fat, idx) => (
-                          <div key={fat.id} className="flex justify-between items-center p-3 text-xs text-emerald-800 font-medium bg-white/80 border border-emerald-100/40 rounded-xl shadow-sm mb-2">
-                            <span>{idx + 1}ª Parcela ({fat.codigo_fatura || `Parcela ${idx+1}`})</span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-neutral-800">{formatCurrency(fat.valor_total)}</span>
-                              <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                                fat.status === 'pago' ? 'bg-emerald-200 text-emerald-900 border border-emerald-300' : 'bg-orange-100 text-orange-800 border border-orange-200'
-                              }`}>
-                                {fat.status === 'pago' ? 'Pago' : 'Pendente'}
-                              </span>
-                            </div>
+                    if (isCreditoLoja) {
+                      return (
+                        <div className="mt-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
+                          <div className="flex items-center justify-between text-xs font-black text-emerald-800 uppercase tracking-wider">
+                            <span>Forma de Pagamento:</span>
+                            <span className="bg-emerald-100 px-2.5 py-1 rounded-full text-[10px] border border-emerald-300 font-bold">
+                              Crédito GSA Store ({orcamento?.parcelas_credito || faturasCredito.length || 1}x)
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : fatura?.pagamentos && fatura.pagamentos.length > 0 ? (
-                    <div className="mt-4 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3">
-                      <div className="flex items-center justify-between text-xs font-black text-indigo-900 uppercase tracking-wider mb-2">
-                        <span>Forma de Pagamento (Módulo Financeiro):</span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        {fatura.pagamentos.map((pag: any, idx: number) => {
-                          let label = pag.metodo.toUpperCase();
-                          let badgeColors = 'bg-neutral-100 text-neutral-800 border-neutral-200';
                           
-                          if (pag.metodo === 'pix') { label = 'PIX'; badgeColors = 'bg-teal-100 text-teal-800 border-teal-200'; }
-                          else if (pag.metodo === 'credit_card' || pag.metodo === 'cartao') { label = 'CARTÃO DE CRÉDITO'; badgeColors = 'bg-blue-100 text-blue-800 border-blue-200'; }
-                          else if (pag.metodo === 'voucher') { label = 'VOUCHER'; badgeColors = 'bg-purple-100 text-purple-800 border-purple-200'; }
-                          else if (pag.metodo === 'carteira') { label = 'SALDO CARTEIRA'; badgeColors = 'bg-amber-100 text-amber-800 border-amber-200'; }
-                          else if (pag.metodo === 'pontos') { label = 'PONTOS FIDELIDADE'; badgeColors = 'bg-emerald-100 text-emerald-800 border-emerald-200'; }
-                          else if (pag.metodo === 'boleto') { label = 'BOLETO BANCÁRIO'; badgeColors = 'bg-orange-100 text-orange-800 border-orange-200'; }
+                          <div className="text-[11px] text-emerald-700 leading-normal font-semibold">
+                            ✨ O pagamento via <strong>Crédito GSA Store</strong> foi aprovado.
+                            {faturasCredito.length > 0 ? (
+                              <> Foram vinculadas <strong>{faturasCredito.length} faturas</strong> de amortização para este crédito.</>
+                            ) : (
+                              <> As parcelas de amortização foram registradas na conta de crédito do cliente.</>
+                            )}
+                          </div>
 
-                          return (
-                            <div key={idx} className="flex justify-between items-center text-sm font-semibold text-neutral-800 bg-white p-2 rounded-xl shadow-sm border border-neutral-100">
-                              <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider border ${badgeColors}`}>
-                                {label}
-                              </span>
-                              <span>{formatCurrency(pag.valor)}</span>
+                          {faturasCredito.length > 0 && (
+                            <div className="space-y-2.5 pt-2 border-t border-emerald-100/50">
+                              <span className="text-[9px] font-black text-emerald-900 uppercase tracking-wider block mb-2">Faturas de Amortização Geradas</span>
+                              {faturasCredito.map((fat, idx) => (
+                                <div key={fat.id} className="flex justify-between items-center p-3 text-xs text-emerald-800 font-medium bg-white/80 border border-emerald-100/40 rounded-xl shadow-sm mb-1.5">
+                                  <span>{idx + 1}ª Parcela ({fat.codigo_fatura || `Parcela ${idx+1}`})</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-neutral-800">{formatCurrency(fat.valor_total)}</span>
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                      fat.status === 'pago' ? 'bg-emerald-200 text-emerald-900 border border-emerald-300' : 'bg-orange-100 text-orange-800 border border-orange-200'
+                                    }`}>
+                                      {fat.status === 'pago' ? 'Pago' : 'Pendente'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                          );
-                        })}
+                          )}
+                        </div>
+                      );
+                    }
+
+                    if (fatura?.pagamentos && fatura.pagamentos.length > 0) {
+                      return (
+                        <div className="mt-4 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3">
+                          <div className="flex items-center justify-between text-xs font-black text-indigo-900 uppercase tracking-wider mb-2">
+                            <span>Forma de Pagamento (Módulo Financeiro):</span>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            {fatura.pagamentos.map((pag: any, idx: number) => {
+                              let label = pag.metodo.toUpperCase();
+                              let badgeColors = 'bg-neutral-100 text-neutral-800 border-neutral-200';
+                              
+                              if (pag.metodo === 'pix') { label = 'PIX'; badgeColors = 'bg-teal-100 text-teal-800 border-teal-200'; }
+                              else if (pag.metodo === 'credit_card' || pag.metodo === 'cartao') { label = 'CARTÃO DE CRÉDITO'; badgeColors = 'bg-blue-100 text-blue-800 border-blue-200'; }
+                              else if (pag.metodo === 'voucher') { label = 'VOUCHER'; badgeColors = 'bg-purple-100 text-purple-800 border-purple-200'; }
+                              else if (pag.metodo === 'carteira') { label = 'SALDO CARTEIRA'; badgeColors = 'bg-amber-100 text-amber-800 border-amber-200'; }
+                              else if (pag.metodo === 'pontos') { label = 'PONTOS FIDELIDADE'; badgeColors = 'bg-emerald-100 text-emerald-800 border-emerald-200'; }
+                              else if (pag.metodo === 'boleto') { label = 'BOLETO BANCÁRIO'; badgeColors = 'bg-orange-100 text-orange-800 border-orange-200'; }
+
+                              return (
+                                <div key={idx} className="flex justify-between items-center text-sm font-semibold text-neutral-800 bg-white p-2 rounded-xl shadow-sm border border-neutral-100">
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider border ${badgeColors}`}>
+                                    {label}
+                                  </span>
+                                  <span>{formatCurrency(pag.valor)}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    const formaLoja = orcamento?.forma_pagamento_loja;
+                    const formaLabel = formaLoja === 'pix' ? 'PIX'
+                      : formaLoja === 'cartao' ? 'CARTÃO DE CRÉDITO'
+                      : formaLoja === 'boleto' ? 'BOLETO BANCÁRIO'
+                      : formaLoja === 'carteira' ? 'SALDO CARTEIRA'
+                      : formaLoja === 'pontos' ? 'PONTOS FIDELIDADE'
+                      : (['pago', 'em_expedicao', 'em_transporte', 'concluido'].includes(ordem.status) || !!(ordem?.motivo_cancelamento || fatura?.status === 'pago'))
+                        ? 'SALDO CARTEIRA/PONTOS'
+                        : 'Não definida';
+
+                    return (
+                      <div className="mt-4 p-4 rounded-2xl bg-neutral-50 border border-neutral-200 space-y-1">
+                        <div className="flex items-center justify-between text-xs font-black text-neutral-700 uppercase tracking-wider">
+                          <span>Forma de Pagamento:</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                            formaLabel !== 'Não definida' ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' : 'bg-neutral-100 text-neutral-500'
+                          }`}>
+                            {formaLabel}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-neutral-400 font-semibold mt-2">
+                          {formaLabel !== 'Não definida'
+                            ? `Pagamento processado via ${formaLabel.toLowerCase()}.`
+                            : 'Pagamento a ser verificado mediante fatura convencional gerada pelo sistema.'}
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="mt-4 p-4 rounded-2xl bg-neutral-50 border border-neutral-200 space-y-1">
-                      <div className="flex items-center justify-between text-xs font-black text-neutral-700 uppercase tracking-wider">
-                        <span>Forma de Pagamento:</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                          (['pago', 'em_expedicao', 'em_transporte', 'concluido'].includes(ordem.status) || !!(ordem?.motivo_cancelamento || fatura?.status === 'pago')) ? 'bg-indigo-100 text-indigo-700' : 'bg-neutral-100 text-neutral-500'
-                        }`}>
-                          {(['pago', 'em_expedicao', 'em_transporte', 'concluido'].includes(ordem.status) || !!(ordem?.motivo_cancelamento || fatura?.status === 'pago')) 
-                            ? 'SALDO CARTEIRA/PONTOS' 
-                            : 'Não definida'}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-neutral-400 font-semibold mt-2">
-                        {['pago', 'em_expedicao', 'em_transporte', 'concluido'].includes(ordem.status)
-                          ? 'Pagamento processado integralmente via saldo da carteira ou pontos GSA.'
-                          : 'Pagamento a ser verificado mediante fatura convencional gerada pelo sistema.'}
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </>
               );
             })()}
