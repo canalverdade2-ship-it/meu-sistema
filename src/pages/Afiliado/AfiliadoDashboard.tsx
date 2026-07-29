@@ -27,6 +27,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { Modal } from '../../components/ui/Modal';
 import { LogoGSA } from '../../components/ui/LogoGSA';
 import {
   cancelAffiliatePayout,
@@ -37,7 +38,7 @@ import {
   requestAffiliatePayout,
   updateAffiliateProfile,
 } from '../../features/affiliates/service';
-import type { AffiliateSnapshot } from '../../features/affiliates/types';
+import type { AffiliateCommission, AffiliateSnapshot } from '../../features/affiliates/types';
 import { supabase } from '../../lib/supabase';
 import { copyToClipboard, formatCurrency, formatDateTime, maskCNPJ, maskCPF } from '../../lib/utils';
 import { navigate } from '../../routing/navigationService';
@@ -150,7 +151,7 @@ function statusTone(value: string) {
 
 export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRoute }: AfiliadoDashboardProps) {
   const activeTab = resolveTabFromRoute(activeSubRoute);
-  const { notifications, unreadNotifications, markAsRead, markAllAsRead, deleteAllNotifications } = useClientNotifications();
+  const { notifications, unreadNotifications, markAsRead, markAllAsRead } = useClientNotifications();
   const [snapshot, setSnapshot] = useState<AffiliateSnapshot>(EMPTY_SNAPSHOT);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -168,6 +169,9 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
   const [joinPixType, setJoinPixType] = useState('cpf');
   const [joinPixKey, setJoinPixKey] = useState('');
   const [clientDetails, setClientDetails] = useState<{ nome?: string; cpf?: string; cnpj?: string; tipo_pessoa?: string } | null>(null);
+  const [isMovementsModalOpen, setIsMovementsModalOpen] = useState(false);
+  const [movementFilter, setMovementFilter] = useState<'todos' | 'comissoes' | 'saques'>('todos');
+  const [selectedCommission, setSelectedCommission] = useState<AffiliateCommission | null>(null);
 
   const load = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
@@ -186,6 +190,12 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
         setProfileName(data.affiliate.nomeDivulgacao);
         setProfilePixType(data.affiliate.pixTipo || 'cpf');
         setProfilePixKey(data.affiliate.pixChave || '');
+      } else if (clientRes?.data) {
+        const clientData = clientRes.data;
+        if (clientData.nome) setJoinName((prev) => prev || clientData.nome);
+        const doc = clientData.cpf || clientData.cnpj;
+        if (doc) setJoinPixKey((prev) => prev || doc);
+        if (clientData.tipo_pessoa === 'pj' || clientData.cnpj) setJoinPixType('cnpj');
       }
       if (data.programs[0]) {
         setProgramCode((current) => current || data.programs[0].codigo);
@@ -234,12 +244,15 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
 
   const activateProfile = async (event: FormEvent) => {
     event.preventDefault();
-    await runAction(() => joinAffiliate({
+    const ok = await runAction(() => joinAffiliate({
       nomeDivulgacao: joinName.trim(),
       pixTipo: joinPixType,
       pixChave: joinPixKey.trim(),
       termosVersao: '2026-07-22',
     }), 'Perfil de afiliado ativado.');
+    if (ok) {
+      await load(true);
+    }
   };
 
   const createLink = async (event: FormEvent) => {
@@ -314,19 +327,22 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
   const conversionRate = snapshot.summary.cliques > 0
     ? (snapshot.summary.conversoes / snapshot.summary.cliques) * 100
     : 0;
-  const recentMovements = useMemo(() => {
+  const allMovements = useMemo(() => {
     const commissionItems = snapshot.commissions.map((item) => ({
       id: `comm-${item.id}`,
+      tipo: 'comissao',
       titulo: `Comissão · ${item.programaNome}`,
-      subtitulo: `Base ${formatCurrency(item.baseElegivel)} (${item.percentual}%)`,
+      subtitulo: `${item.codigoReferencia ? `${item.codigoReferencia} · ` : ''}Base ${formatCurrency(item.baseElegivel)} (${item.percentual}%)`,
       data: item.criadoEm,
       valor: item.valor,
       isPositive: true,
       status: item.status,
+      originalCommission: item,
     }));
 
     const payoutItems = snapshot.payouts.map((payout) => ({
       id: `payout-${payout.id}`,
+      tipo: 'saque',
       titulo: `Saque PIX (${payout.pixChaveMascarada})`,
       subtitulo: payout.motivo ? payout.motivo : `Chave PIX ${payout.pixTipo.toUpperCase()}`,
       data: payout.solicitadoEm,
@@ -342,8 +358,16 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       return timeB - timeA;
     });
 
-    return all.slice(0, 8);
+    return all;
   }, [snapshot.commissions, snapshot.payouts]);
+
+  const recentMovements = useMemo(() => allMovements.slice(0, 5), [allMovements]);
+
+  const filteredMovements = useMemo(() => {
+    if (movementFilter === 'comissoes') return allMovements.filter((m) => m.tipo === 'comissao');
+    if (movementFilter === 'saques') return allMovements.filter((m) => m.tipo === 'saque');
+    return allMovements;
+  }, [allMovements, movementFilter]);
 
   if (loading) {
     return (
@@ -356,7 +380,15 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
     );
   }
 
-  if (!snapshot.affiliate) {
+  const isProfileComplete = Boolean(
+    snapshot.affiliate &&
+    snapshot.affiliate.nomeDivulgacao &&
+    snapshot.affiliate.nomeDivulgacao.trim().length >= 3 &&
+    snapshot.affiliate.pixChave &&
+    snapshot.affiliate.pixChave.trim().length >= 3
+  );
+
+  if (!isProfileComplete) {
     return (
       <main className="affiliate-page min-h-screen bg-[#f2efe7] px-5 py-12 text-[#142033] sm:py-16">
         <div className="affiliate-panel-shadow mx-auto max-w-2xl border-t-4 border-[#c59a4a] bg-white p-7 sm:p-10">
@@ -397,7 +429,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
               </label>
             </div>
             <div className="flex flex-col gap-3 border-t border-[#d8d1c6] pt-6 sm:flex-row">
-              <button disabled={working} className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:opacity-45">
+              <button disabled={working} className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 bg-[#0b1522] px-5 text-sm font-bold text-white disabled:opacity-45 hover:bg-[#192b42] transition-colors">
                 {working ? 'Ativando perfil...' : 'Ativar perfil de afiliado'} <ArrowRight className="h-4 w-4" />
               </button>
               <button type="button" onClick={onLogout} className="min-h-[52px] border border-[#bcb4a8] px-6 text-sm font-bold text-[#59616c] hover:border-[#0b1522] hover:text-[#0b1522]">
@@ -448,7 +480,6 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
               unreadCount={unreadNotifications}
               onMarkAsRead={markAsRead}
               onMarkAllAsRead={markAllAsRead}
-              onDeleteAll={deleteAllNotifications}
               onNavigate={(mod, tab) => {
                 const targetMod = (mod || '').toLowerCase();
                 const targetTab = (tab || '').toLowerCase();
@@ -606,10 +637,10 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                       </div>
                       <button
                         type="button"
-                        onClick={() => navigateToTab('saques')}
-                        className="text-xs font-bold text-[#8d6829] hover:underline"
+                        onClick={() => setIsMovementsModalOpen(true)}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-[#8d6829] hover:text-[#0b1522]"
                       >
-                        Ver saques
+                        Ver todos <ChevronRight className="h-4 w-4" />
                       </button>
                     </div>
                     <div className="divide-y divide-[#ebe6de]">
@@ -750,6 +781,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                     <table className="w-full min-w-[820px] text-left text-sm">
                       <thead className="border-b border-[#d8d1c6] bg-[#f4f1ea] text-[11px] font-bold uppercase tracking-[0.12em] text-[#626a74]">
                         <tr>
+                          <th className="px-5 py-4">Identificação</th>
                           <th className="px-5 py-4">Data</th>
                           <th className="px-5 py-4">Programa</th>
                           <th className="px-5 py-4">Base elegível</th>
@@ -760,7 +792,13 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                       </thead>
                       <tbody className="divide-y divide-[#ebe6de]">
                         {snapshot.commissions.map((item) => (
-                          <tr key={item.id} className="hover:bg-[#faf8f3]">
+                          <tr
+                            key={item.id}
+                            onClick={() => setSelectedCommission(item)}
+                            className="cursor-pointer hover:bg-[#faf8f3] transition-colors"
+                            title="Clique para ver detalhes e prazo de carência"
+                          >
+                            <td className="whitespace-nowrap px-5 py-4 font-mono font-bold text-[#8d6829]">{item.codigoReferencia || '—'}</td>
                             <td className="whitespace-nowrap px-5 py-4 text-[#69717c]">{item.criadoEm ? formatDateTime(item.criadoEm) : '—'}</td>
                             <td className="px-5 py-4 font-semibold text-[#0b1522]">{item.programaNome}</td>
                             <td className="px-5 py-4">{formatCurrency(item.baseElegivel)}</td>
@@ -977,6 +1015,241 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
           <MobileNavItem key={item.id} icon={item.icon} label={item.shortLabel} active={activeTab === item.id} onClick={() => navigateToTab(item.id)} />
         ))}
       </nav>
+
+      <Modal
+        isOpen={isMovementsModalOpen}
+        onClose={() => setIsMovementsModalOpen(false)}
+        title="Extrato de Movimentações"
+        size="3xl"
+      >
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+            <p className="text-xs text-neutral-500">
+              Histórico completo de comissões por vendas e saques PIX do seu perfil de afiliado.
+            </p>
+            <div className="flex items-center gap-1 rounded-xl bg-neutral-100 p-1">
+              <button
+                type="button"
+                onClick={() => setMovementFilter('todos')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  movementFilter === 'todos' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Todos ({allMovements.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMovementFilter('comissoes')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  movementFilter === 'comissoes' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Comissões ({allMovements.filter((m) => m.tipo === 'comissao').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMovementFilter('saques')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  movementFilter === 'saques' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Saques ({allMovements.filter((m) => m.tipo === 'saque').length})
+              </button>
+            </div>
+          </div>
+
+          <div className="divide-y divide-neutral-100 rounded-2xl border border-neutral-200/80 bg-white">
+            {filteredMovements.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => {
+                  if (item.originalCommission) {
+                    setSelectedCommission(item.originalCommission);
+                  }
+                }}
+                className={`grid grid-cols-[1fr_auto] items-center gap-4 px-4 py-3.5 hover:bg-neutral-50/80 transition-colors ${item.originalCommission ? 'cursor-pointer' : ''}`}
+                title={item.originalCommission ? 'Clique para ver detalhes e prazo de carência' : undefined}
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex h-2.5 w-2.5 shrink-0 rounded-full ${item.isPositive ? 'bg-emerald-500 ring-4 ring-emerald-50' : 'bg-amber-500 ring-4 ring-amber-50'}`} />
+                    <p className="truncate text-sm font-bold text-neutral-900">{item.titulo}</p>
+                    <Status value={item.status} compact />
+                  </div>
+                  <p className="mt-1 truncate text-xs text-neutral-500">
+                    {item.data ? formatDateTime(item.data) : 'Data não informada'} · {item.subtitulo}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className={`text-sm font-black tracking-tight ${item.isPositive ? 'text-emerald-600' : 'text-amber-700'}`}>
+                    {item.isPositive ? '+' : '-'} {formatCurrency(item.valor)}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {filteredMovements.length === 0 && (
+              <div className="py-12 text-center text-xs font-medium text-neutral-400">
+                Nenhuma movimentação encontrada para este filtro.
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(selectedCommission)}
+        onClose={() => setSelectedCommission(null)}
+        title="Detalhes da Comissão"
+        size="2xl"
+      >
+        {selectedCommission && (() => {
+          const carenciaDefinida = selectedCommission.carenciaDias || 30;
+          const criadoEm = selectedCommission.criadoEm ? new Date(selectedCommission.criadoEm) : new Date();
+          const disponivelEm = selectedCommission.disponivelEm
+            ? new Date(selectedCommission.disponivelEm)
+            : new Date(criadoEm.getTime() + carenciaDefinida * 24 * 60 * 60 * 1000);
+          const agora = new Date();
+
+          const diffMs = disponivelEm.getTime() - agora.getTime();
+          const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+          const totalMs = Math.max(1, disponivelEm.getTime() - criadoEm.getTime());
+          const decorridoMs = Math.max(0, agora.getTime() - criadoEm.getTime());
+          const percentualConcluido = Math.min(100, Math.max(0, Math.round((decorridoMs / totalMs) * 100)));
+
+          const isPendente = selectedCommission.status === 'pendente';
+          const isDisponivel = selectedCommission.status === 'disponivel';
+          const isPago = selectedCommission.status === 'paga' || selectedCommission.status === 'pago';
+
+          const valorBruto = selectedCommission.valorBruto || selectedCommission.baseElegivel;
+          const pontosGerados = Math.floor(valorBruto);
+
+          return (
+            <div className="space-y-6">
+              {/* Header da Comissão com Código e Status */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-100 pb-5">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">Identificação da Venda</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="font-mono text-xl font-black text-[#8d6829]">
+                      {selectedCommission.codigoReferencia || '—'}
+                    </span>
+                    {selectedCommission.codigoReferencia && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void copyToClipboard(selectedCommission.codigoReferencia!);
+                          toast.success('Código copiado!');
+                        }}
+                        className="rounded p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
+                        title="Copiar código"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Status value={selectedCommission.status} />
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-neutral-400">Valor da Comissão</p>
+                    <p className="text-2xl font-black text-emerald-600">
+                      {formatCurrency(selectedCommission.valor)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card de Carência e Liberação (Destaque Principal) */}
+              <div className="rounded-2xl border border-[#e5ded0] bg-[#faf8f3] p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0b1522] text-[#ddc28d]">
+                    <Clock3 className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h4 className="text-sm font-bold text-[#0b1522]">Carência e Liberação do Saldo</h4>
+                      <span className="rounded-full bg-[#0b1522]/10 px-2.5 py-0.5 text-xs font-black text-[#0b1522]">
+                        {carenciaDefinida} dias de carência
+                      </span>
+                    </div>
+
+                    {isPendente && (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs font-semibold">
+                          <span className="text-[#8d6829]">
+                            {diasRestantes > 0 ? `Faltam ${diasRestantes} dia(s) para a liberação` : 'Liberação em processamento hoje'}
+                          </span>
+                          <span className="text-neutral-500">{percentualConcluido}% concluído</span>
+                        </div>
+
+                        {/* Barra de Progresso */}
+                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#e8e2d5]">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#8d6829] to-[#c59a4a] transition-all duration-500"
+                            style={{ width: `${percentualConcluido}%` }}
+                          />
+                        </div>
+
+                        <p className="text-[11px] text-neutral-500">
+                          Data prevista para saldo ficar disponível: <strong className="text-neutral-800">{formatDateTime(disponivelEm.toISOString())}</strong>
+                        </p>
+                      </div>
+                    )}
+
+                    {isDisponivel && (
+                      <div className="mt-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                        ✅ <strong>Carência Concluída:</strong> O valor de {formatCurrency(selectedCommission.valor)} está liberado no seu saldo disponível para saque PIX.
+                      </div>
+                    )}
+
+                    {isPago && (
+                      <div className="mt-2 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                        🎉 <strong>Comissão Paga:</strong> O valor desta comissão já foi transferido para sua conta via PIX.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabela de Detalhes da Operação */}
+              <div className="rounded-2xl border border-neutral-200 bg-white overflow-hidden">
+                <div className="bg-neutral-50 px-4 py-3 border-b border-neutral-100 font-bold text-xs text-neutral-600 uppercase tracking-wider">
+                  Detalhamento da Venda
+                </div>
+                <dl className="divide-y divide-neutral-100 text-sm">
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <dt className="text-neutral-500 font-medium">Programa de Afiliados</dt>
+                    <dd className="font-semibold text-neutral-900 text-right">{selectedCommission.programaNome}</dd>
+                  </div>
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <dt className="text-neutral-500 font-medium">Data e Hora da Venda</dt>
+                    <dd className="font-semibold text-neutral-900 text-right">
+                      {selectedCommission.criadoEm ? formatDateTime(selectedCommission.criadoEm) : '—'}
+                    </dd>
+                  </div>
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <dt className="text-neutral-500 font-medium">Valor Bruto da Venda</dt>
+                    <dd className="font-semibold text-neutral-900 text-right">{formatCurrency(valorBruto)}</dd>
+                  </div>
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <dt className="text-neutral-500 font-medium">Base Elegível para Comissão</dt>
+                    <dd className="font-semibold text-neutral-900 text-right">{formatCurrency(selectedCommission.baseElegivel)}</dd>
+                  </div>
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <dt className="text-neutral-500 font-medium">Percentual Aplicado</dt>
+                    <dd className="font-semibold text-neutral-900 text-right">{selectedCommission.percentual}%</dd>
+                  </div>
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <dt className="text-neutral-500 font-medium">Pontos Gerados (R$ 1 bruto = 1 pt)</dt>
+                    <dd className="font-bold text-[#8d6829] text-right">+{pontosGerados} pts</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
     </div>
   );
 }

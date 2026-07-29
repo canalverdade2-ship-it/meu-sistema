@@ -70,6 +70,9 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
       localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
       localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
       localStorage.removeItem(GUEST_ACTIVATED_STORE_COUPONS_KEY);
+      // Seta flag no sessionStorage para que o ClientGSAStore possa detectar a migração
+      // mesmo que o evento 'gsa-cart-migrated' chegue antes do componente montar.
+      try { sessionStorage.setItem('gsa_cart_just_migrated', '1'); } catch { /* ignore */ }
     }
     return migrated;
   } catch (err) {
@@ -121,10 +124,14 @@ export default function App() {
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const isSessionActive = !!(session.clientId || session.adminAuth || session.prestadorId || session.fornecedorId);
 
-  const handleLoginClient = (clientId: string, isRecovery: boolean = false, personType?: ClientPersonType) => {
+  const handleLoginClient = async (clientId: string, isRecovery: boolean = false, personType?: ClientPersonType) => {
     const resolvedType = personType || (route.area === 'business' ? 'pj' : 'pf');
     sessionService.setClientPersonType(resolvedType);
     setSession({ clientId, clientPersonType: resolvedType });
+
+    // Migra o carrinho de visitante (localStorage) para o banco de dados do cliente
+    const didMigrate = await migrateGuestCartToAccount(clientId);
+
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get('returnTo');
     if (isRecovery) {
@@ -132,6 +139,10 @@ export default function App() {
       replace(`${targetProfile}?modal=alterar-senha&origem=recuperacao`);
     } else if (returnTo) {
       replace(decodeURIComponent(returnTo));
+      // Se o carrinho foi migrado, dispara o evento para o ClientGSAStore abrir o drawer
+      if (didMigrate) {
+        setTimeout(() => window.dispatchEvent(new CustomEvent('gsa-cart-migrated')), 800);
+      }
     } else {
       replace(resolvedType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
     }
@@ -183,13 +194,20 @@ export default function App() {
     }
   };
 
-  const handleLoginAfiliado = (clientId: string) => {
+  const handleLoginAfiliado = async (clientId: string) => {
     sessionService.setClientPersonType('pf');
     setSession({ clientId, clientPersonType: 'pf' });
+
+    // Migra carrinho de visitante se houver
+    const didMigrate = await migrateGuestCartToAccount(clientId);
+
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get('returnTo');
     if (returnTo) {
       replace(decodeURIComponent(returnTo));
+      if (didMigrate) {
+        setTimeout(() => window.dispatchEvent(new CustomEvent('gsa-cart-migrated')), 800);
+      }
     } else {
       replace('/afiliados/dashboard');
     }
@@ -205,7 +223,7 @@ export default function App() {
     localStorage.removeItem('adminType');
     localStorage.removeItem('colaboradorId');
     localStorage.removeItem('colaboradorNome');
-    replace(routes.home.index());
+    replace(routes.public.home());
   };
 
   useEffect(() => {

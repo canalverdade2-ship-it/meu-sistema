@@ -404,11 +404,14 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     fetchStoreData();
 
     if (clientId) {
-      // A migração do carrinho visitante j\u00e1 foi feita em App.tsx antes da navega\u00e7\u00e3o.
-      // Aqui apenas carregamos o carrinho do banco e abrimos o drawer se a URL pedir.
+      // A migração do carrinho visitante já foi feita em App.tsx antes da navegação.
+      // Aqui apenas carregamos o carrinho do banco e abrimos o drawer se a URL pedir
+      // ou se a flag de migração estiver no sessionStorage (evento pode ter chegado antes do mount).
       const urlWantsCart = window.location.search.includes('modal=carrinho') || window.location.search.includes('modal=checkout');
-      if (urlWantsCart) {
+      const justMigrated = sessionStorage.getItem('gsa_cart_just_migrated') === '1';
+      if (urlWantsCart || justMigrated) {
         pendingCartOpenRef.current = true;
+        sessionStorage.removeItem('gsa_cart_just_migrated');
       }
 
       fetchCart().then(() => {
@@ -417,6 +420,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
           setTimeout(() => {
             setIsCartOpen(true);
             updateRouteQuery({ modal: 'carrinho' });
+            if (justMigrated) toast.success('Carrinho recuperado! Continue sua compra.');
           }, 50);
         }
       });
@@ -436,8 +440,9 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     };
     fetchAtivadas();
 
-    // Ouve o evento disparado pelo App.tsx ap\u00f3s migrar o carrinho de visitante
+    // Ouve o evento disparado pelo App.tsx após migrar o carrinho de visitante
     const onCartMigrated = () => {
+      sessionStorage.removeItem('gsa_cart_just_migrated');
       fetchCart().then(() => {
         setTimeout(() => {
           setIsCartOpen(true);

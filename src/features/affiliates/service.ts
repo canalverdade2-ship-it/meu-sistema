@@ -86,10 +86,13 @@ const normalizeCommission = (value: unknown): AffiliateCommission => {
   const item = record(value);
   return {
     id: text(item.id),
+    codigoReferencia: text(item.codigo_referencia, item.codigoReferencia, item.codigo_orcamento) || undefined,
     programaCodigo: text(item.programa_codigo, item.programaCodigo),
     programaNome: text(item.programa_nome, item.programaNome, item.programa_codigo, 'Programa GSA'),
+    carenciaDias: number(item.carencia_dias, item.carenciaDias, 30),
     origemTipo: text(item.origem_tipo, item.source_type, item.origemTipo) || undefined,
     origemId: text(item.origem_id, item.source_id, item.origemId) || undefined,
+    valorBruto: number(item.valor_bruto, item.valorBruto, item.base_elegivel, item.baseElegivel),
     baseElegivel: number(item.base_elegivel, item.baseElegivel),
     percentual: number(item.percentual),
     valor: number(item.valor),

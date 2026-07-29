@@ -19,6 +19,7 @@ import {
   UserRoundCheck,
   Users,
   XCircle,
+  Zap,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
@@ -280,6 +281,41 @@ export function AffiliateAdminModule() {
       await load(true);
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível processar o saque.');
+    } finally {
+      setWorkingId(null);
+    }
+  };
+
+  const handleReleaseCarencia = async (affiliateId?: string, affiliateName?: string, totalAmount?: number) => {
+    const isSingle = Boolean(affiliateId);
+    const title = isSingle ? 'Liberar Carência do Afiliado' : 'Liberar Carência de TODOS os Afiliados';
+    const amountText = totalAmount ? formatCurrency(totalAmount) : '';
+    const message = isSingle
+      ? `Deseja antecipar e liberar o saldo em carência de ${amountText} para o afiliado "${affiliateName}"? As comissões ficarão imediatamente disponíveis para saque.`
+      : `Deseja antecipar e liberar a carência de TODOS os afiliados (total de ${amountText})? Todas as comissões pendentes serão liberadas para saque imediato.`;
+
+    const ok = await confirmHook.confirm({
+      title,
+      message,
+      confirmLabel: isSingle ? 'Liberar Carência' : 'Liberar Todas as Carências',
+      cancelLabel: 'Cancelar',
+    });
+    if (!ok) return;
+
+    const workingKey = affiliateId || 'all_carencia';
+    setWorkingId(workingKey);
+    try {
+      await callAdminRpc('gsa_admin_release_affiliate_commissions', {
+        p_afiliado_id: affiliateId || null,
+      });
+      toast.success(
+        isSingle
+          ? `Carência de ${affiliateName} antecipada com sucesso!`
+          : 'Carência de todas as comissões pendentes liberada com sucesso!'
+      );
+      await load(true);
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao liberar carência.');
     } finally {
       setWorkingId(null);
     }
@@ -728,7 +764,7 @@ export function AffiliateAdminModule() {
                       : 'Listagem de afiliados que geraram vendas e conversões confirmadas na plataforma.'}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex flex-col items-end gap-1">
                   <span className="text-[10px] font-black uppercase tracking-wider block opacity-70">Total</span>
                   <strong className="text-xl font-black">
                     {activeSummaryModal === 'carencia'
@@ -737,6 +773,18 @@ export function AffiliateAdminModule() {
                       ? formatCurrency(snapshot.summary.comissoes_disponiveis)
                       : `${snapshot.summary.vendas_atribuidas.toLocaleString('pt-BR')} Vendas`}
                   </strong>
+                  {activeSummaryModal === 'carencia' && snapshot.summary.comissoes_pendentes > 0 && (
+                    <button
+                      type="button"
+                      disabled={workingId === 'all_carencia'}
+                      onClick={() => void handleReleaseCarencia(undefined, undefined, snapshot.summary.comissoes_pendentes)}
+                      className="mt-1 inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-1.5 text-xs font-black text-white hover:bg-amber-700 transition-colors shadow-2xs"
+                      title="Liberar carência de todos os afiliados"
+                    >
+                      {workingId === 'all_carencia' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                      Liberar Todos
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -790,6 +838,18 @@ export function AffiliateAdminModule() {
                                 : `${number(aff.conversoes).toLocaleString('pt-BR')} Vendas (${formatCurrency(number(aff.comissao_total))})`}
                             </strong>
                           </div>
+                          {activeSummaryModal === 'carencia' && number(aff.comissao_pendente) > 0 && (
+                            <button
+                              type="button"
+                              disabled={workingId === aff.id}
+                              onClick={() => void handleReleaseCarencia(aff.id, aff.cliente_nome_completo || aff.nome_divulgacao, number(aff.comissao_pendente))}
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-amber-700 transition-colors shadow-2xs"
+                              title="Liberar carência deste afiliado"
+                            >
+                              {workingId === aff.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                              Liberar Carência
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => {

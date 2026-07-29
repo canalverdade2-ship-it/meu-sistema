@@ -49,10 +49,13 @@ export interface AffiliateLink {
 
 export interface AffiliateCommission {
   id: string;
+  codigoReferencia?: string;
   programaCodigo: string;
   programaNome: string;
+  carenciaDias?: number;
   origemTipo?: string;
   origemId?: string;
+  valorBruto?: number;
   baseElegivel: number;
   percentual: number;
   valor: number;
