@@ -925,6 +925,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                       <input
                         required
                         type="number"
+                        step="any"
                         min={snapshot.summary.pontosMinimo}
                         max={snapshot.summary.pontos}
                         value={pointsValue}
