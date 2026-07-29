@@ -95,6 +95,7 @@ export interface AffiliatePointsEvent {
   tipo: string;
   pontos: number;
   valorCarteira: number;
+  metadata?: Record<string, any>;
   criadoEm?: string;
 }
 

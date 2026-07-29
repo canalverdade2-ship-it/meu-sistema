@@ -124,6 +124,7 @@ const normalizePointsEvent = (value: unknown): AffiliatePointsEvent => {
     tipo: text(item.tipo, 'resgate_carteira'),
     pontos: number(item.pontos, item.pontos_assinados, item.pontosAssinados),
     valorCarteira: number(item.valor_carteira, item.valorCarteira),
+    metadata: record(item.metadata),
     criadoEm: text(item.created_at, item.criado_em, item.criadoEm) || undefined,
   };
 };

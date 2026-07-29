@@ -336,6 +336,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       data: item.criadoEm,
       valor: item.valor,
       isPositive: true,
+      isCurrency: true,
       status: item.status,
       originalCommission: item,
     }));
@@ -348,19 +349,41 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       data: payout.solicitadoEm,
       valor: payout.valor,
       isPositive: false,
+      isCurrency: true,
       status: payout.status,
     }));
 
-    const pointsItems = (snapshot.pointsEvents || []).map((event) => ({
-      id: `pts-${event.id}`,
-      tipo: 'pontos',
-      titulo: event.tipo === 'boas_vindas' ? 'Bônus de Boas-Vindas (Pontos)' : 'Conversão de Pontos para Carteira',
-      subtitulo: `${event.pontos.toLocaleString('pt-BR')} pts convertidos em saldo`,
-      data: event.criadoEm,
-      valor: event.valorCarteira,
-      isPositive: true,
-      status: 'disponivel',
-    }));
+    const pointsItems = (snapshot.pointsEvents || []).map((event) => {
+      const isResgate = event.tipo === 'resgate_carteira';
+      const isBoasVindas = event.tipo === 'boas_vindas';
+      const isPositive = event.pontos > 0 || isResgate;
+
+      let titulo = 'Crédito de pontos para carteira de pontos';
+      if (isResgate) {
+        titulo = 'Conversão de Pontos para Carteira';
+      } else if (isBoasVindas) {
+        titulo = 'Bônus de Boas-Vindas (Pontos)';
+      } else if (event.pontos < 0) {
+        titulo = 'Débito de pontos na carteira de pontos';
+      }
+
+      const motivoText = event.metadata?.descricao ? ` · Motivo: ${event.metadata.descricao}` : '';
+      const subtitulo = isResgate
+        ? `${Math.abs(event.pontos).toLocaleString('pt-BR')} pts convertidos em saldo`
+        : `${event.pontos > 0 ? '+' : ''}${event.pontos.toLocaleString('pt-BR')} pts lançados na carteira de pontos${motivoText}`;
+
+      return {
+        id: `pts-${event.id}`,
+        tipo: 'pontos',
+        titulo,
+        subtitulo,
+        data: event.criadoEm,
+        valor: isResgate ? event.valorCarteira : Math.abs(event.pontos),
+        isCurrency: isResgate,
+        isPositive,
+        status: 'disponivel',
+      };
+    });
 
     const all = [...commissionItems, ...payoutItems, ...pointsItems];
     all.sort((a, b) => {
@@ -1104,7 +1127,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                 </div>
                 <div className="text-right">
                   <p className={`text-sm font-black tracking-tight ${item.isPositive ? 'text-emerald-600' : 'text-amber-700'}`}>
-                    {item.isPositive ? '+' : '-'} {formatCurrency(item.valor)}
+                    {item.isPositive ? '+' : '-'} {item.isCurrency ? formatCurrency(item.valor) : `${item.valor.toLocaleString('pt-BR')} pts`}
                   </p>
                 </div>
               </div>
