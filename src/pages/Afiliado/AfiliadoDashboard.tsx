@@ -1048,9 +1048,16 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
             )}
 
             {activeTab === 'suporte' && (
-              <div className="bg-white rounded-2xl p-4 sm:p-6 border border-[#c9c2b6] shadow-sm">
+              <section className="border-t-4 border-[#c59a4a] bg-white p-5 shadow-[0_14px_40px_rgba(11,21,34,0.06)] sm:p-7 border border-[#c9c2b6]">
+                <div className="mb-6 border-b border-[#e5dec9] pb-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Atendimento e Chamados</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-[#0b1522]">Suporte ao Afiliado</h2>
+                  <p className="mt-1 text-sm text-[#69717c]">
+                    Tire suas dúvidas, solicite apoio técnico ou informe qualquer necessidade relacionada à sua operação.
+                  </p>
+                </div>
                 <ClientSuporte clientId={clientId} modulo="afiliado" />
-              </div>
+              </section>
             )}
           </div>
         </main>
