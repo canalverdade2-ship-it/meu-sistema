@@ -90,6 +90,14 @@ export interface AffiliateSummary {
   pontosAtivo?: boolean;
 }
 
+export interface AffiliatePointsEvent {
+  id: string;
+  tipo: string;
+  pontos: number;
+  valorCarteira: number;
+  criadoEm?: string;
+}
+
 export interface AffiliateSnapshot {
   affiliate: AffiliateProfile | null;
   programs: AffiliateProgram[];
@@ -97,6 +105,7 @@ export interface AffiliateSnapshot {
   summary: AffiliateSummary;
   commissions: AffiliateCommission[];
   payouts: AffiliatePayout[];
+  pointsEvents: AffiliatePointsEvent[];
 }
 
 export interface AffiliateProfileInput {

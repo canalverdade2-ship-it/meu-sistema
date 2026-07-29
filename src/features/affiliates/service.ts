@@ -5,6 +5,7 @@ import type {
   AffiliateLink,
   AffiliatePayout,
   AffiliatePayoutStatus,
+  AffiliatePointsEvent,
   AffiliateProfile,
   AffiliateProgram,
   AffiliateSnapshot,
@@ -116,6 +117,17 @@ const normalizePayout = (value: unknown): AffiliatePayout => {
   };
 };
 
+const normalizePointsEvent = (value: unknown): AffiliatePointsEvent => {
+  const item = record(value);
+  return {
+    id: text(item.id),
+    tipo: text(item.tipo, 'resgate_carteira'),
+    pontos: number(item.pontos, item.pontos_assinados, item.pontosAssinados),
+    valorCarteira: number(item.valor_carteira, item.valorCarteira),
+    criadoEm: text(item.created_at, item.criado_em, item.criadoEm) || undefined,
+  };
+};
+
 export function normalizeAffiliateSnapshot(value: unknown): AffiliateSnapshot {
   const root = record(value);
   const summary = record(root.summary || root.resumo);
@@ -139,6 +151,7 @@ export function normalizeAffiliateSnapshot(value: unknown): AffiliateSnapshot {
     },
     commissions: list(root.commissions || root.comissoes).map(normalizeCommission).filter(item => item.id),
     payouts: list(root.payouts || root.saques).map(normalizePayout).filter(item => item.id),
+    pointsEvents: list(root.points_events || root.pointsEvents).map(normalizePointsEvent).filter(item => item.id),
   };
 }
 

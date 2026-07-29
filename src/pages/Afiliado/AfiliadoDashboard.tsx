@@ -170,7 +170,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
   const [joinPixKey, setJoinPixKey] = useState('');
   const [clientDetails, setClientDetails] = useState<{ nome?: string; cpf?: string; cnpj?: string; tipo_pessoa?: string } | null>(null);
   const [isMovementsModalOpen, setIsMovementsModalOpen] = useState(false);
-  const [movementFilter, setMovementFilter] = useState<'todos' | 'comissoes' | 'saques'>('todos');
+  const [movementFilter, setMovementFilter] = useState<'todos' | 'comissoes' | 'saques' | 'pontos'>('todos');
   const [selectedCommission, setSelectedCommission] = useState<AffiliateCommission | null>(null);
 
   const load = useCallback(async (quiet = false) => {
@@ -351,7 +351,18 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       status: payout.status,
     }));
 
-    const all = [...commissionItems, ...payoutItems];
+    const pointsItems = (snapshot.pointsEvents || []).map((event) => ({
+      id: `pts-${event.id}`,
+      tipo: 'pontos',
+      titulo: event.tipo === 'boas_vindas' ? 'Bônus de Boas-Vindas (Pontos)' : 'Conversão de Pontos para Carteira',
+      subtitulo: `${event.pontos.toLocaleString('pt-BR')} pts convertidos em saldo`,
+      data: event.criadoEm,
+      valor: event.valorCarteira,
+      isPositive: true,
+      status: 'pago',
+    }));
+
+    const all = [...commissionItems, ...payoutItems, ...pointsItems];
     all.sort((a, b) => {
       const timeA = a.data ? new Date(a.data).getTime() : 0;
       const timeB = b.data ? new Date(b.data).getTime() : 0;
@@ -359,13 +370,14 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
     });
 
     return all;
-  }, [snapshot.commissions, snapshot.payouts]);
+  }, [snapshot.commissions, snapshot.payouts, snapshot.pointsEvents]);
 
   const recentMovements = useMemo(() => allMovements.slice(0, 5), [allMovements]);
 
   const filteredMovements = useMemo(() => {
     if (movementFilter === 'comissoes') return allMovements.filter((m) => m.tipo === 'comissao');
     if (movementFilter === 'saques') return allMovements.filter((m) => m.tipo === 'saque');
+    if (movementFilter === 'pontos') return allMovements.filter((m) => m.tipo === 'pontos');
     return allMovements;
   }, [allMovements, movementFilter]);
 
@@ -1055,6 +1067,15 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                 }`}
               >
                 Saques ({allMovements.filter((m) => m.tipo === 'saque').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMovementFilter('pontos')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  movementFilter === 'pontos' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Pontos ({allMovements.filter((m) => m.tipo === 'pontos').length})
               </button>
             </div>
           </div>
