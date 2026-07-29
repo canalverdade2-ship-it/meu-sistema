@@ -359,7 +359,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       data: event.criadoEm,
       valor: event.valorCarteira,
       isPositive: true,
-      status: 'pago',
+      status: 'disponivel',
     }));
 
     const all = [...commissionItems, ...payoutItems, ...pointsItems];
