@@ -11,6 +11,16 @@ export const formatCurrency = (value: any) => {
   }).format(safeValue);
 };
 
+export const formatShortId = (prefix: string, rawId?: string | null) => {
+  if (!rawId) return '—';
+  const str = String(rawId).trim();
+  if (str.length >= 32) {
+    const clean = str.replaceAll('-', '').toUpperCase();
+    return `${prefix}-${clean.slice(0, 8)}`;
+  }
+  return str.toUpperCase().startsWith(prefix.toUpperCase()) ? str.toUpperCase() : `${prefix}-${str.toUpperCase()}`;
+};
+
 export const formatDate = (date: string | Date | null | undefined) => {
   if (!date) return '-';
   try {

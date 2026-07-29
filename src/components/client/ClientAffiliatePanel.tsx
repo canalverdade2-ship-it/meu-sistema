@@ -76,7 +76,7 @@ const commissionStatus: Record<AffiliateCommissionStatus, { label: string; class
 };
 
 const payoutStatus: Record<AffiliatePayoutStatus, { label: string; className: string }> = {
-  solicitado: { label: 'Solicitado', className: 'bg-amber-50 text-amber-700' },
+  solicitado: { label: 'Em Análise', className: 'bg-amber-50 text-amber-700' },
   aprovado: { label: 'Aprovado', className: 'bg-sky-50 text-sky-700' },
   pago: { label: 'Pago', className: 'bg-emerald-50 text-emerald-700' },
   rejeitado: { label: 'Rejeitado', className: 'bg-rose-50 text-rose-700' },

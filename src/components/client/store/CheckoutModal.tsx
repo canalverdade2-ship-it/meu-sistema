@@ -180,23 +180,29 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         .eq('cliente_id', clientId)
         .neq('status', 'cancelado');
 
-      const usedSet = new Set<string>();
+      const clientUsesMap = new Map<string, number>();
       (orcamentos || []).forEach(orc => {
-        if (orc.cupom_desconto_id) usedSet.add(orc.cupom_desconto_id);
-        if (orc.cupom_entrega_id) usedSet.add(orc.cupom_entrega_id);
+        if (orc.cupom_desconto_id) {
+          clientUsesMap.set(orc.cupom_desconto_id, (clientUsesMap.get(orc.cupom_desconto_id) || 0) + 1);
+        }
+        if (orc.cupom_entrega_id) {
+          clientUsesMap.set(orc.cupom_entrega_id, (clientUsesMap.get(orc.cupom_entrega_id) || 0) + 1);
+        }
       });
 
       const now = new Date();
       const filtered = (data || []).filter(c => {
-        if (usedSet.has(c.id)) return false; // Impede uso de cupons já usados pelo cliente
+        const usesByClient = clientUsesMap.get(c.id) || 0;
+        const maxUsesPerClient = c.limite_usos_por_cliente || 1;
+        if (usesByClient >= maxUsesPerClient) return false;
 
         if (c.data_validade) {
-          const [year, month, day] = c.data_validade.split('-').map(Number);
+          const [year, month, day] = String(c.data_validade).split('T')[0].split('-').map(Number);
           const expiryDate = new Date(year, month - 1, day, 23, 59, 59);
           if (expiryDate < now) return false;
         }
-        const hasUses = c.total_usos < c.limite_usos;
-        return hasUses;
+        if (c.limite_usos && c.total_usos >= c.limite_usos) return false;
+        return true;
       });
 
       setAvailableCoupons(filtered);

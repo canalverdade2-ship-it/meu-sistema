@@ -38,6 +38,7 @@ import {
   updateAffiliateProfile,
 } from '../../features/affiliates/service';
 import type { AffiliateSnapshot } from '../../features/affiliates/types';
+import { supabase } from '../../lib/supabase';
 import { copyToClipboard, formatCurrency, formatDateTime, maskCNPJ, maskCPF } from '../../lib/utils';
 import { navigate } from '../../routing/navigationService';
 import { routes } from '../../routing/routeCatalog';
@@ -93,7 +94,7 @@ const STATUS_LABELS: Record<string, string> = {
   bloqueado: 'Bloqueado',
   pendente: 'Em carência',
   disponivel: 'Disponível',
-  solicitado: 'Solicitado',
+  solicitado: 'Em Análise',
   aprovado: 'Aprovado',
   pago: 'Pago',
   paga: 'Paga',
@@ -313,7 +314,36 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
   const conversionRate = snapshot.summary.cliques > 0
     ? (snapshot.summary.conversoes / snapshot.summary.cliques) * 100
     : 0;
-  const recentCommissions = useMemo(() => snapshot.commissions.slice(0, 5), [snapshot.commissions]);
+  const recentMovements = useMemo(() => {
+    const commissionItems = snapshot.commissions.map((item) => ({
+      id: `comm-${item.id}`,
+      titulo: `Comissão · ${item.programaNome}`,
+      subtitulo: `Base ${formatCurrency(item.baseElegivel)} (${item.percentual}%)`,
+      data: item.criadoEm,
+      valor: item.valor,
+      isPositive: true,
+      status: item.status,
+    }));
+
+    const payoutItems = snapshot.payouts.map((payout) => ({
+      id: `payout-${payout.id}`,
+      titulo: `Saque PIX (${payout.pixChaveMascarada})`,
+      subtitulo: payout.motivo ? payout.motivo : `Chave PIX ${payout.pixTipo.toUpperCase()}`,
+      data: payout.solicitadoEm,
+      valor: payout.valor,
+      isPositive: false,
+      status: payout.status,
+    }));
+
+    const all = [...commissionItems, ...payoutItems];
+    all.sort((a, b) => {
+      const timeA = a.data ? new Date(a.data).getTime() : 0;
+      const timeB = b.data ? new Date(b.data).getTime() : 0;
+      return timeB - timeA;
+    });
+
+    return all.slice(0, 8);
+  }, [snapshot.commissions, snapshot.payouts]);
 
   if (loading) {
     return (
@@ -419,11 +449,22 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
               onMarkAsRead={markAsRead}
               onMarkAllAsRead={markAllAsRead}
               onDeleteAll={deleteAllNotifications}
-              onNavigate={(mod, tab, itemId) => {
-                if (mod === 'affiliates' || mod === 'afiliados') {
-                  navigate(`/afiliados/${tab || itemId || 'dashboard'}`);
+              onNavigate={(mod, tab) => {
+                const targetMod = (mod || '').toLowerCase();
+                const targetTab = (tab || '').toLowerCase();
+
+                if (targetMod.includes('saque') || targetTab.includes('saque')) {
+                  navigateToTab('saques');
+                } else if (targetMod.includes('comiss') || targetTab.includes('comiss')) {
+                  navigateToTab('comissoes');
+                } else if (targetMod.includes('ponto') || targetMod.includes('fidelidade') || targetTab.includes('ponto')) {
+                  navigateToTab('pontos');
+                } else if (targetMod.includes('link') || targetTab.includes('link')) {
+                  navigateToTab('links');
+                } else if (targetMod.includes('perfil') || targetTab.includes('perfil')) {
+                  navigateToTab('perfil');
                 } else {
-                  navigate(`/cliente/dashboard`);
+                  navigateToTab('dashboard');
                 }
               }}
             />
@@ -527,8 +568,8 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
 
                 <div className="affiliate-kpi-grid grid grid-cols-2 gap-3 xl:grid-cols-4">
                   <MetricCard label="Saldo disponível" value={formatCurrency(snapshot.summary.totalDisponivel)} icon={WalletCards} detail="Liberado para saque" />
+                  <MetricCard label="Em análise" value={formatCurrency(snapshot.summary.totalSolicitado)} icon={FileText} detail="Aguardando confirmação" />
                   <MetricCard label="Em carência" value={formatCurrency(snapshot.summary.totalPendente)} icon={Clock3} detail="Aguardando liberação" />
-                  <MetricCard label="Conversões" value={snapshot.summary.conversoes.toLocaleString('pt-BR')} icon={CheckCircle2} detail={`${conversionRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% dos cliques`} />
                   <MetricCard label="Total pago" value={formatCurrency(snapshot.summary.totalPago)} icon={Banknote} detail="Histórico concluído" />
                 </div>
 
@@ -558,25 +599,41 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                   </section>
 
                   <section className="border border-[#c9c2b6] bg-white">
-                    <div className="border-b border-[#d8d1c6] px-5 py-4 sm:px-6">
-                      <h2 className="text-base font-semibold text-[#0b1522]">Movimentações recentes</h2>
-                      <p className="mt-1 text-xs text-[#727a84]">Últimas comissões registradas.</p>
+                    <div className="flex items-center justify-between border-b border-[#d8d1c6] px-5 py-4 sm:px-6">
+                      <div>
+                        <h2 className="text-base font-semibold text-[#0b1522]">Movimentações recentes</h2>
+                        <p className="mt-1 text-xs text-[#727a84]">Extrato de comissões, resgates e saques.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigateToTab('saques')}
+                        className="text-xs font-bold text-[#8d6829] hover:underline"
+                      >
+                        Ver saques
+                      </button>
                     </div>
                     <div className="divide-y divide-[#ebe6de]">
-                      {recentCommissions.map((item) => (
-                        <div key={item.id} className="grid grid-cols-[1fr_auto] gap-4 px-5 py-4 sm:px-6">
+                      {recentMovements.map((item) => (
+                        <div key={item.id} className="grid grid-cols-[1fr_auto] gap-4 px-5 py-4 sm:px-6 hover:bg-[#faf8f5]">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#0b1522]">{item.programaNome}</p>
-                            <p className="mt-1 text-xs text-[#7a828c]">{item.criadoEm ? formatDateTime(item.criadoEm) : 'Data não informada'}</p>
+                            <div className="flex items-center gap-2">
+                              <span className={`inline-flex h-2 w-2 shrink-0 rounded-full ${item.isPositive ? 'bg-emerald-600' : 'bg-amber-600'}`} />
+                              <p className="truncate text-sm font-semibold text-[#0b1522]">{item.titulo}</p>
+                            </div>
+                            <p className="mt-1 truncate text-xs text-[#7a828c]">
+                              {item.data ? formatDateTime(item.data) : 'Data não informada'} · {item.subtitulo}
+                            </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-bold text-[#0b1522]">{formatCurrency(item.valor)}</p>
+                            <p className={`text-sm font-bold ${item.isPositive ? 'text-emerald-700' : 'text-amber-800'}`}>
+                              {item.isPositive ? '+' : '-'} {formatCurrency(item.valor)}
+                            </p>
                             <Status value={item.status} compact />
                           </div>
                         </div>
                       ))}
-                      {recentCommissions.length === 0 && (
-                        <EmptyState icon={BadgeDollarSign} title="Sem comissões registradas" text="As conversões elegíveis aparecerão aqui quando forem confirmadas." />
+                      {recentMovements.length === 0 && (
+                        <EmptyState icon={BadgeDollarSign} title="Nenhuma movimentação registrada" text="O extrato registrará todas as suas comissões, resgates e solicitações de saque." />
                       )}
                     </div>
                   </section>
@@ -680,7 +737,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
                 <div className="affiliate-kpi-grid grid grid-cols-2 gap-3 lg:grid-cols-4">
                   <MetricCard label="Disponível" value={formatCurrency(snapshot.summary.totalDisponivel)} icon={WalletCards} detail="Liberado" />
                   <MetricCard label="Em carência" value={formatCurrency(snapshot.summary.totalPendente)} icon={Clock3} detail="Aguardando" />
-                  <MetricCard label="Solicitado" value={formatCurrency(snapshot.summary.totalSolicitado)} icon={FileText} detail="Em processamento" />
+                  <MetricCard label="Em análise" value={formatCurrency(snapshot.summary.totalSolicitado)} icon={FileText} detail="Em processamento" />
                   <MetricCard label="Pago" value={formatCurrency(snapshot.summary.totalPago)} icon={CheckCircle2} detail="Concluído" />
                 </div>
 

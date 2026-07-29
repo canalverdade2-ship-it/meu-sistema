@@ -290,6 +290,7 @@ BEGIN
     'total_pendente', coalesce((SELECT sum(valor) FROM public.gsa_afiliado_comissoes WHERE afiliado_id = v_affiliate.id AND status = 'pendente'), 0),
     'total_disponivel', greatest(
       coalesce((SELECT sum(valor - pago_valor) FROM public.gsa_afiliado_comissoes WHERE afiliado_id = v_affiliate.id AND status = 'disponivel'), 0)
+      + v_wallet
       - coalesce((SELECT sum(valor) FROM public.gsa_afiliado_saques WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0
     ),
     'total_pago', coalesce((SELECT sum(valor) FROM public.gsa_afiliado_saques WHERE afiliado_id = v_affiliate.id AND status = 'pago'), 0),
@@ -467,6 +468,7 @@ BEGIN
 
   SELECT greatest(
     coalesce((SELECT sum(valor - pago_valor) FROM public.gsa_afiliado_comissoes WHERE afiliado_id = v_affiliate.id AND status = 'disponivel'), 0)
+    + coalesce((SELECT saldo_carteira FROM public.clientes WHERE id = v_actor.cliente_id), 0)
     - coalesce((SELECT sum(valor) FROM public.gsa_afiliado_saques WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0
   ) INTO v_available;
   IF p_valor > v_available THEN RAISE EXCEPTION 'Saldo de comissoes disponivel insuficiente.'; END IF;
@@ -753,7 +755,13 @@ BEGIN
        WHERE id = v_item.id;
       v_remaining := v_remaining - v_take;
     END LOOP;
-    IF v_remaining > 0 THEN RAISE EXCEPTION 'Saldo liberado insuficiente para concluir o pagamento.'; END IF;
+    IF v_remaining > 0 THEN
+      PERFORM set_config('gsa.credit_release', 'on', true);
+      UPDATE public.clientes
+         SET saldo_carteira = greatest(saldo_carteira - v_remaining, 0)
+       WHERE id = (SELECT cliente_id FROM public.gsa_afiliados WHERE id = v_payout.afiliado_id);
+      v_remaining := 0;
+    END IF;
 
     INSERT INTO public.gsa_afiliado_comissao_eventos(afiliado_id, saque_id, tipo, valor_assinado, efetivo_em, metadata)
     VALUES (v_payout.afiliado_id, v_payout.id, 'saque', -v_payout.valor, coalesce(p_paid_at, now()), jsonb_build_object('notas', p_notes))
