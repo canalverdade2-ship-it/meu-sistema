@@ -232,9 +232,17 @@ export default function App() {
   }, [route.pathname, route.search]);
 
   useEffect(() => {
+    let mounted = true;
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
+        setIsLoadingSession(false);
+      }
+    }, 3000);
+
     const restore = async () => {
       try {
         const restored = await sessionService.restoreSession();
+        if (!mounted) return;
         if (restored) {
           if (restored.atorTipo === 'cliente') {
             const restoredPersonType = restored.clientPersonType === 'pj' || restored.clientPersonType === 'pf'
@@ -301,28 +309,39 @@ export default function App() {
           ['client', 'business', 'admin'].includes(route.area)
           || (route.area === 'provider' && route.module !== 'home')
           || (route.area === 'supplier' && !['home', 'login', 'access'].includes(route.module))
+          || (route.area === 'public' && route.module === 'affiliates' && !['login', 'acesso', 'cadastro', ''].includes(route.itemId || ''))
         ) {
           const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-          const loginPath = route.area === 'supplier'
-            ? routes.login.supplier()
-            : route.area === 'business'
-              ? routes.login.business()
-              : route.area === 'client'
-                ? routes.login.personal()
-                : route.area === 'admin'
-                  ? routes.login.restricted()
-                  : route.area === 'provider'
-                    ? routes.login.provider()
-                : routes.login.root();
+          const loginPath = (route.area === 'public' && route.module === 'affiliates')
+            ? '/afiliados/login'
+            : route.area === 'supplier'
+              ? routes.login.supplier()
+              : route.area === 'business'
+                ? routes.login.business()
+                : route.area === 'client'
+                  ? routes.login.personal()
+                  : route.area === 'admin'
+                    ? routes.login.restricted()
+                    : route.area === 'provider'
+                      ? routes.login.provider()
+                      : routes.login.root();
           replace(`${loginPath}?returnTo=${returnTo}`);
         }
       } catch (err) {
         console.error('Failed to restore session:', err);
       } finally {
-        setIsLoadingSession(false);
+        if (mounted) {
+          clearTimeout(safetyTimer);
+          setIsLoadingSession(false);
+        }
       }
     };
     restore();
+
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimer);
+    };
   }, [route.area]);
 
   const activeView = route.area;
@@ -338,17 +357,19 @@ export default function App() {
         replace(routes.business.dashboard());
       } else {
         const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
-        const loginPath = route.area === 'supplier'
-          ? routes.login.supplier()
-          : route.area === 'business'
-            ? routes.login.business()
-            : route.area === 'client'
-              ? routes.login.personal()
-              : route.area === 'admin'
-                ? routes.login.restricted()
-                : route.area === 'provider'
-                  ? routes.login.provider()
-              : routes.login.root();
+        const loginPath = (route.area === 'public' && route.module === 'affiliates')
+          ? '/afiliados/login'
+          : route.area === 'supplier'
+            ? routes.login.supplier()
+            : route.area === 'business'
+              ? routes.login.business()
+              : route.area === 'client'
+                ? routes.login.personal()
+                : route.area === 'admin'
+                  ? routes.login.restricted()
+                  : route.area === 'provider'
+                    ? routes.login.provider()
+                    : routes.login.root();
         replace(`${loginPath}?returnTo=${returnTo}`);
       }
     }
