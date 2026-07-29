@@ -125,12 +125,12 @@ export const generateSequentialCode = (prefix: string, count: number) => {
 };
 
 export const generateUUID = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    try {
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
       return crypto.randomUUID();
-    } catch (e) {
-      // Fallback if randomUUID fails for some reason
     }
+  } catch (e) {
+    // Fallback if randomUUID fails for some reason (e.g. non-secure HTTP context)
   }
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);

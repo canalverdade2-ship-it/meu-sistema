@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { generateUUID } from './utils';
 
 export const PRIVATE_DOCUMENT_BUCKET = 'gsa-private-documents';
 export const PRIVATE_DOCUMENT_PREFIX = `gsa-private://${PRIVATE_DOCUMENT_BUCKET}/`;
@@ -174,7 +175,7 @@ export async function uploadPrivateDocument(
 
   const ownerId = await resolveDocumentOwnerId(options);
   const safeName = sanitizePrivateFileName(file.name);
-  const uniqueName = `${crypto.randomUUID()}-${safeName}`;
+  const uniqueName = `${generateUUID()}-${safeName}`;
   const path = `${options.scope}/${ownerId}/${options.context}/${options.contextId}/${uniqueName}`;
 
   const { error } = await supabase.storage
