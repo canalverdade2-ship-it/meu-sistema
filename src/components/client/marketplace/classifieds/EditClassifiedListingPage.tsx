@@ -9,6 +9,7 @@ import {
   uploadClassifiedImage,
   validateClassifiedImage,
 } from '../../../../lib/classifiedStorage';
+import { generateUUID } from '../../../../lib/utils';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
 
@@ -32,7 +33,7 @@ export function EditClassifiedListingPage({ clientId, anuncioId }: { clientId: s
   const [category, setCategory] = useState('');
   const [form, setForm] = useState({ titulo: '', descricao: '', preco: '', cep: '', cidade: '', estado: '', bairro: '', detalhes: {} as Record<string, any>, midias: [] as UploadedClassifiedMedia[] });
   const inputRef = useRef<HTMLInputElement>(null);
-  const draftIdRef = useRef(crypto.randomUUID());
+  const draftIdRef = useRef(generateUUID());
 
   useEffect(() => { void load(); }, [anuncioId, clientId]);
 

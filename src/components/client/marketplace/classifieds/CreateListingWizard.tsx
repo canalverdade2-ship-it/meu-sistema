@@ -44,7 +44,7 @@ export function CreateListingWizard({ clientId, onBack }: WizardProps) {
   const [removingPath, setRemovingPath] = useState<string | null>(null);
   const [commissions, setCommissions] = useState<Record<string, number>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const draftIdRef = useRef(crypto.randomUUID());
+  const draftIdRef = useRef(generateUUID());
   const uploadedPathsRef = useRef<string[]>([]);
   const submittedRef = useRef(false);
 

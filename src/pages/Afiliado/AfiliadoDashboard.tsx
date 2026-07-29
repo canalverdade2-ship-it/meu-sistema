@@ -40,7 +40,7 @@ import {
 } from '../../features/affiliates/service';
 import type { AffiliateCommission, AffiliateSnapshot } from '../../features/affiliates/types';
 import { supabase } from '../../lib/supabase';
-import { copyToClipboard, formatCurrency, formatDateTime, maskCNPJ, maskCPF } from '../../lib/utils';
+import { copyToClipboard, formatCurrency, formatDateTime, generateUUID, maskCNPJ, maskCPF } from '../../lib/utils';
 import { navigate } from '../../routing/navigationService';
 import { routes } from '../../routing/routeCatalog';
 import { UniversalNotificationBell } from '../../components/ui/UniversalNotificationBell';
@@ -289,7 +289,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       return;
     }
     const success = await runAction(
-      () => requestAffiliatePayout(value, crypto.randomUUID()),
+      () => requestAffiliatePayout(value, generateUUID()),
       'Solicitação de saque enviada.',
     );
     if (success) setPayoutValue('');
@@ -307,7 +307,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       return;
     }
     const success = await runAction(
-      () => redeemAffiliatePoints(points, crypto.randomUUID()),
+      () => redeemAffiliatePoints(points, generateUUID()),
       'Pontos convertidos para a carteira.',
     );
     if (success) setPointsValue('');
