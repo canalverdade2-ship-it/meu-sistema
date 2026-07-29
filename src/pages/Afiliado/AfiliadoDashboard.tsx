@@ -358,7 +358,7 @@ export function AfiliadoDashboard({ clientId: _clientId, onLogout, activeSubRout
       const isBoasVindas = event.tipo === 'boas_vindas';
       const isPositive = event.pontos > 0 || isResgate;
 
-      let titulo = 'Crédito de pontos para carteira de pontos';
+      let titulo = 'Crédito de Pontos para Carteira';
       if (isResgate) {
         titulo = 'Conversão de Pontos para Carteira';
       } else if (isBoasVindas) {
