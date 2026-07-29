@@ -65,6 +65,7 @@ const EMPTY_SNAPSHOT: AffiliateSnapshot = {
   links: [],
   commissions: [],
   payouts: [],
+  pointsEvents: [],
   summary: {
     cliques: 0,
     conversoes: 0,
@@ -1298,7 +1299,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
           </div>
 
           <div className="divide-y divide-neutral-100 rounded-2xl border border-neutral-200/80 bg-white">
-            {filteredMovements.map((item) => (
+            {filteredMovements.map((item: any) => (
               <div
                 key={item.id}
                 onClick={() => {
@@ -1358,7 +1359,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
 
           const isPendente = selectedCommission.status === 'pendente';
           const isDisponivel = selectedCommission.status === 'disponivel';
-          const isPago = selectedCommission.status === 'paga' || selectedCommission.status === 'pago';
+          const isPago = (selectedCommission.status as string) === 'paga' || (selectedCommission.status as string) === 'pago';
 
           const valorBruto = selectedCommission.valorBruto || selectedCommission.baseElegivel;
           const pontosGerados = Math.floor(valorBruto);

@@ -17,6 +17,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { supabase } from '../../../../lib/supabase';
+import { generateUUID } from '../../../../lib/utils';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
 import { toast } from 'react-hot-toast';

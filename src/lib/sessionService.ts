@@ -15,6 +15,8 @@ export type AuthGatewayError = Error & {
   status?: number;
 };
 
+export type ClientPersonType = 'pf' | 'pj';
+
 const SESSION_STORAGE_KEY = '_gsa_session';
 let restoreSessionPromise: Promise<StoredSession | null> | null = null;
 let endSessionPromise: Promise<void> | null = null;
@@ -329,6 +331,14 @@ export const sessionService = {
 
   async loginColaborador(code: string) {
     return authenticate('login_colaborador', { code });
+  },
+
+  async requestClientFirstAccess(documento: string, contato: string, pin: string) {
+    return authenticate('request_client_first_access', { documento, contato, pin });
+  },
+
+  async completeClientFirstAccess(challengeId: string, pin: string) {
+    return authenticate('complete_client_first_access', { challengeId, pin });
   },
 
   async restoreSession() {
