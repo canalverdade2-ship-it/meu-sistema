@@ -11,6 +11,24 @@ interface FileViewerContextType {
 
 const FileViewerContext = createContext<FileViewerContextType | undefined>(undefined);
 
+async function resolveAnyFileReference(reference: string, expiresInSeconds = 300): Promise<string> {
+  if (!reference) return '';
+
+  if (/^https?:\/\//i.test(reference) || /^blob:/i.test(reference) || /^data:/i.test(reference)) {
+    return reference;
+  }
+
+  if (isPrivateDocumentReference(reference)) {
+    return await resolvePrivateFileReference(reference, expiresInSeconds);
+  }
+
+  try {
+    return await resolveProviderFileUrl(reference, expiresInSeconds);
+  } catch (err) {
+    return reference;
+  }
+}
+
 function PrivateReferenceDomResolver() {
   const pendingRef = useRef(new WeakSet<Element>());
 
@@ -18,13 +36,16 @@ function PrivateReferenceDomResolver() {
     const resolveElement = (element: Element) => {
       const attribute = element instanceof HTMLImageElement || element instanceof HTMLIFrameElement ? 'src' : 'href';
       const reference = element.getAttribute(attribute);
-      if (!reference || pendingRef.current.has(element) || !isPrivateDocumentReference(reference)) return;
+      if (!reference || pendingRef.current.has(element)) return;
+
+      if (!isPrivateDocumentReference(reference) && !reference.startsWith('storage://') && !reference.startsWith('gsa-provider://')) {
+        return;
+      }
 
       pendingRef.current.add(element);
-      void resolvePrivateFileReference(reference)
-        .then((privateUrl) => resolveProviderFileUrl(privateUrl))
+      void resolveAnyFileReference(reference)
         .then((signedUrl) => {
-          if (element.isConnected) element.setAttribute(attribute, signedUrl);
+          if (element.isConnected && signedUrl) element.setAttribute(attribute, signedUrl);
         })
         .catch((error) => {
           console.error('Erro ao resolver referência privada na interface:', error);
@@ -75,8 +96,7 @@ export function FileViewerProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const privateUrl = await resolvePrivateFileReference(url);
-      const resolvedUrl = await resolveProviderFileUrl(privateUrl);
+      const resolvedUrl = await resolveAnyFileReference(url);
       setFileUrl(resolvedUrl);
       setFileName(name || null);
       setIsOpen(true);
