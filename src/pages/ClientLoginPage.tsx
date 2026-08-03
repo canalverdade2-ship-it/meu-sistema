@@ -272,6 +272,7 @@ export function ClientLoginPage({
       const data = await sessionService.requestClientFirstAccess(
         cleanDocument,
         firstAccessContact.trim().toLowerCase(),
+        firstAccessPin,
       );
       if (!data?.success || !data?.challenge_id) {
         throw new Error('Não foi possível iniciar a confirmação do primeiro acesso.');

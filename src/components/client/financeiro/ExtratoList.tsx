@@ -17,14 +17,18 @@ import { toast } from 'react-hot-toast';
 import { formatCurrency, formatDate, formatDateTime } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
 import { callClientRpc } from '../../../lib/clientRpc';
+import { useWhatsAppDocument } from '../../../hooks/useWhatsAppDocument';
+import { generateExtratoPDF } from '../../../lib/pdf';
+import { whatsappNotificationService } from '../../../lib/whatsappNotificationService';
 
 interface ExtratoListProps {
   clientId: string;
   initialItemId?: string;
 }
 
-export function ExtratoList({ clientId, initialItemId }: ExtratoListProps) {
+export function ExtratoList({ clientId, initialItemId, clienteNome, clienteTelefone }: ExtratoListProps & { clienteNome?: string, clienteTelefone?: string }) {
   const [extrato, setExtrato] = useState<any[]>([]);
+  const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
   const [monthFilter, setMonthFilter] = useState<string>(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -78,8 +82,37 @@ export function ExtratoList({ clientId, initialItemId }: ExtratoListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white p-4 rounded-2xl ring-1 ring-neutral-300 shadow-md">
-        <input type="month" value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="w-full rounded-xl border p-2 text-sm" />
+      <div className="bg-white p-4 rounded-2xl ring-1 ring-neutral-300 shadow-md flex flex-col sm:flex-row items-center gap-4">
+        <input type="month" value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="w-full sm:flex-1 rounded-xl border p-2 text-sm" />
+        
+        <button
+          onClick={async () => {
+            try {
+              const doc = await generateExtratoPDF(extrato, clienteNome || 'Cliente', { returnDoc: true }) as any;
+              const pdfBase64 = doc.output('datauristring');
+              
+              const mensagemBase = whatsappNotificationService.gerarMensagemWhatsApp({
+                tipo: 'extrato' as any,
+                clienteNome: clienteNome,
+              });
+              
+              await sendToWhatsApp(
+                clienteTelefone,
+                mensagemBase,
+                pdfBase64,
+                `extrato_financeiro_${new Date().getTime()}.pdf`
+              );
+            } catch (err) {
+              console.error(err);
+              toast.error("Erro ao gerar extrato.");
+            }
+          }}
+          disabled={isSendingWhatsApp || extrato.length === 0}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-emerald-100 px-6 py-2.5 text-sm font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50"
+        >
+          {isSendingWhatsApp ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" /> : <Send className="h-4 w-4" />}
+          {isSendingWhatsApp ? 'Enviando...' : 'Enviar p/ WhatsApp'}
+        </button>
       </div>
 
       <div className="rounded-2xl bg-white p-6 shadow-md ring-1 ring-neutral-300">

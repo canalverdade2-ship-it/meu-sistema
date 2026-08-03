@@ -19,6 +19,8 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { LogoGSA } from '../components/ui/LogoGSA';
 import { PinInput } from '../components/ui/PinInput';
+import { WhatsAppPinVerification } from '../components/auth/WhatsAppPinVerification';
+import { SetupAccessPin } from '../components/auth/SetupAccessPin';
 import { logService } from '../lib/logService';
 import { sessionService } from '../lib/sessionService';
 import { supabase } from '../lib/supabase';
@@ -103,7 +105,7 @@ export function ProviderAccessPage({
   const [providerData, setProviderData] = useState<ProviderRegistrationData>(createEmptyProvider);
   const [errors, setErrors] = useState<ProviderErrors>({});
   const [confirmed, setConfirmed] = useState(false);
-  const [registrationSubmitted, setRegistrationSubmitted] = useState(false);
+  const [registrationStage, setRegistrationStage] = useState<'form' | 'whatsapp' | 'setup_pin' | 'success'>('form');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -113,7 +115,7 @@ export function ProviderAccessPage({
     setProviderPin('');
     setPinError(false);
     setAttemptsLeft(null);
-    setRegistrationSubmitted(false);
+    setRegistrationStage('form');
     setErrors({});
   }, [initialMode]);
 
@@ -146,7 +148,7 @@ export function ProviderAccessPage({
     setProviderPin('');
     setPinError(false);
     setAttemptsLeft(null);
-    setRegistrationSubmitted(false);
+    setRegistrationStage('form');
     setErrors({});
     onModeChange(nextMode);
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
@@ -235,13 +237,18 @@ export function ProviderAccessPage({
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleProviderRegister = async (event: FormEvent) => {
+  const handleProviderRegister = (event: FormEvent) => {
     event.preventDefault();
     if (!validateRegistration()) {
       toast.error('Revise os campos destacados.');
       return;
     }
+    
+    // Inicia a verificação via WhatsApp
+    setRegistrationStage('whatsapp');
+  };
 
+  const submitFinalRegistration = async (pin: string) => {
     setLoading(true);
     try {
       const { error } = await supabase.rpc('gsa_public_register_provider', {
@@ -254,16 +261,17 @@ export function ProviderAccessPage({
           telefone: providerData.telefone.replace(/\D/g, ''),
           cep: providerData.cep.replace(/\D/g, ''),
           area_servico: providerData.area_servico.trim(),
+          pin, // envia o PIN para ativação imediata
         },
       });
       if (error) throw error;
 
-      setRegistrationSubmitted(true);
       setProviderData(createEmptyProvider());
       setConfirmed(false);
       window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível enviar o cadastro de prestador.');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -506,7 +514,7 @@ export function ProviderAccessPage({
                 </div>
               )}
 
-              {mode === 'register' && !registrationSubmitted && (
+              {mode === 'register' && registrationStage === 'form' && (
                 <form role="tabpanel" onSubmit={handleProviderRegister} noValidate className="pt-9">
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#267153]">Pré-cadastro profissional</p>
                   <h2 className="mt-3 text-3xl font-black tracking-[-0.035em] text-[#0d2740]">
@@ -735,50 +743,31 @@ export function ProviderAccessPage({
                     className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#267153] px-5 text-sm font-black text-white shadow-[0_12px_30px_rgba(38,113,83,.2)] transition hover:bg-[#1d5a41] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#267153] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
                   >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserRoundCheck className="h-4 w-4" />}
-                    {loading ? 'Enviando cadastro...' : 'Enviar cadastro para análise'}
+                    {loading ? 'Enviando...' : 'Continuar para ativação'}
                   </button>
                 </form>
               )}
 
-              {mode === 'register' && registrationSubmitted && (
-                <div role="tabpanel" className="py-10 text-center">
-                  <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 ring-8 ring-emerald-50">
-                    <CheckCircle2 className="h-10 w-10" />
-                  </span>
-                  <h2 className="mt-8 text-3xl font-black tracking-[-0.035em] text-[#0d2740]">
-                    Cadastro enviado para análise
-                  </h2>
-                  <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#657786]">
-                    A equipe GSA recebeu suas informações. Após a validação do perfil, você receberá as orientações para liberar a senha e acessar a Área do Prestador.
-                  </p>
-
-                  <div className="mx-auto mt-8 grid max-w-xl gap-3 text-left sm:grid-cols-3">
-                    {([
-                      ['1', 'Dados recebidos', true],
-                      ['2', 'Análise GSA', false],
-                      ['3', 'Acesso liberado', false],
-                    ] as const).map(([number, label, complete]) => (
-                      <div key={String(number)} className="rounded-2xl border border-[#dbe4ea] bg-white p-4">
-                        <span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${
-                          complete ? 'bg-emerald-600 text-white' : 'bg-[#e7edf2] text-[#667887]'
-                        }`}>
-                          {complete ? <Check className="h-4 w-4" /> : number}
-                        </span>
-                        <p className="mt-3 text-xs font-black text-[#344b5d]">{label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => switchMode('login')}
-                    className="mt-9 inline-flex min-h-14 w-full max-w-md items-center justify-center gap-2 rounded-xl bg-[#0d2740] px-6 text-sm font-black text-white transition hover:bg-[#164b70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f5a86]"
-                  >
-                    Ir para o login do prestador
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+              {mode === 'register' && registrationStage === 'whatsapp' && (
+                <div role="tabpanel" className="pt-9">
+                  <WhatsAppPinVerification
+                    initialPhone={providerData.telefone}
+                    onVerified={(verifiedPhone) => {
+                      updateProvider('telefone', verifiedPhone);
+                      setRegistrationStage('setup_pin');
+                    }}
+                    onCancel={() => setRegistrationStage('form')}
+                  />
                 </div>
               )}
+
+              {mode === 'register' && registrationStage === 'setup_pin' && (
+                <div role="tabpanel" className="pt-9">
+                  <SetupAccessPin onComplete={submitFinalRegistration} loading={loading} />
+                </div>
+              )}
+
+
             </div>
           </motion.section>
         </div>

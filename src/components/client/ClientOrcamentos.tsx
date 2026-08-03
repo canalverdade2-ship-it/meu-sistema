@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Orcamento } from '../../types';
 import { formatCurrency, formatDate, generateCode, handleError } from '../../lib/utils';
-import { FileText, Clock, CheckCircle, XCircle, MessageSquare, Percent, Info, Plus, Search, ChevronRight, ChevronLeft, Upload, Trash2, ShoppingBag, Briefcase as BriefcaseIcon, CalendarCheck } from 'lucide-react';
+import { FileText, Clock, CheckCircle, XCircle, MessageSquare, Percent, Info, Plus, Search, ChevronRight, ChevronLeft, Upload, Trash2, ShoppingBag, Briefcase as BriefcaseIcon, CalendarCheck, Send } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { toast } from 'react-hot-toast';
 import { notificationService } from '../../lib/notificationService';
@@ -12,6 +12,9 @@ import { validarCPF } from '../../utils/cpfValidator';
 import { logService } from '../../lib/logService';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
+import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
+import { generateOrcamentoPDF } from '../../lib/pdf';
+import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { callClientRpc } from '../../lib/clientRpc';
 import { CatalogPackage, CatalogService, createClientServiceQuote, fetchClientServiceCatalog } from '../../lib/serviceCatalog';
 
@@ -59,6 +62,7 @@ export function ClientOrcamentos({
   );
   const [monthFilter, setMonthFilter] = useState<string>('');
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
+  const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
   const [selectedOrcamento, setSelectedOrcamento] = useState<Orcamento | null>(null);
   const [isNegotiateModalOpen, setIsNegotiateModalOpen] = useState(false);
   const [isRequestDiscountOpen, setIsRequestDiscountOpen] = useState(false);
@@ -197,7 +201,7 @@ export function ClientOrcamentos({
     };
 
     const channel = supabase
-      .channel(`client-orc-rt-${clientId}-${Date.now()}`)
+      .channel(`client-orc-rt-${clientId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -849,13 +853,47 @@ export function ClientOrcamentos({
               </div>
             </div>
 
-            <div className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-3">
+            <div className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-3 gap-3 flex-wrap">
               {orc.status !== 'em revisão' && (
                 <div>
                   <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">Total do Orçamento</p>
                   <p className="text-lg font-black text-indigo-600">{formatCurrency(orc.total)}</p>
                 </div>
               )}
+              <div className="flex-1 flex justify-end">
+                <button
+                  onClick={async () => {
+                    try {
+                      const itemPdf = orc.categoria === 'servico' ? orc.servicos : orc.categoria === 'produto' ? (orc as any).produtos : (orc as any).assinaturas;
+                      const doc = await generateOrcamentoPDF(orc, orc.clientes, itemPdf as any, { returnDoc: true }) as any;
+                      const pdfBase64 = doc.output('datauristring');
+                      
+                      const mensagemBase = whatsappNotificationService.gerarMensagemWhatsApp({
+                        tipo: 'orcamento',
+                        clienteNome: orc.clientes?.nome,
+                        codigo: orc.codigo_orcamento,
+                        status: orc.status === 'aberto' ? 'Aberto' : orc.status === 'aprovado' ? 'Aprovado' : orc.status === 'cancelado' ? 'Cancelado' : 'Em Análise',
+                        valorTotal: formatCurrency(orc.total)
+                      });
+                      
+                      await sendToWhatsApp(
+                        orc.clientes?.telefone,
+                        mensagemBase,
+                        pdfBase64,
+                        `orcamento_${orc.codigo_orcamento}.pdf`
+                      );
+                    } catch (error) {
+                      console.error(error);
+                      toast.error("Erro ao gerar PDF do orçamento.");
+                    }
+                  }}
+                  disabled={isSendingWhatsApp}
+                  className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50 whitespace-nowrap"
+                >
+                  {isSendingWhatsApp ? <div className="h-3.5 w-3.5 animate-spin rounded-full border border-emerald-800 border-t-transparent" /> : <Send className="h-3.5 w-3.5" />}
+                  WhatsApp
+                </button>
+              </div>
             </div>
 
             {orc.status === 'aberto' && (

@@ -18,19 +18,15 @@ import {
 import { motion, useReducedMotion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { LogoGSA } from '../components/ui/LogoGSA';
+import { WhatsAppPinVerification } from '../components/auth/WhatsAppPinVerification';
+import { SetupAccessPin } from '../components/auth/SetupAccessPin';
 import { usePublicRegistrationSettings } from '../hooks/usePublicRegistrationSettings';
 import { supabase } from '../lib/supabase';
-import {
-  copyToClipboard,
-  formatCurrency,
-  maskCEP,
-  maskCNPJ,
-  maskPhone,
-} from '../lib/utils';
-import { consultarCEP } from '../utils/viaCep';
+import { copyToClipboard, formatCurrency, maskCNPJ, maskPhone, maskCEP } from '../lib/utils';
 import { validarCNPJ, validarEmail } from '../utils/cpfValidator';
+import { consultarCEP } from '../utils/viaCep';
 
-type RegistrationStage = 'authorization' | 'company' | 'success';
+type RegistrationStage = 'authorization' | 'company' | 'whatsapp' | 'setup_pin' | 'success';
 type VoucherTab = 'com-indicacao' | 'sem-indicacao';
 type SubmissionStatus = 'pendente' | 'ativo';
 
@@ -242,7 +238,7 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleRegister = async (event: FormEvent) => {
+  const handleRegister = (event: FormEvent) => {
     event.preventDefault();
     if (!referralInfo) {
       setStage('authorization');
@@ -253,7 +249,12 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
       toast.error('Revise os campos destacados.');
       return;
     }
+    
+    // Inicia verificação via WhatsApp
+    setStage('whatsapp');
+  };
 
+  const submitFinalRegistration = async (pin: string) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc('gsa_public_register_client', {
@@ -267,15 +268,16 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
           estado: registrationData.estado.trim().toUpperCase(),
           tipo_pessoa: 'pj',
           cnpj: cnpj.replace(/\D/g, ''),
+          pin, // Passa o PIN para ativar o cadastro
         },
       });
       if (error) throw error;
 
       setSubmissionStatus(data?.status === 'pendente' ? 'pendente' : 'ativo');
-      setStage('success');
       window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível concluir o cadastro empresarial.');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -853,60 +855,28 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
                       className="inline-flex min-h-14 flex-[1.45] items-center justify-center gap-2 rounded-xl bg-[#0b1828] px-5 text-sm font-black text-white shadow-[0_12px_30px_rgba(11,24,40,.18)] transition hover:bg-[#142a43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9a742b] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
                     >
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Building2 className="h-4 w-4" />}
-                      {loading ? 'Enviando solicitação...' : 'Finalizar cadastro empresarial'}
+                      {loading ? 'Enviando...' : 'Continuar para ativação'}
                     </button>
                   </div>
                 </form>
               )}
 
-              {stage === 'success' && (
-                <div className="py-4 text-center sm:py-9">
-                  <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 ring-8 ring-emerald-50">
-                    <CheckCircle2 className="h-10 w-10" />
-                  </span>
-                  <h3 className="mt-8 text-2xl font-black tracking-[-0.03em] text-[#0b1828] sm:text-3xl">
-                    {submissionStatus === 'pendente'
-                      ? 'Solicitação empresarial enviada'
-                      : 'Cadastro empresarial concluído'}
-                  </h3>
-                  <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#65717e]">
-                    {submissionStatus === 'pendente'
-                      ? 'Os dados foram recebidos e seguirão para análise administrativa. Assim que a empresa for aprovada, o acesso ao GSA HUB Empresas poderá ser ativado.'
-                      : 'A empresa já pode seguir para o login empresarial e acessar o ambiente exclusivo da GSA.'}
-                  </p>
+              {stage === 'whatsapp' && (
+                <div className="pt-9">
+                  <WhatsAppPinVerification
+                    initialPhone={registrationData.telefone}
+                    onVerified={(verifiedPhone) => {
+                      updateField('telefone', verifiedPhone);
+                      setStage('setup_pin');
+                    }}
+                    onCancel={() => setStage('company')}
+                  />
+                </div>
+              )}
 
-                  <div className="mx-auto mt-8 grid max-w-xl gap-3 text-left sm:grid-cols-3">
-                    {[
-                      ['1', 'Dados recebidos'],
-                      ['2', submissionStatus === 'pendente' ? 'Análise cadastral' : 'Cadastro liberado'],
-                      ['3', 'Acesso empresarial'],
-                    ].map(([number, label], index) => (
-                      <div key={number} className="rounded-2xl border border-[#dfe5ea] bg-white p-4">
-                        <span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${
-                          index === 0 || submissionStatus === 'ativo'
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-[#e9edf1] text-[#667482]'
-                        }`}>
-                          {index === 0 || submissionStatus === 'ativo' ? <Check className="h-4 w-4" /> : number}
-                        </span>
-                        <p className="mt-3 text-xs font-black text-[#344154]">{label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={onLogin}
-                    className="mt-9 inline-flex min-h-14 w-full max-w-md items-center justify-center gap-2 rounded-xl bg-[#0b1828] px-6 text-sm font-black text-white shadow-[0_12px_30px_rgba(11,24,40,.18)] transition hover:bg-[#142a43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9a742b] focus-visible:ring-offset-2"
-                  >
-                    Ir para o login empresarial
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-
-                  <p className="mt-5 inline-flex items-center gap-2 text-xs text-[#71808e]">
-                    <ShieldCheck className="h-4 w-4 text-[#9a742b]" />
-                    O acesso continuará protegido por CNPJ e senha.
-                  </p>
+              {stage === 'setup_pin' && (
+                <div className="pt-9">
+                  <SetupAccessPin onComplete={submitFinalRegistration} loading={loading} />
                 </div>
               )}
             </div>

@@ -493,16 +493,29 @@ export async function generateFaturaPDF(fatura: Fatura, cliente: PdfCliente | nu
 
   let tableBody: string[][] = [];
 
-  if (fatura.tipo === 'pacote_nivel' && fatura.itens_faturados && fatura.itens_faturados.length > 0) {
-    tableBody = (fatura.itens_faturados as unknown as PdfFaturaItem[]).map((it) => [it.descricao || '', '1', formatCurrency(it.valor || 0), formatCurrency(it.valor || 0)]);
+  if (Array.isArray(fatura.itens_faturados) && fatura.itens_faturados.length > 0) {
+    tableBody = (fatura.itens_faturados as any[]).map((it) => [
+      it.descricao || it.nome || 'Item Faturado',
+      String(it.quantidade || 1),
+      formatCurrency(it.valor_unitario || it.valor || 0),
+      formatCurrency(it.subtotal || ((it.quantidade || 1) * (it.valor_unitario || it.valor || 0)))
+    ]);
   } else if (os) {
     const servico = orcamento?.servicos?.nome || 'Serviço';
     tableBody.push([`Serviço: ${servico}\nOS: ${os.codigo_os}`, '1', formatCurrency(orcamento?.valor_servico || 0), formatCurrency(orcamento?.valor_servico || 0)]);
     if ((orcamento?.valor_adicional || 0) > 0) {
       tableBody.push([orcamento?.descricao_adicional || 'Taxa Adicional', '1', formatCurrency(orcamento?.valor_adicional || 0), formatCurrency(orcamento?.valor_adicional || 0)]);
     }
+  } else if (fatura.ordens_compra) {
+    const oc = fatura.ordens_compra;
+    const prod = oc.produtos?.nome || 'Produto';
+    tableBody.push([`Produto: ${prod}\nOC: ${oc.codigo_ordem || oc.codigo_oc || ''}`, String(oc.quantidade || 1), formatCurrency(oc.produtos?.valor || 0), formatCurrency((oc.produtos?.valor || 0) * (oc.quantidade || 1))]);
+  } else if ((fatura as any).ordens_assinatura) {
+    const oa = (fatura as any).ordens_assinatura;
+    const plan = oa.assinaturas?.nome || 'Plano de Assinatura';
+    tableBody.push([`Assinatura: ${plan}\nOA: ${oa.codigo_ordem || oa.codigo_oa || ''}`, String(oa.quantidade || 1), formatCurrency(oa.assinaturas?.valor || 0), formatCurrency((oa.assinaturas?.valor || 0) * (oa.quantidade || 1))]);
   } else {
-    tableBody.push(['Cobrança de Serviço', '1', formatCurrency(fatura.valor_total), formatCurrency(fatura.valor_total)]);
+    tableBody.push([fatura.observacoes || 'Cobrança de Serviço', '1', formatCurrency(fatura.valor_total), formatCurrency(fatura.valor_total)]);
   }
 
   autoTable(doc, {
@@ -527,7 +540,16 @@ export async function generateFaturaPDF(fatura: Fatura, cliente: PdfCliente | nu
   y = checkPageBreak(doc, y, 60);
   y = drawSectionTitle(doc, 'Resumo Financeiro', y);
 
-  const baseTotal = Number(fatura.valor_base_original) > 0 ? Number(fatura.valor_base_original) : Number(fatura.valor_total);
+  const baseTotal = Number(fatura.valor_base_original) > 0 
+    ? Number(fatura.valor_base_original) 
+    : (
+        Number(fatura.valor_total || 0) 
+        + Number(fatura.desconto_manual || 0) 
+        - Number(fatura.acrescimo_manual || 0) 
+        + Number(fatura.desconto_voucher_aplicado || 0) 
+        + Number(fatura.abatimento_carteira_aplicado || 0) 
+        + Number(fatura.desconto_pontos_aplicado || 0)
+      );
 
   const totalRows: [string, string, boolean?][] = [
     ['Subtotal', formatCurrency(baseTotal)],
@@ -540,11 +562,18 @@ export async function generateFaturaPDF(fatura: Fatura, cliente: PdfCliente | nu
   if (Number(fatura.acrescimo_manual) > 0)            totalRows.push(['Acréscimo Ajuste', `+ ${formatCurrency(fatura.acrescimo_manual)}`]);
   if (Number(fatura.desconto_manual) > 0)             totalRows.push(['Desconto Ajuste', `- ${formatCurrency(fatura.desconto_manual)}`]);
 
-  const labelTotal = fatura.status === 'pago' ? 'Total Pago' : 'Total a Pagar';
-  totalRows.push([labelTotal, formatCurrency(fatura.valor_pago || fatura.valor_total), true]);
+  const valorTotalFinal = Number(fatura.valor_total || 0);
+  const valorPago = Number(fatura.valor_pago || 0);
 
-  if ((fatura.valor_final_pendente || 0) > 0 && fatura.status !== 'pago') {
-    totalRows.push(['Restante a Pagar', formatCurrency(fatura.valor_final_pendente)]);
+  if (fatura.status === 'pago') {
+    totalRows.push(['Total Pago', formatCurrency(valorPago > 0 ? valorPago : valorTotalFinal), true]);
+  } else {
+    totalRows.push(['Total a Pagar', formatCurrency(valorTotalFinal), true]);
+    if (valorPago > 0 && valorPago < valorTotalFinal) {
+      totalRows.push(['Valor Já Pago', `- ${formatCurrency(valorPago)}`]);
+      const restante = Math.max(0, valorTotalFinal - valorPago);
+      totalRows.push(['Restante a Pagar', formatCurrency(restante)]);
+    }
   }
 
   y = drawTotalBlock(doc, totalRows, y);
@@ -572,3 +601,54 @@ export async function generateFaturaPDF(fatura: Fatura, cliente: PdfCliente | nu
   if (options.returnDoc) return doc;
   doc.save(`fatura_${fatura.codigo_fatura}.pdf`);
 }
+
+export const generateExtratoPDF = async (extrato: any[], clienteNome: string, options: any = {}) => {
+  const doc = new jsPDF();
+  let yPos = 20;
+
+  // Cabeçalho
+  doc.setFontSize(20);
+  doc.setTextColor(30, 30, 30);
+  doc.text('Extrato Financeiro', 14, yPos);
+  
+  yPos += 10;
+  doc.setFontSize(12);
+  doc.text(`Cliente: ${clienteNome || 'N/A'}`, 14, yPos);
+  
+  yPos += 6;
+  doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, 14, yPos);
+  
+  yPos += 15;
+
+  const tableData = extrato.map(item => [
+    new Date(item.data).toLocaleDateString('pt-BR'),
+    item.descricao || '-',
+    item.tipo === 'entrada' ? 'Entrada' : 'Saída',
+    formatCurrency(item.valor)
+  ]);
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [['Data', 'Descrição', 'Tipo', 'Valor']],
+    body: tableData,
+    theme: 'grid',
+    styles: { fontSize: 9, cellPadding: 4 },
+    headStyles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 30 },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 30 },
+      3: { cellWidth: 40, halign: 'right' }
+    },
+    didParseCell: function(data) {
+      if (data.section === 'body' && data.column.index === 3) {
+        data.cell.styles.textColor = data.row.raw[2] === 'Entrada' ? [16, 185, 129] : [239, 68, 68];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    }
+  });
+
+  if (options.returnDoc) return doc;
+  
+  doc.save(`extrato_financeiro_${new Date().getTime()}.pdf`);
+};

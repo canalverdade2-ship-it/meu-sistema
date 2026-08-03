@@ -54,7 +54,14 @@ export function EditClassifiedListingPage({ clientId, anuncioId }: { clientId: s
       const details = data.detalhes && typeof data.detalhes === 'object' ? data.detalhes : {};
       const medias = [...(data.classificados_midias || [])]
         .sort((a: any, b: any) => Number(a.ordem || 0) - Number(b.ordem || 0))
-        .map((media: any, index: number) => ({ url: media.url, path: getStoragePath(media.url), tipo: media.tipo || 'image', ordem: index }));
+        .map((media: any, index: number) => ({
+          url: media.url,
+          path: getStoragePath(media.url),
+          tipo: media.tipo || 'image',
+          ordem: index,
+          nome: media.url ? media.url.split('/').pop() || 'media' : 'media',
+          tamanho: 0,
+        }));
       const pending = [...(data.classificados_ajustes || [])]
         .filter((item: any) => item.status === 'pendente')
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] || null;

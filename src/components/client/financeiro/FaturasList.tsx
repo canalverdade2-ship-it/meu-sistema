@@ -24,6 +24,9 @@ import { Modal } from '../../ui/Modal';
 import { createNotification } from '../../../lib/notifications';
 import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
 import { PaymentModal } from './PaymentModal';
+import { useWhatsAppDocument } from '../../../hooks/useWhatsAppDocument';
+import { generateFaturaPDF } from '../../../lib/pdf';
+import { whatsappNotificationService } from '../../../lib/whatsappNotificationService';
 
 export const getFaturaDetails = (fat: any) => {
   // 1. Se houver itens_faturados já salvos (novo padrão para faturas manuais), priorizar
@@ -160,6 +163,8 @@ export function FaturasList({
   const [loadingCreditoDetalhes, setLoadingCreditoDetalhes] = useState(false);
   const [faturaOrdemFiscal, setFaturaOrdemFiscal] = useState<any | null>(null);
   const hasAutoOpened = useRef<string | null>(null);
+
+  const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
 
   useEffect(() => {
     if (initialItemId && faturas.length > 0 && hasAutoOpened.current !== initialItemId) {
@@ -1474,13 +1479,16 @@ export function FaturasList({
                 <p className="text-3xl tracking-tight text-[#1a1a1a] mt-1">{formatCurrency(selectedFatura.valor_total)}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-semibold tracking-widest text-[#1a1a1a]/40 uppercase">Restante a Pagar</p>
-                <p className="text-2xl tracking-tight text-[#1a1a1a] mt-1">
-                  {formatCurrency(
-                    selectedFatura.status === 'pago' || selectedFatura.status === 'cancelado'
-                      ? 0 
-                      : (selectedFatura.valor_final_pendente ?? selectedFatura.valor_total)
-                  )}
+                <p className="text-[10px] font-semibold tracking-widest text-[#1a1a1a]/40 uppercase">
+                  {selectedFatura.status === 'pago' ? 'Status' : 'Restante a Pagar'}
+                </p>
+                <p className={`text-2xl tracking-tight mt-1 ${selectedFatura.status === 'pago' ? 'text-emerald-600 font-black' : 'text-[#1a1a1a]'}`}>
+                  {selectedFatura.status === 'pago'
+                    ? 'PAGO'
+                    : selectedFatura.status === 'cancelado'
+                      ? 'CANCELADO'
+                      : formatCurrency(Math.max(0, Number(selectedFatura.valor_total || 0) - Number((selectedFatura as any).valor_pago || 0)))
+                  }
                 </p>
               </div>
             </div>
@@ -1633,25 +1641,62 @@ export function FaturasList({
               </button>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 mt-3">
               <button 
-                onClick={() => setIsDetailOpen(false)}
-                className="flex-1 rounded-xl bg-neutral-200 py-4 text-base font-bold text-[#1a1a1a] hover:bg-neutral-300 transition-all"
+                onClick={async () => {
+                  try {
+                    const doc = await generateFaturaPDF(selectedFatura, cliente, (selectedFatura as any).ordens_servico, { returnDoc: true }) as any;
+                    const pdfBase64 = doc.output('datauristring');
+                    const mensagemBase = whatsappNotificationService.gerarMensagemWhatsApp({
+                      tipo: 'fatura',
+                      clienteNome: cliente?.nome,
+                      codigo: selectedFatura.codigo_fatura,
+                      status: selectedFatura.status === 'pago' ? 'Paga' : selectedFatura.status === 'vencida' ? 'Vencida' : selectedFatura.status === 'cancelado' ? 'Cancelada' : 'Pendente',
+                      dataVencimento: selectedFatura.data_vencimento ? formatDate(selectedFatura.data_vencimento) : undefined,
+                      valorTotal: formatCurrency(selectedFatura.valor_total)
+                    });
+                    
+                    await sendToWhatsApp(
+                      cliente?.telefone, 
+                      mensagemBase, 
+                      pdfBase64, 
+                      `fatura_${selectedFatura.codigo_fatura}.pdf`
+                    );
+                  } catch (error) {
+                    console.error("Erro ao gerar PDF:", error);
+                    toast.error("Erro ao gerar documento para envio.");
+                  }
+                }}
+                disabled={isSendingWhatsApp}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-100 py-4 text-sm font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50"
               >
-                Fechar Detalhes
+                {isSendingWhatsApp ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" />
+                ) : (
+                  <MessageSquare className="h-5 w-5" />
+                )}
+                {isSendingWhatsApp ? 'Enviando...' : 'Enviar p/ meu WhatsApp'}
               </button>
-              {['pendente', 'vencida', 'fatura_negociada'].includes(selectedFatura.status) && (
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button 
-                  onClick={() => { 
-                    setIsDetailOpen(false);
-                    setFaturaToPay(selectedFatura); 
-                    setPaymentModalOpen(true); 
-                  }}
-                  className="flex-[2] rounded-xl bg-emerald-600 py-4 text-base font-bold text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all"
+                  onClick={() => setIsDetailOpen(false)}
+                  className="flex-1 rounded-xl bg-neutral-200 py-4 text-base font-bold text-[#1a1a1a] hover:bg-neutral-300 transition-all"
                 >
-                  Realizar Pagamento
+                  Fechar Detalhes
                 </button>
-              )}
+                {['pendente', 'vencida', 'fatura_negociada'].includes(selectedFatura.status) && (
+                  <button 
+                    onClick={() => { 
+                      setIsDetailOpen(false);
+                      setFaturaToPay(selectedFatura); 
+                      setPaymentModalOpen(true); 
+                    }}
+                    className="flex-[2] rounded-xl bg-emerald-600 py-4 text-base font-bold text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all"
+                  >
+                    Realizar Pagamento
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           );
