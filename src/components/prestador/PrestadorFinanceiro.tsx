@@ -8,6 +8,10 @@ import { providerOperations } from '../../lib/providerOperations';
 import { logService } from '../../lib/logService';
 import { useProviderNotifications } from '../../hooks/useProviderNotifications';
 import { Modal } from '../ui/Modal';
+import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
+import { generateExtratoPDF } from '../../lib/pdf';
+import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
+import { Send } from 'lucide-react';
 
 type Transaction = {
   id: string;
@@ -47,6 +51,7 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
   const [cancelReason, setCancelReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
 
   const loadData = async () => {
     try {
@@ -179,9 +184,46 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5"><p className="text-xs font-black uppercase tracking-widest text-neutral-400">Em processamento</p><p className="mt-2 text-2xl font-black text-amber-600">{formatCurrency(pendingTotal)}</p></div>
       </div>
 
-      <div className="flex gap-2 rounded-2xl bg-neutral-100 p-1 sm:w-max">
-        <button onClick={() => setActiveTab('extrato')} className={`flex-1 rounded-xl px-6 py-3 text-sm font-black sm:flex-none ${activeTab === 'extrato' ? 'bg-white shadow-sm' : 'text-neutral-500'}`}>Extrato</button>
-        <button onClick={() => setActiveTab('saques')} className={`flex-1 rounded-xl px-6 py-3 text-sm font-black sm:flex-none ${activeTab === 'saques' ? 'bg-white shadow-sm' : 'text-neutral-500'}`}>Saques ({withdrawals.length})</button>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex gap-2 rounded-2xl bg-neutral-100 p-1 sm:w-max">
+          <button onClick={() => setActiveTab('extrato')} className={`flex-1 rounded-xl px-6 py-3 text-sm font-black sm:flex-none ${activeTab === 'extrato' ? 'bg-white shadow-sm' : 'text-neutral-500'}`}>Extrato</button>
+          <button onClick={() => setActiveTab('saques')} className={`flex-1 rounded-xl px-6 py-3 text-sm font-black sm:flex-none ${activeTab === 'saques' ? 'bg-white shadow-sm' : 'text-neutral-500'}`}>Saques ({withdrawals.length})</button>
+        </div>
+        {activeTab === 'extrato' && (
+          <button
+            onClick={async () => {
+              try {
+                const { data: pData } = await supabase.from('prestadores').select('nome_completo, telefone').eq('id', prestadorId).single();
+                if (!pData?.telefone) { toast.error("Telefone não encontrado."); return; }
+                
+                const formattedTransactions = transactions.map(t => ({
+                  data: t.created_at,
+                  descricao: t.descricao,
+                  tipo: t.tipo === 'credito' ? 'entrada' : 'saida',
+                  valor: Math.abs(t.valor)
+                }));
+                
+                const doc = await generateExtratoPDF(formattedTransactions as any, pData.nome_completo, { returnDoc: true }) as any;
+                const pdfBase64 = doc.output('datauristring');
+                
+                const msg = whatsappNotificationService.gerarMensagemWhatsApp({
+                  tipo: 'extrato' as any,
+                  clienteNome: pData.nome_completo,
+                });
+                
+                await sendToWhatsApp(pData.telefone, msg, pdfBase64, `extrato_prestador_${new Date().getTime()}.pdf`);
+              } catch (e) {
+                console.error(e);
+                toast.error("Erro ao gerar extrato.");
+              }
+            }}
+            disabled={isSendingWhatsApp || transactions.length === 0}
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100 px-4 py-3 text-xs font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50"
+          >
+            {isSendingWhatsApp ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" /> : <Send className="h-4 w-4" />}
+            Enviar WhatsApp
+          </button>
+        )}
       </div>
 
       {activeTab === 'extrato' && (

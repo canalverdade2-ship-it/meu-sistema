@@ -22,6 +22,10 @@ import { LogoGSA } from '../../components/ui/LogoGSA';
 import { UniversalNotificationBell, type StandardNotification } from '../../components/ui/UniversalNotificationBell';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDate, formatDateTime, generateUUID } from '../../lib/utils';
+import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
+import { generateExtratoPDF } from '../../lib/pdf';
+import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
+import { Send } from 'lucide-react';
 import {
   getSupplierSnapshot,
   markAllSupplierNotificationsRead,
@@ -251,7 +255,7 @@ export function FornecedorDashboard({ fornecedorId, onLogout }: { fornecedorId: 
           )}
           {active === 'pedidos' && <Orders orders={snapshot.orders} loading={loading} onOpen={(order) => void openOrder(order)} />}
           {active === 'entregas' && <Deliveries deliveries={snapshot.deliveries} loading={loading} onGoToOrders={() => navigate(routes.supplier.orders())} />}
-          {active === 'financeiro' && <Payables payables={snapshot.payables} loading={loading} />}
+          {active === 'financeiro' && <Payables supplierId={snapshot.supplier.id} payables={snapshot.payables} loading={loading} />}
           {active === 'perfil' && (
             <Profile
               supplier={snapshot.supplier}
@@ -528,9 +532,47 @@ function Deliveries({ deliveries, loading, onGoToOrders }: { deliveries: Array<R
   );
 }
 
-function Payables({ payables, loading }: { payables: Array<Record<string, any>>; loading: boolean }) {
+function Payables({ supplierId, payables, loading }: { supplierId: string; payables: Array<Record<string, any>>; loading: boolean }) {
+  const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
+  
   return (
     <Page title="Financeiro" description="Contas criadas somente após a aprovação da entrega e da nota fiscal.">
+      <div className="mb-6 flex justify-end">
+        <button
+          onClick={async () => {
+            try {
+              const { data: sData } = await supabase.from('fornecedores').select('nome_fantasia, razao_social, telefone').eq('id', supplierId).single();
+              if (!sData?.telefone) { toast.error("Telefone não encontrado."); return; }
+              const supplierName = sData.nome_fantasia || sData.razao_social || 'Fornecedor';
+              
+              const formattedTransactions = payables.map(t => ({
+                data: t.data_vencimento,
+                descricao: `Pagamento NF ${t.numero_documento} (${t.status})`,
+                tipo: 'entrada',
+                valor: Math.abs(Number(t.valor_original || 0))
+              }));
+              
+              const doc = await generateExtratoPDF(formattedTransactions as any, supplierName, { returnDoc: true }) as any;
+              const pdfBase64 = doc.output('datauristring');
+              
+              const msg = whatsappNotificationService.gerarMensagemWhatsApp({
+                tipo: 'extrato' as any,
+                clienteNome: supplierName,
+              });
+              
+              await sendToWhatsApp(sData.telefone, msg, pdfBase64, `extrato_fornecedor_${new Date().getTime()}.pdf`);
+            } catch (e) {
+              console.error(e);
+              toast.error("Erro ao gerar extrato financeiro.");
+            }
+          }}
+          disabled={isSendingWhatsApp || payables.length === 0}
+          className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100 px-4 py-3 text-xs font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50"
+        >
+          {isSendingWhatsApp ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" /> : <Send className="h-4 w-4" />}
+          Enviar Extrato via WhatsApp
+        </button>
+      </div>
       <div className="space-y-3">
         {payables.map((item) => (
           <article key={item.id} className="rounded-2xl border border-neutral-200 bg-white p-5">

@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import SignaturePad from 'signature_pad';
 import { Modal } from '../ui/Modal';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
+import { generateExtratoPDF } from '../../lib/pdf';
+import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { supabase } from '../../lib/supabase';
 import { Cliente, LojaCreditoSolicitacao, LojaCreditoDocumento, LojaCreditoMovimentacao } from '../../types';
 import { notificationService } from '../../lib/notificationService';
@@ -28,6 +33,7 @@ import {
   X,
   ClipboardList,
   CreditCard,
+  Send,
   Package
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -55,6 +61,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
   // Modals / Form states
   const [activeTab, setActiveTab] = useState(initialTab || 'resumo');
   const [creditoTab, setCreditoTab] = useState<'limite' | 'faturas' | 'extrato'>('limite');
+  const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isIncreaseModalOpen, setIsIncreaseModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -1045,14 +1052,14 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
       </div>
     );
 
-  if (isEmAndamento && solicitacao?.tipo === 'adesao') {
+  if (isEmAndamento && (solicitacao as any)?.tipo === 'adesao') {
     return renderAcompanhamento(false);
   }
 
   // 4. Painel de Crédito Ativo (Status Liberado)
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
-      {isEmAndamento && solicitacao?.tipo !== 'adesao' && (
+      {isEmAndamento && (solicitacao as any)?.tipo !== 'adesao' && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-[2rem] p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h4 className="text-sm font-black text-indigo-900 uppercase tracking-wider flex items-center gap-2">
@@ -1352,16 +1359,54 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
                       <History className="w-5 h-5 text-indigo-600" />
                       Extrato de Crédito
                     </h3>
-                    <select
-                      value={filtroMesExtrato}
-                      onChange={(e) => setFiltroMesExtrato(e.target.value)}
-                      className="px-3 py-1.5 rounded-xl border border-neutral-200 bg-white text-xs font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/25"
-                    >
-                      <option value="todos">Todos os Meses</option>
-                      {getMesesFiltro().map(opt => (
-                        <option key={opt.valor} value={opt.valor}>{opt.rotulo}</option>
-                      ))}
-                    </select>
+                    <div className="flex gap-2">
+                      <select
+                        value={filtroMesExtrato}
+                        onChange={(e) => setFiltroMesExtrato(e.target.value)}
+                        className="px-3 py-1.5 rounded-xl border border-neutral-200 bg-white text-xs font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/25"
+                      >
+                        <option value="todos">Todos os Meses</option>
+                        {getMesesFiltro().map(opt => (
+                          <option key={opt.valor} value={opt.valor}>{opt.rotulo}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const formattedMovimentacoes = movimentacoesFiltradas.map((mov: any) => ({
+                              data: mov.created_at,
+                              descricao: mov.historico || mov.descricao,
+                              tipo: mov.tipo === 'entrada' || mov.valor > 0 ? 'entrada' : 'saida', // Adapting to generic extrato structure
+                              valor: Math.abs(mov.valor || 0)
+                            }));
+                            
+                            const doc = await generateExtratoPDF(formattedMovimentacoes, cliente?.nome || 'Cliente', { returnDoc: true }) as any;
+                            const pdfBase64 = doc.output('datauristring');
+                            
+                            const mensagemBase = whatsappNotificationService.gerarMensagemWhatsApp({
+                              tipo: 'extrato' as any,
+                              clienteNome: cliente?.nome,
+                            });
+                            
+                            await sendToWhatsApp(
+                              cliente?.telefone,
+                              mensagemBase,
+                              pdfBase64,
+                              `extrato_credito_${new Date().getTime()}.pdf`
+                            );
+                          } catch (err) {
+                            console.error(err);
+                            toast.error("Erro ao gerar extrato.");
+                          }
+                        }}
+                        disabled={isSendingWhatsApp || movimentacoesFiltradas.length === 0}
+                        className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50"
+                        title="Enviar para o WhatsApp"
+                      >
+                        {isSendingWhatsApp ? <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" /> : <Send className="h-3.5 w-3.5" />}
+                        <span className="hidden sm:inline">WhatsApp</span>
+                      </button>
+                    </div>
                   </div>
 
                   {movimentacoesExibidas.length > 0 ? (

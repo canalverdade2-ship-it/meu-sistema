@@ -125,13 +125,14 @@ export function ClientOrcamentos({
       if (item) {
         hasAutoOpened.current = initialItemId;
         setSelectedOrcamento(item);
-        if (item.status === 'aberto' || item.status === 'pendente' || item.status === 'negociação' || item.status === 'em revisão' || item.status === 'pendência documentos') {
+        const statusStr = item.status as string;
+        if (statusStr === 'aberto' || statusStr === 'pendente' || statusStr === 'negociação' || statusStr === 'em revisão' || statusStr === 'pendência documentos') {
           setActiveTab('abertos');
-        } else if (item.status === 'aprovado' || item.status === 'produção' || item.status === 'em separação') {
+        } else if (statusStr === 'aprovado' || statusStr === 'produção' || statusStr === 'em separação') {
           setActiveTab('aprovados');
         }
         
-        if ((item.status === 'aberto' && (item.desconto || 0) <= 0) || item.status === 'negociação') {
+        if ((statusStr === 'aberto' && (item.desconto || 0) <= 0) || statusStr === 'negociação') {
           setIsNegotiateModalOpen(true);
         }
         
@@ -145,8 +146,8 @@ export function ClientOrcamentos({
           }
         }, 500);
       } else {
-        if (initialTab && initialTab !== activeTab) {
-          setActiveTab(initialTab);
+        if (initialTab && (initialTab as any) !== activeTab) {
+          setActiveTab(initialTab as any);
         }
       }
     }
@@ -805,11 +806,11 @@ export function ClientOrcamentos({
                   <div className="space-y-1 border-t border-neutral-100 pt-2">
                     <div className="flex justify-between text-sm text-amber-600">
                       <span className="font-bold">
-                        {orc.categoria === 'loja' ? 'Juros do Crédito GSA' : 'Acréscimo'}
+                        {(orc.categoria as string) === 'loja' ? 'Juros do Crédito GSA' : 'Acréscimo'}
                       </span>
                       <span className="font-bold">+ {formatCurrency(orc.acrescimo)}</span>
                     </div>
-                    {orc.categoria === 'loja' && orc.descricao_adicional && (
+                    {(orc.categoria as string) === 'loja' && orc.descricao_adicional && (
                       <p className="text-[10px] text-neutral-400 italic leading-tight bg-white/50 p-1.5 rounded-lg">
                         <span className="font-bold uppercase mr-1">Taxa:</span>
                         {orc.descricao_adicional}
@@ -864,20 +865,21 @@ export function ClientOrcamentos({
                 <button
                   onClick={async () => {
                     try {
-                      const itemPdf = orc.categoria === 'servico' ? orc.servicos : orc.categoria === 'produto' ? (orc as any).produtos : (orc as any).assinaturas;
-                      const doc = await generateOrcamentoPDF(orc, orc.clientes, itemPdf as any, { returnDoc: true }) as any;
+                      const orcAny = orc as any;
+                      const itemPdf = orc.categoria === 'servico' ? orcAny.servicos : orc.categoria === 'produto' ? orcAny.produtos : orcAny.assinaturas;
+                      const doc = await generateOrcamentoPDF(orc, orcAny.clientes, itemPdf as any, { returnDoc: true }) as any;
                       const pdfBase64 = doc.output('datauristring');
                       
                       const mensagemBase = whatsappNotificationService.gerarMensagemWhatsApp({
                         tipo: 'orcamento',
-                        clienteNome: orc.clientes?.nome,
+                        clienteNome: orcAny.clientes?.nome,
                         codigo: orc.codigo_orcamento,
                         status: orc.status === 'aberto' ? 'Aberto' : orc.status === 'aprovado' ? 'Aprovado' : orc.status === 'cancelado' ? 'Cancelado' : 'Em Análise',
                         valorTotal: formatCurrency(orc.total)
                       });
                       
                       await sendToWhatsApp(
-                        orc.clientes?.telefone,
+                        orcAny.clientes?.telefone,
                         mensagemBase,
                         pdfBase64,
                         `orcamento_${orc.codigo_orcamento}.pdf`
@@ -1562,9 +1564,9 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
   };
 
   // Estados de empréstimo
-  const [dadosPessoais, setDadosPessoais] = useState<DadosPessoais>({ nome_completo: '', data_nascimento: '', rg: '', cpf: '', telefone: '', cep: '', numero_casa: '', endereco_rua: '', endereco_bairro: '', endereco_cidade: '', endereco_uf: '', email: '' });
-  const [dadosEmprestimo, setDadosEmprestimo] = useState<DadosEmprestimo>({ valor_desejado: '', parcelas_desejadas: 0, data_desejada: '' });
-  const [docFiles, setDocFiles] = useState<DocFiles>({ cnh: null, comprovante_endereco: null, holerite: null, foto_perfil: null });
+  const [dadosPessoais, setDadosPessoais] = useState<any>({ nome_completo: '', data_nascimento: '', rg: '', cpf: '', telefone: '', cep: '', numero_casa: '', endereco_rua: '', endereco_bairro: '', endereco_cidade: '', endereco_uf: '', email: '' });
+  const [dadosEmprestimo, setDadosEmprestimo] = useState<any>({ valor_desejado: '', parcelas_desejadas: 0, data_desejada: '' });
+  const [docFiles, setDocFiles] = useState<any>({ cnh: null, comprovante_endereco: null, holerite: null, foto_perfil: null });
 
   const handleFinishEmprestimo = async () => {
     if (isSubmitting) return;

@@ -34,6 +34,11 @@ import type {
   AffiliateSnapshot,
 } from '../../features/affiliates/types';
 import { Modal } from '../ui/Modal';
+import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
+import { generateExtratoPDF } from '../../lib/pdf';
+import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
+import { supabase } from '../../lib/supabase';
+import { Send } from 'lucide-react';
 
 const TERMS_VERSION = '2026-07-21';
 const PIX_TYPES = [
@@ -59,6 +64,7 @@ const emptySnapshot: AffiliateSnapshot = {
   },
   commissions: [],
   payouts: [],
+  pointsEvents: [],
 };
 
 const formatDate = (value?: string) => {
@@ -114,6 +120,7 @@ export function ClientAffiliatePanel({ clientId: _clientId }: { clientId: string
   const [profileOpen, setProfileOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [payoutOpen, setPayoutOpen] = useState(false);
+  const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
 
   const load = async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -448,9 +455,44 @@ export function ClientAffiliatePanel({ clientId: _clientId }: { clientId: string
 
       <div className="grid gap-6 xl:grid-cols-[1.45fr_0.55fr]">
         <section className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
-          <div className="border-b border-neutral-100 p-5 sm:p-6">
-            <h3 className="text-lg font-black text-neutral-950">Extrato de comissões</h3>
-            <p className="mt-1 text-xs text-neutral-500">A porcentagem é registrada no momento da venda e não muda depois.</p>
+          <div className="border-b border-neutral-100 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-black text-neutral-950">Extrato de comissões</h3>
+              <p className="mt-1 text-xs text-neutral-500">A porcentagem é registrada no momento da venda e não muda depois.</p>
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  const { data: cData } = await supabase.from('clientes').select('nome, telefone').eq('id', _clientId).single();
+                  if (!cData?.telefone) { toast.error("Telefone não encontrado."); return; }
+                  
+                  const formattedCommissions = snapshot.commissions.map(c => ({
+                    data: c.criadoEm,
+                    descricao: `Comissão - ${c.programaNome} (${c.percentual}%)`,
+                    tipo: c.status === 'estornada' ? 'saida' : 'entrada',
+                    valor: c.valor
+                  }));
+                  
+                  const doc = await generateExtratoPDF(formattedCommissions as any, cData.nome, { returnDoc: true }) as any;
+                  const pdfBase64 = doc.output('datauristring');
+                  
+                  const msg = whatsappNotificationService.gerarMensagemWhatsApp({
+                    tipo: 'extrato' as any,
+                    clienteNome: cData.nome,
+                  });
+                  
+                  await sendToWhatsApp(cData.telefone, msg, pdfBase64, `extrato_comissoes_${new Date().getTime()}.pdf`);
+                } catch (e) {
+                  console.error(e);
+                  toast.error("Erro ao gerar extrato.");
+                }
+              }}
+              disabled={isSendingWhatsApp || snapshot.commissions.length === 0}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50"
+            >
+              {isSendingWhatsApp ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" /> : <Send className="h-4 w-4" />}
+              WhatsApp
+            </button>
           </div>
           <div className="divide-y divide-neutral-100">
             {snapshot.commissions.map(commission => {
