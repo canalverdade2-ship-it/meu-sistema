@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { isLocalDevHost } from '../lib/utils';
 
 export interface PublicRegistrationSettings {
   ativo: boolean;
@@ -23,12 +22,6 @@ export function usePublicRegistrationSettings(enabled: boolean) {
   const refresh = useCallback(async () => {
     if (!enabled) return;
     setLoading(true);
-    // Em dev local com servidor remoto instável, usa os valores padrão para evitar erros 522/CORS no console
-    if (isLocalDevHost()) {
-      setSettings(DEFAULT_SETTINGS);
-      setLoading(false);
-      return;
-    }
     try {
       const { data, error } = await supabase.rpc('gsa_public_registration_settings');
       if (error) throw error;
@@ -39,7 +32,28 @@ export function usePublicRegistrationSettings(enabled: boolean) {
         valor: Number(data?.valor || 0),
       });
     } catch {
-      setSettings(DEFAULT_SETTINGS);
+      // Fallback: consulta diretamente da tabela system_settings se o RPC falhar
+      try {
+        const { data: rows } = await supabase
+          .from('system_settings')
+          .select('key, value')
+          .in('key', ['codigo_cadastro_padrao_ativo', 'codigo_cadastro_padrao', 'bonus_cadastro_tipo', 'bonus_cadastro_valor']);
+        
+        if (rows && rows.length > 0) {
+          const map: Record<string, string> = {};
+          rows.forEach(r => { map[r.key] = r.value; });
+          setSettings({
+            ativo: map.codigo_cadastro_padrao_ativo?.toLowerCase() === 'true',
+            codigo: map.codigo_cadastro_padrao || '',
+            tipo: map.bonus_cadastro_tipo === 'credito' ? 'credito' : 'pontos',
+            valor: Number(map.bonus_cadastro_valor || 0),
+          });
+        } else {
+          setSettings(DEFAULT_SETTINGS);
+        }
+      } catch {
+        setSettings(DEFAULT_SETTINGS);
+      }
     } finally {
       setLoading(false);
     }

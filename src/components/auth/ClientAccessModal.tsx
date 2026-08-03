@@ -11,12 +11,14 @@ import { copyToClipboard, formatCurrency, maskCNPJ, maskCPF, maskPhone } from '.
 import { validarCNPJ, validarCPF, validarEmail } from '../../utils/cpfValidator';
 import { consultarCEP } from '../../utils/viaCep';
 import { usePublicRegistrationSettings } from '../../hooks/usePublicRegistrationSettings';
+import { WhatsAppPinVerification } from './WhatsAppPinVerification';
+import { SetupAccessPin } from './SetupAccessPin';
 import type { ClientPersonType } from '../../lib/sessionService';
 
 export type ClientAccessMode = 'login' | 'first_access' | 'recovery' | 'register';
 
 type PersonType = 'pf' | 'pj';
-type RegisterStage = 'voucher' | 'confirm' | 'form';
+type RegisterStage = 'voucher' | 'confirm' | 'form' | 'whatsapp' | 'setup_pin';
 
 interface ClientAccessModalProps {
   isOpen: boolean;
@@ -80,6 +82,12 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
     setVoucherInput('');
     setReferralInfo(null);
   }, [initialMode, initialPersonType, isOpen]);
+
+  useEffect(() => {
+    if (voucherTab === 'sem-indicacao' && settings.ativo && settings.codigo && !voucherInput) {
+      setVoucherInput(settings.codigo);
+    }
+  }, [voucherTab, settings.ativo, settings.codigo, voucherInput]);
 
   const cleanDocument = () => documento.replace(/\D/g, '');
   const validDocumentLength = () => cleanDocument().length === (personType === 'pf' ? 11 : 14);
@@ -215,7 +223,7 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
     }
   };
 
-  const handleRegister = async (event: React.FormEvent) => {
+  const handleRegister = (event: React.FormEvent) => {
     event.preventDefault();
     const cleanDoc = cleanDocument();
     const cleanPhone = registrationData.telefone.replace(/\D/g, '');
@@ -227,7 +235,15 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
       toast.error('Informe e-mail e telefone válidos.');
       return;
     }
+    
+    // Inicia a verificação via WhatsApp
+    setRegisterStage('whatsapp');
+  };
+
+  const submitFinalRegistration = async (pin: string) => {
     setLoading(true);
+    const cleanDoc = cleanDocument();
+    const cleanPhone = registrationData.telefone.replace(/\D/g, '');
     try {
       const { data, error } = await supabase.rpc('gsa_public_register_client', {
         p_referral_token: voucherInput.trim(),
@@ -237,6 +253,7 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
           cep: registrationData.cep.replace(/\D/g, ''),
           tipo_pessoa: personType,
           [personType === 'pf' ? 'cpf' : 'cnpj']: cleanDoc,
+          pin, // Envia o PIN
         },
       });
       if (error) throw error;
@@ -247,6 +264,7 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
       changeMode('login');
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível concluir o cadastro.');
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -324,8 +342,8 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
       {mode === 'register' && registerStage === 'voucher' && (
         <div className="space-y-5">
           <div className="flex gap-2 rounded-lg bg-neutral-100 p-1" role="group" aria-label="Forma de cadastro">
-            <button type="button" aria-pressed={voucherTab === 'com-indicacao'} onClick={() => { setVoucherTab('com-indicacao'); setVoucherInput(''); }} className={`flex-1 rounded-md py-2 text-sm ${voucherTab === 'com-indicacao' ? 'bg-white shadow' : 'text-neutral-500'}`}>Com indicação</button>
-            <button type="button" aria-pressed={voucherTab === 'sem-indicacao'} onClick={() => { setVoucherTab('sem-indicacao'); setVoucherInput(''); }} className={`flex-1 rounded-md py-2 text-sm ${voucherTab === 'sem-indicacao' ? 'bg-white shadow' : 'text-neutral-500'}`}>Sem indicação</button>
+            <button type="button" aria-pressed={voucherTab === 'com-indicacao'} onClick={() => { setVoucherTab('com-indicacao'); setVoucherInput(''); }} className={`flex-1 rounded-md py-2 text-sm font-semibold transition ${voucherTab === 'com-indicacao' ? 'bg-white text-[#0b1522] shadow' : 'text-neutral-500 hover:text-neutral-800'}`}>Com indicação</button>
+            <button type="button" aria-pressed={voucherTab === 'sem-indicacao'} onClick={() => { setVoucherTab('sem-indicacao'); setVoucherInput(settings.ativo && settings.codigo ? settings.codigo : ''); }} className={`flex-1 rounded-md py-2 text-sm font-semibold transition ${voucherTab === 'sem-indicacao' ? 'bg-white text-[#0b1522] shadow' : 'text-neutral-500 hover:text-neutral-800'}`}>Sem indicação</button>
           </div>
           {voucherTab === 'sem-indicacao' && (
             <div className="rounded-2xl bg-indigo-50 p-4 text-sm text-indigo-900">
@@ -371,8 +389,23 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
             <label className="grid gap-2 text-sm font-medium text-neutral-600">UF<input required name="estado" autoComplete="address-level1" maxLength={2} value={registrationData.estado} onChange={(event) => setRegistrationData({ ...registrationData, estado: event.target.value.toUpperCase() })} className="input-field" /></label>
           </div>
           <label className="grid gap-2 text-sm font-medium text-neutral-600">Observações<textarea name="observacoes" rows={2} maxLength={2000} value={registrationData.observacoes} onChange={(event) => setRegistrationData({ ...registrationData, observacoes: event.target.value })} className="input-field resize-none" /></label>
-          <div className="flex gap-3"><button type="button" onClick={() => setRegisterStage(referralInfo?.isDefaultCode ? 'voucher' : 'confirm')} className="btn-secondary flex-1">Voltar</button><button type="submit" disabled={loading} className="btn-primary flex-1">{loading ? 'Enviando...' : 'Finalizar cadastro'}</button></div>
+          <div className="flex gap-3"><button type="button" onClick={() => setRegisterStage(referralInfo?.isDefaultCode ? 'voucher' : 'confirm')} className="btn-secondary flex-1">Voltar</button><button type="submit" disabled={loading} className="btn-primary flex-1">{loading ? 'Validando...' : 'Continuar para ativação'}</button></div>
         </form>
+      )}
+
+      {mode === 'register' && registerStage === 'whatsapp' && (
+        <WhatsAppPinVerification
+          initialPhone={registrationData.telefone}
+          onVerified={(verifiedPhone) => {
+            setRegistrationData({ ...registrationData, telefone: verifiedPhone });
+            setRegisterStage('setup_pin');
+          }}
+          onCancel={() => setRegisterStage('form')}
+        />
+      )}
+
+      {mode === 'register' && registerStage === 'setup_pin' && (
+        <SetupAccessPin onComplete={submitFinalRegistration} loading={loading} />
       )}
     </Modal>
   );
