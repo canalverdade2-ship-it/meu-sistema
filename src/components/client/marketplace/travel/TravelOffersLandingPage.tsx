@@ -36,11 +36,11 @@ const categories = [
   {
     id: 'excursoes',
     icon: Luggage,
-    title: 'Excursões Exclusivas',
-    sub: 'Roteiros curados e guias especializados para grupos',
-    label: 'Em grupo',
-    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85',
-    imageAlt: 'Grupo de pessoas reunido durante uma experiência de viagem',
+    title: 'Promoções Exclusivas',
+    sub: 'Pacotes com descontos especiais e por tempo limitado',
+    label: 'Ofertas',
+    image: 'https://images.unsplash.com/photo-1582719478250-c89400bb379b?auto=format&fit=crop&w=1200&q=85',
+    imageAlt: 'Resort de luxo em promoção',
     accent: '#065a82',
     path: routes.marketplace.travelPackages.ofertasExcursoes()
   },

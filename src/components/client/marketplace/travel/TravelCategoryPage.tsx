@@ -32,13 +32,13 @@ const CATEGORY_INFO = {
     headerImg: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1200&q=80',
   },
   excursao: {
-    title: 'Excursões Exclusivas',
+    title: 'Promoções Exclusivas',
     icon: Luggage,
     bg: 'bg-[#1b3a4b]',
     textColor: 'text-[#7dd3fc]',
     accent: '#065a82',
     headerBg: 'bg-[#1b3a4b]',
-    headerImg: 'https://images.unsplash.com/photo-1522199755839-a2bacb67c546?auto=format&fit=crop&w=1200&q=80',
+    headerImg: 'https://images.unsplash.com/photo-1582719478250-c89400bb379b?auto=format&fit=crop&w=1200&q=80',
   }
 };
 

@@ -29,8 +29,8 @@ const categories = [
   },
   {
     icon: Luggage,
-    title: 'Excursões Exclusivas',
-    sub: 'Roteiros curados e guias especializados para membros',
+    title: 'Promoções Exclusivas',
+    sub: 'Pacotes com descontos especiais e por tempo limitado',
     gradient: 'from-[#0c1821] via-[#1b3a4b] to-[#065a82]',
     accentColor: '#7dd3fc',
     iconBg: 'bg-[#7dd3fc]',
