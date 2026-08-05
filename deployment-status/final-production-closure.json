@@ -1,8 +1,8 @@
 {
   "status": "failure",
-  "workflow_run_id": "30855251829",
-  "validated_sha": "1001df373c49c2014716a2c486dace33da4cdad2",
-  "validated_at_utc": "2026-08-03T21:36:41Z",
+  "workflow_run_id": "31028157469",
+  "validated_sha": "17ee1ca47d379c7aa81b5f71cd72d8ec9854d8a0",
+  "validated_at_utc": "2026-08-05T17:04:11Z",
   "scope": "admin-collaborator-client-provider-home-travel-products-subscriptions-supabase",
   "migrations": "failure",
   "database_objects": "failure",
