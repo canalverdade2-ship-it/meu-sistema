@@ -38,7 +38,7 @@ const CATEGORY_INFO = {
     textColor: 'text-[#7dd3fc]',
     accent: '#065a82',
     headerBg: 'bg-[#1b3a4b]',
-    headerImg: 'https://images.unsplash.com/photo-1582719478250-c89400bb379b?auto=format&fit=crop&w=1200&q=80',
+    headerImg: '/images/promocoes_exclusivas_cover.jpg',
   }
 };
 

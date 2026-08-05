@@ -39,7 +39,7 @@ const categories = [
     title: 'Promoções Exclusivas',
     sub: 'Pacotes com descontos especiais e por tempo limitado',
     label: 'Ofertas',
-    image: 'https://images.unsplash.com/photo-1582719478250-c89400bb379b?auto=format&fit=crop&w=1200&q=85',
+    image: '/images/promocoes_exclusivas_cover.jpg',
     imageAlt: 'Resort de luxo em promoção',
     accent: '#065a82',
     path: routes.marketplace.travelPackages.ofertasExcursoes()
