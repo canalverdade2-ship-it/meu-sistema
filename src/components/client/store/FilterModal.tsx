@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { Check, RotateCcw, SlidersHorizontal, Tag } from 'lucide-react';
 import { Modal } from '../../ui/Modal';
 
 type SortOption = 'none' | 'price-asc' | 'price-desc' | 'alpha-asc' | 'alpha-desc';
@@ -13,14 +13,15 @@ interface FilterModalProps {
   setMinPrice: (value: number | '') => void;
   maxPrice: number | '';
   setMaxPrice: (value: number | '') => void;
+  categories?: Array<{ id: string; nome: string }>;
+  selectedCategoryId?: string;
+  onSelectCategory?: (id: string) => void;
 }
 
 const SORT_OPTIONS: Array<{ id: SortOption; label: string; description: string }> = [
   { id: 'none', label: 'Relevância', description: 'Ordem recomendada pela loja' },
   { id: 'price-asc', label: 'Menor preço', description: 'Do mais barato ao mais caro' },
   { id: 'price-desc', label: 'Maior preço', description: 'Do mais caro ao mais barato' },
-  { id: 'alpha-asc', label: 'Nome: A a Z', description: 'Ordem alfabética crescente' },
-  { id: 'alpha-desc', label: 'Nome: Z a A', description: 'Ordem alfabética decrescente' },
 ];
 
 export default function FilterModal({
@@ -32,22 +33,26 @@ export default function FilterModal({
   setMinPrice,
   maxPrice,
   setMaxPrice,
+  categories = [],
+  selectedCategoryId = 'todas',
+  onSelectCategory,
 }: FilterModalProps) {
   if (!isOpen) return null;
 
   const hasInvalidRange = minPrice !== '' && maxPrice !== '' && Number(minPrice) > Number(maxPrice);
-  const hasFilters = sortBy !== 'none' || minPrice !== '' || maxPrice !== '';
+  const hasFilters = sortBy !== 'none' || minPrice !== '' || maxPrice !== '' || selectedCategoryId !== 'todas';
 
   const clearFilters = () => {
     setSortBy('none');
     setMinPrice('');
     setMaxPrice('');
+    if (onSelectCategory) onSelectCategory('todas');
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Filtrar produtos" size="sm">
       <div className="space-y-7 p-1 sm:p-2">
-        <div className="rounded-2xl border border-slate-200 bg-[#f7f8fa] p-4">
+        <div className="hidden sm:block rounded-2xl border border-slate-200 bg-[#f7f8fa] p-4">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#17345f] text-white">
               <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
@@ -60,6 +65,45 @@ export default function FilterModal({
             </div>
           </div>
         </div>
+
+        {categories.length > 0 && (
+          <section aria-labelledby="store-categories-title">
+            <h4 id="store-categories-title" className="mb-3 text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500 flex items-center gap-1.5">
+              <Tag className="h-3.5 w-3.5 text-slate-400" />
+              Categoria
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => onSelectCategory?.('todas')}
+                className={`rounded-xl border px-3.5 py-2 text-xs font-bold transition ${
+                  selectedCategoryId === 'todas'
+                    ? 'border-[#17345f] bg-[#17345f] text-white shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                Todas as categorias
+              </button>
+              {categories.map((cat) => {
+                const selected = selectedCategoryId === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => onSelectCategory?.(cat.id)}
+                    className={`rounded-xl border px-3.5 py-2 text-xs font-bold transition ${
+                      selected
+                        ? 'border-[#17345f] bg-[#17345f] text-white shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    {cat.nome}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <section aria-labelledby="store-sort-title">
           <h4 id="store-sort-title" className="mb-3 text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">
