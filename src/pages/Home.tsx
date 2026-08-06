@@ -6,6 +6,8 @@ import { LoginHub } from '../components/public/LoginHub';
 import { ClientAccessModalWithReturn as ClientAccessModal, type ClientAccessMode } from '../components/auth/ClientAccessModalWithReturn';
 import {
   getServicePackageSlug,
+  publicServices,
+  servicePackages,
   type Audience,
   type IconItem,
   type PublicPage,
@@ -63,8 +65,8 @@ export function Home({
   const [publicAudience, setPublicAudience] = useState<Audience>('PF');
   const [clientModalOpen, setClientModalOpen] = useState(false);
   const [clientMode, setClientMode] = useState<ClientAccessMode>('login');
-  const [managedPackages, setManagedPackages] = useState<ServicePackage[]>([]);
-  const [managedServices, setManagedServices] = useState<IconItem[]>([]);
+  const [managedPackages, setManagedPackages] = useState<ServicePackage[]>(servicePackages);
+  const [managedServices, setManagedServices] = useState<IconItem[]>(publicServices);
 
   const selectedPackage = useMemo(() => (
     initialServiceSlug
@@ -112,23 +114,26 @@ export function Home({
     let active = true;
     fetchPublicServiceCatalog().then((catalog) => {
       if (!active) return;
-      setManagedPackages(catalog.packages.map((item) => ({
-        id: item.id,
-        code: item.code,
-        audience: item.audience,
-        title: item.title,
-        subtitle: item.subtitle,
-        description: item.description,
-        services: item.services,
-      })));
-      setManagedServices(catalog.services.map((item) => ({
-        icon: BriefcaseBusiness,
-        title: item.title,
-        text: item.description,
-      })));
+      if (catalog.packages && catalog.packages.length > 0) {
+        setManagedPackages(catalog.packages.map((item) => ({
+          id: item.id,
+          code: item.code,
+          audience: item.audience,
+          title: item.title,
+          subtitle: item.subtitle,
+          description: item.description,
+          services: item.services,
+        })));
+      }
+      if (catalog.services && catalog.services.length > 0) {
+        setManagedServices(catalog.services.map((item) => ({
+          icon: BriefcaseBusiness,
+          title: item.title,
+          text: item.description,
+        })));
+      }
     }).catch(() => {
-      setManagedPackages([]);
-      setManagedServices([]);
+      // Mantém pacotes padrão estáticos em caso de erro
     });
     return () => { active = false; };
   }, []);

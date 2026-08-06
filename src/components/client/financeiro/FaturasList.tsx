@@ -1267,7 +1267,7 @@ export function FaturasList({
                     {Number(selectedFatura.acrescimo_manual) > 0 && (
                       <tr>
                         <td className="px-6 py-4">
-                          <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Acréscimo (Ajuste Adm)</p>
+                          <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Acréscimo (Ajuste do Sistema)</p>
                         </td>
                         <td className="px-6 py-4 text-right font-bold text-amber-600">
                           + {formatCurrency(Number(selectedFatura.acrescimo_manual))}
@@ -1278,7 +1278,7 @@ export function FaturasList({
                     {Number(selectedFatura.desconto_manual) > 0 && (
                       <tr>
                         <td className="px-6 py-4">
-                          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Desconto (Ajuste Adm)</p>
+                          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Desconto (Ajuste do Sistema)</p>
                         </td>
                         <td className="px-6 py-4 text-right font-bold text-emerald-600">
                           - {formatCurrency(Number(selectedFatura.desconto_manual))}

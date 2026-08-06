@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { whatsappNotificationService } from '../../../lib/whatsappNotificationService';
 import { Loader2, FileText, MessageSquare } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface AdminWhatsAppButtonProps {
   telefone?: string | null;
@@ -25,9 +26,10 @@ export function AdminWhatsAppButton({
 }: AdminWhatsAppButtonProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const isDisabled = disabled || isGeneratingPDF;
+  const isDisabled = disabled || isGeneratingPDF || isSending;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -43,22 +45,32 @@ export function AdminWhatsAppButton({
     };
   }, [showOptions]);
 
-  const handleAction = (e: React.MouseEvent) => {
+  const handleAction = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     if (!isDisabled) {
       if (onSendWithPDF) {
         setShowOptions(true);
       } else {
-        whatsappNotificationService.abrirWhatsApp(telefone, mensagem);
+        setIsSending(true);
+        const sent = await whatsappNotificationService.enviarWhatsAppDireto(telefone, mensagem);
+        setIsSending(false);
+        if (sent) {
+          toast.success(`Notificação enviada via WhatsApp!`);
+        }
       }
     }
   };
 
-  const sendOnlyMessage = (e: React.MouseEvent) => {
+  const sendOnlyMessage = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowOptions(false);
-    whatsappNotificationService.abrirWhatsApp(telefone, mensagem);
+    setIsSending(true);
+    const sent = await whatsappNotificationService.enviarWhatsAppDireto(telefone, mensagem);
+    setIsSending(false);
+    if (sent) {
+      toast.success(`Notificação enviada via WhatsApp!`);
+    }
   };
 
   const sendWithPDF = async (e: React.MouseEvent) => {
@@ -91,7 +103,7 @@ export function AdminWhatsAppButton({
           onMouseLeave={() => setShowPreview(false)}
           disabled={isDisabled}
           type="button"
-          title={!telefone ? 'Compartilhar via WhatsApp' : tooltip}
+          title={isSending ? 'Enviando notificação...' : tooltip}
           className={`
             relative h-10 w-10 rounded-full flex items-center justify-center
             transition-all duration-200 group
@@ -105,7 +117,7 @@ export function AdminWhatsAppButton({
           {!isDisabled && !showOptions && (
             <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-20 pointer-events-none" />
           )}
-          {isGeneratingPDF ? <Loader2 className="animate-spin h-5 w-5" /> : whatsappIcon}
+          {isSending || isGeneratingPDF ? <Loader2 className="animate-spin h-5 w-5" /> : whatsappIcon}
         </button>
 
         {/* Preview da mensagem ao hover (Ponte invisível para não perder o hover) */}
@@ -125,12 +137,12 @@ export function AdminWhatsAppButton({
               {/* Header do preview */}
               <div className="flex items-center gap-2 px-4 py-3 bg-[#202c33] border-b border-white/5">
               <div className="w-7 h-7 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                {React.cloneElement(whatsappIcon as React.ReactElement, { width: '14', height: '14' })}
+                {React.cloneElement(whatsappIcon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { width: 14, height: 14 })}
               </div>
               <div>
                 <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Pré-visualização</p>
                 <p className="text-[9px] text-white/40 font-medium mt-0.5">
-                  {telefone ? `+55 ${telefone}` : 'Sem número — busca manual'}
+                  {telefone ? `+55 ${telefone}` : 'Busca automática no sistema'}
                 </p>
               </div>
             </div>
@@ -144,8 +156,8 @@ export function AdminWhatsAppButton({
 
             {/* Footer do preview */}
             <div className="px-4 py-2.5 bg-[#202c33] border-t border-white/5">
-              <p className="text-[9px] text-white/30 font-medium text-center">
-                {onSendWithPDF ? 'Clique para ver as opções de envio' : 'Clique no botão para abrir o WhatsApp'}
+              <p className="text-[9px] text-[#25D366] font-bold text-center">
+                Clique no botão para enviar a notificação instantaneamente
               </p>
             </div>
             </div>

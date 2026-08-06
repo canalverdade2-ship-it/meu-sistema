@@ -76,7 +76,7 @@ export function clearStoredProSession(tool: ProToolId) {
 }
 
 async function invoke<T>(action: string, tool: ProToolId, payload: Record<string, unknown> = {}): Promise<T> {
-  const { data, error } = await supabase.functions.invoke('gsa-free-tools-pro', {
+  const { data, error } = await supabase.functions.invoke('gsa-free-tools', {
     body: {
       action,
       payload: {

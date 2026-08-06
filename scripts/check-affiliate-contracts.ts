@@ -61,6 +61,15 @@ async function main() {
     'GRANT EXECUTE ON FUNCTION public.gsa_public_register_affiliate(jsonb) TO service_role',
   ]);
 
+  await contains('supabase/migrations/20260729110000_fix_affiliate_all_issues.sql', [
+    'bonus_boas_vindas',
+    'gsa_admin_release_affiliate_commissions',
+    'gsa_admin_update_affiliate_details',
+    'gsa_admin_adjust_affiliate_balance',
+    'gsa_admin_update_global_saque_minimo',
+    'points_events',
+  ]);
+
   await contains('src/features/affiliates/service.ts', [
     "callClientRpc('gsa_client_affiliate_snapshot')",
     "callClientRpc('gsa_client_create_affiliate_link'",

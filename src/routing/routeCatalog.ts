@@ -243,6 +243,7 @@ export const routes = {
   // Portal do Anunciante
   advertiser: {
     root: () => '/anuncios/login', // DUPLICADO: mesma rota de login.advertiser
+    login: () => '/anuncios/login',
     proposals: () => '/anuncios/propostas',
     campaigns: () => '/anuncios/campanhas',
     creatives: () => '/anuncios/criativos',
@@ -326,6 +327,7 @@ export const routes = {
   // Prestador
   provider: {
     home: () => '/prestador',
+    login: () => '/login/prestador',
     dashboard: () => '/prestador/dashboard',
     payables: () => '/prestador/financeiro',
     demands: () => '/prestador/demandas',
@@ -347,6 +349,7 @@ export const routes = {
   // Fornecedor (Portal do Fornecedor)
   supplier: {
     home: () => '/fornecedor',
+    login: () => '/fornecedor/login',
     dashboard: () => '/fornecedor/dashboard',
     products: () => '/fornecedor/produtos',
     product: (id: string) => `/fornecedor/produtos/${id}`,

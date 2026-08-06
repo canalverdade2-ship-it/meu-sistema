@@ -59,39 +59,32 @@ export function PublicHomeLanding({ reduceMotion, setPublicPage, onGuestStore }:
       action: () => setPublicPage('systems'),
     },
     {
-      eyebrow: 'GSA Saúde',
-      title: 'Solicitar uma cotação de saúde',
-      description: 'Individual, familiar, empresarial ou odontológico.',
-      icon: HeartPulse,
-      action: () => navigate(routes.marketplace.saude.root()),
-    },
-    {
-      eyebrow: 'GSA Seguros',
-      title: 'Encontrar a proteção adequada',
-      description: 'Auto, residencial, vida e soluções empresariais.',
-      icon: ShieldCheck,
-      action: () => navigate(routes.marketplace.seguros.root()),
-    },
-    {
-      eyebrow: 'GSA Store',
-      title: 'Comprar produtos e soluções',
-      description: 'Uma experiência comercial integrada ao ecossistema GSA.',
-      icon: ShoppingBag,
-      action: openStore,
-    },
-    {
       eyebrow: 'Gestão',
-      title: 'Contratar apoio administrativo',
+      title: 'Contratar Serviços',
       description: 'Serviços e assinaturas para pessoas, MEIs e empresas.',
       icon: BriefcaseBusiness,
       action: () => setPublicPage('services'),
     },
     {
-      eyebrow: 'Orientação',
-      title: 'Ainda não sei qual solução escolher',
-      description: 'Conheça o ecossistema e encontre o caminho mais adequado.',
-      icon: Search,
-      action: () => document.getElementById('ecossistema-gsa')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' }),
+      eyebrow: 'GSA Store',
+      title: 'Produtos e Soluções',
+      description: 'Uma experiência comercial integrada ao ecossistema GSA.',
+      icon: ShoppingBag,
+      action: openStore,
+    },
+    {
+      eyebrow: 'Jornada de Marca',
+      title: 'Identidade & Web Design',
+      description: 'Nome, identidade, presença digital, site e estrutura de marca conectados.',
+      icon: Palette,
+      action: () => navigate('/empresa-do-zero-ao-digital'),
+    },
+    {
+      eyebrow: 'Utilidade pública',
+      title: 'Serviços gratuitos',
+      description: 'Calculadoras, simuladores e ferramentas para decisões do dia a dia.',
+      icon: Calculator,
+      action: () => setPublicPage('free-tools'),
     },
   ];
 
@@ -243,7 +236,7 @@ export function PublicHomeLanding({ reduceMotion, setPublicPage, onGuestStore }:
             </motion.div>
           </div>
 
-          <div className="grid border-y border-white/15 py-5 text-xs font-bold uppercase tracking-[0.18em] text-white/55 sm:grid-cols-3">
+          <div className="hidden border-y border-white/15 py-5 text-xs font-bold uppercase tracking-[0.18em] text-white/55 sm:grid sm:grid-cols-3">
             <div className="py-2 sm:border-r sm:border-white/15 sm:pr-6">Soluções para pessoas</div>
             <div className="py-2 sm:border-r sm:border-white/15 sm:px-6">Estrutura para empresas</div>
             <div className="py-2 sm:pl-6">Experiências conectadas</div>

@@ -171,7 +171,7 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
         const data = await executeSubscriptionCancellation(
           ordem,
           getLocalDateInputValue(),
-          motivo || 'Cancelamento imediato da ordem pelo administrador'
+          motivo || 'Cancelamento imediato da ordem pelo sistema'
         );
 
         toast.success((data as any)?.already_processed
@@ -642,7 +642,7 @@ export function AssinaturaDetails({
                   <CheckCircle className="h-4 w-4" /> Ativar Assinatura
                 </button>
                 <button 
-                  onClick={() => onUpdateStatus(ordem.id, 'cancelado', 'Cancelado pelo administrador')}
+                  onClick={() => onUpdateStatus(ordem.id, 'cancelado', 'Cancelado pelo sistema')}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 py-3 text-xs font-black uppercase tracking-widest transition-all ring-1 ring-red-100"
                 >
                   <XCircle className="h-4 w-4" /> Cancelar Ordem

@@ -1,0 +1,13 @@
+﻿name = "gsa-hub-r2-worker"
+main = "index.js"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "gsa-hub-storage"
+
+[vars]
+SUPABASE_URL = "https://ocgajvagxagutfvgxwsy.supabase.co"
+R2_PUBLIC_URL = "https://pub-7f7b1419c83c407ba9bcf6512329e79a.r2.dev"
+ALLOWED_ORIGINS = "https://gsa-hub.pages.dev,http://localhost:3000,http://localhost:5173"

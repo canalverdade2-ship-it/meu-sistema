@@ -21,13 +21,15 @@ const SESSION_STORAGE_KEY = '_gsa_session';
 let restoreSessionPromise: Promise<StoredSession | null> | null = null;
 let endSessionPromise: Promise<void> | null = null;
 
-function getSessionStorage() {
-  return typeof window === 'undefined' ? null : window.sessionStorage;
+function getStorage() {
+  return typeof window === 'undefined' ? null : window.localStorage;
 }
 
 function readStoredSession(): StoredSession | null {
   try {
-    const stored = getSessionStorage()?.getItem(SESSION_STORAGE_KEY);
+    const storage = getStorage();
+    if (!storage) return null;
+    const stored = storage.getItem(SESSION_STORAGE_KEY) || window.sessionStorage?.getItem(SESSION_STORAGE_KEY);
     if (!stored) return null;
     return JSON.parse(stored) as StoredSession;
   } catch {
@@ -36,13 +38,15 @@ function readStoredSession(): StoredSession | null {
 }
 
 function writeStoredSession(sessionData: StoredSession) {
-  getSessionStorage()?.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
-  localStorage.removeItem('sessaoId');
-  localStorage.removeItem('_gsa_sess');
+  const dataStr = JSON.stringify(sessionData);
+  getStorage()?.setItem(SESSION_STORAGE_KEY, dataStr);
+  window.sessionStorage?.setItem(SESSION_STORAGE_KEY, dataStr);
+  localStorage.setItem('sessaoId', sessionData.sessaoId);
 }
 
 function clearStoredSession() {
-  getSessionStorage()?.removeItem(SESSION_STORAGE_KEY);
+  getStorage()?.removeItem(SESSION_STORAGE_KEY);
+  window.sessionStorage?.removeItem(SESSION_STORAGE_KEY);
   localStorage.removeItem('sessaoId');
   localStorage.removeItem('_gsa_sess');
   localStorage.removeItem('lastPing');

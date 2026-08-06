@@ -375,10 +375,10 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
         for (const file of novaDemandaArquivos) {
           const ext = file.name.split('.').pop();
           const path = `briefings/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-          const { error: uploadError } = await supabase.storage.from('entregas_demandas').upload(path, file);
+          const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'entregas_demandas', path);
           if (uploadError) throw uploadError;
 
-          const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
+          // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
           arquivosBriefing.push({ nome: file.name, url: publicUrl, tipo: file.type, tamanho: file.size });
         }
       }
@@ -865,9 +865,9 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
         const fileExt = transferFile.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
         const filePath = `transfers/${selectedDemanda.id}/${fileName}`;
-        const { error: uploadError } = await supabase.storage.from('entregas_demandas').upload(filePath, transferFile);
+        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(transferFile, 'entregas_demandas', filePath);
         if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(filePath);
+        // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         arquivoUrl = publicUrl;
       }
 
@@ -2831,10 +2831,10 @@ export function AdminOSSuporteChat({ osId, remetenteId, remetenteNome, clienteId
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         const path = `suporte/${osId}/${fileName}`;
         
-        const { error: uErr } = await supabase.storage.from('entregas_demandas').upload(path, anexoFile);
+        const { error: uErr , url: __publicUrl, path: __r2Path } = await uploadToR2(anexoFile, 'entregas_demandas', path);
         if (uErr) throw uErr;
         
-        const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
+        // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         
         const anexoStr = `[ANEXO|${anexoFile.name}|${publicUrl}]`;
         mensagemTexto = mensagemTexto ? `${mensagemTexto}\n\n${anexoStr}` : anexoStr;

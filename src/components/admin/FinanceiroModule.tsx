@@ -660,7 +660,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
         await notificationService.notifyClient(
           t.cliente_origem_id,
           'Transferência aprovada',
-          `Sua transferência de ${t.tipo?.toLowerCase().includes('ponto') ? `${Number(t.valor).toLocaleString('pt-BR')} pts` : formatCurrency(t.valor)} foi aprovada pelo administrador.`,
+          `Sua transferência de ${t.tipo?.toLowerCase().includes('ponto') ? `${Number(t.valor).toLocaleString('pt-BR')} pts` : formatCurrency(t.valor)} foi aprovada pelo sistema.`,
           'financeiro',
           'transferencia_aprovada',
           { prioridade: 'alta', contexto: { transferencia_id: t.id, valor: t.valor } }
@@ -767,7 +767,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
         await notificationService.notifyClient(
           t.cliente_origem_id,
           'Transferência estornada',
-          `Sua transferência para ${t.cliente_destino?.nome} foi estornada pelo administrador. O valor foi devolvido à sua conta.`,
+          `Sua transferência para ${t.cliente_destino?.nome} foi estornada pelo sistema. O valor foi devolvido à sua conta.`,
           'financeiro',
           'transferencia_aprovada'
         );
@@ -776,7 +776,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
         await notificationService.notifyClient(
           t.cliente_destino_id,
           'Transferência revertida',
-          `Uma transferência recebida de ${t.cliente_origem?.nome} foi estornada pelo administrador.`,
+          `Uma transferência recebida de ${t.cliente_origem?.nome} foi estornada pelo sistema.`,
           'financeiro',
           'transferencia_recusada'
         );
@@ -829,6 +829,41 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
         acao: 'BAIXAR_FATURA_MANUAL',
         detalhes: `Baixa manual da fatura #${fatura.codigo_fatura} via ${method}`
       });
+
+      // Busca a fatura atualizada para pegar todos os descontos reais do banco
+      const { data: updatedFatura } = await supabase
+        .from('faturas')
+        .select(`
+          *,
+          clientes (
+            nome,
+            telefone
+          )
+        `)
+        .eq('id', fatura.id)
+        .single();
+
+      if (updatedFatura && updatedFatura.clientes?.telefone) {
+        const mensagemWhats = whatsappNotificationService.gerarMensagemWhatsApp({
+          tipo: 'fatura',
+          clienteNome: updatedFatura.clientes.nome,
+          codigo: updatedFatura.codigo_fatura,
+          status: updatedFatura.status,
+          dataVencimento: updatedFatura.data_vencimento ? formatDate(updatedFatura.data_vencimento) : undefined,
+          valorTotal: formatCurrency(updatedFatura.valor_total),
+          formaPagamento: method,
+          valorLiquido: formatCurrency(updatedFatura.valor_pago || updatedFatura.valor_total),
+          cupomAplicado: updatedFatura.voucher_codigo,
+          valorCupom: updatedFatura.desconto_voucher_aplicado > 0 ? formatCurrency(updatedFatura.desconto_voucher_aplicado) : undefined,
+          pontosUtilizados: updatedFatura.pontos_utilizados > 0 ? updatedFatura.pontos_utilizados : undefined,
+          valorPontos: updatedFatura.desconto_pontos_aplicado > 0 ? formatCurrency(updatedFatura.desconto_pontos_aplicado) : undefined,
+          saldoCarteiraUtilizado: updatedFatura.abatimento_carteira_aplicado > 0 ? formatCurrency(updatedFatura.abatimento_carteira_aplicado) : undefined,
+        });
+
+        // Dispara o WhatsApp em background
+        whatsappNotificationService.enviarWhatsAppDireto(updatedFatura.clientes.telefone, mensagemWhats)
+          .catch(err => console.warn('Falha silenciosa ao enviar WhatsApp automático', err));
+      }
     } catch (error: any) {
       console.error('Erro na baixa manual:', error);
       toast.error(error?.message || 'Erro ao processar baixa administrativa.');
@@ -904,7 +939,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
       await notificationService.notifyClient(
         fatura.cliente_id,
         'Fatura cancelada',
-        `Sua fatura #${fatura.codigo_fatura} foi cancelada pelo administrador.`,
+        `Sua fatura #${fatura.codigo_fatura} foi cancelada pelo sistema.`,
         'financeiro',
         'fatura_cancelada',
         { itemId: fatura.id, contexto: { fatura_id: fatura.id, codigo: fatura.codigo_fatura } }
@@ -913,7 +948,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
       await createNotification(
         fatura.cliente_id,
         'Fatura cancelada',
-        `Sua fatura #${fatura.codigo_fatura} foi cancelada pelo administrador.`,
+        `Sua fatura #${fatura.codigo_fatura} foi cancelada pelo sistema.`,
         'financeiro',
         'faturas',
         fatura.id,
@@ -2302,7 +2337,7 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
   );
 }
 
-function FaturaDetails({ 
+export function FaturaDetails({ 
   fatura, 
   onManualPay, 
   onCancel,
@@ -2312,9 +2347,9 @@ function FaturaDetails({
   colaboradorNome
 }: { 
   fatura: any, 
-  onManualPay: (method: string, dateTime: string, notes: string) => void,
-  onCancel: () => void,
-  onGerarFiscal: () => void,
+  onManualPay?: (method: string, dateTime: string, notes: string) => void,
+  onCancel?: () => void,
+  onGerarFiscal?: () => void,
   onEnviarParaCobranca?: () => void,
   colaboradorId?: string,
   colaboradorNome?: string
@@ -2431,10 +2466,34 @@ function FaturaDetails({
       const baseOriginal = Number(data?.valor_base_original ?? fatura.valor_base_original ?? fatura.valor_total);
       const novoHistorico = data?.historico_ajustes || fatura.historico_ajustes || [];
 
+      let detalheAjuste = '';
+      if (acrescimo > 0 && desconto > 0) {
+        detalheAjuste = `• *Acréscimo:* + ${formatCurrency(acrescimo)}\n• *Desconto:* - ${formatCurrency(desconto)}`;
+      } else if (acrescimo > 0) {
+        detalheAjuste = `• *Acréscimo Aplicado:* + ${formatCurrency(acrescimo)}`;
+      } else if (desconto > 0) {
+        detalheAjuste = `• *Desconto Aplicado:* - ${formatCurrency(desconto)}`;
+      } else {
+        detalheAjuste = `• *Ajuste de Valor:* Valor atualizado`;
+      }
+
+      const mensagemNotificacao = [
+        `Informamos que houve um ajuste nos valores da sua fatura *#${fatura.codigo_fatura}*.`,
+        ``,
+        `📊 *DETALHES DO AJUSTE:*`,
+        `• *Valor Anterior:* ${formatCurrency(baseOriginal)}`,
+        detalheAjuste,
+        `• *Novo Valor Total:* *${formatCurrency(novoTotal)}*`,
+        `• *Motivo / Justificativa:* _${ajusteMotivo.trim()}_`,
+        ``,
+        `▶️ *PRÓXIMO PASSO:*`,
+        `Acesse o Portal do Cliente GSA para conferir os detalhes e realizar o pagamento.`
+      ].join('\n');
+
       await createNotification(
         fatura.cliente_id,
         'Fatura Atualizada',
-        `O valor da sua fatura #${fatura.codigo_fatura} foi ajustado para ${formatCurrency(novoTotal)}. Motivo: ${ajusteMotivo.trim()}`,
+        mensagemNotificacao,
         'financeiro',
         'faturas',
         fatura.id,
@@ -2451,11 +2510,14 @@ function FaturaDetails({
 
       toast.success(`Ajuste aplicado! Novo valor: ${formatCurrency(novoTotal)}`);
       fatura.valor_total = novoTotal;
+      fatura.valor_final_pendente = Math.max(0, novoTotal - Number(fatura.valor_pago || 0));
       fatura.desconto_manual = desconto;
       fatura.acrescimo_manual = acrescimo;
       fatura.valor_base_original = baseOriginal;
       fatura.historico_ajustes = novoHistorico;
       setAjusteMotivo('');
+      setAjusteDesconto('');
+      setAjusteAcrescimo('');
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || 'Erro ao aplicar ajuste.');
@@ -2465,41 +2527,40 @@ function FaturaDetails({
   };
 
   const handleSendFaturaWithPDF = async () => {
-    if (!fatura.clientes?.telefone) {
-      toast.error("Cliente sem telefone cadastrado");
-      return;
-    }
-    
     try {
       setIsGeneratingPDF(true);
-      toast.loading('Gerando e anexando PDF...', { id: 'pdf-toast' });
+      toast.loading('Gerando PDF da fatura...', { id: 'pdf-toast' });
       
       const os = fatura.ordens_servico;
       const doc = await generateFaturaPDF(fatura, fatura.clientes, os, { returnDoc: true }) as any;
       if (!doc) throw new Error("Erro ao gerar PDF");
 
-      const result = await pdfSharingService.uploadAndGetLink(doc, `fatura_${fatura.codigo_fatura}.pdf`);
-      
-      if (result) {
-        toast.success('Pronto! Abrindo WhatsApp...', { id: 'pdf-toast' });
-        
-        const mensagemBase = whatsappNotificationService.gerarMensagemWhatsApp({
-          tipo: 'fatura',
-          clienteNome: fatura.clientes?.nome,
-          codigo: fatura.codigo_fatura,
-          status: fatura.status === 'pago' ? 'Paga' : fatura.status === 'vencida' ? 'Vencida' : fatura.status === 'cancelado' ? 'Cancelada' : 'Pendente',
-          dataVencimento: fatura.data_vencimento ? formatDate(fatura.data_vencimento) : undefined,
-          valorTotal: formatCurrency(fatura.valor_total)
-        });
+      const pdfBase64 = doc.output('datauristring');
 
-        const mensagemComLink = `${mensagemBase}\n\n📎 *Acesse o PDF da sua Fatura aqui:*\n${result.url}`;
-        whatsappNotificationService.abrirWhatsApp(fatura.clientes.telefone, mensagemComLink);
-      } else {
-        throw new Error("Erro no upload");
+      const mensagemBase = whatsappNotificationService.gerarMensagemWhatsApp({
+        tipo: 'fatura',
+        clienteNome: fatura.clientes?.nome,
+        codigo: fatura.codigo_fatura,
+        status: fatura.status === 'pago' ? 'Paga' : fatura.status === 'vencida' ? 'Vencida' : fatura.status === 'cancelado' ? 'Cancelada' : 'Pendente',
+        dataVencimento: fatura.data_vencimento ? formatDate(fatura.data_vencimento) : undefined,
+        valorTotal: formatCurrency(fatura.valor_total)
+      });
+
+      const sent = await whatsappNotificationService.enviarWhatsAppDireto(
+        fatura.clientes?.telefone, 
+        mensagemBase,
+        {
+          mediaBase64: pdfBase64,
+          fileName: `fatura_${fatura.codigo_fatura}.pdf`
+        }
+      );
+
+      if (sent) {
+        toast.success('✅ PDF da fatura e notificação enviados no WhatsApp!', { id: 'pdf-toast' });
       }
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao enviar com PDF', { id: 'pdf-toast' });
+      toast.error('Erro ao enviar notificação com PDF', { id: 'pdf-toast' });
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -2956,7 +3017,7 @@ function FaturaDetails({
             </div>
 
             <button 
-              onClick={() => onManualPay(paymentMethod, paymentDateTime, paymentNotes)}
+              onClick={() => onManualPay && onManualPay(paymentMethod, paymentDateTime, paymentNotes)}
               disabled={!paymentNotes}
               className="w-full rounded-xl bg-emerald-600 py-3 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
@@ -3089,7 +3150,7 @@ function FaturaDetails({
         {/* Cancelar Fatura */}
         {fatura.status !== 'cancelado' && fatura.status !== 'pago' && (
           <button 
-            onClick={onCancel}
+            onClick={() => onCancel && onCancel()}
             className="w-full mt-2 rounded-3xl border border-rose-200 bg-white py-4 text-rose-600 font-black uppercase tracking-widest text-[10px] hover:bg-rose-50 transition-all flex items-center justify-center gap-2"
           >
             <XCircle className="h-4 w-4" />
@@ -3103,7 +3164,7 @@ function FaturaDetails({
 }
 
 
-function getFaturaDetails(fat: any) {
+export function getFaturaDetails(fat: any) {
   const os = fat.ordens_servico;
   const oc = fat.ordens_compra;
   const oa = fat.ordens_assinatura;

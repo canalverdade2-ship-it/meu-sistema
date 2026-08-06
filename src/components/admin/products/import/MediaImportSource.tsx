@@ -47,7 +47,7 @@ export function MediaImportSource({ type, onCandidatesReady }: MediaImportSource
 
       // 2. Request Signed URL
       setProgressText('Enviando arquivo com segurança...');
-      const uploadReq = await supabase.functions.invoke('import-products-from-file', {
+      const uploadReq = await supabase.functions.invoke('gsa-product-import', {
         body: {
           action: 'create_upload',
           sessaoId: session.sessaoId,
@@ -58,7 +58,7 @@ export function MediaImportSource({ type, onCandidatesReady }: MediaImportSource
 
       if (uploadReq.error) {
          if (uploadReq.error.message?.includes('Failed to fetch')) {
-            throw new Error('A Edge Function import-products-from-file não está respondendo. Pode não ter sido publicada ainda.');
+            throw new Error('A Edge Function gsa-product-import não está respondendo. Pode não ter sido publicada ainda.');
          }
          throw uploadReq.error;
       }
@@ -91,7 +91,7 @@ export function MediaImportSource({ type, onCandidatesReady }: MediaImportSource
         });
       }, 8000);
 
-      const analyzeReq = await supabase.functions.invoke('import-products-from-file', {
+      const analyzeReq = await supabase.functions.invoke('gsa-product-import', {
         body: {
           action: 'analyze_media',
           sessaoId: session.sessaoId,

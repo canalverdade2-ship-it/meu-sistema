@@ -57,19 +57,57 @@ function normalizeCatalog(value: unknown): ServiceCatalogSnapshot {
   };
 }
 
+import { publicServices as defaultPublicServices, servicePackages as defaultServicePackages } from '../data/publicServiceCatalog';
+
+export function getDefaultPublicServiceCatalog(): ServiceCatalogSnapshot {
+  return {
+    services: defaultPublicServices.map((s, idx) => ({
+      id: `default-svc-${idx + 1}`,
+      name: s.title,
+      title: s.title,
+      description: s.text,
+      audience: 'AMBOS',
+      status: 'ativo',
+      publicVisible: true,
+      quoteAvailable: true,
+      order: idx + 1,
+    })),
+    packages: defaultServicePackages.map((pkg, idx) => ({
+      id: pkg.id || `default-pkg-${idx + 1}`,
+      code: pkg.code || `PCT-${idx + 1}`,
+      title: pkg.title,
+      subtitle: pkg.subtitle,
+      description: pkg.description,
+      audience: pkg.audience,
+      serviceIds: [],
+      services: pkg.services.map((svc, sIdx) => ({
+        id: `svc-${sIdx + 1}`,
+        name: svc.name,
+        desc: svc.desc,
+      })),
+      status: 'ativo',
+      publicVisible: true,
+      quoteAvailable: true,
+      order: idx + 1,
+    })),
+  };
+}
+
 export async function fetchPublicServiceCatalog(audience?: 'PF' | 'PJ') {
-  if (isLocalDevHost()) {
-    return normalizeCatalog(null);
-  }
   try {
     const { data, error } = await supabase.rpc('gsa_public_service_catalog', {
       p_audience: audience?.toLowerCase() || null,
     });
-    if (error) throw error;
-    return normalizeCatalog(data);
+    if (!error && data) {
+      const normalized = normalizeCatalog(data);
+      if (normalized.packages.length > 0) {
+        return normalized;
+      }
+    }
   } catch {
-    return normalizeCatalog(null);
+    // RPC não respondeu ou ambiente offline, utiliza catálogo padrão
   }
+  return getDefaultPublicServiceCatalog();
 }
 
 export async function fetchClientServiceCatalog() {

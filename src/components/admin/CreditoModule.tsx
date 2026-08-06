@@ -429,10 +429,10 @@ const enviarOfertaQuitacao = async () => {
       if (contratoFile) {
         const sanitizedName = contratoFile.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
         const uploadPath = `credito_modelos/${selectedRequest.id}/${Date.now()}-${sanitizedName}`;
-        const { error: uploadError } = await supabase.storage.from('emprestimos').upload(uploadPath, contratoFile);
+        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(contratoFile, 'emprestimos', uploadPath);
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage.from('emprestimos').getPublicUrl(uploadPath);
+        // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         finalContratoUrl = publicUrl;
       }
 

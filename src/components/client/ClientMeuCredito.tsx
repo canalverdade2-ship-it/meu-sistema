@@ -498,16 +498,12 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
       const filePath = `credito_documentos/${fileName}`;
       
       // Upload para storage bucket 'documentos_cliente'
-      const { error: uploadError } = await supabase.storage
-        .from('documentos_cliente')
-        .upload(filePath, file);
+      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_cliente', filePath);
 
       if (uploadError) throw uploadError;
 
       // Obter URL pública do arquivo
-      const { data: { publicUrl } } = supabase.storage
-        .from('documentos_cliente')
-        .getPublicUrl(filePath);
+      // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
       // Atualizar status e arquivo_url do documento na tabela loja_credito_documentos
       await clientOperationalWrite(clientId, 'loja_credito_documentos', 'update', {
@@ -548,16 +544,12 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
       const filePath = `credito_contratos/${fileName}`;
       
       // Upload para storage bucket 'documentos_cliente'
-      const { error: uploadError } = await supabase.storage
-        .from('documentos_cliente')
-        .upload(filePath, file);
+      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_cliente', filePath);
 
       if (uploadError) throw uploadError;
 
       // Obter URL pública do arquivo
-      const { data: { publicUrl } } = supabase.storage
-        .from('documentos_cliente')
-        .getPublicUrl(filePath);
+      // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
       // Atualizar status da solicitação
       await clientOperationalWrite(clientId, 'loja_credito_solicitacoes', 'update', {
@@ -628,15 +620,11 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
       const blob = await (await fetch(dataUrl)).blob();
       const path = `credito_contratos/${clientId}/assinatura_${solicitacao.id}_${Date.now()}.png`;
       
-      const { error: uploadError } = await supabase.storage
-        .from('documentos_cliente')
-        .upload(path, blob);
+      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(blob, 'documentos_cliente', path);
         
       if (uploadError) throw uploadError;
       
-      const { data: { publicUrl } } = supabase.storage
-        .from('documentos_cliente')
-        .getPublicUrl(path);
+      // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         
       await clientOperationalWrite(clientId, 'loja_credito_solicitacoes', 'update', {
         contrato_assinado_url: publicUrl,
@@ -1961,8 +1949,8 @@ function getMovimentacaoTitle(tipo: string): string {
     case 'concessao_inicial': return 'Liberação Inicial';
     case 'compra': return 'Compra na GSA Store';
     case 'amortizacao': return 'Pagamento de Amortização';
-    case 'ajuste_adm_aumento': return 'Aumento de Limite (ADM)';
-    case 'ajuste_adm_reducao': return 'Redução de Limite (ADM)';
+    case 'ajuste_adm_aumento': return 'Aumento de Limite (Sistema)';
+    case 'ajuste_adm_reducao': return 'Redução de Limite (Sistema)';
     case 'solicitacao_aumento_aprovada': return 'Aumento de Limite Aprovado';
     case 'estorno_compra': return 'Estorno de Compra';
     default: return tipo;

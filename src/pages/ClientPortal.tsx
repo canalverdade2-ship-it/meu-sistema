@@ -41,6 +41,7 @@ import { Cliente, Module, Notificacao } from '../types';
 import { formatCurrency, playPremiumBeep } from '../lib/utils';
 
 // Roteamento
+import { callClientRpc } from '../lib/clientRpc';
 import { useAppLocation } from '../routing/useAppLocation';
 import { navigate, replace } from '../routing/navigationService';
 import { routes } from '../routing/routeCatalog';
@@ -349,9 +350,23 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
       else if (tab === 'assinaturas') path = routes.client.services.assinaturas();
       else path = routes.client.services.root();
     } else if (module === 'financeiro') {
-      path = routes.client.finance.root();
+      if (tab === 'faturas') path = routes.client.finance.faturas();
+      else if (tab === 'nf' || tab === 'notas-fiscais') path = routes.client.finance.notas();
+      else if (tab === 'extrato') path = routes.client.finance.extrato();
+      else if (tab === 'saques') path = routes.client.finance.saques();
+      else if (tab === 'transferencias') path = routes.client.finance.transferencias();
+      else if (tab === 'credito' || tab === 'credito_loja') path = routes.client.finance.credito();
+      else if (tab === 'emprestimos') path = routes.client.finance.emprestimos();
+      else path = routes.client.finance.root();
     } else if (module === 'fidelidade') {
-      path = routes.client.loyalty.root();
+      if (tab === 'pontos') path = routes.client.loyalty.pontos();
+      else if (tab === 'vouchers') path = routes.client.loyalty.vouchers();
+      else if (tab === 'promocoes') path = routes.client.loyalty.promocoes();
+      else if (tab === 'premios') path = routes.client.loyalty.premios();
+      else if (tab === 'indique-ganhe') path = routes.client.loyalty.indiqueGanhe();
+      else if (tab === 'afiliados') path = routes.client.loyalty.affiliates();
+      else if (tab === 'area-vip' || tab === 'vip') path = routes.client.loyalty.vip();
+      else path = routes.client.loyalty.root();
     } else if (module === 'suporte') {
       path = routes.client.support();
     } else if ((module as string) === 'gsa_store') {
@@ -371,7 +386,8 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
       path = routes.marketplace.classifieds.meusAnuncios();
     }
 
-    navigate(path);
+    if (replaceFlag) replace(path);
+    else navigate(path);
     setModuleKey(prev => prev + 1);
 
     // Auto collapse sidebar if not pinned on desktop
@@ -422,7 +438,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
 
   interface MenuItem {
     id: Module;
-    label: string | React.ReactNode;
+    label: string;
     icon: any;
     count: number;
     locked: boolean;
@@ -822,89 +838,8 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
 
   const verificarLiberacaoCreditoAgendada = async () => {
     try {
-      const hojeStr = new Date().toISOString().split('T')[0];
-      const { data: sols, error } = await supabase
-        .from('loja_credito_solicitacoes')
-        .select('*')
-        .eq('cliente_id', clientId)
-        .in('status', ['contrato_assinado', 'pre_aprovado'])
-        .lte('data_liberacao_credito', hojeStr);
-
-      if (error) throw error;
-
-      if (sols && sols.length > 0) {
-        for (const sol of sols) {
-          if (sol.status === 'contrato_assinado') {
-            const limiteAprovado = sol.limite_aprovado || 0;
-            
-            const { data: cliData } = await supabase
-              .from('clientes')
-              .select('limite_credito_total, limite_credito_disponivel')
-              .eq('id', clientId)
-              .single();
-
-            if (cliData) {
-              const limiteTotalAtual = cliData.limite_credito_total || 0;
-              const limiteDispAtual = cliData.limite_credito_disponivel || 0;
-              
-              let novoLimiteTotal = limiteAprovado;
-              let novoLimiteDisp = limiteDispAtual;
-              let variacao = limiteAprovado;
-              let tipoMov: 'concessao_inicial' | 'solicitacao_aumento_aprovada' = 'concessao_inicial';
-
-              if (sol.tipo_solicitacao === 'adesao') {
-                novoLimiteDisp = limiteAprovado;
-              } else {
-                const diff = limiteAprovado - limiteTotalAtual;
-                novoLimiteDisp = limiteDispAtual + diff;
-                variacao = diff;
-                tipoMov = 'solicitacao_aumento_aprovada';
-              }
-
-              // Atualiza o cliente
-              await supabase
-                .from('clientes')
-                .update({
-                  limite_credito_total: novoLimiteTotal,
-                  limite_credito_disponivel: novoLimiteDisp,
-                  opcao_pagamento_parcelado: sol.opcao_pagamento_parcelado
-                })
-                .eq('id', clientId);
-
-              // Insere movimentacao
-              await supabase
-                .from('loja_credito_movimentacoes')
-                .insert({
-                  cliente_id: clientId,
-                  solicitacao_id: sol.id,
-                  tipo: tipoMov,
-                  valor: variacao,
-                  limite_total_anterior: limiteTotalAtual,
-                  limite_total_novo: novoLimiteTotal,
-                  limite_disponivel_anterior: limiteDispAtual,
-                  limite_disponivel_novo: novoLimiteDisp,
-                  descricao: sol.tipo_solicitacao === 'adesao' 
-                    ? 'Ativação automática de limite de crédito pré-aprovado e assinado' 
-                    : `Ajuste automático de limite: alteração para ${limiteAprovado}`
-                });
-
-              // Atualiza a solicitacao
-              await supabase
-                .from('loja_credito_solicitacoes')
-                .update({ status: 'liberado', updated_at: new Date().toISOString() })
-                .eq('id', sol.id);
-
-              // Envia notificacao
-              await supabase.from('notificacoes').insert({
-                cliente_id: clientId,
-                titulo: 'Crédito Ativo! 💳',
-                mensagem: `Seu limite de crédito de R$ ${limiteAprovado.toFixed(2)} foi liberado e já está disponível para uso na loja!`,
-                link_modulo: 'credito_loja',
-                tipo: 'sistema'
-              });
-            }
-          }
-        }
+      const result = await callClientRpc<{ released?: number }>('gsa_client_process_scheduled_credit_release');
+      if (result && typeof result.released === 'number' && result.released > 0) {
         fetchCliente();
       }
     } catch (err) {
@@ -944,7 +879,8 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   
   const isVip = currentLevelName !== 'Básico';
 
-  const isBlocked = ((cliente?.status === 'inativo' && cliente?.cadastro_aprovado === false) || cliente?.bloqueado === true) && !isVip;
+  const restrictedModules = ['bloqueado', 'inativo', 'excluido'];
+  const isBlocked = (restrictedModules.includes(String(cliente?.status)) && cliente?.cadastro_aprovado === false) || cliente?.bloqueado === true;
 
   let menuItems: MenuItem[] = [
     { id: 'perfil', label: 'Meu Perfil', icon: User, count: pendencies.modulePerfil, locked: false },

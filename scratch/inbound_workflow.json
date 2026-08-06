@@ -1,0 +1,56 @@
+[
+  {
+    "name": "GSA System - WhatsApp Auto-Atendimento",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "whatsapp-inbound",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "name": "Meta Webhook Inbound",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          200,
+          300
+        ],
+        "webhookId": "whatsapp-inbound-webhook"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json.query && $json.query['hub.challenge'] ? $json.query['hub.challenge'] : 'OK' }}",
+          "options": {
+            "responseCode": 200
+          }
+        },
+        "name": "Respond Meta Challenge",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          420,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Meta Webhook Inbound": {
+        "main": [
+          [
+            {
+              "node": "Respond Meta Challenge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": true,
+    "settings": {
+      "executionOrder": "v1"
+    }
+  }
+]

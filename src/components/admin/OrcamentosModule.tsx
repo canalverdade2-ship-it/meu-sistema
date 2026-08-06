@@ -300,7 +300,7 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
       await notificationService.notifyClient(
         selectedOrcamento.cliente_id,
         '📩 Nova Proposta de Negociação',
-        `O administrador enviou uma nova proposta para o orçamento ${selectedOrcamento.codigo_orcamento}. 📝`,
+        `O sistema enviou uma nova proposta para o orçamento ${selectedOrcamento.codigo_orcamento}. 📝`,
         'orcamentos',
         'orcamento_contraproposta',
         { tab: 'abertos', itemId: selectedOrcamento.id, prioridade: 'alta', contexto: { orcamento_id: selectedOrcamento.id, codigo: selectedOrcamento.codigo_orcamento } }
@@ -341,7 +341,7 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
       await notificationService.notifyClient(
         orc.cliente_id,
         '✅ Pedido Aprovado!',
-        `Seu pedido ${orc.codigo_orcamento} foi aprovado pelo administrador. 🚀`,
+        `Seu pedido ${orc.codigo_orcamento} foi aprovado pelo sistema. 🚀`,
         'orcamentos',
         'orcamento_aprovado',
         { tab: 'aprovados', itemId: orc.id, prioridade: 'alta' }
@@ -383,7 +383,7 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
       await notificationService.notifyClient(
         selectedOrcamento.cliente_id,
         '📁 Documentos Solicitados',
-        `Atenção: O administrador solicitou documentos para o orçamento ${selectedOrcamento.codigo_orcamento}. Verifique as pendências no seu portal. 📑`,
+        `Atenção: O sistema solicitou documentos para o orçamento ${selectedOrcamento.codigo_orcamento}. Verifique as pendências no seu portal. 📑`,
         'orcamentos',
         'orcamento_revisado',
         { tab: 'abertos', itemId: selectedOrcamento.id, prioridade: 'alta', contexto: { orcamento_id: selectedOrcamento.id, documentos: finalDocs } }
@@ -639,7 +639,7 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
         await notificationService.notifyClient(
           orc.cliente_id || '',
           '❌ Pedido Cancelado',
-          `Seu pedido ${orc.codigo_orcamento} foi cancelado pelo administrador. ⚠️`,
+          `Seu pedido ${orc.codigo_orcamento} foi cancelado pelo sistema. ⚠️`,
           'orcamentos',
           'orcamento_recusado',
           { tab: 'cancelados', itemId: orc.id, prioridade: 'normal' }

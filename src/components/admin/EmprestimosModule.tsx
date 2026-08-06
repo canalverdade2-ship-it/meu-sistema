@@ -261,12 +261,12 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
     }
     const sanitizedName = contratoFile.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
     const uploadPath = `contratos/${selected.id}/${Date.now()}-${sanitizedName}`;
-    const { error } = await supabase.storage.from('emprestimos').upload(uploadPath, contratoFile);
+    const { error, url: publicUrl, path: r2Path } = await uploadToR2(contratoFile, 'emprestimos', uploadPath);
     if (error) {
       toast.error('Erro ao enviar contrato.');
       return;
     }
-    const { data: { publicUrl } } = supabase.storage.from('emprestimos').getPublicUrl(uploadPath);
+    // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
     try {
       const session = getAdminSessionForRpc();
@@ -304,7 +304,7 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
       const isTaxaZero = Boolean(data?.taxa_zero ?? taxa === 0);
 
       if (isTaxaZero) {
-        await notificationService.notifyClient(selected.cliente_id, 'Emprestimo Aprovado!', 'Seu emprestimo foi aprovado com taxa de servico isenta! Aguarde a ativacao pelo administrador.', 'emprestimos', 'sistema');
+        await notificationService.notifyClient(selected.cliente_id, 'Emprestimo Aprovado!', 'Seu emprestimo foi aprovado com taxa de servico isenta! Aguarde a ativacao pelo sistema.', 'emprestimos', 'sistema');
         toast.success(data?.already_processed ? 'Emprestimo ja estava aprovado.' : 'Aprovado! Taxa isenta e fatura marcada como paga.');
       } else {
         await notificationService.notifyClient(selected.cliente_id, 'Emprestimo Aprovado!', `Seu emprestimo foi aprovado! Pague a taxa de servico de ${formatCurrency(taxa)} para liberar as parcelas.`, 'financeiro', 'sistema');

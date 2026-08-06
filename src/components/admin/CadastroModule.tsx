@@ -1,3 +1,4 @@
+// HMR cache refresh
 import { useState, useEffect } from 'react';
 import { ClientesModule } from './ClientesModule';
 import { ServicosModule } from './ServicosModule';
@@ -6,14 +7,14 @@ import { AssinaturasModule } from './AssinaturasModule';
 import { IndicacoesModule } from './IndicacoesModule';
 import { VouchersModule } from './VouchersModule';
 import PremiosModule from './PremiosModule';
-import { PromocoesModule } from './PromocoesModule';
+import { PromocaoQuantidadeModule } from './PromocaoQuantidadeModule';
 import { CuponsLojaModule } from './CuponsLojaModule';
 import { LojaTrocasModule } from './LojaTrocasModule';
 import { ReembolsosModule } from './ReembolsosModule';
 import { PrestadoresCadastro } from './prestadores/PrestadoresCadastro';
 import { LojaCategoriasModule } from './LojaCategoriasModule';
 import { ServicePackagesModule } from './ServicePackagesModule';
-import { Users, Scissors, Package, Boxes, Zap, Share2, Ticket, Trophy, Megaphone, ShieldCheck, Building2, Store, Tag, ChevronLeft } from 'lucide-react';
+import { Users, Scissors, Package, Boxes, Zap, Share2, Ticket, Trophy, Megaphone, ShieldCheck, Building2, Store, Tag, ChevronLeft, Tags } from 'lucide-react';
 import { useAdminNotifications } from '../../hooks/useAdminNotifications';
 
 type MainTab = 'clientes' | 'servicos' | 'pacotes' | 'produtos' | 'assinaturas' | 'indicacoes' | 'vouchers' | 'premios' | 'promocoes' | 'prestadores' | 'gsa_store' | 'categorias_loja';
@@ -204,7 +205,7 @@ export function CadastroModule({
       icon: Trophy,
       badge: pendencies.cadastro_premios_pendentes
     },
-    { id: 'promocoes', label: 'Promoções', icon: Megaphone },
+    { id: 'promocoes', label: 'Promoções por Quantidade', icon: Tags },
     { id: 'categorias_loja', label: 'Categorias Loja', icon: Tag },
     { id: 'gsa_store', label: 'GSA Store Hub', icon: Store },
   ].filter(tab => isAllowedTab(tab.id as MainTab));
@@ -362,7 +363,7 @@ export function CadastroModule({
         {activeTab === 'indicacoes' && <IndicacoesModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'vouchers' && <VouchersModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'premios' && <PremiosModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
-        {activeTab === 'promocoes' && <PromocoesModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
+        {activeTab === 'promocoes' && <PromocaoQuantidadeModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} />}
         {activeTab === 'gsa_store' && activeSubTab === 'cupons' && <CuponsLojaModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'gsa_store' && activeSubTab === 'trocas' && <LojaTrocasModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'gsa_store' && activeSubTab === 'reembolsos' && <ReembolsosModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}

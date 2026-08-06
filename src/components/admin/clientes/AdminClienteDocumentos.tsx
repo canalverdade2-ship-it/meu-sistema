@@ -80,12 +80,13 @@ export function AdminClienteDocumentos({ clienteId, clienteNome, clienteTelefone
     setActionLoading(true);
     try {
       const tipo = requestData.tipo === 'outro' ? requestData.outroTipo : requestData.tipo;
-      const { error } = await supabase.from('cliente_documentos').insert([{
+      const { data: docData, error } = await supabase.from('cliente_documentos').insert([{
         cliente_id: clienteId,
         nome: requestData.nome,
         tipo,
         status: 'pendente'
-      }]);
+      }]).select('id').single();
+      
       if (error) throw error;
       
       // Criar a notificação alertando o cliente com a rota correta
@@ -97,6 +98,28 @@ export function AdminClienteDocumentos({ clienteId, clienteNome, clienteTelefone
         'documento_solicitado',
         { tab: 'documentos' }
       );
+
+      // Automação: Registrar a pendência para habilitar resposta direta e enviar no WhatsApp
+      if (clienteTelefone) {
+        await supabase.rpc('gsa_registrar_pendencia_whatsapp', {
+          p_cliente_id: clienteId,
+          p_telefone: clienteTelefone,
+          p_modulo: 'documentos',
+          p_registro_id: docData.id,
+          p_tipo_esperado: 'arquivo',
+          p_mensagem_contexto: `Envio pendente de: ${requestData.nome}`
+        });
+
+        const msgWhats = whatsappNotificationService.gerarMensagemWhatsApp({
+          tipo: 'documento_cliente',
+          clienteNome,
+          status: 'pendente',
+          titulo: requestData.nome
+        });
+        
+        whatsappNotificationService.enviarWhatsAppDireto(clienteTelefone, msgWhats)
+          .catch(err => console.warn('Falha no envio de WA direto (documento_solicitado):', err));
+      }
 
       toast.success('Documento solicitado com sucesso.');
       refreshCounts?.();
@@ -124,14 +147,10 @@ export function AdminClienteDocumentos({ clienteId, clienteNome, clienteTelefone
         const fileName = `${tipo}-admin-${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
         const filePath = `${clienteId}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('documentos_cliente')
-          .upload(filePath, file);
+        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_cliente', filePath);
         if (uploadError) throw uploadError;
 
-        const { data: publicUrlData } = supabase.storage
-          .from('documentos_cliente')
-          .getPublicUrl(filePath);
+        // publicUrl is handled directly
         
         urls.push(publicUrlData.publicUrl);
       }
@@ -224,7 +243,7 @@ export function AdminClienteDocumentos({ clienteId, clienteNome, clienteTelefone
               .slice(pathSegments.indexOf('documentos_cliente') + 1)
               .join('/');
             if (storagePath) {
-              await supabase.storage.from('documentos_cliente').remove([storagePath]);
+              await removeFromR2(storagePath);
             }
           } catch (storageErr) {
             console.error('Erro ao excluir arquivo do storage:', storageErr);

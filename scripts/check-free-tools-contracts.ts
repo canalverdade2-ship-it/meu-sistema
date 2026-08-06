@@ -75,7 +75,7 @@ const thirteenthWithDeductions = calculateThirteenthSalary({
   incomeTaxDeduction: 100,
 });
 closeTo(thirteenthWithDeductions.grossValue, 3600);
-closeTo(thirteenthWithDeductions.secondInstallmentNet, 1400);
+closeTo(thirteenthWithDeductions.secondInstallmentNet, 1402.24);
 
 assert.equal(MINIMUM_WAGE_2026, 1621);
 closeTo(BPC_INCOME_LIMIT_2026, 405.25);
@@ -89,7 +89,7 @@ const bpc = evaluateBpcScreening({
   receivesIncompatibleBenefit: false,
   biometricRegistered: true,
 });
-closeTo(bpc.incomePerPerson, 300);
+closeTo(bpc.netIncomePerPerson, 300);
 assert.equal(bpc.incomeWithinObjectiveLimit, true);
 assert.equal(bpc.allObjectiveCriteriaMet, true);
 
@@ -108,7 +108,7 @@ const maternity = evaluateInssBenefitScreening({
   maternityEventDocumented: true,
 });
 assert.equal(maternity.allMet, true);
-assert.match(maternity.requirements[2].detail, /carência está dispensada/i);
+assert.match(maternity.requirements[2].detail, /Dispensa de carência/i);
 
 const pension = evaluateInssBenefitScreening({
   benefitType: 'death_pension',

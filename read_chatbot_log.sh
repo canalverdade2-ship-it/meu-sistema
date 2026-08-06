@@ -1,0 +1,1 @@
+cat /tmp/chatbot.log

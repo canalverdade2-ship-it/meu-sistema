@@ -204,7 +204,7 @@ export function PaymentModal({ isOpen, onClose, fatura, onSuccess, clientName }:
 
     setGeneratingLink(true);
     try {
-      const { data: result, error } = await supabase.functions.invoke('generate-payment-link', {
+      const { data: result, error } = await supabase.functions.invoke('gsa-payments', {
         body: {
           fatura_id: fatura.id,
           cliente_id: fatura.cliente_id,

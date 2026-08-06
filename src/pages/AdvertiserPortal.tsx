@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
+import { compressImageBeforeUpload } from '../lib/imageCompression';
 import { advertiserAccess } from '../lib/advertiserAccess';
 import { copyToClipboard } from '../lib/utils';
 import navigationService, { navigate } from '../routing/navigationService';
@@ -560,7 +561,7 @@ export function AdvertiserPortal() {
     setValidating(true);
     setValidated(false);
     try {
-      const { data, error } = await supabase.functions.invoke('gsa-advertiser-access', {
+      const { data, error } = await supabase.functions.invoke('gsa-ads-public', {
         body: { action: 'validate', protocol: normalized },
       });
       const result = data as { success?: boolean; request?: Record<string, string> } | null;
@@ -600,7 +601,7 @@ export function AdvertiserPortal() {
     if (password !== passwordConfirm) return toast.error('As senhas não coincidem.');
     setSending(true);
     try {
-      const { data, error } = await supabase.functions.invoke('gsa-advertiser-access', {
+      const { data, error } = await supabase.functions.invoke('gsa-ads-public', {
         body: { action: 'register', protocol, document: documentValue, email: email.trim().toLowerCase(), password },
       });
       const result = data as {
@@ -782,16 +783,20 @@ export function AdvertiserPortal() {
       let duration: number | null = null;
 
       if (creativeFile) {
-        kind = VIDEO_TYPES.has(creativeFile.type) ? 'video' : 'image';
-        const metadata = await mediaMetadata(creativeFile);
+        let fileToUpload = creativeFile;
+        if (IMAGE_TYPES.has(creativeFile.type)) {
+          fileToUpload = await compressImageBeforeUpload(creativeFile, { maxDimension: 1920, quality: 0.85 });
+        }
+        kind = VIDEO_TYPES.has(fileToUpload.type) ? 'video' : 'image';
+        const metadata = await mediaMetadata(fileToUpload);
         width = metadata.width;
         height = metadata.height;
         duration = metadata.duration;
-        storagePath = `${snapshot.advertiser.id}/${creativeCampaignId}/${crypto.randomUUID()}-${safeName(creativeFile.name)}`;
-        const { error } = await supabase.storage.from('gsa-ad-creatives').upload(storagePath, creativeFile, {
-          cacheControl: '3600',
+        storagePath = `${snapshot.advertiser.id}/${creativeCampaignId}/${crypto.randomUUID()}-${safeName(fileToUpload.name)}`;
+        const { error } = await supabase.storage.from('gsa-ad-creatives').upload(storagePath, fileToUpload, {
+          cacheControl: '31536000',
           upsert: false,
-          contentType: creativeFile.type,
+          contentType: fileToUpload.type,
         });
         if (error) throw error;
         uploadedPath = storagePath;

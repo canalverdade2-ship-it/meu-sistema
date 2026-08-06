@@ -65,7 +65,7 @@ export const pdfSharingService = {
       ``,
       `🔐 Acesse agora o *Portal Completo do Cliente* para visualizar todos os seus documentos, orçamentos e faturas.`,
       ``,
-      `_Mensagem gerada automaticamente pelo sistema GSA._`
+      `_Mensagem enviada via GSA HUB._`
     ].join('\n');
 
     const text = encodeURIComponent(message);
@@ -96,7 +96,7 @@ export const pdfSharingService = {
       `🔐 Acesse agora o Portal Completo do Cliente para visualizar todos os seus documentos, orçamentos e faturas.`,
       ``,
       `---`,
-      `Mensagem gerada automaticamente pelo sistema GSA.`
+      `Mensagem enviada via GSA HUB.`
     ].join('\n');
 
     const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

@@ -1,6 +1,7 @@
+// HMR cache refresh
 import { useState, useEffect, useRef } from 'react';
 import { Cliente } from '../../types';
-import { Plus, Search, Filter, MoreHorizontal, User as UserIcon, Wallet, FileText, ClipboardList, History, Info, CheckCircle2, Users, Gift, Trash2, Settings, Shield, X, Send, Lock, Unlock, Mail, Eye, Save, AlertCircle, Pencil, ShoppingBag, ChevronRight, Calendar, Printer, MessageSquare, Clock } from 'lucide-react';
+import { Plus, Search, Filter, MoreHorizontal, User as UserIcon, Wallet, FileText, ClipboardList, History, Info, CheckCircle2, Users, Gift, Trash2, Settings, Shield, X, Send, Lock, Unlock, Mail, Eye, Save, AlertCircle, Pencil, ShoppingBag, ChevronRight, Calendar, Printer, MessageSquare, Clock, Landmark, CreditCard } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { safeSupabaseQuery } from '../../lib/supabaseWrapper';
 import { canDeleteRecord } from '../../lib/deleteRequest';
@@ -12,6 +13,7 @@ import { GlobalFilter } from '../ui/GlobalFilter';
 import { OSDetails } from './OrdensServicoModule';
 import { CompraDetails } from './OrdensCompraModule';
 import { AssinaturaDetails } from './OrdensAssinaturaModule';
+import { FaturaDetails } from './FinanceiroModule';
 import { osService } from '../../lib/osService';
 import { AdminClienteDocumentos } from './clientes/AdminClienteDocumentos';
 
@@ -28,6 +30,20 @@ import { whatsappNotificationService } from '../../lib/whatsappNotificationServi
 import { sessionService } from '../../lib/sessionService';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { removePrivateDocument } from '../../lib/privateStorage';
+import { adminModulePath } from '../../routing/adminAccess';
+
+export interface ClientPendency {
+  id: string;
+  tipo: 'fatura' | 'orcamento' | 'saque' | 'emprestimo' | 'ticket' | 'classificado' | 'credito';
+  titulo: string;
+  descricao: string;
+  valorDisplay?: string;
+  statusDisplay: string;
+  module: string;
+  tab?: string;
+  itemId: string;
+  tableName: string;
+}
 
 const getAdminSessionForRpc = () => {
   const session = sessionService.getCurrentSession();
@@ -316,10 +332,241 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null);
+  const [isPendenciesModalOpen, setIsPendenciesModalOpen] = useState(false);
+  const [pendencies, setPendencies] = useState<ClientPendency[]>([]);
+  const [isCheckingPendencies, setIsCheckingPendencies] = useState(false);
+  const [deletingPendencyId, setDeletingPendencyId] = useState<string | null>(null);
 
-  const confirmDelete = (cliente: Cliente) => {
+  const checkClientPendencies = async (clienteId: string): Promise<ClientPendency[]> => {
+    const result: ClientPendency[] = [];
+
+    try {
+      // 1. Faturas Pendentes
+      const { data: faturas } = await supabase
+        .from('faturas')
+        .select('id, codigo_fatura, valor, status')
+        .eq('cliente_id', clienteId)
+        .in('status', ['pendente', 'vencida', 'pendente_pagamento', 'revisada', 'aguardando_link']);
+
+      if (faturas && faturas.length > 0) {
+        for (const f of faturas) {
+          result.push({
+            id: `fatura-${f.id}`,
+            tipo: 'fatura',
+            titulo: `Fatura ${f.codigo_fatura || '#' + f.id.slice(0, 8)}`,
+            descricao: `Fatura pendente de pagamento ou vencida.`,
+            valorDisplay: formatCurrency(f.valor || 0),
+            statusDisplay: f.status,
+            module: 'financeiro',
+            tab: 'faturas',
+            itemId: f.id,
+            tableName: 'faturas'
+          });
+        }
+      }
+
+      // 2. Orçamentos em Aberto
+      const { data: orcamentos } = await supabase
+        .from('orcamentos')
+        .select('id, codigo_orcamento, valor_total, status')
+        .eq('cliente_id', clienteId)
+        .in('status', ['em análise', 'negociação', 'pendência documentos', 'em revisão']);
+
+      if (orcamentos && orcamentos.length > 0) {
+        for (const o of orcamentos) {
+          result.push({
+            id: `orcamento-${o.id}`,
+            tipo: 'orcamento',
+            titulo: `Orçamento #${o.codigo_orcamento || o.id.slice(0, 8)}`,
+            descricao: `Proposta/Orçamento em aberto ou negociação.`,
+            valorDisplay: formatCurrency(o.valor_total || 0),
+            statusDisplay: o.status,
+            module: 'operacoes',
+            tab: 'orcamentos',
+            itemId: o.id,
+            tableName: 'orcamentos'
+          });
+        }
+      }
+
+      // 3. Solicitações de Saque
+      const { data: saques } = await supabase
+        .from('saques')
+        .select('id, valor, status')
+        .eq('cliente_id', clienteId)
+        .in('status', ['solicitado', 'aprovado']);
+
+      if (saques && saques.length > 0) {
+        for (const s of saques) {
+          result.push({
+            id: `saque-${s.id}`,
+            tipo: 'saque',
+            titulo: `Solicitação de Saque`,
+            descricao: `Pedido de retirada de saldo em análise.`,
+            valorDisplay: formatCurrency(s.valor || 0),
+            statusDisplay: s.status,
+            module: 'financeiro',
+            tab: 'saques',
+            itemId: s.id,
+            tableName: 'saques'
+          });
+        }
+      }
+
+      // 4. Empréstimos Ativos / Em Análise
+      const { data: emprestimos } = await supabase
+        .from('emprestimos')
+        .select('id, codigo_contrato, valor_solicitado, status')
+        .eq('cliente_id', clienteId)
+        .in('status', ['solicitado', 'em_analise', 'ativo', 'pendente']);
+
+      if (emprestimos && emprestimos.length > 0) {
+        for (const e of emprestimos) {
+          result.push({
+            id: `emprestimo-${e.id}`,
+            tipo: 'emprestimo',
+            titulo: `Empréstimo ${e.codigo_contrato || '#' + e.id.slice(0, 8)}`,
+            descricao: `Contrato de crédito ativo ou pendente de análise.`,
+            valorDisplay: formatCurrency(e.valor_solicitado || 0),
+            statusDisplay: e.status,
+            module: 'financeiro',
+            tab: 'emprestimos',
+            itemId: e.id,
+            tableName: 'emprestimos'
+          });
+        }
+      }
+
+      // 5. Tickets de Suporte Abertos
+      const { data: tickets } = await supabase
+        .from('tickets')
+        .select('id, assunto, status')
+        .eq('cliente_id', clienteId)
+        .in('status', ['aberto', 'em andamento', 'pendente_cliente']);
+
+      if (tickets && tickets.length > 0) {
+        for (const t of tickets) {
+          result.push({
+            id: `ticket-${t.id}`,
+            tipo: 'ticket',
+            titulo: `Ticket: ${t.assunto || 'Sem assunto'}`,
+            descricao: `Chamado de suporte técnico/atendimento aberto.`,
+            statusDisplay: t.status,
+            module: 'atendimento',
+            tab: 'abertos',
+            itemId: t.id,
+            tableName: 'tickets'
+          });
+        }
+      }
+
+      // 6. Anúncios nos Classificados
+      const { data: classificados } = await supabase
+        .from('classificados_anuncios')
+        .select('id, titulo, status')
+        .eq('cliente_id', clienteId)
+        .in('status', ['ativo', 'pendente_aprovacao']);
+
+      if (classificados && classificados.length > 0) {
+        for (const c of classificados) {
+          result.push({
+            id: `classificado-${c.id}`,
+            tipo: 'classificado',
+            titulo: `Anúncio: ${c.titulo}`,
+            descricao: `Anúncio publicado nos classificados.`,
+            statusDisplay: c.status,
+            module: 'classificados',
+            tab: 'anuncios',
+            itemId: c.id,
+            tableName: 'classificados_anuncios'
+          });
+        }
+      }
+
+      // 7. Crédito Loja
+      const { data: creditos } = await supabase
+        .from('loja_credito_solicitacoes')
+        .select('id, valor_solicitado, status')
+        .eq('cliente_id', clienteId)
+        .in('status', ['solicitado', 'em_analise']);
+
+      if (creditos && creditos.length > 0) {
+        for (const cr of creditos) {
+          result.push({
+            id: `credito-${cr.id}`,
+            tipo: 'credito',
+            titulo: `Solicitação de Crédito Loja`,
+            descricao: `Pedido de aumento de limite em análise.`,
+            valorDisplay: formatCurrency(cr.valor_solicitado || 0),
+            statusDisplay: cr.status,
+            module: 'financeiro',
+            tab: 'credito',
+            itemId: cr.id,
+            tableName: 'loja_credito_solicitacoes'
+          });
+        }
+      }
+
+    } catch (err) {
+      console.error('Erro ao verificar pendências do cliente:', err);
+    }
+
+    return result;
+  };
+
+  const confirmDelete = async (cliente: Cliente) => {
     setClienteToDelete(cliente);
-    setIsDeleteConfirmOpen(true);
+    setIsCheckingPendencies(true);
+    const toastId = toast.loading('Verificando pendências do cliente...');
+
+    try {
+      const pList = await checkClientPendencies(cliente.id);
+      toast.dismiss(toastId);
+      setPendencies(pList);
+      if (pList.length > 0) {
+        setIsPendenciesModalOpen(true);
+      } else {
+        setIsDeleteConfirmOpen(true);
+      }
+    } catch (err) {
+      toast.dismiss(toastId);
+      console.error('Erro ao verificar pendências:', err);
+      setIsDeleteConfirmOpen(true);
+    } finally {
+      setIsCheckingPendencies(false);
+    }
+  };
+
+  const handleDeletePendency = async (pItem: ClientPendency) => {
+    setDeletingPendencyId(pItem.id);
+    try {
+      if (pItem.tableName === 'tickets') {
+        await supabase.from('ticket_mensagens').delete().eq('ticket_id', pItem.itemId);
+      } else if (pItem.tableName === 'orcamentos') {
+        await supabase.from('orcamento_itens').delete().eq('orcamento_id', pItem.itemId);
+        await supabase.from('orcamento_historico').delete().eq('orcamento_id', pItem.itemId);
+      } else if (pItem.tableName === 'emprestimos') {
+        await supabase.from('emprestimo_parcelas').delete().eq('emprestimo_id', pItem.itemId);
+      }
+
+      const { error } = await supabase.from(pItem.tableName).delete().eq('id', pItem.itemId);
+      if (error) throw error;
+
+      toast.success(`Pendência "${pItem.titulo}" excluída com sucesso.`);
+      setPendencies(prev => prev.filter(p => p.id !== pItem.id));
+    } catch (err: any) {
+      console.error('Erro ao excluir pendência:', err);
+      toast.error(`Erro ao excluir pendência: ${err.message || 'Verifique registros vinculados.'}`);
+    } finally {
+      setDeletingPendencyId(null);
+    }
+  };
+
+  const handleResolvePendency = (pItem: ClientPendency) => {
+    setIsPendenciesModalOpen(false);
+    setIsDeleteConfirmOpen(false);
+    const targetUrl = adminModulePath(pItem.module, pItem.tab, pItem.itemId);
+    window.location.href = targetUrl;
   };
 
   const handleDelete = async () => {
@@ -328,6 +575,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
     const canProceed = await canDeleteRecord('clientes', clienteToDelete.id);
     if (!canProceed) {
       setIsDeleteConfirmOpen(false);
+      setIsPendenciesModalOpen(false);
       setClienteToDelete(null);
       return;
     }
@@ -347,9 +595,26 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
       const osIds = osList?.map(o => o.id) || [];
       const demands = osIds.length > 0 ? await supabase.from('prestador_demandas').select('link_entrega').in('os_id', osIds).then(res => res.data) : [];
 
-      // 2. Excluir banco de dados atomicamente via RPC
+      // 2. Excluir banco de dados atomicamente via RPC ou fallback seguro
       const { error: rpcError } = await supabase.rpc('delete_client_cascade', { p_cliente_id: cliente.id });
-      if (rpcError) throw rpcError;
+      if (rpcError) {
+        console.warn('Fallback manual para exclusão do cliente:', rpcError);
+        await supabase.from('notificacoes').delete().eq('cliente_id', cliente.id);
+        const { data: clientTickets } = await supabase.from('tickets').select('id').eq('cliente_id', cliente.id);
+        if (clientTickets && clientTickets.length > 0) {
+          await supabase.from('ticket_mensagens').delete().in('ticket_id', clientTickets.map(t => t.id));
+        }
+        await supabase.from('tickets').delete().eq('cliente_id', cliente.id);
+        await supabase.from('faturas').delete().eq('cliente_id', cliente.id);
+        await supabase.from('orcamentos').delete().eq('cliente_id', cliente.id);
+        await supabase.from('ordens_servico').delete().eq('cliente_id', cliente.id);
+        await supabase.from('emprestimos').delete().eq('cliente_id', cliente.id);
+        await supabase.from('saques').delete().eq('cliente_id', cliente.id);
+        await supabase.from('classificados_anuncios').delete().eq('cliente_id', cliente.id);
+        await supabase.from('loja_credito_solicitacoes').delete().eq('cliente_id', cliente.id);
+        await supabase.from('cliente_documentos').delete().eq('cliente_id', cliente.id);
+        await supabase.from('clientes').delete().eq('id', cliente.id);
+      }
 
       // 3. Excluir arquivos do Storage em background
       const deleteFiles = async (urlsOrAnexos: any, bucket: string) => {
@@ -433,6 +698,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
       toast.success('Cliente excluído permanentemente.');
       refreshCounts?.();
       setIsDeleteConfirmOpen(false);
+      setIsPendenciesModalOpen(false);
       setIsDetailOpen(false);
       setClienteToDelete(null);
       fetchClientes();
@@ -589,6 +855,138 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
               onRefresh={fetchClientes}
             />
           )}
+        </div>
+      </Modal>
+
+      {/* Modal de Pendências do Cliente */}
+      <Modal
+        isOpen={isPendenciesModalOpen}
+        onClose={() => {
+          setIsPendenciesModalOpen(false);
+          setClienteToDelete(null);
+        }}
+        title="PENDÊNCIAS BLOQUEANDO EXCLUSÃO"
+        size="wide"
+      >
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200/60 flex items-start gap-3.5 text-left">
+            <AlertCircle className="h-6 w-6 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-black text-amber-900 uppercase tracking-tight">
+                Pendências Encontradas no Cadastro
+              </h4>
+              <p className="text-xs text-amber-800 font-medium leading-relaxed mt-1">
+                O cliente <strong className="font-black text-amber-950">{clienteToDelete?.nome}</strong> possui{' '}
+                <span className="font-mono font-black text-amber-900 bg-amber-200/60 px-1.5 py-0.5 rounded-md">
+                  {pendencies.length}
+                </span>{' '}
+                registro(s) em aberto no sistema. Resolva ou exclua cada pendência abaixo para liberar a exclusão imediata do cadastro.
+              </p>
+            </div>
+          </div>
+
+          {/* Lista de Pendências */}
+          {pendencies.length > 0 ? (
+            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+              {pendencies.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-neutral-200 shadow-2xs hover:border-indigo-200 transition-all text-left"
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0 mt-0.5">
+                      {item.tipo === 'fatura' && <FileText className="h-5 w-5" />}
+                      {item.tipo === 'orcamento' && <ClipboardList className="h-5 w-5" />}
+                      {item.tipo === 'saque' && <Wallet className="h-5 w-5" />}
+                      {item.tipo === 'emprestimo' && <Landmark className="h-5 w-5" />}
+                      {item.tipo === 'ticket' && <MessageSquare className="h-5 w-5" />}
+                      {item.tipo === 'classificado' && <ShoppingBag className="h-5 w-5" />}
+                      {item.tipo === 'credito' && <CreditCard className="h-5 w-5" />}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h5 className="text-xs font-black text-neutral-900 uppercase tracking-tight truncate">
+                          {item.titulo}
+                        </h5>
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                          {item.statusDisplay}
+                        </span>
+                        {item.valorDisplay && (
+                          <span className="font-mono text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">
+                            {item.valorDisplay}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-neutral-500 font-medium mt-1">
+                        {item.descricao}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 justify-end">
+                    <button
+                      type="button"
+                      disabled={deletingPendencyId === item.id}
+                      onClick={() => handleDeletePendency(item)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50"
+                      title="Excluir esta pendência imediatamente"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {deletingPendencyId === item.id ? 'Excluindo...' : 'Excluir assim mesmo'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleResolvePendency(item)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-black uppercase tracking-wider shadow-sm transition-all"
+                      title="Ir para a página de resolução desta pendência"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                      Resolver agora
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
+              <CheckCircle2 className="h-8 w-8 text-emerald-600 mx-auto" />
+              <h4 className="text-sm font-black text-emerald-950 uppercase tracking-tight">
+                Todas as pendências foram removidas!
+              </h4>
+              <p className="text-xs text-emerald-700 font-medium">
+                O cadastro do cliente agora está livre e pode ser excluído definitivamente.
+              </p>
+            </div>
+          )}
+
+          {/* Footer Actions */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-3 border-t border-neutral-100">
+            <button
+              type="button"
+              onClick={() => {
+                setIsPendenciesModalOpen(false);
+                setClienteToDelete(null);
+              }}
+              className="order-2 sm:order-1 w-full sm:flex-1 rounded-xl border border-neutral-200 py-3 text-xs font-black uppercase tracking-widest text-neutral-600 hover:bg-neutral-50 transition-all"
+            >
+              Cancelar
+            </button>
+
+            {pendencies.length === 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPendenciesModalOpen(false);
+                  setIsDeleteConfirmOpen(true);
+                }}
+                className="order-1 sm:order-2 w-full sm:flex-1 rounded-xl bg-red-600 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-red-600/30 hover:bg-red-700 transition-all"
+              >
+                Prosseguir com Exclusão Definitiva
+              </button>
+            )}
+          </div>
         </div>
       </Modal>
 
@@ -797,10 +1195,12 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
   const [selectedOS, setSelectedOS] = useState<any | null>(null);
   const [selectedCompra, setSelectedCompra] = useState<any | null>(null);
   const [selectedAssinatura, setSelectedAssinatura] = useState<any | null>(null);
+  const [selectedFatura, setSelectedFatura] = useState<any | null>(null);
   
   const [isOSModalOpen, setIsOSModalOpen] = useState(false);
   const [isCompraModalOpen, setIsCompraModalOpen] = useState(false);
   const [isAssinaturaModalOpen, setIsAssinaturaModalOpen] = useState(false);
+  const [isFaturaModalOpen, setIsFaturaModalOpen] = useState(false);
 
   useEffect(() => {
     setCliente(initialCliente);
@@ -911,11 +1311,114 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
     setLoadingTab(true);
     const { data } = await supabase
       .from('faturas')
-      .select('*, ordens_servico(codigo_os)')
+      .select('*, cobrancas(id), clientes(id, nome, cpf, cnpj, email, telefone, codigo_cliente), ordens_servico(codigo_os, orcamentos(codigo_orcamento, total, valor_servico, valor_adicional, descricao_adicional, acrescimo, desconto, servicos(nome))), ordens_compra(codigo_ordem, quantidade, produtos(nome, valor), orcamentos(codigo_orcamento, total, valor_servico, valor_adicional, descricao_adicional, acrescimo, desconto)), ordens_assinatura(codigo_ordem, quantidade, assinaturas(nome, valor), orcamentos(codigo_orcamento, total, valor_servico, valor_adicional, descricao_adicional, acrescimo, desconto, quantidade_meses, prazo_indeterminado)), pagamentos(metodo, valor), ordens_fiscais(id)')
       .eq('cliente_id', cliente.id)
-      .order('codigo_fatura', { ascending: false });
+      .order('created_at', { ascending: false });
     if (data) setFaturasList(data);
     setLoadingTab(false);
+  };
+
+  const handleManualPaymentFatura = async (method: string, dateTime: string, notes: string) => {
+    if (!selectedFatura) return;
+    if (!notes.trim()) {
+      toast.error('Informe as observações da baixa.');
+      return;
+    }
+
+    try {
+      const isoDateTime = new Date(dateTime).toISOString();
+      const session = getAdminSessionForRpc();
+
+      const { data: baixaResult, error: baixaError } = await supabase.rpc('gsa_admin_baixar_fatura', {
+        p_sessao_id: session.sessaoId,
+        p_session_token: session.sessionToken,
+        p_fatura_id: selectedFatura.id,
+        p_metodo: method,
+        p_data_pagamento: isoDateTime,
+        p_observacoes: notes
+      });
+
+      if (baixaError) throw baixaError;
+      if (baixaResult && !(baixaResult as any).success) {
+        throw new Error((baixaResult as any).error || 'Erro ao baixar fatura.');
+      }
+
+      toast.success('Baixa administrativa realizada com sucesso!');
+      setIsFaturaModalOpen(false);
+      fetchFaturas();
+      fetchExtrato();
+      fetchPaidInvoicesCount();
+      onRefresh();
+
+      await logService.logAction({
+        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+        ator_id: colaboradorId || 'admin',
+        ator_nome: colaboradorNome || 'Administrador',
+        acao: 'BAIXAR_FATURA_MANUAL',
+        detalhes: `Baixa manual da fatura #${selectedFatura.codigo_fatura} via ${method}`
+      });
+
+      // Busca a fatura atualizada para pegar todos os descontos e contatos reais
+      const { data: updatedFatura } = await supabase
+        .from('faturas')
+        .select(`
+          *,
+          clientes (
+            nome,
+            telefone
+          )
+        `)
+        .eq('id', selectedFatura.id)
+        .single();
+
+      if (updatedFatura && updatedFatura.clientes?.telefone) {
+        const mensagemWhats = whatsappNotificationService.gerarMensagemWhatsApp({
+          tipo: 'fatura',
+          clienteNome: updatedFatura.clientes.nome,
+          codigo: updatedFatura.codigo_fatura,
+          status: updatedFatura.status,
+          dataVencimento: updatedFatura.data_vencimento ? new Date(updatedFatura.data_vencimento).toLocaleDateString('pt-BR') : undefined,
+          valorTotal: formatCurrency(updatedFatura.valor_total),
+          formaPagamento: method,
+          valorLiquido: formatCurrency(updatedFatura.valor_pago || updatedFatura.valor_total),
+          cupomAplicado: updatedFatura.voucher_codigo,
+          valorCupom: updatedFatura.desconto_voucher_aplicado > 0 ? formatCurrency(updatedFatura.desconto_voucher_aplicado) : undefined,
+          pontosUtilizados: updatedFatura.pontos_utilizados > 0 ? updatedFatura.pontos_utilizados : undefined,
+          valorPontos: updatedFatura.desconto_pontos_aplicado > 0 ? formatCurrency(updatedFatura.desconto_pontos_aplicado) : undefined,
+          saldoCarteiraUtilizado: updatedFatura.abatimento_carteira_aplicado > 0 ? formatCurrency(updatedFatura.abatimento_carteira_aplicado) : undefined,
+        });
+
+        whatsappNotificationService.enviarWhatsAppDireto(updatedFatura.clientes.telefone, mensagemWhats)
+          .catch(err => console.warn('Falha ao enviar aviso WA:', err));
+      }
+    } catch (error: any) {
+      console.error('Erro na baixa manual:', error);
+      toast.error(error?.message || 'Erro ao processar baixa administrativa.');
+    }
+  };
+
+  const handleEnviarParaCobrancaFatura = async () => {
+    if (!selectedFatura) return;
+    try {
+      const session = getAdminSessionForRpc();
+      const { data, error } = await supabase.rpc('gsa_admin_enviar_fatura_cobranca', {
+        p_sessao_id: session.sessaoId,
+        p_session_token: session.sessionToken,
+        p_fatura_id: selectedFatura.id
+      });
+
+      if (error) throw error;
+      if (data && !(data as any).success) {
+        throw new Error((data as any).error || 'Erro ao enviar fatura para cobrança.');
+      }
+
+      toast.success('Fatura enviada para o módulo de cobrança com sucesso!');
+      fetchFaturas();
+      setSelectedFatura((prev: any) => prev ? { ...prev, tem_cobranca: true } : null);
+    } catch (error: any) {
+      console.error('Erro ao enviar fatura para cobrança:', error);
+      toast.error(error?.message || 'Erro ao processar envio para cobrança.');
+    }
   };
 
   const fetchExtrato = async () => {
@@ -2180,24 +2683,38 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
               ) : faturasList.length > 0 ? (
                 <div className="grid gap-3 sm:gap-4">
                   {faturasList.map(fat => (
-                    <div key={fat.id} className="rounded-xl sm:rounded-2xl bg-white p-4 sm:p-5 shadow-sm ring-1 ring-neutral-200 hover:shadow-md transition-all">
+                    <div 
+                      key={fat.id} 
+                      onClick={() => {
+                        setSelectedFatura(fat);
+                        setIsFaturaModalOpen(true);
+                      }}
+                      className="group rounded-xl sm:rounded-2xl bg-white p-4 sm:p-5 shadow-sm ring-1 ring-neutral-200 hover:shadow-md hover:ring-indigo-300 hover:bg-neutral-50/50 transition-all cursor-pointer"
+                    >
                       <div className="flex justify-between items-center gap-4">
                         <div className="flex items-center gap-3 sm:gap-4 text-left min-w-0">
-                          <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                          <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                             <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                           </div>
                           <div className="min-w-0">
-                            <p className="font-black text-neutral-900 uppercase text-xs sm:text-sm truncate">{fat.codigo_fatura}</p>
-                            <p className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase truncate">Ref. OS: {fat.ordens_servico?.codigo_os}</p>
+                            <p className="font-black text-neutral-900 uppercase text-xs sm:text-sm truncate group-hover:text-indigo-600 transition-colors">{fat.codigo_fatura}</p>
+                            <p className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase truncate">
+                              Ref. {fat.ordens_servico?.codigo_os ? `OS: ${fat.ordens_servico.codigo_os}` : fat.ordens_compra?.codigo_ordem ? `Compra: ${fat.ordens_compra.codigo_ordem}` : fat.ordens_assinatura?.codigo_ordem ? `Assinatura: ${fat.ordens_assinatura.codigo_ordem}` : 'Geral'}
+                            </p>
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-xs sm:text-sm font-black text-indigo-600">{formatCurrency(fat.valor_total)}</p>
-                          <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${
-                            fat.status === 'pendente' ? 'text-amber-500' : fat.status === 'pago' ? 'text-emerald-500' : 'text-red-500'
-                          }`}>
-                            {fat.status}
-                          </span>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <p className="text-xs sm:text-sm font-black text-indigo-600">{formatCurrency(fat.valor_total)}</p>
+                            <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${
+                              fat.status === 'pendente' ? 'text-amber-500' : fat.status === 'pago' ? 'text-emerald-500' : 'text-red-500'
+                            }`}>
+                              {fat.status}
+                            </span>
+                          </div>
+                          <div className="rounded-full bg-neutral-100 p-1.5 text-neutral-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
+                            <ChevronRight className="h-4 w-4" />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -2624,6 +3141,23 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
             activeTab={selectedAssinatura.status === 'em_analise' ? 'processamento' : 'concluido'}
           />
         )}
+      </Modal>
+
+      <Modal isOpen={isFaturaModalOpen} onClose={() => setIsFaturaModalOpen(false)} title="Detalhes da Fatura" size="full">
+        <div className="max-w-6xl mx-auto py-4 sm:py-8">
+          {selectedFatura && (
+            <FaturaDetails 
+              fatura={selectedFatura} 
+              onManualPay={handleManualPaymentFatura}
+              onEnviarParaCobranca={handleEnviarParaCobrancaFatura}
+              onCancel={() => {
+                toast.error("Para cancelar faturas com registro definitivo, utilize o módulo 'Financeiro'.");
+              }}
+              colaboradorId={colaboradorId}
+              colaboradorNome={colaboradorNome}
+            />
+          )}
+        </div>
       </Modal>
 
     </div>

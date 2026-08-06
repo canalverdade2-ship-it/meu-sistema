@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
+  AlertTriangle,
   ArrowRight,
   BadgeDollarSign,
   Banknote,
@@ -22,11 +23,15 @@ import {
   Save,
   ShieldCheck,
   Star,
+  Trash2,
   User,
   WalletCards,
   X,
   type LucideIcon,
 } from 'lucide-react';
+import { logService } from '../../lib/logService';
+import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
+import { notificationService } from '../../lib/notificationService';
 import { ClientSuporte } from '../../components/client/ClientSuporte';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../../components/ui/Modal';
@@ -230,18 +235,76 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
   const [payoutValue, setPayoutValue] = useState('');
   const [pointsValue, setPointsValue] = useState('');
   const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
   const [profilePixType, setProfilePixType] = useState('cpf');
   const [profilePixKey, setProfilePixKey] = useState('');
   const [joinName, setJoinName] = useState('');
   const [joinPixType, setJoinPixType] = useState('cpf');
   const [joinPixKey, setJoinPixKey] = useState('');
-  const [clientDetails, setClientDetails] = useState<{ nome?: string; cpf?: string; cnpj?: string; tipo_pessoa?: string } | null>(null);
+  const [clientDetails, setClientDetails] = useState<{ nome?: string; cpf?: string; cnpj?: string; tipo_pessoa?: string; email?: string; telefone?: string } | null>(null);
   const [isMovementsModalOpen, setIsMovementsModalOpen] = useState(false);
   const [movementFilter, setMovementFilter] = useState<'todos' | 'comissoes' | 'saques' | 'pontos'>('todos');
   const [selectedCommission, setSelectedCommission] = useState<AffiliateCommission | null>(null);
   const [destinationType, setDestinationType] = useState<'geral' | 'especifico'>('geral');
   const [specificChoice, setSpecificChoice] = useState('');
   const [storeProducts, setStoreProducts] = useState<any[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [submittingDelete, setSubmittingDelete] = useState(false);
+  const [pendingDeletionTicket, setPendingDeletionTicket] = useState<{ id: string; data_abertura: string; status: string } | null>(null);
+
+  const handleConfirmDeleteAccount = async () => {
+    if (!deleteReason.trim()) {
+      toast.error('Informe o motivo da solicitação de exclusão.');
+      return;
+    }
+    setSubmittingDelete(true);
+    try {
+      const assunto = 'Solicitação de Exclusão de Conta';
+      const descricao = `O afiliado ${profileName || 'Afiliado'} solicitou a EXCLUSÃO PERMANENTE do seu perfil e conta.\n\nMotivo Informado:\n${deleteReason.trim()}\n\nA solicitação entrou em análise pela administração (prazo: 3 dias úteis).`;
+      
+      const createdTicket = await clientOperationalWrite<{ id: string }>(clientId, 'tickets', 'insert', {
+        cliente_id: clientId,
+        assunto,
+        descricao,
+        status: 'aberto',
+        modulo: 'afiliado',
+      });
+
+      if (createdTicket?.id) {
+        setPendingDeletionTicket({
+          id: createdTicket.id,
+          data_abertura: new Date().toISOString(),
+          status: 'aberto',
+        });
+        await notificationService.notifyAdmin(
+          '🎟️ Solicitação de Exclusão de Conta [Afiliado]',
+          `${profileName || clientId} solicitou a exclusão de conta pelo Portal do Afiliado.`,
+          'suporte',
+          'ticket_aberto_cliente',
+          { itemId: createdTicket.id, tab: 'abertos' }
+        );
+      }
+
+      await logService.logAction({
+        ator_tipo: 'cliente',
+        ator_id: clientId || '',
+        ator_nome: profileName || 'Afiliado',
+        acao: 'SOLICITAR_EXCLUSAO_AFILIADO',
+        detalhes: `Solicitação de exclusão de conta enviada. Motivo: ${deleteReason.trim()}`,
+      });
+
+      toast.success('Solicitação de exclusão enviada com sucesso! Analisaremos seu pedido em até 3 dias úteis.');
+      setIsDeleteModalOpen(false);
+      setDeleteReason('');
+    } catch (err: any) {
+      console.error('Erro ao solicitar exclusão:', err);
+      toast.error('Erro ao enviar solicitação de exclusão: ' + (err?.message || 'Tente novamente.'));
+    } finally {
+      setSubmittingDelete(false);
+    }
+  };
 
   useEffect(() => {
     const fetchStoreProducts = async () => {
@@ -263,15 +326,33 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
   const load = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
     try {
-      const [data, clientRes] = await Promise.all([
+      const [data, clientRes, deletionRes] = await Promise.all([
         fetchAffiliateSnapshot(),
         clientId
-          ? supabase.from('clientes').select('nome, cpf, cnpj, tipo_pessoa').eq('id', clientId).maybeSingle()
+          ? supabase.from('clientes').select('nome, cpf, cnpj, tipo_pessoa, email, telefone').eq('id', clientId).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        clientId
+          ? supabase
+              .from('tickets')
+              .select('id, data_abertura, status')
+              .eq('cliente_id', clientId)
+              .ilike('assunto', '%exclusão%')
+              .in('status', ['aberto', 'em andamento'])
+              .order('data_abertura', { ascending: false })
+              .limit(1)
+              .maybeSingle()
           : Promise.resolve({ data: null, error: null }),
       ]);
       setSnapshot(data);
       if (clientRes?.data) {
         setClientDetails(clientRes.data);
+        setProfileEmail((current) => current || clientRes.data.email || '');
+        setProfilePhone((current) => current || clientRes.data.telefone || '');
+      }
+      if (deletionRes?.data) {
+        setPendingDeletionTicket(deletionRes.data as any);
+      } else {
+        setPendingDeletionTicket(null);
       }
       if (data.affiliate) {
         setProfileName(data.affiliate.nomeDivulgacao);
@@ -313,11 +394,13 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
     setWorking(true);
     try {
       const data = await action();
-      setSnapshot(data);
-      if (data.affiliate) {
-        setProfileName(data.affiliate.nomeDivulgacao);
-        setProfilePixType(data.affiliate.pixTipo || 'cpf');
-        setProfilePixKey(data.affiliate.pixChave || '');
+      if (data) {
+        setSnapshot(data);
+        if (data.affiliate) {
+          setProfileName(data.affiliate.nomeDivulgacao);
+          setProfilePixType(data.affiliate.pixTipo || 'cpf');
+          setProfilePixKey(data.affiliate.pixChave || '');
+        }
       }
       toast.success(success);
       return true;
@@ -402,11 +485,23 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
 
   const saveProfile = async (event: FormEvent) => {
     event.preventDefault();
-    await runAction(() => updateAffiliateProfile({
-      nomeDivulgacao: profileName.trim(),
-      pixTipo: profilePixType,
-      pixChave: profilePixKey.trim(),
-    }), 'Perfil atualizado.');
+    await runAction(async () => {
+      const nextSnapshot = await updateAffiliateProfile({
+        nomeDivulgacao: profileName.trim(),
+        pixTipo: profilePixType,
+        pixChave: profilePixKey.trim(),
+      });
+      if (clientId) {
+        await supabase
+          .from('clientes')
+          .update({
+            email: profileEmail.trim(),
+            telefone: profilePhone.trim(),
+          })
+          .eq('id', clientId);
+      }
+      return nextSnapshot;
+    }, 'Perfil atualizado.');
   };
 
   const selectedProgram = snapshot.programs.find((program) => program.codigo === programCode);
@@ -482,7 +577,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
     return all;
   }, [snapshot.commissions, snapshot.payouts, snapshot.pointsEvents]);
 
-  const recentMovements = useMemo(() => allMovements.slice(0, 5), [allMovements]);
+  const recentMovements = useMemo(() => allMovements.slice(0, 3), [allMovements]);
 
   const filteredMovements = useMemo(() => {
     if (movementFilter === 'comissoes') return allMovements.filter((m) => m.tipo === 'comissao');
@@ -678,6 +773,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
                   {formattedDocument && (
                     <p className="mt-0.5 max-w-[210px] truncate text-xs font-medium text-[#59616c]">{docLabel}: {formattedDocument}</p>
                   )}
+
                 </div>
                 <button type="button" onClick={() => setSidebarOpen(false)} className="p-2 text-[#59616c]" aria-label="Fechar menu">
                   <X className="h-5 w-5" />
@@ -1175,6 +1271,16 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
                       Nome de divulgação
                       <input required minLength={3} value={profileName} onChange={(event) => setProfileName(event.target.value)} className="affiliate-input mt-2" />
                     </label>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                        E-mail de contato
+                        <input type="email" value={profileEmail} onChange={(event) => setProfileEmail(event.target.value)} placeholder="email@exemplo.com" className="affiliate-input mt-2" />
+                      </label>
+                      <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                        Telefone / WhatsApp
+                        <input type="tel" value={profilePhone} onChange={(event) => setProfilePhone(event.target.value)} placeholder="(11) 99999-9999" className="affiliate-input mt-2" />
+                      </label>
+                    </div>
                     <div className="grid gap-5 sm:grid-cols-[0.8fr_1.2fr]">
                       <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
                         Tipo de PIX
@@ -1221,6 +1327,39 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
                       A chave PIX completa é utilizada somente nas operações autorizadas. Históricos exibem dados protegidos sempre que aplicável.
                     </p>
                   </div>
+
+                  {pendingDeletionTicket ? (
+                    <div className="bg-[#b91c1c] p-5 sm:p-6 text-white shadow-md">
+                      <div className="flex items-center gap-2 text-[#fde047]">
+                        <Clock3 className="h-5 w-5 shrink-0 text-[#fde047]" />
+                        <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-[#fde047]">Solicitação em análise</h3>
+                      </div>
+                      <p className="mt-2.5 text-xs leading-relaxed text-white/90">
+                        Sua solicitação de exclusão de conta foi registrada e está sob análise pela equipe de administração.
+                      </p>
+                      <div className="mt-4 border-t border-white/20 pt-3 text-[11px] leading-5 text-white/80">
+                        <p>Data do pedido: <span className="font-semibold text-white">{formatDateTime(pendingDeletionTicket.data_abertura)}</span></p>
+                        <p className="mt-0.5">Prazo estimado: <span className="font-semibold text-white">Até 3 dias úteis</span></p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-[#b91c1c] p-5 sm:p-6 text-white shadow-md">
+                      <div className="flex items-center gap-2 text-white">
+                        <AlertTriangle className="h-5 w-5 shrink-0 text-white" />
+                        <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-white">Exclusão da conta</h3>
+                      </div>
+                      <p className="mt-2 text-xs leading-relaxed text-white/90">
+                        Deseja encerrar seu perfil de afiliado? A solicitação de exclusão permanente será analisada pela administração em até 3 dias úteis.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsDeleteModalOpen(true)}
+                        className="mt-4 inline-flex w-full items-center justify-center gap-2 border border-white/40 bg-white px-4 py-2.5 text-xs font-bold text-[#b91c1c] transition-colors hover:bg-[#881337] hover:text-white hover:border-[#881337]"
+                      >
+                        <Trash2 className="h-4 w-4" /> Solicitar exclusão da conta
+                      </button>
+                    </div>
+                  )}
                 </aside>
               </div>
             )}
@@ -1489,6 +1628,58 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
             </div>
           );
         })()}
+      </Modal>
+
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Solicitar Exclusão da Conta">
+        <div className="space-y-4 text-sm text-[#0b1522]">
+          <div className="flex items-start gap-3 border border-red-200 bg-red-50 p-4 text-xs leading-relaxed text-red-900">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+            <div>
+              <p className="font-bold">Processo de Exclusão da Conta</p>
+              <p className="mt-1 text-red-800/90">
+                A solicitação de exclusão é um processo analisado pelo sistema e equipe de segurança. Ao confirmar, uma solicitação prioritária será gerada para tratamento em até <strong>3 dias úteis</strong>.
+              </p>
+            </div>
+          </div>
+
+          <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+            Motivo da exclusão *
+            <textarea
+              required
+              rows={4}
+              value={deleteReason}
+              onChange={(event) => setDeleteReason(event.target.value)}
+              placeholder="Por favor, conte-nos o motivo do encerramento..."
+              className="affiliate-input mt-2 w-full resize-none p-3 text-sm"
+            />
+          </label>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="border border-[#c9c2b6] bg-white px-4 py-2.5 text-xs font-bold text-[#4f5864] hover:bg-[#f4f1ea]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              disabled={submittingDelete || !deleteReason.trim()}
+              onClick={handleConfirmDeleteAccount}
+              className="inline-flex items-center gap-2 bg-red-600 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+            >
+              {submittingDelete ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Enviando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" /> Confirmar Solicitação
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

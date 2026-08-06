@@ -1,0 +1,69 @@
+[
+  {
+    "name": "GSA System - Disparador WhatsApp",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "send-whatsapp",
+          "options": {}
+        },
+        "name": "Webhook GSA System",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "gsa-whatsapp-webhook"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://graph.facebook.com/v20.0/1159932857213543/messages",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer EAATzMfBrFUUBSKUGYDkioeRHENS7hcliAdztOVnfpGTZCxA9H58yU32BxtaZCrve2HrEvC3wRsSgXsfvPp2df38Qu6KxpPBI2UeRhQWdY7ZADeFoEs6rOE8CZC4B8bv6KNZCNQZAKhZABLIQNMk98S6RcoQxdoy2MQ2r5xLKDDjJ7wISHL6n21US9QT993NzswJfQZDZD"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.body.phone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $json.body.message }}\"\n  }\n}",
+          "options": {}
+        },
+        "name": "Meta WhatsApp API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          500,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook GSA System": {
+        "main": [
+          [
+            {
+              "node": "Meta WhatsApp API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": true,
+    "settings": {
+      "executionOrder": "v1"
+    }
+  }
+]

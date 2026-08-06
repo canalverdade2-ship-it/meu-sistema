@@ -189,7 +189,7 @@ export function AdvertisingSlot({
       try {
         const viewerId = getViewerId();
         const sessionId = getPersistentId('_gsa_ad_session', window.sessionStorage);
-        const { data, error } = await supabase.functions.invoke<DeliveryResponse>('gsa-ad-delivery', {
+        const { data, error } = await supabase.functions.invoke<DeliveryResponse>('gsa-ads-public', {
           body: {
             action: 'serve',
             placement_code: placementCode,
@@ -221,7 +221,7 @@ export function AdvertisingSlot({
     if (!token || recordedEvents.current.has(eventType)) return;
     recordedEvents.current.add(eventType);
     try {
-      const { error } = await supabase.functions.invoke('gsa-ad-delivery', {
+      const { error } = await supabase.functions.invoke('gsa-ads-public', {
         body: { action: 'event', event_token: token, event_type: eventType },
       });
       if (error) throw error;

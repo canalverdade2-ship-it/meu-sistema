@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
+import { uploadToR2, getPrivateR2Url, removeFromR2 } from './r2Storage';
 
-const STORAGE_PREFIX = 'storage://';
+const STORAGE_PREFIX = 'r2://';
 const PRIVATE_BUCKETS = new Set(['documentos_prestador', 'entregas_demandas']);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -100,27 +101,20 @@ export async function uploadProviderPrivateFile(input: {
   if (!scope) throw new Error('Escopo de arquivo inválido.');
 
   const path = `${providerId}/${scope}/${Date.now()}_${crypto.randomUUID()}.${extension}`;
-  const { error } = await supabase.storage.from(input.bucket).upload(path, input.file, {
-    upsert: false,
-    contentType: input.file.type || undefined,
-  });
+  const { path: r2Path, error } = await uploadToR2(input.file, input.bucket, path);
+  
   if (error) throw error;
-  return toStorageReference(input.bucket, path);
+  return toStorageReference(input.bucket, r2Path);
 }
 
 export async function resolveProviderFileUrl(reference: string, expiresInSeconds = 300) {
   const parsed = parseStorageReference(reference);
   if (!parsed) throw new Error('Referência privada do prestador inválida.');
-  const { data, error } = await supabase.storage
-    .from(parsed.bucket)
-    .createSignedUrl(parsed.path, Math.min(Math.max(expiresInSeconds, 30), 900));
-  if (error || !data?.signedUrl) throw error || new Error('Não foi possível abrir o arquivo.');
-  return data.signedUrl;
+  return await getPrivateR2Url(parsed.path);
 }
 
 export async function removeProviderPrivateFile(reference: string) {
   const parsed = parseStorageReference(reference);
   if (!parsed) return;
-  const { error } = await supabase.storage.from(parsed.bucket).remove([parsed.path]);
-  if (error) throw error;
+  await removeFromR2(parsed.path);
 }

@@ -9,7 +9,7 @@ import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { 
   Gavel, AlertTriangle, MessageCircle, Settings, History, Send, Clock, CheckCircle,
-  Activity, User, Briefcase, Scale, Target, Banknote,
+  Activity, User, Briefcase, Scale, Target, Banknote, Loader2,
   TrendingUp, TrendingDown, ShieldAlert, Search, Filter, XCircle, Trash2, FileText, Layers
 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
@@ -46,6 +46,7 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   const [selectedCobranca, setSelectedCobranca] = useState<any>(null);
   const [isWpModalOpen, setIsWpModalOpen] = useState(false);
   const [wpMessage, setWpMessage] = useState('');
+  const [sendingId, setSendingId] = useState<string | null>(null);
   const [isGerarCobrancaOpen, setIsGerarCobrancaOpen] = useState(false);
   const [selectedFaturaIds, setSelectedFaturaIds] = useState<string[]>([]);
   const [batchProcessing, setBatchProcessing] = useState(false);
@@ -342,63 +343,97 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
     .slice(0, 80);
 
   // --- Handler WhatsApp ---
-  const handleOpenWhatsApp = (c: any) => {
-    setSelectedCobranca(c);
-    const template = configs.cobranca_wp_template || `Olá {nome_cliente}, notamos que a sua fatura {numero_fatura} no valor de {valor_atualizado} está em aberto. Como podemos ajudar?`;
-    
-    let msg = template
-      .replace('{nome_cliente}', c.clientes?.nome)
-      .replace('{numero_fatura}', c.faturas?.codigo_fatura || c.fatura_id?.substring(0, 8))
-      .replace('{valor_original}', formatCurrency(c.valor_original))
-      .replace('{valor_atualizado}', formatCurrency(c.valor_atualizado))
-      .replace('{dias_atraso}', String(c.dias_atraso));
-    
-    setWpMessage(msg);
-    setIsWpModalOpen(true);
-  };
+  const handleEnviarWhatsAppDireto = async (c: any) => {
+    if (!c || sendingId === c.id) return;
+    setSendingId(c.id);
 
-  const confirmarWhatsApp = async () => {
-    if (!selectedCobranca || isSubmittingAcao) return;
-    const phoneNum = selectedCobranca.clientes?.telefone?.replace(/\D/g, '') || '';
+    const defaultCobrancaTemplate = [
+      `⚠️ *AVISO DE COBRANÇA - PENDÊNCIA FINANCEIRA* ⚠️`,
+      ``,
+      `Olá, *{nome_cliente}*! 👋`,
+      ``,
+      `Identificamos uma pendência financeira em aberto no sistema *GSA HUB* referente à sua fatura. 📄`,
+      ``,
+      `📋 *DETALHES DA PENDÊNCIA:*`,
+      `🧾 *Fatura:* #{numero_fatura}`,
+      `⏰ *Dias em Atraso:* {dias_atraso} dias`,
+      `💸 *Valor Atualizado (c/ encargos):* *{valor_atualizado}*`,
+      ``,
+      `💬 Como podemos auxiliar com a quitação desta pendência?`,
+      `Estamos à disposição para negociar as melhores condições de pagamento para você de forma rápida e segura! 🤝`,
+      ``,
+      `▶️ *COMO RESOLVER AGORA MESMO:*`,
+      `Responda esta mensagem com a opção desejada para autoatendimento:`,
+      ``,
+      `1️⃣ Solicitar 2ª via da Fatura / Boleto`,
+      `2️⃣ Gerar código PIX para pagamento`,
+      `3️⃣ Negociar dívida`,
+      ``,
+      `_Mensagem enviada via GSA HUB._`
+    ].join('\n');
 
-    if (!phoneNum || phoneNum.length < 10) {
-      toast.error('O cliente nao possui um numero de WhatsApp valido cadastrado.');
-      setIsWpModalOpen(false);
-      return;
+    const legacyTemplate = "Olá {nome_cliente}, notamos que a sua fatura {numero_fatura} no valor atualizado de R$ {valor_atualizado} consta em aberto há {dias_atraso} dias. Como podemos auxiliar com a quitação desta pendência?";
+    const isLegacy = configs.cobranca_wp_template?.trim().startsWith("Olá {nome_cliente}, notamos que a sua fatura");
+
+    const rawTemplate = (configs.cobranca_wp_template && configs.cobranca_wp_template.trim() !== '' && !isLegacy)
+      ? configs.cobranca_wp_template
+      : defaultCobrancaTemplate;
+
+    let msg = rawTemplate
+      .replace(/{nome_cliente}/g, c.clientes?.nome || 'Cliente')
+      .replace(/{numero_fatura}/g, c.faturas?.codigo_fatura || c.fatura_id?.substring(0, 8))
+      .replace(/{valor_original}/g, formatCurrency(c.valor_original))
+      .replace(/{valor_atualizado}/g, formatCurrency(c.valor_atualizado))
+      .replace(/{dias_atraso}/g, String(c.dias_atraso || 0));
+
+    // Corrige duplicação "R$ R$" caso venha de templates legados
+    msg = msg.replace(/R\$\s*R\$/g, 'R$');
+
+    // Garante o rodapé padrão se não estiver presente
+    if (!msg.includes('_Mensagem enviada via GSA HUB._')) {
+      msg = msg + '\n\n_Mensagem enviada via GSA HUB._';
     }
 
-    setIsSubmittingAcao(true);
+    const phoneNum = c.clientes?.telefone?.replace(/\D/g, '') || null;
+
     try {
       const session = getAdminSessionForRpc();
       const { error } = await supabase.rpc('gsa_admin_registrar_cobranca_historico', {
         p_sessao_id: session.sessaoId,
         p_session_token: session.sessionToken,
-        p_cobranca_id: selectedCobranca.id,
+        p_cobranca_id: c.id,
         p_tipo_acao: 'contato_whatsapp',
-        p_descricao: 'Mensagem de cobranca enviada via WhatsApp.',
+        p_descricao: 'Mensagem de cobrança enviada via WhatsApp.',
         p_canal: 'whatsapp',
         p_atualizar_ultimo_contato: true
       });
 
-      if (error) throw error;
+      if (error) console.warn('Erro ao registrar histórico de cobrança:', error);
 
       fetchDados();
-      setIsWpModalOpen(false);
 
       await logService.logAction({
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_nome: colaboradorNome || 'Administrador',
         acao: 'CONTATO_WHATSAPP_COBRANCA',
-        detalhes: `Mensagem WhatsApp enviada para ${selectedCobranca.clientes?.nome} (Ref: ${selectedCobranca.faturas?.codigo_fatura || selectedCobranca.id.slice(0, 8)})`
+        detalhes: `Mensagem WhatsApp enviada para ${c.clientes?.nome} (Ref: ${c.faturas?.codigo_fatura || c.id.slice(0, 8)})`
       });
 
-      const url = `https://api.whatsapp.com/send?phone=55${phoneNum}&text=${encodeURIComponent(wpMessage)}`;
-      window.open(url, '_blank');
+      const sent = await whatsappNotificationService.enviarWhatsAppDireto(phoneNum, msg, {
+        clienteNome: c.clientes?.nome,
+        codigoFatura: c.faturas?.codigo_fatura
+      });
+
+      if (sent) {
+        toast.success(`✅ Notificação de cobrança enviada instantaneamente no WhatsApp!`);
+      } else {
+        toast.error(`Não foi possível enviar a notificação no WhatsApp.`);
+      }
     } catch (err: any) {
-      console.error('Erro ao registrar contato WhatsApp:', err);
-      toast.error(err?.message || 'Erro ao registrar contato WhatsApp.');
+      console.error('Erro ao processar envio de cobrança:', err);
+      toast.error(err?.message || 'Erro ao processar envio de cobrança.');
     } finally {
-      setIsSubmittingAcao(false);
+      setSendingId(null);
     }
   };
 
@@ -967,8 +1002,13 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
                   </span>
                 </td>
                 <td className="p-4 text-right pr-6 space-x-2">
-                  <button onClick={() => handleOpenWhatsApp(c)} className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100" title="Cobrar WhatsApp">
-                    <MessageCircle className="h-4 w-4" />
+                  <button 
+                    onClick={() => handleEnviarWhatsAppDireto(c)} 
+                    disabled={sendingId === c.id} 
+                    className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 disabled:opacity-50 transition-all" 
+                    title="Cobrar WhatsApp (Envio Instantâneo)"
+                  >
+                    {sendingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                   </button>
                   <button onClick={() => { setSelectedCobranca(c); setIsHistoricoModalOpen(true); }} className="p-1.5 bg-neutral-100 text-neutral-600 rounded-lg hover:bg-neutral-200" title="Ver Detalhes">
                     <History className="h-4 w-4" />
@@ -1288,8 +1328,35 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
           <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2">Template WhatsApp (Gatilho Fila de Cobrança)</label>
           <p className="text-[10px] text-neutral-400 mb-2 font-medium">Use as tags: <span className="font-bold text-indigo-500">{"{nome_cliente}"}</span>, <span className="font-bold text-indigo-500">{"{numero_fatura}"}</span>, <span className="font-bold text-indigo-500">{"{valor_atualizado}"}</span>, <span className="font-bold text-indigo-500">{"{dias_atraso}"}</span></p>
           <textarea 
-            rows={4}
-            value={editingConfigs.cobranca_wp_template || ''}
+            rows={12}
+            value={
+              editingConfigs.cobranca_wp_template?.trim().startsWith("Olá {nome_cliente}, notamos que a sua fatura") 
+                ? [
+                    `⚠️ *AVISO DE COBRANÇA - PENDÊNCIA FINANCEIRA* ⚠️`,
+                    ``,
+                    `Olá, *{nome_cliente}*! 👋`,
+                    ``,
+                    `Identificamos uma pendência financeira em aberto no sistema *GSA HUB* referente à sua fatura. 📄`,
+                    ``,
+                    `📋 *DETALHES DA PENDÊNCIA:*`,
+                    `🧾 *Fatura:* #{numero_fatura}`,
+                    `⏰ *Dias em Atraso:* {dias_atraso} dias`,
+                    `💸 *Valor Atualizado (c/ encargos):* *{valor_atualizado}*`,
+                    ``,
+                    `💬 Como podemos auxiliar com a quitação desta pendência?`,
+                    `Estamos à disposição para negociar as melhores condições de pagamento para você de forma rápida e segura! 🤝`,
+                    ``,
+                    `▶️ *COMO RESOLVER AGORA MESMO:*`,
+                    `Responda esta mensagem com a opção desejada para autoatendimento:`,
+                    ``,
+                    `1️⃣ Solicitar 2ª via da Fatura / Boleto`,
+                    `2️⃣ Gerar código PIX para pagamento`,
+                    `3️⃣ Negociar dívida`,
+                    ``,
+                    `_Mensagem enviada via GSA HUB._`
+                  ].join('\n')
+                : editingConfigs.cobranca_wp_template || ''
+            }
             onChange={e => setEditingConfigs({...editingConfigs, cobranca_wp_template: e.target.value})}
             className="w-full bg-neutral-50 border border-neutral-200 rounded-2xl p-4 text-sm font-medium text-neutral-800 outline-none focus:ring-2 focus:ring-green-500 resize-none" 
           />
@@ -1488,16 +1555,31 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
         </div>
       </Modal>
 
-      <Modal isOpen={isWpModalOpen} onClose={() => setIsWpModalOpen(false)} title="Enviar Mensagem" size="md">
+      <Modal isOpen={isWpModalOpen} onClose={() => setIsWpModalOpen(false)} title="Enviar Notificação de Cobrança" size="md">
         <div className="space-y-4">
-          <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">Prévia da Mensagem (WhatsApp)</p>
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">Prévia da Mensagem (WhatsApp)</p>
+            <span className="text-[10px] font-bold text-neutral-400">Disparo Instantâneo</span>
+          </div>
           <textarea
             value={wpMessage}
             onChange={(e) => setWpMessage(e.target.value)}
-            className="w-full h-32 rounded-2xl bg-neutral-50 border border-neutral-200 p-4 font-medium text-sm focus:ring-2 focus:ring-green-500 outline-none resize-none"
+            className="w-full h-56 rounded-2xl bg-neutral-50 border border-neutral-200 p-4 font-medium text-xs text-neutral-800 focus:ring-2 focus:ring-green-500 outline-none resize-none"
           />
-          <button onClick={confirmarWhatsApp} disabled={isSubmittingAcao} className="w-full bg-green-500 hover:bg-green-600 py-4 rounded-xl text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all disabled:opacity-50">
-            <Send className="h-4 w-4" /> Enviar para o Cliente
+          <button 
+            onClick={() => selectedCobranca && handleEnviarWhatsAppDireto(selectedCobranca)} 
+            disabled={sendingId === selectedCobranca?.id} 
+            className="w-full bg-green-500 hover:bg-green-600 py-4 rounded-xl text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-green-500/20"
+          >
+            {sendingId === selectedCobranca?.id ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Enviando Notificação...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" /> Enviar Notificação para o Cliente
+              </>
+            )}
           </button>
         </div>
       </Modal>

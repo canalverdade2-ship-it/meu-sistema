@@ -937,185 +937,199 @@ const handleBulkDelete = async () => {
                     </div>
                   )}
 
-                  <div className="flex gap-2 pt-2">
-                    <button
-                      type="button"
-                      disabled={isSavingDiscount}
-                      onClick={async () => {
-                        const originalVal = selectedProduto.valor || 0;
-                        const descVal = parseFloat(discountValue) || 0;
+                  {(() => {
+                    const descVal = parseFloat(discountValue);
+                    const originalVal = selectedProduto.valor || 0;
+                    const isDiscountFormValid = discountActive &&
+                      !isNaN(descVal) &&
+                      descVal > 0 &&
+                      (discountType !== 'porcentagem' || descVal < 100) &&
+                      (discountType !== 'valor' || descVal < originalVal) &&
+                      (discountValidityType !== 'determinado' || (Boolean(discountEndDate) && discountEndDate >= new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(new Date()))) &&
+                      (!discountQuantityLimited || (Boolean(discountQuantityLimit) && parseInt(discountQuantityLimit, 10) > 0));
 
-                        if (discountActive) {
-                          if (isNaN(descVal) || descVal <= 0) {
-                            toast.error('Informe um valor de desconto maior que zero.');
-                            return;
-                          }
-                          if (discountType === 'porcentagem' && descVal >= 100) {
-                            toast.error('O desconto de porcentagem deve ser menor que 100%.');
-                            return;
-                          }
-                          if (discountType === 'valor' && descVal >= originalVal) {
-                            toast.error('O desconto fixo deve ser menor que o preço original.');
-                            return;
-                          }
-                          if (discountValidityType === 'determinado') {
-                            if (!discountEndDate) {
-                              toast.error('Informe a data final da promoção.');
-                              return;
+                    return (
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          type="button"
+                          disabled={isSavingDiscount || !isDiscountFormValid}
+                          onClick={async () => {
+                            if (!isDiscountFormValid) return;
+
+                            if (discountActive) {
+                              if (isNaN(descVal) || descVal <= 0) {
+                                toast.error('Informe um valor de desconto maior que zero.');
+                                return;
+                              }
+                              if (discountType === 'porcentagem' && descVal >= 100) {
+                                toast.error('O desconto de porcentagem deve ser menor que 100%.');
+                                return;
+                              }
+                              if (discountType === 'valor' && descVal >= originalVal) {
+                                toast.error('O desconto fixo deve ser menor que o preço original.');
+                                return;
+                              }
+                              if (discountValidityType === 'determinado') {
+                                if (!discountEndDate) {
+                                  toast.error('Informe a data final da promoção.');
+                                  return;
+                                }
+                                const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+                                if (discountEndDate < today) {
+                                  toast.error('A data final da promoção não pode ser no passado.');
+                                  return;
+                                }
+                              }
                             }
-                            const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(new Date());
-                            if (discountEndDate < today) {
-                              toast.error('A data final da promoção não pode ser no passado.');
-                              return;
-                            }
-                          }
-                        }
 
-                        setIsSavingDiscount(true);
-                        try {
-                          // Calcula o fim_em em UTC a partir da data local (fim do dia em SP)
-                          let fimEmISO: string | null = null;
-                          if (discountActive && discountValidityType === 'determinado' && discountEndDate) {
-                            // Fim do dia em SP = próximo dia 00:00 UTC-3 = próximo dia 03:00 UTC
-                            fimEmISO = new Date(`${discountEndDate}T23:59:59-03:00`).toISOString();
-                          }
-                          const limiteQtd = discountQuantityLimited && discountQuantityLimit ? parseInt(discountQuantityLimit, 10) : null;
+                            setIsSavingDiscount(true);
+                            try {
+                              let fimEmISO: string | null = null;
+                              if (discountActive && discountValidityType === 'determinado' && discountEndDate) {
+                                fimEmISO = new Date(`${discountEndDate}T23:59:59-03:00`).toISOString();
+                              }
+                              const limiteQtd = discountQuantityLimited && discountQuantityLimit ? parseInt(discountQuantityLimit, 10) : null;
 
-                          // Validar quantidade
-                          if (discountActive && discountQuantityLimited) {
-                            if (!limiteQtd || limiteQtd < 1 || !Number.isInteger(limiteQtd)) {
-                              toast.error('A quantidade limite deve ser um número inteiro maior que zero.');
+                              if (discountActive && discountQuantityLimited) {
+                                if (!limiteQtd || limiteQtd < 1 || !Number.isInteger(limiteQtd)) {
+                                  toast.error('A quantidade limite deve ser um número inteiro maior que zero.');
+                                  setIsSavingDiscount(false);
+                                  return;
+                                }
+                                const utilizada = selectedProduto.desconto_quantidade_utilizada || 0;
+                                if (limiteQtd < utilizada) {
+                                  toast.error(`O limite não pode ser menor que as ${utilizada} unidades já utilizadas nesta campanha.`);
+                                  setIsSavingDiscount(false);
+                                  return;
+                                }
+                              }
+
+                              const data = await setAdminProductDiscount(
+                                selectedProduto.id,
+                                discountActive,
+                                discountActive ? discountType : null,
+                                discountActive ? descVal : null,
+                                discountActive ? discountValidityType : 'indeterminado',
+                                fimEmISO,
+                                discountActive ? discountQuantityLimited : false,
+                                discountActive && discountQuantityLimited ? limiteQtd : null
+                              );
+
+                              if (data && data.success) {
+                                toast.success('Configuração de desconto atualizada!');
+                                
+                                await logService.logAction({
+                                  acao: 'EDITAR_PRODUTO',
+                                  ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+                                  ator_id: colaboradorId || undefined,
+                                  ator_nome: colaboradorNome || 'Administrador',
+                                  detalhes: discountActive 
+                                    ? `Configurou desconto no produto ${selectedProduto.nome}: Tipo: ${discountType}, Valor: ${descVal}, Promocional: R$ ${data.valor_promocional}, Efetivo: ${data.desconto_percentual}% OFF`
+                                    : `Removeu desconto do produto ${selectedProduto.nome}`
+                                });
+
+                                setSelectedProduto({
+                                  ...selectedProduto,
+                                  desconto_ativo: data.desconto_ativo,
+                                  desconto_tipo: data.desconto_tipo,
+                                  desconto_valor: data.desconto_valor,
+                                  valor_promocional: data.valor_promocional,
+                                  desconto_percentual: data.desconto_percentual,
+                                  desconto_prazo_tipo: data.desconto_prazo_tipo || discountValidityType,
+                                  desconto_fim_em: data.desconto_fim_em || null,
+                                  desconto_limite_quantidade_ativo: data.desconto_limite_quantidade_ativo || false,
+                                  desconto_quantidade_limite: data.desconto_quantidade_limite || null,
+                                  desconto_quantidade_utilizada: data.desconto_quantidade_utilizada || 0,
+                                  desconto_campanha_id: data.desconto_campanha_id || null
+                                });
+
+                                fetchProdutos();
+                              } else {
+                                toast.error('Erro ao atualizar desconto.');
+                              }
+                            } catch (err: any) {
+                              console.error(err);
+                              toast.error(err.message || 'Erro ao aplicar desconto.');
+                            } finally {
                               setIsSavingDiscount(false);
-                              return;
                             }
-                            const utilizada = selectedProduto.desconto_quantidade_utilizada || 0;
-                            if (limiteQtd < utilizada) {
-                              toast.error(`O limite não pode ser menor que as ${utilizada} unidades já utilizadas nesta campanha.`);
-                              setIsSavingDiscount(false);
-                              return;
-                            }
-                          }
+                          }}
+                          className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                            isDiscountFormValid && !isSavingDiscount
+                              ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 cursor-pointer'
+                              : 'bg-neutral-200 text-neutral-400 cursor-not-allowed shadow-none'
+                          }`}
+                        >
+                          {isSavingDiscount ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Check className="w-3.5 h-3.5" />
+                          )}
+                          Aplicar desconto
+                        </button>
 
-                          const data = await setAdminProductDiscount(
-                            selectedProduto.id,
-                            discountActive,
-                            discountActive ? discountType : null,
-                            discountActive ? descVal : null,
-                            discountActive ? discountValidityType : 'indeterminado',
-                            fimEmISO,
-                            discountActive ? discountQuantityLimited : false,
-                            discountActive && discountQuantityLimited ? limiteQtd : null
-                          );
+                        {selectedProduto.desconto_ativo && (
+                          <button
+                            type="button"
+                            disabled={isSavingDiscount}
+                            onClick={async () => {
+                              setIsSavingDiscount(true);
+                              try {
+                                const data = await setAdminProductDiscount(
+                                  selectedProduto.id,
+                                  false,
+                                  null,
+                                  null
+                                );
 
-                          if (data && data.success) {
-                            toast.success('Configuração de desconto atualizada!');
-                            
-                            await logService.logAction({
-                              acao: 'EDITAR_PRODUTO',
-                              ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-                              ator_id: colaboradorId || undefined,
-                              ator_nome: colaboradorNome || 'Administrador',
-                              detalhes: discountActive 
-                                ? `Configurou desconto no produto ${selectedProduto.nome}: Tipo: ${discountType}, Valor: ${descVal}, Promocional: R$ ${data.valor_promocional}, Efetivo: ${data.desconto_percentual}% OFF`
-                                : `Removeu desconto do produto ${selectedProduto.nome}`
-                            });
+                                if (data && data.success) {
+                                  toast.success('Desconto removido com sucesso!');
+                                  
+                                  await logService.logAction({
+                                    acao: 'EDITAR_PRODUTO',
+                                    ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+                                    ator_id: colaboradorId || undefined,
+                                    ator_nome: colaboradorNome || 'Administrador',
+                                    detalhes: `Removeu desconto do produto ${selectedProduto.nome}`
+                                  });
 
-                            setSelectedProduto({
-                              ...selectedProduto,
-                              desconto_ativo: data.desconto_ativo,
-                              desconto_tipo: data.desconto_tipo,
-                              desconto_valor: data.desconto_valor,
-                              valor_promocional: data.valor_promocional,
-                              desconto_percentual: data.desconto_percentual,
-                              desconto_prazo_tipo: data.desconto_prazo_tipo || discountValidityType,
-                              desconto_fim_em: data.desconto_fim_em || null,
-                              desconto_limite_quantidade_ativo: data.desconto_limite_quantidade_ativo || false,
-                              desconto_quantidade_limite: data.desconto_quantidade_limite || null,
-                              desconto_quantidade_utilizada: data.desconto_quantidade_utilizada || 0,
-                              desconto_campanha_id: data.desconto_campanha_id || null
-                            });
+                                  setDiscountActive(false);
+                                  setDiscountValue('');
+                                  setDiscountValidityType('indeterminado');
+                                  setDiscountEndDate('');
 
-                            fetchProdutos();
-                          } else {
-                            toast.error('Erro ao atualizar desconto.');
-                          }
-                        } catch (err: any) {
-                          console.error(err);
-                          toast.error(err.message || 'Erro ao aplicar desconto.');
-                        } finally {
-                          setIsSavingDiscount(false);
-                        }
-                      }}
-                      className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
-                    >
-                      {isSavingDiscount ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Check className="w-3.5 h-3.5" />
-                      )}
-                      Aplicar desconto
-                    </button>
+                                  setDiscountQuantityLimited(false);
+                                  setDiscountQuantityLimit('');
+                                  setSelectedProduto({
+                                    ...selectedProduto,
+                                    desconto_ativo: false,
+                                    desconto_tipo: null,
+                                    desconto_valor: null,
+                                    valor_promocional: null,
+                                    desconto_percentual: null,
+                                    desconto_prazo_tipo: undefined,
+                                    desconto_fim_em: undefined,
+                                    desconto_limite_quantidade_ativo: false,
+                                    desconto_quantidade_limite: null
+                                  });
 
-                    {selectedProduto.desconto_ativo && (
-                      <button
-                        type="button"
-                        disabled={isSavingDiscount}
-                        onClick={async () => {
-                          setIsSavingDiscount(true);
-                          try {
-                            const data = await setAdminProductDiscount(
-                              selectedProduto.id,
-                              false,
-                              null,
-                              null
-                            );
-
-                            if (data && data.success) {
-                              toast.success('Desconto removido com sucesso!');
-                              
-                              await logService.logAction({
-                                acao: 'EDITAR_PRODUTO',
-                                ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-                                ator_id: colaboradorId || undefined,
-                                ator_nome: colaboradorNome || 'Administrador',
-                                detalhes: `Removeu desconto do produto ${selectedProduto.nome}`
-                              });
-
-                              setDiscountActive(false);
-                              setDiscountValue('');
-                              setDiscountValidityType('indeterminado');
-                              setDiscountEndDate('');
-
-                              setDiscountQuantityLimited(false);
-                              setDiscountQuantityLimit('');
-                              setSelectedProduto({
-                                ...selectedProduto,
-                                desconto_ativo: false,
-                                desconto_tipo: null,
-                                desconto_valor: null,
-                                valor_promocional: null,
-                                desconto_percentual: null,
-                                desconto_prazo_tipo: undefined,
-                                desconto_fim_em: undefined,
-                                desconto_limite_quantidade_ativo: false,
-                                desconto_quantidade_limite: null
-                              });
-
-                              fetchProdutos();
-                            }
-                          } catch (err: any) {
-                            console.error(err);
-                            toast.error(err.message || 'Erro ao remover desconto.');
-                          } finally {
-                            setIsSavingDiscount(false);
-                          }
-                        }}
-                        className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all border border-red-200 disabled:opacity-50"
-                      >
-                        Remover desconto
-                      </button>
-                    )}
-                  </div>
+                                  fetchProdutos();
+                                }
+                              } catch (err: any) {
+                                console.error(err);
+                                toast.error(err.message || 'Erro ao remover desconto.');
+                              } finally {
+                                setIsSavingDiscount(false);
+                              }
+                            }}
+                            className="py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all border border-red-200 disabled:opacity-50"
+                          >
+                            Remover desconto
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 

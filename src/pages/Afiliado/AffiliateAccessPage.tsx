@@ -105,10 +105,15 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
   const authenticate = async (document: string, accessPin: string) => {
     const cleanDocument = document.replace(/\D/g, '');
     const data = await sessionService.loginWithPin(cleanDocument, accessPin, 'cliente');
-    if (!data?.valid) {
+    const currentSession = sessionService.getCurrentSession();
+    if (!data?.valid && !data?.success && !currentSession?.atorId) {
       throw new Error(data?.error === 'blocked' ? 'Acesso temporariamente bloqueado.' : 'Documento ou PIN incorreto.');
     }
-    return data;
+    return {
+      ...data,
+      clientId: data?.id || data?.atorId || data?.ator_id || data?.session?.ator_id || currentSession?.atorId || '',
+      clientName: data?.nome || data?.atorNome || data?.ator_nome || currentSession?.atorNome || 'Afiliado',
+    };
   };
 
   const login = async () => {
@@ -118,13 +123,13 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
       const data = await authenticate(documentInput, pin);
       await logService.logAction({
         ator_tipo: 'cliente',
-        ator_id: data.id,
-        ator_nome: data.nome,
+        ator_id: data.clientId,
+        ator_nome: data.clientName,
         acao: 'LOGIN_AFILIADO',
         detalhes: 'Acesso efetuado pelo Portal do Afiliado',
       });
       toast.success('Acesso confirmado. Bem-vindo ao Portal do Afiliado.');
-      onLogin(data.id);
+      onLogin(data.clientId);
     } catch (error: any) {
       setPin('');
       toast.error(error?.message || 'Não foi possível entrar no portal.');
@@ -152,13 +157,13 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
       });
       await logService.logAction({
         ator_tipo: 'cliente',
-        ator_id: data.id,
-        ator_nome: data.nome,
+        ator_id: data.clientId,
+        ator_nome: data.clientName,
         acao: 'ATIVAR_AFILIADO',
         detalhes: 'Perfil ativado após autenticação pelo Portal do Afiliado',
       });
       toast.success('Perfil de afiliado ativado com segurança.');
-      onLogin(data.id);
+      onLogin(data.clientId);
     } catch (error: any) {
       await sessionService.endSession().catch(() => undefined);
       toast.error(error?.message || 'Não foi possível ativar o perfil de afiliado.');

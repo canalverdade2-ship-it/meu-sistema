@@ -1,0 +1,80 @@
+[
+  {
+    "id": "gsaDisparadorEvo01",
+    "name": "GSA System - Disparador WhatsApp (Evolution API)",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "send-whatsapp",
+          "options": {}
+        },
+        "name": "Webhook GSA System",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "gsa-whatsapp-webhook"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/GSA_WhatsApp",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "gsa_hub_evolution_token_2026"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $json.body.phone }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.body.message }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "name": "Evolution WhatsApp API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          500,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook GSA System": {
+        "main": [
+          [
+            {
+              "node": "Evolution WhatsApp API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": true,
+    "settings": {
+      "executionOrder": "v1"
+    }
+  }
+]

@@ -1,0 +1,1 @@
+curl -s -X POST http://localhost:8080/instance/create -H "Content-Type: application/json" -H "apikey: gsa_hub_evolution_token_2026" -d '{"instanceName": "GSA_WhatsApp", "integration": "WHATSAPP-BAILEYS", "qrcode": true}'

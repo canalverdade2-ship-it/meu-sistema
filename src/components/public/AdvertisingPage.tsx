@@ -418,7 +418,7 @@ export function AdvertisingPage({ mode = 'showcase', onBack, onLogin }: Advertis
         success: boolean;
         protocol?: string;
         error?: string;
-      }>('gsa-public-advertising', { body: requestPayload });
+      }>('gsa-ads-public', { body: requestPayload });
 
       if (error) throw error;
       if (!data?.success || !data.protocol) {

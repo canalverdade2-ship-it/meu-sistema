@@ -6,12 +6,14 @@ const sourcePath = resolve(process.cwd(), 'scripts/check-admin-migrations-runtim
 const generatedPath = resolve(process.cwd(), 'scripts/.check-admin-migrations-runtime.generated.cjs');
 const source = readFileSync(sourcePath, 'utf8');
 
-const marker = "const migrations = [\n";
-const hardeningEntry = "  'supabase/migrations/20260720234500_admin_identity_permissions_hardening.sql',\n";
-const extensionsEntry = "  'supabase/migrations/20260720235450_enable_admin_extensions.sql',\n";
-const hashEntry = "  'supabase/migrations/20260721003000_hash_collaborator_credentials.sql',\n";
-const unsafeSuspensionScenario = `    await setClaims(client, 'colaborador', newId, newSession);\n    await client.query("UPDATE public.colaboradores SET status='suspenso' WHERE id=$1", [newId]);\n    await expectError(() => client.query('SELECT public.gsa_admin_context()'), 'Colaborador suspenso deve perder o contexto.');\n`;
-const safeSuspensionScenario = `    await setClaims(client, 'admin', IDS.admin, IDS.adminSession);\n    await client.query("UPDATE public.colaboradores SET status='suspenso' WHERE id=$1", [newId]);\n    await setClaims(client, 'colaborador', newId, newSession);\n    await expectError(() => client.query('SELECT public.gsa_admin_context()'), 'Colaborador suspenso deve perder o contexto.');\n`;
+const marker = source.includes("const migrations = [\r\n") ? "const migrations = [\r\n" : "const migrations = [\n";
+const hardeningEntry = source.includes("  'supabase/migrations/20260720234500_admin_identity_permissions_hardening.sql',\r\n") ? "  'supabase/migrations/20260720234500_admin_identity_permissions_hardening.sql',\r\n" : "  'supabase/migrations/20260720234500_admin_identity_permissions_hardening.sql',\n";
+const extensionsEntry = source.includes("  'supabase/migrations/20260720235450_enable_admin_extensions.sql',\r\n") ? "  'supabase/migrations/20260720235450_enable_admin_extensions.sql',\r\n" : "  'supabase/migrations/20260720235450_enable_admin_extensions.sql',\n";
+const hashEntry = source.includes("  'supabase/migrations/20260721003000_hash_collaborator_credentials.sql',\r\n") ? "  'supabase/migrations/20260721003000_hash_collaborator_credentials.sql',\r\n" : "  'supabase/migrations/20260721003000_hash_collaborator_credentials.sql',\n";
+const unsafeSuspensionScenarioRaw = `    await setClaims(client, 'colaborador', newId, newSession);\n    await client.query("UPDATE public.colaboradores SET status='suspenso' WHERE id=$1", [newId]);\n    await expectError(() => client.query('SELECT public.gsa_admin_context()'), 'Colaborador suspenso deve perder o contexto.');\n`;
+const safeSuspensionScenarioRaw = `    await setClaims(client, 'admin', IDS.admin, IDS.adminSession);\n    await client.query("UPDATE public.colaboradores SET status='suspenso' WHERE id=$1", [newId]);\n    await setClaims(client, 'colaborador', newId, newSession);\n    await expectError(() => client.query('SELECT public.gsa_admin_context()'), 'Colaborador suspenso deve perder o contexto.');\n`;
+const unsafeSuspensionScenario = source.includes("\r\n") ? unsafeSuspensionScenarioRaw.replace(/\n/g, "\r\n") : unsafeSuspensionScenarioRaw;
+const safeSuspensionScenario = source.includes("\r\n") ? safeSuspensionScenarioRaw.replace(/\n/g, "\r\n") : safeSuspensionScenarioRaw;
 
 for (const required of [marker, hardeningEntry, extensionsEntry, hashEntry, unsafeSuspensionScenario]) {
   if (!source.includes(required)) {

@@ -226,7 +226,7 @@ export function PartnerApplicationForm({ onCancel }: PartnerApplicationFormProps
         <div className="partner-application-success__mark"><CheckCircle2 aria-hidden="true" /></div>
         <p className="partners-kicker">Registro concluído</p>
         <h2>Recebemos sua solicitação.</h2>
-        <p>Os dados foram enviados ao painel administrativo da GSA HUB e ficaram com o status <strong>Em análise</strong>. A publicação não é automática: a equipe responsável revisará as informações antes de qualquer aprovação.</p>
+        <p>Os dados foram enviados ao sistema da GSA HUB e ficaram com o status <strong>Em análise</strong>. A publicação não é automática: a equipe responsável revisará as informações antes de qualquer aprovação.</p>
         <div className="partner-protocol-box">
           <div><span>Protocolo da solicitação</span><strong>{protocol}</strong></div>
           <FileCheck2 aria-hidden="true" />

@@ -85,24 +85,26 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
 
 const queryClient = new QueryClient();
 
-const SecureAdminPanel = lazy(() => import('./pages/SecureAdminPanel').then((module) => ({ default: module.SecureAdminPanel })));
-const ClientPortal = lazy(() => import('./pages/ClientPortal').then((module) => ({ default: module.ClientPortal })));
-const ClientLoginPage = lazy(() => import('./pages/ClientLoginPage').then((module) => ({ default: module.ClientLoginPage })));
-const BusinessRegistrationPage = lazy(() => import('./pages/BusinessRegistrationPage').then((module) => ({ default: module.BusinessRegistrationPage })));
-const RestrictedAccessHubPage = lazy(() => import('./pages/RestrictedAccessHubPage').then((module) => ({ default: module.RestrictedAccessHubPage })));
-const ProviderAccessPage = lazy(() => import('./pages/ProviderAccessPage').then((module) => ({ default: module.ProviderAccessPage })));
-const ProviderLandingPage = lazy(() => import('./pages/Prestador/ProviderLandingPage').then((module) => ({ default: module.ProviderLandingPage })));
-const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard').then((module) => ({ default: module.PrestadorDashboard })));
-const FornecedorDashboard = lazy(() => import('./pages/Fornecedor/FornecedorDashboard').then((module) => ({ default: module.FornecedorDashboard })));
-const FornecedorAccessPage = lazy(() => import('./pages/Fornecedor/FornecedorAccessPage').then((module) => ({ default: module.FornecedorAccessPage })));
-const FornecedorLandingPage = lazy(() => import('./pages/Fornecedor/FornecedorLandingPage').then((module) => ({ default: module.FornecedorLandingPage })));
-const AdvertiserPortal = lazy(() => import('./pages/AdvertiserPortal').then((module) => ({ default: module.AdvertiserPortal })));
-const MarketplaceGSAStore = lazy(() => import('./components/client/marketplace/MarketplaceGSAStore').then((module) => ({ default: module.MarketplaceGSAStore })));
-const AffiliatePublicPage = lazy(() => import('./components/public/AffiliatePublicPage').then((module) => ({ default: module.AffiliatePublicPage })));
-const AffiliateAccessPage = lazy(() => import('./pages/Afiliado/AffiliateAccessPage').then((module) => ({ default: module.AffiliateAccessPage })));
-const AfiliadoDashboard = lazy(() => import('./pages/Afiliado/AfiliadoDashboard').then((module) => ({ default: module.AfiliadoDashboard })));
-const CareersLandingPage = lazy(() => import('./pages/Careers/CareersLandingPage').then((module) => ({ default: module.CareersLandingPage })));
-const CareersAccessPage = lazy(() => import('./pages/Careers/CareersAccessPage').then((module) => ({ default: module.CareersAccessPage })));
+import { lazyWithRetry } from './lib/lazyWithRetry';
+
+const SecureAdminPanel = lazyWithRetry(() => import('./pages/SecureAdminPanel'), 'SecureAdminPanel');
+const ClientPortal = lazyWithRetry(() => import('./pages/ClientPortal'), 'ClientPortal');
+const ClientLoginPage = lazyWithRetry(() => import('./pages/ClientLoginPage'), 'ClientLoginPage');
+const BusinessRegistrationPage = lazyWithRetry(() => import('./pages/BusinessRegistrationPage'), 'BusinessRegistrationPage');
+const RestrictedAccessHubPage = lazyWithRetry(() => import('./pages/RestrictedAccessHubPage'), 'RestrictedAccessHubPage');
+const ProviderAccessPage = lazyWithRetry(() => import('./pages/ProviderAccessPage'), 'ProviderAccessPage');
+const ProviderLandingPage = lazyWithRetry(() => import('./pages/Prestador/ProviderLandingPage'), 'ProviderLandingPage');
+const PrestadorDashboard = lazyWithRetry(() => import('./pages/Prestador/PrestadorDashboard'), 'PrestadorDashboard');
+const FornecedorDashboard = lazyWithRetry(() => import('./pages/Fornecedor/FornecedorDashboard'), 'FornecedorDashboard');
+const FornecedorAccessPage = lazyWithRetry(() => import('./pages/Fornecedor/FornecedorAccessPage'), 'FornecedorAccessPage');
+const FornecedorLandingPage = lazyWithRetry(() => import('./pages/Fornecedor/FornecedorLandingPage'), 'FornecedorLandingPage');
+const AdvertiserPortal = lazyWithRetry(() => import('./pages/AdvertiserPortal'), 'AdvertiserPortal');
+const MarketplaceGSAStore = lazyWithRetry(() => import('./components/client/marketplace/MarketplaceGSAStore'), 'MarketplaceGSAStore');
+const AffiliatePublicPage = lazyWithRetry(() => import('./components/public/AffiliatePublicPage'), 'AffiliatePublicPage');
+const AffiliateAccessPage = lazyWithRetry(() => import('./pages/Afiliado/AffiliateAccessPage'), 'AffiliateAccessPage');
+const AfiliadoDashboard = lazyWithRetry(() => import('./pages/Afiliado/AfiliadoDashboard'), 'AfiliadoDashboard');
+const CareersLandingPage = lazyWithRetry(() => import('./pages/Careers/CareersLandingPage'), 'CareersLandingPage');
+const CareersAccessPage = lazyWithRetry(() => import('./pages/Careers/CareersAccessPage'), 'CareersAccessPage');
 
 function RouteLoading() {
   return <div className="flex min-h-[50vh] items-center justify-center bg-neutral-50 text-sm font-semibold text-neutral-600" role="status">Carregando ambiente...</div>;
@@ -149,12 +151,6 @@ export default function App() {
   };
 
   const handleLoginAdmin = (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => {
-    localStorage.setItem('adminType', adminDetails.type);
-    if (adminDetails.id) localStorage.setItem('colaboradorId', adminDetails.id);
-    else localStorage.removeItem('colaboradorId');
-    if (adminDetails.nome) localStorage.setItem('colaboradorNome', adminDetails.nome);
-    else localStorage.removeItem('colaboradorNome');
-
     setSession({
       adminAuth: true,
       adminType: adminDetails.type,
@@ -174,10 +170,9 @@ export default function App() {
 
   const handleLoginPrestador = (prestadorId: string) => {
     setSession({ prestadorId });
-    const params = new URLSearchParams(window.location.search);
-    const returnTo = params.get('returnTo');
+    const returnTo = readSafeReturnTo(window.location.search, ['/prestador']);
     if (returnTo) {
-      replace(decodeURIComponent(returnTo));
+      replace(returnTo);
     } else {
       replace(routes.provider.dashboard());
     }
@@ -194,12 +189,20 @@ export default function App() {
     }
   };
 
-  const handleLoginAfiliado = async (clientId: string) => {
+  const handleLoginAfiliado = async (clientId?: string) => {
+    const currentSession = sessionService.getCurrentSession();
+    const finalId = clientId || currentSession?.atorId || session.clientId;
+
+    if (!finalId) {
+      toast.error('Não foi possível identificar o ID do afiliado.');
+      return;
+    }
+
     sessionService.setClientPersonType('pf');
-    setSession({ clientId, clientPersonType: 'pf' });
+    setSession({ clientId: finalId, clientPersonType: 'pf' });
 
     // Migra carrinho de visitante se houver
-    const didMigrate = await migrateGuestCartToAccount(clientId);
+    const didMigrate = await migrateGuestCartToAccount(finalId);
 
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get('returnTo');

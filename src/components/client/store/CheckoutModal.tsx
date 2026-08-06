@@ -24,8 +24,10 @@ type CartItem = {
 
 const PENDING_STORE_COUPONS_KEY = 'gsa_pending_store_coupons';
 
-export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplicadas = [], clientId, onSuccess }: { isOpen: boolean, onClose: () => void, cartItems: any[], promosAplicadas?: any[], clientId: string, onSuccess: (orderId?: string) => void }) {
+export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplicadas = [], clientId, onSuccess, travelInstallments }: { isOpen: boolean, onClose: () => void, cartItems: any[], promosAplicadas?: any[], clientId: string, onSuccess: (orderId?: string) => void, travelInstallments?: number }) {
   const checkoutRequestId = useRef<string>(generateUUID());
+  const normalizedTravelInstallments = travelInstallments || 1;
+  // Parcelamento da viagem | parcelas: normalizedTravelInstallments | Total do contrato
   const [step, setStep] = useState(1);
   const [endereco, setEndereco] = useState({ cep: '', logradouro: '', bairro: '', cidade: '', uf: '', numero: '', complemento: '' });
   const [isEditingEndereco, setIsEditingEndereco] = useState(false);
@@ -325,8 +327,8 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
     setPontosAplicados(cleanVal);
   };
 
-  const descontoPontos = usarPontos ? (Math.min(pontosAplicados, maxPontosValidos) * 0.01) : 0;
-  const subtotalAposPontos = Math.max(0, subtotalComPromos - descontoPontos);
+  const descontoPontos = usarPontos ? Number((Math.min(pontosAplicados, maxPontosValidos) * 0.01).toFixed(2)) : 0;
+  const subtotalAposPontos = Number(Math.max(0, subtotalComPromos - descontoPontos).toFixed(2));
 
   // 2. Calcula descontos lógicos baseado no cupom selecionado
   const calcularDesconto = () => {
@@ -360,15 +362,15 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
     return Math.min(desc, subtotalAposPontos);
   };
 
-  const descontoCalculado = calcularDesconto();
+  const descontoCalculado = Number(calcularDesconto().toFixed(2));
   
   // Taxa de entrega final (0 se cupom de frete grátis, caso contrário a taxa fixa se houver produtos)
   const taxaEntregaFinal = (temProdutos && !cupomEntrega) ? taxaEntregaFixa : (cupomEntrega?.tipo_entrega === 'taxa_fixa' ? (cupomEntrega.taxa_fixa_entrega || 0) : 0);
 
-  const totalAntesCarteira = Math.max(subtotalComPromos - descontoPontos - descontoCalculado + taxaEntregaFinal, 0);
+  const totalAntesCarteira = Number(Math.max(subtotalComPromos - descontoPontos - descontoCalculado + taxaEntregaFinal, 0).toFixed(2));
 
   // 1.5 Lógica de Saldo na Carteira Virtual
-  const maxSaldoValido = Math.min(saldoCarteira, totalAntesCarteira);
+  const maxSaldoValido = Number(Math.min(saldoCarteira, totalAntesCarteira).toFixed(2));
   
   const handleToggleSaldoCarteira = (checked: boolean) => {
     setUsarSaldoCarteira(checked);
@@ -384,13 +386,13 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       setSaldoCarteiraAplicado(0);
       return;
     }
-    const cleanVal = Math.min(val, maxSaldoValido);
+    const cleanVal = Number(Math.min(val, maxSaldoValido).toFixed(2));
     setSaldoCarteiraAplicado(cleanVal);
   };
 
-  const descontoCarteira = usarSaldoCarteira ? Math.min(saldoCarteiraAplicado, maxSaldoValido) : 0;
+  const descontoCarteira = usarSaldoCarteira ? Number(Math.min(saldoCarteiraAplicado, maxSaldoValido).toFixed(2)) : 0;
   
-  const totalHoje = Math.max(totalAntesCarteira - descontoCarteira, 0);
+  const totalHoje = Number(Math.max(totalAntesCarteira - descontoCarteira, 0).toFixed(2));
   
   const taxaJurosAplicada = formaPagamento === 'credito_loja' 
     ? (numParcelas === 1 ? jurosCreditoAvista : jurosCreditoAvista + (jurosCreditoParcelado * numParcelas))
@@ -816,37 +818,37 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           </div>
 
           {/* Sessão de Pontos Fidelidade GSA VIP */}
-          <div className="bg-gradient-to-r from-purple-50 via-indigo-50/30 to-purple-50 rounded-2xl p-5 border border-purple-100/80 shadow-sm relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-24 h-24 bg-purple-200/20 rounded-full blur-xl"></div>
+          <div className="relative overflow-hidden rounded-2xl border border-purple-700/50 bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 p-5 text-white shadow-lg">
+            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-amber-400/10 blur-xl"></div>
             
-            <div className="flex items-center justify-between mb-4 relative z-10">
+            <div className="relative z-10 mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-purple-600 text-white shadow-md shadow-purple-600/10">
-                  <Coins className="w-4 h-4" />
+                <div className="rounded-xl bg-amber-400 p-2.5 text-purple-950 shadow-md shadow-amber-400/20">
+                  <Coins className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black text-neutral-900 uppercase tracking-widest">Resgatar Pontos VIP</h3>
-                  <p className="text-[10px] text-neutral-500 font-bold">Cada 100 pontos equivalem a R$ 1,00</p>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-white">Resgatar Pontos VIP</h3>
+                  <p className="text-[10px] font-bold text-purple-200/90">Cada 100 pontos equivalem a R$ 1,00</p>
                 </div>
               </div>
 
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex cursor-pointer items-center">
                 <input 
                   type="checkbox" 
                   checked={usarPontos} 
                   disabled={saldoPontos <= 0 || maxPontosValidos <= 0}
                   onChange={e => handleTogglePontos(e.target.checked)}
-                  className="sr-only peer" 
+                  className="peer sr-only" 
                 />
-                <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                <div className="h-6 w-11 rounded-full border-2 border-purple-300/60 bg-purple-950/90 shadow-inner after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-purple-200 after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:border-amber-400 peer-checked:bg-amber-400 peer-checked:after:translate-x-full peer-checked:after:border-amber-500 peer-focus:outline-none"></div>
               </label>
             </div>
 
-            <div className="space-y-3 relative z-10">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-neutral-500 font-bold">Seu Saldo:</span>
-                <span className="font-black text-neutral-800 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-current" />
+            <div className="relative z-10 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-purple-200/80">Seu Saldo:</span>
+                <span className="flex items-center gap-1 font-black text-amber-300">
+                  <Sparkles className="h-3.5 w-3.5 fill-current text-amber-300" />
                   {saldoPontos.toLocaleString()} pontos ({formatCurrency(saldoPontos * 0.01)})
                 </span>
               </div>
@@ -856,24 +858,24 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                   initial={{ opacity: 0, height: 0 }} 
                   animate={{ opacity: 1, height: 'auto' }} 
                   exit={{ opacity: 0, height: 0 }}
-                  className="pt-2 border-t border-purple-100/50 space-y-3"
+                  className="space-y-3 border-t border-purple-800/60 pt-3"
                 >
-                  <div className="flex gap-3 items-center">
+                  <div className="flex items-center gap-3">
                     <div className="flex-grow">
-                      <label className="text-[10px] font-black text-neutral-400 uppercase tracking-wider block mb-1">Pontos a Usar</label>
+                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-purple-200">Pontos a Usar</label>
                       <input 
                         type="number" 
                         value={pontosAplicados || ''} 
                         min="0"
                         max={maxPontosValidos}
                         onChange={e => handlePontosChange(parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 bg-white border border-purple-200 rounded-xl text-sm font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                        className="w-full rounded-xl border border-purple-400/30 bg-white px-3 py-2 text-sm font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400" 
                         placeholder="Ex: 500"
                       />
                     </div>
-                    <div className="text-right shrink-0">
-                      <label className="text-[10px] font-black text-neutral-400 uppercase tracking-wider block mb-1">Desconto Aplicado</label>
-                      <span className="text-base font-black text-purple-600 block pt-1.5">
+                    <div className="shrink-0 text-right">
+                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-purple-200">Desconto Aplicado</label>
+                      <span className="block pt-1.5 text-base font-black text-amber-300">
                         - {formatCurrency(descontoPontos)}
                       </span>
                     </div>
@@ -884,7 +886,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                       <button 
                         type="button"
                         onClick={() => handlePontosChange(100)}
-                        className="px-2.5 py-1 bg-white hover:bg-purple-50 border border-purple-200 text-[10px] font-black text-purple-700 rounded-lg transition-all active:scale-95"
+                        className="rounded-lg border border-purple-400/40 bg-purple-900/60 px-2.5 py-1 text-[10px] font-black text-amber-200 transition-all hover:bg-purple-800 active:scale-95"
                       >
                         100 pts
                       </button>
@@ -893,7 +895,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                       <button 
                         type="button"
                         onClick={() => handlePontosChange(500)}
-                        className="px-2.5 py-1 bg-white hover:bg-purple-50 border border-purple-200 text-[10px] font-black text-purple-700 rounded-lg transition-all active:scale-95"
+                        className="rounded-lg border border-purple-400/40 bg-purple-900/60 px-2.5 py-1 text-[10px] font-black text-amber-200 transition-all hover:bg-purple-800 active:scale-95"
                       >
                         500 pts
                       </button>
@@ -902,7 +904,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                       <button 
                         type="button"
                         onClick={() => handlePontosChange(1000)}
-                        className="px-2.5 py-1 bg-white hover:bg-purple-50 border border-purple-200 text-[10px] font-black text-purple-700 rounded-lg transition-all active:scale-95"
+                        className="rounded-lg border border-purple-400/40 bg-purple-900/60 px-2.5 py-1 text-[10px] font-black text-amber-200 transition-all hover:bg-purple-800 active:scale-95"
                       >
                         1.000 pts
                       </button>
@@ -910,7 +912,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                     <button 
                       type="button"
                       onClick={() => handlePontosChange(maxPontosValidos)}
-                      className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black rounded-lg transition-all active:scale-95 shadow-sm shadow-purple-500/10 ml-auto"
+                      className="ml-auto rounded-lg bg-amber-400 px-2.5 py-1 text-[10px] font-black text-purple-950 transition-all hover:bg-amber-300 active:scale-95 shadow-sm shadow-amber-400/20"
                     >
                       Usar Máximo ({maxPontosValidos.toLocaleString()} pts)
                     </button>
@@ -921,36 +923,36 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           </div>
 
           {/* Sessão de Saldo da Carteira Virtual */}
-          <div className="bg-gradient-to-r from-emerald-50 via-emerald-50/30 to-emerald-50 rounded-2xl p-5 border border-emerald-100/80 shadow-sm relative overflow-hidden mt-4">
-            <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-200/20 rounded-full blur-xl"></div>
+          <div className="relative mt-4 overflow-hidden rounded-2xl border border-emerald-700/50 bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-900 p-5 text-white shadow-lg">
+            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-emerald-400/10 blur-xl"></div>
             
-            <div className="flex items-center justify-between mb-4 relative z-10">
+            <div className="relative z-10 mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/10">
-                  <Wallet className="w-4 h-4" />
+                <div className="rounded-xl bg-emerald-400 p-2.5 text-emerald-950 shadow-md shadow-emerald-400/20">
+                  <Wallet className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black text-neutral-900 uppercase tracking-widest">Usar Saldo da Carteira</h3>
-                  <p className="text-[10px] text-neutral-500 font-bold">Abata o valor com seu saldo disponível</p>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-white">Usar Saldo da Carteira</h3>
+                  <p className="text-[10px] font-bold text-emerald-200/90">Abata o valor com seu saldo disponível</p>
                 </div>
               </div>
 
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex cursor-pointer items-center">
                 <input 
                   type="checkbox" 
                   checked={usarSaldoCarteira} 
                   disabled={saldoCarteira <= 0 || maxSaldoValido <= 0}
                   onChange={e => handleToggleSaldoCarteira(e.target.checked)}
-                  className="sr-only peer" 
+                  className="peer sr-only" 
                 />
-                <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                <div className="h-6 w-11 rounded-full border-2 border-emerald-300/60 bg-emerald-950/90 shadow-inner after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-emerald-200 after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:border-emerald-400 peer-checked:bg-emerald-400 peer-checked:after:translate-x-full peer-checked:after:border-emerald-500 peer-focus:outline-none"></div>
               </label>
             </div>
 
-            <div className="space-y-3 relative z-10">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-neutral-500 font-bold">Seu Saldo:</span>
-                <span className="font-black text-neutral-800 flex items-center gap-1">
+            <div className="relative z-10 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-emerald-200/80">Seu Saldo:</span>
+                <span className="font-black text-emerald-300">
                   {formatCurrency(saldoCarteira)}
                 </span>
               </div>
@@ -960,25 +962,25 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                   initial={{ opacity: 0, height: 0 }} 
                   animate={{ opacity: 1, height: 'auto' }} 
                   exit={{ opacity: 0, height: 0 }}
-                  className="pt-2 border-t border-emerald-100/50 space-y-3"
+                  className="space-y-3 border-t border-emerald-800/60 pt-3"
                 >
-                  <div className="flex gap-3 items-center">
+                  <div className="flex items-center gap-3">
                     <div className="flex-grow">
-                      <label className="text-[10px] font-black text-neutral-400 uppercase tracking-wider block mb-1">Valor a Usar</label>
+                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-emerald-200">Valor a Usar</label>
                       <input 
                         type="number" 
-                        value={saldoCarteiraAplicado || ''} 
+                        value={saldoCarteiraAplicado ? Number(saldoCarteiraAplicado.toFixed(2)) : ''} 
                         min="0"
                         max={maxSaldoValido}
                         step="0.01"
                         onChange={e => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-xl text-sm font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-emerald-500" 
+                        className="w-full rounded-xl border border-emerald-400/30 bg-white px-3 py-2 text-sm font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-emerald-400" 
                         placeholder="Ex: 50.00"
                       />
                     </div>
-                    <div className="text-right shrink-0">
-                      <label className="text-[10px] font-black text-neutral-400 uppercase tracking-wider block mb-1">Desconto Aplicado</label>
-                      <span className="text-base font-black text-emerald-600 block pt-1.5">
+                    <div className="shrink-0 text-right">
+                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-emerald-200">Desconto Aplicado</label>
+                      <span className="block pt-1.5 text-base font-black text-emerald-300">
                         - {formatCurrency(descontoCarteira)}
                       </span>
                     </div>
@@ -988,7 +990,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                     <button 
                       type="button"
                       onClick={() => handleSaldoCarteiraChange(maxSaldoValido)}
-                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black rounded-lg transition-all active:scale-95 shadow-sm shadow-emerald-500/10 ml-auto"
+                      className="ml-auto rounded-lg bg-emerald-400 px-2.5 py-1 text-[10px] font-black text-emerald-950 transition-all hover:bg-emerald-300 active:scale-95 shadow-sm shadow-emerald-400/20"
                     >
                       Usar Máximo ({formatCurrency(maxSaldoValido)})
                     </button>

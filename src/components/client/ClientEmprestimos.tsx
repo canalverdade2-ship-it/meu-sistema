@@ -16,6 +16,8 @@ import type { DadosPessoais, DadosEmprestimo, DocFiles } from './emprestimo/Empr
 import { callClientRpc } from '../../lib/clientRpc';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
+import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 
 export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavigate }: { clientId: string, initialTab?: string, initialItemId?: string, onNavigate?: (mod: any, tab?: string, itemId?: string) => void }) {
   const { openFile } = useFileViewer();
@@ -41,6 +43,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   const [selectedParcela, setSelectedParcela] = useState<EmprestimoParcela | null>(null);
   const confirmHook = useConfirm();
+  const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
 
   // ── Solicitação de Alteração Cadastral (Tickets) ──
   const [hasPendingEditTicket, setHasPendingEditTicket] = useState(false);
@@ -160,9 +163,9 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
         if (!file) continue;
         const ext = (file as File).name.split('.').pop();
         const path = `solicitacoes/${clientId}/${tipo}-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('emprestimos').upload(path, file as File);
+        const { error: upErr , url: __publicUrl, path: __r2Path } = await uploadToR2(file as File, 'emprestimos', path);
         if (upErr) throw upErr;
-        const { data: { publicUrl } } = supabase.storage.from('emprestimos').getPublicUrl(path);
+        // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         uploadedDocs.push({ tipo, nome: (file as File).name, url: publicUrl });
       }
 
@@ -300,10 +303,10 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
       setUploadingDocId(docId);
       const ext = file.name.split('.').pop();
       const path = `${clientId}/${Date.now()}_${tipo}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('emprestimos').upload(path, file);
+      const { error: upErr , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'emprestimos', path);
       if (upErr) throw upErr;
 
-      const { data: { publicUrl } } = supabase.storage.from('emprestimos').getPublicUrl(path);
+      // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
       await clientOperationalWrite(clientId, 'emprestimo_documentos', 'update', {
         url: publicUrl,
@@ -381,9 +384,9 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
     const dataUrl = signPadRef.current.toDataURL('image/png');
     const blob = await (await fetch(dataUrl)).blob();
     const path = `assinaturas/${clientId}/${selected.id}-${Date.now()}.png`;
-    const { error } = await supabase.storage.from('emprestimos').upload(path, blob);
+    const { error, url: publicUrl, path: r2Path } = await uploadToR2(blob, 'emprestimos', path);
     if (error) { toast.error('Erro ao salvar assinatura.'); return; }
-    const { data: { publicUrl } } = supabase.storage.from('emprestimos').getPublicUrl(path);
+    // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
     await clientOperationalWrite(clientId, 'emprestimos', 'update', { assinatura_url: publicUrl, data_assinatura: new Date().toISOString(), status: 'analise_contrato' }, { id: selected.id });
     await clientOperationalWrite(clientId, 'emprestimo_historico', 'insert', { emprestimo_id: selected.id, tipo_acao: 'contrato_assinado', descricao: 'Cliente assinou contrato digitalmente', usuario_tipo: 'cliente', usuario_id: clientId });
     await notificationService.notifyAdmin('📝 Contrato assinado', `Cliente assinou contrato do empréstimo ${selected.codigo_emprestimo}`, 'emprestimos', 'emprestimo_assinado', { itemId: selected.id, tab: 'ativos' });
@@ -685,7 +688,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
 
             {/* Mensagem da proposta */}
             {selected.proposta_mensagem && (
-              <div className="bg-amber-50 p-4 rounded-xl ring-1 ring-amber-200"><p className="text-[10px] font-black text-amber-500 uppercase mb-1">Mensagem do ADM</p><p className="text-xs text-amber-800">{selected.proposta_mensagem}</p></div>
+              <div className="bg-amber-50 p-4 rounded-xl ring-1 ring-amber-200"><p className="text-[10px] font-black text-amber-500 uppercase mb-1">Mensagem do Sistema</p><p className="text-xs text-amber-800">{selected.proposta_mensagem}</p></div>
             )}
 
             {/* Simulador de Parcelas */}
@@ -730,9 +733,38 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
             {/* Botão assinar contrato */}
             {selected.status === 'pendencia_assinatura' && selected.contrato_url && (
               <div className="space-y-3">
-                <button type="button" onClick={() => openFile(selected.contrato_url!, 'Contrato')} className="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl ring-1 ring-neutral-200 text-sm font-bold hover:bg-neutral-50 transition-all">
-                  <Download className="h-4 w-4" /> Visualizar Contrato
-                </button>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => openFile(selected.contrato_url!, 'Contrato')} className="flex-1 flex items-center justify-center gap-2 py-3 bg-white rounded-xl ring-1 ring-neutral-200 text-sm font-bold hover:bg-neutral-50 transition-all">
+                    <Download className="h-4 w-4" /> Visualizar Contrato
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSendingWhatsApp}
+                    onClick={async () => {
+                      try {
+                        const { data: cData } = await supabase.from('clientes').select('nome, telefone').eq('id', clientId).single();
+                        if (!cData?.telefone) { toast.error("Telefone não encontrado."); return; }
+                        
+                        const msg = whatsappNotificationService.gerarMensagemWhatsApp({
+                          tipo: 'emprestimo',
+                          clienteNome: cData.nome,
+                          codigo: selected.codigo_emprestimo,
+                          status: 'Pendente de Assinatura',
+                          valorTotal: formatCurrency(selected.valor_solicitado)
+                        });
+                        
+                        await sendToWhatsApp(cData.telefone, msg, undefined, 'contrato_emprestimo.pdf', selected.contrato_url!);
+                      } catch (e) {
+                        console.error(e);
+                        toast.error("Erro ao enviar contrato pelo WhatsApp.");
+                      }
+                    }}
+                    className="flex items-center justify-center gap-2 px-4 bg-emerald-100 rounded-xl ring-1 ring-emerald-200 text-sm font-bold text-emerald-800 hover:bg-emerald-200 transition-all disabled:opacity-50"
+                  >
+                    {isSendingWhatsApp ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" /> : <Send className="h-4 w-4" />}
+                    WhatsApp
+                  </button>
+                </div>
                 <button onClick={openSignature} className="w-full py-3 bg-[#1a1a1a] text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-black active:scale-95 transition-all">✍️ Assinar Contrato</button>
               </div>
             )}
@@ -744,10 +776,39 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
                 {selected.assinatura_url && (
                   <div className="bg-emerald-50 p-4 rounded-xl ring-1 ring-emerald-200">
                     <h4 className="text-xs font-black text-emerald-800 uppercase mb-3">📄 Documentação</h4>
-                    <button type="button" onClick={() => openFile(selected.assinatura_url!, 'Contrato Assinado')} className="flex items-center justify-between w-full py-3 px-4 bg-white rounded-xl ring-1 ring-emerald-200 text-sm font-bold hover:bg-emerald-100 transition-all group">
-                      <span className="flex items-center gap-2 text-emerald-700"><Download className="h-4 w-4" /> Contrato Assinado</span>
-                      <ChevronRight className="h-4 w-4 text-emerald-300 group-hover:text-emerald-600 transition-all" />
-                    </button>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => openFile(selected.assinatura_url!, 'Contrato Assinado')} className="flex-1 flex items-center justify-between py-3 px-4 bg-white rounded-xl ring-1 ring-emerald-200 text-sm font-bold hover:bg-emerald-100 transition-all group">
+                        <span className="flex items-center gap-2 text-emerald-700"><Download className="h-4 w-4" /> Contrato Assinado</span>
+                        <ChevronRight className="h-4 w-4 text-emerald-300 group-hover:text-emerald-600 transition-all" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isSendingWhatsApp}
+                        onClick={async () => {
+                          try {
+                            const { data: cData } = await supabase.from('clientes').select('nome, telefone').eq('id', clientId).single();
+                            if (!cData?.telefone) { toast.error("Telefone não encontrado."); return; }
+                            
+                            const msg = whatsappNotificationService.gerarMensagemWhatsApp({
+                              tipo: 'emprestimo',
+                              clienteNome: cData.nome,
+                              codigo: selected.codigo_emprestimo,
+                              status: 'Ativo (Assinado)',
+                              valorTotal: formatCurrency(selected.valor_solicitado)
+                            });
+                            
+                            await sendToWhatsApp(cData.telefone, msg, undefined, 'contrato_assinado.pdf', selected.assinatura_url!);
+                          } catch (e) {
+                            console.error(e);
+                            toast.error("Erro ao enviar contrato assinado pelo WhatsApp.");
+                          }
+                        }}
+                        className="flex items-center justify-center gap-2 px-4 bg-emerald-100 rounded-xl ring-1 ring-emerald-300 text-sm font-bold text-emerald-800 hover:bg-emerald-200 transition-all disabled:opacity-50"
+                        title="Enviar para o WhatsApp"
+                      >
+                        {isSendingWhatsApp ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" /> : <Send className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                 )}
 

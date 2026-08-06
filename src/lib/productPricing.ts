@@ -1,4 +1,4 @@
-﻿import { Produto, PromotionQuantityInfo, ProductQuantityPriceBreakdown } from '../types';
+import { Produto, PromotionQuantityInfo, ProductQuantityPriceBreakdown } from '../types';
 
 export function hasActiveProductDiscount(produto: Produto | null | undefined): boolean {
   if (!produto) return false;
@@ -204,7 +204,7 @@ export function getProductRemainingQuantityText(produto: Produto | null | undefi
   const info = getProductPromotionQuantityInfo(produto);
   if (info.esgotadaPorQuantidade) return 'Cota promocional esgotada';
   if (info.quantidadeRestante === null) return '';
-  if (info.quantidadeRestante === 1) return 'Ultima unidade com desconto';
-  if (info.quantidadeRestante > 1) return `Restam ${info.quantidadeRestante} unidades com desconto`;
+  if (info.quantidadeRestante === 1) return '1 unidade promocional';
+  if (info.quantidadeRestante > 1) return `${info.quantidadeRestante} unidades promocionais`;
   return '';
 }

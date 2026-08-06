@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { r2Upload, r2Delete, r2PublicUrl } from '../_shared/r2.ts';
 
 const BUCKET = 'classificados-midias';
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -233,26 +234,27 @@ export async function handleRequest(request: Request) {
       }
 
       const path = `${authenticated.clientId}/${draftId}/${Date.now()}_${crypto.randomUUID()}.${extension}`;
-      const { error: uploadError } = await authenticated.admin.storage.from(BUCKET).upload(path, file, {
-        upsert: false,
-        contentType: file.type,
-        cacheControl: '31536000',
-      });
-      if (uploadError) {
-        console.error('Falha no upload de mídia classificada:', uploadError);
+      const r2Key = `public/classified-media/${path}`;
+      const fileBytes = new Uint8Array(await file.arrayBuffer());
+      
+      let r2UploadResult;
+      try {
+        r2UploadResult = await r2Upload(r2Key, fileBytes, file.type);
+      } catch (err) {
+        console.error('Falha no upload de mídia classificada:', err);
         return json({ success: false, error: 'upload_failed', message: 'Não foi possível armazenar a imagem.' }, 500, allowedOrigin);
       }
 
-      const { data: publicData } = authenticated.admin.storage.from(BUCKET).getPublicUrl(path);
-      if (!publicData?.publicUrl) {
-        await authenticated.admin.storage.from(BUCKET).remove([path]);
+      const publicUrl = r2PublicUrl(r2Key);
+      if (!publicUrl) {
+        await r2Delete([r2Key]);
         return json({ success: false, error: 'public_url_failed', message: 'Não foi possível concluir o upload.' }, 500, allowedOrigin);
       }
 
       return json({
         success: true,
         media: {
-          url: publicData.publicUrl,
+          url: publicUrl,
           path,
           name: file.name,
           size: file.size,
@@ -280,8 +282,9 @@ export async function handleRequest(request: Request) {
       return json({ success: false, error: 'forbidden_path', message: 'Uma das imagens não pertence ao seu cadastro.' }, 403, allowedOrigin);
     }
 
-    const { error: removeError } = await authenticated.admin.storage.from(BUCKET).remove(paths as string[]);
-    if (removeError) {
+    try {
+      await r2Delete(paths.map((p) => `public/classified-media/${p}`));
+    } catch (removeError) {
       console.error('Falha ao excluir mídia classificada:', removeError);
       return json({ success: false, error: 'delete_failed', message: 'Não foi possível remover a imagem.' }, 500, allowedOrigin);
     }

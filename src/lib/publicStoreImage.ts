@@ -1,7 +1,6 @@
-import { supabase } from './supabase';
+import { uploadPublicStoreImageR2, removeFromR2, getR2PathFromUrl } from './r2Storage';
 import { generateUUID } from './utils';
 
-const STORE_IMAGE_BUCKET = 'gsa-store-images';
 const MAX_STORE_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_STORE_IMAGE_TYPES = new Set([
   'image/jpeg',
@@ -21,31 +20,17 @@ export function validatePublicStoreImage(file: File) {
 
 export async function uploadPublicStoreImage(file: File, prefix: string) {
   validatePublicStoreImage(file);
-  const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'img';
-  const path = `${prefix}/${generateUUID()}.${extension}`;
-  const { error } = await supabase.storage.from(STORE_IMAGE_BUCKET).upload(path, file, {
-    upsert: false,
-    contentType: file.type,
-    cacheControl: '31536000',
-  });
-  if (error) throw error;
-  const { data } = supabase.storage.from(STORE_IMAGE_BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+  return await uploadPublicStoreImageR2(file, prefix);
 }
 
 export function getPublicStoreImagePath(reference?: string | null) {
-  if (!reference) return null;
-  const marker = `/storage/v1/object/public/${STORE_IMAGE_BUCKET}/`;
-  const index = reference.indexOf(marker);
-  if (index < 0) return null;
-  return decodeURIComponent(reference.slice(index + marker.length));
+  return getR2PathFromUrl(reference);
 }
 
 export async function removePublicStoreImage(reference?: string | null) {
   const path = getPublicStoreImagePath(reference);
   if (!path) return;
-  const { error } = await supabase.storage.from(STORE_IMAGE_BUCKET).remove([path]);
-  if (error) throw error;
+  await removeFromR2(path);
 }
 
 export async function removeUnusedPublicStoreImages(before: string[], after: string[]) {

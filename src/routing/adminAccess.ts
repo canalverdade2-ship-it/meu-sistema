@@ -62,6 +62,7 @@ const VALID_MODULES = new Set<AdminModule>([
   'configuracoes',
   'acessos',
   'sistema',
+  'automacoes',
   'promocoes',
   'area_vip',
   'afiliados',
@@ -190,6 +191,7 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     case 'configuracoes': return '/admin/configuracoes';
     case 'acessos': return '/admin/acessos';
     case 'sistema': return '/admin/sistema';
+    case 'automacoes': return '/admin/automacoes';
     case 'promocoes': return parts('admin', 'promocoes', tab, itemId);
     case 'area_vip': return parts('admin', 'area_vip', tab, itemId);
     case 'afiliados': return parts('admin', 'financeiro', 'afiliados', itemId);

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { r2Upload, r2Delete, r2PublicUrl } from '../_shared/r2.ts';
 
 const BUCKET = 'parceiros-midias';
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -314,15 +315,15 @@ export async function handleRequest(request: Request) {
       if (!file) return null;
       const extension = EXTENSION_BY_TYPE[file.type];
       const path = `solicitacoes/${applicationId}/${kind}-${crypto.randomUUID()}.${extension}`;
-      const { error } = await admin.storage.from(BUCKET).upload(path, file, {
-        upsert: false,
-        contentType: file.type,
-        cacheControl: '31536000',
-      });
-      if (error) throw new Error(`${kind}_upload_failed`);
-      uploadedPaths.push(path);
-      const { data } = admin.storage.from(BUCKET).getPublicUrl(path);
-      return data.publicUrl;
+      const r2Key = `public/partner-applications/${path}`;
+      const fileBytes = new Uint8Array(await file.arrayBuffer());
+      try {
+        await r2Upload(r2Key, fileBytes, file.type);
+      } catch (error) {
+        throw new Error(`${kind}_upload_failed`);
+      }
+      uploadedPaths.push(r2Key);
+      return r2PublicUrl(r2Key);
     };
 
     try {
@@ -352,7 +353,7 @@ export async function handleRequest(request: Request) {
         throw new Error('database_insert_failed');
       }
     } catch (error) {
-      if (uploadedPaths.length > 0) await admin.storage.from(BUCKET).remove(uploadedPaths);
+      if (uploadedPaths.length > 0) await r2Delete(uploadedPaths);
       throw error;
     }
 

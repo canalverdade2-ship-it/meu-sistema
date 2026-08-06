@@ -76,9 +76,9 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
         const uploadPromises = arquivos.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `briefings/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-          const { error: uErr } = await supabase.storage.from('entregas_demandas').upload(path, file);
+          const { error: uErr , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'entregas_demandas', path);
           if (uErr) return null;
-          const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
+          // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
           return publicUrl;
         });
         const uploadedUrls = await Promise.all(uploadPromises);

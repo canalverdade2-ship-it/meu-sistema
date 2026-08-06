@@ -15,17 +15,26 @@ let storageProxy: any = null;
 let rpcProxy: any = null;
 const legacyLoanReferences = new Map<string, string>();
 
-const sessionStorageAdapter = {
+const persistentStorageAdapter = {
   getItem(key: string) {
-    return typeof window === 'undefined' ? null : window.sessionStorage.getItem(key);
+    if (typeof window === 'undefined') return null;
+    return window.localStorage.getItem(key) || window.sessionStorage.getItem(key);
   },
   setItem(key: string, value: string) {
-    if (typeof window !== 'undefined') window.sessionStorage.setItem(key, value);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(key, value);
+      window.sessionStorage.setItem(key, value);
+    }
   },
   removeItem(key: string) {
-    if (typeof window !== 'undefined') window.sessionStorage.removeItem(key);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    }
   },
 };
+
+const sessionStorageAdapter = persistentStorageAdapter;
 
 function legacySupabaseStorageKey(supabaseUrl: string) {
   try {
@@ -82,7 +91,7 @@ function privateReferencePath(reference?: string | null) {
 function getStoredActor(): { atorTipo?: string; atorId?: string } | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.sessionStorage.getItem(CLIENT_SESSION_KEY);
+    const raw = window.localStorage.getItem(CLIENT_SESSION_KEY) || window.sessionStorage.getItem(CLIENT_SESSION_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;

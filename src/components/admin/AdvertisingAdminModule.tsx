@@ -201,7 +201,7 @@ export function AdvertisingAdminModule() {
           terms: terms.trim(),
         },
       }, 'Proposta gravada no sistema.');
-      const { data: invite, error: inviteError } = await supabase.functions.invoke('gsa-advertiser-admin', { body: { action: 'invite', request_id: proposalRequest.id } });
+      const { data: invite, error: inviteError } = await supabase.functions.invoke('gsa-ads-admin', { body: { action: 'invite', request_id: proposalRequest.id } });
       if (inviteError || !invite?.success) toast.error('A proposta foi criada, mas o convite do portal não foi enviado. Reenvie o acesso.');
       else toast.success(data?.version ? `Proposta v${data.version} liberada no portal.` : 'Portal do anunciante liberado.');
       setProposalRequest(null);
@@ -214,7 +214,7 @@ export function AdvertisingAdminModule() {
   const invite = async (request: AdvertisingRequest) => {
     setActionId(request.id);
     try {
-      const { data, error } = await supabase.functions.invoke('gsa-advertiser-admin', { body: { action: 'invite', request_id: request.id } });
+      const { data, error } = await supabase.functions.invoke('gsa-ads-admin', { body: { action: 'invite', request_id: request.id } });
       if (error || !data?.success) throw error || new Error('Convite recusado.');
       toast.success(data.already_linked ? 'Acesso reenviado ao anunciante.' : 'Convite enviado ao anunciante.');
       await load();

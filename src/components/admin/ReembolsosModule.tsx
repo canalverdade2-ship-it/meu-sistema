@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
+import { uploadToR2, getR2PublicUrl, removeFromR2, getPrivateR2Url } from '../../lib/r2Storage';
 import { Search, DollarSign, Clock, CheckCircle, XCircle, ArrowUpRight, FileText, Calendar, User, FileCheck, Upload, Paperclip, X, Info } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../lib/utils';
 import { toast } from 'react-hot-toast';
@@ -239,9 +240,7 @@ export function ReembolsosModule({
         setIsUploadingComprovante(true);
         const ext = comprovanteFile.name.split('.').pop();
         const fileName = `reembolso-${selectedRefund.codigo_reembolso}-${Date.now()}.${ext}`;
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('documentos_cliente')
-          .upload(`reembolsos/${fileName}`, comprovanteFile, { upsert: true });
+        const { error, url: publicUrl, path: r2Path } = await uploadToR2(comprovanteFile, 'documentos_cliente', `reembolsos/${fileName}`);
         setIsUploadingComprovante(false);
 
         if (uploadErr) {
@@ -250,9 +249,7 @@ export function ReembolsosModule({
           return;
         }
 
-        const { data: publicUrl } = supabase.storage
-          .from('documentos_cliente')
-          .getPublicUrl(`reembolsos/${fileName}`);
+        // publicUrl is handled directly
         comprovanteUrl = publicUrl.publicUrl;
       }
 

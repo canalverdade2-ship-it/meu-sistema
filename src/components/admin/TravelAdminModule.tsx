@@ -31,14 +31,20 @@ import {
   Zap,
   Coins,
   Wallet,
+  Map,
+  Building2,
+  Tag,
+  Settings,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatCurrency, formatDateTime, generateUUID } from '../../lib/utils';
 import { Modal } from '../ui/Modal';
 import { supabase } from '../../lib/supabase';
+import { ViagensCategoriasModule } from './ViagensCategoriasModule';
+import { FornecedoresModule } from './FornecedoresModule';
 
-type AdminTab = 'solicitacoes' | 'pacotes' | 'propostas' | 'transacoes';
+type AdminTab = 'solicitacoes' | 'pacotes' | 'propostas' | 'transacoes' | 'fornecedores' | 'categorias_viagens';
 
 const accommodationLabels: Record<string, string> = {
   economico: 'Econômico',
@@ -170,12 +176,14 @@ function Pagination({ page, total, onPage }: { page: number; total: number; onPa
 
 export function TravelAdminModule() {
   const [activeTab, setActiveTab] = useState<AdminTab>('solicitacoes');
-  const tabs: Array<{ id: AdminTab; label: string; icon: React.ElementType }> = [
-    { id: 'solicitacoes', label: 'Orçamentos', icon: Users },
-    { id: 'pacotes', label: 'Pacotes', icon: Plane },
-    { id: 'propostas', label: 'Propostas', icon: FileText },
-    { id: 'transacoes', label: 'Reservas & Transações', icon: Receipt },
-  ];
+  const tabs = [
+    { id: 'solicitacoes', label: 'Orçamentos', icon: Users, color: 'text-indigo-600', bgColor: 'bg-indigo-100' },
+    { id: 'pacotes', label: 'Pacotes Ativos', icon: Map, color: 'text-indigo-600', bgColor: 'bg-indigo-100' },
+    { id: 'fornecedores', label: 'Fornecedores', icon: Building2, color: 'text-emerald-600', bgColor: 'bg-emerald-100' },
+    { id: 'categorias_viagens', label: 'Categorias', icon: Tag, color: 'text-amber-600', bgColor: 'bg-amber-100' },
+    { id: 'propostas', label: 'Propostas', icon: FileText, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { id: 'transacoes', label: 'Reservas', icon: Receipt, color: 'text-rose-600', bgColor: 'bg-rose-100' },
+  ] as const;
 
   return (
     <div className="space-y-6">
@@ -190,7 +198,7 @@ export function TravelAdminModule() {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
-            <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800'}`}>
+            <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id as AdminTab)} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold transition ${activeTab === tab.id ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800'}`}>
               <Icon className="h-4 w-4" /> {tab.label}
             </button>
           );
@@ -200,6 +208,8 @@ export function TravelAdminModule() {
       <section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6">
         {activeTab === 'solicitacoes' && <SolicitacoesTab />}
         {activeTab === 'pacotes' && <PacotesTab />}
+        {activeTab === 'fornecedores' && <FornecedoresModule />}
+        {activeTab === 'categorias_viagens' && <ViagensCategoriasModule />}
         {activeTab === 'propostas' && <PropostasTab />}
         {activeTab === 'transacoes' && <TransacoesTab />}
       </section>
@@ -729,7 +739,7 @@ function PacotesTab() {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagens, setImagens] = useState<string[]>([]);
-  const [form, setForm] = useState({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1' });
+  const [form, setForm] = useState({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1', url_fornecedor: '' });
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files: File[] = Array.from(event.target.files || []);
@@ -756,14 +766,10 @@ function PacotesTab() {
         const fileName = `pacotes/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
 
         let publicUrl = '';
-        const { error: uploadError } = await supabase.storage
-          .from('gsa-store-images')
-          .upload(fileName, file, { upsert: true });
+        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'gsa-store-images', fileName);
 
         if (uploadError) {
-          const { error: fallbackError } = await supabase.storage
-            .from('classificados-midias')
-            .upload(fileName, file, { upsert: true });
+          const { error: fallbackError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'classificados-midias', fileName);
 
           if (fallbackError) throw uploadError;
 
@@ -805,7 +811,7 @@ function PacotesTab() {
   const openNew = () => {
     setEditingPkg(null);
     setImagens([]);
-    setForm({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1' });
+    setForm({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1', url_fornecedor: '' });
     setShowForm(true);
   };
 
@@ -827,6 +833,7 @@ function PacotesTab() {
       noites: pkg.noites != null ? String(pkg.noites) : '',
       preco_venda: pkg.preco_venda != null ? String(pkg.preco_venda).replace('.', ',') : '',
       parcelamento_maximo: pkg.parcelamento_maximo != null ? String(pkg.parcelamento_maximo) : '1',
+      url_fornecedor: pkg.url_fornecedor || '',
     });
     setShowForm(true);
   };
@@ -850,6 +857,7 @@ function PacotesTab() {
             noites: form.noites ? Number(form.noites) : null,
             preco_venda: price,
             parcelamento_maximo: Number(form.parcelamento_maximo || 1),
+            url_fornecedor: form.url_fornecedor?.trim() || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', editingPkg.id);
@@ -877,6 +885,7 @@ function PacotesTab() {
         const payload = {
           ...form,
           preco_venda: price,
+          url_fornecedor: form.url_fornecedor?.trim() || null,
           imagem_url: imagens[0] || '',
         };
         const res = await callAdminRpc<any>('gsa_admin_travel_create_package', { p_payload: payload });
@@ -898,7 +907,7 @@ function PacotesTab() {
       setShowForm(false);
       setEditingPkg(null);
       setImagens([]);
-      setForm({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1' });
+      setForm({ titulo: '', categoria: 'nacional', origem: '', destino: '', data_ida: '', data_volta: '', dias: '', noites: '', preco_venda: '', parcelamento_maximo: '1', url_fornecedor: '' });
       await list.load();
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível salvar o pacote.');
@@ -925,7 +934,7 @@ function PacotesTab() {
       return <article key={pkg.id} className="overflow-hidden rounded-2xl border border-neutral-200 bg-white flex flex-col justify-between hover:border-indigo-300 transition shadow-2xs"><div>{cover ? <img src={cover} alt={pkg.titulo} className="h-36 w-full object-cover" /> : <div className="flex h-36 items-center justify-center bg-neutral-100"><Plane className="h-10 w-10 text-neutral-300" /></div>}<div className="p-5"><div className="mb-2 flex items-center justify-between gap-2"><StatusBadge status={pkg.status} /><span className="text-xs font-bold uppercase text-neutral-400">{pkg.categoria}</span></div><h4 className="line-clamp-2 font-black text-neutral-900">{pkg.titulo}</h4><p className="mt-1 text-sm text-neutral-500">{pkg.destino} · {pkg.dias || '—'} dias</p><p className="mt-4 text-lg font-black text-indigo-700">{formatCurrency(pkg.preco_venda)}</p></div></div><div className="p-5 pt-0 space-y-2"><button type="button" onClick={() => openEdit(pkg)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-50 py-2.5 text-xs font-black text-indigo-700 hover:bg-indigo-100 transition border border-indigo-100"><Edit className="h-4 w-4" /> Editar / Ver Detalhes</button><select value={pkg.status} onChange={(event) => void updateStatus(pkg.id, event.target.value)} className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold text-neutral-700"><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option><option value="disponibilidade_sob_consulta">Sob consulta</option><option value="pausado">Pausado</option><option value="esgotado">Esgotado</option></select></div></article>;
     })}</div>}
     <Pagination page={list.page} total={list.result.total} onPage={list.setPage} />
-    <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editingPkg ? "Editar Pacote de Viagem" : "Novo Pacote de Viagem"} size="xl"><div className="space-y-5"><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Título<input value={form.titulo} onChange={(event) => setForm((value) => ({ ...value, titulo: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Categoria<select value={form.categoria} onChange={(event) => setForm((value) => ({ ...value, categoria: event.target.value }))} className={`${inputClass} mt-2`}><option value="nacional">Nacional</option><option value="internacional">Internacional</option><option value="excursao">Excursão</option></select></label><label className={labelClass}>Origem<input value={form.origem} onChange={(event) => setForm((value) => ({ ...value, origem: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Destino<input value={form.destino} onChange={(event) => setForm((value) => ({ ...value, destino: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de ida<input type="date" value={form.data_ida} onChange={(event) => setForm((value) => ({ ...value, data_ida: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de volta<input type="date" value={form.data_volta} onChange={(event) => setForm((value) => ({ ...value, data_volta: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Dias<input type="number" min="1" value={form.dias} onChange={(event) => setForm((value) => ({ ...value, dias: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Noites<input type="number" min="0" value={form.noites} onChange={(event) => setForm((value) => ({ ...value, noites: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Preço de venda<input value={form.preco_venda} onChange={(event) => setForm((value) => ({ ...value, preco_venda: event.target.value }))} placeholder="0,00" className={`${inputClass} mt-2`} /></label><label className={labelClass}>Parcelamento máximo<input type="number" min="1" max="24" value={form.parcelamento_maximo} onChange={(event) => setForm((value) => ({ ...value, parcelamento_maximo: event.target.value }))} className={`${inputClass} mt-2`} /></label></div>
+    <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editingPkg ? "Editar Pacote de Viagem" : "Novo Pacote de Viagem"} size="xl"><div className="space-y-5"><div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Título<input value={form.titulo} onChange={(event) => setForm((value) => ({ ...value, titulo: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Categoria<select value={form.categoria} onChange={(event) => setForm((value) => ({ ...value, categoria: event.target.value }))} className={`${inputClass} mt-2`}><option value="nacional">Nacional</option><option value="internacional">Internacional</option><option value="excursao">Excursão</option></select></label><label className={labelClass}>Origem<input value={form.origem} onChange={(event) => setForm((value) => ({ ...value, origem: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Destino<input value={form.destino} onChange={(event) => setForm((value) => ({ ...value, destino: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de ida<input type="date" value={form.data_ida} onChange={(event) => setForm((value) => ({ ...value, data_ida: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Data de volta<input type="date" value={form.data_volta} onChange={(event) => setForm((value) => ({ ...value, data_volta: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Dias<input type="number" min="1" value={form.dias} onChange={(event) => setForm((value) => ({ ...value, dias: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Noites<input type="number" min="0" value={form.noites} onChange={(event) => setForm((value) => ({ ...value, noites: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>Preço de venda<input value={form.preco_venda} onChange={(event) => setForm((value) => ({ ...value, preco_venda: event.target.value }))} placeholder="0,00" className={`${inputClass} mt-2`} /></label><label className={labelClass}>Parcelamento máximo<input type="number" min="1" max="24" value={form.parcelamento_maximo} onChange={(event) => setForm((value) => ({ ...value, parcelamento_maximo: event.target.value }))} className={`${inputClass} mt-2`} /></label><label className={labelClass}>URL do Fornecedor (Oculto)<input value={form.url_fornecedor} onChange={(event) => setForm((value) => ({ ...value, url_fornecedor: event.target.value }))} placeholder="https://..." className={`${inputClass} mt-2 border-indigo-200 bg-indigo-50/30`} /></label></div>
     
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -1491,6 +1500,9 @@ function TransacoesTab() {
       valorDisplay: string;
       prazo: string;
       isSystem: boolean;
+      isCompleted?: boolean;
+      dataConfirmacao?: string | null;
+      formaReembolso?: string;
     }> = [];
 
     // 1. Saldo da carteira GSA

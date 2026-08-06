@@ -1,5 +1,8 @@
+import { supabase } from './supabase';
+import { toast } from 'react-hot-toast';
+
 export type WhatsAppContext = {
-  tipo: 'orcamento' | 'os' | 'compra' | 'assinatura' | 'fatura' | 'voucher' | 'promocao' | 'emprestimo' | 'credito' | 'produto' | 'cobranca' | 'cliente' | 'ticket' | 'indicacao' | 'personalizado' | 'carteira_digital' | 'carteira_pontos' | 'documento_cliente' | 'fiscal' | 'venda' | 'reembolso' | 'vip' | 'premio' | 'cupom' | 'troca' | 'servico' | 'acesso' | 'cadastro' | 'demanda_tecnico' | 'documento_prestador';
+  tipo: 'orcamento' | 'os' | 'compra' | 'assinatura' | 'fatura' | 'voucher' | 'promocao' | 'emprestimo' | 'credito' | 'produto' | 'cobranca' | 'cliente' | 'ticket' | 'indicacao' | 'personalizado' | 'carteira_digital' | 'carteira_pontos' | 'documento_cliente' | 'fiscal' | 'venda' | 'reembolso' | 'vip' | 'premio' | 'cupom' | 'troca' | 'servico' | 'acesso' | 'cadastro' | 'demanda_tecnico' | 'documento_prestador' | 'extrato';
   clienteNome?: string;
   codigo?: string;
   status?: string;
@@ -7,11 +10,19 @@ export type WhatsAppContext = {
   dataVencimento?: string;
   detalhesExtras?: string;
   titulo?: string; // Usado para promoção ou assunto de ticket
+  
+  // Detalhamento de Pagamento
+  formaPagamento?: string;
+  cupomAplicado?: string;
+  valorCupom?: number | string;
+  pontosUtilizados?: number;
+  valorPontos?: number | string;
+  saldoCarteiraUtilizado?: number | string;
+  creditoGsaUtilizado?: number | string;
+  valorLiquido?: number | string;
 };
 
 // ─── Helpers Internos ────────────────────────────────────────────────────────
-
-const SEP = '──────────────────────';
 
 function emojiStatus(status?: string): string {
   if (!status) return '📌';
@@ -57,12 +68,13 @@ function emojiTipo(tipo: string): string {
     cadastro: '👋',
     demanda_tecnico: '🔧',
     documento_prestador: '📑',
+    extrato: '📊',
   };
   return map[tipo] || '📌';
 }
 
 function rodape(despedida: string): string {
-  return `${SEP}\n${despedida}\n\n*⚙️ Mensagem gerada automaticamente pelo sistema GSA.*`;
+  return `${despedida}\n\n_Mensagem enviada via GSA HUB._`;
 }
 
 function formatList(items: (string | null | undefined)[]): string {
@@ -71,11 +83,18 @@ function formatList(items: (string | null | undefined)[]): string {
 
 // ─── Serviço Principal ────────────────────────────────────────────────────────
 
+export type SendDirectOptions = {
+  mediaBase64?: string;
+  pdfUrl?: string;
+  pdfPath?: string;
+  fileName?: string;
+};
+
 export const whatsappNotificationService = {
   gerarMensagemWhatsApp: (contexto: WhatsAppContext): string => {
     const nome = contexto.clienteNome ? `*${contexto.clienteNome.trim()}*` : 'prezado(a) cliente';
     const saudacao = `Olá, ${nome}! 👋`;
-    const cabecalho = `🏢 *GSA — Gestão de Serviços*\n${SEP}`;
+    const cabecalho = `🏢 *GSA — Gestão de Serviços*`;
     const statusEmoji = emojiStatus(contexto.status);
     const tipoEmoji = emojiTipo(contexto.tipo);
     const strStatus = contexto.status || '—';
@@ -138,7 +157,7 @@ export const whatsappNotificationService = {
             ])
           ].join('\n');
           tituloAcao = `▶️ *O QUE FAZER AGORA?*`;
-          textoAcao = `Para darmos continuidade aos seus processos, por favor, acesse a aba "Documentos" no seu Portal do Cliente e envie o arquivo solicitado o quanto antes para análise.`;
+          textoAcao = `Para darmos continuidade aos seus processos, por favor, envie o arquivo solicitado o quanto antes para análise.\n\nVocê tem duas opções:\n1️⃣ *Responder a esta mensagem* anexando a foto ou PDF do documento.\n2️⃣ Acessar a aba "Documentos" no seu Portal do Cliente e realizar o envio por lá.`;
         } else if (contexto.status === 'aprovado') {
           subtitulo = `✨ *Análise de Documento*`;
           descricao = `Ótima notícia! Seu documento foi recebido e avaliado pela nossa equipe.`;
@@ -488,18 +507,40 @@ export const whatsappNotificationService = {
       // ── Fatura ─────────────────────────────────────────────────────────────
       case 'fatura':
         const isAtrasado = contexto.status?.toLowerCase().includes('vencid') || contexto.status?.toLowerCase().includes('atraso');
-        subtitulo = isAtrasado ? `⚠️ *Aviso de Fatura*` : `✨ *Status da Fatura*`;
-        descricao = `Esta é uma notificação sobre o status da sua fatura.`;
-
-        blocoDetalhes = [
-          `${tipoEmoji} *DETALHES DA FATURA*`,
-          formatList([
-            `*Referência:* ${strCodigo}`,
-            `*Situação:* ${statusEmoji} ${strStatus}`,
-            contexto.dataVencimento ? `*Vencimento:* 📅 ${contexto.dataVencimento}` : null,
-            contexto.valorTotal ? `*Valor:* 💰 ${contexto.valorTotal}` : null
-          ])
-        ].join('\n');
+        const isPago = contexto.status?.toLowerCase().includes('pago');
+        
+        if (isPago) {
+          subtitulo = `🎉 *Pagamento Confirmado!*`;
+          descricao = `O pagamento da sua fatura foi processado com sucesso.`;
+          
+          blocoDetalhes = [
+            `${tipoEmoji} *RESUMO DO PAGAMENTO*`,
+            formatList([
+              `*Referência:* ${strCodigo}`,
+              contexto.valorTotal ? `*Valor Original:* 💰 ${contexto.valorTotal}` : null,
+              contexto.cupomAplicado ? `*Cupom Aplicado:* 🎟️ -${contexto.valorCupom} (Cód: ${contexto.cupomAplicado})` : null,
+              contexto.pontosUtilizados ? `*Pontos Utilizados:* 🌟 ${contexto.pontosUtilizados} pts (-${contexto.valorPontos})` : null,
+              contexto.saldoCarteiraUtilizado ? `*Saldo Carteira:* 💳 -${contexto.saldoCarteiraUtilizado}` : null,
+              contexto.creditoGsaUtilizado ? `*Crédito Loja GSA:* 💰 -${contexto.creditoGsaUtilizado}` : null,
+              contexto.valorLiquido ? `*Valor Pago:* 💵 ${contexto.valorLiquido} ${contexto.formaPagamento ? `via ${contexto.formaPagamento}` : ''}` : null
+            ])
+          ].join('\n');
+          
+          textoAcao = `Obrigado por manter as contas em dia. Acesse o portal para ver o recibo e histórico completo.`;
+        } else {
+          subtitulo = isAtrasado ? `⚠️ *Aviso de Fatura*` : `✨ *Status da Fatura*`;
+          descricao = `Esta é uma notificação sobre o status da sua fatura.`;
+  
+          blocoDetalhes = [
+            `${tipoEmoji} *DETALHES DA FATURA*`,
+            formatList([
+              `*Referência:* ${strCodigo}`,
+              `*Situação:* ${statusEmoji} ${strStatus}`,
+              contexto.dataVencimento ? `*Vencimento:* 📅 ${contexto.dataVencimento}` : null,
+              contexto.valorTotal ? `*Valor:* 💰 ${contexto.valorTotal}` : null
+            ])
+          ].join('\n');
+        }
 
         if (isAtrasado) {
           tituloAcao = `▶️ *REGULARIZE AGORA*`;
@@ -615,21 +656,23 @@ export const whatsappNotificationService = {
 
       // ── Cobrança ───────────────────────────────────────────────────────────
       case 'cobranca':
-        subtitulo = `⚠️ *Aviso de Pendência*`;
-        descricao = `Identificamos um valor em aberto associado à sua conta.`;
+        subtitulo = `⚠️ *AVISO DE COBRANÇA - PENDÊNCIA FINANCEIRA*`;
+        descricao = `Identificamos uma pendência financeira em aberto referente à sua fatura no sistema GSA HUB.`;
 
         blocoDetalhes = [
-          `${tipoEmoji} *RESUMO DA COBRANÇA*`,
+          `📋 *DETALHES DA PENDÊNCIA:*`,
           formatList([
-            `*Referência:* ${strCodigo}`,
+            `*Fatura:* ${strCodigo}`,
             `*Situação:* ${statusEmoji} ${strStatus}`,
-            contexto.dataVencimento ? `*Vencimento Original:* 📅 ${contexto.dataVencimento}` : null,
-            contexto.valorTotal ? `*Total em Aberto:* 💰 ${contexto.valorTotal}` : null
-          ])
+            contexto.dataVencimento ? `*Vencimento:* 📅 ${contexto.dataVencimento}` : null,
+            contexto.valorTotal ? `*Valor Atualizado (c/ encargos):* 💰 *${contexto.valorTotal}*` : null
+          ]),
+          ``,
+          `💬 Como podemos auxiliar com a quitação desta pendência? Estamos à disposição para negociar as melhores condições de pagamento para você.`
         ].join('\n');
 
-        tituloAcao = `▶️ *COMO REGULARIZAR*`;
-        textoAcao = `Acesse o Portal do Cliente GSA e realize o pagamento para evitar possíveis restrições ou encargos.`;
+        tituloAcao = `▶️ *PRÓXIMO PASSO:*`;
+        textoAcao = `Acesse o Portal do Cliente GSA para visualizar a fatura, obter a 2ª via ou realizar o pagamento.`;
         despedida = `_Se o pagamento já foi realizado, por favor desconsidere este aviso._`;
         break;
 
@@ -707,6 +750,26 @@ export const whatsappNotificationService = {
         despedida = `_Estamos à disposição._`;
         break;
 
+      // ── Extrato ────────────────────────────────────────────────────────────
+      case 'extrato':
+        subtitulo = `📄 *EXTRATO FINANCEIRO DISPONÍVEL*`;
+        descricao = `Acabamos de gerar o extrato com o histórico completo das suas movimentações.`;
+
+        blocoDetalhes = [
+          `📊 *O QUE VOCÊ VAI ENCONTRAR NO PDF:*`,
+          formatList([
+            `🟢 *Entradas* (Créditos, comissões, estornos e pagamentos)`,
+            `🔴 *Saídas* (Resgates, débitos e contratação de serviços)`,
+            contexto.valorTotal ? `💰 *Saldo Final na Emissão:* ${contexto.valorTotal}` : `💰 *Saldo Atualizado da Carteira*`
+          ])
+        ].join('\n');
+
+        tituloAcao = `🔎 *COMO VISUALIZAR*`;
+        textoAcao = `Basta tocar no arquivo PDF enviado acima para abrir o seu documento.\n\n💡 *Dica:* Você pode salvar este arquivo ou encaminhar para a sua equipe financeira.`;
+        
+        despedida = `_Precisa de ajuda ou encontrou alguma divergência?_\n_Acesse a Central de Atendimento no Portal GSA._`;
+        break;
+
       default:
         subtitulo = `✨ *Nova Notificação*`;
         descricao = `Temos uma atualização no sistema para você.`;
@@ -752,5 +815,87 @@ export const whatsappNotificationService = {
     const ddiPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
     const whatsappUrl = `https://api.whatsapp.com/send?phone=${ddiPhone}&text=${text}`;
     window.open(whatsappUrl, '_blank');
+  },
+
+  enviarWhatsAppDireto: async (
+    telefone?: string | null, 
+    mensagem?: string,
+    options?: SendDirectOptions
+  ): Promise<boolean> => {
+    if (!mensagem) return false;
+
+    let targetPhone = telefone ? telefone.replace(/\D/g, '') : '';
+
+    // Se o telefone não veio nos props, tenta resolver automaticamente pelo Código da OS, Fatura ou Nome do Cliente!
+    if (!targetPhone || targetPhone.length < 8) {
+      try {
+        // 1. Tentar por código de Ordem de Serviço (ex: OS102)
+        const matchOS = mensagem.match(/(?:Número|Código|OS):\s*\*?(OS\d+)\*?/i);
+        if (matchOS && matchOS[1]) {
+          const codigoOs = matchOS[1].trim();
+          const { data: osData } = await supabase
+            .from('ordens_servico')
+            .select('clientes(telefone)')
+            .eq('codigo_os', codigoOs)
+            .maybeSingle();
+
+          if ((osData as any)?.clientes?.telefone) {
+            targetPhone = (osData as any).clientes.telefone.replace(/\D/g, '');
+          }
+        }
+
+        // 2. Tentar por nome do cliente
+        if (!targetPhone || targetPhone.length < 8) {
+          const matchNome = mensagem.match(/Olá,\s*\*([^*]+)\*/i);
+          if (matchNome && matchNome[1]) {
+            const nomeCliente = matchNome[1].trim();
+            const { data: cliData } = await supabase
+              .from('clientes')
+              .select('telefone')
+              .ilike('nome', `%${nomeCliente}%`)
+              .not('telefone', 'is', null)
+              .limit(1);
+
+            if (cliData && cliData.length > 0 && cliData[0].telefone) {
+              targetPhone = cliData[0].telefone.replace(/\D/g, '');
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Erro na resolução automática de telefone do cliente:', e);
+      }
+    }
+
+    if (!targetPhone || targetPhone.length < 8) {
+      toast.error('❌ Não foi possível realizar o envio automático: telefone do cliente não foi localizado no cadastro.');
+      return false;
+    }
+
+    const phone = targetPhone.startsWith('55') ? targetPhone : `55${targetPhone}`;
+
+    try {
+      const payload: any = { telefone: phone, mensagem };
+      if (options?.mediaBase64 || options?.pdfUrl) {
+        payload.mediaBase64 = options.mediaBase64;
+        payload.pdfUrl = options.pdfUrl;
+        payload.pdfPath = options.pdfPath;
+        payload.fileName = options.fileName;
+      }
+
+      const res = await fetch('https://counted-brief-hay-promoting.trycloudflare.com/webhook/send-direct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        return true;
+      }
+    } catch (e) {
+      console.warn('⚠️ Falha no disparo automático via API:', e);
+    }
+
+    toast.error('⚠️ Ocorreu um erro no servidor de WhatsApp. Tente novamente em instantes.');
+    return false;
   }
 };

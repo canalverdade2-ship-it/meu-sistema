@@ -127,9 +127,9 @@ export function SiteCampaignAdminModule() {
     try {
       const name = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120);
       const path = `campaigns/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${name}`;
-      const { error } = await supabase.storage.from('gsa-site-campaigns').upload(path, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
+      const { error, url: publicUrl, path: r2Path } = await uploadToR2(file, 'gsa-site-campaigns', path);
       if (error) throw error;
-      const url = supabase.storage.from('gsa-site-campaigns').getPublicUrl(path).data.publicUrl;
+      // url handled directly
       set(variant === 'desktop' ? 'image_desktop_url' : 'image_mobile_url', url);
       toast.success('Imagem enviada.');
     } catch (error) { toast.error(message(error, 'Não foi possível enviar a imagem.')); }

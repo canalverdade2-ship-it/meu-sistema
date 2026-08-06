@@ -96,13 +96,18 @@
 
 .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button::before {
   position: absolute;
-  top: 1rem;
-  right: 1.15rem;
+  top: clamp(1.4rem, 2.4vw, 2rem);
+  right: 3.2rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  line-height: 1;
   color: currentColor;
   font-size: 0.7rem;
   font-weight: 900;
   letter-spacing: 0.22em;
   opacity: 0.34;
+  pointer-events: none;
 }
 
 .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button::after {
@@ -133,7 +138,7 @@
   color: #ffffff;
 }
 
-.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(2)::before { content: '02  SAÚDE'; }
+.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(2)::before { content: '02  GESTÃO'; }
 
 .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(3) {
   grid-column: span 5;
@@ -141,32 +146,23 @@
   color: #ffffff;
 }
 
-.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(3)::before { content: '03  SEGUROS'; }
+.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(3)::before { content: '03  STORE'; }
 
 .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(4) {
-  grid-column: span 4;
+  grid-column: span 6;
   background: #d7c28f !important;
   color: #0a1722;
 }
 
-.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(4)::before { content: '04  STORE'; }
+.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(4)::before { content: '04  JORNADA'; }
 
 .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(5) {
-  grid-column: span 4;
+  grid-column: span 6;
   background: #26333f !important;
   color: #ffffff;
 }
 
-.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(5)::before { content: '05  GESTÃO'; }
-
-.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(6) {
-  grid-column: span 4;
-  background: #f1ede4 !important;
-  color: #0a1722;
-  border-color: #cbbfae !important;
-}
-
-.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(6)::before { content: '06  ORIENTAÇÃO'; }
+.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(5)::before { content: '05  FERRAMENTAS'; }
 
 .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button > div:first-child {
   width: 100%;
@@ -203,11 +199,6 @@
   line-height: 1.08 !important;
 }
 
-.gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(1) h3 {
-  max-width: 12ch !important;
-  font-size: clamp(2.2rem, 4vw, 4rem) !important;
-  line-height: 0.98 !important;
-}
 
 .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button > p:last-child {
   max-width: 34rem !important;
@@ -222,7 +213,7 @@
   color: #0a1722 !important;
 }
 
-@media (max-width: 1279px) {
+@media (min-width: 768px) and (max-width: 1279px) {
   .gsa-home-plan-3 #gsa-navigator {
     margin-top: -4rem;
   }
@@ -231,18 +222,14 @@
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
-  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(1) {
-    grid-column: span 2;
-    grid-row: auto;
-    min-height: 25rem !important;
+  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button {
+    grid-column: span 1 !important;
+    grid-row: auto !important;
+    min-height: 15rem !important;
   }
 
-  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(n + 2):nth-child(-n + 5) {
-    grid-column: span 1;
-  }
-
-  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(6) {
-    grid-column: span 2;
+  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(7) {
+    grid-column: span 2 !important;
   }
 }
 
@@ -269,22 +256,22 @@
   }
 
   .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) {
-    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
   }
 
   .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button,
-  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(1),
-  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(6) {
-    grid-column: span 1;
+  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(n) {
+    width: 100% !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
     min-height: 13.5rem !important;
   }
 
-  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(1) {
-    min-height: 20rem !important;
-  }
-
-  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button:nth-child(1) h3 {
-    font-size: clamp(2rem, 10vw, 3.1rem) !important;
+  .gsa-home-plan-3 #gsa-navigator > div > div:nth-child(2) > button::before {
+    top: 1.4rem;
+    right: 3.2rem;
   }
 }
 

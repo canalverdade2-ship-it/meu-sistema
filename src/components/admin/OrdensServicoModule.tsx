@@ -182,7 +182,7 @@ export function OrdensServicoModule({ activeSubTab, initialItemId, colaboradorNo
         await notificationService.notifyClient(
           os.cliente_id,
           '❌ Ordem de Serviço Cancelada',
-          `Sua ordem de serviço ${os.codigo_os} foi cancelada pelo administrador. Motivo: ${cancelReason}`,
+          `Sua ordem de serviço ${os.codigo_os} foi cancelada pelo sistema. Motivo: ${cancelReason}`,
           'servicos',
           'os_cancelada',
           { tab: 'cancelado', itemId: os.id, prioridade: 'alta', contexto: { os_id: os.id, codigo: os.codigo_os, motivo: cancelReason } }
@@ -196,7 +196,7 @@ export function OrdensServicoModule({ activeSubTab, initialItemId, colaboradorNo
             await notificationService.notifyProvider(
               dem.prestador_id,
               '⚠️ Demanda Cancelada pela GSA',
-              `A demanda ${dem.codigo_demanda || dem.id.slice(0,8)} foi cancelada administrativamente. Motivo: ${cancelReason}`,
+              `A demanda ${dem.codigo_demanda || dem.id.slice(0,8)} foi cancelada pelo sistema. Motivo: ${cancelReason}`,
               'demandas',
               'demanda_cancelada',
               { itemId: dem.id, prioridade: 'alta', contexto: { demanda_id: dem.id, motivo: cancelReason } }
@@ -376,11 +376,17 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
   const [requestedDocs, setRequestedDocs] = useState<string[]>(['']);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
+  const [clienteInfo, setClienteInfo] = useState<any>((os as any).clientes || null);
   const finalizeRequestId = useRef(generateUUID());
 
   useEffect(() => {
     fetchNotas();
-  }, [os.id]);
+    if (!clienteInfo && os.cliente_id) {
+      supabase.from('clientes').select('id, nome, telefone').eq('id', os.cliente_id).maybeSingle().then(({ data }) => {
+        if (data) setClienteInfo(data);
+      });
+    }
+  }, [os.id, os.cliente_id]);
 
   const fetchNotas = async () => {
     const { data } = await supabase.from('os_notas').select('*').eq('os_id', os.id).order('data_criacao', { ascending: false });
@@ -543,10 +549,10 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
 
          <div className="flex items-center gap-4">
             <AdminWhatsAppButton 
-              telefone={(os as any).clientes?.telefone}
+              telefone={clienteInfo?.telefone || (os as any).clientes?.telefone}
               mensagem={whatsappNotificationService.gerarMensagemWhatsApp({
                 tipo: 'os',
-                clienteNome: (os as any).clientes?.nome,
+                clienteNome: clienteInfo?.nome || (os as any).clientes?.nome,
                 codigo: os.codigo_os,
                 status: os.status === 'andamento' ? 'Em Execução' : os.status === 'concluido' ? 'Finalizada' : 'Cancelada',
                 detalhesExtras: notas.length > 0 ? notas[0].nota : undefined

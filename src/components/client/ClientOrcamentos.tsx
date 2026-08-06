@@ -928,11 +928,11 @@ export function ClientOrcamentos({
                 <div className="rounded-xl bg-indigo-50 p-3 ring-1 ring-indigo-100">
                   <p className="text-[10px] sm:text-xs font-bold text-indigo-700 flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" />
-                    {orc.fase_negociacao === 'admin' ? 'Aguardando análise administrativa' : 'Proposta recebida do administrativo'}
+                    {orc.fase_negociacao === 'admin' ? 'Aguardando análise do sistema' : 'Proposta recebida do sistema'}
                   </p>
                   {orc.fase_negociacao === 'cliente' && orc.proposta_admin_porcentagem && (
                     <div className="mt-3">
-                      <p className="text-sm text-indigo-900">O administrativo propôs um desconto de <strong>{orc.proposta_admin_porcentagem}%</strong>.</p>
+                      <p className="text-sm text-indigo-900">O sistema propôs um desconto de <strong>{orc.proposta_admin_porcentagem}%</strong>.</p>
                       <p className="text-lg font-black text-indigo-600 mt-1">{formatCurrency(orc.total * (1 - orc.proposta_admin_porcentagem / 100))}</p>
                     </div>
                   )}
@@ -985,7 +985,7 @@ export function ClientOrcamentos({
                     Pendência de Documentos
                   </p>
                   <p className="text-xs font-medium text-rose-700 leading-relaxed mb-4">
-                    O administrador solicitou os seguintes documentos para prosseguir com seu orçamento:
+                    O sistema solicitou os seguintes documentos para prosseguir com seu orçamento:
                   </p>
                   <div className="space-y-3">
                     {((orc as any).documentos_solicitados || []).map((doc: string, idx: number) => (
@@ -1208,7 +1208,7 @@ export function ClientOrcamentos({
                   <div className="space-y-2">
                     <p className="text-sm text-amber-900 font-bold">Informativo de Negociação</p>
                     <p className="text-xs text-amber-800 leading-relaxed">
-                      O desconto solicitado será analisado e poderá ser aprovado ou recusado pelo nosso setor administrativo.
+                      O desconto solicitado será analisado e poderá ser aprovado ou recusado pelo sistema.
                     </p>
                     <p className="text-xs font-bold text-amber-900">
                       O prazo é de 48 horas para retorno.
@@ -1908,7 +1908,7 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
                     {catalogServices.length > 0 && <optgroup label="Serviços avulsos">{catalogServices.map((item) => <option key={item.id} value={`service:${item.id}`}>{item.title}</option>)}</optgroup>}
                   </select>
                 )}
-                {!catalogLoading && !catalogError && catalogPackages.length === 0 && catalogServices.length === 0 && <p className="rounded-xl bg-amber-50 p-3 text-xs font-bold text-amber-800">Nenhum item ativo está disponível. Solicite ao administrador o cadastro do catálogo.</p>}
+                {!catalogLoading && !catalogError && catalogPackages.length === 0 && catalogServices.length === 0 && <p className="rounded-xl bg-amber-50 p-3 text-xs font-bold text-amber-800">Nenhum item ativo está disponível. O sistema não possui catálogo cadastrado no momento.</p>}
               </div>
 
               {(selectedPackage || selectedService) && (

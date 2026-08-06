@@ -21,8 +21,7 @@ export function useAutoLogout(
       clearTimeout(timeoutRef.current);
     }
 
-    timeoutRef.current = setTimeout(performLogout, TIMEOUT_MS);
-
+    // Sessão por tempo indeterminado: não é encerrada por inatividade.
     // Atualiza a validade da sessão no máximo uma vez por minuto.
     const lastPing = localStorage.getItem('lastPing');
     const now = Date.now();

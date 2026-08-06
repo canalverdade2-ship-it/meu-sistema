@@ -1,10 +1,11 @@
 import { supabase } from './supabase';
 import { generateUUID } from './utils';
+import { uploadToR2, getPrivateR2Url, removeFromR2 } from './r2Storage';
 
 export const PRIVATE_DOCUMENT_BUCKET = 'gsa-private-documents';
-export const PRIVATE_DOCUMENT_PREFIX = `gsa-private://${PRIVATE_DOCUMENT_BUCKET}/`;
+export const PRIVATE_DOCUMENT_PREFIX = `r2://${PRIVATE_DOCUMENT_BUCKET}/`;
 export const CLIENT_DOCUMENT_BUCKET = 'documentos_cliente';
-export const CLIENT_DOCUMENT_PREFIX = `storage://${CLIENT_DOCUMENT_BUCKET}/`;
+export const CLIENT_DOCUMENT_PREFIX = `r2://${CLIENT_DOCUMENT_BUCKET}/`;
 export const MAX_PRIVATE_DOCUMENT_SIZE = 10 * 1024 * 1024;
 
 const ALLOWED_EXTENSIONS = new Set([
@@ -178,19 +179,13 @@ export async function uploadPrivateDocument(
   const uniqueName = `${generateUUID()}-${safeName}`;
   const path = `${options.scope}/${ownerId}/${options.context}/${options.contextId}/${uniqueName}`;
 
-  const { error } = await supabase.storage
-    .from(PRIVATE_DOCUMENT_BUCKET)
-    .upload(path, file, {
-      cacheControl: '3600',
-      contentType: file.type || undefined,
-      upsert: false,
-    });
-
+  const { path: r2Path, error } = await uploadToR2(file, PRIVATE_DOCUMENT_BUCKET, path);
+  
   if (error) throw error;
 
   return {
-    reference: buildPrivateDocumentReference(path),
-    path,
+    reference: buildPrivateDocumentReference(r2Path),
+    path: r2Path,
     fileName: file.name,
     mimeType: file.type || 'application/octet-stream',
     size: file.size,
@@ -201,14 +196,11 @@ export async function resolvePrivateFileReference(reference: string, expiresInSe
   const parsed = parsePrivateDocumentReference(reference);
   if (!parsed) return reference;
 
-  const { data, error } = await supabase.storage.from(parsed.bucket).createSignedUrl(parsed.path, expiresInSeconds);
-  if (error || !data?.signedUrl) throw error || new Error('Não foi possível gerar o acesso temporário ao arquivo.');
-  return data.signedUrl;
+  return await getPrivateR2Url(parsed.path);
 }
 
 export async function removePrivateDocument(reference: string) {
   const parsed = parsePrivateDocumentReference(reference);
   if (!parsed) return;
-  const { error } = await supabase.storage.from(parsed.bucket).remove([parsed.path]);
-  if (error) throw error;
+  await removeFromR2(parsed.path);
 }

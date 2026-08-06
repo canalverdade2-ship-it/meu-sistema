@@ -91,7 +91,7 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
         <div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
           {hasDiscount && (
             <span className="rounded-md bg-[#a77a2c] px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white shadow-sm">
-              {formatProductDiscountPercentage(item)} off
+              {formatProductDiscountPercentage(item)}
             </span>
           )}
 
@@ -133,7 +133,7 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
 
         {promotionQuantity?.limitadoPorQuantidade && promotionQuantity.quantidadeRestante !== null && (
           <p className="mt-2 text-[11px] font-semibold text-emerald-700">
-            {promotionQuantity.quantidadeRestante} unidades com preço promocional
+            {promotionQuantity.quantidadeRestante} {promotionQuantity.quantidadeRestante === 1 ? 'unidade promocional' : 'unidades promocionais'}
           </p>
         )}
 

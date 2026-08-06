@@ -155,7 +155,7 @@ export function OrdensCompraModule({
 
 const handleUpdateStatus = async (id: string, status: 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido' | 'cancelado', motivo?: string) => {
   if (status === 'cancelado') {
-    setCancelReason(motivo || 'Cancelamento solicitado pelo administrador');
+    setCancelReason(motivo || 'Cancelamento solicitado pelo sistema');
     setIsCancelModalOpen(true);
     return;
   }

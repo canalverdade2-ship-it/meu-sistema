@@ -13,7 +13,7 @@ import { createNotification } from '../../lib/notifications';
 import { notifyWhatsAppModal } from '../ui/WhatsAppButton';
 import { avaliarPromocoes, PromoResult } from '../../lib/promocaoQuantidadeEngine';
 import { VIP_LEVELS } from '../../constants';
-import { getProductEffectivePrice } from '../../lib/productPricing';
+import { getProductEffectivePrice, getProductDiscountPercentage } from '../../lib/productPricing';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 
 // Roteamento
@@ -927,6 +927,16 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       base.sort((a, b) => a.nome.localeCompare(b.nome));
     } else if (sortBy === 'alpha-desc') {
       base.sort((a, b) => b.nome.localeCompare(a.nome));
+    } else {
+      // Padrão: Produtos com desconto primeiro (maior % para o menor %), depois sem desconto
+      base.sort((a, b) => {
+        const descA = tipo === 'produto' ? getProductDiscountPercentage(a) : 0;
+        const descB = tipo === 'produto' ? getProductDiscountPercentage(b) : 0;
+        if (descB !== descA) {
+          return descB - descA; // Maior % de desconto primeiro
+        }
+        return (a.nome || '').localeCompare(b.nome || '');
+      });
     }
 
     return base.map(b => ({ 
@@ -942,7 +952,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
         {onBack ? (
           <button 
             onClick={onBack}
-            className="self-start md:self-auto inline-flex h-9 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 text-xs font-black text-neutral-800 shadow-sm transition-colors hover:bg-neutral-50 sm:h-10 sm:rounded-full sm:px-4 sm:text-sm"
+            className="hidden md:inline-flex self-start md:self-auto h-9 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 text-xs font-black text-neutral-800 shadow-sm transition-colors hover:bg-neutral-50 sm:h-10 sm:rounded-full sm:px-4 sm:text-sm"
           >
             <ChevronLeft className="h-4 w-4 shrink-0" />
             <span>Voltar</span>
@@ -1004,38 +1014,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
         </button>
       </div>
 
-      {/* Categories Bar */}
-      {(() => {
-        const cats = categorias.filter(c => c.tipo === activeTab);
-        if (cats.length === 0) return null;
-        return (
-          <div className="flex items-center gap-2 overflow-x-auto py-2 px-1 max-w-4xl mx-auto no-scrollbar">
-            <button
-              onClick={() => handleSelectCategory('todas')}
-              className={`flex h-9 items-center justify-center rounded-xl border-2 px-4 text-xs font-black uppercase tracking-wider transition-all ${
-                selectedCategoriaId === 'todas'
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm shadow-indigo-100'
-                  : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300'
-              }`}
-            >
-              Todas
-            </button>
-            {cats.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => handleSelectCategory(cat.id)}
-                className={`flex h-9 items-center justify-center rounded-xl border-2 px-4 text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
-                  selectedCategoriaId === cat.id
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm shadow-indigo-100'
-                    : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300'
-                }`}
-              >
-                {cat.nome}
-              </button>
-            ))}
-          </div>
-        );
-      })()}
+
 
       {/* Grid */}
       {isLoading ? (
@@ -1215,6 +1194,13 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
           setMinPrice={setMinPrice}
           maxPrice={maxPrice}
           setMaxPrice={setMaxPrice}
+          categories={categorias.filter(c => {
+            const targetType = activeTab === 'produtos' ? 'produto' : 'assinatura';
+            const t = c.tipo_item || c.tipo || 'todos';
+            return t === targetType || t === 'todos' || t === 'ambos';
+          })}
+          selectedCategoryId={selectedCategoriaId}
+          onSelectCategory={handleSelectCategory}
         />
       </React.Suspense>
     </div>

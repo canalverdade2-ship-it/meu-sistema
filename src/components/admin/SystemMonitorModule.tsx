@@ -29,11 +29,36 @@ function formatBytes(value: unknown) {
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
 }
 
+import { sendAdminWhatsAppNotification } from '../../utils/n8nWhatsApp';
+import { MessageSquare } from 'lucide-react';
+
 export function SystemMonitorModule(_props: { colaboradorId?: string; colaboradorNome?: string | null }) {
   const [snapshot, setSnapshot] = useState<SystemSnapshot>({ metrics: {}, tables: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [sendingAlert, setSendingAlert] = useState(false);
   const [search, setSearch] = useState('');
+
+  const handleSendTestAlert = async () => {
+    setSendingAlert(true);
+    try {
+      const success = await sendAdminWhatsAppNotification({
+        title: 'Alerta de Observabilidade',
+        message: `Status do sistema verificado via Painel Admin. Todos os serviços estão operando normalmente na Oracle Cloud com n8n ativo.`,
+        category: 'SISTEMA'
+      });
+      if (success) {
+        toast.success('Notificação de WhatsApp enviada para o administrador!');
+      } else {
+        toast.error('Erro ao enviar notificação via WhatsApp.');
+      }
+    } catch (e: any) {
+      toast.error('Falha no envio de notificação: ' + (e?.message || 'Erro desconhecido'));
+    } finally {
+      setSendingAlert(false);
+    }
+  };
+
 
   const load = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true);
@@ -95,7 +120,18 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
             <h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><ShieldCheck className="h-6 w-6 text-emerald-400" /> Saúde do Sistema</h1>
             <p className="mt-2 text-sm text-white/55">Visão somente leitura. O navegador não recebe permissão para consultar tabelas arbitrárias nem apagar arquivos.</p>
           </div>
-          <button type="button" onClick={() => void load(true)} disabled={refreshing} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Atualizar</button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void handleSendTestAlert()}
+              disabled={sendingAlert}
+              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-sm font-black text-white hover:bg-emerald-600 disabled:opacity-60 transition-colors shadow-lg shadow-emerald-500/20"
+            >
+              <MessageSquare className={`h-4 w-4 ${sendingAlert ? 'animate-bounce' : ''}`} />
+              {sendingAlert ? 'Enviando...' : 'Enviar Alerta WhatsApp'}
+            </button>
+            <button type="button" onClick={() => void load(true)} disabled={refreshing} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Atualizar</button>
+          </div>
         </div>
       </header>
 

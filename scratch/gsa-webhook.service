@@ -1,0 +1,15 @@
+[Unit]
+Description=GSA WhatsApp Webhook Production Service
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/docker exec n8n node /home/node/server_webhook.js
+Restart=always
+RestartSec=3
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

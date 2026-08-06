@@ -22,7 +22,7 @@ export const productUrlImportService = {
       throw new Error('Sessão administrativa não encontrada');
     }
 
-    const { data, error } = await supabase.functions.invoke('import-product-from-url', {
+    const { data, error } = await supabase.functions.invoke('gsa-product-import', {
       body: {
         sessaoId: session.sessaoId,
         sessionToken: session.sessionToken,
@@ -52,7 +52,7 @@ export const productUrlImportService = {
       throw new Error('Sessão administrativa não encontrada');
     }
 
-    const { data, error } = await supabase.functions.invoke('import-product-from-url', {
+    const { data, error } = await supabase.functions.invoke('gsa-product-import', {
       body: {
         sessaoId: session.sessaoId,
         sessionToken: session.sessionToken,
@@ -79,7 +79,7 @@ export const productUrlImportService = {
     const session = sessionService.getCurrentSession();
     if (!session?.sessaoId || !session?.sessionToken) throw new Error('Sessão administrativa não encontrada');
 
-    const { data, error } = await supabase.functions.invoke('import-product-from-url', {
+    const { data, error } = await supabase.functions.invoke('gsa-product-import', {
       body: { sessaoId: session.sessaoId, sessionToken: session.sessionToken, url, action: 'discover_products' }
     });
 
@@ -93,7 +93,7 @@ export const productUrlImportService = {
     const session = sessionService.getCurrentSession();
     if (!session?.sessaoId || !session?.sessionToken) throw new Error('Sessão administrativa não encontrada');
 
-    const { data, error } = await supabase.functions.invoke('import-product-from-url', {
+    const { data, error } = await supabase.functions.invoke('gsa-product-import', {
       body: { sessaoId: session.sessaoId, sessionToken: session.sessionToken, urls, action: 'analyze_products' }
     });
 
@@ -107,7 +107,7 @@ export const productUrlImportService = {
     const session = sessionService.getCurrentSession();
     if (!session?.sessaoId || !session?.sessionToken) throw new Error('Sessão administrativa não encontrada');
 
-    const { data, error } = await supabase.functions.invoke('import-product-from-url', {
+    const { data, error } = await supabase.functions.invoke('gsa-product-import', {
       body: { sessaoId: session.sessaoId, sessionToken: session.sessionToken, batchId, products, action: 'copy_product_images' }
     });
 

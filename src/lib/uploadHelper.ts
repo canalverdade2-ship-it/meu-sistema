@@ -1,4 +1,5 @@
-import { supabase } from './supabase';
+import { uploadToR2 } from './r2Storage';
+
 
 /**
  * Faz o upload de múltiplos arquivos para o bucket especificado no Supabase Storage.

@@ -47,30 +47,33 @@ import {
   normalizeCollaboratorModules,
 } from '../security/collaboratorAccess';
 
-const Dashboard = lazy(() => import('../components/admin/Dashboard').then((module) => ({ default: module.Dashboard })));
-const CollaboratorDashboard = lazy(() => import('../components/admin/CollaboratorDashboard').then((module) => ({ default: module.CollaboratorDashboard })));
-const CadastroModule = lazy(() => import('../components/admin/CadastroModule').then((module) => ({ default: module.CadastroModule })));
-const VendasModule = lazy(() => import('../components/admin/VendasModule').then((module) => ({ default: module.VendasModule })));
-const FinanceiroModule = lazy(() => import('../components/admin/FinanceiroModule').then((module) => ({ default: module.FinanceiroModule })));
-const AffiliateAdminModule = lazy(() => import('../components/admin/AffiliateAdminModule').then((module) => ({ default: module.AffiliateAdminModule })));
-const TicketsModule = lazy(() => import('../components/admin/TicketsModule').then((module) => ({ default: module.TicketsModule })));
-const RelatoriosModule = lazy(() => import('../components/admin/RelatoriosModule').then((module) => ({ default: module.RelatoriosModule })));
-const ConfiguracoesModule = lazy(() => import('../components/admin/ConfiguracoesModule').then((module) => ({ default: module.ConfiguracoesModule })));
-const AreaVIPModule = lazy(() => import('../components/admin/AreaVIPModule').then((module) => ({ default: module.AreaVIPModule })));
-const AcessosModule = lazy(() => import('../components/admin/AcessosModule').then((module) => ({ default: module.AcessosModule })));
-const DemandasColaboradorModule = lazy(() => import('../components/admin/DemandasColaboradorModule').then((module) => ({ default: module.DemandasColaboradorModule })));
-const SystemMonitorModule = lazy(() => import('../components/admin/SystemMonitorModule').then((module) => ({ default: module.SystemMonitorModule })));
-const FiscalModule = lazy(() => import('../components/admin/FiscalModule').then((module) => ({ default: module.FiscalModule })));
-const CobrancaModule = lazy(() => import('../components/admin/CobrancaModule').then((module) => ({ default: module.CobrancaModule })));
-const PromocaoQuantidadeModule = lazy(() => import('../components/admin/PromocaoQuantidadeModule').then((module) => ({ default: module.PromocaoQuantidadeModule })));
-const ClassifiedsModule = lazy(() => import('../components/admin/ClassifiedsModule').then((module) => ({ default: module.ClassifiedsModule })));
-const TravelAdminModule = lazy(() => import('../components/admin/TravelAdminModule').then((module) => ({ default: module.TravelAdminModule })));
-const ProtectionAdminModule = lazy(() => import('../components/admin/ProtectionAdminModule').then((module) => ({ default: module.ProtectionAdminModule })));
-const PartnersAdminModule = lazy(() => import('../components/admin/PartnersAdminModule').then((module) => ({ default: module.PartnersAdminModule })));
-const AdvertisingAdminModule = lazy(() => import('../components/admin/AdvertisingAdminModule').then((module) => ({ default: module.AdvertisingAdminModule })));
-const FornecedoresModule = lazy(() => import('../components/admin/FornecedoresModule').then((module) => ({ default: module.FornecedoresModule })));
-const CareersAdminModule = lazy(() => import('../components/admin/CareersAdminModule').then((module) => ({ default: module.CareersAdminModule })));
-const SiteCampaignAdminPage = lazy(() => import('../components/admin/SiteCampaignAdminPage').then((module) => ({ default: module.SiteCampaignAdminPage })));
+import { lazyWithRetry } from '../lib/lazyWithRetry';
+
+const Dashboard = lazyWithRetry(() => import('../components/admin/Dashboard'), 'Dashboard');
+const CollaboratorDashboard = lazyWithRetry(() => import('../components/admin/CollaboratorDashboard'), 'CollaboratorDashboard');
+const CadastroModule = lazyWithRetry(() => import('../components/admin/CadastroModule'), 'CadastroModule');
+const VendasModule = lazyWithRetry(() => import('../components/admin/VendasModule'), 'VendasModule');
+const ScrapingAdminModule = lazy(() => import('../components/admin/ScrapingAdminModule').then((m) => ({ default: m.ScrapingAdminModule })));
+const FinanceiroModule = lazyWithRetry(() => import('../components/admin/FinanceiroModule'), 'FinanceiroModule');
+const AffiliateAdminModule = lazyWithRetry(() => import('../components/admin/AffiliateAdminModule'), 'AffiliateAdminModule');
+const TicketsModule = lazyWithRetry(() => import('../components/admin/TicketsModule'), 'TicketsModule');
+const RelatoriosModule = lazyWithRetry(() => import('../components/admin/RelatoriosModule'), 'RelatoriosModule');
+const ConfiguracoesModule = lazyWithRetry(() => import('../components/admin/ConfiguracoesModule'), 'ConfiguracoesModule');
+const AreaVIPModule = lazyWithRetry(() => import('../components/admin/AreaVIPModule'), 'AreaVIPModule');
+const AcessosModule = lazyWithRetry(() => import('../components/admin/AcessosModule'), 'AcessosModule');
+const DemandasColaboradorModule = lazyWithRetry(() => import('../components/admin/DemandasColaboradorModule'), 'DemandasColaboradorModule');
+const SystemMonitorModule = lazyWithRetry(() => import('../components/admin/SystemMonitorModule'), 'SystemMonitorModule');
+const FiscalModule = lazyWithRetry(() => import('../components/admin/FiscalModule'), 'FiscalModule');
+const CobrancaModule = lazyWithRetry(() => import('../components/admin/CobrancaModule'), 'CobrancaModule');
+const PromocaoQuantidadeModule = lazyWithRetry(() => import('../components/admin/PromocaoQuantidadeModule'), 'PromocaoQuantidadeModule');
+const ClassifiedsModule = lazyWithRetry(() => import('../components/admin/ClassifiedsModule'), 'ClassifiedsModule');
+const TravelAdminModule = lazyWithRetry(() => import('../components/admin/TravelAdminModule'), 'TravelAdminModule');
+const ProtectionAdminModule = lazyWithRetry(() => import('../components/admin/ProtectionAdminModule'), 'ProtectionAdminModule');
+const PartnersAdminModule = lazyWithRetry(() => import('../components/admin/PartnersAdminModule'), 'PartnersAdminModule');
+const AdvertisingAdminModule = lazyWithRetry(() => import('../components/admin/AdvertisingAdminModule'), 'AdvertisingAdminModule');
+const FornecedoresModule = lazyWithRetry(() => import('../components/admin/FornecedoresModule'), 'FornecedoresModule');
+const CareersAdminModule = lazyWithRetry(() => import('../components/admin/CareersAdminModule'), 'CareersAdminModule');
+const SiteCampaignAdminPage = lazyWithRetry(() => import('../components/admin/SiteCampaignAdminPage'), 'SiteCampaignAdminPage');
 
 function ModuleLoadingState() {
   return (
@@ -120,7 +123,6 @@ const MENU_GROUPS: MenuGroup[] = [
     { id: 'parceiros', label: 'Parceiros', icon: Handshake },
     { id: 'trabalhe-conosco', label: 'Trabalhe Conosco', icon: Briefcase },
     { id: 'fidelidade', label: 'Fidelidade', icon: Gift },
-    { id: 'promocoes', label: 'Promoções por Quantidade', icon: Tags },
     { id: 'area_vip', label: 'Área VIP', icon: Gift },
     { id: 'atendimento', label: 'Atendimento', icon: MessageSquare },
   ]},
@@ -132,7 +134,7 @@ const MENU_GROUPS: MenuGroup[] = [
     { id: 'configuracoes', label: 'Configurações', icon: Settings },
   ]},
   { label: 'Acesso', items: [{ id: 'acessos', label: 'Gerenciar Acessos', icon: ShieldAlert }] },
-  { label: 'Infraestrutura', items: [{ id: 'sistema', label: 'Saúde do Sistema', icon: Server }] },
+  { label: 'Infraestrutura', items: [{ id: 'sistema', label: 'Saúde do Sistema', icon: Server }, { id: 'automacoes', label: 'Automações', icon: Server }] },
 ];
 
 function LiveClock() {
@@ -243,7 +245,7 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
         {normalizedActive === 'parceiros' && <ErrorBoundary><PartnersAdminModule /></ErrorBoundary>}
         {normalizedActive === 'operacoes' && <ErrorBoundary><VendasModule title="Operações" allowedTabs={['orcamentos', 'demandas', 'os', 'produtos', 'assinaturas']} initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} /></ErrorBoundary>}
         {normalizedActive === 'demandas' && <DemandasColaboradorModule colaboradorId={colaboradorId} adminType={adminType} initialItemId={activeItemId} initialTab={activeTab} colaboradorNome={colaboradorNome} />}
-        {normalizedActive === 'loja' && <ErrorBoundary><CadastroModule title="Loja GSA Store" allowedTabs={['produtos', 'servicos', 'pacotes', 'assinaturas', 'categorias_loja', 'gsa_store']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
+        {normalizedActive === 'loja' && <ErrorBoundary><CadastroModule title="Loja GSA Store" allowedTabs={['produtos', 'servicos', 'pacotes', 'assinaturas', 'promocoes', 'categorias_loja', 'gsa_store']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
         {normalizedActive === 'fidelidade' && <ErrorBoundary><CadastroModule title="Fidelidade" allowedTabs={['indicacoes', 'vouchers', 'premios', 'promocoes']} initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}
         {normalizedActive === 'atendimento' && <TicketsModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {normalizedActive === 'financeiro' && <FinanceiroModule initialTab={activeTab} initialItemId={activeItemId} adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} onNavigate={commonNavigate} />}
@@ -254,7 +256,8 @@ export function AdminPanel({ onLogout, adminType, colaboradorId, colaboradorNome
         {normalizedActive === 'relatorios' && <RelatoriosModule adminType={adminType} colaboradorModulos={internalModulos} />}
         {normalizedActive === 'configuracoes' && <ConfiguracoesModule />}
         {normalizedActive === 'area_vip' && <AreaVIPModule initialItemId={activeItemId} colaboradorNome={colaboradorNome} />}
-        {normalizedActive === 'acessos' && <AcessosModule adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} />}
+        {normalizedActive === 'acessos' && <ErrorBoundary><AcessosModule adminType={adminType} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} /></ErrorBoundary>}
+        {normalizedActive === 'automacoes' && <ErrorBoundary><ScrapingAdminModule /></ErrorBoundary>}
         {normalizedActive === 'sistema' && <SystemMonitorModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {normalizedActive === 'promocoes' && <ErrorBoundary><PromocaoQuantidadeModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} /></ErrorBoundary>}
         {normalizedActive === 'classificados' && <ErrorBoundary><ClassifiedsModule initialTab={activeTab} initialItemId={activeItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} /></ErrorBoundary>}

@@ -11,7 +11,12 @@ import {
   ShieldCheck,
   ShoppingBag,
   Truck,
+  MessageSquare,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
+import { notificationService } from '../../../lib/notificationService';
 import { getProductDisplayCode } from '../../../lib/productIdentification';
 import { formatCurrency } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
@@ -33,6 +38,8 @@ interface ProductDetailsModalProps {
   item: any;
   tipo: ItemType;
   onAdd: () => void;
+  clientId?: string;
+  onRequireAuth?: () => void;
 }
 
 function getTypeLabel(tipo: ItemType) {
@@ -55,13 +62,63 @@ function Placeholder({ tipo }: { tipo: ItemType }) {
   return <Package className={className} aria-hidden="true" />;
 }
 
-export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd }: ProductDetailsModalProps) {
+export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd, clientId, onRequireAuth }: ProductDetailsModalProps) {
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const [isRequestingTicket, setIsRequestingTicket] = useState(false);
   const images = useMemo(() => mapColumnsToGallery(item), [item]);
 
   useEffect(() => {
     setActiveImageIdx(0);
   }, [item?.id]);
+
+  const handleRequestOutOfStockProduct = async () => {
+    if (!item) return;
+
+    if (!clientId) {
+      toast.error('Você precisa estar logado para solicitar este produto.');
+      if (onRequireAuth) onRequireAuth();
+      return;
+    }
+
+    if (isRequestingTicket) return;
+    setIsRequestingTicket(true);
+
+    try {
+      const ticket = await clientOperationalWrite<{ id: string }>(clientId, 'tickets', 'insert', {
+        cliente_id: clientId,
+        assunto: `Solicitação de produto esgotado: ${item.nome}`,
+        categoria: 'Dúvidas/Solicitações',
+        descricao: `Solicitação automática de aviso/reposição para o produto esgotado: "${item.nome}" (Código: ${item.codigo_produto || item.id}).`,
+        prioridade: 'normal',
+        modulo: 'cliente',
+        status: 'aberto'
+      });
+
+      await notificationService.notifyAdmin(
+        '🎟️ Solicitação de Produto Esgotado',
+        `Cliente solicitou o produto esgotado: "${item.nome}"`,
+        'suporte',
+        'ticket_aberto_cliente',
+        { itemId: ticket.id, tab: 'abertos' }
+      );
+
+      await notificationService.notifyClient(
+        clientId,
+        'Solicitação Registrada! 💬',
+        `Seu chamando para o produto "${item.nome}" foi registrado com sucesso. Avisaremos assim que o estoque for reposto.`,
+        'suporte',
+        'ticket_aberto',
+        { itemId: ticket.id }
+      );
+
+      toast.success(`Ticket aberto com sucesso! Registramos sua solicitação para "${item.nome}".`);
+    } catch (error: any) {
+      console.error('Erro ao abrir ticket de solicitação:', error);
+      toast.error('Erro ao abrir ticket de solicitação. Tente novamente em instantes.');
+    } finally {
+      setIsRequestingTicket(false);
+    }
+  };
 
   if (!isOpen || !item) return null;
 
@@ -155,7 +212,7 @@ export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd
             {category && <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-slate-500">{category}</span>}
             {reference && <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-slate-500">Ref. {reference}</span>}
             {discount && !outOfStock && (
-              <span className="rounded-md bg-[#9b742f] px-2.5 py-1.5 text-white">{formatProductDiscountPercentage(item)} off</span>
+              <span className="rounded-md bg-[#9b742f] px-2.5 py-1.5 text-white">{formatProductDiscountPercentage(item)}</span>
             )}
           </div>
 
@@ -227,24 +284,8 @@ export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd
             </div>
           )}
 
-          <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5">
-              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#9b742f]" aria-hidden="true" />
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">Compra protegida</p>
-                <p className="mt-0.5 text-xs leading-5 text-slate-500">Pedido registrado e acompanhado no portal.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5">
-              {isProduct ? <Truck className="mt-0.5 h-5 w-5 shrink-0 text-[#9b742f]" aria-hidden="true" /> : <Check className="mt-0.5 h-5 w-5 shrink-0 text-[#9b742f]" aria-hidden="true" />}
-              <div>
-                <p className="text-xs font-extrabold text-slate-900">{isProduct ? 'Entrega acompanhada' : 'Ativação acompanhada'}</p>
-                <p className="mt-0.5 text-xs leading-5 text-slate-500">Você recebe atualizações em cada etapa.</p>
-              </div>
-            </div>
-          </div>
 
-          <div className="mt-6 bg-white pt-2 md:sticky md:bottom-0 md:mt-auto md:pt-6">
+          <div className="mt-6 bg-white pb-4 pt-2 md:sticky md:bottom-0 md:mt-auto md:pb-6 md:pt-6">
             <button
               type="button"
               disabled={outOfStock}
@@ -254,6 +295,22 @@ export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd
               <ShoppingBag className="h-5 w-5" aria-hidden="true" />
               {outOfStock ? 'Produto indisponível' : tipo === 'assinatura' ? 'Escolher período' : 'Adicionar ao carrinho'}
             </button>
+
+            {outOfStock && (
+              <button
+                type="button"
+                disabled={isRequestingTicket}
+                onClick={handleRequestOutOfStockProduct}
+                className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-indigo-600 bg-indigo-50 px-5 py-3.5 text-sm font-extrabold text-indigo-700 shadow-sm transition hover:bg-indigo-100 active:scale-[0.98] disabled:opacity-50"
+              >
+                {isRequestingTicket ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-indigo-700" />
+                ) : (
+                  <MessageSquare className="h-4.5 w-4.5 text-indigo-600" />
+                )}
+                <span>{isRequestingTicket ? 'Abrindo ticket...' : 'Solicitar este produto'}</span>
+              </button>
+            )}
           </div>
         </section>
       </div>

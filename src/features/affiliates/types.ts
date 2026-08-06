@@ -106,7 +106,7 @@ export interface AffiliateSnapshot {
   summary: AffiliateSummary;
   commissions: AffiliateCommission[];
   payouts: AffiliatePayout[];
-  pointsEvents: AffiliatePointsEvent[];
+  pointsEvents?: AffiliatePointsEvent[];
 }
 
 export interface AffiliateProfileInput {

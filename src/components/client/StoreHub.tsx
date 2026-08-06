@@ -37,6 +37,7 @@ import StoreHubCoupons from './store/StoreHubCoupons';
 import StoreHubPurchases from './store/StoreHubPurchases';
 import { Modal } from '../ui/Modal';
 import { formatCurrency, formatDate, formatDateTime, generateCode, generateUUID } from '../../lib/utils';
+import { getProductDiscountPercentage } from '../../lib/productPricing';
 import { useAppLocation } from '../../routing/useAppLocation';
 import { navigate } from '../../routing/navigationService';
 import { routes } from '../../routing/routeCatalog';
@@ -531,7 +532,13 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
         .eq('status', 'ativo')
         .eq('visivel_na_loja', true);
       if (error) throw error;
-      setStoreProducts(data || []);
+      const sorted = (data || []).sort((a: any, b: any) => {
+        const descA = getProductDiscountPercentage(a);
+        const descB = getProductDiscountPercentage(b);
+        if (descB !== descA) return descB - descA;
+        return (a.nome || '').localeCompare(b.nome || '');
+      });
+      setStoreProducts(sorted);
     } catch (err) {
       console.error('Erro ao buscar produtos da loja:', err);
     }
@@ -1355,7 +1362,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
           {onBackToMarketplace ? (
             <button
               onClick={onBackToMarketplace}
-              className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-950 md:flex-none md:rounded-full md:px-4 md:text-sm"
+              className="hidden md:inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-950 md:flex-none md:rounded-full md:px-4 md:text-sm"
             >
               <ChevronRight className="h-4 w-4 shrink-0 rotate-180" />
               <span className="truncate">Voltar ao Marketplace</span>
@@ -1363,7 +1370,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
           ) : onBackToSite && (
             <button
               onClick={onBackToSite}
-              className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-950 md:flex-none md:rounded-full md:px-4 md:text-sm"
+              className="hidden md:inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-950 md:flex-none md:rounded-full md:px-4 md:text-sm"
             >
               <ChevronRight className="h-4 w-4 shrink-0 rotate-180" />
               <span className="truncate">Voltar</span>

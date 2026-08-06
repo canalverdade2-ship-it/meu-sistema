@@ -54,9 +54,9 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       ariaLabelledBy={titleId}
       zIndexClassName="z-[100]"
       overlayClassName="items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4 lg:p-6"
-      panelClassName={`${sizes[size]} max-h-[95vh] overflow-y-auto rounded-t-[1.5rem] bg-white p-4 shadow-2xl ring-1 ring-black/5 sm:max-h-[90vh] sm:rounded-[2rem] sm:p-6 lg:p-7 custom-scrollbar`}
+      panelClassName={`${sizes[size]} max-h-[95vh] sm:max-h-[90vh] flex flex-col rounded-t-[1.5rem] bg-white shadow-2xl ring-1 ring-black/5 sm:rounded-[2rem] overflow-hidden`}
     >
-      <div className="sticky top-0 z-10 mb-5 flex items-center justify-between border-b border-neutral-100 bg-white pb-4">
+      <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 bg-white px-5 py-4 sm:px-6 lg:px-7">
         <h2 id={titleId} className="text-lg font-black uppercase tracking-tight text-neutral-900 sm:text-xl">{title}</h2>
         <button
           type="button"
@@ -68,7 +68,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
           <X className="h-5 w-5" />
         </button>
       </div>
-      <div className="pb-2">{children}</div>
+      <div className="flex-1 overflow-y-auto p-5 sm:p-6 lg:p-7 custom-scrollbar">{children}</div>
     </AccessibleDialog>
   );
 }

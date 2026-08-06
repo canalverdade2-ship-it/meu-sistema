@@ -11,6 +11,9 @@ import { toast } from 'react-hot-toast';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
+import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
+import { generateOSPDF } from '../../lib/pdf';
+import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 
 export function ClientServicos({ 
   clientId, 
@@ -28,6 +31,7 @@ export function ClientServicos({
   );
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
   const [servicos, setServicos] = useState<OS[]>([]);
+  const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
   const [selectedOS, setSelectedOS] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeModalTab, setActiveModalTab] = useState<'detalhes' | 'suporte'>('detalhes');
@@ -100,7 +104,7 @@ export function ClientServicos({
     };
 
     const channel = supabase
-      .channel(`client-os-rt-${clientId}-${Date.now()}`)
+      .channel(`client-os-rt-${clientId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -574,6 +578,43 @@ export function ClientServicos({
             ) : (
               <OSSuporteChat osId={selectedOS.id} clientId={clientId} remetenteId={clientId} remetenteTipo="cliente" isConcluida={selectedOS.status === 'concluido'} />
             )}
+            {activeModalTab === 'detalhes' ? (
+              <div className="mt-4 pb-16">
+                <button
+                  onClick={async () => {
+                    try {
+                      // Fetch full OS data for the PDF (like orcamentos and cliente) if needed.
+                      // Wait, selectedOS should already have these.
+                      const doc = await generateOSPDF(selectedOS, selectedOS.clientes, selectedOS.orcamentos, { returnDoc: true }) as any;
+                      const pdfBase64 = doc.output('datauristring');
+                      
+                      const mensagemBase = whatsappNotificationService.gerarMensagemWhatsApp({
+                        tipo: 'os',
+                        clienteNome: selectedOS.clientes?.nome,
+                        codigo: selectedOS.codigo_os,
+                        status: selectedOS.status === 'concluido' ? 'Concluída' : selectedOS.status === 'cancelado' ? 'Cancelada' : 'Em Andamento',
+                        dataVencimento: selectedOS.data_previsao_entrega ? formatDate(selectedOS.data_previsao_entrega) : undefined,
+                      });
+                      
+                      await sendToWhatsApp(
+                        selectedOS.clientes?.telefone,
+                        mensagemBase,
+                        pdfBase64,
+                        `os_${selectedOS.codigo_os}.pdf`
+                      );
+                    } catch (error) {
+                      console.error(error);
+                      toast.error("Erro ao gerar PDF da OS.");
+                    }
+                  }}
+                  disabled={isSendingWhatsApp}
+                  className="w-full mb-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-100 py-4 text-sm font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50"
+                >
+                  {isSendingWhatsApp ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" /> : <MessageSquare className="h-5 w-5" />}
+                  {isSendingWhatsApp ? 'Enviando...' : 'Enviar OS p/ meu WhatsApp'}
+                </button>
+            </div>
+            ) : null}
           </div>
         )}
       </Modal>

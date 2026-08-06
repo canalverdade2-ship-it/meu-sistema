@@ -99,10 +99,10 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
 
     setUploadingImage(true);
     try {
-      const { error: uploadError } = await supabase.storage.from('gsa-store-images').upload(filePath, file);
+      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'gsa-store-images', filePath);
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('gsa-store-images').getPublicUrl(filePath);
+      // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
       const { error: updateError } = await supabase.from('servicos').update({ imagem_url: publicUrl }).eq('id', selectedServico.id);
       if (updateError) throw updateError;
@@ -611,10 +611,10 @@ function ServicoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
 
     setUploadingGallery(true);
     try {
-      const { error: uploadError } = await supabase.storage.from('gsa-store-images').upload(filePath, file);
+      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'gsa-store-images', filePath);
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('gsa-store-images').getPublicUrl(filePath);
+      // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
       
       setFormData(prev => ({
         ...prev,

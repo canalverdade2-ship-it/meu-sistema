@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X, Upload, CheckCircle2, Clock } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
+import { uploadToR2, getR2PublicUrl, removeFromR2, getPrivateR2Url } from '../../../lib/r2Storage';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -68,9 +69,9 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
         const uploadPromises = arquivos.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `comentarios/${demandaId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-          const { error } = await supabase.storage.from('entregas_demandas').upload(path, file);
+          const { error, url: publicUrl, path: r2Path } = await uploadToR2(file, 'entregas_demandas', path);
           if (error) throw error;
-          const { data: { publicUrl } } = supabase.storage.from('entregas_demandas').getPublicUrl(path);
+          // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
           return publicUrl;
         });
         const uploadedUrls = await Promise.all(uploadPromises);

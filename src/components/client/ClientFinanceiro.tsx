@@ -717,7 +717,7 @@ export function ClientFinanceiro({
       <div className="min-h-[400px]">
         {activeTab === 'faturas' && <FaturasList clientId={clientId} saldo={saldo} cliente={cliente} onRefresh={fetchSaldo} initialItemId={initialItemId} />}
         {activeTab === 'nf' && <NotasFiscaisList clientId={clientId} initialItemId={initialItemId} />}
-        {activeTab === 'extrato' && <ExtratoList clientId={clientId} initialItemId={initialItemId} />}
+        {activeTab === 'extrato' && <ExtratoList clientId={clientId} initialItemId={initialItemId} clienteNome={cliente?.nome} clienteTelefone={cliente?.telefone} />}
         {activeTab === 'saques' && (
           <div className="space-y-6">
             {walletCard}

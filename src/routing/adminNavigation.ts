@@ -123,7 +123,7 @@ export const ADMIN_NAVIGATION_GROUPS: AdminNavigationGroup[] = [
       ] },
       { label: 'Gestão', entries: [
         { id: 'fornecedores', label: 'Fornecedores e Suprimentos', module: 'fornecedores' },
-        { id: 'promocoes-quantidade', label: 'Promoções por Quantidade', module: 'promocoes' },
+        { id: 'promocoes-quantidade', label: 'Promoções por Quantidade', module: 'loja', tab: 'promocoes' },
       ] },
     ],
   },
@@ -238,6 +238,7 @@ export const ADMIN_NAVIGATION_GROUPS: AdminNavigationGroup[] = [
     sections: [{ entries: [
       { id: 'configuracoes', label: 'Configurações Gerais', module: 'configuracoes' },
       { id: 'acessos', label: 'Gestão de Acessos', module: 'acessos', adminOnly: true, badgeKeys: ['moduleAcessos'] },
+      { id: 'automacoes', label: 'Automações N8N', module: 'automacoes', adminOnly: true },
       { id: 'sistema', label: 'Saúde do Sistema', module: 'sistema' },
     ] }],
   },
@@ -279,6 +280,7 @@ export const ADMIN_PERMISSION_GROUPS = [
   { label: 'Gestão', options: [
     ['relatorios', 'Relatórios'],
     ['configuracoes', 'Configurações'],
+    ['automacoes', 'Configurar Automações'],
     ['sistema', 'Saúde do Sistema'],
   ] },
 ] as const satisfies ReadonlyArray<{

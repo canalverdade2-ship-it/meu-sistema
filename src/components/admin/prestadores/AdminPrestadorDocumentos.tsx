@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
+import { uploadToR2, getR2PublicUrl, removeFromR2, getPrivateR2Url } from '../../../lib/r2Storage';
 import { toast } from 'react-hot-toast';
 import { FileText, Plus, CheckCircle, XCircle, Trash2, Shield, Upload, Clock, Calendar } from 'lucide-react';
 import { Modal } from '../../ui/Modal';
@@ -125,10 +126,10 @@ export function AdminPrestadorDocumentos({
         const fileName = `${uploadData.tipo}-admin-${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
         const filePath = `${prestadorId}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage.from('documentos_prestador').upload(filePath, file);
+        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_prestador', filePath);
         if (uploadError) throw uploadError;
 
-        const { data: publicUrlData } = supabase.storage.from('documentos_prestador').getPublicUrl(filePath);
+        // publicUrl is handled directly
         return publicUrlData.publicUrl;
       });
 
