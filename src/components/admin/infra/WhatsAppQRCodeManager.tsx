@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { QrCode, RefreshCw, CheckCircle2, AlertCircle, PhoneCall, ShieldCheck, Zap, Smartphone, Radio, Check, Edit3, Trash2, Send, X, Save, AlertTriangle, ArrowRight } from 'lucide-react';
+import { QrCode, RefreshCw, CheckCircle2, AlertCircle, PhoneCall, ShieldCheck, Zap, Smartphone, Radio, Check, Edit3, Trash2, Send, X, Save, AlertTriangle, Plus, Layers, ToggleLeft, ToggleRight, Lock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../../lib/supabase';
 import { getAdminWhatsAppConfig, sendAdminWhatsAppNotification } from '../../../utils/n8nWhatsApp';
@@ -23,6 +23,17 @@ interface WhatsAppDevice {
   role: 'MASTER' | 'SUPORTE';
   phone: string;
   description: string;
+  canDelete: boolean;
+}
+
+interface WhatsAppRamal {
+  id: string;
+  setor_nome: string;
+  codigo_setor: string;
+  numero_whatsapp: string;
+  responsavel_nome: string;
+  ativo: boolean;
+  ordem: number;
 }
 
 export function WhatsAppQRCodeManager() {
@@ -33,7 +44,7 @@ export function WhatsAppQRCodeManager() {
   const [instanceName] = useState('GSA_WhatsApp');
   const [targetIp, setTargetIp] = useState<'147.15.43.141' | '163.176.97.152'>('163.176.97.152');
 
-  // Dispositivos e Linhas do WhatsApp
+  // Dispositivos e Linhas Principais
   const [devices, setDevices] = useState<WhatsAppDevice[]>([
     {
       id: '1',
@@ -41,31 +52,44 @@ export function WhatsAppQRCodeManager() {
       name: 'WhatsApp Master',
       role: 'MASTER',
       phone: '5511971858372',
-      description: 'Receptor 100% de Notificações, Alertas de VPS, Faturas e Cobranças'
+      description: 'Receptor 100% de Notificações, Alertas de VPS, Faturas e Cobranças',
+      canDelete: true
     },
     {
       id: '2',
       key: 'whatsapp_suporte_numero',
-      name: 'WhatsApp Suporte & Botão Flutuante',
+      name: 'WhatsApp Suporte Oficial & Botão Flutuante',
       role: 'SUPORTE',
       phone: '5511920857756',
-      description: 'Atendimento do Portal do Cliente, Botão Flutuante e Dúvidas Comercial'
+      description: 'Linha Principal Oficial do Sistema — Impossível de apagar. Usada no Botão Flutuante e Robô',
+      canDelete: false
     }
   ]);
 
-  // Estado para Modal de Edição de Linha
+  // Ramais de Transbordo por Setor
+  const [ramais, setRamais] = useState<WhatsAppRamal[]>([]);
+  const [loadingRamais, setLoadingRamais] = useState(true);
+
+  // Modais de Edição
   const [selectedDevice, setSelectedDevice] = useState<WhatsAppDevice | null>(null);
   const [editPhone, setEditPhone] = useState('');
-  const [editRole, setEditRole] = useState<'MASTER' | 'SUPORTE'>('MASTER');
   const [savingDevice, setSavingDevice] = useState(false);
   const [testingId, setTestingId] = useState<string | null>(null);
 
-  // Carrega as linhas de telefone salvas no banco
+  // Modal de Ramal (Novo / Editar)
+  const [isRamalModalOpen, setIsRamalModalOpen] = useState(false);
+  const [selectedRamal, setSelectedRamal] = useState<WhatsAppRamal | null>(null);
+  const [ramalNome, setRamalNome] = useState('');
+  const [ramalCodigo, setRamalCodigo] = useState('');
+  const [ramalNumero, setRamalNumero] = useState('');
+  const [ramalResponsavel, setRamalResponsavel] = useState('');
+  const [savingRamal, setSavingRamal] = useState(false);
+
+  // Carrega as configurações das Linhas Principais
   const loadDeviceConfig = async () => {
     try {
       const config = await getAdminWhatsAppConfig();
       
-      // Busca linha de suporte publica de system_settings
       const { data } = await supabase
         .from('system_settings')
         .select('key, value')
@@ -81,19 +105,48 @@ export function WhatsAppQRCodeManager() {
           name: 'WhatsApp Master',
           role: 'MASTER',
           phone: config.phone || '5511971858372',
-          description: 'Receptor 100% de Notificações, Alertas de VPS, Faturas e Cobranças'
+          description: 'Receptor 100% de Notificações, Alertas de VPS, Faturas e Cobranças',
+          canDelete: true
         },
         {
           id: '2',
           key: 'whatsapp_suporte_numero',
-          name: 'WhatsApp Suporte & Botão Flutuante',
+          name: 'WhatsApp Suporte Oficial & Botão Flutuante',
           role: 'SUPORTE',
           phone: suportePhone,
-          description: 'Atendimento do Portal do Cliente, Botão Flutuante e Dúvidas Comercial'
+          description: 'Linha Principal Oficial do Sistema — Impossível de apagar. Usada no Botão Flutuante e Robô',
+          canDelete: false
         }
       ]);
     } catch (e) {
       console.warn('Silent fallback ao carregar dispositivos de WhatsApp:', e);
+    }
+  };
+
+  // Carrega os Ramais de Transbordo por Setor do PostgreSQL
+  const loadRamais = async () => {
+    setLoadingRamais(true);
+    try {
+      const { data, error } = await supabase
+        .from('gsa_whatsapp_ramais')
+        .select('*')
+        .order('ordem', { ascending: true });
+
+      if (!error && Array.isArray(data)) {
+        setRamais(data);
+      } else {
+        // Fallback inicial visual
+        setRamais([
+          { id: 'r1', setor_nome: '1. Vendas & Orçamentos', codigo_setor: 'vendas', numero_whatsapp: '5511971858372', responsavel_nome: 'Equipe Comercial GSA', ativo: true, ordem: 1 },
+          { id: 'r2', setor_nome: '2. Financeiro & Cobrança', codigo_setor: 'financeiro', numero_whatsapp: '5511971858372', responsavel_nome: 'Setor Financeiro', ativo: true, ordem: 2 },
+          { id: 'r3', setor_nome: '3. Suporte Técnico & Operações', codigo_setor: 'suporte_tecnico', numero_whatsapp: '5511920857756', responsavel_nome: 'Central de Suporte GSA', ativo: true, ordem: 3 },
+          { id: 'r4', setor_nome: '4. Diretoria & Atendimento Especial', codigo_setor: 'diretoria', numero_whatsapp: '5511971858372', responsavel_nome: 'Gestão & Diretoria', ativo: true, ordem: 4 }
+        ]);
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar ramais de transbordo:', e);
+    } finally {
+      setLoadingRamais(false);
     }
   };
 
@@ -105,9 +158,8 @@ export function WhatsAppQRCodeManager() {
         return;
       }
 
-      // Para a VPS Nova (147.15.43.141):
-      const { data, error } = await supabase.functions.invoke('vps-api', {
-        body: { action: 'whatsapp-status', targetIp: ip }
+      const { data, error } = await supabase.functions.invoke('vps-api/whatsapp-status', {
+        method: 'GET'
       });
 
       if (!error && data?.success && data?.state === 'open') {
@@ -132,8 +184,8 @@ export function WhatsAppQRCodeManager() {
     setPairingCode(null);
     
     try {
-      const { data, error } = await supabase.functions.invoke('vps-api', {
-        body: { action: 'whatsapp-qrcode', targetIp }
+      const { data, error } = await supabase.functions.invoke('vps-api/whatsapp-qrcode', {
+        method: 'GET'
       });
 
       if (!error && data?.base64) {
@@ -156,10 +208,11 @@ export function WhatsAppQRCodeManager() {
 
   useEffect(() => {
     void loadDeviceConfig();
+    void loadRamais();
     void checkConnectionStatus('163.176.97.152');
   }, []);
 
-  // Salva alteração de linha de WhatsApp
+  // Salva alteração de linha de WhatsApp Principal
   const handleSaveDevice = async () => {
     if (!selectedDevice) return;
     setSavingDevice(true);
@@ -174,7 +227,6 @@ export function WhatsAppQRCodeManager() {
     const formattedNumber = cleanNumber.startsWith('55') ? cleanNumber : `55${cleanNumber}`;
 
     try {
-      // Salva na tabela system_settings no PostgreSQL
       const { error } = await supabase
         .from('system_settings')
         .upsert(
@@ -183,11 +235,10 @@ export function WhatsAppQRCodeManager() {
         );
 
       if (error) {
-        console.warn('Upsert direto no system_settings falhou, tentando fallback RPC:', error);
+        console.warn('Upsert no system_settings falhou:', error);
       }
 
-      // Atualiza o estado local
-      setDevices(prev => prev.map(d => d.id === selectedDevice.id ? { ...d, phone: formattedNumber, role: editRole } : d));
+      setDevices(prev => prev.map(d => d.id === selectedDevice.id ? { ...d, phone: formattedNumber } : d));
       toast.success(`Linha "${selectedDevice.name}" atualizada para ${formatPhoneDisplay(formattedNumber)}!`);
       setSelectedDevice(null);
     } catch (e: any) {
@@ -197,8 +248,13 @@ export function WhatsAppQRCodeManager() {
     }
   };
 
-  // Desvincula/Remove uma linha
+  // Exclusão protegida (Linha Oficial de Suporte Bloqueada)
   const handleRemoveDevice = async (device: WhatsAppDevice) => {
+    if (!device.canDelete) {
+      toast.error('❌ A Linha de Suporte Oficial é permanente e NUNCA pode ser excluída. Você só pode alterar o número de telefone.');
+      return;
+    }
+
     if (!confirm(`Tem certeza que deseja desvincular a linha "${device.name}"?`)) return;
     
     try {
@@ -214,7 +270,91 @@ export function WhatsAppQRCodeManager() {
     }
   };
 
-  // Envia disparo de teste direto para a linha selecionada
+  // Salvar ou Criar Ramal de Transbordo por Setor
+  const handleSaveRamal = async () => {
+    if (!ramalNome || !ramalNumero || !ramalResponsavel) {
+      toast.error('Preencha o nome do setor, o número e o nome do responsável.');
+      return;
+    }
+
+    setSavingRamal(true);
+    const cleanPhone = ramalNumero.replace(/\D/g, '');
+    const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+    const generatedCodigo = ramalCodigo || ramalNome.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+    try {
+      const payload = {
+        setor_nome: ramalNome,
+        codigo_setor: generatedCodigo,
+        numero_whatsapp: formattedPhone,
+        responsavel_nome: ramalResponsavel,
+        ativo: true,
+        ordem: selectedRamal ? selectedRamal.ordem : ramais.length + 1,
+        updated_at: new Date().toISOString()
+      };
+
+      if (selectedRamal) {
+        const { error } = await supabase
+          .from('gsa_whatsapp_ramais')
+          .update(payload)
+          .eq('id', selectedRamal.id);
+
+        if (error) throw error;
+        toast.success(`Ramal "${ramalNome}" atualizado com sucesso!`);
+      } else {
+        const { error } = await supabase
+          .from('gsa_whatsapp_ramais')
+          .insert([payload]);
+
+        if (error) throw error;
+        toast.success(`Novo Ramal de Setor "${ramalNome}" cadastrado!`);
+      }
+
+      await loadRamais();
+      setIsRamalModalOpen(false);
+      setSelectedRamal(null);
+    } catch (e: any) {
+      toast.error('Erro ao salvar ramal: ' + e.message);
+    } finally {
+      setSavingRamal(false);
+    }
+  };
+
+  // Toggle Ativar/Desativar Ramal
+  const handleToggleRamalAtivo = async (ramal: WhatsAppRamal) => {
+    try {
+      const newStatus = !ramal.ativo;
+      const { error } = await supabase
+        .from('gsa_whatsapp_ramais')
+        .update({ ativo: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', ramal.id);
+
+      if (error) throw error;
+      setRamais(prev => prev.map(r => r.id === ramal.id ? { ...r, ativo: newStatus } : r));
+      toast.success(`Ramal "${ramal.setor_nome}" ${newStatus ? 'ativado' : 'desativado'} em tempo real!`);
+    } catch (e: any) {
+      toast.error('Erro ao alterar status do ramal: ' + e.message);
+    }
+  };
+
+  // Excluir Ramal de Setor
+  const handleDeleteRamal = async (ramal: WhatsAppRamal) => {
+    if (!confirm(`Deseja remover o ramal de atendimento "${ramal.setor_nome}"?`)) return;
+    try {
+      const { error } = await supabase
+        .from('gsa_whatsapp_ramais')
+        .delete()
+        .eq('id', ramal.id);
+
+      if (error) throw error;
+      setRamais(prev => prev.filter(r => r.id !== ramal.id));
+      toast.success(`Ramal "${ramal.setor_nome}" removido!`);
+    } catch (e: any) {
+      toast.error('Erro ao excluir ramal: ' + e.message);
+    }
+  };
+
+  // Testar Disparo de Linha ou Ramal
   const handleTestDevice = async (device: WhatsAppDevice) => {
     if (!device.phone) {
       toast.error('Cadastre um número antes de testar o disparo.');
@@ -234,13 +374,29 @@ export function WhatsAppQRCodeManager() {
       } else {
         const ok = await whatsappNotificationService.enviarWhatsAppDireto(
           device.phone,
-          `🤖 *TESTE GSA HUB* - Linha de Atendimento (${device.name}) verificada com sucesso em tempo real!`,
+          `🤖 *TESTE GSA HUB* - Linha Oficial de Suporte (${device.name}) verificada em tempo real!`,
           { clienteNome: 'Administrador' }
         );
         if (ok) toast.success(`✅ Notificação enviada para ${formatPhoneDisplay(device.phone)}!`);
       }
     } catch (e: any) {
       toast.error('Falha no teste da linha: ' + e.message);
+    } finally {
+      setTestingId(null);
+    }
+  };
+
+  const handleTestRamal = async (ramal: WhatsAppRamal) => {
+    setTestingId(ramal.id);
+    try {
+      const ok = await whatsappNotificationService.enviarWhatsAppDireto(
+        ramal.numero_whatsapp,
+        `📲 *TESTE DE TRANSBORDO DE RAMAL* - Setor: *${ramal.setor_nome}*\n\nResponsável: ${ramal.responsavel_nome}\nStatus: Operacional 🟢`,
+        { clienteNome: 'Administrador' }
+      );
+      if (ok) toast.success(`✅ Teste de transbordo enviado para ${ramal.setor_nome} (${formatPhoneDisplay(ramal.numero_whatsapp)})!`);
+    } catch (e: any) {
+      toast.error('Falha no teste de ramal: ' + e.message);
     } finally {
       setTestingId(null);
     }
@@ -262,7 +418,7 @@ export function WhatsAppQRCodeManager() {
               </span>
             </h3>
             <p className="text-xs text-neutral-400">
-              Pareamento QR Code, gerenciamento completo de linhas, direcionamento de chamadas e controle de status.
+              Pareamento QR Code, proteção da linha oficial de suporte e roteamento de ramais por setor.
             </p>
           </div>
         </div>
@@ -341,15 +497,15 @@ export function WhatsAppQRCodeManager() {
         </div>
       </div>
 
-      {/* Seção Interativa de Gerenciamento de Linhas e Celulares */}
+      {/* ─── LINHAS PRINCIPAIS (COM SUPORTE OFICIAL INVIOLÁVEL) ─── */}
       <div className="bg-neutral-950/80 border border-neutral-800 rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-emerald-400" /> Gerenciamento de Dispositivos e Linhas Conectadas
+              <Smartphone className="w-4 h-4 text-emerald-400" /> Linhas Principais do Sistema GSA HUB
             </h4>
             <p className="text-xs text-neutral-400 mt-1">
-              Clique em cima da linha para editar o número, alterar o direcionamento ou realizar envios de teste individuais.
+              Linha Oficial de Suporte é permanente e protegida contra exclusão acidental.
             </p>
           </div>
           <span className="text-[10px] font-mono px-2 py-1 bg-neutral-900 text-neutral-400 rounded border border-neutral-800">
@@ -363,7 +519,7 @@ export function WhatsAppQRCodeManager() {
             return (
               <div 
                 key={device.id} 
-                className="bg-neutral-900 border border-neutral-800/90 hover:border-emerald-500/50 rounded-xl p-4 transition-all space-y-3 group shadow-md"
+                className={`bg-neutral-900 border ${device.role === 'SUPORTE' ? 'border-emerald-500/40 shadow-emerald-500/5' : 'border-neutral-800/90'} rounded-xl p-4 transition-all space-y-3 shadow-md`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -376,6 +532,11 @@ export function WhatsAppQRCodeManager() {
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest ${device.role === 'MASTER' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-blue-500/20 text-blue-300'}`}>
                           {device.role}
                         </span>
+                        {!device.canDelete && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest bg-emerald-600 text-white flex items-center gap-1">
+                            <Lock className="w-3 h-3" /> OFICIAL INVIOLÁVEL
+                          </span>
+                        )}
                       </div>
                       <span className="text-xs font-mono font-bold text-emerald-400 block mt-0.5">
                         {formatPhoneDisplay(device.phone)}
@@ -383,14 +544,13 @@ export function WhatsAppQRCodeManager() {
                     </div>
                   </div>
 
-                  {/* Badge de Conexão no Servidor Selecionado */}
                   {isConnectedOnCurrentIp ? (
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                       <Check className="w-3 h-3" /> Ativo
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" /> Pendente na Nova
+                      <AlertTriangle className="w-3 h-3" /> Pendente Nova
                     </span>
                   )}
                 </div>
@@ -399,18 +559,16 @@ export function WhatsAppQRCodeManager() {
                   {device.description}
                 </p>
 
-                {/* Botões de Ação na Linha */}
                 <div className="flex items-center justify-between border-t border-neutral-800/80 pt-3">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
                         setSelectedDevice(device);
                         setEditPhone(device.phone);
-                        setEditRole(device.role);
                       }}
                       className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-blue-400" /> Editar Linha
+                      <Edit3 className="w-3.5 h-3.5 text-blue-400" /> Alterar Número
                     </button>
                     <button
                       onClick={() => void handleTestDevice(device)}
@@ -422,18 +580,125 @@ export function WhatsAppQRCodeManager() {
                     </button>
                   </div>
 
-                  <button
-                    onClick={() => void handleRemoveDevice(device)}
-                    className="p-1.5 text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
-                    title="Desvincular Linha"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {device.canDelete ? (
+                    <button
+                      onClick={() => void handleRemoveDevice(device)}
+                      className="p-1.5 text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                      title="Desvincular Linha"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <span className="text-[10px] font-mono text-emerald-500/70 flex items-center gap-1 px-2 py-1 bg-emerald-500/5 rounded border border-emerald-500/10">
+                      <Lock className="w-3 h-3" /> Protegido
+                    </span>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
+      </div>
+
+      {/* ─── RAMAIS DE TRANSBORDO HUMANO POR SETOR (NOVO RECURSO PROFISSIONAL) ─── */}
+      <div className="bg-neutral-950/80 border border-neutral-800 rounded-xl p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h4 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
+              <Layers className="w-4 h-4 text-blue-400" /> Ramais de Transbordo Humano por Setor (Chatbot Transfer)
+            </h4>
+            <p className="text-xs text-neutral-400 mt-1">
+              Roteamento invisível em tempo real. Quando o cliente solicita atendimento humano no WhatsApp, a demanda é transferida instantaneamente para o ramal do setor cadastrado.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setSelectedRamal(null);
+              setRamalNome('');
+              setRamalCodigo('');
+              setRamalNumero('');
+              setRamalResponsavel('');
+              setIsRamalModalOpen(true);
+            }}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> Novo Ramal de Setor
+          </button>
+        </div>
+
+        {loadingRamais ? (
+          <div className="flex items-center justify-center py-8 text-neutral-500">
+            <RefreshCw className="w-6 h-6 animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {ramais.map((ramal) => (
+              <div 
+                key={ramal.id} 
+                className={`bg-neutral-900 border ${ramal.ativo ? 'border-neutral-800 hover:border-blue-500/50' : 'border-neutral-800/50 opacity-60'} rounded-xl p-4 transition-all space-y-3 shadow-md`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-white">{ramal.setor_nome}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400">
+                        {ramal.codigo_setor}
+                      </span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-blue-400 block mt-0.5">
+                      {formatPhoneDisplay(ramal.numero_whatsapp)}
+                    </span>
+                    <span className="text-[11px] text-neutral-400 block font-sans">
+                      Responsável: {ramal.responsavel_nome}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => void handleToggleRamalAtivo(ramal)}
+                    className="text-neutral-400 hover:text-white transition-colors"
+                    title={ramal.ativo ? 'Desativar Ramal' : 'Ativar Ramal'}
+                  >
+                    {ramal.ativo ? <ToggleRight className="w-7 h-7 text-emerald-400" /> : <ToggleLeft className="w-7 h-7 text-neutral-600" />}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-neutral-800/80 pt-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedRamal(ramal);
+                        setRamalNome(ramal.setor_nome);
+                        setRamalCodigo(ramal.codigo_setor);
+                        setRamalNumero(ramal.numero_whatsapp);
+                        setRamalResponsavel(ramal.responsavel_nome);
+                        setIsRamalModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-blue-400" /> Editar Ramal
+                    </button>
+                    <button
+                      onClick={() => void handleTestRamal(ramal)}
+                      disabled={testingId === ramal.id}
+                      className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Send className={`w-3.5 h-3.5 ${testingId === ramal.id ? 'animate-bounce' : ''}`} />
+                      {testingId === ramal.id ? 'Testando...' : 'Testar Transbordo'}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => void handleDeleteRamal(ramal)}
+                    className="p-1.5 text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                    title="Excluir Ramal"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Área de QR Code e Ações para a VPS Nova */}
@@ -458,7 +723,6 @@ export function WhatsAppQRCodeManager() {
           </div>
         </div>
 
-        {/* Renderização do QR Code */}
         <div className="flex flex-col items-center justify-center p-4 bg-neutral-900 border border-neutral-800 rounded-2xl min-w-[220px] min-h-[220px]">
           {qrCodeBase64 ? (
             <div className="space-y-3 text-center">
@@ -482,14 +746,14 @@ export function WhatsAppQRCodeManager() {
         </div>
       </div>
 
-      {/* Modal Profissional de Edição / Redirecionamento da Linha */}
+      {/* Modal de Edição de Linha Principal */}
       {selectedDevice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 max-w-lg w-full space-y-5 shadow-2xl relative">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
               <h3 className="text-base font-black text-white flex items-center gap-2">
                 <Edit3 className="w-4 h-4 text-emerald-400" />
-                Gerenciar / Alterar Linha: {selectedDevice.name}
+                Alterar Número da Linha: {selectedDevice.name}
               </h3>
               <button onClick={() => setSelectedDevice(null)} className="p-1 text-neutral-400 hover:text-white rounded-lg">
                 <X className="w-5 h-5" />
@@ -497,6 +761,13 @@ export function WhatsAppQRCodeManager() {
             </div>
 
             <div className="space-y-4 text-left">
+              {!selectedDevice.canDelete && (
+                <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-2 font-bold">
+                  <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
+                  Esta é a Linha de Suporte Oficial do sistema. Ela não pode ser excluída, mas você pode substituir o número por outro aparelho a qualquer momento.
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold text-neutral-300 uppercase tracking-widest mb-1.5">
                   Número do WhatsApp (com DDD)
@@ -505,32 +776,11 @@ export function WhatsAppQRCodeManager() {
                   type="text"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
-                  placeholder="Ex: 5511971858372"
+                  placeholder="Ex: 5511920857756"
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-emerald-500 transition-all"
                 />
                 <span className="text-[11px] text-neutral-400 mt-1 block">
                   Formato visual: <strong>{formatPhoneDisplay(editPhone)}</strong>
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-300 uppercase tracking-widest mb-1.5">
-                  Função / Direcionamento da Linha
-                </label>
-                <select
-                  value={editRole}
-                  onChange={(e) => setEditRole(e.target.value as any)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition-all"
-                >
-                  <option value="MASTER">Master (Receptor de Notificações, Cobranças e Alertas Admin)</option>
-                  <option value="SUPORTE">Suporte (Atendimento do Cliente & Botão Flutuante)</option>
-                </select>
-              </div>
-
-              <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-800 text-xs text-neutral-400 leading-relaxed flex items-start gap-2">
-                <ArrowRight className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>
-                  Ao salvar, esta linha receberá o redirecionamento instantâneo de todas as mensagens configuradas no sistema em tempo real.
                 </span>
               </div>
             </div>
@@ -548,7 +798,85 @@ export function WhatsAppQRCodeManager() {
                 className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
               >
                 {savingDevice ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Salvar Alterações
+                Salvar Número
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Cadastro / Edição de Ramal de Setor */}
+      {isRamalModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 max-w-lg w-full space-y-5 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <h3 className="text-base font-black text-white flex items-center gap-2">
+                <Layers className="w-4 h-4 text-blue-400" />
+                {selectedRamal ? 'Editar Ramal de Transbordo' : 'Cadastrar Novo Ramal de Setor'}
+              </h3>
+              <button onClick={() => setIsRamalModalOpen(false)} className="p-1 text-neutral-400 hover:text-white rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-bold text-neutral-300 uppercase tracking-widest mb-1.5">
+                  Nome do Setor (Ex: 1. Vendas & Orçamentos)
+                </label>
+                <input
+                  type="text"
+                  value={ramalNome}
+                  onChange={(e) => setRamalNome(e.target.value)}
+                  placeholder="Ex: 5. Atendimento VIP / Jurídico"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-300 uppercase tracking-widest mb-1.5">
+                  Número de WhatsApp do Responsável (com DDD)
+                </label>
+                <input
+                  type="text"
+                  value={ramalNumero}
+                  onChange={(e) => setRamalNumero(e.target.value)}
+                  placeholder="Ex: 5511971858372"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-blue-500 transition-all"
+                />
+                <span className="text-[11px] text-neutral-400 mt-1 block">
+                  Formato visual: <strong>{formatPhoneDisplay(ramalNumero)}</strong>
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-300 uppercase tracking-widest mb-1.5">
+                  Nome do Responsável / Atendente do Ramal
+                </label>
+                <input
+                  type="text"
+                  value={ramalResponsavel}
+                  onChange={(e) => setRamalResponsavel(e.target.value)}
+                  placeholder="Ex: Carlos Andrade - Gerente de Vendas"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-neutral-800 pt-4">
+              <button
+                onClick={() => setIsRamalModalOpen(false)}
+                className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-xl text-xs font-bold transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => void handleSaveRamal()}
+                disabled={savingRamal}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
+              >
+                {savingRamal ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Salvar Ramal
               </button>
             </div>
           </div>
