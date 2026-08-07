@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-08-07T12:01:44.636Z",
+  "generated_at": "2026-08-07T13:26:17.590Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
   "scanned_files": 384,
   "blocker_count": 0,
-  "review_count": 23,
+  "review_count": 24,
   "blockers": [],
   "review": [
     {
@@ -192,6 +192,14 @@
       "file": "src/lib/deleteRequest.ts",
       "line": 42,
       "excerpt": "const motivo = window.prompt('Exclusão restrita: qual o motivo para solicitar a exclusão deste registro? Sua solicitação será enviada para aprovação administrativa.');"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/lib/r2Storage.ts",
+      "line": 107,
+      "excerpt": "// Filtra itens de demonstração para evitar disparo desnecessário ao Worker"
     }
   ]
 }

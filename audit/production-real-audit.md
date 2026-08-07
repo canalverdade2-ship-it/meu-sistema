@@ -1,12 +1,12 @@
 # Auditoria de operação real
 
-Gerada em: 2026-08-07T12:01:44.636Z
+Gerada em: 2026-08-07T13:26:17.590Z
 
 Arquivos executáveis examinados: **384**
 
 Bloqueadores explícitos: **0**
 
-Ocorrências para revisão humana: **23**
+Ocorrências para revisão humana: **24**
 
 ## Bloqueadores
 
@@ -37,3 +37,4 @@ Nenhum bloqueador explícito encontrado.
 - `src/components/ui/AccessibleDialog.tsx:149` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > section:nth-child(2) {`
 - `src/components/ui/AccessibleDialog.tsx:170` — Referência a demonstração em código executável — `const isSystemsDemo = ariaLabel?.startsWith('Laboratório de demonstração') ?? false;`
 - `src/lib/deleteRequest.ts:42` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = window.prompt('Exclusão restrita: qual o motivo para solicitar a exclusão deste registro? Sua solicitação será enviada para aprovação administrativa.');`
+- `src/lib/r2Storage.ts:107` — Referência a demonstração em código executável — `// Filtra itens de demonstração para evitar disparo desnecessário ao Worker`
