@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, Database, HardDrive, RefreshCw, Server, ShieldCheck, Users, Terminal as TerminalIcon, Globe, Cpu, ChevronDown, ChevronUp, X, Info, CheckCircle2, BarChart3, Lock, FileText, UserCheck } from 'lucide-react';
+import { Activity, Database, HardDrive, RefreshCw, Server, ShieldCheck, Users, Terminal as TerminalIcon, Globe, Cpu, ChevronDown, ChevronUp, X, Info, CheckCircle2, BarChart3, Lock, FileText, UserCheck, Search, ShieldAlert } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatDateTime } from '../../lib/utils';
@@ -19,6 +19,15 @@ type SystemSnapshot = {
     last_analyze?: string | null;
     last_autoanalyze?: string | null;
   }>;
+  users_list?: Array<{
+    id: string;
+    email: string;
+    created_at?: string;
+    last_sign_in_at?: string;
+    nome?: string;
+    tipo?: string;
+    status?: string;
+  }>;
   generated_at?: string;
 };
 
@@ -37,11 +46,12 @@ function formatBytes(value: unknown) {
 
 export function SystemMonitorModule(_props: { colaboradorId?: string; colaboradorNome?: string | null }) {
   const [activeTab, setActiveTab] = useState<'vps' | 'cloudflare' | 'database'>('vps');
-  const [snapshot, setSnapshot] = useState<SystemSnapshot>({ metrics: {}, tables: [] });
+  const [snapshot, setSnapshot] = useState<SystemSnapshot>({ metrics: {}, tables: [], users_list: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sendingAlert, setSendingAlert] = useState(false);
   const [search, setSearch] = useState('');
+  const [userSearch, setUserSearch] = useState('');
   const [tablesOpen, setTablesOpen] = useState(false);
   const [activeCardModal, setActiveCardModal] = useState<'database' | 'storage' | 'users' | 'tables' | null>(null);
 
@@ -73,6 +83,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       setSnapshot({
         metrics: data?.metrics || {},
         tables: Array.isArray(data?.tables) ? data.tables : [],
+        users_list: Array.isArray(data?.users_list) ? data.users_list : [],
         generated_at: data?.generated_at,
       });
     } catch (error: any) {
@@ -105,6 +116,16 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
     return (snapshot.tables || []).filter((table) => table.table.toLowerCase().includes(value));
   }, [search, snapshot.tables]);
 
+  const filteredUsers = useMemo(() => {
+    const value = userSearch.trim().toLowerCase();
+    if (!value) return snapshot.users_list || [];
+    return (snapshot.users_list || []).filter((u) => 
+      (u.nome && u.nome.toLowerCase().includes(value)) ||
+      (u.email && u.email.toLowerCase().includes(value)) ||
+      (u.tipo && u.tipo.toLowerCase().includes(value))
+    );
+  }, [userSearch, snapshot.users_list]);
+
   const topTables = useMemo(() => {
     const sorted = [...(snapshot.tables || [])].sort((a, b) => (b.estimated_rows || 0) - (a.estimated_rows || 0));
     return sorted.slice(0, 5);
@@ -113,7 +134,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
   const cards = [
     { key: 'database' as const, label: 'Banco de dados', value: formatBytes(metrics.database_size_bytes), icon: Database, color: 'text-purple-600 bg-purple-50 hover:border-purple-300' },
     { key: 'storage' as const, label: 'Storage', value: formatBytes(metrics.storage_size_bytes), icon: HardDrive, color: 'text-blue-600 bg-blue-50 hover:border-blue-300' },
-    { key: 'users' as const, label: 'Usuários Auth', value: numberValue(metrics.auth_users_count).toLocaleString('pt-BR'), icon: Users, color: 'text-emerald-600 bg-emerald-50 hover:border-emerald-300' },
+    { key: 'users' as const, label: 'Usuários Auth', value: (snapshot.users_list?.length || numberValue(metrics.auth_users_count)).toLocaleString('pt-BR'), icon: Users, color: 'text-emerald-600 bg-emerald-50 hover:border-emerald-300' },
     { key: 'tables' as const, label: 'Tabelas', value: numberValue(metrics.database_tables_count || snapshot.tables?.length).toLocaleString('pt-BR'), icon: Server, color: 'text-amber-600 bg-amber-50 hover:border-amber-300' },
   ];
 
@@ -251,17 +272,17 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       {/* Modal de Detalhes dos Cards */}
       {activeCardModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-neutral-100 relative space-y-6">
+          <div className={`bg-white rounded-3xl w-full p-6 shadow-2xl border border-neutral-100 relative space-y-6 max-h-[90vh] flex flex-col ${activeCardModal === 'users' ? 'max-w-4xl' : 'max-w-lg'}`}>
             <button
               onClick={() => setActiveCardModal(null)}
-              className="absolute top-5 right-5 p-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 transition-colors"
+              className="absolute top-5 right-5 p-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 transition-colors z-10"
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Modal: Banco de Dados */}
             {activeCardModal === 'database' && (
-              <div>
+              <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <span className="p-3 bg-purple-100 text-purple-600 rounded-2xl"><Database className="w-6 h-6"/></span>
                   <div>
@@ -269,7 +290,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                     <p className="text-xs text-neutral-500">Métricas e estatísticas do motor de banco na VPS</p>
                   </div>
                 </div>
-                <div className="mt-6 space-y-3">
+                <div className="space-y-3">
                   <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
                     <span className="text-xs font-bold text-neutral-500">Tamanho Total Alocado</span>
                     <span className="text-sm font-black text-purple-700 font-mono">{formatBytes(metrics.database_size_bytes)}</span>
@@ -298,7 +319,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
 
             {/* Modal: Storage */}
             {activeCardModal === 'storage' && (
-              <div>
+              <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <span className="p-3 bg-blue-100 text-blue-600 rounded-2xl"><HardDrive className="w-6 h-6"/></span>
                   <div>
@@ -306,7 +327,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                     <p className="text-xs text-neutral-500">Buckets de mídia, documentos e anexos do sistema</p>
                   </div>
                 </div>
-                <div className="mt-6 space-y-3">
+                <div className="space-y-3">
                   <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
                     <span className="text-xs font-bold text-neutral-500">Volume Total em Uso</span>
                     <span className="text-sm font-black text-blue-700 font-mono">{formatBytes(metrics.storage_size_bytes)}</span>
@@ -329,42 +350,92 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
               </div>
             )}
 
-            {/* Modal: Usuários Auth */}
+            {/* Modal: Usuários Auth (Lista Completa de Usuários) */}
             {activeCardModal === 'users' && (
-              <div>
-                <div className="flex items-center gap-3">
-                  <span className="p-3 bg-emerald-100 text-emerald-600 rounded-2xl"><Users className="w-6 h-6"/></span>
-                  <div>
-                    <h3 className="text-xl font-black text-neutral-900">Usuários & Autenticação</h3>
-                    <p className="text-xs text-neutral-500">Contas cadastradas no auth.users do sistema</p>
+              <div className="flex flex-col flex-1 overflow-hidden space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="p-3 bg-emerald-100 text-emerald-600 rounded-2xl"><Users className="w-6 h-6"/></span>
+                    <div>
+                      <h3 className="text-xl font-black text-neutral-900">Usuários Cadastrados no Sistema</h3>
+                      <p className="text-xs text-neutral-500">Listagem de todas as contas registradas no auth.users e perfis vinculados ({snapshot.users_list?.length || 0})</p>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-6 space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
-                    <span className="text-xs font-bold text-neutral-500">Total de Usuários Registrados</span>
-                    <span className="text-sm font-black text-emerald-700 font-mono">{numberValue(metrics.auth_users_count).toLocaleString('pt-BR')}</span>
+
+                <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-neutral-50 p-3 rounded-2xl border border-neutral-100">
+                  <div className="relative w-full sm:w-72">
+                    <Search className="w-4 h-4 absolute left-3 top-3 text-neutral-400" />
+                    <input 
+                      type="text" 
+                      value={userSearch} 
+                      onChange={(e) => setUserSearch(e.target.value)} 
+                      placeholder="Pesquisar por nome, e-mail ou tipo..." 
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-neutral-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500" 
+                    />
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
-                    <span className="text-xs font-bold text-neutral-500">Métodos de Login</span>
-                    <span className="text-sm font-mono font-bold text-neutral-800">Código Master, PIN & Senha</span>
+                  <div className="text-xs text-neutral-500 font-bold">
+                    Exibindo <span className="text-neutral-900 font-mono">{filteredUsers.length}</span> de <span className="text-neutral-900 font-mono">{snapshot.users_list?.length || 0}</span> cadastros
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
-                    <span className="text-xs font-bold text-neutral-500">Proteção contra Brute Force</span>
-                    <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1">
-                      <UserCheck className="w-3.5 h-3.5"/> Rate Limiter Ativo
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
-                    <span className="text-xs font-bold text-neutral-500">Sessões Ativas</span>
-                    <span className="text-sm font-mono font-bold text-neutral-800">Gerenciadas via JWT Segura</span>
-                  </div>
+                </div>
+
+                <div className="overflow-y-auto flex-1 border border-neutral-100 rounded-2xl">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-neutral-100 text-[10px] font-black uppercase tracking-wider text-neutral-500 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-3">Nome / Identificação</th>
+                        <th className="px-4 py-3">E-mail</th>
+                        <th className="px-4 py-3">Tipo de Perfil</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Cadastrado em</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-100">
+                      {filteredUsers.map((u) => (
+                        <tr key={u.id} className="hover:bg-neutral-50 transition-colors">
+                          <td className="px-4 py-3 font-bold text-neutral-900">
+                            {u.nome || 'Usuário'}
+                          </td>
+                          <td className="px-4 py-3 text-neutral-600 font-mono">
+                            {u.email}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase ${
+                              u.tipo?.includes('Master') ? 'bg-purple-100 text-purple-700 border border-purple-200' :
+                              u.tipo?.includes('Colaborador') ? 'bg-blue-100 text-blue-700' :
+                              u.tipo?.includes('Cliente') ? 'bg-emerald-100 text-emerald-700' :
+                              u.tipo?.includes('Fornecedor') ? 'bg-orange-100 text-orange-700' :
+                              u.tipo?.includes('Prestador') ? 'bg-amber-100 text-amber-700' :
+                              'bg-neutral-100 text-neutral-700'
+                            }`}>
+                              {u.tipo || 'Usuário'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                              u.status === 'Bloqueado' ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-600'
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${u.status === 'Bloqueado' ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                              {u.status || 'Ativo'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-neutral-500">
+                            {u.created_at ? formatDateTime(u.created_at) : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filteredUsers.length === 0 && (
+                    <div className="p-8 text-center text-neutral-400">Nenhum usuário encontrado na busca.</div>
+                  )}
                 </div>
               </div>
             )}
 
             {/* Modal: Tabelas */}
             {activeCardModal === 'tables' && (
-              <div>
+              <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <span className="p-3 bg-amber-100 text-amber-600 rounded-2xl"><Server className="w-6 h-6"/></span>
                   <div>
@@ -372,7 +443,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                     <p className="text-xs text-neutral-500">Visão das principais tabelas registradas no PostgreSQL</p>
                   </div>
                 </div>
-                <div className="mt-6 space-y-3">
+                <div className="space-y-3">
                   <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
                     <span className="text-xs font-bold text-neutral-500">Quantidade Total de Tabelas</span>
                     <span className="text-sm font-black text-amber-700 font-mono">{numberValue(metrics.database_tables_count || snapshot.tables?.length).toLocaleString('pt-BR')}</span>
