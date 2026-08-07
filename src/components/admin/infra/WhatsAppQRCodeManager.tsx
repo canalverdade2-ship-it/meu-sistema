@@ -621,65 +621,65 @@ export function WhatsAppQRCodeManager() {
             return (
               <div 
                 key={device.id} 
-                className={`bg-neutral-900 border ${device.role === 'SUPORTE' ? 'border-emerald-500/40 shadow-emerald-500/5' : 'border-neutral-800/90'} rounded-xl p-4 transition-all space-y-3 shadow-md`}
+                className={`bg-neutral-900 border ${device.role === 'SUPORTE' ? 'border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.05)]' : 'border-neutral-800'} rounded-xl p-5 transition-all flex flex-col gap-4`}
               >
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 pb-2 border-b border-neutral-800/60">
-                  {/* Nome e Telefone da Linha */}
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className={`p-2.5 rounded-xl border shrink-0 ${device.role === 'MASTER' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
-                      {device.role === 'MASTER' ? <Radio className="w-5 h-5 animate-pulse" /> : <PhoneCall className="w-5 h-5" />}
-                    </div>
-                    <div className="min-w-0 space-y-1">
-                      <h5 className="text-sm font-bold text-white tracking-tight leading-snug">
+                {/* Header: Icon, Name, Role Badge */}
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-xl border shrink-0 ${device.role === 'MASTER' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                    {device.role === 'MASTER' ? <Radio className="w-5 h-5 animate-pulse" /> : <PhoneCall className="w-5 h-5" />}
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h5 className="text-base font-bold text-white truncate">
                         {device.name}
                       </h5>
-                      <span className="text-xs font-mono font-bold text-emerald-400 block">
-                        {formatPhoneDisplay(device.phone)}
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider whitespace-nowrap border ${device.role === 'MASTER' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                        {device.role}
                       </span>
                     </div>
-                  </div>
-
-                  {/* Badges e Tags Elegantes (Sem quebra de texto) */}
-                  <div className="flex items-center flex-wrap gap-1.5 shrink-0">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider whitespace-nowrap border ${device.role === 'MASTER' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' : 'bg-blue-500/10 text-blue-300 border-blue-500/30'}`}>
-                      {device.role}
+                    <span className="text-sm font-mono font-medium text-emerald-400 block">
+                      {formatPhoneDisplay(device.phone)}
                     </span>
-
-                    {!device.canDelete && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider whitespace-nowrap bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
-                        <Lock className="w-3 h-3 text-emerald-400" /> OFICIAL INVIOLÁVEL
-                      </span>
-                    )}
-
-                    {targetIp === '163.176.97.152' ? (
-                      isNovaVpsConnected ? (
-                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-rose-500/10 text-rose-300 border border-rose-500/30 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3 text-rose-400" /> DESPAREADO (MIGRADO)
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                          <Check className="w-3 h-3 text-emerald-400" /> ATIVO
-                        </span>
-                      )
-                    ) : (
-                      isNovaVpsConnected ? (
-                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                          <Check className="w-3 h-3 text-emerald-400" /> ATIVO NA NOVA VPS
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider whitespace-nowrap bg-amber-500/10 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3 text-amber-400" /> PENDENTE NOVA
-                        </span>
-                      )
-                    )}
                   </div>
                 </div>
 
-                <p className="text-[11px] text-neutral-400 leading-relaxed border-t border-neutral-800/60 pt-2">
+                {/* Status Badges Row */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {!device.canDelete && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-neutral-950 text-neutral-300 border border-neutral-700">
+                      <Lock className="w-3 h-3 text-emerald-400" /> Oficial Inviolável
+                    </span>
+                  )}
+                  {targetIp === '163.176.97.152' ? (
+                    isNovaVpsConnected ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        <AlertCircle className="w-3 h-3" /> Despareado (Migrado)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <Check className="w-3 h-3" /> Ativo
+                      </span>
+                    )
+                  ) : (
+                    isNovaVpsConnected ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <Check className="w-3 h-3" /> Ativo na Nova VPS
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <AlertTriangle className="w-3 h-3" /> Pendente Nova
+                      </span>
+                    )
+                  )}
+                </div>
+
+                {/* Description */}
+                <p className="text-[11px] text-neutral-400 leading-relaxed bg-neutral-950/50 p-3 rounded-lg border border-neutral-800/50">
                   {device.description}
                 </p>
 
-                <div className="flex items-center justify-between border-t border-neutral-800/80 pt-3">
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-2 border-t border-neutral-800/80">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
@@ -693,7 +693,7 @@ export function WhatsAppQRCodeManager() {
                     <button
                       onClick={() => void handleTestDevice(device)}
                       disabled={testingId === device.id}
-                      className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+                      className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
                     >
                       <Send className={`w-3.5 h-3.5 ${testingId === device.id ? 'animate-bounce' : ''}`} />
                       {testingId === device.id ? 'Enviando...' : 'Testar Disparo'}
@@ -752,61 +752,61 @@ export function WhatsAppQRCodeManager() {
                 onDragStart={() => handleDragStart(idx)}
                 onDragOver={handleDragOver}
                 onDrop={() => void handleDrop(idx)}
-                className={`bg-neutral-900 border ${ramal.ativo ? 'border-neutral-800 hover:border-blue-500/50' : 'border-neutral-800/50 opacity-60'} ${draggedIndex === idx ? 'border-dashed border-blue-400 bg-neutral-950 scale-95' : ''} rounded-xl p-4 transition-all space-y-3 shadow-md relative group cursor-grab active:cursor-grabbing`}
+                className={`bg-neutral-900 border ${ramal.ativo ? 'border-neutral-800 hover:border-blue-500/50' : 'border-neutral-800/50 opacity-60'} ${draggedIndex === idx ? 'border-dashed border-blue-400 bg-neutral-950 scale-95' : ''} rounded-xl p-4 transition-all flex flex-col gap-3 relative group cursor-grab active:cursor-grabbing`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-1.5 bg-neutral-950 rounded-lg text-neutral-500 group-hover:text-blue-400 border border-neutral-800 shrink-0" title="Arraste para reordenar">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="p-2 bg-neutral-950 rounded-lg text-neutral-500 group-hover:text-blue-400 border border-neutral-800 shrink-0 mt-1" title="Arraste para reordenar">
                       <GripVertical className="w-4 h-4" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-white">{ramal.setor_nome}</span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h5 className="text-sm font-bold text-white truncate">{ramal.setor_nome}</h5>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400 whitespace-nowrap">
                           Posição #{idx + 1}
                         </span>
                       </div>
-                      <span className="text-xs font-mono font-bold text-blue-400 block mt-0.5">
+                      <span className="text-xs font-mono font-medium text-blue-400 block mb-0.5">
                         {formatPhoneDisplay(ramal.numero_whatsapp)}
                       </span>
-                      <span className="text-[11px] text-neutral-400 block font-sans">
+                      <span className="text-[11px] text-neutral-400 block font-sans truncate">
                         Responsável: {ramal.responsavel_nome}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* Botões de Troca Rápida de Ordem */}
-                    <div className="flex flex-col gap-0.5">
-                      <button
-                        onClick={() => void moveRamalPosition(idx, 'UP')}
-                        disabled={idx === 0}
-                        className="p-1 bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white rounded text-[10px] disabled:opacity-30"
-                        title="Mover para Cima"
-                      >
-                        <ArrowUp className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => void moveRamalPosition(idx, 'DOWN')}
-                        disabled={idx === ramais.length - 1}
-                        className="p-1 bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white rounded text-[10px] disabled:opacity-30"
-                        title="Mover para Baixo"
-                      >
-                        <ArrowDown className="w-3 h-3" />
-                      </button>
-                    </div>
-
+                  <div className="flex flex-col items-end gap-2 shrink-0">
                     <button
                       onClick={() => void handleToggleRamalAtivo(ramal)}
                       className="text-neutral-400 hover:text-white transition-colors"
                       title={ramal.ativo ? 'Desativar Ramal' : 'Ativar Ramal'}
                     >
-                      {ramal.ativo ? <ToggleRight className="w-7 h-7 text-emerald-400" /> : <ToggleLeft className="w-7 h-7 text-neutral-600" />}
+                      {ramal.ativo ? <ToggleRight className="w-8 h-8 text-emerald-400" /> : <ToggleLeft className="w-8 h-8 text-neutral-600" />}
                     </button>
+                    {/* Botões de Troca Rápida de Ordem */}
+                    <div className="flex bg-neutral-950 rounded border border-neutral-800 overflow-hidden">
+                      <button
+                        onClick={() => void moveRamalPosition(idx, 'UP')}
+                        disabled={idx === 0}
+                        className="p-1 text-neutral-400 hover:text-white hover:bg-neutral-800 disabled:opacity-30 transition-colors"
+                        title="Mover para Cima"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+                      <div className="w-px bg-neutral-800"></div>
+                      <button
+                        onClick={() => void moveRamalPosition(idx, 'DOWN')}
+                        disabled={idx === ramais.length - 1}
+                        className="p-1 text-neutral-400 hover:text-white hover:bg-neutral-800 disabled:opacity-30 transition-colors"
+                        title="Mover para Baixo"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-neutral-800/80 pt-3">
+                <div className="flex items-center justify-between border-t border-neutral-800/80 pt-3 mt-1">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
@@ -819,15 +819,15 @@ export function WhatsAppQRCodeManager() {
                       }}
                       className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-blue-400" /> Editar Ramal
+                      <Edit3 className="w-3.5 h-3.5 text-blue-400" /> Editar
                     </button>
                     <button
                       onClick={() => void handleTestRamal(ramal)}
                       disabled={testingId === ramal.id}
-                      className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+                      className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
                     >
                       <Send className={`w-3.5 h-3.5 ${testingId === ramal.id ? 'animate-bounce' : ''}`} />
-                      {testingId === ramal.id ? 'Testando...' : 'Testar Transbordo'}
+                      {testingId === ramal.id ? 'Testando...' : 'Testar'}
                     </button>
                   </div>
 

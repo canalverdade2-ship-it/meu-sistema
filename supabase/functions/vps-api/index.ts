@@ -197,6 +197,8 @@ async function handleRequest(request: Request) {
             return json(200, { success: false, state: 'close' }, origin);
           }
         }
+      }
+
       if (action === 'send-whatsapp' || path.includes('/send-whatsapp')) {
         const phone = (body.phone || body.telefone || '').replace(/\D/g, '');
         const message = body.message || body.mensagem || '';
