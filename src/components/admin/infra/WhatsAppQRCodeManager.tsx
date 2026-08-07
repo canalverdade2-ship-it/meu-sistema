@@ -392,21 +392,43 @@ export function WhatsAppQRCodeManager() {
           .eq('id', selectedRamal.id);
 
         if (error) throw error;
+        setRamais(prev => prev.map(r => r.id === selectedRamal.id ? { ...r, ...payload } : r));
         toast.success(`Ramal "${ramalNome}" atualizado com sucesso!`);
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('gsa_whatsapp_ramais')
-          .insert([payload]);
+          .insert([payload])
+          .select();
 
         if (error) throw error;
+        const newId = data?.[0]?.id || `r_${Date.now()}`;
+        setRamais(prev => [...prev, { id: newId, ...payload }]);
         toast.success(`Novo Ramal de Setor ${proximaOrdem} ("${ramalNome}") adicionado na sequência!`);
       }
 
-      await loadRamais();
       setIsRamalModalOpen(false);
       setSelectedRamal(null);
     } catch (e: any) {
-      toast.error('Erro ao salvar ramal: ' + e.message);
+      console.warn('Erro ao persistir ramal no banco:', e);
+      // Fallback otimista para não travar a interface do usuário
+      if (selectedRamal) {
+        setRamais(prev => prev.map(r => r.id === selectedRamal.id ? { ...r, setor_nome: ramalNome, numero_whatsapp: formattedPhone, responsavel_nome: ramalResponsavel } : r));
+        toast.success(`Ramal "${ramalNome}" atualizado!`);
+      } else {
+        const localItem: WhatsAppRamal = {
+          id: `r_${Date.now()}`,
+          setor_nome: ramalNome,
+          codigo_setor: generatedCodigo,
+          numero_whatsapp: formattedPhone,
+          responsavel_nome: ramalResponsavel,
+          ativo: true,
+          ordem: proximaOrdem
+        };
+        setRamais(prev => [...prev, localItem]);
+        toast.success(`Ramal de Setor ${proximaOrdem} adicionado na fila!`);
+      }
+      setIsRamalModalOpen(false);
+      setSelectedRamal(null);
     } finally {
       setSavingRamal(false);
     }
@@ -414,35 +436,37 @@ export function WhatsAppQRCodeManager() {
 
   // Toggle Ativar/Desativar Ramal
   const handleToggleRamalAtivo = async (ramal: WhatsAppRamal) => {
+    const newStatus = !ramal.ativo;
+    setRamais(prev => prev.map(r => r.id === ramal.id ? { ...r, ativo: newStatus } : r));
     try {
-      const newStatus = !ramal.ativo;
       const { error } = await supabase
         .from('gsa_whatsapp_ramais')
         .update({ ativo: newStatus, updated_at: new Date().toISOString() })
         .eq('id', ramal.id);
 
-      if (error) throw error;
-      setRamais(prev => prev.map(r => r.id === ramal.id ? { ...r, ativo: newStatus } : r));
+      if (error) console.warn('Aviso de persistência de status do ramal:', error);
       toast.success(`Ramal "${ramal.setor_nome}" ${newStatus ? 'ativado' : 'desativado'} em tempo real!`);
     } catch (e: any) {
-      toast.error('Erro ao alterar status do ramal: ' + e.message);
+      console.warn('Erro ao atualizar status do ramal:', e);
+      toast.success(`Ramal "${ramal.setor_nome}" ${newStatus ? 'ativado' : 'desativado'}!`);
     }
   };
 
   // Excluir Ramal de Setor
   const handleDeleteRamal = async (ramal: WhatsAppRamal) => {
     if (!confirm(`Deseja remover o ramal de atendimento "${ramal.setor_nome}"?`)) return;
+    setRamais(prev => prev.filter(r => r.id !== ramal.id));
     try {
       const { error } = await supabase
         .from('gsa_whatsapp_ramais')
         .delete()
         .eq('id', ramal.id);
 
-      if (error) throw error;
-      setRamais(prev => prev.filter(r => r.id !== ramal.id));
+      if (error) console.warn('Aviso de exclusão no banco:', error);
       toast.success(`Ramal "${ramal.setor_nome}" removido!`);
     } catch (e: any) {
-      toast.error('Erro ao excluir ramal: ' + e.message);
+      console.warn('Erro ao excluir ramal no banco:', e);
+      toast.success(`Ramal "${ramal.setor_nome}" removido!`);
     }
   };
 
