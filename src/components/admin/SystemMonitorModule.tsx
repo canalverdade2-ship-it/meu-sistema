@@ -5,6 +5,7 @@ import { callAdminRpc } from '../../lib/adminRpc';
 import { formatDateTime } from '../../lib/utils';
 import { sendAdminWhatsAppNotification } from '../../utils/n8nWhatsApp';
 import { MessageSquare } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 import { OracleMetricsPanel } from './infra/OracleMetricsPanel';
 import { VPSTerminal } from './infra/VPSTerminal';
@@ -55,6 +56,109 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
   const [tablesOpen, setTablesOpen] = useState(false);
   const [activeCardModal, setActiveCardModal] = useState<'database' | 'storage' | 'users' | 'tables' | null>(null);
 
+  const fetchFallbackUsers = useCallback(async () => {
+    try {
+      const users: any[] = [];
+      const seenIds = new Set<string>();
+
+      // Colaboradores
+      const { data: cols } = await supabase.from('gsa_colaboradores').select('id, nome, email, created_at, status, e_master');
+      if (cols) {
+        cols.forEach(c => {
+          if (!seenIds.has(c.id)) {
+            seenIds.add(c.id);
+            users.push({
+              id: c.id,
+              nome: c.nome || 'Colaborador GSA',
+              email: c.email || '—',
+              tipo: c.e_master || c.email === 'admin@gsa.com' ? 'Administrador Master' : 'Colaborador GSA',
+              status: c.status === 'inativo' || c.ativo === false ? 'Bloqueado' : 'Ativo',
+              created_at: c.created_at
+            });
+          }
+        });
+      }
+
+      // Clientes
+      const { data: clis } = await supabase.from('gsa_clientes').select('id, nome, email, created_at, status').limit(100);
+      if (clis) {
+        clis.forEach(c => {
+          if (!seenIds.has(c.id)) {
+            seenIds.add(c.id);
+            users.push({
+              id: c.id,
+              nome: c.nome || 'Cliente GSA',
+              email: c.email || '—',
+              tipo: 'Cliente GSA',
+              status: c.status === 'bloqueado' ? 'Bloqueado' : 'Ativo',
+              created_at: c.created_at
+            });
+          }
+        });
+      }
+
+      // Fornecedores
+      const { data: forns } = await supabase.from('gsa_fornecedores').select('id, razao_social, email, created_at, status').limit(100);
+      if (forns) {
+        forns.forEach(c => {
+          if (!seenIds.has(c.id)) {
+            seenIds.add(c.id);
+            users.push({
+              id: c.id,
+              nome: c.razao_social || 'Fornecedor GSA',
+              email: c.email || '—',
+              tipo: 'Fornecedor GSA',
+              status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
+              created_at: c.created_at
+            });
+          }
+        });
+      }
+
+      // Prestadores
+      const { data: pres } = await supabase.from('gsa_prestadores').select('id, nome, email, created_at, status').limit(100);
+      if (pres) {
+        pres.forEach(c => {
+          if (!seenIds.has(c.id)) {
+            seenIds.add(c.id);
+            users.push({
+              id: c.id,
+              nome: c.nome || 'Prestador GSA',
+              email: c.email || '—',
+              tipo: 'Prestador de Serviço',
+              status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
+              created_at: c.created_at
+            });
+          }
+        });
+      }
+
+      // Afiliados
+      const { data: afils } = await supabase.from('gsa_afiliados').select('id, nome, email, created_at, status').limit(100);
+      if (afils) {
+        afils.forEach(c => {
+          if (!seenIds.has(c.id)) {
+            seenIds.add(c.id);
+            users.push({
+              id: c.id,
+              nome: c.nome || 'Afiliado GSA',
+              email: c.email || '—',
+              tipo: 'Afiliado GSA',
+              status: c.status === 'inativo' || c.status === 'bloqueado' ? 'Bloqueado' : 'Ativo',
+              created_at: c.created_at
+            });
+          }
+        });
+      }
+
+      if (users.length > 0) {
+        setSnapshot(prev => ({ ...prev, users_list: users }));
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar usuários de fallback:', e);
+    }
+  }, []);
+
   const handleSendTestAlert = async () => {
     setSendingAlert(true);
     try {
@@ -80,19 +184,32 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
     else setLoading(true);
     try {
       const data = await callAdminRpc<SystemSnapshot>('gsa_admin_system_snapshot');
+      const usersList = Array.isArray(data?.users_list) && data.users_list.length > 0 ? data.users_list : [];
+      
       setSnapshot({
         metrics: data?.metrics || {},
         tables: Array.isArray(data?.tables) ? data.tables : [],
-        users_list: Array.isArray(data?.users_list) ? data.users_list : [],
+        users_list: usersList,
         generated_at: data?.generated_at,
       });
+
+      if (usersList.length === 0) {
+        void fetchFallbackUsers();
+      }
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível carregar as métricas do sistema.');
+      void fetchFallbackUsers();
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [fetchFallbackUsers]);
+
+  useEffect(() => {
+    if (activeCardModal === 'users' && (!snapshot.users_list || snapshot.users_list.length === 0)) {
+      void fetchFallbackUsers();
+    }
+  }, [activeCardModal, snapshot.users_list, fetchFallbackUsers]);
 
   useEffect(() => {
     void load();
