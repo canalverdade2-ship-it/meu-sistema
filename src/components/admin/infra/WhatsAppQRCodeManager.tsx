@@ -14,8 +14,8 @@ export function WhatsAppQRCodeManager() {
   const checkConnectionStatus = async (ip = targetIp) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('vps-api/whatsapp-status', {
-        headers: { 'x-target-vps': ip }
+      const { data, error } = await supabase.functions.invoke('vps-api', {
+        body: { action: 'whatsapp-status', targetIp: ip }
       });
       if (!error && data?.success) {
         setStatus('connected');
@@ -36,8 +36,8 @@ export function WhatsAppQRCodeManager() {
     setPairingCode(null);
     
     try {
-      const { data, error } = await supabase.functions.invoke('vps-api/whatsapp-qrcode', {
-        headers: { 'x-target-vps': targetIp }
+      const { data, error } = await supabase.functions.invoke('vps-api', {
+        body: { action: 'whatsapp-qrcode', targetIp }
       });
 
       if (!error && data?.base64) {

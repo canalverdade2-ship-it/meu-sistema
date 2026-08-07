@@ -131,49 +131,58 @@ async function handleRequest(request: Request) {
       return json(200, metrics, origin);
     }
 
-    if (method === 'POST' && path.endsWith('/power')) {
-      const body = await request.json();
-      const action = body.action; // 'start', 'stop', 'reboot'
-      return json(200, { success: true, message: `Command ${action} sent to VPS` }, origin);
-    }
-
-    if (path.includes('/whatsapp-qrcode')) {
-      const targetHost = request.headers.get('x-target-vps') || '147.15.43.141';
+    if (method === 'POST') {
+      let body: any = {};
       try {
-        const evoRes = await fetch(`http://${targetHost}:8080/instance/connect/GSA_WhatsApp`, {
-          headers: { 'apikey': 'gsa_hub_evolution_token_2026' }
-        });
-        if (evoRes.ok) {
-          const data = await evoRes.json();
-          return json(200, { success: true, base64: data.base64 || data.code, pairingCode: data.pairingCode }, origin);
-        } else {
-          // Tenta criar a instancia se nao existir
-          const createRes = await fetch(`http://${targetHost}:8080/instance/create`, {
-            method: 'POST',
-            headers: { 'apikey': 'gsa_hub_evolution_token_2026', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ instanceName: 'GSA_WhatsApp', qrcode: true, integration: 'WHATSAPP-BAILEYS' })
-          });
-          const createData = await createRes.json();
-          return json(200, { success: true, base64: createData?.qrcode?.base64, pairingCode: createData?.qrcode?.pairingCode }, origin);
-        }
-      } catch (e: any) {
-        return json(500, { error: 'Falha na ponte Edge-to-Evolution: ' + e.message }, origin);
-      }
-    }
-
-    if (path.includes('/whatsapp-status')) {
-      const targetHost = request.headers.get('x-target-vps') || '147.15.43.141';
-      try {
-        const evoRes = await fetch(`http://${targetHost}:8080/instance/connectionState/GSA_WhatsApp`, {
-          headers: { 'apikey': 'gsa_hub_evolution_token_2026' }
-        });
-        if (evoRes.ok) {
-          const data = await evoRes.json();
-          return json(200, { success: true, state: data?.instance?.state || 'close' }, origin);
-        }
-        return json(200, { success: false, state: 'close' }, origin);
+        body = await request.json();
       } catch {
-        return json(200, { success: false, state: 'close' }, origin);
+        body = {};
+      }
+
+      const action = body.action || '';
+      const targetHost = body.targetIp || request.headers.get('x-target-vps') || '147.15.43.141';
+
+      if (action === 'power' || path.endsWith('/power')) {
+        const pAction = body.action_type || body.action; // 'start', 'stop', 'reboot'
+        return json(200, { success: true, message: `Command ${pAction} sent to VPS` }, origin);
+      }
+
+      if (action === 'whatsapp-qrcode' || path.includes('/whatsapp-qrcode')) {
+        try {
+          const evoRes = await fetch(`http://${targetHost}:8080/instance/connect/GSA_WhatsApp`, {
+            headers: { 'apikey': 'gsa_hub_evolution_token_2026' }
+          });
+          if (evoRes.ok) {
+            const data = await evoRes.json();
+            return json(200, { success: true, base64: data.base64 || data.code, pairingCode: data.pairingCode }, origin);
+          } else {
+            // Tenta criar a instancia se nao existir
+            const createRes = await fetch(`http://${targetHost}:8080/instance/create`, {
+              method: 'POST',
+              headers: { 'apikey': 'gsa_hub_evolution_token_2026', 'Content-Type': 'application/json' },
+              body: JSON.stringify({ instanceName: 'GSA_WhatsApp', qrcode: true, integration: 'WHATSAPP-BAILEYS' })
+            });
+            const createData = await createRes.json();
+            return json(200, { success: true, base64: createData?.qrcode?.base64, pairingCode: createData?.qrcode?.pairingCode }, origin);
+          }
+        } catch (e: any) {
+          return json(500, { error: 'Falha na ponte Edge-to-Evolution: ' + e.message }, origin);
+        }
+      }
+
+      if (action === 'whatsapp-status' || path.includes('/whatsapp-status')) {
+        try {
+          const evoRes = await fetch(`http://${targetHost}:8080/instance/connectionState/GSA_WhatsApp`, {
+            headers: { 'apikey': 'gsa_hub_evolution_token_2026' }
+          });
+          if (evoRes.ok) {
+            const data = await evoRes.json();
+            return json(200, { success: true, state: data?.instance?.state || 'close' }, origin);
+          }
+          return json(200, { success: false, state: 'close' }, origin);
+        } catch {
+          return json(200, { success: false, state: 'close' }, origin);
+        }
       }
     }
 
