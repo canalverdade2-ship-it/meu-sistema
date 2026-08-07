@@ -12,7 +12,7 @@ curl -i -X POST http://localhost:8080/webhook/set/GSA_WhatsApp \
   -d '{
     "webhook": {
       "enabled": true,
-      "url": "http://163.176.97.152:5680/webhook",
+      "url": "http://147.15.43.141:5680/webhook",
       "byEvents": false,
       "events": ["MESSAGES_UPSERT"]
     }
