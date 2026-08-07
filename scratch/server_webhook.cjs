@@ -935,7 +935,20 @@ function processMessage(fromPhone, textBody, messageType) {
         session.state = 'HUMAN_SUPPORT_DEPT';
         session.errors = 0;
         userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, '💬 *Atendimento Humano GSA HUB*\n\nPor favor, escolha o setor desejado para atendimento:\n\n1️⃣ Comercial\n2️⃣ Financeiro\n3️⃣ Dep. Pessoal\n5️⃣ Suporte Afiliados\n6️⃣ Suporte Parceiros\n7️⃣ Suporte Fornecedores\n8️⃣ SAC\n\n_Digite o número da opção desejada (1, 2, 3, 5, 6, 7 ou 8)._\n_Digite 0 para voltar ao menu principal._');
+
+        // Busca ramais ativos em tempo real do banco de dados (PostgreSQL)
+        supabaseGet('/rest/v1/gsa_whatsapp_ramais?ativo=eq.true&order=ordem.asc', (errR, ramaisList) => {
+          let textMenu = '💬 *Atendimento Humano GSA HUB*\n\nPor favor, escolha o setor desejado para atendimento:\n\n';
+          if (!errR && Array.isArray(ramaisList) && ramaisList.length > 0) {
+            ramaisList.forEach(r => {
+              textMenu += `${r.setor_nome}\n`;
+            });
+            textMenu += '\n_Digite o número ou nome da opção desejada._\n_Digite 0 para voltar ao menu principal._';
+          } else {
+            textMenu += '1️⃣ Comercial\n2️⃣ Financeiro\n3️⃣ Dep. Pessoal\n5️⃣ Suporte Afiliados\n6️⃣ Suporte Parceiros\n7️⃣ Suporte Fornecedores\n8️⃣ SAC\n\n_Digite o número da opção desejada (1, 2, 3, 5, 6, 7 ou 8)._\n_Digite 0 para voltar ao menu principal._';
+          }
+          sendWhatsAppReply(fromPhone, textMenu);
+        });
         break;
 
       default:
@@ -2346,44 +2359,60 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: SELEÇÃO DE SETOR PARA ATENDIMENTO HUMANO ──────────────────────
   if (session.state === 'HUMAN_SUPPORT_DEPT') {
-    const sectors = {
-      '1': { dept: 'Comercial', agent: 'COMERCIAL GSA' },
-      '2': { dept: 'Financeiro', agent: 'FINANCEIRO GSA' },
-      '3': { dept: 'Dep. Pessoal', agent: 'DEP. PESSOAL GSA' },
-      '5': { dept: 'Suporte Afiliados', agent: 'SUPORTE AFILIADOS GSA' },
-      '6': { dept: 'Suporte Parceiros', agent: 'SUPORTE PARCEIROS GSA' },
-      '7': { dept: 'Suporte Fornecedores', agent: 'SUPORTE FORNECEDORES GSA' },
-      '8': { dept: 'SAC', agent: 'SAC GSA' }
-    };
+    const userInput = text.trim();
 
-    const choice = sectors[text.trim()];
-    if (!choice) {
-      sendWhatsAppReply(fromPhone, '❌ Opção inválida. Por favor escolha uma das opções:\n\n1️⃣ Comercial\n2️⃣ Financeiro\n3️⃣ Dep. Pessoal\n5️⃣ Suporte Afiliados\n6️⃣ Suporte Parceiros\n7️⃣ Suporte Fornecedores\n8️⃣ SAC\n\n_Digite 0 para voltar ao menu._');
-      return;
-    }
+    supabaseGet('/rest/v1/gsa_whatsapp_ramais?ativo=eq.true&order=ordem.asc', (errR, ramaisList) => {
+      let matchedRamal = null;
 
-    const protocolo = generateProtocolNumber();
-    session.state = 'HUMAN_AGENT_RELAY';
-    session.supportDept = choice.dept;
-    session.supportAgent = choice.agent;
-    session.protocolo = protocolo;
-    userSessions[fromPhone] = session;
+      if (!errR && Array.isArray(ramaisList) && ramaisList.length > 0) {
+        matchedRamal = ramaisList.find(r => {
+          const numMatch = r.setor_nome.match(/^(\d+)/);
+          const optionNumber = numMatch ? numMatch[1] : '';
+          return optionNumber === userInput || r.codigo_setor === userInput || r.setor_nome.toLowerCase().includes(userInput.toLowerCase());
+        });
+      }
 
-    // 1. Mensagem inicial imediata
-    sendWhatsAppReply(fromPhone, 'Aguarde, estamos transferindo o atendimento...');
+      if (!matchedRamal) {
+        const sectors = {
+          '1': { dept: 'Comercial', agent: 'COMERCIAL GSA', phone: '5511971858372' },
+          '2': { dept: 'Financeiro', agent: 'FINANCEIRO GSA', phone: '5511971858372' },
+          '3': { dept: 'Dep. Pessoal', agent: 'DEP. PESSOAL GSA', phone: '5511971858372' },
+          '5': { dept: 'Suporte Afiliados', agent: 'SUPORTE AFILIADOS GSA', phone: '5511920857756' },
+          '6': { dept: 'Suporte Parceiros', agent: 'SUPORTE PARCEIROS GSA', phone: '5511920857756' },
+          '7': { dept: 'Suporte Fornecedores', agent: 'SUPORTE FORNECEDORES GSA', phone: '5511920857756' },
+          '8': { dept: 'SAC', agent: 'SAC GSA', phone: '5511971858372' }
+        };
+        const choice = sectors[userInput];
+        if (!choice) {
+          sendWhatsAppReply(fromPhone, '❌ Opção inválida. Por favor escolha uma das opções exibidas no menu.\n\n_Digite 0 para voltar ao menu._');
+          return;
+        }
+        matchedRamal = { setor_nome: choice.dept, responsavel_nome: choice.agent, numero_whatsapp: choice.phone };
+      }
 
-    // 2. Aguarda 10 segundos
-    setTimeout(() => {
-      // 3. Confirmar transferência com Número de Protocolo
-      sendWhatsAppReply(fromPhone, `Seu atendimento foi transferido com Sucesso\n📋 *Protocolo:* ${protocolo}`);
+      const protocolo = generateProtocolNumber();
+      session.state = 'HUMAN_AGENT_RELAY';
+      session.supportDept = matchedRamal.setor_nome;
+      session.supportAgent = matchedRamal.responsavel_nome;
+      session.protocolo = protocolo;
+      userSessions[fromPhone] = session;
 
-      // 4. Aguarda 5 segundos
+      sendWhatsAppReply(fromPhone, 'Aguarde, estamos transferindo o atendimento...');
+
       setTimeout(() => {
-        // 5. Apresentação do Atendente em negrito e maiúsculo
-        const agentNameFormatted = choice.agent.toUpperCase();
-        sendWhatsAppReply(fromPhone, `*ATENDENTE ${agentNameFormatted}:*\nOlá, Seja Bem Vindo ao Atendimento da GSA HUB,\nComo podemos te ajudar ?`);
-      }, 5000);
-    }, 10000);
+        sendWhatsAppReply(fromPhone, `Seu atendimento foi transferido com Sucesso\n📋 *Protocolo:* ${protocolo}`);
+
+        // Roteamento & Notificação em tempo real para o WhatsApp do atendente responsável pelo setor!
+        if (matchedRamal.numero_whatsapp && matchedRamal.numero_whatsapp !== fromPhone) {
+          sendWhatsAppReply(matchedRamal.numero_whatsapp, `🚨 *NOVO ATENDIMENTO DE TRANSBORDO HUMANO*\n\n📱 *Cliente:* ${fromPhone}\n🏢 *Setor:* ${matchedRamal.setor_nome}\n📋 *Protocolo:* ${protocolo}\n\nO cliente aguarda atendimento no WhatsApp!`);
+        }
+
+        setTimeout(() => {
+          const agentNameFormatted = matchedRamal.responsavel_nome.toUpperCase();
+          sendWhatsAppReply(fromPhone, `*ATENDENTE ${agentNameFormatted}:*\nOlá, Seja Bem Vindo ao Atendimento da GSA HUB,\nComo podemos te ajudar ?`);
+        }, 5000);
+      }, 10000);
+    });
     return;
   }
 
