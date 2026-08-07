@@ -16,7 +16,71 @@
           250,
           300
         ],
-        "webhookId": "gsa-whatsapp-webhook"
+        "webhookId": "gsa-whatsapp-webhook",
+        "id": "3e47f72d-39e5-427c-9f00-d032594c1ad6"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "2e680a6b-c376-47b1-9bb4-b77e20b33633",
+                "leftValue": "={{ $json.body.mediaBase64 || $json.body.pdfUrl || $json.body.media }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "5f13ab69-9f4a-4d79-9e8c-52bb6c8a77a9",
+        "name": "Possui Anexo PDF?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          480,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendMedia/GSA_WhatsApp",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "gsa_hub_evolution_token_2026"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"{{ $json.body.phone }}\",\n  \"mediatype\": \"document\",\n  \"mimetype\": \"application/pdf\",\n  \"media\": \"{{ $json.body.mediaBase64 || $json.body.media || $json.body.pdfUrl }}\",\n  \"fileName\": \"{{ $json.body.fileName || 'fatura.pdf' }}\",\n  \"caption\": \"{{ $json.body.message }}\"\n}",
+          "options": {}
+        },
+        "name": "Enviar Documento PDF",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          720,
+          200
+        ],
+        "id": "d8e792ac-7411-4f46-81aa-a829a9971bc1"
       },
       {
         "parameters": {
@@ -50,13 +114,14 @@
           },
           "options": {}
         },
-        "name": "Evolution WhatsApp API",
+        "name": "Enviar Somente Texto",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.1,
         "position": [
-          500,
-          300
-        ]
+          720,
+          400
+        ],
+        "id": "2d62bfaf-39f9-40af-93c1-5825fbe3f3df"
       }
     ],
     "connections": {
@@ -64,7 +129,25 @@
         "main": [
           [
             {
-              "node": "Evolution WhatsApp API",
+              "node": "Possui Anexo PDF?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Possui Anexo PDF?": {
+        "main": [
+          [
+            {
+              "node": "Enviar Documento PDF",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Enviar Somente Texto",
               "type": "main",
               "index": 0
             }

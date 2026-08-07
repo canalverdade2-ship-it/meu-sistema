@@ -3,14 +3,17 @@
  * GSA HUB - Sistema de Gestão de Serviços
  */
 
+import { supabase } from '../lib/supabase';
+import { callAdminRpc } from '../lib/adminRpc';
+
 export interface AdminNotificationPayload {
   title: string;
   message: string;
-  category?: 'VENDAS' | 'SUPORTE' | 'CADASTRO' | 'FINANCEIRO' | 'SISTEMA';
+  category?: 'VENDAS' | 'SUPORTE' | 'CADASTRO' | 'FINANCEIRO' | 'SISTEMA' | 'DEMANDAS' | 'FORNECEDORES' | 'PRESTADORES';
   recipientPhone?: string;
 }
 
-const N8N_WEBHOOK_URL = 'http://163.176.97.152:5678/webhook/send-whatsapp';
+const DEFAULT_N8N_WEBHOOK_URL = 'http://147.15.43.141:5678/webhook/send-whatsapp';
 const DEFAULT_ADMIN_PHONE = '5511920857756';
 
 // Meta API Direct Fallback
@@ -18,16 +21,68 @@ const META_PHONE_NUMBER_ID = '1208358025697171';
 const META_TOKEN = 'EAATzMfBrFUUBSKUGYDkioeRHENS7hcliAdztOVnfpGTZCxA9H58yU32BxtaZCrve2HrEvC3wRsSgXsfvPp2df38Qu6KxpPBI2UeRhQWdY7ZADeFoEs6rOE8CZC4B8bv6KNZCNQZAKhZABLIQNMk98S6RcoQxdoy2MQ2r5xLKDDjJ7wISHL6n21US9QT993NzswJfQZDZD';
 
 /**
- * Envia notificação administrativa para o WhatsApp do Administrador
+ * Busca as configurações ativas do WhatsApp Master para notificações administrativas
+ */
+export async function getAdminWhatsAppConfig(): Promise<{ phone: string; webhookUrl: string }> {
+  try {
+    const data = await callAdminRpc<any>('gsa_admin_settings_snapshot');
+    const settings = data?.settings || {};
+    
+    const rawPhone = settings['whatsapp_admin_notificacoes'] || DEFAULT_ADMIN_PHONE;
+    const cleanPhone = rawPhone.replace(/\D/g, '');
+    const phone = cleanPhone ? (cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`) : DEFAULT_ADMIN_PHONE;
+    const webhookUrl = settings['whatsapp_n8n_webhook_url'] || DEFAULT_N8N_WEBHOOK_URL;
+    
+    return { phone, webhookUrl };
+  } catch {
+    // Fallback via consulta direta pública a system_settings se RPC não estiver na sessão
+    try {
+      const { data } = await supabase
+        .from('system_settings')
+        .select('key, value')
+        .in('key', ['whatsapp_admin_notificacoes', 'whatsapp_n8n_webhook_url']);
+
+      let phone = DEFAULT_ADMIN_PHONE;
+      let webhookUrl = DEFAULT_N8N_WEBHOOK_URL;
+
+      if (Array.isArray(data)) {
+        for (const row of data) {
+          if (row.key === 'whatsapp_admin_notificacoes' && row.value) {
+            const clean = row.value.replace(/\D/g, '');
+            if (clean) phone = clean.startsWith('55') ? clean : `55${clean}`;
+          }
+          if (row.key === 'whatsapp_n8n_webhook_url' && row.value) {
+            webhookUrl = row.value;
+          }
+        }
+      }
+      return { phone, webhookUrl };
+    } catch (e) {
+      console.warn('⚠️ Falha ao carregar configuracao do WhatsApp Admin:', e);
+      return { phone: DEFAULT_ADMIN_PHONE, webhookUrl: DEFAULT_N8N_WEBHOOK_URL };
+    }
+  }
+}
+
+/**
+ * Envia notificação administrativa para o WhatsApp Master do Administrador
  */
 export async function sendAdminWhatsAppNotification(payload: AdminNotificationPayload): Promise<boolean> {
-  const phone = payload.recipientPhone || DEFAULT_ADMIN_PHONE;
+  const config = await getAdminWhatsAppConfig();
+  
+  let targetPhone = payload.recipientPhone ? payload.recipientPhone.replace(/\D/g, '') : config.phone;
+  if (targetPhone && !targetPhone.startsWith('55') && targetPhone.length <= 11) {
+    targetPhone = `55${targetPhone}`;
+  }
+  const phone = targetPhone || DEFAULT_ADMIN_PHONE;
+  const webhookUrl = config.webhookUrl || DEFAULT_N8N_WEBHOOK_URL;
+
   const categoryFormatted = payload.category ? `[${payload.category}]` : '[AVISO ADMIN]';
   const textBody = `🚨 *GSA HUB - Notificação Administrativa*\n\n${categoryFormatted} *${payload.title}*\n\n${payload.message}\n\n📅 ${new Date().toLocaleString('pt-BR')}\n\n_Mensagem enviada via GSA HUB._`;
 
   try {
     // 1. Tentar via n8n Webhook
-    const response = await fetch(N8N_WEBHOOK_URL, {
+    const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -40,7 +95,7 @@ export async function sendAdminWhatsAppNotification(payload: AdminNotificationPa
     });
 
     if (response.ok) {
-      console.log('✅ Notificação de WhatsApp enviada via n8n com sucesso!');
+      console.log(`✅ Notificação de WhatsApp enviada via n8n para ${phone} com sucesso!`);
       return true;
     }
   } catch (err) {
@@ -68,7 +123,7 @@ export async function sendAdminWhatsAppNotification(payload: AdminNotificationPa
 
     const metaData = await metaResponse.json();
     if (metaResponse.ok && !metaData.error) {
-      console.log('✅ Notificação enviada com sucesso via Meta API Direct!');
+      console.log(`✅ Notificação enviada para ${phone} com sucesso via Meta API Direct!`);
       return true;
     } else {
       console.error('❌ Erro no envio Meta API:', metaData);

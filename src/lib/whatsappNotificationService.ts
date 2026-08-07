@@ -882,10 +882,20 @@ export const whatsappNotificationService = {
         payload.fileName = options.fileName;
       }
 
-      const res = await fetch('https://counted-brief-hay-promoting.trycloudflare.com/webhook/send-direct', {
+      const res = await fetch('http://147.15.43.141:5678/webhook/send-whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          phone,
+          message: payload.mensagem,
+          title: 'Notificação GSA HUB',
+          category: 'CLIENTE',
+          timestamp: new Date().toISOString(),
+          mediaBase64: options?.mediaBase64,
+          pdfUrl: options?.pdfUrl,
+          fileName: options?.fileName || 'documento.pdf',
+          ...payload
+        })
       });
 
       if (res.ok) {

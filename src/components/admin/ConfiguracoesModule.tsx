@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import type React from 'react';
-import { Building2, Calculator, CreditCard, Layout, LockKeyhole, MessageSquare, Plus, RefreshCw, Save, Settings, Users, Wallet, X } from 'lucide-react';
+import { Bell, Building2, Calculator, CreditCard, Layout, LockKeyhole, MessageSquare, Plus, RefreshCw, Save, Send, Settings, Users, Wallet, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
+import { sendAdminWhatsAppNotification } from '../../utils/n8nWhatsApp';
 import { CalculatorProAdminPanel } from './CalculatorProAdminPanel';
 import { CalculatorProPaymentConfiguration } from './CalculatorProPaymentConfiguration';
 
@@ -22,6 +23,7 @@ export function ConfiguracoesModule() {
   const [activeTab, setActiveTab] = useState<Tab>('empresa');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingTestAlert, setSendingTestAlert] = useState(false);
   const [company, setCompany] = useState<any>({ razao_social: '', cnpj: '', telefone: '', responsavel: '' });
   const [methods, setMethods] = useState<any[]>([]);
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -131,7 +133,81 @@ export function ConfiguracoesModule() {
 
     {activeTab === 'indicacao' && <Card title="Programa de indicação" icon={Users}><div className="grid gap-4 sm:grid-cols-2"><SelectField label="Recompensa do indicador" value={value('indicador_recompensa_tipo', 'carteira')} onChange={(next) => setValue('indicador_recompensa_tipo', next)} options={[["carteira", "Carteira"], ["pontos", "Pontos"], ["ambos", "Ambos"]]} /><SelectField label="Recompensa do indicado" value={value('indicado_recompensa_tipo', 'desconto')} onChange={(next) => setValue('indicado_recompensa_tipo', next)} options={[["desconto", "Desconto"], ["pontos", "Pontos"], ["ambos", "Ambos"]]} /><NumberField label="Limite na carteira" value={value('indicador_limite_carteira', value('bonus_indicador', '20'))} onChange={(next) => { setValue('indicador_limite_carteira', next); setValue('bonus_indicador', next); }} /><NumberField label="Pontos do indicador" value={value('indicador_valor_pontos', '50')} onChange={(next) => setValue('indicador_valor_pontos', next)} /><NumberField label="Desconto do indicado (%)" value={value('indicado_desconto_porcentagem', value('desconto_indicado_porcentagem', '10'))} onChange={(next) => { setValue('indicado_desconto_porcentagem', next); setValue('desconto_indicado_porcentagem', next); }} /><NumberField label="Pontos do indicado" value={value('indicado_valor_pontos', '50')} onChange={(next) => setValue('indicado_valor_pontos', next)} /><label className="block text-sm font-bold sm:col-span-2">Mensagem de indicação<textarea rows={5} value={value('template_mensagem_indicacao', '')} onChange={(event) => setValue('template_mensagem_indicacao', event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></div><SaveButton saving={saving} onClick={() => void saveSettings(['indicador_recompensa_tipo', 'indicador_limite_carteira', 'indicador_valor_pontos', 'indicado_recompensa_tipo', 'indicado_desconto_porcentagem', 'indicado_valor_pontos', 'template_mensagem_indicacao', 'bonus_indicador', 'desconto_indicado_porcentagem'], 'Programa de indicação salvo.')} /></Card>}
 
-    {activeTab === 'whatsapp' && <Card title="Botão flutuante do WhatsApp" icon={MessageSquare}><div className="grid gap-4 sm:grid-cols-2"><SelectField label="Ativo" value={value('whatsapp_float_ativo', 'true')} onChange={(next) => setValue('whatsapp_float_ativo', next)} options={[["true", "Ativo"], ["false", "Desativado"]]} /><TextField label="Telefone" value={value('whatsapp_float_telefone', '')} onChange={(next) => setValue('whatsapp_float_telefone', next.replace(/\D/g, ''))} /><TextField label="Tooltip" value={value('whatsapp_float_tooltip', 'Falar no WhatsApp')} onChange={(next) => setValue('whatsapp_float_tooltip', next)} /><SelectField label="Tamanho" value={value('whatsapp_float_tamanho', 'M')} onChange={(next) => setValue('whatsapp_float_tamanho', next)} options={[["P", "Pequeno"], ["M", "Médio"], ["G", "Grande"]]} /><SelectField label="Posição" value={value('whatsapp_float_posicao', 'direita')} onChange={(next) => setValue('whatsapp_float_posicao', next)} options={[["direita", "Direita"], ["esquerda", "Esquerda"]]} /><label className="block text-sm font-bold sm:col-span-2">Mensagem inicial<textarea rows={3} value={value('whatsapp_float_mensagem', '')} onChange={(event) => setValue('whatsapp_float_mensagem', event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></div><SaveButton saving={saving} onClick={() => void saveSettings(['whatsapp_float_ativo', 'whatsapp_float_telefone', 'whatsapp_float_mensagem', 'whatsapp_float_tamanho', 'whatsapp_float_posicao', 'whatsapp_float_tooltip'], 'Configurações do WhatsApp salvas.')} /></Card>}
+    {activeTab === 'whatsapp' && <section className="space-y-6">
+      <Card title="WhatsApp Master — Notificações Administrativas (Painel Admin)" icon={MessageSquare}>
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 mb-5 text-sm text-indigo-950 leading-relaxed">
+          <p className="font-black text-indigo-900 flex items-center gap-2">
+            <Bell className="h-4 w-4 text-indigo-600" /> Receptor 100% de Notificações do Sistema
+          </p>
+          <p className="mt-1 text-xs text-indigo-800/80">
+            Este número de WhatsApp receberá <strong>100% de todas as notificações e alertas</strong> gerados pelo painel administrativo (alertas técnicos de VPS/banco, solicitações de clientes, cadastro de fornecedores, demandas de colaboradores, relatórios, etc.) via API integrada no n8n.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextField 
+            label="Telefone WhatsApp Master (Com DDD)" 
+            value={value('whatsapp_admin_notificacoes', '5511920857756')} 
+            onChange={(next) => setValue('whatsapp_admin_notificacoes', next.replace(/\D/g, ''))} 
+          />
+          <TextField 
+            label="URL Webhook API n8n" 
+            value={value('whatsapp_n8n_webhook_url', 'http://147.15.43.141:5678/webhook/send-whatsapp')} 
+            onChange={(next) => setValue('whatsapp_n8n_webhook_url', next)} 
+          />
+        </div>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <SaveButton 
+            saving={saving} 
+            onClick={() => void saveSettings(['whatsapp_admin_notificacoes', 'whatsapp_n8n_webhook_url'], 'WhatsApp Master de Notificações salvo com sucesso.')} 
+            label="Salvar WhatsApp Master" 
+          />
+          <button
+            type="button"
+            disabled={sendingTestAlert || saving}
+            onClick={async () => {
+              setSendingTestAlert(true);
+              try {
+                const targetNumber = value('whatsapp_admin_notificacoes', '5511920857756');
+                const ok = await sendAdminWhatsAppNotification({
+                  title: 'Alerta de Teste de Configuração',
+                  message: `Teste de recebimento de notificações administrativas no WhatsApp registrado (${targetNumber}). O sistema n8n está operacional!`,
+                  category: 'SISTEMA',
+                  recipientPhone: targetNumber
+                });
+                if (ok) {
+                  toast.success(`Alerta de teste enviado com sucesso para ${targetNumber}!`);
+                } else {
+                  toast.error('Não foi possível enviar o alerta de teste. Verifique a URL do n8n.');
+                }
+              } catch (e: any) {
+                toast.error('Erro no envio: ' + (e?.message || 'Erro desconhecido'));
+              } finally {
+                setSendingTestAlert(false);
+              }
+            }}
+            className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-black text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-md shadow-emerald-600/20 text-sm"
+          >
+            <Send className={`h-4 w-4 ${sendingTestAlert ? 'animate-bounce' : ''}`} />
+            {sendingTestAlert ? 'Enviando Alerta...' : 'Enviar Alerta de Teste Agora'}
+          </button>
+        </div>
+      </Card>
+
+      <Card title="Botão Flutuante do WhatsApp (Portal do Cliente)" icon={MessageSquare}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SelectField label="Ativo" value={value('whatsapp_float_ativo', 'true')} onChange={(next) => setValue('whatsapp_float_ativo', next)} options={[["true", "Ativo"], ["false", "Desativado"]]} />
+          <TextField label="Telefone do Botão Flutuante" value={value('whatsapp_float_telefone', '')} onChange={(next) => setValue('whatsapp_float_telefone', next.replace(/\D/g, ''))} />
+          <TextField label="Tooltip" value={value('whatsapp_float_tooltip', 'Falar no WhatsApp')} onChange={(next) => setValue('whatsapp_float_tooltip', next)} />
+          <SelectField label="Tamanho" value={value('whatsapp_float_tamanho', 'M')} onChange={(next) => setValue('whatsapp_float_tamanho', next)} options={[["P", "Pequeno"], ["M", "Médio"], ["G", "Grande"]]} />
+          <SelectField label="Posição" value={value('whatsapp_float_posicao', 'direita')} onChange={(next) => setValue('whatsapp_float_posicao', next)} options={[["direita", "Direita"], ["esquerda", "Esquerda"]]} />
+          <label className="block text-sm font-bold sm:col-span-2">
+            Mensagem inicial
+            <textarea rows={3} value={value('whatsapp_float_mensagem', '')} onChange={(event) => setValue('whatsapp_float_mensagem', event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" />
+          </label>
+        </div>
+        <SaveButton saving={saving} onClick={() => void saveSettings(['whatsapp_float_ativo', 'whatsapp_float_telefone', 'whatsapp_float_mensagem', 'whatsapp_float_tamanho', 'whatsapp_float_posicao', 'whatsapp_float_tooltip'], 'Configurações do WhatsApp flutuante salvas.')} />
+      </Card>
+    </section>}
 
     {activeTab === 'portal' && <Card title="Modal de indicação no portal" icon={Layout}><div className="grid gap-4 sm:grid-cols-2"><SelectField label="Ativo" value={value('modal_indicacao_ativo', 'true')} onChange={(next) => setValue('modal_indicacao_ativo', next)} options={[["true", "Ativo"], ["false", "Desativado"]]} /><SelectField label="Tamanho" value={value('modal_indicacao_tamanho', 'md')} onChange={(next) => setValue('modal_indicacao_tamanho', next)} options={[["sm", "Pequeno"], ["md", "Médio"], ["lg", "Grande"]]} /><TextField label="Título" value={value('modal_indicacao_titulo', 'Você foi indicado!')} onChange={(next) => setValue('modal_indicacao_titulo', next)} /><TextField label="Texto do botão" value={value('modal_indicacao_texto_botao', 'Solicitar Serviços')} onChange={(next) => setValue('modal_indicacao_texto_botao', next)} /><TextField label="URL do botão" value={value('modal_indicacao_url_botao', '')} onChange={(next) => setValue('modal_indicacao_url_botao', next)} /><TextField label="Módulo de destino" value={value('modal_indicacao_modulo_destino', 'orcamentos')} onChange={(next) => setValue('modal_indicacao_modulo_destino', next)} /><label className="block text-sm font-bold sm:col-span-2">Descrição<textarea rows={4} value={value('modal_indicacao_descricao', '')} onChange={(event) => setValue('modal_indicacao_descricao', event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></div><SaveButton saving={saving} onClick={() => void saveSettings(['modal_indicacao_ativo', 'modal_indicacao_titulo', 'modal_indicacao_descricao', 'modal_indicacao_url_botao', 'modal_indicacao_acao_botao', 'modal_indicacao_modulo_destino', 'modal_indicacao_texto_botao', 'modal_indicacao_tamanho'], 'Configurações do portal salvas.')} /></Card>}
 

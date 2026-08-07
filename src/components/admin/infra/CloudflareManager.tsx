@@ -194,9 +194,7 @@ export function CloudflareManager() {
 
           {/* Indicador 4: Cloudflare Pages & R2 Storage — CLICÁVEL & DINÂMICO */}
           {(() => {
-            const calculatedR2Mb = r2Files.length > 0
-              ? r2Files.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)
-              : metrics.pagesAndR2.r2StorageUsedMb;
+            const calculatedR2Mb = r2Files.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024);
             const calculatedR2Percent = (calculatedR2Mb / metrics.pagesAndR2.r2LimitMb) * 100;
             return (
               <div 

@@ -1601,15 +1601,24 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      {f.tem_cobranca && onNavigate ? (
-                        <button onClick={() => onNavigate('cobranca', 'fila', f.id)} className="mr-2 px-3 py-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white hover:border-transparent transition-all shadow-sm">
-                          Ver Cobrança
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-2">
+                        {f.tem_cobranca && onNavigate ? (
+                          <button 
+                            onClick={() => onNavigate('cobranca', 'fila', f.id)} 
+                            className="px-3.5 py-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white hover:border-transparent transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+                          >
+                            <ShieldAlert className="w-3.5 h-3.5" />
+                            Ver Cobrança
+                          </button>
+                        ) : null}
+                        <button 
+                          onClick={() => { setSelectedFatura(f); setIsDetailOpen(true); }} 
+                          className="px-4 py-2 rounded-xl bg-neutral-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-md whitespace-nowrap cursor-pointer"
+                        >
+                          Gerenciar
                         </button>
-                      ) : null}
-                      <button onClick={() => { setSelectedFatura(f); setIsDetailOpen(true); }} className="px-4 py-2 rounded-xl bg-neutral-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-md">
-                        Gerenciar
-                      </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

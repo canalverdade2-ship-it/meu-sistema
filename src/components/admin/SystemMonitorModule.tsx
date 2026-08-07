@@ -55,6 +55,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
   const [userSearch, setUserSearch] = useState('');
   const [tablesOpen, setTablesOpen] = useState(false);
   const [activeCardModal, setActiveCardModal] = useState<'database' | 'storage' | 'users' | 'tables' | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchFallbackUsers = useCallback(async () => {
     try {
@@ -116,14 +117,14 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       }
 
       // 4. Prestadores
-      const { data: pres } = await supabase.from('prestadores').select('id, nome, email, created_at, status').limit(100);
+      const { data: pres } = await supabase.from('prestadores').select('id, nome_razao, email, created_at, status').limit(100);
       if (pres && pres.length > 0) {
-        pres.forEach(c => {
+        pres.forEach((c: any) => {
           if (c.id && !seenIds.has(c.id)) {
             seenIds.add(c.id);
             users.push({
               id: c.id,
-              nome: c.nome || 'Prestador GSA',
+              nome: c.nome_razao || 'Prestador GSA',
               email: c.email || '—',
               tipo: 'Prestador de Serviço',
               status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
@@ -134,17 +135,17 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       }
 
       // 5. Afiliados
-      const { data: afils } = await supabase.from('gsa_afiliados').select('id, nome, email, created_at, status').limit(100);
+      const { data: afils } = await supabase.from('gsa_afiliados').select('id, nome_divulgacao, created_at, status').limit(100);
       if (afils && afils.length > 0) {
-        afils.forEach(c => {
+        afils.forEach((c: any) => {
           if (c.id && !seenIds.has(c.id)) {
             seenIds.add(c.id);
             users.push({
               id: c.id,
-              nome: c.nome || 'Afiliado GSA',
-              email: c.email || '—',
+              nome: c.nome_divulgacao || 'Afiliado GSA',
+              email: '—',
               tipo: 'Afiliado GSA',
-              status: c.status === 'inativo' || c.status === 'bloqueado' ? 'Bloqueado' : 'Ativo',
+              status: c.status === 'encerrado' ? 'Bloqueado' : 'Ativo',
               created_at: c.created_at
             });
           }
@@ -302,7 +303,26 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
               <MessageSquare className={`h-4 w-4 ${sendingAlert ? 'animate-bounce' : ''}`} />
               {sendingAlert ? 'Enviando...' : 'Enviar Alerta WhatsApp'}
             </button>
-            <button type="button" onClick={() => void load(true)} disabled={refreshing} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Atualizar</button>
+            <button 
+              type="button" 
+              onClick={async () => {
+                setRefreshing(true);
+                setRefreshKey(prev => prev + 1);
+                try {
+                  await load(true);
+                  await fetchFallbackUsers();
+                  toast.success('Todas as tabelas e dados atualizados em tempo real!');
+                } catch (e: any) {
+                  toast.error('Erro ao atualizar: ' + (e?.message || ''));
+                } finally {
+                  setRefreshing(false);
+                }
+              }} 
+              disabled={refreshing} 
+              className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-60 hover:bg-neutral-100 transition-colors shadow-md cursor-pointer"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Atualizar
+            </button>
           </div>
         </div>
 
@@ -332,14 +352,14 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       {/* Conteúdo da Aba VPS */}
       {activeTab === 'vps' && (
         <div className="space-y-6">
-          <OracleMetricsPanel />
-          <VPSTerminal />
+          <OracleMetricsPanel key={`vps-${refreshKey}`} />
+          <VPSTerminal key={`term-${refreshKey}`} />
         </div>
       )}
 
       {/* Conteúdo da Aba Cloudflare */}
       {activeTab === 'cloudflare' && (
-        <CloudflareManager />
+        <CloudflareManager key={`cf-${refreshKey}`} />
       )}
 
       {/* Conteúdo da Aba Database (Original) */}
