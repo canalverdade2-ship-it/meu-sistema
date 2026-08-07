@@ -40,7 +40,7 @@ BEGIN
       'last_sign_in_at', u.last_sign_in_at,
       'nome', COALESCE(col.nome, cli.nome, forn.razao_social, pres.nome, afil.nome, (u.raw_user_meta_data->>'nome'), 'Usuário'),
       'tipo', CASE
-        WHEN col.e_master = true OR u.email = 'admin@gsa.com' THEN 'Administrador Master'
+        WHEN col.email = 'admin@gsa.com' OR u.email = 'admin@gsa.com' THEN 'Administrador Master'
         WHEN col.id IS NOT NULL THEN 'Colaborador GSA'
         WHEN cli.id IS NOT NULL THEN 'Cliente GSA'
         WHEN forn.id IS NOT NULL THEN 'Fornecedor GSA'
@@ -49,17 +49,17 @@ BEGIN
         ELSE COALESCE(u.role, 'Usuário Registrado')
       END,
       'status', CASE
-        WHEN col.ativo = false OR cli.status = 'bloqueado' OR forn.status = 'inativo' THEN 'Bloqueado'
+        WHEN col.status = 'inativo' OR cli.status = 'inativo' OR cli.status = 'bloqueado' THEN 'Bloqueado'
         ELSE 'Ativo'
       END
     ) ORDER BY u.created_at DESC), '[]'::jsonb)
     INTO v_users_list
     FROM auth.users u
-    LEFT JOIN public.gsa_colaboradores col ON col.auth_user_id = u.id OR (u.email IS NOT NULL AND lower(col.email) = lower(u.email))
-    LEFT JOIN public.gsa_clientes cli ON cli.auth_user_id = u.id OR (u.email IS NOT NULL AND lower(cli.email) = lower(u.email))
-    LEFT JOIN public.gsa_fornecedores forn ON forn.auth_user_id = u.id OR (u.email IS NOT NULL AND lower(forn.email) = lower(u.email))
-    LEFT JOIN public.gsa_prestadores pres ON pres.auth_user_id = u.id OR (u.email IS NOT NULL AND lower(pres.email) = lower(u.email))
-    LEFT JOIN public.gsa_afiliados afil ON afil.auth_user_id = u.id OR (u.email IS NOT NULL AND lower(afil.email) = lower(u.email));
+    LEFT JOIN public.colaboradores col ON col.email = u.email
+    LEFT JOIN public.clientes cli ON cli.email = u.email
+    LEFT JOIN public.fornecedores forn ON forn.email = u.email
+    LEFT JOIN public.prestadores pres ON pres.email = u.email
+    LEFT JOIN public.gsa_afiliados afil ON afil.email = u.email;
   EXCEPTION WHEN OTHERS THEN
     v_users_list := '[]'::jsonb;
   END;

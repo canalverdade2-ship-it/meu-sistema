@@ -61,47 +61,47 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       const users: any[] = [];
       const seenIds = new Set<string>();
 
-      // Colaboradores
-      const { data: cols } = await supabase.from('gsa_colaboradores').select('id, nome, email, created_at, status, e_master');
-      if (cols) {
+      // 1. Colaboradores
+      const { data: cols } = await supabase.from('colaboradores').select('id, nome, email, created_at, status');
+      if (cols && cols.length > 0) {
         cols.forEach(c => {
-          if (!seenIds.has(c.id)) {
+          if (c.id && !seenIds.has(c.id)) {
             seenIds.add(c.id);
             users.push({
               id: c.id,
               nome: c.nome || 'Colaborador GSA',
               email: c.email || '—',
-              tipo: c.e_master || c.email === 'admin@gsa.com' ? 'Administrador Master' : 'Colaborador GSA',
-              status: c.status === 'inativo' || c.ativo === false ? 'Bloqueado' : 'Ativo',
+              tipo: c.email === 'admin@gsa.com' || (c.nome && c.nome.toLowerCase().includes('admin')) ? 'Administrador Master' : 'Colaborador GSA',
+              status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
               created_at: c.created_at
             });
           }
         });
       }
 
-      // Clientes
-      const { data: clis } = await supabase.from('gsa_clientes').select('id, nome, email, created_at, status').limit(100);
-      if (clis) {
+      // 2. Clientes
+      const { data: clis } = await supabase.from('clientes').select('id, nome, email, data_cadastro, status').limit(100);
+      if (clis && clis.length > 0) {
         clis.forEach(c => {
-          if (!seenIds.has(c.id)) {
+          if (c.id && !seenIds.has(c.id)) {
             seenIds.add(c.id);
             users.push({
               id: c.id,
               nome: c.nome || 'Cliente GSA',
               email: c.email || '—',
               tipo: 'Cliente GSA',
-              status: c.status === 'bloqueado' ? 'Bloqueado' : 'Ativo',
-              created_at: c.created_at
+              status: c.status === 'inativo' || c.status === 'bloqueado' ? 'Bloqueado' : 'Ativo',
+              created_at: c.data_cadastro
             });
           }
         });
       }
 
-      // Fornecedores
-      const { data: forns } = await supabase.from('gsa_fornecedores').select('id, razao_social, email, created_at, status').limit(100);
-      if (forns) {
+      // 3. Fornecedores
+      const { data: forns } = await supabase.from('fornecedores').select('id, razao_social, email, created_at, status').limit(100);
+      if (forns && forns.length > 0) {
         forns.forEach(c => {
-          if (!seenIds.has(c.id)) {
+          if (c.id && !seenIds.has(c.id)) {
             seenIds.add(c.id);
             users.push({
               id: c.id,
@@ -115,11 +115,11 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
         });
       }
 
-      // Prestadores
-      const { data: pres } = await supabase.from('gsa_prestadores').select('id, nome, email, created_at, status').limit(100);
-      if (pres) {
+      // 4. Prestadores
+      const { data: pres } = await supabase.from('prestadores').select('id, nome, email, created_at, status').limit(100);
+      if (pres && pres.length > 0) {
         pres.forEach(c => {
-          if (!seenIds.has(c.id)) {
+          if (c.id && !seenIds.has(c.id)) {
             seenIds.add(c.id);
             users.push({
               id: c.id,
@@ -133,11 +133,11 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
         });
       }
 
-      // Afiliados
+      // 5. Afiliados
       const { data: afils } = await supabase.from('gsa_afiliados').select('id, nome, email, created_at, status').limit(100);
-      if (afils) {
+      if (afils && afils.length > 0) {
         afils.forEach(c => {
-          if (!seenIds.has(c.id)) {
+          if (c.id && !seenIds.has(c.id)) {
             seenIds.add(c.id);
             users.push({
               id: c.id,
