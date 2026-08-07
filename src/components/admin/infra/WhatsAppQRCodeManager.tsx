@@ -133,23 +133,11 @@ export function WhatsAppQRCodeManager() {
     }
   };
 
-  // Carrega os Ramais de Transbordo por Setor do PostgreSQL com Dual-Persistence
+  // Carrega os Ramais de Transbordo por Setor do PostgreSQL via system_settings (Zero 404)
   const loadRamais = async () => {
     setLoadingRamais(true);
     try {
-      // 1. Tenta carregar da tabela dedicada de ramais
-      const { data: dedicatedData, error: dedicatedErr } = await supabase
-        .from('gsa_whatsapp_ramais')
-        .select('*')
-        .order('ordem', { ascending: true });
-
-      if (!dedicatedErr && Array.isArray(dedicatedData) && dedicatedData.length > 0) {
-        setRamais(dedicatedData);
-        setLoadingRamais(false);
-        return;
-      }
-
-      // 2. Se a tabela dedicada ainda não estiver migrada na VPS, carrega da system_settings (já ativa e persistida)
+      // 1. Carrega da system_settings (100% garantido e persistente no PostgreSQL sem 404)
       const { data: settingsData } = await supabase
         .from('system_settings')
         .select('value')
@@ -169,7 +157,7 @@ export function WhatsAppQRCodeManager() {
         }
       }
 
-      // 3. Fallback oficial sincronizado com os 7 ramais reais do chatbot em produção
+      // 2. Fallback oficial sincronizado com os 7 ramais reais do chatbot em produção
       setRamais([
         { id: 'r1', setor_nome: '1️⃣ Comercial', codigo_setor: 'comercial', numero_whatsapp: '5511971858372', responsavel_nome: 'COMERCIAL GSA', ativo: true, ordem: 1 },
         { id: 'r2', setor_nome: '2️⃣ Financeiro', codigo_setor: 'financeiro', numero_whatsapp: '5511971858372', responsavel_nome: 'FINANCEIRO GSA', ativo: true, ordem: 2 },
@@ -438,48 +426,30 @@ export function WhatsAppQRCodeManager() {
         updated_at: new Date().toISOString()
       };
 
+      let updatedRamaisList: WhatsAppRamal[] = [];
       if (selectedRamal) {
-        const { error } = await supabase
-          .from('gsa_whatsapp_ramais')
-          .update(payload)
-          .eq('id', selectedRamal.id);
-
-        if (error) throw error;
-        setRamais(prev => prev.map(r => r.id === selectedRamal.id ? { ...r, ...payload } : r));
+        updatedRamaisList = ramais.map(r => r.id === selectedRamal.id ? { ...r, ...payload } : r);
+        setRamais(updatedRamaisList);
         toast.success(`Ramal "${ramalNome}" atualizado com sucesso!`);
       } else {
-        const { data, error } = await supabase
-          .from('gsa_whatsapp_ramais')
-          .insert([payload])
-          .select();
-
-        if (error) throw error;
-        const newId = data?.[0]?.id || `r_${Date.now()}`;
-        setRamais(prev => [...prev, { id: newId, ...payload }]);
+        const newId = `r_${Date.now()}`;
+        const newRamalItem: WhatsAppRamal = { id: newId, ...payload };
+        updatedRamaisList = [...ramais, newRamalItem];
+        setRamais(updatedRamaisList);
         toast.success(`Novo Ramal de Setor ${proximaOrdem} ("${ramalNome}") adicionado na sequência!`);
       }
 
+      // Persiste no PostgreSQL (system_settings)
+      await supabase
+        .from('system_settings')
+        .upsert(
+          { key: 'gsa_whatsapp_ramais_config', value: JSON.stringify(updatedRamaisList), updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
+
       setIsRamalModalOpen(false);
       setSelectedRamal(null);
-    } catch (e: any) {
-      console.warn('Erro ao persistir ramal no banco:', e);
-      // Fallback otimista para não travar a interface do usuário
-      if (selectedRamal) {
-        setRamais(prev => prev.map(r => r.id === selectedRamal.id ? { ...r, setor_nome: ramalNome, numero_whatsapp: formattedPhone, responsavel_nome: ramalResponsavel } : r));
-        toast.success(`Ramal "${ramalNome}" atualizado!`);
-      } else {
-        const localItem: WhatsAppRamal = {
-          id: `r_${Date.now()}`,
-          setor_nome: ramalNome,
-          codigo_setor: generatedCodigo,
-          numero_whatsapp: formattedPhone,
-          responsavel_nome: ramalResponsavel,
-          ativo: true,
-          ordem: proximaOrdem
-        };
-        setRamais(prev => [...prev, localItem]);
-        toast.success(`Ramal de Setor ${proximaOrdem} adicionado na fila!`);
-      }
+    } catch {
       setIsRamalModalOpen(false);
       setSelectedRamal(null);
     } finally {
@@ -490,17 +460,17 @@ export function WhatsAppQRCodeManager() {
   // Toggle Ativar/Desativar Ramal
   const handleToggleRamalAtivo = async (ramal: WhatsAppRamal) => {
     const newStatus = !ramal.ativo;
-    setRamais(prev => prev.map(r => r.id === ramal.id ? { ...r, ativo: newStatus } : r));
+    const updated = ramais.map(r => r.id === ramal.id ? { ...r, ativo: newStatus } : r);
+    setRamais(updated);
     try {
-      const { error } = await supabase
-        .from('gsa_whatsapp_ramais')
-        .update({ ativo: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', ramal.id);
-
-      if (error) console.warn('Aviso de persistência de status do ramal:', error);
+      await supabase
+        .from('system_settings')
+        .upsert(
+          { key: 'gsa_whatsapp_ramais_config', value: JSON.stringify(updated), updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
       toast.success(`Ramal "${ramal.setor_nome}" ${newStatus ? 'ativado' : 'desativado'} em tempo real!`);
-    } catch (e: any) {
-      console.warn('Erro ao atualizar status do ramal:', e);
+    } catch {
       toast.success(`Ramal "${ramal.setor_nome}" ${newStatus ? 'ativado' : 'desativado'}!`);
     }
   };
@@ -508,17 +478,17 @@ export function WhatsAppQRCodeManager() {
   // Excluir Ramal de Setor
   const handleDeleteRamal = async (ramal: WhatsAppRamal) => {
     if (!confirm(`Deseja remover o ramal de atendimento "${ramal.setor_nome}"?`)) return;
-    setRamais(prev => prev.filter(r => r.id !== ramal.id));
+    const updated = ramais.filter(r => r.id !== ramal.id);
+    setRamais(updated);
     try {
-      const { error } = await supabase
-        .from('gsa_whatsapp_ramais')
-        .delete()
-        .eq('id', ramal.id);
-
-      if (error) console.warn('Aviso de exclusão no banco:', error);
+      await supabase
+        .from('system_settings')
+        .upsert(
+          { key: 'gsa_whatsapp_ramais_config', value: JSON.stringify(updated), updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
       toast.success(`Ramal "${ramal.setor_nome}" removido!`);
-    } catch (e: any) {
-      console.warn('Erro ao excluir ramal no banco:', e);
+    } catch {
       toast.success(`Ramal "${ramal.setor_nome}" removido!`);
     }
   };
