@@ -1,26 +1,25 @@
 import { useState, useEffect } from 'react';
 import { QrCode, RefreshCw, CheckCircle2, AlertCircle, PhoneCall, ShieldCheck, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { supabase } from '../../../lib/supabase';
 
 export function WhatsAppQRCodeManager() {
   const [loading, setLoading] = useState(false);
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [status, setStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'unknown'>('unknown');
-  const [instanceName, setInstanceName] = useState('GSA_WhatsApp');
+  const [instanceName] = useState('GSA_WhatsApp');
   const [targetIp, setTargetIp] = useState<'147.15.43.141' | '163.176.97.152'>('147.15.43.141');
 
   const checkConnectionStatus = async (ip = targetIp) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://${ip}:5678/webhook/send-whatsapp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: '5511971858372', message: 'ping_status_check' })
+      const { data, error } = await supabase.functions.invoke('vps-api/whatsapp-status', {
+        headers: { 'x-target-vps': ip }
       });
-      if (res.ok) {
+      if (!error && data?.success) {
         setStatus('connected');
-        toast.success(`Serviço de WhatsApp Ativo na VPS (${ip})`);
+        toast.success(`Serviço de WhatsApp Conectado na VPS (${ip})`);
       } else {
         setStatus('disconnected');
       }
@@ -37,29 +36,20 @@ export function WhatsAppQRCodeManager() {
     setPairingCode(null);
     
     try {
-      // Tenta endpoint da Evolution API na VPS escolhida
-      const res = await fetch(`http://${targetIp}:8080/instance/connect/${instanceName}`, {
-        method: 'GET',
-        headers: {
-          'apikey': 'gsa_hub_evolution_token_2026',
-          'Content-Type': 'application/json'
-        }
+      const { data, error } = await supabase.functions.invoke('vps-api/whatsapp-qrcode', {
+        headers: { 'x-target-vps': targetIp }
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.base64) {
-          setQrCodeBase64(data.base64);
-          if (data?.pairingCode) setPairingCode(data.pairingCode);
-          setStatus('connecting');
-          toast.success('QR Code gerado! Aponte o WhatsApp do celular.');
-          return;
-        }
+      if (!error && data?.base64) {
+        setQrCodeBase64(data.base64);
+        if (data?.pairingCode) setPairingCode(data.pairingCode);
+        setStatus('connecting');
+        toast.success('QR Code gerado com sucesso! Aponte a câmera do WhatsApp.');
+        return;
       }
-
-      // Se falhar a chamada direta da porta 8080 por bloqueio CORS ou firewall, avisa o usuário com fallback guiado
-      toast.error(`A API da Evolution na porta 8080 (${targetIp}) requer pareamento local. Use o comando de inicialização no terminal.`);
-      setStatus('disconnected');
+      if (error) {
+        toast.error('Erro na geração do QR Code: ' + (error.message || 'Verifique o serviço na VPS'));
+      }
     } catch (e: any) {
       toast.error('Erro ao comunicar com a Evolution API: ' + e.message);
       setStatus('disconnected');
