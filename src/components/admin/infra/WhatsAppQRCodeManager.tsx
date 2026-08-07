@@ -1,7 +1,19 @@
 import { useState, useEffect } from 'react';
-import { QrCode, RefreshCw, CheckCircle2, AlertCircle, PhoneCall, ShieldCheck, Zap } from 'lucide-react';
+import { QrCode, RefreshCw, CheckCircle2, AlertCircle, PhoneCall, ShieldCheck, Zap, Smartphone, Radio, Check } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../../lib/supabase';
+import { getAdminWhatsAppConfig } from '../../../utils/n8nWhatsApp';
+
+function formatPhoneDisplay(raw: string) {
+  const digits = (raw || '').replace(/\D/g, '');
+  if (digits.length === 13) {
+    return `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9)}`;
+  }
+  if (digits.length === 11) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+  return raw || 'Não configurado';
+}
 
 export function WhatsAppQRCodeManager() {
   const [loading, setLoading] = useState(false);
@@ -10,6 +22,22 @@ export function WhatsAppQRCodeManager() {
   const [status, setStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'unknown'>('unknown');
   const [instanceName] = useState('GSA_WhatsApp');
   const [targetIp, setTargetIp] = useState<'147.15.43.141' | '163.176.97.152'>('147.15.43.141');
+  const [phones, setPhones] = useState({
+    master: '5511971858372',
+    suporte: '5511920857756'
+  });
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const { phone } = await getAdminWhatsAppConfig();
+        setPhones(prev => ({ ...prev, master: phone || '5511971858372' }));
+      } catch (e) {
+        console.warn('Erro ao carregar configuracoes de telefones:', e);
+      }
+    }
+    void loadConfig();
+  }, []);
 
   const checkConnectionStatus = async (ip = targetIp) => {
     setLoading(true);
@@ -166,6 +194,45 @@ export function WhatsAppQRCodeManager() {
               <ShieldCheck className="w-5 h-5 text-emerald-400" />
               <span className="font-bold text-white text-sm">Baileys WA Web v2.3</span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista de Celulares Anexados e Ativos na API */}
+      <div className="bg-neutral-950/80 border border-neutral-800 rounded-xl p-5 space-y-4">
+        <h4 className="text-xs font-black uppercase tracking-widest text-neutral-400 flex items-center gap-2">
+          <Smartphone className="w-4 h-4 text-emerald-400" /> Dispositivos e Linhas Conectadas à API (Em Tempo Real)
+        </h4>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-neutral-900 border border-neutral-800/90 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
+                <Radio className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <span className="text-[11px] font-mono text-neutral-400 uppercase font-semibold block">WhatsApp Master (Notificações & Cobranças)</span>
+                <span className="text-sm font-black text-white font-mono">{formatPhoneDisplay(phones.master)}</span>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+              <Check className="w-3 h-3" /> Ativo
+            </span>
+          </div>
+
+          <div className="bg-neutral-900 border border-neutral-800/90 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20">
+                <PhoneCall className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[11px] font-mono text-neutral-400 uppercase font-semibold block">WhatsApp Suporte (Botão Flutuante)</span>
+                <span className="text-sm font-black text-white font-mono">{formatPhoneDisplay(phones.suporte)}</span>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+              <Check className="w-3 h-3" /> Ativo
+            </span>
           </div>
         </div>
       </div>
