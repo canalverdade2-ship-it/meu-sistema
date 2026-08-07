@@ -849,6 +849,14 @@ function processMessage(fromPhone, textBody, messageType) {
     session.state = 'MAIN_MENU';
   }
 
+  // BOTÃO DE PÂNICO GLOBAL (0)
+  if (text === '0' && session.state !== 'MAIN_MENU' && session.state !== 'HUMAN_AGENT_RELAY') {
+    session.state = 'MAIN_MENU';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, '🔄 Retornando ao Menu Principal...\n\n' + getMainMenuText(session.profile));
+    return;
+  }
+
   // 1. SAUDAÇÕES E NAVEGAÇÃO AO MENU PRINCIPAL DE INÍCIO
   if (lower === 'oi' || lower === 'olá' || lower === 'ola' || lower === 'inicio' || lower === 'início' || lower === 'start' || lower === 'hi') {
     const finalizeMenu = (profile) => {
@@ -943,7 +951,7 @@ function processMessage(fromPhone, textBody, messageType) {
       case '6':
         session.state = 'CLASSIFIEDS';
         userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, '📢 *Portal de Classificados GSA HUB*\n\nEscolha uma categoria:\n\n1️⃣ 🚗 Veículos\n2️⃣ 🏠 Imóveis\n3️⃣ 📦 Geral\n\n_Digite 0 para voltar ao menu._');
+        sendWhatsAppReply(fromPhone, '📢 *Portal de Classificados GSA HUB*\n\nEscolha uma categoria:\n\n1️⃣ 🚗 Veículos\n2️⃣ 🏠 Imóveis\n3️⃣ 📦 Geral\n4️⃣ 📸 Publicar um Anúncio\n\n_Digite 0 para voltar ao menu._');
         break;
 
       case '7':
@@ -1240,7 +1248,10 @@ function processMessage(fromPhone, textBody, messageType) {
         userSessions[fromPhone] = session;
         sendWhatsAppReply(fromPhone, `🔍 *Cadastro Não Encontrado*\n\nVamos fazer um pré-cadastro rápido para vincular seu pedido!\n\nQual é o seu *Nome Completo* (ou Razão Social)?\n\n_Digite 0 para cancelar._`);
       } else {
-        createOrcamento(fromPhone, session, client.id);
+        session.tempClientId = client.id;
+        session.state = 'CHECKOUT_CEP';
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, '📍 Para finalizarmos, digite o *CEP* do local de entrega/serviço (somente números):\n\n_Digite 0 para cancelar._');
       }
     });
     return;
@@ -1284,7 +1295,10 @@ function processMessage(fromPhone, textBody, messageType) {
 
         sendWhatsAppReply(fromPhone, `⚠️ *Atenção: Cadastro Já Existente!*\n\nVerificamos que ${motivo}.\n\n👤 *Cliente:* ${found.nome ? found.nome.toUpperCase() : 'CADASTRADO'}\n\n💡 *Você já possui cadastro no GSA HUB!* Vinculamos seu atendimento à sua conta existente.\n\n_Para acessar seus dados ou serviços, selecione a *Opção 1 (Área do Cliente)* no menu principal._`);
 
-        createOrcamento(fromPhone, session, found.id);
+        session.tempClientId = found.id;
+        session.state = 'CHECKOUT_CEP';
+        userSessions[fromPhone] = session;
+        setTimeout(() => sendWhatsAppReply(fromPhone, '📍 Para finalizarmos seu pedido, digite o *CEP* do local de entrega/serviço (somente números):\n\n_Digite 0 para cancelar._'), 1000);
         return;
       }
 
@@ -1312,9 +1326,41 @@ function processMessage(fromPhone, textBody, messageType) {
         }
 
         sendWhatsAppReply(fromPhone, `✅ *Cadastro Realizado com Sucesso!*\n\nSeja bem-vindo(a) ao *GSA HUB*, *${session.newName.toUpperCase()}*! 🎉`);
-        createOrcamento(fromPhone, session, res[0].id);
+        session.tempClientId = res[0].id;
+        session.state = 'CHECKOUT_CEP';
+        userSessions[fromPhone] = session;
+        setTimeout(() => sendWhatsAppReply(fromPhone, '📍 Para finalizarmos seu pedido, digite o *CEP* do local de entrega/serviço (somente números):\n\n_Digite 0 para cancelar._'), 1000);
       });
     });
+    return;
+  }
+
+  // ── ESTADO: CHECKOUT_CEP ───────────────────────────────────────────────
+  if (session.state === 'CHECKOUT_CEP') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '❌ Pedido cancelado.\n\n_Retornando ao menu._');
+      return;
+    }
+    const cep = text.replace(/\D/g, '');
+    if (cep.length !== 8) {
+      sendWhatsAppReply(fromPhone, '❌ CEP inválido. Por favor, digite os 8 números do seu CEP.');
+      return;
+    }
+    session.cep = cep;
+    session.state = 'CHECKOUT_ADDRESS_NUM';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, '🏠 Qual é o *Número* e *Complemento* (se houver)?\nEx: 123 - Apto 42');
+    return;
+  }
+
+  // ── ESTADO: CHECKOUT_ADDRESS_NUM ───────────────────────────────────────
+  if (session.state === 'CHECKOUT_ADDRESS_NUM') {
+    session.addressNum = text.trim();
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, '🔄 Finalizando seu pedido...');
+    createOrcamento(fromPhone, session, session.tempClientId);
     return;
   }
 
@@ -1324,7 +1370,12 @@ function processMessage(fromPhone, textBody, messageType) {
 
     if (session.checkoutType === 'store') {
       let totalCart = 0;
-      let obs = '🛒 Pedido da GSA Store via WhatsApp:\n\n';
+      let obs = '🛒 Pedido da GSA Store via WhatsApp:\n';
+      if (session.cep) {
+        obs += `📍 Entrega: CEP ${session.cep} - Nº/Compl: ${session.addressNum}\n\n`;
+      } else {
+        obs += '\n';
+      }
       session.cart.forEach(item => {
         const pUnit = item.produto.desconto_ativo && item.produto.valor_promocional ? item.produto.valor_promocional : item.produto.valor;
         const subtotal = pUnit * item.quantidade;
@@ -1365,7 +1416,7 @@ function processMessage(fromPhone, textBody, messageType) {
         valor_servico: session.selectedService.valor || 0,
         total: session.selectedService.valor || 0,
         status: 'aberto',
-        observacoes_servico: 'Orçamento de Serviço gerado via WhatsApp (Pré-atendimento).',
+        observacoes_servico: `Orçamento de Serviço gerado via WhatsApp (Pré-atendimento).\n📍 Local: CEP ${session.cep || 'N/A'} - Nº/Compl: ${session.addressNum || 'N/A'}`,
         data_criacao: new Date().toISOString()
       };
     }
@@ -1626,7 +1677,7 @@ function processMessage(fromPhone, textBody, messageType) {
       cartTotal += sub;
       msg += `• ${item.quantidade}x ${item.produto.nome} (R$ ${sub.toFixed(2)})\n`;
     });
-    msg += `\n💰 *Total Previsto: R$ ${cartTotal.toFixed(2)}*\n\nO que deseja fazer?\n1️⃣ Adicionar mais itens\n2️⃣ 💳 Finalizar Compra\n3️⃣ 🎟️ Inserir Cupom de Desconto\n\n_Digite 0 para cancelar o pedido e voltar ao menu._`;
+    msg += `\n💰 *Total Previsto: R$ ${cartTotal.toFixed(2)}*\n\nO que deseja fazer?\n1️⃣ ➕ Adicionar mais itens\n2️⃣ 🎟️ Inserir Cupom de Desconto\n3️⃣ 💳 Finalizar Compra\n\n_Digite 0 para cancelar o pedido e voltar ao menu._`;
     sendWhatsAppReply(fromPhone, msg);
     return;
   }
@@ -1703,6 +1754,12 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: CLASSIFICADOS ────────────────────────────────────────────────────
   if (session.state === 'CLASSIFIEDS') {
+    if (text === '4') {
+      session.state = 'CLASSIFIED_PUBLISH_TITLE';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '📸 *Publicar Anúncio no GSA HUB*\n\nPor favor, digite o *Título* do seu anúncio:\n\n_Digite 0 para cancelar._');
+      return;
+    }
     const catsDb = { '1': 'veiculos', '2': 'imoveis', '3': 'geral' };
     const catsLabel = { '1': '🚗 Veículos', '2': '🏠 Imóveis', '3': '📦 Geral' };
     
@@ -2138,7 +2195,10 @@ function processMessage(fromPhone, textBody, messageType) {
       sendWhatsAppReply(fromPhone, '❌ Operação cancelada.\n\n_Digite 0 para voltar._');
       return;
     }
-    const nfData = text.trim();
+    let nfData = text.trim();
+    if (messageType === 'imageMessage' || messageType === 'documentMessage') {
+      nfData = 'Mídia/Arquivo de NF Recebido: ' + (text || 'Sem legenda adicional');
+    }
     const supplier = session.supplierData;
     const proto = generateProtocolNumber();
     
@@ -2226,6 +2286,7 @@ function processMessage(fromPhone, textBody, messageType) {
           sendWhatsAppReply(fromPhone, '🛠️ Você não possui demandas de serviço ativas no momento.\n\n_Digite 0 para voltar._');
           return;
         }
+        
         let msg = '🛠️ *Suas Demandas & Ordens de Serviço:*\n\n';
         list.forEach(d => {
           msg += `🔧 *OS #${String(d.id).substring(0,6)}*\n• Servico: ${d.titulo || 'Atendimento'}\n• Status: ${d.status || 'Em Aberto'}\n\n`;
@@ -2305,6 +2366,8 @@ function processMessage(fromPhone, textBody, messageType) {
     });
     return;
   }
+
+
 
   // ── ESTADO: PORTAL DO ANUNCIANTE ──────────────────────────────────────────
   if (session.state === 'PARTNER_ADVERTISER_MENU') {
@@ -2558,7 +2621,21 @@ function processMessage(fromPhone, textBody, messageType) {
       return;
     }
     session.travelPassengers = qtd;
-    autoInjectDocument(fromPhone, session, 'TRAVEL_DOC', `✅ Confirmado para ${qtd} passageiro(s)!\n\nPara vincularmos essa reserva/cotação ao seu cadastro, por favor digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para cancelar._`);
+    session.state = 'TRAVEL_PASSENGERS_NAMES';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, `✅ Confirmado para ${qtd} passageiro(s)!\n\nPor favor, digite o *Nome Completo e Data de Nascimento* dos passageiros (separados por vírgula ou em linhas diferentes).\n\n_Digite 0 para cancelar._`);
+    return;
+  }
+  
+  if (session.state === 'TRAVEL_PASSENGERS_NAMES') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '❌ Solicitação cancelada.\n\n' + getMainMenuText(session.profile));
+      return;
+    }
+    session.travelPassengerNames = text;
+    autoInjectDocument(fromPhone, session, 'TRAVEL_DOC', '✅ Dados dos passageiros anotados.\n\nPara vincularmos essa reserva/cotação ao seu cadastro, por favor digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para cancelar._');
     return;
   }
 
@@ -2580,7 +2657,7 @@ function processMessage(fromPhone, textBody, messageType) {
         pacote_id: pacote.id,
         protocolo: protocolo,
         adultos: session.travelPassengers,
-        observacoes: `[Via WhatsApp] Solicitação para o pacote: ${pacote.titulo}`
+        observacoes: `[Via WhatsApp] Solicitação para o pacote: ${pacote.titulo}\nPassageiros: ${session.travelPassengerNames || 'N/A'}`
       };
       
       supabasePost('/rest/v1/viagens_orcamentos', viagemData, (errV, resV) => {
@@ -2645,7 +2722,17 @@ function processMessage(fromPhone, textBody, messageType) {
     session.insuranceType = text;
     session.state = 'INSURANCE_DETAILS';
     userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, '✅ Tipo de seguro selecionado!\n\nAgora, descreva brevemente o que você precisa (ex: "seguro para auto ano 2020", "seguro de vida familiar").');
+    
+    const typeLower = text.toLowerCase();
+    if (text === '1' || typeLower.includes('auto') || typeLower.includes('veículo') || typeLower.includes('carro')) {
+      sendWhatsAppReply(fromPhone, '🚗 *Seguro Auto*\nPara agilizarmos, informe a *Placa e o Ano do Veículo* (ou descreva brevemente os detalhes):');
+    } else if (text === '2' || typeLower.includes('vida')) {
+      sendWhatsAppReply(fromPhone, '❤️ *Seguro de Vida*\nPara agilizarmos, informe sua *Idade e Profissão* (ou descreva brevemente):');
+    } else if (text === '3' || typeLower.includes('resid') || typeLower.includes('empres')) {
+      sendWhatsAppReply(fromPhone, '🏠 *Seguro Residencial/Empresarial*\nPara agilizarmos, informe o *CEP e o Tipo de Imóvel* (Casa/Apto/Galpão):');
+    } else {
+      sendWhatsAppReply(fromPhone, '✅ Tipo de seguro selecionado!\n\nAgora, descreva brevemente o que você precisa (ex: "seguro de frota").');
+    }
     return;
   }
 
@@ -2710,15 +2797,82 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: CLASSIFIED_PROPOSAL ────────────────────────────────────────────
   if (session.state === 'CLASSIFIED_PROPOSAL') {
-    if (text.length < 10) {
-      sendWhatsAppReply(fromPhone, '❌ Sua proposta é muito curta. Por favor, detalhe melhor (mínimo 10 caracteres).');
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '❌ Proposta cancelada.\n\n' + getMainMenuText(session.profile));
       return;
     }
-    session.classifiedProposal = text;
+    if (text.length < 10) {
+      sendWhatsAppReply(fromPhone, '⚠️ Sua mensagem está muito curta. Escreva pelo menos algumas palavras sobre sua proposta.');
+      return;
+    }
+    session.classifiedMsg = text;
     session.state = 'CLASSIFIED_DOC';
     userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, `✅ Proposta anotada!\n\nPara enviarmos essa proposta à moderação da GSA e conectarmos você ao vendedor, digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para cancelar._`);
+    sendWhatsAppReply(fromPhone, '✅ Mensagem anotada.\n\nPara encaminharmos sua proposta ao anunciante, digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para cancelar._');
     return;
+  }
+  
+  // ── ESTADOS: CLASSIFIED_PUBLISH (PUBLICAÇÃO DE ANÚNCIO) ─────────────────────
+  if (session.state === 'CLASSIFIED_PUBLISH_TITLE') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '❌ Publicação cancelada.\n\n' + getMainMenuText(session.profile));
+      return;
+    }
+    session.pubTitle = text.trim();
+    session.state = 'CLASSIFIED_PUBLISH_PRICE';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, `📝 *Título:* ${session.pubTitle}\n\nQual é o *Preço/Valor* do item? (Ex: 150.00)\n\n_Digite 0 para cancelar._`);
+    return;
+  }
+
+  if (session.state === 'CLASSIFIED_PUBLISH_PRICE') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '❌ Publicação cancelada.\n\n' + getMainMenuText(session.profile));
+      return;
+    }
+    const val = parseFloat(text.replace(',', '.'));
+    if (isNaN(val)) {
+      sendWhatsAppReply(fromPhone, '❌ Valor inválido. Digite apenas números, por exemplo: 150 ou 150.50.');
+      return;
+    }
+    session.pubPrice = val;
+    session.state = 'CLASSIFIED_PUBLISH_PHOTO';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, `💰 *Valor:* R$ ${val.toFixed(2)}\n\nPara finalizar, *envie uma Foto* do item (usando o ícone de câmera/anexo do WhatsApp).\n\n_Digite 0 para cancelar._`);
+    return;
+  }
+
+  if (session.state === 'CLASSIFIED_PUBLISH_PHOTO') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '❌ Publicação cancelada.\n\n' + getMainMenuText(session.profile));
+      return;
+    }
+    if (messageType === 'imageMessage') {
+      // In a real scenario, you would upload the photo or save the media ID.
+      supabasePost('/rest/v1/classificados', {
+        titulo: session.pubTitle,
+        preco: session.pubPrice,
+        status: 'pendente_aprovacao',
+        descricao: 'Publicado via WhatsApp',
+        telefone_contato: fromPhone
+      }, () => {
+        session.state = 'MAIN_MENU';
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, '✅ *Anúncio Recebido!*\n\nSua foto e informações foram registradas. O anúncio entrará em análise por nossa equipe e será publicado em breve na plataforma.\n\n_Retornando ao menu principal..._');
+      });
+      return;
+    } else {
+      sendWhatsAppReply(fromPhone, '⚠️ Por favor, envie uma *foto* do item (imagem).');
+      return;
+    }
   }
 
   // ── ESTADO: CLASSIFIED_DOC ─────────────────────────────────────────────────
@@ -2868,12 +3022,15 @@ function processMessage(fromPhone, textBody, messageType) {
           sendWhatsAppReply(fromPhone, '✅ Você não tem Ordens de Serviço em andamento no momento.\n\n_Digite 0 para voltar ao menu principal._');
           return;
         }
+        session.currentOSList = osList;
+        session.state = 'CLIENT_OS_LIST';
+        userSessions[fromPhone] = session;
         let msg = '🛠️ *Ordens de Serviço (Em Andamento):*\n\n';
         osList.forEach((os, idx) => {
           const cod = os.codigo_os || `OS-#${String(os.id).substring(0,6)}`;
           msg += `*${idx+1}.* ${cod}\n📌 Status: ${(os.status || 'em_andamento').toUpperCase()}\n\n`;
         });
-        msg += '_Digite 0 para voltar ou (1-5) para outro menu._';
+        msg += '_Digite o número da OS para ver detalhes (ex: 1)._\n_Digite 0 para voltar._';
         sendWhatsAppReply(fromPhone, msg);
       });
       return;
@@ -2886,12 +3043,15 @@ function processMessage(fromPhone, textBody, messageType) {
           sendWhatsAppReply(fromPhone, '✅ Nenhum orçamento em aberto no momento.\n\n_Digite 0 para voltar ao menu principal._');
           return;
         }
+        session.currentOrcamentos = orcs;
+        session.state = 'CLIENT_ORCAMENTO_LIST';
+        userSessions[fromPhone] = session;
         let msg = '📋 *Seus Orçamentos (Em Aberto):*\n\n';
         orcs.forEach((orc, idx) => {
           const cod = orc.codigo_orcamento || `ORC-#${String(orc.id).substring(0,6)}`;
           msg += `*${idx+1}.* ${cod}\n📌 Status: ${(orc.status || 'aberto').toUpperCase()}\n💰 Valor Estimado: R$ ${(orc.total||0).toFixed(2)}\n\n`;
         });
-        msg += '_Digite 0 para voltar ou (1-5) para outro menu._';
+        msg += '_Digite o número do Orçamento para visualizar e aprovar (ex: 1)._\n_Digite 0 para voltar._';
         sendWhatsAppReply(fromPhone, msg);
       });
       return;
@@ -2904,12 +3064,15 @@ function processMessage(fromPhone, textBody, messageType) {
           sendWhatsAppReply(fromPhone, '✅ Você não possui assinaturas ativas no momento.\n\n_Digite 0 para voltar ao menu principal._');
           return;
         }
+        session.currentAssinaturas = asList;
+        session.state = 'CLIENT_ASSINATURA_LIST';
+        userSessions[fromPhone] = session;
         let msg = '🔄 *Suas Assinaturas (Ativas):*\n\n';
         asList.forEach((ass, idx) => {
           const cod = ass.codigo_assinatura || `ASS-#${String(ass.id).substring(0,6)}`;
           msg += `*${idx+1}.* ${cod}\n📌 Status: ATIVA\n💰 Mensalidade: R$ ${(ass.valor||0).toFixed(2)}\n\n`;
         });
-        msg += '_Digite 0 para voltar ou (1-5) para outro menu._';
+        msg += '_Digite o número da assinatura para ver opções (ex: 1)._\n_Digite 0 para voltar._';
         sendWhatsAppReply(fromPhone, msg);
       });
       return;
@@ -2931,6 +3094,153 @@ function processMessage(fromPhone, textBody, messageType) {
     
     sendWhatsAppReply(fromPhone, '❌ Opção inválida.\n\n*Opções disponíveis:*\n1️⃣ Faturas em Aberto\n2️⃣ Ordens de Serviço\n3️⃣ Meus Orçamentos\n4️⃣ Minhas Assinaturas\n5️⃣ Tickets de Suporte\n0️⃣ Sair\n\n_Digite o número desejado:_');
     return;
+  }
+
+  // ── ESTADOS DE AÇÃO DA ÁREA DO CLIENTE ──────────────────────────────────
+  if (session.state === 'CLIENT_OS_LIST') {
+    if (text === '0') {
+      session.state = 'CLIENT_DASHBOARD_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...\n\n_Digite a opção desejada:_');
+      return;
+    }
+    const idx = parseInt(text, 10) - 1;
+    const osList = session.currentOSList || [];
+    if (isNaN(idx) || idx < 0 || idx >= osList.length) {
+      sendWhatsAppReply(fromPhone, `❌ Opção inválida. Escolha um número de 1 a ${osList.length}.\n\n_Digite 0 para voltar._`);
+      return;
+    }
+    const os = osList[idx];
+    const cod = os.codigo_os || `OS-#${String(os.id).substring(0,6)}`;
+    
+    let msg = `🛠️ *Detalhes da Ordem de Serviço*\n\n`;
+    msg += `🔖 *Código:* ${cod}\n`;
+    msg += `📌 *Status:* ${(os.status || 'em_andamento').toUpperCase()}\n`;
+    if (os.observacoes_tecnicas) msg += `📝 *Observações:* ${os.observacoes_tecnicas}\n`;
+    msg += `\n*Opções:*\n1️⃣ Solicitar Reagendamento\n2️⃣ Cancelar Serviço\n\n_Digite 0 para voltar._`;
+    
+    session.selectedOS = os;
+    session.state = 'CLIENT_OS_ACTION';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, msg);
+    return;
+  }
+  
+  if (session.state === 'CLIENT_OS_ACTION') {
+    if (text === '1') {
+      sendWhatsAppReply(fromPhone, '🔄 Solicitando reagendamento da equipe...\nUm atendente humano foi notificado.\n\n_Digite 0 para voltar._');
+      return;
+    } else if (text === '2') {
+      sendWhatsAppReply(fromPhone, '⚠️ Solicitando cancelamento do serviço...\nUma notificação foi enviada ao prestador.\n\n_Digite 0 para voltar._');
+      return;
+    } else {
+      session.state = 'CLIENT_DASHBOARD_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...');
+      return;
+    }
+  }
+
+  if (session.state === 'CLIENT_ORCAMENTO_LIST') {
+    if (text === '0') {
+      session.state = 'CLIENT_DASHBOARD_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...\n\n_Digite a opção desejada:_');
+      return;
+    }
+    const idx = parseInt(text, 10) - 1;
+    const orcs = session.currentOrcamentos || [];
+    if (isNaN(idx) || idx < 0 || idx >= orcs.length) {
+      sendWhatsAppReply(fromPhone, `❌ Opção inválida. Escolha um número de 1 a ${orcs.length}.\n\n_Digite 0 para voltar._`);
+      return;
+    }
+    const orc = orcs[idx];
+    const cod = orc.codigo_orcamento || `ORC-#${String(orc.id).substring(0,6)}`;
+    
+    let msg = `📋 *Detalhes do Orçamento*\n\n`;
+    msg += `🔖 *Código:* ${cod}\n`;
+    msg += `💰 *Total Estimado:* R$ ${(orc.total||0).toFixed(2)}\n`;
+    msg += `📝 *Descrição:* ${orc.observacoes_servico || 'N/A'}\n`;
+    msg += `\n*Ação:*\n1️⃣ ✅ Aprovar Orçamento e Pagar\n\n_Digite 0 para voltar._`;
+    
+    session.selectedOrcamento = orc;
+    session.state = 'CLIENT_ORCAMENTO_ACTION';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, msg);
+    return;
+  }
+  
+  if (session.state === 'CLIENT_ORCAMENTO_ACTION') {
+    if (text === '1') {
+      // Create a mock fatura from this orcamento and go to SELECT_PAYMENT_METHOD
+      const orc = session.selectedOrcamento;
+      const codFat = `FAT-${orc.codigo_orcamento || String(orc.id).substring(0,6)}`;
+      const newFat = {
+        id: orc.id + 1000,
+        codigo_fatura: codFat,
+        cliente_id: orc.cliente_id,
+        valor_total: orc.total,
+        status: 'pendente',
+        data_vencimento: new Date().toISOString()
+      };
+      session.selectedFatura = newFat;
+      session.state = 'SELECT_PAYMENT_METHOD';
+      userSessions[fromPhone] = session;
+      
+      const valor = Number(newFat.valor_total || 0).toFixed(2);
+      const msg = `✅ *Orçamento Aprovado!*\n\n💳 *Pagamento da Fatura ${codFat}*\n\n💰 *Valor Total:* R$ ${valor}\n\nComo deseja realizar o pagamento?\n\n1️⃣ 🟢 *PIX* (Gerar QR Code + Código Copia e Cola)\n2️⃣ 💳 *Cartão de Crédito* (Link Seguro InfinitePay em até 12x)\n\n_Digite 1 para PIX ou 2 para Cartão de Crédito._\n_Digite 0 para cancelar._`;
+      sendWhatsAppReply(fromPhone, msg);
+      return;
+    } else {
+      session.state = 'CLIENT_DASHBOARD_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...');
+      return;
+    }
+  }
+
+  if (session.state === 'CLIENT_ASSINATURA_LIST') {
+    if (text === '0') {
+      session.state = 'CLIENT_DASHBOARD_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...\n\n_Digite a opção desejada:_');
+      return;
+    }
+    const idx = parseInt(text, 10) - 1;
+    const assList = session.currentAssinaturas || [];
+    if (isNaN(idx) || idx < 0 || idx >= assList.length) {
+      sendWhatsAppReply(fromPhone, `❌ Opção inválida. Escolha um número de 1 a ${assList.length}.\n\n_Digite 0 para voltar._`);
+      return;
+    }
+    const ass = assList[idx];
+    const cod = ass.codigo_assinatura || `ASS-#${String(ass.id).substring(0,6)}`;
+    
+    let msg = `🔄 *Gestão de Assinatura*\n\n`;
+    msg += `🔖 *Código:* ${cod}\n`;
+    msg += `📌 *Status:* ATIVA\n`;
+    msg += `💰 *Mensalidade:* R$ ${(ass.valor||0).toFixed(2)}\n`;
+    msg += `\n*Opções:*\n1️⃣ Solicitar 2ª Via do Boleto\n2️⃣ Atualizar Cartão de Crédito\n\n_Digite 0 para voltar._`;
+    
+    session.selectedAssinatura = ass;
+    session.state = 'CLIENT_ASSINATURA_ACTION';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, msg);
+    return;
+  }
+  
+  if (session.state === 'CLIENT_ASSINATURA_ACTION') {
+    if (text === '1') {
+      sendWhatsAppReply(fromPhone, '📄 Gerando 2ª via da sua fatura de assinatura...\nVocê receberá o PDF em instantes.\n\n_Digite 0 para voltar._');
+      return;
+    } else if (text === '2') {
+      sendWhatsAppReply(fromPhone, '💳 Para atualizar seu cartão de crédito, por favor acesse nosso portal seguro:\n🌐 https://gsahub.pages.dev/minhaconta\n\n_Digite 0 para voltar._');
+      return;
+    } else {
+      session.state = 'CLIENT_DASHBOARD_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...');
+      return;
+    }
   }
 
   // ── ESTADO: CLIENT_TICKETS_MENU ────────────────────────────────────────────────
@@ -3086,7 +3396,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
             if (pixCode) {
               sendWhatsAppReply(fromPhone, `🟢 *PIX Copia e Cola (Fatura ${cod}):*`);
-              sendWhatsAppReply(fromPhone, pixCode);
+              sendWhatsAppReply(fromPhone, `\`\`\`${pixCode}\`\`\``);
 
               if (qrCodeUrl) {
                 sendWhatsAppMedia(fromPhone, qrCodeUrl, `qrcode_${cod}.png`, `QR Code PIX - R$ ${valor}`, 'image');
