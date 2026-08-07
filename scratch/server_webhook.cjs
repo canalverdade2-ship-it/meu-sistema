@@ -314,7 +314,7 @@ const MAIN_MENU_TEXT = getMainMenuText(null);
 function triggerInstanceRestart() {
   try {
     const req = http.request({
-      hostname: 'evolution-api',
+      hostname: '127.0.0.1',
       port: 8080,
       path: '/instance/restart/GSA_WhatsApp',
       method: 'POST',
@@ -338,7 +338,7 @@ function sendWhatsAppReply(to, messageText, retryCount = 0) {
   });
 
   const options = {
-    hostname: 'evolution-api',
+    hostname: '127.0.0.1',
     port: 8080,
     path: '/message/sendText/GSA_WhatsApp',
     method: 'POST',
@@ -397,17 +397,44 @@ function formatPhoneForSearch(phoneStr) {
 // ── CONSULTAS AO SUPABASE ───────────────────────────────────────────────────
 
 function fetchUserProfile(phone, callback) {
-  // Busca em paralelo nas tabelas: clientes, fornecedores, prestadores (com e sem prefixo 55)
   const pClean = stripCountryCode55(phone);
   const pWith55 = `55${pClean}`;
   const filter = `or=(telefone.eq.${pClean},telefone.eq.${pWith55})`;
   
-  let result = { type: 'unknown', data: null };
-  let pending = 3;
+  let multiRole = {
+    cliente: null,
+    afiliado: null,
+    fornecedor: null,
+    prestador: null,
+    type: 'unknown',
+    data: null,
+    primaryName: null
+  };
+
+  let pending = 4;
 
   function checkDone() {
     pending--;
-    if (pending === 0) callback(result);
+    if (pending === 0) {
+      if (multiRole.cliente) {
+        multiRole.type = 'cliente';
+        multiRole.data = multiRole.cliente;
+        multiRole.primaryName = multiRole.cliente.nome || multiRole.cliente.nome_completo || multiRole.cliente.razao_social;
+      } else if (multiRole.afiliado) {
+        multiRole.type = 'afiliado';
+        multiRole.data = multiRole.afiliado;
+        multiRole.primaryName = multiRole.afiliado.nome;
+      } else if (multiRole.fornecedor) {
+        multiRole.type = 'fornecedor';
+        multiRole.data = multiRole.fornecedor;
+        multiRole.primaryName = multiRole.fornecedor.razao_social || multiRole.fornecedor.nome_fantasia || multiRole.fornecedor.nome;
+      } else if (multiRole.prestador) {
+        multiRole.type = 'prestador';
+        multiRole.data = multiRole.prestador;
+        multiRole.primaryName = multiRole.prestador.razao_social || multiRole.prestador.nome_fantasia || multiRole.prestador.nome;
+      }
+      callback(multiRole);
+    }
   }
 
   // 1. Clientes
@@ -423,9 +450,7 @@ function fetchUserProfile(phone, callback) {
     res.on('end', () => {
       try {
         const rows = JSON.parse(d);
-        if (rows.length > 0 && result.type === 'unknown') {
-          result = { type: 'cliente', data: rows[0] };
-        }
+        if (rows.length > 0) multiRole.cliente = rows[0];
       } catch (e) {}
       checkDone();
     });
@@ -433,7 +458,28 @@ function fetchUserProfile(phone, callback) {
   reqC.on('error', checkDone);
   reqC.end();
 
-  // 2. Fornecedores
+  // 2. Afiliados
+  const reqA = https.request({
+    hostname: SUPABASE_HOST,
+    port: 443,
+    path: `/rest/v1/gsa_afiliados?${filter}&select=*&limit=1`,
+    method: 'GET',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  }, res => {
+    let d = '';
+    res.on('data', chunk => d += chunk);
+    res.on('end', () => {
+      try {
+        const rows = JSON.parse(d);
+        if (rows.length > 0) multiRole.afiliado = rows[0];
+      } catch (e) {}
+      checkDone();
+    });
+  });
+  reqA.on('error', checkDone);
+  reqA.end();
+
+  // 3. Fornecedores
   const reqF = https.request({
     hostname: SUPABASE_HOST,
     port: 443,
@@ -446,9 +492,7 @@ function fetchUserProfile(phone, callback) {
     res.on('end', () => {
       try {
         const rows = JSON.parse(d);
-        if (rows.length > 0 && result.type === 'unknown') {
-          result = { type: 'fornecedor', data: rows[0] };
-        }
+        if (rows.length > 0) multiRole.fornecedor = rows[0];
       } catch (e) {}
       checkDone();
     });
@@ -456,7 +500,7 @@ function fetchUserProfile(phone, callback) {
   reqF.on('error', checkDone);
   reqF.end();
 
-  // 3. Prestadores
+  // 4. Prestadores
   const reqP = https.request({
     hostname: SUPABASE_HOST,
     port: 443,
@@ -469,9 +513,7 @@ function fetchUserProfile(phone, callback) {
     res.on('end', () => {
       try {
         const rows = JSON.parse(d);
-        if (rows.length > 0 && result.type === 'unknown') {
-          result = { type: 'prestador', data: rows[0] };
-        }
+        if (rows.length > 0) multiRole.prestador = rows[0];
       } catch (e) {}
       checkDone();
     });
@@ -814,20 +856,7 @@ function processMessage(fromPhone, textBody, messageType) {
       session.errors = 0;
       session.state = 'MAIN_MENU';
       userSessions[fromPhone] = session;
-      
-      let greeting = getMainMenuText(profile);
-      if (profile.type === 'fornecedor') {
-        const nomeDisplay = (profile.data.razao_social || profile.data.nome_fantasia || profile.data.nome || 'PARCEIRO').toUpperCase();
-        greeting = `🤝 Olá Parceiro *${nomeDisplay}*!\nBem-vindo ao Portal B2B de Fornecedores GSA.\n\n1️⃣ Entregas e NFs\n2️⃣ Pedidos de Compra\n3️⃣ Financeiro\n\n0️⃣ Voltar / Falar com Atendente`;
-        session.state = 'B2B_FORNECEDOR_MENU';
-      } else if (profile.type === 'prestador') {
-        const nomeDisplay = (profile.data.razao_social || profile.data.nome_fantasia || profile.data.nome || 'PARCEIRO').toUpperCase();
-        greeting = `🤝 Olá Parceiro *${nomeDisplay}*!\nBem-vindo ao Portal B2B de Prestadores GSA.\n\n1️⃣ Minhas Demandas\n2️⃣ Minha Agenda\n3️⃣ Enviar Foto/Relatório\n\n0️⃣ Voltar / Falar com Atendente`;
-        session.state = 'B2B_PRESTADOR_MENU';
-      } else {
-        session.state = 'MAIN_MENU';
-      }
-      sendWhatsAppReply(fromPhone, greeting);
+      sendWhatsAppReply(fromPhone, getMainMenuText(profile));
     };
 
     if (!session.profile) {
@@ -852,8 +881,8 @@ function processMessage(fromPhone, textBody, messageType) {
     const intent = getMenuIntent(text);
     switch (intent) {
       case '1':
-        if (session.profile && session.profile.type === 'cliente') {
-          session.clientData = session.profile.data;
+        if (session.profile && session.profile.cliente) {
+          session.clientData = session.profile.cliente;
           session.state = 'CLIENT_DASHBOARD_MENU';
           userSessions[fromPhone] = session;
           
@@ -863,11 +892,11 @@ function processMessage(fromPhone, textBody, messageType) {
           const saldoCarteira = session.clientData.saldo_carteira || session.clientData.saldo_disponivel || 0;
           const nivel = session.clientData.nivel_manual_info || (session.clientData.is_vip ? 'VIP' : 'Padrão GSA');
           
-          sendWhatsAppReply(fromPhone, `👤 *Área do Cliente GSA HUB*\nOlá, *${nome}*! (🏆 ${nivel})\n\n💰 Saldo: R$ ${Number(saldoCarteira).toFixed(2)}\n⭐ Pontos: ${saldoPts}\n\n*O que você deseja consultar?*\n1️⃣ 📄 Faturas em Aberto\n2️⃣ 🛠️ Ordens de Serviço\n3️⃣ 📋 Meus Orçamentos\n4️⃣ 🔄 Minhas Assinaturas\n5️⃣ 🎫 Tickets de Suporte\n0️⃣ Sair\n\n_Digite o número desejado:_`);
+          sendWhatsAppReply(fromPhone, `👤 *Área do Cliente GSA HUB*\nOlá, *${nome}*! (🏆 ${nivel})\n\n💰 Saldo em Carteira: R$ ${Number(saldoCarteira).toFixed(2)}\n⭐ Pontos Fidelidade: ${saldoPts}\n\n*O que você deseja consultar?*\n1️⃣ 📄 Faturas em Aberto\n2️⃣ 🛠️ Ordens de Serviço\n3️⃣ 📋 Meus Orçamentos\n4️⃣ 🔄 Minhas Assinaturas\n5️⃣ 🎫 Tickets de Suporte\n0️⃣ Sair ao Menu Principal\n\n_Digite o número desejado:_`);
         } else {
           session.state = 'CLIENT_AREA';
           userSessions[fromPhone] = session;
-          sendWhatsAppReply(fromPhone, '👤 *Área do Cliente GSA HUB*\n\nPor favor, digite seu *CPF ou CNPJ* (apenas números) para consultar seus dados reais no sistema.\n\n_Exemplo: 12345678901_\n_Digite 0 para voltar ao menu._');
+          sendWhatsAppReply(fromPhone, '👤 *Área do Cliente GSA HUB*\n\nPor favor, digite seu *CPF ou CNPJ* (apenas números) para consultar seus dados no sistema.\n\n_Exemplo: 12345678901_\n_Digite 0 para voltar ao menu._');
         }
         break;
 
@@ -887,7 +916,7 @@ function processMessage(fromPhone, textBody, messageType) {
         sendWhatsAppReply(fromPhone, '🔄 Buscando pacotes de viagens em destaque...');
         fetchTravelPackages((err, packages) => {
           if (err || packages.length === 0) {
-            sendWhatsAppReply(fromPhone, '✈️ *Pacotes de Viagens GSA*\n\nNenhum pacote publicado no momento. Acesse nosso site para viagens personalizadas:\n🌐 https://getsemani-gsa.netlify.app/\n\n_Digite 0 para voltar._');
+            sendWhatsAppReply(fromPhone, '✈️ *Pacotes de Viagens GSA*\n\nNenhum pacote publicado no momento. Acesse nosso site para viagens personalizadas:\n🌐 https://gsahub.pages.dev/\n\n_Digite 0 para voltar._');
             return;
           }
           session.travelPackages = packages;
@@ -918,11 +947,39 @@ function processMessage(fromPhone, textBody, messageType) {
         break;
 
       case '7':
-        autoInjectDocument(fromPhone, session, 'AFFILIATE_DOC', '🤝 *Portal do Afiliado GSA HUB (Indique & Ganhe)*\n\nPara consultar seu link de indicação, digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para voltar ao menu._');
+        if (session.profile && (session.profile.afiliado || session.profile.cliente)) {
+          const affRecord = session.profile.afiliado || session.profile.cliente;
+          const affName = formatBoldName(affRecord.nome || affRecord.nome_completo || affRecord.razao_social || 'Afiliado GSA');
+          const refCode = affRecord.codigo_afiliado || affRecord.cpf || affRecord.cnpj || ('GSA' + stripCountryCode55(fromPhone));
+          const refLink = affRecord.link_afiliado || `https://gsahub.pages.dev/?ref=${refCode}`;
+          const saldoComissao = affRecord.saldo_comissao || 0;
+          const pontos = affRecord.pontos_acumulados || affRecord.saldo_pontos || 0;
+
+          session.affiliateData = affRecord;
+          session.state = 'PARTNER_AFFILIATE_MENU';
+          userSessions[fromPhone] = session;
+
+          sendWhatsAppReply(fromPhone, `🤝 *Portal do Afiliado GSA HUB (Indique & Ganhe)*\nOlá, *${affName}*!\n\n🔗 *Seu Link Único de Afiliado:*\n${refLink}\n\n💰 Saldo de Comissões: R$ ${Number(saldoComissao).toFixed(2)}\n⭐ Pontos Acumulados: ${pontos}\n\n1️⃣ 📊 Consultar Cliques & Conversões\n2️⃣ 💵 Solicitar Saque via PIX\n3️⃣ 🎁 Resgatar Pontos por Recompensas\n0️⃣ Voltar ao Menu Principal`);
+        } else {
+          autoInjectDocument(fromPhone, session, 'AFFILIATE_DOC', '🤝 *Portal do Afiliado GSA HUB (Indique & Ganhe)*\n\nPara consultar seu link de indicação, digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para voltar ao menu._');
+        }
         break;
 
       case '8':
-        autoInjectDocument(fromPhone, session, 'LOYALTY', '💎 *Programa de Fidelidade & Pontos GSA HUB*\n\nDigite seu *CPF ou CNPJ* (apenas números) para consultar:\n• Saldo real de pontos fidelidade\n• Nível VIP\n• Saldo em carteira\n• Status do cadastro\n\n_Digite 0 para voltar ao menu._');
+        if (session.profile && (session.profile.cliente || session.profile.afiliado)) {
+          const pData = session.profile.cliente || session.profile.afiliado;
+          const nome = formatBoldName(pData.nome || pData.nome_completo || pData.razao_social || 'Cliente GSA');
+          const saldoPts = pData.saldo_pontos || pData.pontos_fidelidade || pData.pontos_acumulados || 0;
+          const nivel = pData.nivel_manual_info || (pData.is_vip ? 'VIP' : 'Padrão GSA');
+
+          session.clientData = pData;
+          session.state = 'LOYALTY_ACTIONS';
+          userSessions[fromPhone] = session;
+
+          sendWhatsAppReply(fromPhone, `💎 *Programa de Fidelidade & Pontos GSA HUB*\nOlá, *${nome}*!\n\n⭐ Saldo Atual: *${saldoPts} Pontos*\n🏆 Nível VIP: *${nivel}*\n\n1️⃣ 🎁 Resgatar Pontos por Descontos ou PIX\n2️⃣ 📋 Extrato de Movimentação\n0️⃣ Voltar ao Menu Principal`);
+        } else {
+          autoInjectDocument(fromPhone, session, 'LOYALTY', '💎 *Programa de Fidelidade & Pontos GSA HUB*\n\nDigite seu *CPF ou CNPJ* (apenas números) para consultar:\n• Saldo real de pontos fidelidade\n• Nível VIP\n• Saldo em carteira\n\n_Digite 0 para voltar ao menu._');
+        }
         break;
 
       case '9':
@@ -981,7 +1038,7 @@ function processMessage(fromPhone, textBody, messageType) {
       if (err || !client) {
         session.state = 'MAIN_MENU';
         userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, `🔍 *Consulta GSA HUB*\n\nNenhum cadastro encontrado para o documento informado.\n\nSe ainda não tem cadastro, acesse nosso site para criar um e aproveitar os benefícios!\n🌐 https://getsemani-gsa.netlify.app\n\n_Digite 0 para voltar ao menu._`);
+        sendWhatsAppReply(fromPhone, `🔍 *Consulta GSA HUB*\n\nNenhum cadastro encontrado para o documento informado.\n\nSe ainda não tem cadastro, acesse nosso site para criar um e aproveitar os benefícios!\n🌐 https://gsahub.pages.dev\n\n_Digite 0 para voltar ao menu._`);
         return;
       }
       
@@ -1408,7 +1465,7 @@ function processMessage(fromPhone, textBody, messageType) {
       sendWhatsAppReply(fromPhone, '🔄 *Carregando vitrine com fotos dos produtos...*');
       fetchProducts((err, products) => {
         if (err || products.length === 0) {
-          sendWhatsAppReply(fromPhone, '🛒 Nenhum produto em destaque no momento.\n\n🌐 Acesse nossa loja web: https://getsemani-gsa.netlify.app/\n\n_Digite 0 para voltar._');
+          sendWhatsAppReply(fromPhone, '🛒 Nenhum produto em destaque no momento.\n\n🌐 Acesse nossa loja web: https://gsahub.pages.dev/\n\n_Digite 0 para voltar._');
           return;
         }
         session.currentStoreProducts = products;
@@ -1443,7 +1500,7 @@ function processMessage(fromPhone, textBody, messageType) {
       fetchProducts((err, products) => {
         const promos = (products || []).filter(p => p.desconto_ativo || p.valor_promocional);
         if (promos.length === 0) {
-          sendWhatsAppReply(fromPhone, '🏷️ *Promoções GSA Store*\n\nNo momento não temos itens em liquidação relâmpago, mas temos produtos incríveis na vitrine!\n\n🌐 Confira também no site: https://getsemani-gsa.netlify.app/\n\n_Digite 1 para ver os produtos ou 0 para voltar._');
+          sendWhatsAppReply(fromPhone, '🏷️ *Promoções GSA Store*\n\nNo momento não temos itens em liquidação relâmpago, mas temos produtos incríveis na vitrine!\n\n🌐 Confira também no site: https://gsahub.pages.dev/\n\n_Digite 1 para ver os produtos ou 0 para voltar._');
           return;
         }
         session.currentStoreProducts = promos;
@@ -1658,7 +1715,7 @@ function processMessage(fromPhone, textBody, messageType) {
       if (err || ads.length === 0) {
         session.state = 'MAIN_MENU';
         userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, `📢 *Classificados GSA HUB — ${catLabel}*\n\nNenhum anúncio recente encontrado nesta categoria.\nVisualize o painel completo em:\n🌐 https://getsemani-gsa.netlify.app/\n\n_Digite 0 para voltar ao menu._`);
+        sendWhatsAppReply(fromPhone, `📢 *Classificados GSA HUB — ${catLabel}*\n\nNenhum anúncio recente encontrado nesta categoria.\nVisualize o painel completo em:\n🌐 https://gsahub.pages.dev/\n\n_Digite 0 para voltar ao menu._`);
         return;
       }
       
@@ -1690,7 +1747,7 @@ function processMessage(fromPhone, textBody, messageType) {
       if (err || !client) {
         session.state = 'MAIN_MENU';
         userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, '❌ Cadastro não encontrado. Verifique o documento ou acesse https://getsemani-gsa.netlify.app para se cadastrar.\n\n_Digite 0 para voltar ao menu principal._');
+        sendWhatsAppReply(fromPhone, '❌ Cadastro não encontrado. Verifique o documento ou acesse https://gsahub.pages.dev para se cadastrar.\n\n_Digite 0 para voltar ao menu principal._');
         return;
       }
       
@@ -1716,13 +1773,46 @@ function processMessage(fromPhone, textBody, messageType) {
   // ── ESTADO: PARTNERS ────────────────────────────────────────────────────────
   if (session.state === 'PARTNERS') {
     if (text === '1') {
-      autoInjectDocument(fromPhone, session, 'AFFILIATE_DOC', '🤝 *Portal do Afiliado GSA HUB (Indique & Ganhe)*\n\nPara acessar seu painel de afiliado, digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para voltar._');
+      if (session.profile && (session.profile.afiliado || session.profile.cliente)) {
+        const affRecord = session.profile.afiliado || session.profile.cliente;
+        const affName = formatBoldName(affRecord.nome || affRecord.nome_completo || affRecord.razao_social || 'Afiliado GSA');
+        const refCode = affRecord.codigo_afiliado || affRecord.cpf || affRecord.cnpj || ('GSA' + stripCountryCode55(fromPhone));
+        const refLink = affRecord.link_afiliado || `https://gsahub.pages.dev/?ref=${refCode}`;
+        const saldoComissao = affRecord.saldo_comissao || 0;
+        const pontos = affRecord.pontos_acumulados || affRecord.saldo_pontos || 0;
+
+        session.affiliateData = affRecord;
+        session.state = 'PARTNER_AFFILIATE_MENU';
+        userSessions[fromPhone] = session;
+
+        sendWhatsAppReply(fromPhone, `🤝 *Portal do Afiliado GSA HUB (Indique & Ganhe)*\nOlá, *${affName}*!\n\n🔗 *Seu Link Único de Afiliado:*\n${refLink}\n\n💰 Saldo de Comissões: R$ ${Number(saldoComissao).toFixed(2)}\n⭐ Pontos Acumulados: ${pontos}\n\n1️⃣ 📊 Consultar Cliques & Conversões\n2️⃣ 💵 Solicitar Saque via PIX\n3️⃣ 🎁 Resgatar Pontos por Recompensas\n0️⃣ Voltar ao Menu Principal`);
+      } else {
+        autoInjectDocument(fromPhone, session, 'AFFILIATE_DOC', '🤝 *Portal do Afiliado GSA HUB (Indique & Ganhe)*\n\nPara acessar seu painel de afiliado, digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para voltar._');
+      }
       return;
     } else if (text === '2') {
-      autoInjectDocument(fromPhone, session, 'PARTNER_SUPPLIER_DOC', '📦 *Portal do Fornecedor & Suprimentos GSA HUB*\n\nDigite seu *CNPJ ou CPF* (apenas números) para consultar seus pedidos de compra, faturas e catálogo.\n\n_Digite 0 para voltar._');
+      if (session.profile && session.profile.fornecedor) {
+        const fData = session.profile.fornecedor;
+        const nomeDisplay = (fData.razao_social || fData.nome_fantasia || fData.nome || 'PARCEIRO').toUpperCase();
+        session.supplierData = fData;
+        session.state = 'PARTNER_SUPPLIER_MENU';
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, `📦 *Portal B2B de Fornecedores GSA HUB*\nOlá Parceiro *${nomeDisplay}*!\n\n1️⃣ 📄 Entregas e Notas Fiscais\n2️⃣ 🛍️ Pedidos de Compra\n3️⃣ 💳 Financeiro e Pagamentos\n0️⃣ Voltar ao Menu Principal`);
+      } else {
+        autoInjectDocument(fromPhone, session, 'PARTNER_SUPPLIER_DOC', '📦 *Portal do Fornecedor & Suprimentos GSA HUB*\n\nDigite seu *CNPJ ou CPF* (apenas números) para consultar seus pedidos de compra, faturas e catálogo.\n\n_Digite 0 para voltar._');
+      }
       return;
     } else if (text === '3') {
-      autoInjectDocument(fromPhone, session, 'PARTNER_PROVIDER_DOC', '🛠️ *Portal do Prestador de Serviços GSA HUB*\n\nDigite seu *CPF ou CNPJ* (apenas números) para consultar suas demandas de serviço, agenda e repasses.\n\n_Digite 0 para voltar._');
+      if (session.profile && session.profile.prestador) {
+        const pData = session.profile.prestador;
+        const nomeDisplay = (pData.razao_social || pData.nome_fantasia || pData.nome || 'PARCEIRO').toUpperCase();
+        session.providerData = pData;
+        session.state = 'PARTNER_PROVIDER_MENU';
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, `🛠️ *Portal B2B de Prestadores GSA HUB*\nOlá Parceiro *${nomeDisplay}*!\n\n1️⃣ 📋 Minhas Demandas de Serviço\n2️⃣ 🗓️ Minha Agenda\n3️⃣ 📷 Enviar Foto / Relatório\n0️⃣ Voltar ao Menu Principal`);
+      } else {
+        autoInjectDocument(fromPhone, session, 'PARTNER_PROVIDER_DOC', '🛠️ *Portal do Prestador de Serviços GSA HUB*\n\nDigite seu *CPF ou CNPJ* (apenas números) para consultar suas demandas de serviço, agenda e repasses.\n\n_Digite 0 para voltar._');
+      }
       return;
     } else if (text === '4') {
       session.state = 'PARTNER_ADVERTISER_MENU';
@@ -1762,7 +1852,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
     if (text === '1') {
       const code = afiliado.codigo_publico;
-      const linksMsg = `🔗 *Seus Links de Indicação GSA HUB*\n\n🌐 *Link Geral:* https://getsemani-gsa.netlify.app/?ref=${code}\n🛍️ *Loja Virtual:* https://getsemani-gsa.netlify.app/loja?ref=${code}\n🛠️ *Serviços:* https://getsemani-gsa.netlify.app/servicos?ref=${code}\n✈️ *Viagens:* https://getsemani-gsa.netlify.app/viagens?ref=${code}\n\n_Compartilhe estes links com seus contatos para acumular comissões a cada compra!_\n\n_Digite 0 para voltar ao menu do afiliado._`;
+      const linksMsg = `🔗 *Seus Links de Indicação GSA HUB*\n\n🌐 *Link Geral:* https://gsahub.pages.dev/?ref=${code}\n🛍️ *Loja Virtual:* https://gsahub.pages.dev/loja?ref=${code}\n🛠️ *Serviços:* https://gsahub.pages.dev/servicos?ref=${code}\n✈️ *Viagens:* https://gsahub.pages.dev/viagens?ref=${code}\n\n_Compartilhe estes links com seus contatos para acumular comissões a cada compra!_\n\n_Digite 0 para voltar ao menu do afiliado._`;
       sendWhatsAppReply(fromPhone, linksMsg);
       return;
     } else if (text === '2') {
@@ -1848,7 +1938,7 @@ function processMessage(fromPhone, textBody, messageType) {
       });
       return;
     } else if (text === '4') {
-      const copyMsg = `📢 *Material de Divulgação GSA HUB*\n\n*Texto Sugerido para Envio:*\n"Olá! 👋 Conheça o GSA HUB, a plataforma completa para contratação de serviços residenciais e empresariais, compras com cashback e pacotes de viagens com as melhores condições! Acesse pelo meu link oficial: https://getsemani-gsa.netlify.app/?ref=${afiliado.codigo_publico}"\n\n_Copie o texto acima e compartilhe no seu WhatsApp, Instagram e redes sociais!_`;
+      const copyMsg = `📢 *Material de Divulgação GSA HUB*\n\n*Texto Sugerido para Envio:*\n"Olá! 👋 Conheça o GSA HUB, a plataforma completa para contratação de serviços residenciais e empresariais, compras com cashback e pacotes de viagens com as melhores condições! Acesse pelo meu link oficial: https://gsahub.pages.dev/?ref=${afiliado.codigo_publico}"\n\n_Copie o texto acima e compartilhe no seu WhatsApp, Instagram e redes sociais!_`;
       sendWhatsAppReply(fromPhone, copyMsg);
       return;
     } else if (text === '0') {
@@ -2031,7 +2121,7 @@ function processMessage(fromPhone, textBody, messageType) {
       sendWhatsAppReply(fromPhone, '📄 *Informar Nota Fiscal de Entrega*\n\nPor favor, digite o *Número da Nota Fiscal* ou a *Chave de Acesso de 44 dígitos*:\n\n_Digite 0 para cancelar._');
       return;
     } else if (text === '5') {
-      sendWhatsAppReply(fromPhone, '🌐 *Painel Web do Fornecedor GSA HUB*\n\nPara visualizar dashboards e fazer upload direto de XML/PDF de NFs, acesse:\n🌐 https://getsemani-gsa.netlify.app/fornecedor\n\n_Digite 0 para voltar._');
+      sendWhatsAppReply(fromPhone, '🌐 *Painel Web do Fornecedor GSA HUB*\n\nPara visualizar dashboards e fazer upload direto de XML/PDF de NFs, acesse:\n🌐 https://gsahub.pages.dev/fornecedor\n\n_Digite 0 para voltar._');
       return;
     } else if (text === '0') {
       session.state = 'PARTNERS';
@@ -2182,7 +2272,7 @@ function processMessage(fromPhone, textBody, messageType) {
       sendWhatsAppReply(fromPhone, '💸 *Solicitação de Saque PIX (Prestador)*\n\nPor favor, digite sua *Chave PIX* (CPF, CNPJ, E-mail, Telefone ou Chave Aleatória):\n\n_Digite 0 para cancelar._');
       return;
     } else if (text === '5') {
-      sendWhatsAppReply(fromPhone, '🌐 *Painel Web do Prestador GSA HUB*\n\nPara aceitar demandas, enviar relatórios fotográficos e acompanhar repasses, acesse:\n🌐 https://getsemani-gsa.netlify.app/prestador\n\n_Digite 0 para voltar._');
+      sendWhatsAppReply(fromPhone, '🌐 *Painel Web do Prestador GSA HUB*\n\nPara aceitar demandas, enviar relatórios fotográficos e acompanhar repasses, acesse:\n🌐 https://gsahub.pages.dev/prestador\n\n_Digite 0 para voltar._');
       return;
     } else if (text === '0') {
       session.state = 'PARTNERS';
@@ -2251,7 +2341,7 @@ function processMessage(fromPhone, textBody, messageType) {
       sendWhatsAppReply(fromPhone, `💬 *Transferindo para o Setor Comercial de Anúncios...*\n\n🔢 *Protocolo:* ${proto}\n\nEm instantes um consultor especializado enviará os formatos e propostas diretamente nesta conversa!\n\n_Digite 0 a qualquer momento para retornar ao menu._`);
       return;
     } else if (text === '4') {
-      sendWhatsAppReply(fromPhone, '🌐 *Painel Web do Anunciante GSA HUB*\n\nPara gerenciar criativos, orçamentos e métricas em tempo real, acesse:\n🌐 https://getsemani-gsa.netlify.app/anunciante\n\n_Digite 0 para voltar._');
+      sendWhatsAppReply(fromPhone, '🌐 *Painel Web do Anunciante GSA HUB*\n\nPara gerenciar criativos, orçamentos e métricas em tempo real, acesse:\n🌐 https://gsahub.pages.dev/anunciante\n\n_Digite 0 para voltar._');
       return;
     } else if (text === '0') {
       session.state = 'PARTNERS';
@@ -2699,13 +2789,13 @@ function processMessage(fromPhone, textBody, messageType) {
         userSessions[fromPhone] = session;
         
         if (errA || !resA || resA.length === 0) {
-          sendWhatsAppReply(fromPhone, '🤝 *Portal do Afiliado GSA HUB*\n\nVocê ainda não ativou seu perfil de Afiliado!\n\nAcesse nosso painel web, vá em "Minha Conta -> Fidelidade -> Afiliados" e ative agora mesmo para começar a ganhar comissões por indicações.\n\n🌐 https://getsemani-gsa.netlify.app/\n\n_Digite 0 para voltar ao menu principal._');
+          sendWhatsAppReply(fromPhone, '🤝 *Portal do Afiliado GSA HUB*\n\nVocê ainda não ativou seu perfil de Afiliado!\n\nAcesse nosso painel web, vá em "Minha Conta -> Fidelidade -> Afiliados" e ative agora mesmo para começar a ganhar comissões por indicações.\n\n🌐 https://gsahub.pages.dev/\n\n_Digite 0 para voltar ao menu principal._');
           return;
         }
         
         const afiliado = resA[0];
         const status = afiliado.status === 'ativo' ? '✅ Ativo' : '⚠️ ' + afiliado.status.toUpperCase();
-        const link = `https://getsemani-gsa.netlify.app/?ref=${afiliado.codigo_publico}`;
+        const link = `https://gsahub.pages.dev/?ref=${afiliado.codigo_publico}`;
         
         sendWhatsAppReply(fromPhone, `🤝 *Seu Painel de Afiliado*\n\n👤 *Nome:* ${afiliado.nome_divulgacao}\n📊 *Status:* ${status}\n\n🔗 *Seu Link Padrão de Indicação:*\n${link}\n\nCopie e envie esse link para seus contatos! Qualquer compra ou contratação feita por ele gerará comissões para você.\n\nPara ver saldos e solicitar saques, acesse o painel web.\n\n_Digite 0 para voltar ao menu principal._`);
       });
@@ -3052,17 +3142,17 @@ function processMessage(fromPhone, textBody, messageType) {
             if (link) {
               sendWhatsAppReply(fromPhone, `💳 *Link de Pagamento com Cartão (InfinitePay):*\n\n👉 ${link}\n\nVocê pode parcelar diretamente no checkout!\n\n🌟 *Como avalia nosso atendimento automático de 1 a 5?*`);
             } else {
-              sendWhatsAppReply(fromPhone, `💳 Acesse nosso portal para pagar com cartão:\nhttps://getsemani-gsa.netlify.app/\n\n🌟 *Como avalia nosso atendimento automático de 1 a 5?*`);
+              sendWhatsAppReply(fromPhone, `💳 Acesse nosso portal para pagar com cartão:\nhttps://gsahub.pages.dev/\n\n🌟 *Como avalia nosso atendimento automático de 1 a 5?*`);
             }
           } catch (e) {
-            sendWhatsAppReply(fromPhone, `💳 Acesse nosso portal para pagar com cartão:\nhttps://getsemani-gsa.netlify.app/\n\n🌟 *Como avalia nosso atendimento automático de 1 a 5?*`);
+            sendWhatsAppReply(fromPhone, `💳 Acesse nosso portal para pagar com cartão:\nhttps://gsahub.pages.dev/\n\n🌟 *Como avalia nosso atendimento automático de 1 a 5?*`);
           }
         });
       });
       reqE.on('error', () => {
         session.state = 'NPS_RATING';
         userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, `💳 Acesse nosso portal para pagar com cartão:\nhttps://getsemani-gsa.netlify.app/\n\n🌟 *Como avalia nosso atendimento automático de 1 a 5?*`);
+        sendWhatsAppReply(fromPhone, `💳 Acesse nosso portal para pagar com cartão:\nhttps://gsahub.pages.dev/\n\n🌟 *Como avalia nosso atendimento automático de 1 a 5?*`);
       });
       reqE.write(JSON.stringify(edgePayload));
       reqE.end();

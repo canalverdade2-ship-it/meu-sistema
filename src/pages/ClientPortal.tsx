@@ -323,7 +323,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     descricao: 'Para validar a segunda etapa da sua indicação e garantir seu bônus, siga estes passos:',
     acaoBotao: 'url',
     moduloDestino: 'orcamentos',
-    urlBotao: 'https://getsemani-gsa.netlify.app/',
+    urlBotao: 'https://gsahub.pages.dev/',
     textoBotao: 'Solicitar Serviços',
     tamanho: 'md'
   });
@@ -624,7 +624,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
           descricao: get('modal_indicacao_descricao', 'Para validar a segunda etapa da sua indicação e garantir seu bônus, siga estes passos:'),
           acaoBotao: get('modal_indicacao_acao_botao', 'url'),
           moduloDestino: get('modal_indicacao_modulo_destino', 'orcamentos'),
-          urlBotao: get('modal_indicacao_url_botao', 'https://getsemani-gsa.netlify.app/'),
+          urlBotao: get('modal_indicacao_url_botao', 'https://gsahub.pages.dev/'),
           textoBotao: get('modal_indicacao_texto_botao', 'Solicitar Serviços'),
           tamanho: get('modal_indicacao_tamanho', 'md')
         });
@@ -848,7 +848,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   };
 
   const handleRequestService = () => {
-    window.open('https://getsemani-gsa.netlify.app/', '_blank');
+    window.open('https://gsahub.pages.dev/', '_blank');
   };
 
   const currentPoints = cliente?.pontos_totais || 0;
