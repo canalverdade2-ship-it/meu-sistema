@@ -47,7 +47,7 @@ function formatBytes(value: unknown) {
 }
 
 export function SystemMonitorModule(_props: { colaboradorId?: string; colaboradorNome?: string | null }) {
-  const [activeTab, setActiveTab] = useState<'vps' | 'cloudflare' | 'database'>('vps');
+  const [activeTab, setActiveTab] = useState<'vps' | 'cloudflare' | 'database' | 'whatsapp'>('vps');
   const [snapshot, setSnapshot] = useState<SystemSnapshot>({ metrics: {}, tables: [], users_list: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -347,13 +347,18 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
           >
             <Database className="w-4 h-4 text-purple-400" /> PostgreSQL (VPS)
           </button>
+          <button
+            onClick={() => setActiveTab('whatsapp')}
+            className={`flex items-center gap-2 px-4 py-3 font-bold text-sm rounded-t-xl transition-colors ${activeTab === 'whatsapp' ? 'bg-neutral-900 text-white border-t border-x border-neutral-800' : 'text-neutral-400 hover:text-white'}`}
+          >
+            <MessageSquare className="w-4 h-4 text-emerald-400" /> WhatsApp & Evolution API
+          </button>
         </div>
       </header>
 
       {/* Conteúdo da Aba VPS */}
       {activeTab === 'vps' && (
         <div className="space-y-6">
-          <WhatsAppQRCodeManager key={`wa-${refreshKey}`} />
           <OracleMetricsPanel key={`vps-${refreshKey}`} />
           <VPSTerminal key={`term-${refreshKey}`} />
         </div>
@@ -362,6 +367,11 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       {/* Conteúdo da Aba Cloudflare */}
       {activeTab === 'cloudflare' && (
         <CloudflareManager key={`cf-${refreshKey}`} />
+      )}
+
+      {/* Conteúdo da Aba WhatsApp & Evolution API */}
+      {activeTab === 'whatsapp' && (
+        <WhatsAppQRCodeManager key={`wa-${refreshKey}`} />
       )}
 
       {/* Conteúdo da Aba Database (Original) */}
