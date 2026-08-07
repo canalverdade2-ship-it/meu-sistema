@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, Database, HardDrive, RefreshCw, Server, ShieldCheck, Users, Terminal as TerminalIcon, Globe, Cpu } from 'lucide-react';
+import { Activity, Database, HardDrive, RefreshCw, Server, ShieldCheck, Users, Terminal as TerminalIcon, Globe, Cpu, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatDateTime } from '../../lib/utils';
@@ -42,6 +42,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
   const [refreshing, setRefreshing] = useState(false);
   const [sendingAlert, setSendingAlert] = useState(false);
   const [search, setSearch] = useState('');
+  const [tablesOpen, setTablesOpen] = useState(false);
 
   const handleSendTestAlert = async () => {
     setSendingAlert(true);
@@ -180,18 +181,43 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
             {cards.map(({ label, value, icon: Icon }) => <article key={label} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Icon className="h-5 w-5" /></span><p className="mt-5 text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-1 text-2xl font-black text-neutral-900">{value}</p></article>)}
           </div>
 
-          <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-            <div className="flex flex-col justify-between gap-4 border-b border-neutral-100 p-5 sm:flex-row sm:items-center">
-              <div><h2 className="flex items-center gap-2 text-lg font-black"><Activity className="h-5 w-5 text-indigo-600" /> Estatísticas das tabelas</h2><p className="mt-1 text-sm text-neutral-500">Estimativas fornecidas pelo PostgreSQL, sem leitura do conteúdo das linhas.</p></div>
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar tabela" className="rounded-xl border border-neutral-200 px-4 py-2.5 text-sm" />
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-neutral-50 text-[10px] font-black uppercase tracking-wider text-neutral-500"><tr><th className="px-4 py-3">Tabela</th><th className="px-4 py-3">Linhas estimadas</th><th className="px-4 py-3">Linhas mortas</th><th className="px-4 py-3">Última análise</th></tr></thead>
-                <tbody className="divide-y divide-neutral-100">{filteredTables.map((table) => <tr key={table.table}><td className="px-4 py-3 font-mono text-xs font-bold text-neutral-800">{table.table}</td><td className="px-4 py-3">{numberValue(table.estimated_rows).toLocaleString('pt-BR')}</td><td className="px-4 py-3">{numberValue(table.dead_rows).toLocaleString('pt-BR')}</td><td className="px-4 py-3 text-neutral-500">{table.last_analyze || table.last_autoanalyze ? formatDateTime(table.last_analyze || table.last_autoanalyze || '') : '—'}</td></tr>)}</tbody>
-              </table>
-            </div>
-            {filteredTables.length === 0 && <div className="p-12 text-center text-neutral-400">Nenhuma tabela encontrada.</div>}
+          <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all">
+            <button
+              type="button"
+              onClick={() => setTablesOpen(!tablesOpen)}
+              className="w-full flex items-center justify-between gap-4 p-5 text-left bg-white hover:bg-neutral-50/80 transition-colors"
+            >
+              <div>
+                <h2 className="flex items-center gap-2 text-lg font-black text-neutral-900">
+                  <Activity className="h-5 w-5 text-indigo-600" /> Estatísticas das tabelas
+                </h2>
+                <p className="mt-1 text-sm text-neutral-500">Estimativas fornecidas pelo PostgreSQL, sem leitura do conteúdo das linhas.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-neutral-400 bg-neutral-100 px-3 py-1.5 rounded-lg">
+                  {tablesOpen ? 'Clique para recolher' : 'Clique para expandir'}
+                </span>
+                <span className="p-2 rounded-xl bg-neutral-100 text-neutral-600">
+                  {tablesOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </span>
+              </div>
+            </button>
+
+            {tablesOpen && (
+              <div className="border-t border-neutral-100">
+                <div className="flex flex-col justify-between gap-4 p-5 bg-neutral-50/50 sm:flex-row sm:items-center">
+                  <span className="text-xs font-bold text-neutral-500">Filtrar por nome de tabela</span>
+                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar tabela" className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="bg-neutral-50 text-[10px] font-black uppercase tracking-wider text-neutral-500"><tr><th className="px-4 py-3">Tabela</th><th className="px-4 py-3">Linhas estimadas</th><th className="px-4 py-3">Linhas mortas</th><th className="px-4 py-3">Última análise</th></tr></thead>
+                    <tbody className="divide-y divide-neutral-100">{filteredTables.map((table) => <tr key={table.table} className="hover:bg-neutral-50/80"><td className="px-4 py-3 font-mono text-xs font-bold text-neutral-800">{table.table}</td><td className="px-4 py-3">{numberValue(table.estimated_rows).toLocaleString('pt-BR')}</td><td className="px-4 py-3">{numberValue(table.dead_rows).toLocaleString('pt-BR')}</td><td className="px-4 py-3 text-neutral-500">{table.last_analyze || table.last_autoanalyze ? formatDateTime(table.last_analyze || table.last_autoanalyze || '') : '—'}</td></tr>)}</tbody>
+                  </table>
+                </div>
+                {filteredTables.length === 0 && <div className="p-12 text-center text-neutral-400">Nenhuma tabela encontrada.</div>}
+              </div>
+            )}
           </section>
 
           <p className="text-right text-xs text-neutral-400">Snapshot gerado em {snapshot.generated_at ? formatDateTime(snapshot.generated_at) : '—'}</p>
