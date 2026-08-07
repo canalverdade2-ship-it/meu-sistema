@@ -137,10 +137,13 @@ export function WhatsAppQRCodeManager() {
       } else {
         // Fallback inicial visual
         setRamais([
-          { id: 'r1', setor_nome: '1. Vendas & Orçamentos', codigo_setor: 'vendas', numero_whatsapp: '5511971858372', responsavel_nome: 'Equipe Comercial GSA', ativo: true, ordem: 1 },
-          { id: 'r2', setor_nome: '2. Financeiro & Cobrança', codigo_setor: 'financeiro', numero_whatsapp: '5511971858372', responsavel_nome: 'Setor Financeiro', ativo: true, ordem: 2 },
-          { id: 'r3', setor_nome: '3. Suporte Técnico & Operações', codigo_setor: 'suporte_tecnico', numero_whatsapp: '5511920857756', responsavel_nome: 'Central de Suporte GSA', ativo: true, ordem: 3 },
-          { id: 'r4', setor_nome: '4. Diretoria & Atendimento Especial', codigo_setor: 'diretoria', numero_whatsapp: '5511971858372', responsavel_nome: 'Gestão & Diretoria', ativo: true, ordem: 4 }
+          { id: 'r1', setor_nome: '1️⃣ Comercial', codigo_setor: 'comercial', numero_whatsapp: '5511971858372', responsavel_nome: 'COMERCIAL GSA', ativo: true, ordem: 1 },
+          { id: 'r2', setor_nome: '2️⃣ Financeiro', codigo_setor: 'financeiro', numero_whatsapp: '5511971858372', responsavel_nome: 'FINANCEIRO GSA', ativo: true, ordem: 2 },
+          { id: 'r3', setor_nome: '3️⃣ Dep. Pessoal', codigo_setor: 'dep_pessoal', numero_whatsapp: '5511971858372', responsavel_nome: 'DEP. PESSOAL GSA', ativo: true, ordem: 3 },
+          { id: 'r5', setor_nome: '5️⃣ Suporte Afiliados', codigo_setor: 'suporte_afiliados', numero_whatsapp: '5511920857756', responsavel_nome: 'SUPORTE AFILIADOS GSA', ativo: true, ordem: 5 },
+          { id: 'r6', setor_nome: '6️⃣ Suporte Parceiros', codigo_setor: 'suporte_parceiros', numero_whatsapp: '5511920857756', responsavel_nome: 'SUPORTE PARCEIROS GSA', ativo: true, ordem: 6 },
+          { id: 'r7', setor_nome: '7️⃣ Suporte Fornecedores', codigo_setor: 'suporte_fornecedores', numero_whatsapp: '5511920857756', responsavel_nome: 'SUPORTE FORNECEDORES GSA', ativo: true, ordem: 7 },
+          { id: 'r8', setor_nome: '8️⃣ SAC', codigo_setor: 'sac', numero_whatsapp: '5511971858372', responsavel_nome: 'SAC GSA', ativo: true, ordem: 8 }
         ]);
       }
     } catch (e) {
