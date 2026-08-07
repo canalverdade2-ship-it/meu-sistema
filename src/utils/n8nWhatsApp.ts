@@ -81,25 +81,23 @@ export async function sendAdminWhatsAppNotification(payload: AdminNotificationPa
   const textBody = `🚨 *GSA HUB - Notificação Administrativa*\n\n${categoryFormatted} *${payload.title}*\n\n${payload.message}\n\n📅 ${new Date().toLocaleString('pt-BR')}\n\n_Mensagem enviada via GSA HUB._`;
 
   try {
-    // 1. Tentar via n8n Webhook
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('vps-api', {
+      body: {
+        action: 'send-whatsapp',
         phone,
-        title: payload.title,
         message: textBody,
+        title: payload.title,
         category: payload.category || 'ADMIN',
-        timestamp: new Date().toISOString()
-      })
+        targetIp: '163.176.97.152'
+      }
     });
 
-    if (response.ok) {
-      console.log(`✅ Notificação de WhatsApp enviada via n8n para ${phone} com sucesso!`);
+    if (!error && data?.success) {
+      console.log(`✅ Notificação de WhatsApp enviada via Edge Function para ${phone} com sucesso!`);
       return true;
     }
   } catch (err) {
-    console.warn('⚠️ Webhook n8n indisponível, acionando rota direta Meta WhatsApp API...', err);
+    console.warn('⚠️ Falha via vps-api, acionando rota direta Meta WhatsApp API...', err);
   }
 
   // 2. Fallback direto via Meta WhatsApp Cloud API

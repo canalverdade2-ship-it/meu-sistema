@@ -875,36 +875,22 @@ export const whatsappNotificationService = {
     const phone = targetPhone.startsWith('55') ? targetPhone : `55${targetPhone}`;
 
     try {
-      const { webhookUrl } = await getAdminWhatsAppConfig();
-      const payload: any = { telefone: phone, mensagem };
-      if (options?.mediaBase64 || options?.pdfUrl) {
-        payload.mediaBase64 = options.mediaBase64;
-        payload.pdfUrl = options.pdfUrl;
-        payload.pdfPath = options.pdfPath;
-        payload.fileName = options.fileName;
-      }
-
-      const res = await fetch('http://147.15.43.141:5678/webhook/send-whatsapp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('vps-api', {
+        body: {
+          action: 'send-whatsapp',
           phone,
-          message: payload.mensagem,
+          message: mensagem,
           title: 'Notificação GSA HUB',
           category: 'CLIENTE',
-          timestamp: new Date().toISOString(),
-          mediaBase64: options?.mediaBase64,
-          pdfUrl: options?.pdfUrl,
-          fileName: options?.fileName || 'documento.pdf',
-          ...payload
-        })
+          targetIp: '163.176.97.152'
+        }
       });
 
-      if (res.ok) {
+      if (!error && data?.success) {
         return true;
       }
     } catch (e) {
-      console.warn('⚠️ Falha no disparo automático via API:', e);
+      console.warn('⚠️ Falha no disparo via Edge Function vps-api:', e);
     }
 
     toast.error('⚠️ Ocorreu um erro no servidor de WhatsApp. Tente novamente em instantes.');

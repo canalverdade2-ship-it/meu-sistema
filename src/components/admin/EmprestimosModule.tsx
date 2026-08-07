@@ -881,49 +881,65 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
                   </div>
                 </div>
 
-                {/* Ações por Status */}
-                <div className="bg-[#1a1a1a] p-8 rounded-[2rem] shadow-xl text-white space-y-6">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2">
+                {/* Ações por Status — Painel Executivo de Alto Contraste */}
+                <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-neutral-200 text-neutral-900 space-y-6">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4" /> Ações Administrativas
                   </h3>
 
                   {selected.status === 'analise_inicial' && (
                     <div className="space-y-5 animate-in slide-in-from-top-4 duration-500">
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Valor Aprovado (R$)</label>
+                        <label className="text-[10px] font-black text-neutral-700 uppercase tracking-widest">Valor Aprovado (R$)</label>
                         <input 
                           value={maskCurrency(proposta.valorAprovado)} 
                           onChange={e => handleCurrencyInputChange(e.target.value, (val) => setProposta({ ...proposta, valorAprovado: val.toString() }))} 
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold" 
+                          className="w-full bg-neutral-50 border border-neutral-200 text-neutral-900 placeholder:text-neutral-400 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all font-bold shadow-inner" 
                           placeholder="0,00" 
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Juros (%)</label>
-                          <input value={proposta.juros} onChange={e => setProposta({ ...proposta, juros: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold" placeholder="0.00" />
+                          <label className="text-[10px] font-black text-neutral-700 uppercase tracking-widest">Juros (%)</label>
+                          <input 
+                            value={proposta.juros} 
+                            onChange={e => setProposta({ ...proposta, juros: e.target.value })} 
+                            className="w-full bg-neutral-50 border border-neutral-200 text-neutral-900 placeholder:text-neutral-400 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all font-bold shadow-inner" 
+                            placeholder="0.00" 
+                          />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Máx Parcelas</label>
-                          <input value={proposta.maxParcelas} onChange={e => setProposta({ ...proposta, maxParcelas: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold" placeholder="12" />
+                          <label className="text-[10px] font-black text-neutral-700 uppercase tracking-widest">Máx Parcelas</label>
+                          <input 
+                            value={proposta.maxParcelas} 
+                            onChange={e => setProposta({ ...proposta, maxParcelas: e.target.value })} 
+                            className="w-full bg-neutral-50 border border-neutral-200 text-neutral-900 placeholder:text-neutral-400 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all font-bold shadow-inner" 
+                            placeholder="12" 
+                          />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Taxa de Serviço (R$)</label>
+                        <label className="text-[10px] font-black text-neutral-700 uppercase tracking-widest">Taxa de Serviço (R$)</label>
                         <input 
                           value={maskCurrency(proposta.taxaServico)} 
                           onChange={e => handleCurrencyInputChange(e.target.value, (val) => setProposta({ ...proposta, taxaServico: val.toString() }))} 
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold" 
+                          className="w-full bg-neutral-50 border border-neutral-200 text-neutral-900 placeholder:text-neutral-400 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all font-bold shadow-inner" 
                           placeholder="0,00" 
                         />
                       </div>
                       {proposta.juros && proposta.maxParcelas && (
-                        <div className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-[11px] font-bold text-emerald-400">
+                        <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-[11px] font-bold text-emerald-800">
                           Simulação: {proposta.maxParcelas}x de {formatCurrency(calcularParcela(parseFloat(proposta.valorAprovado) || 0, parseFloat(proposta.juros) || 0, parseInt(proposta.maxParcelas) || 1).valorParcela)}
                         </div>
                       )}
-                      <textarea value={proposta.mensagem} onChange={e => setProposta({ ...proposta, mensagem: e.target.value })} placeholder="Mensagem para o cliente..." className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold resize-none" rows={3} />
-                      <button onClick={enviarProposta} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-600/20 active:scale-[0.98]">
+                      <textarea 
+                        value={proposta.mensagem} 
+                        onChange={e => setProposta({ ...proposta, mensagem: e.target.value })} 
+                        placeholder="Mensagem para o cliente..." 
+                        className="w-full bg-neutral-50 border border-neutral-200 text-neutral-900 placeholder:text-neutral-400 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all font-bold resize-none shadow-inner" 
+                        rows={3} 
+                      />
+                      <button onClick={enviarProposta} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-600/20 active:scale-[0.98] cursor-pointer">
                         Enviar Proposta Oficial
                       </button>
                     </div>
@@ -931,15 +947,15 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
 
                   {selected.status === 'analise_final' && (
                     <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
-                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                        <p className="text-xs font-bold text-neutral-400 mb-3 uppercase tracking-widest">Upload de Contrato PDF</p>
-                        <label className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
-                          <Upload className="h-5 w-5 text-emerald-500" />
-                          <span className="text-xs text-neutral-300 truncate">{contratoFile ? contratoFile.name : 'Selecionar Contrato...'}</span>
+                      <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200">
+                        <p className="text-xs font-bold text-neutral-700 mb-3 uppercase tracking-widest">Upload de Contrato PDF</p>
+                        <label className="flex items-center gap-3 p-4 rounded-xl bg-white border border-neutral-200 cursor-pointer hover:bg-neutral-50 transition-all shadow-sm">
+                          <Upload className="h-5 w-5 text-emerald-600" />
+                          <span className="text-xs text-neutral-700 font-bold truncate">{contratoFile ? contratoFile.name : 'Selecionar Contrato...'}</span>
                           <input type="file" accept=".pdf" className="hidden" onChange={e => setContratoFile(e.target.files?.[0] || null)} />
                         </label>
                       </div>
-                      <button onClick={enviarContrato} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-600/20">
+                      <button onClick={enviarContrato} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-600/20 cursor-pointer">
                         Publicar Contrato
                       </button>
                     </div>
@@ -948,17 +964,17 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
                   {selected.status === 'analise_contrato' && (
                     <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
                       {selected.assinatura_url && (
-                        <div className="p-6 bg-white rounded-3xl ring-1 ring-black/5">
-                          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-3">Assinatura Digital</p>
+                        <div className="p-6 bg-neutral-50 rounded-3xl border border-neutral-200">
+                          <p className="text-[10px] font-black text-neutral-600 uppercase tracking-widest mb-3">Assinatura Digital</p>
                           <img src={selected.assinatura_url} alt="Assinatura" className="w-full h-24 object-contain mb-2" />
-                          <p className="text-[10px] text-neutral-400 text-center font-bold">Assinado eletronicamente em {formatDate(selected.data_assinatura!)}</p>
+                          <p className="text-[10px] text-neutral-500 text-center font-bold">Assinado eletronicamente em {formatDate(selected.data_assinatura!)}</p>
                         </div>
                       )}
                       <div className="space-y-3">
-                        <button onClick={aprovar} className="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-500/20">
+                        <button onClick={aprovar} className="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-500/20 cursor-pointer">
                           Aprovar & Gerar Fatura Taxa
                         </button>
-                        <button onClick={reprovarAssinatura} className="w-full py-4 bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-600/20 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all">
+                        <button onClick={reprovarAssinatura} className="w-full py-4 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer">
                           Reprovar e Solicitar Nova Assinatura
                         </button>
                       </div>
@@ -967,14 +983,14 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
 
                   {selected.status === 'aprovado' && (
                     <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
-                      <div className="p-6 bg-amber-50 rounded-3xl ring-1 ring-amber-100 flex items-center gap-4">
+                      <div className="p-6 bg-amber-50 rounded-3xl border border-amber-200 flex items-center gap-4">
                         <Clock className="h-6 w-6 text-amber-600" />
                         <div>
                           <p className="text-[10px] font-black text-amber-900 uppercase">Aguardando Pagamento da Taxa</p>
                           <p className="text-xs font-bold text-amber-700">O empréstimo já foi aprovado. Assim que a taxa for paga, ative-o abaixo.</p>
                         </div>
                       </div>
-                      <button onClick={ativar} className="w-full py-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
+                      <button onClick={ativar} className="w-full py-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-indigo-500/20 active:scale-95 cursor-pointer">
                         Ativar Empréstimo Agora
                       </button>
                     </div>
@@ -982,26 +998,26 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
 
                   {['ativo', 'quitado', 'analise_quitacao', 'aguardando_pagamento_quitacao'].includes(selected.status) && (
                     <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
-                      <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-4 flex items-center gap-2">
+                      <div className="p-6 bg-neutral-50 rounded-3xl border border-neutral-200">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-4 flex items-center gap-2">
                           <CheckCircle className="h-4 w-4" /> Acompanhamento de Pagamentos
                         </h4>
                         <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
                           {parcelas.length === 0 ? (
-                            <p className="text-xs text-neutral-400">Nenhuma parcela gerada.</p>
+                            <p className="text-xs text-neutral-500">Nenhuma parcela gerada.</p>
                           ) : parcelas.map((p) => (
-                            <div key={p.id} className={`flex items-center justify-between p-3 rounded-xl border ${p.status === 'paga' ? 'bg-emerald-500/10 border-emerald-500/20' : p.status === 'vencida' ? 'bg-red-500/10 border-red-500/20' : 'bg-white/5 border-white/10'}`}>
+                            <div key={p.id} className={`flex items-center justify-between p-3 rounded-xl border ${p.status === 'paga' ? 'bg-emerald-50 border-emerald-200' : p.status === 'vencida' ? 'bg-rose-50 border-rose-200' : 'bg-white border-neutral-200'}`}>
                               <div className="flex items-center gap-3">
-                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-xs font-black ${p.status === 'paga' ? 'bg-emerald-500/20 text-emerald-400' : p.status === 'vencida' ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-neutral-300'}`}>
+                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-xs font-black ${p.status === 'paga' ? 'bg-emerald-100 text-emerald-700' : p.status === 'vencida' ? 'bg-rose-100 text-rose-700' : 'bg-neutral-100 text-neutral-700'}`}>
                                   {p.numero_parcela}
                                 </div>
                                 <div>
-                                  <p className="text-xs font-bold text-white">{formatCurrency(p.valor)}</p>
-                                  <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Venc: {formatDate(p.data_vencimento)}</p>
+                                  <p className="text-xs font-bold text-neutral-900">{formatCurrency(p.valor)}</p>
+                                  <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500">Venc: {formatDate(p.data_vencimento)}</p>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <span className={`text-[9px] font-black uppercase tracking-widest ${p.status === 'paga' ? 'text-emerald-400' : p.status === 'vencida' ? 'text-red-400' : 'text-amber-400'}`}>
+                                <span className={`text-[9px] font-black uppercase tracking-widest ${p.status === 'paga' ? 'text-emerald-700 font-bold' : p.status === 'vencida' ? 'text-rose-600 font-bold' : 'text-amber-600 font-bold'}`}>
                                   {p.status}
                                 </span>
                                 {p.data_pagamento && (
@@ -1017,24 +1033,24 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
 
                   {selected.status === 'analise_quitacao' && (
                     <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
-                      <div className="p-6 bg-amber-500/10 rounded-3xl border border-amber-500/20">
-                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Solicitação de Quitação</p>
-                        <p className="text-sm font-bold text-neutral-300">O cliente deseja quitar o empréstimo. Avalie e informe o valor final com desconto (se houver).</p>
+                      <div className="p-6 bg-amber-50 rounded-3xl border border-amber-200">
+                        <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2">Solicitação de Quitação</p>
+                        <p className="text-sm font-bold text-neutral-700">O cliente deseja quitar o empréstimo. Avalie e informe o valor final com desconto (se houver).</p>
                         <div className="mt-4">
                           <p className="text-[9px] font-black text-neutral-500 uppercase tracking-widest mb-1">Valor Restante (Original)</p>
-                          <p className="text-xl font-black text-white">{formatCurrency(roundMoney(parcelas.filter(p => p.status !== 'paga').reduce((sum, p) => sum + (p.valor || 0), 0)))}</p>
+                          <p className="text-xl font-black text-neutral-900">{formatCurrency(roundMoney(parcelas.filter(p => p.status !== 'paga').reduce((sum, p) => sum + (p.valor || 0), 0)))}</p>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Valor da Oferta de Quitação (R$)</label>
+                        <label className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Valor da Oferta de Quitação (R$)</label>
                         <input 
                           value={maskCurrency(valorQuitacao)} 
                           onChange={e => handleCurrencyInputChange(e.target.value, (val) => setValorQuitacao(val.toString()))} 
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold" 
+                          className="w-full bg-neutral-50 border border-neutral-200 text-neutral-900 placeholder:text-neutral-400 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all font-bold shadow-inner" 
                           placeholder="0,00" 
                         />
                       </div>
-                      <button onClick={enviarOfertaQuitacao} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                      <button onClick={enviarOfertaQuitacao} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer">
                         Enviar Oferta de Quitação
                       </button>
                     </div>
@@ -1042,34 +1058,45 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
 
                   {selected.status === 'aguardando_pagamento_quitacao' && (
                     <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
-                      <div className="p-6 bg-indigo-500/10 rounded-3xl border border-indigo-500/20">
-                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Aguardando Pagamento</p>
-                        <p className="text-sm font-bold text-neutral-300">Oferta enviada ao cliente para quitação total:</p>
-                        <p className="text-3xl font-black text-white mt-2">{formatCurrency(selected.valor_quitacao_acordo || 0)}</p>
+                      <div className="p-6 bg-indigo-50 rounded-3xl border border-indigo-200">
+                        <p className="text-[10px] font-black text-indigo-700 uppercase tracking-widest mb-2">Aguardando Pagamento</p>
+                        <p className="text-sm font-bold text-neutral-700">Oferta enviada ao cliente para quitação total:</p>
+                        <p className="text-3xl font-black text-indigo-900 mt-2">{formatCurrency(selected.valor_quitacao_acordo || 0)}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Ações Globais: Pendência e Observações */}
-                  <div className="pt-6 border-t border-white/5 space-y-4">
+                  <div className="pt-6 border-t border-neutral-200 space-y-4">
                     <div className="space-y-3">
-                      <input value={motivoPendencia} onChange={e => setMotivoPendencia(e.target.value)} placeholder="Descreva a pendência..." className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs focus:ring-2 focus:ring-amber-500 outline-none transition-all font-bold" />
-                      <button onClick={solicitarPendencia} className="w-full py-3 bg-amber-600/20 hover:bg-amber-600/30 text-amber-500 border border-amber-600/30 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
+                      <input 
+                        value={motivoPendencia} 
+                        onChange={e => setMotivoPendencia(e.target.value)} 
+                        placeholder="Descreva a pendência..." 
+                        className="w-full bg-neutral-50 border border-neutral-200 text-neutral-900 placeholder:text-neutral-400 rounded-xl px-4 py-3 text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white outline-none transition-all font-bold shadow-inner" 
+                      />
+                      <button onClick={solicitarPendencia} className="w-full py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer">
                         Solicitar Correção/Doc
                       </button>
                     </div>
 
                     <div className="space-y-3 pt-4">
-                      <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Observações Administrativas</p>
-                      <textarea value={obs} onChange={e => setObs(e.target.value)} rows={3} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs focus:ring-2 focus:ring-white/20 outline-none transition-all font-bold resize-none" />
-                      <button onClick={saveObs} className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                      <p className="text-[10px] font-black text-neutral-700 uppercase tracking-widest">Observações Administrativas</p>
+                      <textarea 
+                        value={obs} 
+                        onChange={e => setObs(e.target.value)} 
+                        rows={3} 
+                        placeholder="Escreva observações internas..."
+                        className="w-full bg-neutral-50 border border-neutral-200 text-neutral-900 placeholder:text-neutral-400 rounded-xl px-4 py-3 text-xs focus:ring-2 focus:ring-neutral-400 focus:bg-white outline-none transition-all font-bold resize-none shadow-inner" 
+                      />
+                      <button onClick={saveObs} className="px-6 py-2.5 bg-neutral-900 hover:bg-black text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md cursor-pointer">
                         Salvar Nota
                       </button>
                     </div>
                   </div>
 
                   {selected.status !== 'cancelado' && (
-                    <button onClick={cancelar} className="w-full py-4 text-red-500/60 hover:text-red-500 font-black text-[10px] uppercase tracking-widest transition-all">
+                    <button onClick={cancelar} className="w-full py-4 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer">
                       Reprovar Empréstimo
                     </button>
                   )}

@@ -197,9 +197,58 @@ async function handleRequest(request: Request) {
             return json(200, { success: false, state: 'close' }, origin);
           }
         }
-        return json(200, { success: false, state: 'close' }, origin);
+      if (action === 'send-whatsapp' || path.includes('/send-whatsapp')) {
+        const phone = (body.phone || body.telefone || '').replace(/\D/g, '');
+        const message = body.message || body.mensagem || '';
+        if (!phone || !message) {
+          return json(400, { error: 'phone e message sao obrigatorios' }, origin);
+        }
+
+        const formattedPhone = phone.startsWith('55') ? phone : `55${phone}`;
+
+        try {
+          // 1. Tenta via n8n webhook na porta 5678 da VPS solicitada
+          const n8nRes = await fetch(`http://${targetHost}:5678/webhook/send-whatsapp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: formattedPhone,
+              message,
+              title: body.title || 'Notificação GSA HUB',
+              category: body.category || 'SISTEMA',
+              timestamp: new Date().toISOString()
+            })
+          });
+
+          if (n8nRes.ok) {
+            const resData = await n8nRes.json().catch(() => ({}));
+            return json(200, { success: true, via: 'n8n', data: resData }, origin);
+          }
+
+          // 2. Fallback direto para Evolution API na porta 8080
+          const evoRes = await fetch(`http://${targetHost}:8080/message/sendText/GSA_WhatsApp`, {
+            method: 'POST',
+            headers: {
+              'apikey': 'gsa_hub_evolution_token_2026',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              number: formattedPhone,
+              options: { delay: 1200, presence: 'composing', linkPreview: true },
+              textMessage: { text: message }
+            })
+          });
+
+          if (evoRes.ok) {
+            const evoData = await evoRes.json();
+            return json(200, { success: true, via: 'evolution-api', data: evoData }, origin);
+          }
+
+          return json(500, { error: 'Falha no disparo: n8n e Evolution API responderam com erro' }, origin);
+        } catch (e: any) {
+          return json(500, { error: 'Erro de conexao no servidor de disparo: ' + e.message }, origin);
+        }
       }
-    }
 
     return json(404, { error: 'Route not found' }, origin);
 

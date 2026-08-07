@@ -448,7 +448,7 @@ export function WhatsAppQRCodeManager() {
     }
   };
 
-  // Testar Disparo de Linha ou Ramal
+  // Testar Disparo de Linha ou Ramal via Edge Function (HTTPS, Sem Bloqueio de Mixed Content)
   const handleTestDevice = async (device: WhatsAppDevice) => {
     if (!device.phone) {
       toast.error('Cadastre um número antes de testar o disparo.');
@@ -457,24 +457,24 @@ export function WhatsAppQRCodeManager() {
     setTestingId(device.id);
 
     try {
-      if (device.role === 'MASTER') {
-        const ok = await sendAdminWhatsAppNotification({
+      const { data, error } = await supabase.functions.invoke('vps-api', {
+        body: {
+          action: 'send-whatsapp',
+          phone: device.phone,
+          message: `🚨 *TESTE DE LINHA PRINCIPAL GSA HUB*\n\nDispositivo: *${device.name}*\nFunção: ${device.role}\nServidor: ${targetIp}\nStatus: Operacional 🟢\n📅 ${new Date().toLocaleString('pt-BR')}`,
           title: 'Teste de Linha Conectada',
-          message: `Disparo de teste realizado com sucesso na linha ${device.name} (${targetIp}).`,
           category: 'SISTEMA',
-          recipientPhone: device.phone
-        });
-        if (ok) toast.success(`✅ Alerta enviado para ${formatPhoneDisplay(device.phone)}!`);
+          targetIp
+        }
+      });
+
+      if (!error && data?.success) {
+        toast.success(`✅ Disparo de teste enviado com sucesso via ${data.via || 'servidor'} para ${formatPhoneDisplay(device.phone)}!`);
       } else {
-        const ok = await whatsappNotificationService.enviarWhatsAppDireto(
-          device.phone,
-          `🤖 *TESTE GSA HUB* - Linha Oficial de Suporte (${device.name}) verificada em tempo real!`,
-          { clienteNome: 'Administrador' }
-        );
-        if (ok) toast.success(`✅ Notificação enviada para ${formatPhoneDisplay(device.phone)}!`);
+        toast.error('❌ Falha no disparo de teste: ' + (error?.message || data?.error || 'Servidor indisponível'));
       }
     } catch (e: any) {
-      toast.error('Falha no teste da linha: ' + e.message);
+      toast.error('Falha no disparo de teste: ' + e.message);
     } finally {
       setTestingId(null);
     }
@@ -483,12 +483,22 @@ export function WhatsAppQRCodeManager() {
   const handleTestRamal = async (ramal: WhatsAppRamal) => {
     setTestingId(ramal.id);
     try {
-      const ok = await whatsappNotificationService.enviarWhatsAppDireto(
-        ramal.numero_whatsapp,
-        `📲 *TESTE DE TRANSBORDO DE RAMAL* - Setor: *${ramal.setor_nome}*\n\nResponsável: ${ramal.responsavel_nome}\nStatus: Operacional 🟢`,
-        { clienteNome: 'Administrador' }
-      );
-      if (ok) toast.success(`✅ Teste de transbordo enviado para ${ramal.setor_nome} (${formatPhoneDisplay(ramal.numero_whatsapp)})!`);
+      const { data, error } = await supabase.functions.invoke('vps-api', {
+        body: {
+          action: 'send-whatsapp',
+          phone: ramal.numero_whatsapp,
+          message: `📲 *TESTE DE TRANSBORDO DE RAMAL GSA HUB*\n\n🏢 Setor: *${ramal.setor_nome}*\n👤 Responsável: ${ramal.responsavel_nome}\n🖥️ Servidor: ${targetIp}\nStatus: Operacional 🟢\n📅 ${new Date().toLocaleString('pt-BR')}`,
+          title: 'Teste de Transbordo',
+          category: 'SISTEMA',
+          targetIp
+        }
+      });
+
+      if (!error && data?.success) {
+        toast.success(`✅ Teste de transbordo enviado com sucesso via ${data.via || 'servidor'} para ${ramal.setor_nome} (${formatPhoneDisplay(ramal.numero_whatsapp)})!`);
+      } else {
+        toast.error('❌ Falha no disparo de transbordo: ' + (error?.message || data?.error || 'Servidor indisponível'));
+      }
     } catch (e: any) {
       toast.error('Falha no teste de ramal: ' + e.message);
     } finally {
