@@ -121,14 +121,28 @@ async function persistAuthenticatedSession(payload: any, useExistingAuthSession 
     }
   } else {
     const tokenHash = rpcSession?.auth?.token_hash;
-    if (!tokenHash) {
-      throw new Error('A autenticação não retornou o token de ativação.');
-    }
+    const email = rpcSession?.auth?.email;
+    const password = rpcSession?.auth?.password;
+    
+    let authData, authError;
 
-    const { data: authData, error: authError } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'magiclink',
-    });
+    if (email && password) {
+      const res = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      authData = res.data;
+      authError = res.error;
+    } else if (tokenHash) {
+      const res = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: 'magiclink',
+      });
+      authData = res.data;
+      authError = res.error;
+    } else {
+      throw new Error('A autenticação não retornou os dados de ativação.');
+    }
 
     if (authError || !authData.session || !authData.user) {
       await supabase.rpc('gsa_end_session', {

@@ -307,11 +307,8 @@ function getRpcProxy(client: SupabaseClient) {
 
 export const getSupabase = (): SupabaseClient => {
   if (!supabaseInstance) {
-    const meta = import.meta as any;
-    const processEnv = (typeof process !== 'undefined' ? process.env : {}) as any;
-
-    const supabaseUrl = meta.env?.VITE_SUPABASE_URL || processEnv.VITE_SUPABASE_URL;
-    const supabaseAnonKey = meta.env?.VITE_SUPABASE_ANON_KEY || processEnv.VITE_SUPABASE_ANON_KEY;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || (typeof process !== 'undefined' ? process.env.VITE_SUPABASE_URL : undefined);
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || (typeof process !== 'undefined' ? process.env.VITE_SUPABASE_ANON_KEY : undefined);
 
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error(

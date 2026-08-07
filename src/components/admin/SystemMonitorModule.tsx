@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, Database, HardDrive, RefreshCw, Server, ShieldCheck, Users } from 'lucide-react';
+import { Activity, Database, HardDrive, RefreshCw, Server, ShieldCheck, Users, Terminal as TerminalIcon, Globe, Cpu } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatDateTime } from '../../lib/utils';
+import { sendAdminWhatsAppNotification } from '../../utils/n8nWhatsApp';
+import { MessageSquare } from 'lucide-react';
+
+import { OracleMetricsPanel } from './infra/OracleMetricsPanel';
+import { VPSTerminal } from './infra/VPSTerminal';
+import { CloudflareManager } from './infra/CloudflareManager';
 
 type SystemSnapshot = {
   metrics?: Record<string, unknown>;
@@ -29,10 +35,8 @@ function formatBytes(value: unknown) {
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
 }
 
-import { sendAdminWhatsAppNotification } from '../../utils/n8nWhatsApp';
-import { MessageSquare } from 'lucide-react';
-
 export function SystemMonitorModule(_props: { colaboradorId?: string; colaboradorNome?: string | null }) {
+  const [activeTab, setActiveTab] = useState<'vps' | 'cloudflare' | 'database'>('vps');
   const [snapshot, setSnapshot] = useState<SystemSnapshot>({ metrics: {}, tables: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -58,7 +62,6 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       setSendingAlert(false);
     }
   };
-
 
   const load = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true);
@@ -107,7 +110,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
     { label: 'Tabelas', value: numberValue(metrics.database_tables_count || snapshot.tables?.length).toLocaleString('pt-BR'), icon: Server },
   ];
 
-  if (loading) {
+  if (loading && activeTab === 'database') {
     return <div className="flex min-h-[420px] items-center justify-center"><RefreshCw className="h-9 w-9 animate-spin text-indigo-600" /></div>;
   }
 
@@ -116,9 +119,9 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Observabilidade protegida</p>
-            <h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><ShieldCheck className="h-6 w-6 text-emerald-400" /> Saúde do Sistema</h1>
-            <p className="mt-2 text-sm text-white/55">Visão somente leitura. O navegador não recebe permissão para consultar tabelas arbitrárias nem apagar arquivos.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Infraestrutura e Observabilidade</p>
+            <h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><ShieldCheck className="h-6 w-6 text-emerald-400" /> Saúde do Sistema & VPS</h1>
+            <p className="mt-2 text-sm text-white/55">Gestão completa da Oracle Cloud, Cloudflare e Banco de Dados.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -133,27 +136,67 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
             <button type="button" onClick={() => void load(true)} disabled={refreshing} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Atualizar</button>
           </div>
         </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mt-8 border-b border-neutral-800 pb-px">
+          <button
+            onClick={() => setActiveTab('vps')}
+            className={`flex items-center gap-2 px-4 py-3 font-bold text-sm rounded-t-xl transition-colors ${activeTab === 'vps' ? 'bg-neutral-900 text-white border-t border-x border-neutral-800' : 'text-neutral-400 hover:text-white'}`}
+          >
+            <Cpu className="w-4 h-4 text-blue-400" /> Oracle VPS & Terminal
+          </button>
+          <button
+            onClick={() => setActiveTab('cloudflare')}
+            className={`flex items-center gap-2 px-4 py-3 font-bold text-sm rounded-t-xl transition-colors ${activeTab === 'cloudflare' ? 'bg-neutral-900 text-white border-t border-x border-neutral-800' : 'text-neutral-400 hover:text-white'}`}
+          >
+            <Globe className="w-4 h-4 text-orange-400" /> Cloudflare
+          </button>
+          <button
+            onClick={() => setActiveTab('database')}
+            className={`flex items-center gap-2 px-4 py-3 font-bold text-sm rounded-t-xl transition-colors ${activeTab === 'database' ? 'bg-neutral-900 text-white border-t border-x border-neutral-800' : 'text-neutral-400 hover:text-white'}`}
+          >
+            <Database className="w-4 h-4 text-purple-400" /> PostgreSQL (VPS)
+          </button>
+        </div>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map(({ label, value, icon: Icon }) => <article key={label} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Icon className="h-5 w-5" /></span><p className="mt-5 text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-1 text-2xl font-black text-neutral-900">{value}</p></article>)}
-      </div>
-
-      <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-        <div className="flex flex-col justify-between gap-4 border-b border-neutral-100 p-5 sm:flex-row sm:items-center">
-          <div><h2 className="flex items-center gap-2 text-lg font-black"><Activity className="h-5 w-5 text-indigo-600" /> Estatísticas das tabelas</h2><p className="mt-1 text-sm text-neutral-500">Estimativas fornecidas pelo PostgreSQL, sem leitura do conteúdo das linhas.</p></div>
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar tabela" className="rounded-xl border border-neutral-200 px-4 py-2.5 text-sm" />
+      {/* Conteúdo da Aba VPS */}
+      {activeTab === 'vps' && (
+        <div className="space-y-6">
+          <OracleMetricsPanel />
+          <VPSTerminal />
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-neutral-50 text-[10px] font-black uppercase tracking-wider text-neutral-500"><tr><th className="px-4 py-3">Tabela</th><th className="px-4 py-3">Linhas estimadas</th><th className="px-4 py-3">Linhas mortas</th><th className="px-4 py-3">Última análise</th></tr></thead>
-            <tbody className="divide-y divide-neutral-100">{filteredTables.map((table) => <tr key={table.table}><td className="px-4 py-3 font-mono text-xs font-bold text-neutral-800">{table.table}</td><td className="px-4 py-3">{numberValue(table.estimated_rows).toLocaleString('pt-BR')}</td><td className="px-4 py-3">{numberValue(table.dead_rows).toLocaleString('pt-BR')}</td><td className="px-4 py-3 text-neutral-500">{table.last_analyze || table.last_autoanalyze ? formatDateTime(table.last_analyze || table.last_autoanalyze || '') : '—'}</td></tr>)}</tbody>
-          </table>
-        </div>
-        {filteredTables.length === 0 && <div className="p-12 text-center text-neutral-400">Nenhuma tabela encontrada.</div>}
-      </section>
+      )}
 
-      <p className="text-right text-xs text-neutral-400">Snapshot gerado em {snapshot.generated_at ? formatDateTime(snapshot.generated_at) : '—'}</p>
+      {/* Conteúdo da Aba Cloudflare */}
+      {activeTab === 'cloudflare' && (
+        <CloudflareManager />
+      )}
+
+      {/* Conteúdo da Aba Database (Original) */}
+      {activeTab === 'database' && (
+        <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {cards.map(({ label, value, icon: Icon }) => <article key={label} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Icon className="h-5 w-5" /></span><p className="mt-5 text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-1 text-2xl font-black text-neutral-900">{value}</p></article>)}
+          </div>
+
+          <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+            <div className="flex flex-col justify-between gap-4 border-b border-neutral-100 p-5 sm:flex-row sm:items-center">
+              <div><h2 className="flex items-center gap-2 text-lg font-black"><Activity className="h-5 w-5 text-indigo-600" /> Estatísticas das tabelas</h2><p className="mt-1 text-sm text-neutral-500">Estimativas fornecidas pelo PostgreSQL, sem leitura do conteúdo das linhas.</p></div>
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar tabela" className="rounded-xl border border-neutral-200 px-4 py-2.5 text-sm" />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-neutral-50 text-[10px] font-black uppercase tracking-wider text-neutral-500"><tr><th className="px-4 py-3">Tabela</th><th className="px-4 py-3">Linhas estimadas</th><th className="px-4 py-3">Linhas mortas</th><th className="px-4 py-3">Última análise</th></tr></thead>
+                <tbody className="divide-y divide-neutral-100">{filteredTables.map((table) => <tr key={table.table}><td className="px-4 py-3 font-mono text-xs font-bold text-neutral-800">{table.table}</td><td className="px-4 py-3">{numberValue(table.estimated_rows).toLocaleString('pt-BR')}</td><td className="px-4 py-3">{numberValue(table.dead_rows).toLocaleString('pt-BR')}</td><td className="px-4 py-3 text-neutral-500">{table.last_analyze || table.last_autoanalyze ? formatDateTime(table.last_analyze || table.last_autoanalyze || '') : '—'}</td></tr>)}</tbody>
+              </table>
+            </div>
+            {filteredTables.length === 0 && <div className="p-12 text-center text-neutral-400">Nenhuma tabela encontrada.</div>}
+          </section>
+
+          <p className="text-right text-xs text-neutral-400">Snapshot gerado em {snapshot.generated_at ? formatDateTime(snapshot.generated_at) : '—'}</p>
+        </div>
+      )}
     </div>
   );
 }
