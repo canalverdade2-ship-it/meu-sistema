@@ -10,6 +10,7 @@ import { supabase } from '../../lib/supabase';
 import { OracleMetricsPanel } from './infra/OracleMetricsPanel';
 import { VPSTerminal } from './infra/VPSTerminal';
 import { CloudflareManager } from './infra/CloudflareManager';
+import { WhatsAppQRCodeManager } from './infra/WhatsAppQRCodeManager';
 
 type SystemSnapshot = {
   metrics?: Record<string, unknown>;
@@ -352,6 +353,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       {/* Conteúdo da Aba VPS */}
       {activeTab === 'vps' && (
         <div className="space-y-6">
+          <WhatsAppQRCodeManager key={`wa-${refreshKey}`} />
           <OracleMetricsPanel key={`vps-${refreshKey}`} />
           <VPSTerminal key={`term-${refreshKey}`} />
         </div>
