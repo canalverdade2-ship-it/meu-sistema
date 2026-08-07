@@ -4,7 +4,7 @@ sudo docker run -d \
   --name evolution-api \
   --network evo-net \
   -p 8080:8080 \
-  -e SERVER_URL=http://163.176.97.152:8080 \
+  -e SERVER_URL=http://147.15.43.141:8080 \
   -e AUTHENTICATION_API_KEY=gsa_hub_evolution_token_2026 \
   -e DATABASE_PROVIDER=postgresql \
   -e DATABASE_CONNECTION_URI="postgresql://evo:evopass@evo-postgres:5432/evolution?schema=public" \

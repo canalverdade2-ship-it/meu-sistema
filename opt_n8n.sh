@@ -6,8 +6,8 @@ sudo docker run -d \
   -p 5678:5678 \
   --network evo-net \
   -v n8n_data:/home/node/.n8n \
-  -e N8N_HOST=163.176.97.152 \
-  -e N8N_WEBHOOK_URL=http://163.176.97.152:5678 \
+  -e N8N_HOST=147.15.43.141 \
+  -e N8N_WEBHOOK_URL=http://147.15.43.141:5678 \
   -e N8N_SECURE_COOKIE=false \
   -e DB_TYPE=postgresdb \
   -e DB_POSTGRESDB_HOST=evo-postgres \

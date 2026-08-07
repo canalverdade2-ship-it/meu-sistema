@@ -884,7 +884,7 @@ export const whatsappNotificationService = {
         payload.fileName = options.fileName;
       }
 
-      const res = await fetch(webhookUrl, {
+      const res = await fetch('http://147.15.43.141:5678/webhook/send-whatsapp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
