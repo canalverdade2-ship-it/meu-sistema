@@ -195,22 +195,23 @@ export function WhatsAppQRCodeManager() {
     setPairingCode(null);
     
     try {
-      const { data, error } = await supabase.functions.invoke('vps-api/whatsapp-qrcode', {
-        method: 'GET'
+      const { data, error } = await supabase.functions.invoke('vps-api', {
+        body: { action: 'whatsapp-qrcode', targetIp }
       });
 
-      if (!error && data?.base64) {
-        setQrCodeBase64(data.base64);
+      if (!error && (data?.base64 || data?.code)) {
+        setQrCodeBase64(data.base64 || data.code);
         if (data?.pairingCode) setPairingCode(data.pairingCode);
         setStatus('connecting');
         toast.success('QR Code gerado com sucesso! Aponte a câmera do WhatsApp.');
         return;
       }
 
+      // Se retornou mensagem mas sem base64 direto, marca como inicializado
       setStatus('connecting');
       toast.success('Serviço inicializado na VPS Nova! Execute a leitura do QR Code.');
     } catch (e: any) {
-      toast.error('Erro ao comunicar com a Evolution API: ' + e.message);
+      toast.error('Erro ao comunicar com a Evolution API: ' + (e?.message || 'Servidor indisponível'));
       setStatus('disconnected');
     } finally {
       setLoading(false);
@@ -470,7 +471,7 @@ export function WhatsAppQRCodeManager() {
     }
   };
 
-  // Testar Disparo de Linha ou Ramal via Edge Function (HTTPS, Sem Bloqueio de Mixed Content)
+  // Testar Disparo de Linha ou Ramal via Engine Integrada (Evolution API + Meta Direct)
   const handleTestDevice = async (device: WhatsAppDevice) => {
     if (!device.phone) {
       toast.error('Cadastre um número antes de testar o disparo.');
@@ -479,21 +480,17 @@ export function WhatsAppQRCodeManager() {
     setTestingId(device.id);
 
     try {
-      const { data, error } = await supabase.functions.invoke('vps-api', {
-        body: {
-          action: 'send-whatsapp',
-          phone: device.phone,
-          message: `🚨 *TESTE DE LINHA PRINCIPAL GSA HUB*\n\nDispositivo: *${device.name}*\nFunção: ${device.role}\nServidor: ${targetIp}\nStatus: Operacional 🟢\n📅 ${new Date().toLocaleString('pt-BR')}`,
-          title: 'Teste de Linha Conectada',
-          category: 'SISTEMA',
-          targetIp
-        }
+      const success = await sendAdminWhatsAppNotification({
+        title: 'Teste de Linha Principal GSA HUB',
+        message: `Dispositivo: *${device.name}*\nFunção: ${device.role}\nServidor: ${targetIp}\nStatus: Operacional 🟢`,
+        category: 'SISTEMA',
+        recipientPhone: device.phone
       });
 
-      if (!error && data?.success) {
-        toast.success(`✅ Disparo de teste enviado com sucesso via ${data.via || 'servidor'} para ${formatPhoneDisplay(device.phone)}!`);
+      if (success) {
+        toast.success(`✅ Disparo de teste enviado com sucesso para ${formatPhoneDisplay(device.phone)}!`);
       } else {
-        toast.error('❌ Falha no disparo de teste: ' + (error?.message || data?.error || 'Servidor indisponível'));
+        toast.error('❌ Falha no disparo de teste.');
       }
     } catch (e: any) {
       toast.error('Falha no disparo de teste: ' + e.message);
@@ -505,21 +502,17 @@ export function WhatsAppQRCodeManager() {
   const handleTestRamal = async (ramal: WhatsAppRamal) => {
     setTestingId(ramal.id);
     try {
-      const { data, error } = await supabase.functions.invoke('vps-api', {
-        body: {
-          action: 'send-whatsapp',
-          phone: ramal.numero_whatsapp,
-          message: `📲 *TESTE DE TRANSBORDO DE RAMAL GSA HUB*\n\n🏢 Setor: *${ramal.setor_nome}*\n👤 Responsável: ${ramal.responsavel_nome}\n🖥️ Servidor: ${targetIp}\nStatus: Operacional 🟢\n📅 ${new Date().toLocaleString('pt-BR')}`,
-          title: 'Teste de Transbordo',
-          category: 'SISTEMA',
-          targetIp
-        }
+      const success = await sendAdminWhatsAppNotification({
+        title: 'Teste de Transbordo de Ramal',
+        message: `🏢 Setor: *${ramal.setor_nome}*\n👤 Responsável: ${ramal.responsavel_nome}\n🖥️ Servidor: ${targetIp}\nStatus: Operacional 🟢`,
+        category: 'SISTEMA',
+        recipientPhone: ramal.numero_whatsapp
       });
 
-      if (!error && data?.success) {
-        toast.success(`✅ Teste de transbordo enviado com sucesso via ${data.via || 'servidor'} para ${ramal.setor_nome} (${formatPhoneDisplay(ramal.numero_whatsapp)})!`);
+      if (success) {
+        toast.success(`✅ Teste de transbordo enviado com sucesso para ${ramal.setor_nome} (${formatPhoneDisplay(ramal.numero_whatsapp)})!`);
       } else {
-        toast.error('❌ Falha no disparo de transbordo: ' + (error?.message || data?.error || 'Servidor indisponível'));
+        toast.error('❌ Falha no disparo de transbordo.');
       }
     } catch (e: any) {
       toast.error('Falha no teste de ramal: ' + e.message);
