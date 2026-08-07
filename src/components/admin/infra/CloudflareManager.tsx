@@ -192,29 +192,39 @@ export function CloudflareManager() {
             </div>
           </div>
 
-          {/* Indicador 4: Cloudflare Pages & R2 Storage — CLICÁVEL */}
-          <div 
-            onClick={openR2Modal}
-            className="bg-white p-5 rounded-2xl border border-amber-300 shadow-sm hover:shadow-md hover:border-amber-500 transition-all cursor-pointer group relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider flex items-center gap-1">
-              Gerenciar R2 <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </div>
-            <div className="flex justify-between items-start mb-4">
-              <span className="p-2 bg-amber-50 text-amber-600 rounded-lg group-hover:bg-amber-100 transition-colors"><HardDrive className="w-5 h-5"/></span>
-              <span className="text-2xl font-black text-amber-600">{((metrics.pagesAndR2.r2StorageUsedMb / metrics.pagesAndR2.r2LimitMb) * 100).toFixed(1)}%</span>
-            </div>
-            <h4 className="text-xs uppercase font-bold text-neutral-400 group-hover:text-amber-700 transition-colors">Pages & R2 Storage</h4>
-            <div className="mt-4 space-y-2 text-xs text-neutral-600">
-              <div className="flex justify-between"><span>App Cloudflare Pages</span><span className="font-mono font-bold text-emerald-600">Ativo (gsahub)</span></div>
-              <div className="flex justify-between"><span>Requisições Pages (24h)</span><span className="font-mono font-bold">{metrics.pagesAndR2.pagesRequests.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>R2 Storage Utilizado</span><span className="font-mono font-bold">{(metrics.pagesAndR2.r2StorageUsedMb / 1024).toFixed(2)} GB / {(metrics.pagesAndR2.r2LimitMb / 1024).toFixed(0)} GB</span></div>
-            </div>
-            <div className="mt-3 pt-2 border-t border-neutral-100 flex items-center justify-between text-[11px] font-bold text-amber-600 group-hover:underline">
-              <span>Ver Pastas & Arquivos R2</span>
-              <span>Clique aqui &rarr;</span>
-            </div>
-          </div>
+          {/* Indicador 4: Cloudflare Pages & R2 Storage — CLICÁVEL & DINÂMICO */}
+          {(() => {
+            const calculatedR2Mb = r2Files.length > 0
+              ? r2Files.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)
+              : metrics.pagesAndR2.r2StorageUsedMb;
+            const calculatedR2Percent = (calculatedR2Mb / metrics.pagesAndR2.r2LimitMb) * 100;
+            return (
+              <div 
+                onClick={openR2Modal}
+                className="bg-white p-5 rounded-2xl border border-amber-300 shadow-sm hover:shadow-md hover:border-amber-500 transition-all cursor-pointer group relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-bl-lg uppercase tracking-wider flex items-center gap-1">
+                  Gerenciar R2 <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+                <div className="flex justify-between items-start mb-4">
+                  <span className="p-2 bg-amber-50 text-amber-600 rounded-lg group-hover:bg-amber-100 transition-colors"><HardDrive className="w-5 h-5"/></span>
+                  <span className="text-2xl font-black text-amber-600">
+                    {calculatedR2Percent < 0.1 ? '< 0.1%' : `${calculatedR2Percent.toFixed(1)}%`}
+                  </span>
+                </div>
+                <h4 className="text-xs uppercase font-bold text-neutral-400 group-hover:text-amber-700 transition-colors">Pages & R2 Storage</h4>
+                <div className="mt-4 space-y-2 text-xs text-neutral-600">
+                  <div className="flex justify-between"><span>App Cloudflare Pages</span><span className="font-mono font-bold text-emerald-600">Ativo (gsahub)</span></div>
+                  <div className="flex justify-between"><span>Requisições Pages (24h)</span><span className="font-mono font-bold">{metrics.pagesAndR2.pagesRequests.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span>R2 Storage Utilizado</span><span className="font-mono font-bold">{calculatedR2Mb < 1024 ? `${calculatedR2Mb.toFixed(2)} MB` : `${(calculatedR2Mb / 1024).toFixed(2)} GB`} / {(metrics.pagesAndR2.r2LimitMb / 1024).toFixed(0)} GB</span></div>
+                </div>
+                <div className="mt-3 pt-2 border-t border-neutral-100 flex items-center justify-between text-[11px] font-bold text-amber-600 group-hover:underline">
+                  <span>Ver Pastas & Arquivos R2</span>
+                  <span>Clique aqui &rarr;</span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
