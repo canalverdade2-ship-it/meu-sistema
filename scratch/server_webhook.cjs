@@ -2361,7 +2361,7 @@ function processMessage(fromPhone, textBody, messageType) {
   if (session.state === 'HUMAN_SUPPORT_DEPT') {
     const userInput = text.trim();
 
-    supabaseGet('/rest/v1/gsa_whatsapp_ramais?ativo=eq.true&order=ordem.asc', (errR, ramaisList) => {
+    supabaseGet('/rest/v1/gsa_whatsapp_ramais?order=ordem.asc', (errR, ramaisList) => {
       let matchedRamal = null;
 
       if (!errR && Array.isArray(ramaisList) && ramaisList.length > 0) {
@@ -2370,6 +2370,12 @@ function processMessage(fromPhone, textBody, messageType) {
           const optionNumber = numMatch ? numMatch[1] : '';
           return optionNumber === userInput || r.codigo_setor === userInput || r.setor_nome.toLowerCase().includes(userInput.toLowerCase());
         });
+      }
+
+      // Se o ramal foi encontrado mas a chavinha no painel admin esta DESATIVADA (ativo === false):
+      if (matchedRamal && matchedRamal.ativo === false) {
+        sendWhatsAppReply(fromPhone, '⚠️ Atendente não disponível, tente outro setor.\n\n_Digite 0 para voltar ao menu principal._');
+        return;
       }
 
       if (!matchedRamal) {
@@ -2387,7 +2393,7 @@ function processMessage(fromPhone, textBody, messageType) {
           sendWhatsAppReply(fromPhone, '❌ Opção inválida. Por favor escolha uma das opções exibidas no menu.\n\n_Digite 0 para voltar ao menu._');
           return;
         }
-        matchedRamal = { setor_nome: choice.dept, responsavel_nome: choice.agent, numero_whatsapp: choice.phone };
+        matchedRamal = { setor_nome: choice.dept, responsavel_nome: choice.agent, numero_whatsapp: choice.phone, ativo: true };
       }
 
       const protocolo = generateProtocolNumber();
