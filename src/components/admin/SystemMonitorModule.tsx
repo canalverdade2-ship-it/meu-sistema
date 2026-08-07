@@ -206,25 +206,49 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
   }, [fetchFallbackUsers]);
 
   useEffect(() => {
-    if (activeCardModal === 'users' && (!snapshot.users_list || snapshot.users_list.length === 0)) {
-      void fetchFallbackUsers();
-    }
-  }, [activeCardModal, snapshot.users_list, fetchFallbackUsers]);
-
-  useEffect(() => {
     void load();
+    
+    // Inscrever em canais de Realtime WebSocket para atualizações 100% instantâneas
+    const channel = supabase
+      .channel('system-monitor-realtime-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaboradores' }, () => {
+        void load(true);
+        void fetchFallbackUsers();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clientes' }, () => {
+        void load(true);
+        void fetchFallbackUsers();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fornecedores' }, () => {
+        void load(true);
+        void fetchFallbackUsers();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestadores' }, () => {
+        void load(true);
+        void fetchFallbackUsers();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gsa_afiliados' }, () => {
+        void load(true);
+        void fetchFallbackUsers();
+      })
+      .subscribe();
+
     const interval = window.setInterval(() => {
       if (document.visibilityState === 'visible') void load(true);
-    }, 60_000);
+    }, 15_000);
+
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') void load(true);
     };
+
     document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
+      supabase.removeChannel(channel);
     };
-  }, [load]);
+  }, [load, fetchFallbackUsers]);
 
   const metrics = snapshot.metrics || {};
   const filteredTables = useMemo(() => {
