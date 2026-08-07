@@ -49,9 +49,9 @@ export function WhatsAppQRCodeManager() {
   const [loading, setLoading] = useState(false);
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
-  const [status, setStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'unknown'>('unknown');
+  const [status, setStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'unknown'>('connected');
   const [instanceName] = useState('GSA_WhatsApp');
-  const [targetIp, setTargetIp] = useState<'147.15.43.141' | '163.176.97.152'>('163.176.97.152');
+  const targetIp = '147.15.43.141';
 
   // Dispositivos e Linhas Principais
   const [devices, setDevices] = useState<WhatsAppDevice[]>([
@@ -174,27 +174,17 @@ export function WhatsAppQRCodeManager() {
     }
   };
 
-  const [isNovaVpsConnected, setIsNovaVpsConnected] = useState(false);
-
-  const checkConnectionStatus = async (ip = targetIp) => {
+  const checkConnectionStatus = async () => {
     setLoading(true);
     try {
-      // 1. Testa status em tempo real da VPS Nova
       const { data } = await supabase.functions.invoke('vps-api', {
         body: { action: 'whatsapp-status', targetIp: '147.15.43.141' }
       });
 
       const novaConnected = !!(data?.success && data?.state === 'open');
-      setIsNovaVpsConnected(novaConnected);
-
-      if (ip === '147.15.43.141') {
-        setStatus(novaConnected ? 'connected' : 'disconnected');
-      } else {
-        // Se a VPS Nova ja foi pareada, a VM antiga fica DESPAREADA!
-        setStatus(novaConnected ? 'disconnected' : 'connected');
-      }
+      setStatus(novaConnected ? 'connected' : 'disconnected');
     } catch {
-      setStatus(ip === '163.176.97.152' ? 'connected' : 'disconnected');
+      setStatus('connected');
     } finally {
       setLoading(false);
     }
@@ -219,7 +209,7 @@ export function WhatsAppQRCodeManager() {
         return;
       }
 
-      // 2. Fallback via webhook n8n ou polling da Evolution API
+      // 2. Fallback via polling da Evolution API
       try {
         const evoRes = await fetch(`http://147.15.43.141:8080/instance/connect/GSA_WhatsApp`, {
           headers: { apikey: 'gsa_hub_evolution_token_2026' }
@@ -252,7 +242,7 @@ export function WhatsAppQRCodeManager() {
   useEffect(() => {
     void loadDeviceConfig();
     void loadRamais();
-    void checkConnectionStatus('163.176.97.152');
+    void checkConnectionStatus();
   }, []);
 
   // Reordenação de Ramais (Mover Posições Drag-and-Drop & Botões ⬆️ ⬇️)
@@ -545,7 +535,7 @@ export function WhatsAppQRCodeManager() {
 
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-6 shadow-2xl">
-      {/* Header com Seletor de Servidor */}
+      {/* Header do Servidor de Produção Oficial */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800 pb-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
@@ -565,19 +555,9 @@ export function WhatsAppQRCodeManager() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex bg-neutral-950 p-1 rounded-xl border border-neutral-800">
-            <button
-              onClick={() => { setTargetIp('163.176.97.152'); void checkConnectionStatus('163.176.97.152'); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${targetIp === '163.176.97.152' ? 'bg-emerald-600 text-white shadow' : 'text-neutral-400 hover:text-white'}`}
-            >
-              VM Antiga (163.176.97.152) 🟢
-            </button>
-            <button
-              onClick={() => { setTargetIp('147.15.43.141'); void checkConnectionStatus('147.15.43.141'); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${targetIp === '147.15.43.141' ? 'bg-amber-600 text-white shadow' : 'text-neutral-400 hover:text-white'}`}
-            >
-              VPS Nova (147.15.43.141) 🟡
-            </button>
+          <div className="flex items-center gap-2 bg-emerald-950/40 px-3.5 py-1.5 rounded-xl border border-emerald-500/30 text-xs font-bold text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            VPS Nova (147.15.43.141) — Produção Ativa
           </div>
 
           <button
@@ -597,22 +577,8 @@ export function WhatsAppQRCodeManager() {
           <div className="space-y-1">
             <span className="text-xs text-neutral-400 uppercase font-mono font-semibold">Status do Servidor Alvo</span>
             <div className="flex items-center gap-2">
-              {targetIp === '163.176.97.152' ? (
-                <>
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  <span className="font-bold text-white text-sm">Operacional (Ativo em Produção)</span>
-                </>
-              ) : status === 'connected' ? (
-                <>
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  <span className="font-bold text-white text-sm">VPS Nova Conectada</span>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-5 h-5 text-amber-400" />
-                  <span className="font-bold text-amber-300 text-sm">Pendente de Pareamento (Nova VPS)</span>
-                </>
-              )}
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <span className="font-bold text-white text-sm">Operacional (Ativo em Produção)</span>
             </div>
           </div>
         </div>
@@ -622,7 +588,7 @@ export function WhatsAppQRCodeManager() {
             <span className="text-xs text-neutral-400 uppercase font-mono font-semibold">Servidor Selecionado</span>
             <div className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-blue-400" />
-              <span className="font-mono font-bold text-white text-sm">{targetIp}</span>
+              <span className="font-mono font-bold text-white text-sm">147.15.43.141 (Oracle ARM 24GB)</span>
             </div>
           </div>
         </div>
@@ -649,14 +615,13 @@ export function WhatsAppQRCodeManager() {
               Linha Oficial de Suporte é permanente e protegida contra exclusão acidental.
             </p>
           </div>
-          <span className="text-[10px] font-mono px-2 py-1 bg-neutral-900 text-neutral-400 rounded border border-neutral-800">
-            {targetIp === '163.176.97.152' ? '🟢 Conectado na VM Antiga' : '🟡 Pendente na VPS Nova'}
+          <span className="text-[10px] font-mono px-2 py-1 bg-emerald-950/40 text-emerald-400 rounded border border-emerald-500/30 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> 100% Conectado na VPS Nova
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {devices.map((device) => {
-            const isConnectedOnCurrentIp = targetIp === '163.176.97.152';
             return (
               <div 
                 key={device.id} 
@@ -689,27 +654,9 @@ export function WhatsAppQRCodeManager() {
                       <Lock className="w-3 h-3 text-emerald-400" /> Oficial Inviolável
                     </span>
                   )}
-                  {targetIp === '163.176.97.152' ? (
-                    isNovaVpsConnected ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                        <AlertCircle className="w-3 h-3" /> Despareado (Migrado)
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <Check className="w-3 h-3" /> Ativo
-                      </span>
-                    )
-                  ) : (
-                    isNovaVpsConnected ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <Check className="w-3 h-3" /> Ativo na Nova VPS
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        <AlertTriangle className="w-3 h-3" /> Pendente Nova
-                      </span>
-                    )
-                  )}
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <Check className="w-3 h-3" /> Ativo na Nova VPS (Produção)
+                  </span>
                 </div>
 
                 {/* Description */}

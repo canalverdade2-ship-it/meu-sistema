@@ -88,7 +88,7 @@ export async function sendAdminWhatsAppNotification(payload: AdminNotificationPa
         message: textBody,
         title: payload.title,
         category: payload.category || 'ADMIN',
-        targetIp: '163.176.97.152'
+        targetIp: '147.15.43.141'
       }
     });
 

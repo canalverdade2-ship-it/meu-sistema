@@ -882,7 +882,7 @@ export const whatsappNotificationService = {
           message: mensagem,
           title: 'Notificação GSA HUB',
           category: 'CLIENTE',
-          targetIp: '163.176.97.152'
+          targetIp: '147.15.43.141'
         }
       });
 
