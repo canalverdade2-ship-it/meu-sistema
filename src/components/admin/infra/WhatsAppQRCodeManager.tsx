@@ -163,29 +163,27 @@ export function WhatsAppQRCodeManager() {
     }
   };
 
+  const [isNovaVpsConnected, setIsNovaVpsConnected] = useState(false);
+
   const checkConnectionStatus = async (ip = targetIp) => {
     setLoading(true);
     try {
-      if (ip === '163.176.97.152') {
-        setStatus('connected');
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke('vps-api/whatsapp-status', {
-        method: 'GET'
+      // 1. Testa status em tempo real da VPS Nova
+      const { data } = await supabase.functions.invoke('vps-api', {
+        body: { action: 'whatsapp-status', targetIp: '147.15.43.141' }
       });
 
-      if (!error && data?.success && data?.state === 'open') {
-        setStatus('connected');
+      const novaConnected = !!(data?.success && data?.state === 'open');
+      setIsNovaVpsConnected(novaConnected);
+
+      if (ip === '147.15.43.141') {
+        setStatus(novaConnected ? 'connected' : 'disconnected');
       } else {
-        setStatus('disconnected');
+        // Se a VPS Nova ja foi pareada, a VM antiga fica DESPAREADA!
+        setStatus(novaConnected ? 'disconnected' : 'connected');
       }
     } catch {
-      if (ip === '163.176.97.152') {
-        setStatus('connected');
-      } else {
-        setStatus('disconnected');
-      }
+      setStatus(ip === '163.176.97.152' ? 'connected' : 'disconnected');
     } finally {
       setLoading(false);
     }
@@ -648,14 +646,26 @@ export function WhatsAppQRCodeManager() {
                     </div>
                   </div>
 
-                  {isConnectedOnCurrentIp ? (
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Ativo
-                    </span>
+                  {targetIp === '163.176.97.152' ? (
+                    isNovaVpsConnected ? (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> Despareado (Migrado)
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Ativo
+                      </span>
+                    )
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" /> Pendente Nova
-                    </span>
+                    isNovaVpsConnected ? (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Ativo na Nova VPS
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" /> Pendente Nova
+                      </span>
+                    )
                   )}
                 </div>
 
