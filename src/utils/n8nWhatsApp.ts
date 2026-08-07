@@ -97,10 +97,33 @@ export async function sendAdminWhatsAppNotification(payload: AdminNotificationPa
       return true;
     }
   } catch (err) {
-    console.warn('⚠️ Falha via vps-api, acionando rota direta Meta WhatsApp API...', err);
+    console.warn('⚠️ Falha via vps-api, tentando envio direto na Evolution API...', err);
   }
 
-  // 2. Fallback direto via Meta WhatsApp Cloud API
+  // 2. Fallback direto Evolution API na VPS Nova (147.15.43.141)
+  try {
+    const evoResp = await fetch('http://147.15.43.141:8080/message/sendText/GSA_WhatsApp', {
+      method: 'POST',
+      headers: {
+        'apikey': 'gsa_hub_evolution_token_2026',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        number: phone,
+        text: textBody,
+        delay: 1200,
+        linkPreview: true
+      })
+    });
+    if (evoResp.ok) {
+      console.log(`✅ Notificação enviada para ${phone} via Evolution API direta!`);
+      return true;
+    }
+  } catch (evoErr) {
+    console.warn('⚠️ Falha via Evolution API direta:', evoErr);
+  }
+
+  // 3. Fallback direto via Meta WhatsApp Cloud API
   try {
     const metaResponse = await fetch(`https://graph.facebook.com/v20.0/${META_PHONE_NUMBER_ID}/messages`, {
       method: 'POST',

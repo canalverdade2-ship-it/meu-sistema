@@ -275,13 +275,26 @@ async function handleRequest(request: Request) {
             },
             body: JSON.stringify({
               number: formattedPhone,
-              options: { delay: 1200, presence: 'composing', linkPreview: true },
-              textMessage: { text: message }
+              text: message,
+              delay: 1200,
+              linkPreview: true
             })
-          });
+          }).catch(() => fetch(`http://147.15.43.141:8080/message/sendText/GSA_WhatsApp`, {
+            method: 'POST',
+            headers: {
+              'apikey': 'gsa_hub_evolution_token_2026',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              number: formattedPhone,
+              text: message,
+              delay: 1200,
+              linkPreview: true
+            })
+          }));
 
-          if (evoRes.ok) {
-            const evoData = await evoRes.json();
+          if (evoRes && evoRes.ok) {
+            const evoData = await evoRes.json().catch(() => ({}));
             return json(200, { success: true, via: 'evolution-api', data: evoData }, origin);
           }
 
