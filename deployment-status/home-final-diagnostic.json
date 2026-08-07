@@ -1,10 +1,10 @@
 {
-  "generated_at_utc": "2026-08-07T12:02:09.042Z",
-  "validated_sha": "1a867a1d0da5182848bed7ed20a4763e84400727",
+  "generated_at_utc": "2026-08-07T21:12:47.946Z",
+  "validated_sha": "2aacbe0d1a245c84f71cabd066b1bd1f47d26c57",
   "install_exit_code": 0,
   "test_exit_code": 1,
   "result": "failure",
-  "install_log_sha256": "d419bc654337a74ec0fc7d1a00d5b50a6beb4b28adf5930db1afca079c9ccdff",
+  "install_log_sha256": "18089e2badc65f5f62bbf65fa2f8dae91c38c5e147e99a3f5db646a77113d7af",
   "test_log_sha256": "59b9dd95857080dd996daaf7075b2fe10b1eee07214cbd0361249d8dfa076def",
   "failed_markers": [
     "AssertionError [ERR_ASSERTION]: Painel administrativo seguro deve ser carregado sob demanda",
