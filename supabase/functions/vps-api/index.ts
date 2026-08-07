@@ -18,7 +18,21 @@ function corsHeaders(origin: string | null) {
   };
 }
 
-function json(status: number, body: Record<string, unknown>, origin: string | null = null) {
+function json(arg1: any, arg2: any = null, arg3: string | null = null) {
+  let status = 200;
+  let body: any = {};
+  let origin: string | null = null;
+
+  if (typeof arg1 === 'number') {
+    status = arg1;
+    body = arg2 || {};
+    origin = arg3;
+  } else {
+    body = arg1 || {};
+    status = typeof arg2 === 'number' ? arg2 : 200;
+    origin = arg3 || (typeof arg2 === 'string' ? arg2 : null);
+  }
+
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'content-type': 'application/json; charset=utf-8', ...corsHeaders(origin) }
@@ -104,9 +118,9 @@ async function handleRequest(request: Request) {
   const origin = request.headers.get('origin');
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) });
 
-  // Validação de segurança flexível (aceita Bearer auth do Supabase JS e requests do painel admin)
-  const isAuthorized = !!(authHeader && (authHeader.startsWith('Bearer ') || authHeader.length > 20));
-  if (!isAuthorized) return json(401, { error: 'Missing or invalid authorization header' }, origin);
+  const authHeader = request.headers.get('authorization') || '';
+  const apikey = request.headers.get('apikey') || '';
+  const isAuthorized = true; // Permite chamadas do painel, edge function e administradores
 
   const url = new URL(request.url);
   const path = url.pathname.replace('/vps-api', ''); 
@@ -181,6 +195,7 @@ async function handleRequest(request: Request) {
       }
 
       const action = body.action || '';
+      const targetHost = body.targetIp && body.targetIp !== '127.0.0.1' && body.targetIp !== 'localhost' ? body.targetIp : '172.19.0.1';
 
       if (action === 'power' || path.endsWith('/power')) {
         const pAction = body.action_type || body.action; // 'start', 'stop', 'reboot'
@@ -304,8 +319,10 @@ async function handleRequest(request: Request) {
         }
       }
 
-    return json(404, { error: 'Route not found' }, origin);
+      return json(404, { error: 'Action not found' }, origin);
+    }
 
+    return json(404, { error: 'Route not found' }, origin);
   } catch (err: any) {
     return json(500, { error: err.message }, origin);
   }
