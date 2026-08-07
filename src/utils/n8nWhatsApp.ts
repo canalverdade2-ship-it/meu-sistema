@@ -13,7 +13,7 @@ export interface AdminNotificationPayload {
   recipientPhone?: string;
 }
 
-const DEFAULT_N8N_WEBHOOK_URL = 'http://147.15.43.141:5678/webhook/send-whatsapp';
+const DEFAULT_N8N_WEBHOOK_URL = 'http://163.176.97.152:5678/webhook/send-whatsapp';
 const DEFAULT_ADMIN_PHONE = '5511920857756';
 
 // Meta API Direct Fallback

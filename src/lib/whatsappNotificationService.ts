@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { toast } from 'react-hot-toast';
+import { getAdminWhatsAppConfig } from '../utils/n8nWhatsApp';
 
 export type WhatsAppContext = {
   tipo: 'orcamento' | 'os' | 'compra' | 'assinatura' | 'fatura' | 'voucher' | 'promocao' | 'emprestimo' | 'credito' | 'produto' | 'cobranca' | 'cliente' | 'ticket' | 'indicacao' | 'personalizado' | 'carteira_digital' | 'carteira_pontos' | 'documento_cliente' | 'fiscal' | 'venda' | 'reembolso' | 'vip' | 'premio' | 'cupom' | 'troca' | 'servico' | 'acesso' | 'cadastro' | 'demanda_tecnico' | 'documento_prestador' | 'extrato';
@@ -874,6 +875,7 @@ export const whatsappNotificationService = {
     const phone = targetPhone.startsWith('55') ? targetPhone : `55${targetPhone}`;
 
     try {
+      const { webhookUrl } = await getAdminWhatsAppConfig();
       const payload: any = { telefone: phone, mensagem };
       if (options?.mediaBase64 || options?.pdfUrl) {
         payload.mediaBase64 = options.mediaBase64;
@@ -882,7 +884,7 @@ export const whatsappNotificationService = {
         payload.fileName = options.fileName;
       }
 
-      const res = await fetch('http://147.15.43.141:5678/webhook/send-whatsapp', {
+      const res = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

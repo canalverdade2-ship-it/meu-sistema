@@ -151,7 +151,7 @@ export function ConfiguracoesModule() {
           />
           <TextField 
             label="URL Webhook API n8n" 
-            value={value('whatsapp_n8n_webhook_url', 'http://147.15.43.141:5678/webhook/send-whatsapp')} 
+            value={value('whatsapp_n8n_webhook_url', 'http://163.176.97.152:5678/webhook/send-whatsapp')} 
             onChange={(next) => setValue('whatsapp_n8n_webhook_url', next)} 
           />
         </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, FileText, CheckCircle, XCircle, Wallet, Ticket, CreditCard, Filter, Printer, ArrowDownCircle, Check, X, Info, Landmark, Send, MessageSquare, ClipboardList, History, Building2, Plus, Calendar, Clock, User, ShoppingBag, ChevronLeft, Repeat2, Gavel, Receipt, BadgePercent } from 'lucide-react';
+import { Search, FileText, CheckCircle, XCircle, Wallet, Ticket, CreditCard, Filter, Printer, ArrowDownCircle, Check, X, Info, Landmark, Send, MessageSquare, ClipboardList, History, Building2, Plus, Calendar, Clock, User, ShoppingBag, ChevronLeft, Repeat2, Gavel, Receipt, BadgePercent, ShieldAlert } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Fatura, Cliente, Voucher, Saque } from '../../types';
 import { Modal } from '../ui/Modal';
