@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { QrCode, RefreshCw, CheckCircle2, AlertCircle, PhoneCall, ShieldCheck, Zap, Smartphone, Radio, Check, Edit3, Trash2, Send, X, Save, AlertTriangle, Plus, Layers, ToggleLeft, ToggleRight, Lock } from 'lucide-react';
+import { QrCode, RefreshCw, CheckCircle2, AlertCircle, PhoneCall, ShieldCheck, Zap, Smartphone, Radio, Check, Edit3, Trash2, Send, X, Save, AlertTriangle, Plus, Layers, ToggleLeft, ToggleRight, Lock, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../../lib/supabase';
 import { getAdminWhatsAppConfig, sendAdminWhatsAppNotification } from '../../../utils/n8nWhatsApp';
@@ -14,6 +14,15 @@ function formatPhoneDisplay(raw: string) {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   }
   return raw || 'Não configurado';
+}
+
+function getNumberEmoji(num: number) {
+  const map: Record<number, string> = {
+    1: '1️⃣', 2: '2️⃣', 3: '3️⃣', 4: '4️⃣', 5: '5️⃣',
+    6: '6️⃣', 7: '7️⃣', 8: '8️⃣', 9: '9️⃣', 10: '🔟',
+    11: '1️⃣1️⃣', 12: '1️⃣2️⃣', 13: '1️⃣3️⃣', 14: '1️⃣4️⃣', 15: '1️⃣5️⃣'
+  };
+  return map[num] || `${num}️⃣`;
 }
 
 interface WhatsAppDevice {
@@ -69,6 +78,7 @@ export function WhatsAppQRCodeManager() {
   // Ramais de Transbordo por Setor
   const [ramais, setRamais] = useState<WhatsAppRamal[]>([]);
   const [loadingRamais, setLoadingRamais] = useState(true);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Modais de Edição
   const [selectedDevice, setSelectedDevice] = useState<WhatsAppDevice | null>(null);
@@ -132,10 +142,10 @@ export function WhatsAppQRCodeManager() {
         .select('*')
         .order('ordem', { ascending: true });
 
-      if (!error && Array.isArray(data)) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         setRamais(data);
       } else {
-        // Fallback inicial visual
+        // Fallback oficial sincronizado com os 7 ramais reais do chatbot em produção
         setRamais([
           { id: 'r1', setor_nome: '1️⃣ Comercial', codigo_setor: 'comercial', numero_whatsapp: '5511971858372', responsavel_nome: 'COMERCIAL GSA', ativo: true, ordem: 1 },
           { id: 'r2', setor_nome: '2️⃣ Financeiro', codigo_setor: 'financeiro', numero_whatsapp: '5511971858372', responsavel_nome: 'FINANCEIRO GSA', ativo: true, ordem: 2 },
@@ -215,6 +225,74 @@ export function WhatsAppQRCodeManager() {
     void checkConnectionStatus('163.176.97.152');
   }, []);
 
+  // Reordenação de Ramais (Mover Posições Drag-and-Drop & Botões ⬆️ ⬇️)
+  const moveRamalPosition = async (index: number, direction: 'UP' | 'DOWN') => {
+    const targetIndex = direction === 'UP' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= ramais.length) return;
+
+    const newRamais = [...ramais];
+    const temp = newRamais[index];
+    newRamais[index] = newRamais[targetIndex];
+    newRamais[targetIndex] = temp;
+
+    // Atualiza ordens sequenciais 1, 2, 3...
+    const reordered = newRamais.map((r, idx) => ({
+      ...r,
+      ordem: idx + 1
+    }));
+
+    setRamais(reordered);
+    await persistRamaisOrder(reordered);
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (dropIndex: number) => {
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    const newRamais = [...ramais];
+    const [movedItem] = newRamais.splice(draggedIndex, 1);
+    newRamais.splice(dropIndex, 0, movedItem);
+
+    // Re-indexa ordens 1, 2, 3...
+    const reordered = newRamais.map((r, idx) => ({
+      ...r,
+      ordem: idx + 1
+    }));
+
+    setRamais(reordered);
+    setDraggedIndex(null);
+    await persistRamaisOrder(reordered);
+  };
+
+  const persistRamaisOrder = async (updatedList: WhatsAppRamal[]) => {
+    try {
+      for (let i = 0; i < updatedList.length; i++) {
+        const item = updatedList[i];
+        await supabase
+          .from('gsa_whatsapp_ramais')
+          .update({ ordem: i + 1, updated_at: new Date().toISOString() })
+          .eq('id', item.id);
+      }
+      toast.success('Sequência de ramais reordenada com sucesso!');
+    } catch (e: any) {
+      toast.error('Erro ao salvar nova ordem dos ramais: ' + e.message);
+    }
+  };
+
+  // Calcula o próximo número sequencial para novo ramal (ex: 9, 10, 11)
+  const getProximoNumeroSequencial = () => {
+    if (ramais.length === 0) return 9;
+    const maxOrder = Math.max(...ramais.map(r => r.ordem || 0));
+    return maxOrder >= 8 ? maxOrder + 1 : 9;
+  };
+
   // Salva alteração de linha de WhatsApp Principal
   const handleSaveDevice = async () => {
     if (!selectedDevice) return;
@@ -273,6 +351,18 @@ export function WhatsAppQRCodeManager() {
     }
   };
 
+  // Abre Modal de Novo Ramal com Sequência Automática
+  const handleOpenNovoRamalModal = () => {
+    const prox = getProximoNumeroSequencial();
+    const emoji = getNumberEmoji(prox);
+    setSelectedRamal(null);
+    setRamalNome(`${emoji} Novo Setor`);
+    setRamalCodigo(`setor_${prox}`);
+    setRamalNumero('5511971858372');
+    setRamalResponsavel(`Atendente Setor ${prox}`);
+    setIsRamalModalOpen(true);
+  };
+
   // Salvar ou Criar Ramal de Transbordo por Setor
   const handleSaveRamal = async () => {
     if (!ramalNome || !ramalNumero || !ramalResponsavel) {
@@ -284,6 +374,7 @@ export function WhatsAppQRCodeManager() {
     const cleanPhone = ramalNumero.replace(/\D/g, '');
     const formattedPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
     const generatedCodigo = ramalCodigo || ramalNome.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const proximaOrdem = selectedRamal ? selectedRamal.ordem : getProximoNumeroSequencial();
 
     try {
       const payload = {
@@ -292,7 +383,7 @@ export function WhatsAppQRCodeManager() {
         numero_whatsapp: formattedPhone,
         responsavel_nome: ramalResponsavel,
         ativo: true,
-        ordem: selectedRamal ? selectedRamal.ordem : ramais.length + 1,
+        ordem: proximaOrdem,
         updated_at: new Date().toISOString()
       };
 
@@ -310,7 +401,7 @@ export function WhatsAppQRCodeManager() {
           .insert([payload]);
 
         if (error) throw error;
-        toast.success(`Novo Ramal de Setor "${ramalNome}" cadastrado!`);
+        toast.success(`Novo Ramal de Setor ${proximaOrdem} ("${ramalNome}") adicionado na sequência!`);
       }
 
       await loadRamais();
@@ -421,7 +512,7 @@ export function WhatsAppQRCodeManager() {
               </span>
             </h3>
             <p className="text-xs text-neutral-400">
-              Pareamento QR Code, proteção da linha oficial de suporte e roteamento de ramais por setor.
+              Pareamento QR Code, proteção da linha oficial de suporte e reordenação flexível de ramais sequenciais por setor.
             </p>
           </div>
         </div>
@@ -603,29 +694,22 @@ export function WhatsAppQRCodeManager() {
         </div>
       </div>
 
-      {/* ─── RAMAIS DE TRANSBORDO HUMANO POR SETOR (NOVO RECURSO PROFISSIONAL) ─── */}
+      {/* ─── RAMAIS DE TRANSBORDO HUMANO SEQUENCIAIS COM DRAG-AND-DROP ─── */}
       <div className="bg-neutral-950/80 border border-neutral-800 rounded-xl p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h4 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
-              <Layers className="w-4 h-4 text-blue-400" /> Ramais de Transbordo Humano por Setor (Chatbot Transfer)
+              <Layers className="w-4 h-4 text-blue-400" /> Ramais de Transbordo Humano Sequenciais por Setor
             </h4>
             <p className="text-xs text-neutral-400 mt-1">
-              Roteamento invisível em tempo real. Quando o cliente solicita atendimento humano no WhatsApp, a demanda é transferida instantaneamente para o ramal do setor cadastrado.
+              Organização flexível: <strong>Arraste os ramais para trocar de posição</strong> ou use as setas ⬆️ ⬇️. Novos ramais seguem automaticamente a sequência numerada (ex: {getNumberEmoji(getProximoNumeroSequencial())}).
             </p>
           </div>
           <button
-            onClick={() => {
-              setSelectedRamal(null);
-              setRamalNome('');
-              setRamalCodigo('');
-              setRamalNumero('');
-              setRamalResponsavel('');
-              setIsRamalModalOpen(true);
-            }}
+            onClick={handleOpenNovoRamalModal}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" /> Novo Ramal de Setor
+            <Plus className="w-4 h-4" /> Novo Ramal (Sequência {getProximoNumeroSequencial()})
           </button>
         </div>
 
@@ -635,34 +719,65 @@ export function WhatsAppQRCodeManager() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {ramais.map((ramal) => (
+            {ramais.map((ramal, idx) => (
               <div 
                 key={ramal.id} 
-                className={`bg-neutral-900 border ${ramal.ativo ? 'border-neutral-800 hover:border-blue-500/50' : 'border-neutral-800/50 opacity-60'} rounded-xl p-4 transition-all space-y-3 shadow-md`}
+                draggable
+                onDragStart={() => handleDragStart(idx)}
+                onDragOver={handleDragOver}
+                onDrop={() => void handleDrop(idx)}
+                className={`bg-neutral-900 border ${ramal.ativo ? 'border-neutral-800 hover:border-blue-500/50' : 'border-neutral-800/50 opacity-60'} ${draggedIndex === idx ? 'border-dashed border-blue-400 bg-neutral-950 scale-95' : ''} rounded-xl p-4 transition-all space-y-3 shadow-md relative group cursor-grab active:cursor-grabbing`}
               >
                 <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black text-white">{ramal.setor_nome}</span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400">
-                        {ramal.codigo_setor}
+                  <div className="flex items-center gap-3">
+                    <div className="p-1.5 bg-neutral-950 rounded-lg text-neutral-500 group-hover:text-blue-400 border border-neutral-800 shrink-0" title="Arraste para reordenar">
+                      <GripVertical className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-white">{ramal.setor_nome}</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-neutral-800 text-neutral-400">
+                          Posição #{idx + 1}
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-blue-400 block mt-0.5">
+                        {formatPhoneDisplay(ramal.numero_whatsapp)}
+                      </span>
+                      <span className="text-[11px] text-neutral-400 block font-sans">
+                        Responsável: {ramal.responsavel_nome}
                       </span>
                     </div>
-                    <span className="text-xs font-mono font-bold text-blue-400 block mt-0.5">
-                      {formatPhoneDisplay(ramal.numero_whatsapp)}
-                    </span>
-                    <span className="text-[11px] text-neutral-400 block font-sans">
-                      Responsável: {ramal.responsavel_nome}
-                    </span>
                   </div>
 
-                  <button
-                    onClick={() => void handleToggleRamalAtivo(ramal)}
-                    className="text-neutral-400 hover:text-white transition-colors"
-                    title={ramal.ativo ? 'Desativar Ramal' : 'Ativar Ramal'}
-                  >
-                    {ramal.ativo ? <ToggleRight className="w-7 h-7 text-emerald-400" /> : <ToggleLeft className="w-7 h-7 text-neutral-600" />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {/* Botões de Troca Rápida de Ordem */}
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        onClick={() => void moveRamalPosition(idx, 'UP')}
+                        disabled={idx === 0}
+                        className="p-1 bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white rounded text-[10px] disabled:opacity-30"
+                        title="Mover para Cima"
+                      >
+                        <ArrowUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => void moveRamalPosition(idx, 'DOWN')}
+                        disabled={idx === ramais.length - 1}
+                        className="p-1 bg-neutral-950 hover:bg-neutral-800 text-neutral-400 hover:text-white rounded text-[10px] disabled:opacity-30"
+                        title="Mover para Baixo"
+                      >
+                        <ArrowDown className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => void handleToggleRamalAtivo(ramal)}
+                      className="text-neutral-400 hover:text-white transition-colors"
+                      title={ramal.ativo ? 'Desativar Ramal' : 'Ativar Ramal'}
+                    >
+                      {ramal.ativo ? <ToggleRight className="w-7 h-7 text-emerald-400" /> : <ToggleLeft className="w-7 h-7 text-neutral-600" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between border-t border-neutral-800/80 pt-3">
@@ -815,7 +930,7 @@ export function WhatsAppQRCodeManager() {
             <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
               <h3 className="text-base font-black text-white flex items-center gap-2">
                 <Layers className="w-4 h-4 text-blue-400" />
-                {selectedRamal ? 'Editar Ramal de Transbordo' : 'Cadastrar Novo Ramal de Setor'}
+                {selectedRamal ? 'Editar Ramal de Transbordo' : `Cadastrar Novo Ramal (Sequência ${getProximoNumeroSequencial()})`}
               </h3>
               <button onClick={() => setIsRamalModalOpen(false)} className="p-1 text-neutral-400 hover:text-white rounded-lg">
                 <X className="w-5 h-5" />
@@ -825,13 +940,13 @@ export function WhatsAppQRCodeManager() {
             <div className="space-y-4 text-left">
               <div>
                 <label className="block text-xs font-bold text-neutral-300 uppercase tracking-widest mb-1.5">
-                  Nome do Setor (Ex: 1. Vendas & Orçamentos)
+                  Nome do Setor com Sequência
                 </label>
                 <input
                   type="text"
                   value={ramalNome}
                   onChange={(e) => setRamalNome(e.target.value)}
-                  placeholder="Ex: 5. Atendimento VIP / Jurídico"
+                  placeholder={`Ex: ${getNumberEmoji(getProximoNumeroSequencial())} Atendimento VIP / Jurídico`}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 transition-all"
                 />
               </div>
@@ -879,7 +994,7 @@ export function WhatsAppQRCodeManager() {
                 className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
               >
                 {savingRamal ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Salvar Ramal
+                Salvar Ramal Sequencial
               </button>
             </div>
           </div>
