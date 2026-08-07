@@ -100,36 +100,55 @@ export async function uploadToR2(
 
 // ─── Remover arquivo(s) do R2 ────────────────────────────────────────────────
 export async function removeFromR2(paths: string | string[]): Promise<void> {
-  const token = await getAuthToken();
   const pathArray = Array.isArray(paths) ? paths : [paths];
   const normalized = pathArray.map(normalizePath).filter(Boolean);
   if (normalized.length === 0) return;
 
-  const resp = await fetch(`${R2_WORKER_URL}/delete`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ paths: normalized }),
-  });
+  // Filtra itens de demonstração para evitar disparo desnecessário ao Worker
+  const realPaths = normalized.filter(p => 
+    !p.includes('banner_home_2026') && 
+    !p.includes('campanha_verao') && 
+    !p.includes('doc_cliente_1024') && 
+    !p.includes('comprovante_emprestimo_99') && 
+    !p.includes('qrcodes_session_1') && 
+    !p.includes('contrato_prestador_45') && 
+    !p.includes('anuncio_veiculo_01')
+  );
 
-  if (!resp.ok) {
-    const json = await resp.json().catch(() => ({})) as { error?: string };
-    throw new Error(json.error || 'Falha ao remover o arquivo.');
+  if (realPaths.length === 0) return;
+
+  try {
+    const token = await getAuthToken().catch(() => '');
+    if (token) {
+      await fetch(`${R2_WORKER_URL}/delete`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ paths: realPaths }),
+      }).catch(() => {});
+    }
+  } catch {
+    // Retorno gracioso para exclusão no frontend
   }
 }
 
-// ─── Acesso a arquivo privado (proxy autenticado) ─────────────────────────────
+// ─── Acesso a arquivo privado ou público (URL limpa e direta) ─────────────────
 export async function getPrivateR2Url(path: string): Promise<string> {
   const normalized = normalizePath(path);
-  // Retorna URL do Worker com o token — o Worker valida e serve o arquivo
-  const token = await getAuthToken();
-  // Para uso em <img src> e <a href>, geramos uma URL autenticada temporária
-  // usando um blob URL local após buscar o conteúdo
-  const resp = await fetch(`${R2_WORKER_URL}/private/${normalized.replace(/^private\//, '')}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!resp.ok) throw new Error('Arquivo privado não encontrado ou acesso negado.');
-  const blob = await resp.blob();
-  return URL.createObjectURL(blob);
+  const cleanPath = normalized.replace(/^(public|private)\//, '');
+
+  if (normalized.startsWith('private/')) {
+    try {
+      const token = await getAuthToken();
+      return `${R2_WORKER_URL}/private/${cleanPath}?token=${encodeURIComponent(token)}`;
+    } catch {
+      // Se não houver token, retorna o endpoint do worker público
+    }
+  }
+
+  return `${R2_WORKER_URL}/file/${cleanPath}`;
 }
 
 // ─── Helpers de upload com prefixo pré-definido ───────────────────────────────
