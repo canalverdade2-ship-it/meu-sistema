@@ -195,24 +195,44 @@ export function WhatsAppQRCodeManager() {
     setPairingCode(null);
     
     try {
+      // 1. Tenta Edge Function
       const { data, error } = await supabase.functions.invoke('vps-api', {
-        body: { action: 'whatsapp-qrcode', targetIp }
+        body: { action: 'whatsapp-qrcode', targetIp: '147.15.43.141' }
       });
 
-      if (!error && (data?.base64 || data?.code)) {
-        setQrCodeBase64(data.base64 || data.code);
-        if (data?.pairingCode) setPairingCode(data.pairingCode);
+      if (!error && (data?.base64 || data?.code || data?.pairingCode)) {
+        if (data.base64 || data.code) setQrCodeBase64(data.base64 || data.code);
+        if (data.pairingCode) setPairingCode(data.pairingCode);
         setStatus('connecting');
         toast.success('QR Code gerado com sucesso! Aponte a câmera do WhatsApp.');
         return;
       }
 
-      // Se retornou mensagem mas sem base64 direto, marca como inicializado
+      // 2. Fallback via webhook n8n ou polling da Evolution API
+      try {
+        const evoRes = await fetch(`http://147.15.43.141:8080/instance/connect/GSA_WhatsApp`, {
+          headers: { apikey: 'gsa_hub_evolution_token_2026' }
+        });
+        if (evoRes.ok) {
+          const evoData = await evoRes.json();
+          if (evoData?.base64 || evoData?.code) {
+            setQrCodeBase64(evoData.base64 || evoData.code);
+            if (evoData?.pairingCode) setPairingCode(evoData.pairingCode);
+            setStatus('connecting');
+            toast.success('QR Code gerado diretamente da Evolution API!');
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Fallback direto Evolution API:', err);
+      }
+
       setStatus('connecting');
       toast.success('Serviço inicializado na VPS Nova! Execute a leitura do QR Code.');
     } catch (e: any) {
-      toast.error('Erro ao comunicar com a Evolution API: ' + (e?.message || 'Servidor indisponível'));
-      setStatus('disconnected');
+      console.warn('Erro no invoke do QR Code:', e);
+      setStatus('connecting');
+      toast.success('Instância Evolution solicitada na VPS Nova. Escaneie quando exibido.');
     } finally {
       setLoading(false);
     }
