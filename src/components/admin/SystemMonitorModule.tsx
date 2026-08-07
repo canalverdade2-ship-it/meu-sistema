@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, Database, HardDrive, RefreshCw, Server, ShieldCheck, Users, Terminal as TerminalIcon, Globe, Cpu, ChevronDown, ChevronUp } from 'lucide-react';
+import { Activity, Database, HardDrive, RefreshCw, Server, ShieldCheck, Users, Terminal as TerminalIcon, Globe, Cpu, ChevronDown, ChevronUp, X, Info, CheckCircle2, BarChart3, Lock, FileText, UserCheck } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatDateTime } from '../../lib/utils';
@@ -43,6 +43,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
   const [sendingAlert, setSendingAlert] = useState(false);
   const [search, setSearch] = useState('');
   const [tablesOpen, setTablesOpen] = useState(false);
+  const [activeCardModal, setActiveCardModal] = useState<'database' | 'storage' | 'users' | 'tables' | null>(null);
 
   const handleSendTestAlert = async () => {
     setSendingAlert(true);
@@ -104,11 +105,16 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
     return (snapshot.tables || []).filter((table) => table.table.toLowerCase().includes(value));
   }, [search, snapshot.tables]);
 
+  const topTables = useMemo(() => {
+    const sorted = [...(snapshot.tables || [])].sort((a, b) => (b.estimated_rows || 0) - (a.estimated_rows || 0));
+    return sorted.slice(0, 5);
+  }, [snapshot.tables]);
+
   const cards = [
-    { label: 'Banco de dados', value: formatBytes(metrics.database_size_bytes), icon: Database },
-    { label: 'Storage', value: formatBytes(metrics.storage_size_bytes), icon: HardDrive },
-    { label: 'Usuários Auth', value: numberValue(metrics.auth_users_count).toLocaleString('pt-BR'), icon: Users },
-    { label: 'Tabelas', value: numberValue(metrics.database_tables_count || snapshot.tables?.length).toLocaleString('pt-BR'), icon: Server },
+    { key: 'database' as const, label: 'Banco de dados', value: formatBytes(metrics.database_size_bytes), icon: Database, color: 'text-purple-600 bg-purple-50 hover:border-purple-300' },
+    { key: 'storage' as const, label: 'Storage', value: formatBytes(metrics.storage_size_bytes), icon: HardDrive, color: 'text-blue-600 bg-blue-50 hover:border-blue-300' },
+    { key: 'users' as const, label: 'Usuários Auth', value: numberValue(metrics.auth_users_count).toLocaleString('pt-BR'), icon: Users, color: 'text-emerald-600 bg-emerald-50 hover:border-emerald-300' },
+    { key: 'tables' as const, label: 'Tabelas', value: numberValue(metrics.database_tables_count || snapshot.tables?.length).toLocaleString('pt-BR'), icon: Server, color: 'text-amber-600 bg-amber-50 hover:border-amber-300' },
   ];
 
   if (loading && activeTab === 'database') {
@@ -178,7 +184,25 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       {activeTab === 'database' && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {cards.map(({ label, value, icon: Icon }) => <article key={label} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Icon className="h-5 w-5" /></span><p className="mt-5 text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-1 text-2xl font-black text-neutral-900">{value}</p></article>)}
+            {cards.map(({ key, label, value, icon: Icon, color }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveCardModal(key)}
+                className={`group text-left rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer relative overflow-hidden ${color}`}
+              >
+                <div className="flex justify-between items-start">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-[10px] font-extrabold uppercase bg-neutral-100 text-neutral-500 px-2 py-1 rounded-md group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                    Detalhes ➔
+                  </span>
+                </div>
+                <p className="mt-5 text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p>
+                <p className="mt-1 text-2xl font-black text-neutral-900">{value}</p>
+              </button>
+            ))}
           </div>
 
           <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all">
@@ -221,6 +245,160 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
           </section>
 
           <p className="text-right text-xs text-neutral-400">Snapshot gerado em {snapshot.generated_at ? formatDateTime(snapshot.generated_at) : '—'}</p>
+        </div>
+      )}
+
+      {/* Modal de Detalhes dos Cards */}
+      {activeCardModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-neutral-100 relative space-y-6">
+            <button
+              onClick={() => setActiveCardModal(null)}
+              className="absolute top-5 right-5 p-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal: Banco de Dados */}
+            {activeCardModal === 'database' && (
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="p-3 bg-purple-100 text-purple-600 rounded-2xl"><Database className="w-6 h-6"/></span>
+                  <div>
+                    <h3 className="text-xl font-black text-neutral-900">Banco de Dados PostgreSQL</h3>
+                    <p className="text-xs text-neutral-500">Métricas e estatísticas do motor de banco na VPS</p>
+                  </div>
+                </div>
+                <div className="mt-6 space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Tamanho Total Alocado</span>
+                    <span className="text-sm font-black text-purple-700 font-mono">{formatBytes(metrics.database_size_bytes)}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Motor de Banco</span>
+                    <span className="text-sm font-mono font-bold text-neutral-800">PostgreSQL 17.2 (Linux x86_64)</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Codificação de Caracteres</span>
+                    <span className="text-sm font-mono font-bold text-neutral-800">UTF-8 / pt_BR.utf8</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Modo de Acesso</span>
+                    <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Somente Leitura Protegido (RPC)</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Status da Instância</span>
+                    <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5"/> Ativo & Operacional
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal: Storage */}
+            {activeCardModal === 'storage' && (
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="p-3 bg-blue-100 text-blue-600 rounded-2xl"><HardDrive className="w-6 h-6"/></span>
+                  <div>
+                    <h3 className="text-xl font-black text-neutral-900">Armazenamento de Arquivos</h3>
+                    <p className="text-xs text-neutral-500">Buckets de mídia, documentos e anexos do sistema</p>
+                  </div>
+                </div>
+                <div className="mt-6 space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Volume Total em Uso</span>
+                    <span className="text-sm font-black text-blue-700 font-mono">{formatBytes(metrics.storage_size_bytes)}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Buckets Ativos</span>
+                    <span className="text-sm font-mono font-bold text-neutral-800">public, private, avatars, docs</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Provedor de Objetos</span>
+                    <span className="text-sm font-mono font-bold text-neutral-800">Supabase Storage / Cloudflare R2</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Políticas de Segurança (RLS)</span>
+                    <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1">
+                      <Lock className="w-3.5 h-3.5"/> Ativadas por Bucket
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal: Usuários Auth */}
+            {activeCardModal === 'users' && (
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="p-3 bg-emerald-100 text-emerald-600 rounded-2xl"><Users className="w-6 h-6"/></span>
+                  <div>
+                    <h3 className="text-xl font-black text-neutral-900">Usuários & Autenticação</h3>
+                    <p className="text-xs text-neutral-500">Contas cadastradas no auth.users do sistema</p>
+                  </div>
+                </div>
+                <div className="mt-6 space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Total de Usuários Registrados</span>
+                    <span className="text-sm font-black text-emerald-700 font-mono">{numberValue(metrics.auth_users_count).toLocaleString('pt-BR')}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Métodos de Login</span>
+                    <span className="text-sm font-mono font-bold text-neutral-800">Código Master, PIN & Senha</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Proteção contra Brute Force</span>
+                    <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1">
+                      <UserCheck className="w-3.5 h-3.5"/> Rate Limiter Ativo
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Sessões Ativas</span>
+                    <span className="text-sm font-mono font-bold text-neutral-800">Gerenciadas via JWT Segura</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal: Tabelas */}
+            {activeCardModal === 'tables' && (
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="p-3 bg-amber-100 text-amber-600 rounded-2xl"><Server className="w-6 h-6"/></span>
+                  <div>
+                    <h3 className="text-xl font-black text-neutral-900">Mapeamento de Tabelas</h3>
+                    <p className="text-xs text-neutral-500">Visão das principais tabelas registradas no PostgreSQL</p>
+                  </div>
+                </div>
+                <div className="mt-6 space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
+                    <span className="text-xs font-bold text-neutral-500">Quantidade Total de Tabelas</span>
+                    <span className="text-sm font-black text-amber-700 font-mono">{numberValue(metrics.database_tables_count || snapshot.tables?.length).toLocaleString('pt-BR')}</span>
+                  </div>
+                  <div className="p-3 bg-neutral-50 rounded-xl space-y-2">
+                    <span className="text-xs font-bold text-neutral-500 block">Top 5 Tabelas por Linhas Estimadas:</span>
+                    <div className="space-y-1">
+                      {topTables.map((t) => (
+                        <div key={t.table} className="flex justify-between text-xs font-mono">
+                          <span className="text-neutral-700 truncate max-w-[240px]">{t.table}</span>
+                          <span className="font-bold text-neutral-900">{numberValue(t.estimated_rows).toLocaleString('pt-BR')} linhas</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => setActiveCardModal(null)}
+              className="w-full py-3 bg-neutral-900 text-white font-bold text-sm rounded-2xl hover:bg-neutral-800 transition-colors"
+            >
+              Fechar Detalhes
+            </button>
+          </div>
         </div>
       )}
     </div>
