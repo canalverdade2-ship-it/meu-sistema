@@ -162,12 +162,17 @@ function supabasePatch(path, body, callback) {
 }
 
 function supabaseUpsertProduct(path, body, callback) {
+  return supabaseUpsertCustom(path, 'codigo_produto', body, callback);
+}
+
+function supabaseUpsertCustom(path, onConflict, body, callback) {
   const cleanPath = path.replace(/^\/rest\/v1/, '');
   const payload = JSON.stringify(body);
+  const conflictParam = onConflict ? `?on_conflict=${onConflict}` : '';
   const options = {
     hostname: '127.0.0.1',
     port: 3001,
-    path: `${cleanPath}?on_conflict=codigo_produto`,
+    path: `${cleanPath}${conflictParam}`,
     method: 'POST',
     headers: {
       'apikey': SERVICE_ROLE_JWT,
@@ -3267,7 +3272,700 @@ function checkPendingScrapingTasks() {
 }
 setInterval(checkPendingScrapingTasks, 3000);
 
-// ─── SCRAPING HANDLER FOR PRODUCTS ───────────────────────────────────────────
+const GSA_PACOTES_NACIONAIS = [
+  {
+    codigo: 'GSA-NAC-01',
+    titulo: 'Gramado e Canela Clássico (Serra Gaúcha)',
+    destino: 'Gramado, RS',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Wish Serrano Resort & Convention',
+    hotel_categoria: '5 Estrelas',
+    noites: 4,
+    dias: 5,
+    preco_custo: 1290.00,
+    imagem_url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1080&q=80',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-02',
+    titulo: 'Porto de Galinhas Paradisíaco (Praia e Piscinas Naturais)',
+    destino: 'Porto de Galinhas, PE',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Vivá Porto de Galinhas Resort',
+    hotel_categoria: '4 Estrelas Superior',
+    noites: 6,
+    dias: 7,
+    preco_custo: 1890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1080&q=80',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-03',
+    titulo: 'Maceió & Maragogi Caribe Brasileiro (All Inclusive)',
+    destino: 'Maceió, AL',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pratagy Beach All Inclusive Resort',
+    hotel_categoria: 'Resort All Inclusive',
+    noites: 5,
+    dias: 6,
+    preco_custo: 2490.00,
+    imagem_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&q=80',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-04',
+    titulo: 'Fernando de Noronha dos Sonhos (Arquipélago Exclusivo)',
+    destino: 'Fernando de Noronha, PE',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pousada Triboju & Spa',
+    hotel_categoria: 'Pousada de Luxo',
+    noites: 4,
+    dias: 5,
+    preco_custo: 3890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1080&q=80',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-05',
+    titulo: 'Natal & Praia de Pipa com Dunas de Genipabu',
+    destino: 'Natal, RN',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Serhs Natal Grand Hotel & Resort',
+    hotel_categoria: '5 Estrelas Beira-Mar',
+    noites: 5,
+    dias: 6,
+    preco_custo: 1650.00,
+    imagem_url: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=1080&q=80',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-06',
+    titulo: 'Rio de Janeiro Maravilhoso (Copacabana e Cristo Redentor)',
+    destino: 'Rio de Janeiro, RJ',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hilton Copacabana Hotel',
+    hotel_categoria: '5 Estrelas',
+    noites: 3,
+    dias: 4,
+    preco_custo: 1150.00,
+    imagem_url: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1080&q=80',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-07',
+    titulo: 'Foz do Iguaçu & Cataratas do Iguaçu (Parque Nacional)',
+    destino: 'Foz do Iguaçu, PR',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Wish Foz do Iguaçu Resort',
+    hotel_categoria: '4 Estrelas Superior',
+    noites: 3,
+    dias: 4,
+    preco_custo: 1090.00,
+    imagem_url: 'https://images.unsplash.com/photo-1583855282680-6dbdc69b0932?w=1080&q=80',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-08',
+    titulo: 'Bonito Ecoturismo & Flutuação no Rio da Prata (Pantanal)',
+    destino: 'Bonito, MS',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Zagaia Eco Resort',
+    hotel_categoria: 'Eco Resort',
+    noites: 4,
+    dias: 5,
+    preco_custo: 2190.00,
+    imagem_url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1080&q=80',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-09',
+    titulo: 'Florianópolis Ilha da Magia & Beto Carrero World',
+    destino: 'Florianópolis, SC',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Costão do Santinho Resort All Inclusive',
+    hotel_categoria: 'Resort All Inclusive',
+    noites: 4,
+    dias: 5,
+    preco_custo: 2250.00,
+    imagem_url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1080&q=80',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-10',
+    titulo: 'Jalapão Expedição Safari 4x4 & Fervedouros Dourados',
+    destino: 'Jalapão, TO',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pousadas de Charme & Safari Glamping',
+    hotel_categoria: 'Safari Especial',
+    noites: 5,
+    dias: 6,
+    preco_custo: 3490.00,
+    imagem_url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1080&q=80',
+    categoria: 'nacional'
+  }
+];
+
+const GSA_PACOTES_INTERNACIONAIS = [
+  {
+    codigo: 'GSA-INT-01',
+    titulo: 'Cancún All Inclusive Resort (Caribe Mexicano)',
+    destino: 'Cancún, México',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hard Rock Hotel Cancun All Inclusive',
+    hotel_categoria: '5 Estrelas All Inclusive',
+    noites: 6,
+    dias: 7,
+    preco_custo: 4890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=1080&q=80',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-02',
+    titulo: 'Orlando Mágico & Parques Disney / Universal Studios',
+    destino: 'Orlando, Flórida, EUA',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Disney All-Star Movies Resort',
+    hotel_categoria: 'Resort Temático Disney',
+    noites: 7,
+    dias: 8,
+    preco_custo: 5490.00,
+    imagem_url: 'https://images.unsplash.com/photo-1597466765990-64ad1c35dafc?w=1080&q=80',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-03',
+    titulo: 'Paris Romântica & Torre Eiffel com Museu do Louvre',
+    destino: 'Paris, França',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pullman Paris Tour Eiffel Hotel',
+    hotel_categoria: '4 Estrelas Luxo',
+    noites: 6,
+    dias: 7,
+    preco_custo: 6890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1080&q=80',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-04',
+    titulo: 'Lisboa & Porto Histórico com Degustação no Douro',
+    destino: 'Lisboa, Portugal',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pestana CR7 Lisboa / Porto',
+    hotel_categoria: '4 Estrelas Boutique',
+    noites: 7,
+    dias: 8,
+    preco_custo: 5990.00,
+    imagem_url: 'https://images.unsplash.com/photo-1509822929063-6b6cfc9b42f2?w=1080&q=80',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-05',
+    titulo: 'Buenos Aires & Show de Tango com Jantar em Puerto Madero',
+    destino: 'Buenos Aires, Argentina',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hotel Madero Puerto Madero',
+    hotel_categoria: '5 Estrelas',
+    noites: 4,
+    dias: 5,
+    preco_custo: 1890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1080&q=80',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-06',
+    titulo: 'Santiago & Valle Nevado com Rota das Vinícolas',
+    destino: 'Santiago, Chile',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hotel Plaza El Bosque Sanhattan',
+    hotel_categoria: '4 Estrelas Superior',
+    noites: 5,
+    dias: 6,
+    preco_custo: 2390.00,
+    imagem_url: 'https://images.unsplash.com/photo-1589802829985-817e51171b92?w=1080&q=80',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-07',
+    titulo: 'Punta Cana All Inclusive & Passeio de Catamarã Ilha Saona',
+    destino: 'Punta Cana, República Dominicana',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Lopesan Costa Bávaro Resort Spa & Casino',
+    hotel_categoria: '5 Estrelas All Inclusive',
+    noites: 6,
+    dias: 7,
+    preco_custo: 4690.00,
+    imagem_url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1080&q=80',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-08',
+    titulo: 'Nova York Times Square, Broadway & Estátua da Liberdade',
+    destino: 'Nova York, EUA',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'New York Marriott Marquis Times Square',
+    hotel_categoria: '4 Estrelas Superior',
+    noites: 5,
+    dias: 6,
+    preco_custo: 6450.00,
+    imagem_url: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=1080&q=80',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-09',
+    titulo: 'Roma Imperial, Vaticano & Coliseu Histórico',
+    destino: 'Roma, Itália',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Starhotels Metropole Roma',
+    hotel_categoria: '4 Estrelas',
+    noites: 6,
+    dias: 7,
+    preco_custo: 6390.00,
+    imagem_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1080&q=80',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-10',
+    titulo: 'Dubai Futurista & Safari 4x4 no Deserto com Jantar Beduíno',
+    destino: 'Dubai, Emirados Árabes Unidos',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'JW Marriott Marquis Hotel Dubai',
+    hotel_categoria: '5 Estrelas Luxo',
+    noites: 6,
+    dias: 7,
+    preco_custo: 7890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1080&q=80',
+    categoria: 'internacional'
+  }
+];
+
+const GSA_PACOTES_PROMOCOES = [
+  {
+    codigo: 'GSA-PROMO-01',
+    titulo: 'Super Promoção: Porto Seguro All Inclusive com Beach Club',
+    destino: 'Porto Seguro, BA',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Nauticomar Resort All Inclusive',
+    hotel_categoria: 'Resort All Inclusive',
+    noites: 7,
+    dias: 8,
+    preco_custo: 1490.00,
+    imagem_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&q=80',
+    categoria: 'promocoes-exclusivas'
+  },
+  {
+    codigo: 'GSA-PROMO-02',
+    titulo: 'Super Promoção: Maragogi Caribe Brasileiro com Piscinas Naturais',
+    destino: 'Maragogi, AL',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Grand Oca Maragogi All Inclusive Resort',
+    hotel_categoria: 'Resort All Inclusive',
+    noites: 4,
+    dias: 5,
+    preco_custo: 1790.00,
+    imagem_url: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1080&q=80',
+    categoria: 'promocoes-exclusivas'
+  },
+  {
+    codigo: 'GSA-PROMO-03',
+    titulo: 'Super Promoção: Bariloche Neve, Chocolates & Circuito Chico',
+    destino: 'Bariloche, Argentina',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hotel Panamericano Bariloche',
+    hotel_categoria: '5 Estrelas com Spa',
+    noites: 5,
+    dias: 6,
+    preco_custo: 2890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=1080&q=80',
+    categoria: 'promocoes-exclusivas'
+  }
+];
+
+function slugifyViagens(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '') || 'pacote-viagem';
+}
+
+async function handleViagensScraping(config) {
+  const currentId = config.id;
+  const targetUrl = (config.target_url || '').trim();
+  const margem = parseFloat(config.margem_lucro) || 30;
+  const categoriaId = config.categoria_id || null;
+  const syncId = config.sync_id || 'VIAGENS';
+
+  logScrapingStep(currentId, 'requisicao', 'executando', `✈️ Conectando à fonte de pacotes de viagem: ${targetUrl}`, 15, {
+    url_alvo: targetUrl
+  });
+
+  try {
+    let extractedPackages = [];
+
+    // Detecção de Feed Integrado GSA (Nacionais / Internacionais / Promoções / Todos)
+    const urlLower = targetUrl.toLowerCase();
+    if (urlLower.includes('nacionais') || urlLower.includes('gsa-viagens-nacionais')) {
+      extractedPackages = [...GSA_PACOTES_NACIONAIS];
+    } else if (urlLower.includes('internacionais') || urlLower.includes('gsa-viagens-internacionais')) {
+      extractedPackages = [...GSA_PACOTES_INTERNACIONAIS];
+    } else if (urlLower.includes('promoc') || urlLower.includes('gsa-viagens-promocoes')) {
+      extractedPackages = [...GSA_PACOTES_PROMOCOES];
+    } else if (urlLower.includes('geral') || urlLower.includes('todos') || urlLower.includes('gsa-viagens-geral')) {
+      extractedPackages = [...GSA_PACOTES_NACIONAIS, ...GSA_PACOTES_INTERNACIONAIS, ...GSA_PACOTES_PROMOCOES];
+    }
+
+    if (extractedPackages.length === 0) {
+      const feedText = await fetchText(targetUrl);
+      const sizeKb = (feedText.length / 1024).toFixed(1);
+      logScrapingStep(currentId, 'download', 'executando', `Feed de pacotes baixado com sucesso (${sizeKb} KB). Analisando dados...`, 45);
+
+      // 1. Tentar parsear como JSON
+      try {
+        const parsed = JSON.parse(feedText);
+        const arr = Array.isArray(parsed) 
+          ? parsed 
+          : (parsed.data || parsed.packages || parsed.items || parsed.offers || parsed.results || parsed.trips || []);
+        if (Array.isArray(arr) && arr.length > 0) {
+          for (const item of arr) {
+            const dest = item.destino || item.destination || item.city || item.cidade || item.local || item.pais || 'Destino Nacional';
+            const title = item.titulo || item.title || item.nome || item.name || item.package_name || `Pacote ${dest}`;
+            const orig = item.origem || item.origin || item.departure_city || 'São Paulo, SP';
+            const hotel = item.hotel_nome || item.hotel || item.hotel_name || item.hospedagem || 'Hotel Selecionado';
+            const hotelCat = item.hotel_categoria || item.stars || '4 Estrelas';
+            const noites = parseInt(item.noites || item.nights || 4, 10);
+            const dias = parseInt(item.dias || item.days || (noites + 1), 10);
+            const cost = parseFloat(item.preco_custo || item.preco || item.price || item.valor || 0);
+            const img = item.imagem_url || item.imagem || item.image || item.photo || item.thumbnail || item.cover_url || '';
+            const code = String(item.codigo || item.id || item.codigo_oferta || `PKG-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+            const cat = categoriaId || item.categoria || (dest.toLowerCase().includes('orlando') || dest.toLowerCase().includes('cancun') || dest.toLowerCase().includes('paris') || dest.toLowerCase().includes('disney') || dest.toLowerCase().includes('miami') || dest.toLowerCase().includes('lisboa') ? 'internacional' : 'nacional');
+
+            if (title && cost > 0) {
+              extractedPackages.push({
+                titulo: title,
+                destino: dest,
+                origem: orig,
+                hotel_nome: hotel,
+                hotel_categoria: hotelCat,
+                noites,
+                dias,
+                preco_custo: cost,
+                imagem_url: img,
+                codigo_oferta_fornecedor: code,
+                categoria: cat
+              });
+            }
+          }
+        }
+      } catch (e) {}
+
+      // 2. Se não encontrou JSON, tentar como CSV/TSV
+      if (extractedPackages.length === 0) {
+        function parseCSVHelper(text) {
+          const cleanText = text.replace(/^[\uFEFF\xFF\xFE]/, '');
+          const rows = [];
+          let currentRow = [];
+          let currentField = '';
+          let inQuotes = false;
+          for (let i = 0; i < cleanText.length; i++) {
+            const ch = cleanText[i];
+            const nextCh = cleanText[i + 1];
+            if (ch === '"') {
+              if (inQuotes && nextCh === '"') { currentField += '"'; i++; }
+              else inQuotes = !inQuotes;
+            } else if (ch === ',' && !inQuotes) {
+              currentRow.push(currentField.trim());
+              currentField = '';
+            } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
+              if (ch === '\r' && nextCh === '\n') i++;
+              currentRow.push(currentField.trim());
+              if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+              currentRow = [];
+              currentField = '';
+            } else {
+              currentField += ch;
+            }
+          }
+          if (currentField || currentRow.length > 0) {
+            currentRow.push(currentField.trim());
+            if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+          }
+          return rows;
+        }
+
+        const rows = parseCSVHelper(feedText);
+        if (rows.length > 1) {
+          const headers = rows[0].map(h => h.toLowerCase().trim());
+          const findCol = (terms) => headers.findIndex(h => terms.some(t => h.includes(t)));
+          
+          const titleIdx = findCol(['titulo', 'title', 'nome', 'name', 'pacote', 'package', 'oferta', 'product_name']);
+          const destIdx = findCol(['destino', 'destination', 'cidade', 'city', 'local', 'pais']);
+          const origIdx = findCol(['origem', 'origin', 'saida', 'departure']);
+          const priceIdx = findCol(['preco', 'price', 'custo', 'cost', 'valor', 'amount']);
+          const hotelIdx = findCol(['hotel', 'hospedagem', 'resort', 'pousada']);
+          const nightsIdx = findCol(['noite', 'night', 'duracao', 'duration', 'dia', 'day']);
+          const imgIdx = findCol(['imagem', 'image', 'foto', 'photo', 'url_imagem', 'pic', 'thumbnail']);
+          const codeIdx = findCol(['codigo', 'code', 'id', 'sku', 'ref']);
+          const catIdx = findCol(['categoria', 'category']);
+
+          for (let r = 1; r < rows.length; r++) {
+            const row = rows[r];
+            const title = titleIdx >= 0 ? row[titleIdx] : '';
+            const dest = destIdx >= 0 ? row[destIdx] : '';
+            const rawPrice = priceIdx >= 0 ? row[priceIdx] : '';
+            const cost = parseFloat(String(rawPrice || '0').replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+
+            if ((title || dest) && cost > 0) {
+              const finalDest = dest || 'Destino Nacional';
+              const finalTitle = title || `Pacote Promocional ${finalDest}`;
+              const orig = origIdx >= 0 && row[origIdx] ? row[origIdx] : 'São Paulo, SP';
+              const hotel = hotelIdx >= 0 && row[hotelIdx] ? row[hotelIdx] : 'Hotel Selecionado';
+              const noites = nightsIdx >= 0 ? (parseInt(row[nightsIdx], 10) || 4) : 4;
+              const img = imgIdx >= 0 ? row[imgIdx] : '';
+              const code = codeIdx >= 0 && row[codeIdx] ? row[codeIdx] : `PKG-CSV-${r}`;
+              const cat = categoriaId || (catIdx >= 0 && row[catIdx] ? row[catIdx] : (finalDest.toLowerCase().includes('orlando') || finalDest.toLowerCase().includes('cancun') || finalDest.toLowerCase().includes('europa') ? 'internacional' : 'nacional'));
+
+              extractedPackages.push({
+                titulo: finalTitle,
+                destino: finalDest,
+                origem: orig,
+                hotel_nome: hotel,
+                hotel_categoria: '4 Estrelas',
+                noites: noites,
+                dias: noites + 1,
+                preco_custo: cost,
+                imagem_url: img,
+                codigo_oferta_fornecedor: code,
+                categoria: cat
+              });
+            }
+          }
+        }
+      }
+
+      // 3. Se não encontrou CSV, tentar XML/RSS
+      if (extractedPackages.length === 0) {
+        const itemRegex = /<item[\s\S]*?<\/item>|<offer[\s\S]*?<\/offer>|<pacote[\s\S]*?<\/pacote>/gi;
+        let xmlMatch;
+        while ((xmlMatch = itemRegex.exec(feedText)) !== null) {
+          const block = xmlMatch[0];
+          const getTag = (t) => {
+            const m = new RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`, 'i').exec(block);
+            return m ? m[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').trim() : '';
+          };
+          const dest = getTag('destination') || getTag('destino') || getTag('cidade') || 'Destino Nacional';
+          const title = getTag('title') || getTag('nome') || getTag('titulo') || `Pacote ${dest}`;
+          const priceStr = getTag('price') || getTag('preco') || getTag('valor');
+          const cost = parseFloat(priceStr.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+          const img = getTag('image') || getTag('imagem') || getTag('photo') || getTag('enclosure');
+          const code = getTag('id') || getTag('code') || getTag('guid') || `PKG-XML-${Date.now().toString(36)}`;
+
+          if ((title || dest) && cost > 0) {
+            extractedPackages.push({
+              titulo: title,
+              destino: dest,
+              origem: getTag('origin') || getTag('origem') || 'São Paulo, SP',
+              hotel_nome: getTag('hotel') || 'Hotel Selecionado',
+              hotel_categoria: '4 Estrelas',
+              noites: parseInt(getTag('nights') || getTag('noites') || '4', 10),
+              dias: parseInt(getTag('days') || getTag('dias') || '5', 10),
+              preco_custo: cost,
+              imagem_url: img,
+              codigo_oferta_fornecedor: code,
+              categoria: categoriaId || 'nacional'
+            });
+          }
+        }
+      }
+    }
+
+    // 3. Se não encontrou CSV, tentar XML/RSS
+    if (extractedPackages.length === 0) {
+      const itemRegex = /<item[\s\S]*?<\/item>|<offer[\s\S]*?<\/offer>|<pacote[\s\S]*?<\/pacote>/gi;
+      let xmlMatch;
+      while ((xmlMatch = itemRegex.exec(feedText)) !== null) {
+        const block = xmlMatch[0];
+        const getTag = (t) => {
+          const m = new RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`, 'i').exec(block);
+          return m ? m[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').trim() : '';
+        };
+        const dest = getTag('destination') || getTag('destino') || getTag('cidade') || 'Destino Nacional';
+        const title = getTag('title') || getTag('nome') || getTag('titulo') || `Pacote ${dest}`;
+        const priceStr = getTag('price') || getTag('preco') || getTag('valor');
+        const cost = parseFloat(priceStr.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+        const img = getTag('image') || getTag('imagem') || getTag('photo') || getTag('enclosure');
+        const code = getTag('id') || getTag('code') || getTag('guid') || `PKG-XML-${Date.now().toString(36)}`;
+
+        if ((title || dest) && cost > 0) {
+          extractedPackages.push({
+            titulo: title,
+            destino: dest,
+            origem: getTag('origin') || getTag('origem') || 'São Paulo, SP',
+            hotel_nome: getTag('hotel') || 'Hotel Selecionado',
+            hotel_categoria: '4 Estrelas',
+            noites: parseInt(getTag('nights') || getTag('noites') || '4', 10),
+            dias: parseInt(getTag('days') || getTag('dias') || '5', 10),
+            preco_custo: cost,
+            imagem_url: img,
+            codigo_oferta_fornecedor: code,
+            categoria: categoriaId || 'nacional'
+          });
+        }
+      }
+    }
+
+    if (extractedPackages.length === 0) {
+      const isDecolarOrSPA = targetUrl.includes('decolar') || targetUrl.includes('cvc') || targetUrl.includes('booking');
+      const detalheMotivo = isDecolarOrSPA
+        ? 'A URL da operadora é um portal interativo protegido por firewall (SPA). Para importar pacotes de viagens, utilize a URL do Feed de Afiliados (formato CSV, JSON ou XML fornecido no painel da Decolar/Awin/Lomadee) ou API de catálogo.'
+        : 'Nenhum pacote de viagem identificado no feed retornado. Verifique se a URL aponta para um feed CSV/JSON/XML válido.';
+
+      logScrapingStep(currentId, 'erro', 'erro', `Aviso: ${detalheMotivo}`, 100, {
+        erros: [detalheMotivo],
+        motivo_erro: detalheMotivo,
+        produtos_encontrados: 0,
+        novos: 0,
+        atualizados: 0,
+        esgotados: 0
+      });
+      return;
+    }
+
+    const limiteMax = Number(config.limite_produtos || 0);
+    const packagesToProcess = (limiteMax > 0 && extractedPackages.length > limiteMax)
+      ? extractedPackages.slice(0, limiteMax)
+      : extractedPackages;
+
+    const infoLimite = limiteMax > 0 ? ` (limitado a ${limiteMax})` : ' (sem limite)';
+    logScrapingStep(currentId, 'processamento', 'executando', `Encontrados ${extractedPackages.length} pacote(s). Importando ${packagesToProcess.length}${infoLimite}. Calculando margem de lucro (+${margem}%) e cadastrando no GSA Viagens...`, 70, {
+      produtos_encontrados: extractedPackages.length,
+      produtos_limitados: packagesToProcess.length
+    });
+
+    let inseridos = 0;
+    let atualizados = 0;
+    const batchSize = 50;
+
+    for (let b = 0; b < packagesToProcess.length; b += batchSize) {
+      const chunk = packagesToProcess.slice(b, b + batchSize);
+      const newPkgs = [];
+      const imgMap = [];
+
+      for (let idx = 0; idx < chunk.length; idx++) {
+        const pkg = chunk[idx];
+        const precoCusto = pkg.preco_custo;
+        const margemValor = Math.round((precoCusto * (margem / 100)) * 100) / 100;
+        const precoVenda = Math.ceil((precoCusto + margemValor) * 100) / 100;
+        const hashSuffix = (pkg.codigo_oferta_fornecedor || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(-6) || Math.random().toString(36).slice(2, 6);
+        const baseSlug = `${slugifyViagens(pkg.titulo)}-${hashSuffix}`;
+
+        newPkgs.push({
+          titulo: pkg.titulo.slice(0, 200),
+          slug: baseSlug,
+          categoria: pkg.categoria || 'nacional',
+          origem: pkg.origem || 'São Paulo, SP',
+          destino: pkg.destino || 'Destino Nacional',
+          dias: pkg.dias || 5,
+          noites: pkg.noites || 4,
+          hotel_nome: pkg.hotel_nome || 'Hotel Selecionado',
+          hotel_categoria: pkg.hotel_categoria || '4 Estrelas',
+          acomodacao_tipo: 'Quarto Duplo Standard',
+          alimentacao: 'Café da manhã incluso',
+          transporte_tipo: 'Aéreo ida e volta',
+          companhia_executor: 'Companhia Aérea Regular',
+          bagagem_inclusa: '1 mala de mão (10kg) inclusa',
+          traslado_incluso: true,
+          codigo_oferta_fornecedor: pkg.codigo_oferta_fornecedor || null,
+          preco_custo: precoCusto,
+          margem_porcentagem: margem,
+          margem_valor: margemValor,
+          preco_venda: precoVenda,
+          parcelamento_maximo: 10,
+          limite_vendas: 50,
+          vendas_realizadas: 0,
+          status: 'publicado',
+          inclusoes: [
+            "Passagens aéreas (ida e volta)",
+            "Hospedagem com café da manhã",
+            "Traslado aeroporto / hotel / aeroporto",
+            "Suporte e assistência 24h GSA Viagens"
+          ],
+          exclusoes: [
+            "Passeios opcionais não descritos",
+            "Taxas de turismo e despesas pessoais"
+          ],
+          regras: [
+            "Valores por pessoa em acomodação dupla",
+            "Sujeito à alteração de disponibilidade sem aviso prévio"
+          ],
+          documentacao_necessaria: [
+            "Documento oficial com foto (RG ou CNH válida)",
+            "Para destinos internacionais: Passaporte com validade mínima de 6 meses"
+          ]
+        });
+        imgMap.push({ slug: baseSlug, imagem_url: pkg.imagem_url });
+      }
+
+      await new Promise((resolve) => {
+        supabaseUpsertCustom('/rest/v1/viagens_pacotes', 'slug', newPkgs, (errPkg, resPkg, statusCode) => {
+          if (!errPkg) {
+            const resArr = Array.isArray(resPkg) ? resPkg : (resPkg ? [resPkg] : []);
+            if (statusCode === 201) inseridos += resArr.length;
+            else atualizados += resArr.length;
+
+            const imgsToInsert = [];
+            for (const createdPkg of resArr) {
+              const match = imgMap.find(m => m.slug === createdPkg.slug);
+              if (match && match.imagem_url && match.imagem_url.startsWith('http')) {
+                imgsToInsert.push({
+                  pacote_id: createdPkg.id,
+                  url: match.imagem_url,
+                  is_capa: true,
+                  ordem: 0
+                });
+              }
+            }
+            if (imgsToInsert.length > 0) {
+              supabasePost('/rest/v1/viagens_pacote_imagens', imgsToInsert, () => {});
+            }
+          } else {
+            console.error('❌ Erro no lote de viagens:', errPkg?.message || errPkg);
+          }
+          resolve();
+        });
+      });
+
+      const pct = Math.min(98, 70 + Math.floor(((b + chunk.length) / packagesToProcess.length) * 28));
+      logScrapingStep(currentId, 'processamento', 'executando', `Processando lote de pacotes (${Math.min(b + chunk.length, packagesToProcess.length)} / ${packagesToProcess.length})...`, pct);
+    }
+
+    supabasePatch(`/rest/v1/automacao_scraping_configs?id=eq.${currentId}`, { ultima_execucao: new Date().toISOString() }, () => {});
+
+    const msgFinal = inseridos > 0 
+      ? `Sincronização 100% concluída com sucesso! ${inseridos} novo(s) e ${atualizados} atualizado(s) no GSA Viagens com a margem de ${margem}%.`
+      : `Sincronização 100% concluída com sucesso! ${atualizados} pacote(s) atualizados com a margem de ${margem}%.`;
+
+    logScrapingStep(currentId, 'sucesso', 'sucesso', msgFinal, 100, {
+      novos: inseridos,
+      atualizados: atualizados,
+      esgotados: 0,
+      produtos_encontrados: extractedPackages.length,
+      erros: []
+    });
+
+  } catch (err) {
+    console.error('❌ [Viagens Scraping] Erro:', err.message);
+    logScrapingStep(currentId, 'erro', 'erro', `Erro no processamento de viagens: ${err.message}`, 100, {
+      erros: [err.message],
+      motivo_erro: err.message,
+      novos: 0,
+      atualizados: 0,
+      esgotados: 0
+    });
+  }
+}
+
+// ─── SCRAPING HANDLER FOR PRODUCTS & TRAVEL ───────────────────────────────────────────
 async function handleProductScraping(bodyData) {
   let automacaoId = null;
   try {
@@ -3280,7 +3978,7 @@ async function handleProductScraping(bodyData) {
   // Buscar configurações da automação no Supabase
   const path = automacaoId 
     ? `/rest/v1/automacao_scraping_configs?id=eq.${automacaoId}&select=*`
-    : `/rest/v1/automacao_scraping_configs?ativo=eq.true&tipo=eq.produtos&select=*`;
+    : `/rest/v1/automacao_scraping_configs?ativo=eq.true&select=*`;
 
   supabaseGet(path, async (err, configs) => {
     if (err || !Array.isArray(configs) || configs.length === 0) {
@@ -3295,6 +3993,10 @@ async function handleProductScraping(bodyData) {
     }
 
     for (const config of configs) {
+      if (config.tipo === 'viagens') {
+        await handleViagensScraping(config);
+        continue;
+      }
       const currentId = config.id;
       const targetUrl = config.target_url;
       const margem = parseFloat(config.margem_lucro) || 100;
@@ -3326,6 +4028,7 @@ async function handleProductScraping(bodyData) {
             const precoMin = config.preco_min ? parseFloat(config.preco_min) : null;
             const precoMax = config.preco_max ? parseFloat(config.preco_max) : null;
             const descontoMin = config.desconto_min ? parseInt(config.desconto_min) : null;
+            const ratingMin = config.rating_min ? parseFloat(config.rating_min) : null;
             const rawLim = config.limite_produtos;
             const limiteShopee = (rawLim !== null && rawLim !== undefined && rawLim !== '' && !isNaN(Number(rawLim))) ? Number(rawLim) : 0;
 
@@ -3707,6 +4410,35 @@ const server = http.createServer((req, res) => {
         timestamp: new Date().toISOString(),
         activeSessions: Object.keys(userSessions).length
       }));
+    }
+
+    // Public Travel Package Feeds
+    if (req.method === 'GET' && urlPath.startsWith('/feeds/viagens')) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Cache-Control', 'no-cache');
+
+      if (urlPath.includes('nacionais')) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify(GSA_PACOTES_NACIONAIS, null, 2));
+      }
+      if (urlPath.includes('internacionais')) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify(GSA_PACOTES_INTERNACIONAIS, null, 2));
+      }
+      if (urlPath.includes('promoc')) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify(GSA_PACOTES_PROMOCOES, null, 2));
+      }
+      if (urlPath.includes('.csv')) {
+        res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8' });
+        const all = [...GSA_PACOTES_NACIONAIS, ...GSA_PACOTES_INTERNACIONAIS, ...GSA_PACOTES_PROMOCOES];
+        const headers = 'codigo,titulo,destino,origem,hotel_nome,hotel_categoria,noites,dias,preco_custo,imagem_url,categoria\n';
+        const rows = all.map(p => `"${p.codigo}","${p.titulo}","${p.destino}","${p.origem}","${p.hotel_nome}","${p.hotel_categoria}",${p.noites},${p.dias},${p.preco_custo},"${p.imagem_url}","${p.categoria}"`).join('\n');
+        return res.end(headers + rows);
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify([...GSA_PACOTES_NACIONAIS, ...GSA_PACOTES_INTERNACIONAIS, ...GSA_PACOTES_PROMOCOES], null, 2));
     }
 
     // Verificação do webhook (GET)

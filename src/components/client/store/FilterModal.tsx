@@ -19,9 +19,10 @@ interface FilterModalProps {
 }
 
 const SORT_OPTIONS: Array<{ id: SortOption; label: string; description: string }> = [
-  { id: 'none', label: 'Relevância', description: 'Ordem recomendada pela loja' },
-  { id: 'price-asc', label: 'Menor preço', description: 'Do mais barato ao mais caro' },
+  { id: 'price-asc', label: 'Menor preço (Padrão)', description: 'Do mais barato ao mais caro' },
   { id: 'price-desc', label: 'Maior preço', description: 'Do mais caro ao mais barato' },
+  { id: 'alpha-asc', label: 'Nome (A - Z)', description: 'Ordem alfabética' },
+  { id: 'alpha-desc', label: 'Nome (Z - A)', description: 'Ordem alfabética inversa' },
 ];
 
 export default function FilterModal({
@@ -40,10 +41,10 @@ export default function FilterModal({
   if (!isOpen) return null;
 
   const hasInvalidRange = minPrice !== '' && maxPrice !== '' && Number(minPrice) > Number(maxPrice);
-  const hasFilters = sortBy !== 'none' || minPrice !== '' || maxPrice !== '' || selectedCategoryId !== 'todas';
+  const hasFilters = (sortBy !== 'price-asc' && sortBy !== 'none') || minPrice !== '' || maxPrice !== '' || selectedCategoryId !== 'todas';
 
   const clearFilters = () => {
-    setSortBy('none');
+    setSortBy('price-asc');
     setMinPrice('');
     setMaxPrice('');
     if (onSelectCategory) onSelectCategory('todas');

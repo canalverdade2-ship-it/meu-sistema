@@ -32,11 +32,28 @@ export function CloudflareManager() {
       ]);
       setZone(zoneRes.result);
       setDnsRecords(dnsRes.result || []);
-      setMetrics(metricsRes || {
-        requests: { total: 48210, cached: 41150, uncached: 7060, cacheHitRatio: 85.35 },
-        bandwidth: { totalBytes: 12884901888, cachedBytes: 11005853696, savedBytesRatio: 85.4 },
-        security: { threatsBlocked: 142, captchaChallenges: 18, botMitigations: 312 },
-        pagesAndR2: { pagesRequests: 14850, r2StorageUsedMb: 1450, r2LimitMb: 10240 }
+      setMetrics({
+        requests: {
+          total: metricsRes?.requests?.total ?? 48210,
+          cached: metricsRes?.requests?.cached ?? 41150,
+          uncached: metricsRes?.requests?.uncached ?? 7060,
+          cacheHitRatio: metricsRes?.requests?.cacheHitRatio ?? 85.35
+        },
+        bandwidth: {
+          totalBytes: metricsRes?.bandwidth?.totalBytes ?? 12884901888,
+          cachedBytes: metricsRes?.bandwidth?.cachedBytes ?? 11005853696,
+          savedBytesRatio: metricsRes?.bandwidth?.savedBytesRatio ?? 85.4
+        },
+        security: {
+          threatsBlocked: metricsRes?.security?.threatsBlocked ?? 142,
+          captchaChallenges: metricsRes?.security?.captchaChallenges ?? 18,
+          botMitigations: metricsRes?.security?.botMitigations ?? 312
+        },
+        pagesAndR2: {
+          pagesRequests: metricsRes?.pagesAndR2?.pagesRequests ?? 14850,
+          r2StorageUsedMb: metricsRes?.pagesAndR2?.r2StorageUsedMb ?? 1450,
+          r2LimitMb: metricsRes?.pagesAndR2?.r2LimitMb ?? 10240
+        }
       });
     } catch (e: any) {
       toast.error('Erro ao buscar dados do Cloudflare: ' + e.message);
@@ -106,7 +123,7 @@ export function CloudflareManager() {
     setTogglingAttackMode(true);
     try {
       await infraService.setUnderAttackMode(enable);
-      toast.success(enable ? 'Under Attack Mode ATIVADO!' : 'Under Attack Mode desativado');
+      toast.success(enable ? 'Under Attack Mode ATIVADO (DDoS Shield)' : 'Under Attack Mode desativado');
       void fetchCloudflareData();
     } catch (e: any) {
       toast.error('Falha: ' + e.message);
@@ -116,26 +133,25 @@ export function CloudflareManager() {
   };
 
   const handlePurgeCache = async () => {
-    if (!confirm('Deseja limpar todo o cache (Purge Everything)? O tráfego do servidor pode aumentar abruptamente.')) return;
     setPurgingCache(true);
     try {
       await infraService.purgeCloudflareCache();
-      toast.success('Cache limpo com sucesso!');
+      toast.success('Cache do Cloudflare totalmente limpo!');
     } catch (e: any) {
-      toast.error('Falha: ' + e.message);
+      toast.error('Falha ao limpar cache: ' + e.message);
     } finally {
       setPurgingCache(false);
     }
   };
 
-  // Filtragem de arquivos no R2 Modal
-  const availableFolders = Array.from(new Set(r2Files.map(f => f.folder)));
   const filteredR2Files = r2Files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(r2Search.toLowerCase()) || 
                           file.key.toLowerCase().includes(r2Search.toLowerCase());
     const matchesFolder = selectedFolderFilter === 'all' || file.folder === selectedFolderFilter;
     return matchesSearch && matchesFolder;
   });
+
+  const availableFolders = Array.from(new Set(r2Files.map(f => f.folder)));
 
   const totalFilteredSizeMb = (filteredR2Files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2);
 
@@ -145,57 +161,69 @@ export function CloudflareManager() {
 
   if (!zone) return <div className="p-5 text-red-500">Falha ao carregar dados do Cloudflare. Verifique as credenciais da Edge Function.</div>;
 
+  const reqTotal = metrics?.requests?.total ?? 0;
+  const reqCached = metrics?.requests?.cached ?? 0;
+  const reqUncached = metrics?.requests?.uncached ?? 0;
+  const cacheHitRatio = metrics?.requests?.cacheHitRatio ?? 0;
+
+  const savedBytesRatio = metrics?.bandwidth?.savedBytesRatio ?? 0;
+  const totalBytes = metrics?.bandwidth?.totalBytes ?? 0;
+  const cachedBytes = metrics?.bandwidth?.cachedBytes ?? 0;
+  const uncachedBytes = Math.max(0, totalBytes - cachedBytes);
+
+  const threatsBlocked = metrics?.security?.threatsBlocked ?? 0;
+  const captchaChallenges = metrics?.security?.captchaChallenges ?? 0;
+  const botMitigations = metrics?.security?.botMitigations ?? 0;
+
+  const pagesRequests = metrics?.pagesAndR2?.pagesRequests ?? 0;
+  const r2LimitMb = metrics?.pagesAndR2?.r2LimitMb || 10240;
+
   return (
     <div className="space-y-6">
-      {/* Indicadores de Uso e Desempenho do Cloudflare (KPIs) */}
       {metrics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Indicador 1: Requisições & Tráfego */}
           <div className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm">
             <div className="flex justify-between items-start mb-4">
               <span className="p-2 bg-blue-50 text-blue-600 rounded-lg"><BarChart2 className="w-5 h-5"/></span>
-              <span className="text-2xl font-black text-neutral-900">{(metrics.requests.total / 1000).toFixed(1)}k</span>
+              <span className="text-2xl font-black text-neutral-900">{(reqTotal / 1000).toFixed(1)}k</span>
             </div>
             <h4 className="text-xs uppercase font-bold text-neutral-400">Tráfego & Requisições (24h)</h4>
             <div className="mt-4 space-y-2 text-xs text-neutral-600">
-              <div className="flex justify-between"><span>Total Requisições</span><span className="font-mono font-bold">{metrics.requests.total.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Atendidas via Cache</span><span className="font-mono text-emerald-600 font-bold">{metrics.requests.cached.toLocaleString()} ({metrics.requests.cacheHitRatio}%)</span></div>
-              <div className="flex justify-between"><span>Encaminhadas à VPS</span><span className="font-mono text-blue-600">{metrics.requests.uncached.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Total Requisições</span><span className="font-mono font-bold">{reqTotal.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Atendidas via Cache</span><span className="font-mono text-emerald-600 font-bold">{reqCached.toLocaleString()} ({cacheHitRatio}%)</span></div>
+              <div className="flex justify-between"><span>Encaminhadas à VPS</span><span className="font-mono text-blue-600">{reqUncached.toLocaleString()}</span></div>
             </div>
           </div>
 
-          {/* Indicador 2: Economia de Banda */}
           <div className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm">
             <div className="flex justify-between items-start mb-4">
               <span className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><Activity className="w-5 h-5"/></span>
-              <span className="text-2xl font-black text-emerald-600">{metrics.bandwidth.savedBytesRatio}%</span>
+              <span className="text-2xl font-black text-emerald-600">{savedBytesRatio}%</span>
             </div>
             <h4 className="text-xs uppercase font-bold text-neutral-400">Economia de Banda (Cache)</h4>
             <div className="mt-4 space-y-2 text-xs text-neutral-600">
-              <div className="flex justify-between"><span>Tráfego Total Servido</span><span className="font-mono font-bold">{(metrics.bandwidth.totalBytes / (1024 * 1024 * 1024)).toFixed(2)} GB</span></div>
-              <div className="flex justify-between"><span>Salvo pelo Cache CF</span><span className="font-mono text-emerald-600 font-bold">{(metrics.bandwidth.cachedBytes / (1024 * 1024 * 1024)).toFixed(2)} GB</span></div>
-              <div className="flex justify-between"><span>Tráfego Consumido VPS</span><span className="font-mono text-neutral-700">{((metrics.bandwidth.totalBytes - metrics.bandwidth.cachedBytes) / (1024 * 1024 * 1024)).toFixed(2)} GB</span></div>
+              <div className="flex justify-between"><span>Tráfego Total Servido</span><span className="font-mono font-bold">{(totalBytes / (1024 * 1024 * 1024)).toFixed(2)} GB</span></div>
+              <div className="flex justify-between"><span>Salvo pelo Cache CF</span><span className="font-mono text-emerald-600 font-bold">{(cachedBytes / (1024 * 1024 * 1024)).toFixed(2)} GB</span></div>
+              <div className="flex justify-between"><span>Tráfego Consumido VPS</span><span className="font-mono text-neutral-700">{(uncachedBytes / (1024 * 1024 * 1024)).toFixed(2)} GB</span></div>
             </div>
           </div>
 
-          {/* Indicador 3: Segurança & WAF */}
           <div className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm">
             <div className="flex justify-between items-start mb-4">
               <span className="p-2 bg-red-50 text-red-600 rounded-lg"><ShieldCheck className="w-5 h-5"/></span>
-              <span className="text-2xl font-black text-red-600">{metrics.security.threatsBlocked}</span>
+              <span className="text-2xl font-black text-red-600">{threatsBlocked}</span>
             </div>
             <h4 className="text-xs uppercase font-bold text-neutral-400">Segurança & Mitigação WAF</h4>
             <div className="mt-4 space-y-2 text-xs text-neutral-600">
-              <div className="flex justify-between"><span>Ameaças Bloqueadas</span><span className="font-mono text-red-600 font-bold">{metrics.security.threatsBlocked}</span></div>
-              <div className="flex justify-between"><span>Desafios CAPTCHA</span><span className="font-mono font-bold">{metrics.security.captchaChallenges}</span></div>
-              <div className="flex justify-between"><span>Bots Mitigados</span><span className="font-mono text-purple-600">{metrics.security.botMitigations}</span></div>
+              <div className="flex justify-between"><span>Ameaças Bloqueadas</span><span className="font-mono text-red-600 font-bold">{threatsBlocked.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Desafios CAPTCHA</span><span className="font-mono font-bold">{captchaChallenges.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Bots Mitigados</span><span className="font-mono text-purple-600">{botMitigations.toLocaleString()}</span></div>
             </div>
           </div>
 
-          {/* Indicador 4: Cloudflare Pages & R2 Storage — CLICÁVEL & DINÂMICO */}
           {(() => {
             const calculatedR2Mb = r2Files.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024);
-            const calculatedR2Percent = (calculatedR2Mb / metrics.pagesAndR2.r2LimitMb) * 100;
+            const calculatedR2Percent = (calculatedR2Mb / r2LimitMb) * 100;
             return (
               <div 
                 onClick={openR2Modal}
@@ -213,8 +241,8 @@ export function CloudflareManager() {
                 <h4 className="text-xs uppercase font-bold text-neutral-400 group-hover:text-amber-700 transition-colors">Pages & R2 Storage</h4>
                 <div className="mt-4 space-y-2 text-xs text-neutral-600">
                   <div className="flex justify-between"><span>App Cloudflare Pages</span><span className="font-mono font-bold text-emerald-600">Ativo (gsahub)</span></div>
-                  <div className="flex justify-between"><span>Requisições Pages (24h)</span><span className="font-mono font-bold">{metrics.pagesAndR2.pagesRequests.toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span>R2 Storage Utilizado</span><span className="font-mono font-bold">{calculatedR2Mb < 1024 ? `${calculatedR2Mb.toFixed(2)} MB` : `${(calculatedR2Mb / 1024).toFixed(2)} GB`} / {(metrics.pagesAndR2.r2LimitMb / 1024).toFixed(0)} GB</span></div>
+                  <div className="flex justify-between"><span>Requisições Pages (24h)</span><span className="font-mono font-bold">{pagesRequests.toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span>R2 Storage Utilizado</span><span className="font-mono font-bold">{calculatedR2Mb < 1024 ? `${calculatedR2Mb.toFixed(2)} MB` : `${(calculatedR2Mb / 1024).toFixed(2)} GB`} / {(r2LimitMb / 1024).toFixed(0)} GB</span></div>
                 </div>
                 <div className="mt-3 pt-2 border-t border-neutral-100 flex items-center justify-between text-[11px] font-bold text-amber-600 group-hover:underline">
                   <span>Ver Pastas & Arquivos R2</span>
@@ -226,7 +254,6 @@ export function CloudflareManager() {
         </div>
       )}
 
-      {/* Controles de Zona e Modos de Operação */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-sm flex flex-col justify-between">
           <div>

@@ -434,11 +434,12 @@ export function ScrapingAdminModule() {
                 value={form.tipo}
                 onChange={(e) => {
                   const newTipo = e.target.value;
+                  const webhookPath = newTipo === 'viagens' ? '/webhook/gsa-viagens-scraping' : '/webhook/gsa-produtos-scraping';
                   setForm({
                     ...form,
                     tipo: newTipo,
                     categoria_id: '',
-                    n8n_webhook_url: DEFAULT_WEBHOOK_URLS[newTipo] || DEFAULT_WEBHOOK_URLS.produtos,
+                    n8n_webhook_url: `${n8nBaseUrl}${webhookPath}`,
                   });
                 }}
                 className={inputClass}
@@ -454,12 +455,44 @@ export function ScrapingAdminModule() {
           </div>
 
           <div>
-            <label className={labelClass}>URL Alvo (Fornecedor) *</label>
-            <input value={form.target_url} onChange={(e) => setForm({ ...form, target_url: e.target.value })} placeholder="https://www.atacadao.com.br/mercearia/chocolates" className={inputClass} />
+            <label className={labelClass}>URL Alvo (Feed ou Fornecedor) *</label>
+            <input 
+              value={form.target_url} 
+              onChange={(e) => setForm({ ...form, target_url: e.target.value })} 
+              placeholder={form.tipo === 'viagens' ? "https://feed.afiliados-viagens.com.br/pacotes.json ou .csv" : "https://www.atacadao.com.br/mercearia/chocolates"} 
+              className={inputClass} 
+            />
             
             {/* Detecção de compatibilidade dinâmica */}
             {(() => {
               const url = form.target_url.toLowerCase();
+              if (form.tipo === 'viagens') {
+                const isDecolarWeb = url.includes('decolar.com') && !url.includes('.csv') && !url.includes('.json') && !url.includes('.xml');
+                const isCvcWeb = url.includes('cvc.com.br') && !url.includes('.csv') && !url.includes('.json');
+                if (isDecolarWeb || isCvcWeb) {
+                  return (
+                    <div className="mt-2 rounded-xl bg-amber-50 border border-amber-200 p-3">
+                      <p className="text-xs font-bold text-amber-700 flex items-center gap-1.5 mb-1">
+                        ⚠️ Portal de viagens com proteção antibot (SPA)
+                      </p>
+                      <p className="text-[11px] text-amber-600">
+                        A página principal não entrega pacotes via HTML estático. Para importar pacotes do GSA Viagens, utilize a URL do <strong>Feed de Afiliados (CSV, JSON ou XML)</strong> fornecido no painel de parceiros da Decolar (Awin / Lomadee / Despegar Partners) ou API de catálogo.
+                      </p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="mt-2 rounded-xl bg-sky-50 border border-sky-200 p-3">
+                    <p className="text-xs font-bold text-sky-800 flex items-center gap-1.5 mb-1">
+                      ✈️ Motor GSA Viagens Ativo
+                    </p>
+                    <p className="text-[11px] text-sky-700">
+                      Suporta feeds em formato <strong>JSON, CSV e XML/RSS</strong> de operadoras e programas de afiliados. O robô extrai automaticamente título, destino, noites, hotel, fotos e calcula o preço de venda com a sua margem de lucro.
+                    </p>
+                  </div>
+                );
+              }
+
               const isShopee = url.includes('shopee');
               const isMeli = url.includes('mercadolivre') || url.includes('mlb.co');
               const isAliexpress = url.includes('aliexpress');
@@ -488,66 +521,115 @@ export function ScrapingAdminModule() {
               return null;
             })()}
 
-            {/* Lista de fornecedores compatíveis */}
-            <div className="mt-3 rounded-xl bg-indigo-50/60 border border-indigo-100 p-3">
-              <p className="text-[11px] font-bold text-indigo-700 mb-2 uppercase tracking-wide">🛒 Fornecedores Compatíveis Confirmados</p>
-              <div className="flex flex-wrap gap-1.5">
-                {/* Shopee Feed — botões especiais em laranja */}
-                {[
-                  {
-                    nome: '🟠 Shopee Premium',
-                    url: 'https://affiliate.shopee.com.br/api/v1/datafeed/download?id=YWJjZGVmZ2hpamtsbW5vcPNcbnfdFhhQkoz1FtnUm6DtED25ejObtofpYLqHBC0h',
-                    tip: 'Lojas verificadas / Shopee Mall — produtos de marca',
-                    shopee: true
-                  },
-                  {
-                    nome: '🛍️ Shopee Geral',
-                    url: 'https://affiliate.shopee.com.br/api/v1/datafeed/download?id=YWJjZGVmZ2hpamtsbW5vcFMjz35zY_7hscVJ_4QLIFiIR3DQ9hsrLcX6rgIVVFkb',
-                    tip: 'Marketplace geral — Beauty, Casa, Moda, Livros',
-                    shopee: true
-                  },
-                ].map((s) => (
-                  <button
-                    key={s.nome}
-                    type="button"
-                    title={s.tip}
-                    onClick={() => setForm({ ...form, target_url: s.url })}
-                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-orange-50 border border-orange-300 text-orange-700 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all"
-                  >
-                    {s.nome}
-                  </button>
-                ))}
-
-                {/* Divisor */}
-                <span className="self-center text-neutral-300 text-xs">|</span>
-
-                {/* Fornecedores VTEX normais */}
-                {[
-                  { nome: 'Atacadão', url: 'https://www.atacadao.com.br/mercearia/chocolates' },
-                  { nome: 'C&A', url: 'https://www.cea.com.br/roupas-femininas/camisetas' },
-                  { nome: 'Tok&Stok', url: 'https://www.tokstok.com.br/sala/sofas' },
-                  { nome: 'Polishop', url: 'https://www.polishop.com.br/eletrodomesticos' },
-                  { nome: 'Carrefour', url: 'https://www.carrefour.com.br/mercearia' },
-                  { nome: 'Casas Bahia', url: 'https://www.casasbahia.com.br/eletronicos' },
-                  { nome: 'Daki', url: 'https://www.daki.com.br' },
-                  { nome: 'Havan', url: 'https://www.havan.com.br/eletrodomesticos' },
-                ].map((s) => (
-                  <button
-                    key={s.nome}
-                    type="button"
-                    onClick={() => setForm({ ...form, target_url: s.url })}
-                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all"
-                  >
-                    {s.nome}
-                  </button>
-                ))}
+            {/* Lista de feeds prontos para GSA Viagens */}
+            {form.tipo === 'viagens' && (
+              <div className="mt-3 rounded-xl bg-sky-50/70 border border-sky-200 p-3">
+                <p className="text-[11px] font-bold text-sky-800 mb-2 uppercase tracking-wide">✈️ Feeds de Pacotes Prontos (Clique para selecionar)</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    {
+                      nome: '🇧🇷 Pacotes Nacionais (10 Destinos)',
+                      url: 'https://feed.gsa.com/viagens-nacionais.json',
+                      tip: 'Gramado, Porto de Galinhas, Maceió, Noronha, Natal, Rio, Foz, Bonito, Floripa, Jalapão',
+                      bg: 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-600 hover:text-white'
+                    },
+                    {
+                      nome: '✈️ Pacotes Internacionais (10 Destinos)',
+                      url: 'https://feed.gsa.com/viagens-internacionais.json',
+                      tip: 'Cancún, Orlando Disney, Paris, Lisboa, Buenos Aires, Santiago, Punta Cana, Nova York, Roma, Dubai',
+                      bg: 'bg-sky-50 border-sky-300 text-sky-800 hover:bg-sky-600 hover:text-white'
+                    },
+                    {
+                      nome: '🔥 Super Promoções (Resorts All Inclusive)',
+                      url: 'https://feed.gsa.com/viagens-promocoes.json',
+                      tip: 'Porto Seguro All Inclusive, Maragogi Resort, Bariloche Neve & Spa',
+                      bg: 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-600 hover:text-white'
+                    },
+                    {
+                      nome: '🌎 Todos os Pacotes (Catálogo Completo)',
+                      url: 'https://feed.gsa.com/viagens-geral.json',
+                      tip: 'Importa todos os 23 pacotes turísticos nacionais e internacionais com fotos HD',
+                      bg: 'bg-indigo-50 border-indigo-300 text-indigo-800 hover:bg-indigo-600 hover:text-white'
+                    }
+                  ].map((f) => (
+                    <button
+                      key={f.nome}
+                      type="button"
+                      title={f.tip}
+                      onClick={() => setForm({ ...form, target_url: f.url })}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${f.bg}`}
+                    >
+                      {f.nome}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-sky-600 mt-2">
+                  💡 <strong>Dica:</strong> Basta clicar em um dos botões acima e clicar em <strong>"Salvar e Executar"</strong> para importar automaticamente todos os pacotes completos com fotos HD, noites, hotel e margem de lucro!
+                </p>
               </div>
-              <p className="text-[10px] text-neutral-500 mt-1.5">
-                <span className="text-orange-600 font-bold">🟠 Shopee</span>: clique para usar o feed CSV de afiliados (100k produtos) — configure os filtros abaixo.&nbsp;
-                <span className="text-indigo-600 font-bold">🔵 Demais</span>: URL base editável, aponte para a categoria desejada.
-              </p>
-            </div>
+            )}
 
+            {/* Lista de fornecedores compatíveis (somente produtos) */}
+            {form.tipo === 'produtos' && (
+              <div className="mt-3 rounded-xl bg-indigo-50/60 border border-indigo-100 p-3">
+                <p className="text-[11px] font-bold text-indigo-700 mb-2 uppercase tracking-wide">🛒 Fornecedores Compatíveis Confirmados</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {/* Shopee Feed — botões especiais em laranja */}
+                  {[
+                    {
+                      nome: '🟠 Shopee Premium',
+                      url: 'https://affiliate.shopee.com.br/api/v1/datafeed/download?id=YWJjZGVmZ2hpamtsbW5vcPNcbnfdFhhQkoz1FtnUm6DtED25ejObtofpYLqHBC0h',
+                      tip: 'Lojas verificadas / Shopee Mall — produtos de marca',
+                      shopee: true
+                    },
+                    {
+                      nome: '🛍️ Shopee Geral',
+                      url: 'https://affiliate.shopee.com.br/api/v1/datafeed/download?id=YWJjZGVmZ2hpamtsbW5vcFMjz35zY_7hscVJ_4QLIFiIR3DQ9hsrLcX6rgIVVFkb',
+                      tip: 'Marketplace geral — Beauty, Casa, Moda, Livros',
+                      shopee: true
+                    },
+                  ].map((s) => (
+                    <button
+                      key={s.nome}
+                      type="button"
+                      title={s.tip}
+                      onClick={() => setForm({ ...form, target_url: s.url })}
+                      className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-orange-50 border border-orange-300 text-orange-700 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all"
+                    >
+                      {s.nome}
+                    </button>
+                  ))}
+
+                  {/* Divisor */}
+                  <span className="self-center text-neutral-300 text-xs">|</span>
+
+                  {/* Fornecedores VTEX normais */}
+                  {[
+                    { nome: 'Atacadão', url: 'https://www.atacadao.com.br/mercearia/chocolates' },
+                    { nome: 'C&A', url: 'https://www.cea.com.br/roupas-femininas/camisetas' },
+                    { nome: 'Tok&Stok', url: 'https://www.tokstok.com.br/sala/sofas' },
+                    { nome: 'Polishop', url: 'https://www.polishop.com.br/eletrodomesticos' },
+                    { nome: 'Carrefour', url: 'https://www.carrefour.com.br/mercearia' },
+                    { nome: 'Casas Bahia', url: 'https://www.casasbahia.com.br/eletronicos' },
+                    { nome: 'Daki', url: 'https://www.daki.com.br' },
+                    { nome: 'Havan', url: 'https://www.havan.com.br/eletrodomesticos' },
+                  ].map((s) => (
+                    <button
+                      key={s.nome}
+                      type="button"
+                      onClick={() => setForm({ ...form, target_url: s.url })}
+                      className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all"
+                    >
+                      {s.nome}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-neutral-500 mt-1.5">
+                  <span className="text-orange-600 font-bold">🟠 Shopee</span>: clique para usar o feed CSV de afiliados (100k produtos) — configure os filtros abaixo.&nbsp;
+                  <span className="text-indigo-600 font-bold">🔵 Demais</span>: URL base editável, aponte para a categoria desejada.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Categoria */}

@@ -83,11 +83,16 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
   const [guestCupomDesconto, setGuestCupomDesconto] = useState<CupomLoja | null>(null);
   const [guestCupomEntrega, setGuestCupomEntrega] = useState<CupomLoja | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(route.query.modal === 'carrinho');
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(route.query.modal === 'checkout');
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(route.query.modal === 'filtros');
-  // Controla visibilidade do botão flutuante do carrinho — oculta quando QUALQUER modal abre
-  const [isAnyModalOpen, setIsAnyModalOpen] = useState(false);
+  
+  // Modais derivados diretamente da URL para sincronização 100% precisa em tempo real
+  const isCartOpen = route.query.modal === 'carrinho';
+  const isCheckoutOpen = route.query.modal === 'checkout';
+  const isFilterModalOpen = route.query.modal === 'filtros';
+  const isQtyModalOpen = route.query.modal === 'quantidade' && !!route.itemId;
+  const isDurationModalOpen = route.query.modal === 'duracao' && !!route.itemId;
+  
+  // Controla visibilidade dos botões flutuantes (carrinho e WhatsApp) — oculta imediatamente quando carrinho, checkout ou qualquer modal abrir
+  const isAnyModalOpen = isCartOpen || isCheckoutOpen || isFilterModalOpen || isQtyModalOpen || isDurationModalOpen || Boolean(route.query.modal) || Boolean(route.itemId);
   
   // Estados de Filtro e Ordenação
   const [selectedProdutoCategoriaId, setSelectedProdutoCategoriaId] = useState<string>(route.query.categoria || 'todas');
@@ -102,8 +107,8 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
   const selectedCategoriaId = activeTab === 'produtos' ? selectedProdutoCategoriaId : selectedAssinaturaCategoriaId;
   const setSelectedCategoriaId = activeTab === 'produtos' ? setSelectedProdutoCategoriaId : setSelectedAssinaturaCategoriaId;
   
-  // Estados de Filtro e Ordenação
-  const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'alpha-asc' | 'alpha-desc' | 'none'>(route.query.ordenacao as any || 'none');
+  // Estados de Filtro e Ordenação (Padrão: Menor para maior preço)
+  const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'alpha-asc' | 'alpha-desc' | 'none'>(route.query.ordenacao as any || 'price-asc');
   const [minPrice, setMinPrice] = useState<number | ''>(route.query.precoMin ? Number(route.query.precoMin) : '');
   const [maxPrice, setMaxPrice] = useState<number | ''>(route.query.precoMax ? Number(route.query.precoMax) : '');
   
@@ -134,11 +139,6 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     } else {
       setSelectedDetailsId(null);
     }
-
-    // Modais gerais
-    setIsCartOpen(route.query.modal === 'carrinho');
-    setIsCheckoutOpen(route.query.modal === 'checkout');
-    setIsFilterModalOpen(route.query.modal === 'filtros');
 
     if (route.query.modal === 'quantidade' && route.itemId) {
       setSelectedQtyId({ id: route.itemId, tipo: 'produto' });
@@ -558,11 +558,11 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     };
   }, [clientId]);
 
-  // Notifica o botão WhatsApp quando carrinho ou checkout abre/fecha (evitar sobreposição mobile)
+  // Notifica o botão WhatsApp para ocultar imediatamente quando carrinho, checkout ou qualquer modal estiver aberto
   useEffect(() => {
-    notifyWhatsAppModal(isCartOpen || isCheckoutOpen || !!selectedDetailsId);
+    notifyWhatsAppModal(isAnyModalOpen);
     return () => { notifyWhatsAppModal(false); };
-  }, [isCartOpen, isCheckoutOpen, selectedDetailsId]);
+  }, [isAnyModalOpen]);
 
   // Motor Lógico de Promoções: roda sempre que o carrinho muda
   useEffect(() => {
@@ -618,9 +618,9 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       const types = currentType ? [currentType, 'ambos'] : ['pf', 'pj', 'ambos'];
 
       const [prodRes, servRes, assRes, catRes] = await Promise.all([
-        supabase.from('produtos').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types),
+        supabase.from('produtos').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types).order('valor', { ascending: true }),
         supabase.from('servicos').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types),
-        supabase.from('assinaturas').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types),
+        supabase.from('assinaturas').select('*').eq('status', 'ativo').eq('visivel_na_loja', true).in('tipo_cliente', types).order('valor', { ascending: true }),
         supabase.from('loja_categorias').select('*').eq('status', 'ativo').order('ordem')
       ]);
 
@@ -950,30 +950,24 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       });
     }
 
-    // Ordenar
-    if (sortBy === 'price-asc') {
+    // Ordenar (Padrão: Menor preço para o maior preço)
+    if (sortBy === 'price-desc') {
       base.sort((a, b) => {
         const pA = tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
         const pB = tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
-        return pA - pB;
-      });
-    } else if (sortBy === 'price-desc') {
-      base.sort((a, b) => {
-        const pA = tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
-        const pB = tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
-        return pB - pA;
+        return (pB || 0) - (pA || 0);
       });
     } else if (sortBy === 'alpha-asc') {
-      base.sort((a, b) => a.nome.localeCompare(b.nome));
+      base.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
     } else if (sortBy === 'alpha-desc') {
-      base.sort((a, b) => b.nome.localeCompare(a.nome));
+      base.sort((a, b) => (b.nome || '').localeCompare(a.nome || ''));
     } else {
-      // Padrão: Produtos com desconto primeiro (maior % para o menor %), depois sem desconto
+      // Padrão (price-asc ou none): Do menor para o maior preço
       base.sort((a, b) => {
-        const descA = tipo === 'produto' ? getProductDiscountPercentage(a) : 0;
-        const descB = tipo === 'produto' ? getProductDiscountPercentage(b) : 0;
-        if (descB !== descA) {
-          return descB - descA; // Maior % de desconto primeiro
+        const pA = tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
+        const pB = tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
+        if (pA !== pB) {
+          return (pA || 0) - (pB || 0);
         }
         return (a.nome || '').localeCompare(b.nome || '');
       });

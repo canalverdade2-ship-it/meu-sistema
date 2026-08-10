@@ -107,10 +107,10 @@ export function ScrapingExecutionMonitorModal({ isOpen, onClose, automacao, onRe
         .from('automacao_scraping_logs')
         .select('*')
         .eq('automacao_id', automacao.id)
-        .order('created_at', { ascending: true })
-        .limit(100);
+        .order('created_at', { ascending: false })
+        .limit(200);
 
-      if (data) setLogs(data);
+      if (data) setLogs([...data].reverse());
     } catch {
       /* silencioso */
     }

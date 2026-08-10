@@ -78,8 +78,31 @@ export async function archiveAdminCatalogItems(
   tipo: 'produto' | 'assinatura',
   ids: string[],
 ) {
-  return callAdminRpc<any>('gsa_admin_archive_catalog_items', {
-    p_tipo: tipo,
-    p_ids: ids,
-  });
+  if (!ids || ids.length === 0) return { success: true, updated: 0 };
+
+  const chunkSize = 50;
+  let totalUpdated = 0;
+
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    try {
+      const res = await callAdminRpc<any>('gsa_admin_archive_catalog_items', {
+        p_tipo: tipo,
+        p_ids: chunk,
+      });
+      totalUpdated += res?.updated ?? chunk.length;
+    } catch (rpcErr) {
+      console.warn('[adminStoreOperations] Erro no RPC de arquivamento em lote, aplicando fallback direto:', rpcErr);
+      const table = tipo === 'produto' ? 'produtos' : 'assinaturas';
+      const { error: directError } = await supabase
+        .from(table)
+        .update({ status: 'inativo', visivel_na_loja: false })
+        .in('id', chunk);
+
+      if (directError) throw directError;
+      totalUpdated += chunk.length;
+    }
+  }
+
+  return { success: true, updated: totalUpdated };
 }

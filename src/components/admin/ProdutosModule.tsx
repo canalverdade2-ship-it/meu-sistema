@@ -347,13 +347,15 @@ const handleBulkDelete = async () => {
       return;
     }
 
-    if (!await confirm({ title: 'Atenção', message: `Deseja inativar ${selectedIds.size} produto(s)? Eles deixarão de aparecer na loja e poderão ser reativados posteriormente.` })) {
+    const count = selectedIds.size;
+    if (!await confirm({ title: 'Atenção', message: `Deseja inativar ${count} produto(s)? Eles deixarão de aparecer na loja e poderão ser reativados posteriormente.` })) {
       return;
     }
 
     setIsDeleting(true);
     const ids = Array.from(selectedIds) as string[];
     try {
+      setSelectedIds(new Set());
       await archiveAdminCatalogItems('produto', ids);
       toast.success(`${ids.length} produto(s) inativado(s) com sucesso.`);
       await logService.logAction({
@@ -362,10 +364,10 @@ const handleBulkDelete = async () => {
         ator_nome: 'Administrador',
         detalhes: `Inativou ${ids.length} produtos em lote.`
       });
-      setSelectedIds(new Set());
-      fetchProdutos();
+      await fetchProdutos();
     } catch (err: any) {
       toast.error(handleError(err, 'Alguns produtos não puderam ser excluídos pois possuem vínculos.'));
+      await fetchProdutos();
     } finally {
       setIsDeleting(false);
     }
