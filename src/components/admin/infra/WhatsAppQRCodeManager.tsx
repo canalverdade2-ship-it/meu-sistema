@@ -437,9 +437,17 @@ export function WhatsAppQRCodeManager() {
           { onConflict: 'key' }
         );
 
+      // Sincroniza com a tabela nativa
+      if (selectedRamal) {
+        await supabase.from('gsa_whatsapp_ramais').update(payload).eq('id', selectedRamal.id);
+      } else {
+        await supabase.from('gsa_whatsapp_ramais').insert([payload]);
+      }
+
       setIsRamalModalOpen(false);
       setSelectedRamal(null);
-    } catch {
+    } catch (e: any) {
+      toast.error('Erro: ' + e.message);
       setIsRamalModalOpen(false);
       setSelectedRamal(null);
     } finally {
@@ -459,9 +467,13 @@ export function WhatsAppQRCodeManager() {
           { key: 'gsa_whatsapp_ramais_config', value: JSON.stringify(updated), updated_at: new Date().toISOString() },
           { onConflict: 'key' }
         );
+        
+      // Sincroniza com a tabela nativa
+      await supabase.from('gsa_whatsapp_ramais').update({ ativo: newStatus, updated_at: new Date().toISOString() }).eq('id', ramal.id);
+
       toast.success(`Ramal "${ramal.setor_nome}" ${newStatus ? 'ativado' : 'desativado'} em tempo real!`);
-    } catch {
-      toast.success(`Ramal "${ramal.setor_nome}" ${newStatus ? 'ativado' : 'desativado'}!`);
+    } catch (e: any) {
+      toast.error(`Erro ao alternar status do ramal: ` + e.message);
     }
   };
 
@@ -477,9 +489,13 @@ export function WhatsAppQRCodeManager() {
           { key: 'gsa_whatsapp_ramais_config', value: JSON.stringify(updated), updated_at: new Date().toISOString() },
           { onConflict: 'key' }
         );
+        
+      // Sincroniza com a tabela nativa
+      await supabase.from('gsa_whatsapp_ramais').delete().eq('id', ramal.id);
+
       toast.success(`Ramal "${ramal.setor_nome}" removido!`);
-    } catch {
-      toast.success(`Ramal "${ramal.setor_nome}" removido!`);
+    } catch (e: any) {
+      toast.error('Erro ao excluir: ' + e.message);
     }
   };
 
