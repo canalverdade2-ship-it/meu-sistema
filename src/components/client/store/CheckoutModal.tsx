@@ -555,9 +555,12 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       console.error('Erro ao validar alteração de preço:', err);
     }
 
-    const hasOutOfStock = cartItems.some((c: any) => c.tipo === 'produto' && c.item_detalhes?.controle_estoque && (c.item_detalhes?.estoque_disponivel <= 0));
-    if (hasOutOfStock) {
-      toast.error('Remova os produtos esgotados do carrinho antes de finalizar.');
+    const hasInvalidOrDeleted = cartItems.some((c: any) => 
+      !c.item_detalhes 
+      || (c.tipo === 'produto' && c.item_detalhes?.controle_estoque && (c.item_detalhes?.estoque_disponivel <= 0))
+    );
+    if (hasInvalidOrDeleted) {
+      toast.error('Remova os produtos excluídos ou esgotados do carrinho antes de finalizar.');
       return;
     }
 

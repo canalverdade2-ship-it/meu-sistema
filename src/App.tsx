@@ -46,8 +46,26 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
 
   let migrated = false;
   try {
+    const productIds = pendingItems.filter(c => c.tipo === 'produto').map(c => c.item_id);
+    const serviceIds = pendingItems.filter(c => c.tipo === 'servico').map(c => c.item_id);
+    const subscriptionIds = pendingItems.filter(c => c.tipo === 'assinatura').map(c => c.item_id);
+
+    const [prodRes, servRes, assRes] = await Promise.all([
+      productIds.length > 0 ? supabase.from('produtos').select('id').in('id', productIds) : Promise.resolve({ data: [] }),
+      serviceIds.length > 0 ? supabase.from('servicos').select('id').in('id', serviceIds) : Promise.resolve({ data: [] }),
+      subscriptionIds.length > 0 ? supabase.from('assinaturas').select('id').in('id', subscriptionIds) : Promise.resolve({ data: [] })
+    ]);
+
+    const validProductIds = new Set(prodRes.data?.map((p: any) => p.id));
+    const validServiceIds = new Set(servRes.data?.map((s: any) => s.id));
+    const validSubscriptionIds = new Set(assRes.data?.map((a: any) => a.id));
+
     await Promise.all(pendingItems.map(async (item) => {
       if (!item?.item_id || !item?.tipo) return;
+
+      if (item.tipo === 'produto' && !validProductIds.has(item.item_id)) return;
+      if (item.tipo === 'servico' && !validServiceIds.has(item.item_id)) return;
+      if (item.tipo === 'assinatura' && !validSubscriptionIds.has(item.item_id)) return;
 
       const quantidade = Math.max(1, Number(item.quantidade || 1));
       const prazoMeses = item.prazo_meses ? Number(item.prazo_meses) : undefined;

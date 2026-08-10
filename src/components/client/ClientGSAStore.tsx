@@ -253,8 +253,13 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
   });
 
   const savePendingStoreCheckout = (customItems?: CartItem[]) => {
-    const itemsToSave = customItems || cartItems;
-    if (!itemsToSave || itemsToSave.length === 0) return;
+    const itemsToSave = customItems !== undefined ? customItems : cartItems;
+    if (!itemsToSave || itemsToSave.length === 0) {
+      localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+      localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
+      localStorage.removeItem(GUEST_ACTIVATED_STORE_COUPONS_KEY);
+      return;
+    }
     const activatedCouponIds = JSON.parse(localStorage.getItem(GUEST_ACTIVATED_STORE_COUPONS_KEY) || '[]');
 
     localStorage.setItem(PENDING_STORE_CHECKOUT_KEY, JSON.stringify({
@@ -277,7 +282,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
   // Persistir automaticamente o carrinho de visitante no localStorage
   useEffect(() => {
-    if (!clientId && cartItems.length > 0) {
+    if (!clientId) {
       savePendingStoreCheckout(cartItems);
     }
   }, [cartItems, clientId]);
@@ -285,12 +290,20 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
   const loadGuestCart = async () => {
     if (clientId) return;
     const rawCart = localStorage.getItem(PENDING_STORE_CHECKOUT_KEY);
-    if (!rawCart) return;
+    if (!rawCart) {
+      setCartItems([]);
+      return;
+    }
 
     try {
       const parsed = JSON.parse(rawCart);
       const pendingItems = Array.isArray(parsed?.items) ? parsed.items : [];
-      if (pendingItems.length === 0) return;
+      if (pendingItems.length === 0) {
+        localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+        localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
+        setCartItems([]);
+        return;
+      }
 
       const productIds = pendingItems.filter(c => c.tipo === 'produto').map(c => c.item_id);
       const serviceIds = pendingItems.filter(c => c.tipo === 'servico').map(c => c.item_id);
@@ -325,8 +338,14 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
         }
       }
 
-      if (guestItems.length > 0) {
-        setCartItems(guestItems);
+      setCartItems(guestItems);
+
+      if (guestItems.length === 0) {
+        localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+        localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
+        localStorage.removeItem(GUEST_ACTIVATED_STORE_COUPONS_KEY);
+      } else if (guestItems.length < pendingItems.length) {
+        savePendingStoreCheckout(guestItems);
       }
     } catch (err) {
       console.error('[GSAStore] Erro ao carregar carrinho de visitante:', err);
@@ -349,10 +368,28 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       return false;
     }
 
+    const productIds = pendingItems.filter(c => c.tipo === 'produto').map(c => c.item_id);
+    const serviceIds = pendingItems.filter(c => c.tipo === 'servico').map(c => c.item_id);
+    const subscriptionIds = pendingItems.filter(c => c.tipo === 'assinatura').map(c => c.item_id);
+
+    const [prodRes, servRes, assRes] = await Promise.all([
+      productIds.length > 0 ? supabase.from('produtos').select('id').in('id', productIds) : Promise.resolve({ data: [] }),
+      serviceIds.length > 0 ? supabase.from('servicos').select('id').in('id', serviceIds) : Promise.resolve({ data: [] }),
+      subscriptionIds.length > 0 ? supabase.from('assinaturas').select('id').in('id', subscriptionIds) : Promise.resolve({ data: [] })
+    ]);
+
+    const validProductIds = new Set(prodRes.data?.map((p: any) => p.id));
+    const validServiceIds = new Set(servRes.data?.map((s: any) => s.id));
+    const validSubscriptionIds = new Set(assRes.data?.map((a: any) => a.id));
+
     let imported = false;
     try {
       await Promise.all(pendingItems.map(async (pendingItem) => {
         if (!pendingItem?.item_id || !pendingItem?.tipo) return;
+
+        if (pendingItem.tipo === 'produto' && !validProductIds.has(pendingItem.item_id)) return;
+        if (pendingItem.tipo === 'servico' && !validServiceIds.has(pendingItem.item_id)) return;
+        if (pendingItem.tipo === 'assinatura' && !validSubscriptionIds.has(pendingItem.item_id)) return;
 
         const quantidade = Math.max(1, Number(pendingItem.quantidade || 1));
         const prazoMeses = pendingItem.prazo_meses ? Number(pendingItem.prazo_meses) : undefined;
@@ -637,10 +674,13 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       });
 
       // We only keep items that still exist in the database to avoid UI crashes
-      // But we log when something is removed
+      const invalidItems = enrichedCart.filter(i => !i.item_detalhes);
       const validItems = enrichedCart.filter(i => i.item_detalhes);
-      if (validItems.length !== data.length) {
-        console.warn(`[GSAStore] ${data.length - validItems.length} itens foram removidos do carrinho por não existirem mais no banco.`);
+      if (invalidItems.length > 0) {
+        console.warn(`[GSAStore] ${invalidItems.length} itens orfãos foram removidos do carrinho no banco de dados.`);
+        await Promise.all(invalidItems.map(inv => 
+          clientOperationalWrite(clientId, 'loja_carrinhos', 'delete', {}, { id: inv.id })
+        ));
       }
 
       setCartItems(validItems);

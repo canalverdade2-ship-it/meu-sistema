@@ -14,7 +14,7 @@ const userSessions = {};
 
 // ─── HTTP / HTTPS FETCH HELPER (ZERO DEPENDENCIES) ──────────────────────────
 function fetchText(urlStr) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     try {
       const u = new URL(urlStr);
       const mod = u.protocol === 'https:' ? https : http;
@@ -26,23 +26,31 @@ function fetchText(urlStr) {
       }, (res) => {
         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           const redirectUrl = new URL(res.headers.location, urlStr).href;
-          return fetchText(redirectUrl).then(resolve).catch(reject);
+          return fetchText(redirectUrl).then(resolve);
         }
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          return reject(new Error(`HTTP ${res.statusCode}`));
+          return resolve('');
         }
         let data = '';
         res.setEncoding('utf8');
         res.on('data', chunk => { data += chunk; });
         res.on('end', () => resolve(data));
       });
-      req.on('error', reject);
-      req.setTimeout(45000, () => { req.destroy(); reject(new Error('Timeout na conexão')); });
-    } catch(e) { reject(e); }
+      req.on('error', (err) => {
+        console.warn('⚠️ [fetchText Warning]', err.message);
+        resolve('');
+      });
+      req.setTimeout(60000, () => {
+        req.destroy();
+        resolve('');
+      });
+    } catch(e) { resolve(''); }
   });
 }
 
 // ─── SUPABASE HELPER ────────────────────────────────────────────────────────
+const SERVICE_ROLE_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODYwNjMzNzcsImV4cCI6MjEwMTQyMzM3N30.AuVtgQf7nnOrXKoElM_y9pVGW12xledsLpZGg0qOjME';
+
 function supabaseGet(path, callback) {
   const cleanPath = path.replace(/^\/rest\/v1/, '');
   const options = {
@@ -51,14 +59,14 @@ function supabaseGet(path, callback) {
     path: cleanPath,
     method: 'GET',
     headers: {
-      'apikey': 'GSA_JWT_SECRET_MINIMO_32_CARACTERES_AQUI',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODYwNjMzNzcsImV4cCI6MjEwMTQyMzM3N30.AuVtgQf7nnOrXKoElM_y9pVGW12xledsLpZGg0qOjME',
+      'apikey': SERVICE_ROLE_JWT,
+      'Authorization': `Bearer ${SERVICE_ROLE_JWT}`,
       'Content-Type': 'application/json'
     }
   };
   let req;
   try {
-    req = require('http').request(options, (res) => {
+    req = http.request(options, (res) => {
       let data = '';
       res.on('data', chunk => { data += chunk; });
       res.on('end', () => {
@@ -88,28 +96,29 @@ function supabaseGet(path, callback) {
 }
 
 function supabasePost(path, body, callback) {
+  const cleanPath = path.replace(/^\/rest\/v1/, '');
   const payload = JSON.stringify(body);
   const options = {
-    hostname: SUPABASE_HOST,
-    port: 443,
-    path: path,
+    hostname: '127.0.0.1',
+    port: 3001,
+    path: cleanPath,
     method: 'POST',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'apikey': SERVICE_ROLE_JWT,
+      'Authorization': `Bearer ${SERVICE_ROLE_JWT}`,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation',
       'Content-Length': Buffer.byteLength(payload)
     }
   };
-  const req = https.request(options, (res) => {
+  const req = http.request(options, (res) => {
     let data = '';
     res.on('data', chunk => { data += chunk; });
     res.on('end', () => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        callback(null, JSON.parse(data || '[]'));
+        try { callback(null, JSON.parse(data || '[]')); } catch(e) { callback(null, []); }
       } else {
-        console.error('❌ Erro POST Supabase:', data);
+        console.error('❌ Erro POST Supabase local:', data);
         callback(new Error(data), null);
       }
     });
@@ -120,33 +129,67 @@ function supabasePost(path, body, callback) {
 }
 
 function supabasePatch(path, body, callback) {
+  const cleanPath = path.replace(/^\/rest\/v1/, '');
   const payload = JSON.stringify(body);
   const options = {
-    hostname: SUPABASE_HOST,
-    port: 443,
-    path: path,
+    hostname: '127.0.0.1',
+    port: 3001,
+    path: cleanPath,
     method: 'PATCH',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'apikey': SERVICE_ROLE_JWT,
+      'Authorization': `Bearer ${SERVICE_ROLE_JWT}`,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation',
       'Content-Length': Buffer.byteLength(payload)
     }
   };
-  const req = https.request(options, (res) => {
+  const req = http.request(options, (res) => {
     let data = '';
     res.on('data', chunk => { data += chunk; });
     res.on('end', () => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        callback(null, JSON.parse(data || '[]'));
+        try { callback(null, JSON.parse(data || '[]')); } catch(e) { callback(null, []); }
       } else {
-        console.error('❌ Erro PATCH Supabase:', data);
+        console.error('❌ Erro PATCH Supabase local:', data);
         callback(new Error(data), null);
       }
     });
   });
   req.on('error', err => callback(err, null));
+  req.write(payload);
+  req.end();
+}
+
+function supabaseUpsertProduct(path, body, callback) {
+  const cleanPath = path.replace(/^\/rest\/v1/, '');
+  const payload = JSON.stringify(body);
+  const options = {
+    hostname: '127.0.0.1',
+    port: 3001,
+    path: `${cleanPath}?on_conflict=codigo_produto`,
+    method: 'POST',
+    headers: {
+      'apikey': SERVICE_ROLE_JWT,
+      'Authorization': `Bearer ${SERVICE_ROLE_JWT}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=representation',
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  };
+  const req = http.request(options, (res) => {
+    let data = '';
+    res.on('data', chunk => { data += chunk; });
+    res.on('end', () => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        try { callback(null, JSON.parse(data || '[]'), res.statusCode); } catch(e) { callback(null, [], res.statusCode); }
+      } else {
+        console.error('❌ Erro UPSERT Supabase local:', data);
+        callback(new Error(data), null, res.statusCode);
+      }
+    });
+  });
+  req.on('error', err => callback(err, null, 500));
   req.write(payload);
   req.end();
 }
@@ -3200,6 +3243,30 @@ function logScrapingStep(automacaoId, passo, status, mensagem, progresso, detalh
   });
 }
 
+// ─── AUTOMATIC SCRAPING POLLING LISTENER ─────────────────────────────────────
+const activeAutomations = new Set();
+
+function checkPendingScrapingTasks() {
+  supabaseGet('/rest/v1/automacao_scraping_logs?passo=eq.iniciando&status=eq.em_andamento&select=id,automacao_id,created_at&order=created_at.desc&limit=5', (err, logs) => {
+    if (err || !Array.isArray(logs) || logs.length === 0) return;
+    for (const log of logs) {
+      if (activeAutomations.has(log.automacao_id)) continue;
+      const logTime = new Date(log.created_at).getTime();
+      const ageMs = Math.abs(Date.now() - logTime);
+      if (ageMs > 600000) continue;
+      
+      activeAutomations.add(log.automacao_id);
+      supabasePatch(`/rest/v1/automacao_scraping_logs?automacao_id=eq.${log.automacao_id}&status=eq.em_andamento`, { status: 'processando_motor' }, () => {
+        console.log('⚡ [AutoScraping] Capturada nova execução para automação:', log.automacao_id);
+        Promise.resolve(handleProductScraping(JSON.stringify({ automacao_id: log.automacao_id }))).finally(() => {
+          setTimeout(() => activeAutomations.delete(log.automacao_id), 10000);
+        });
+      });
+    }
+  });
+}
+setInterval(checkPendingScrapingTasks, 3000);
+
 // ─── SCRAPING HANDLER FOR PRODUCTS ───────────────────────────────────────────
 async function handleProductScraping(bodyData) {
   let automacaoId = null;
@@ -3252,23 +3319,25 @@ async function handleProductScraping(bodyData) {
         if (isShopeeCSVFeed) {
           logScrapingStep(currentId, 'requisicao', 'executando', '🟠 Motor Shopee Feed CSV: Baixando catálogo de afiliados...', 20, { url_alvo: targetUrl });
           try {
-            const csvText = await fetchText(targetUrl);
+            const csvText = html || await fetchText(targetUrl);
 
             const keywordFilter = (config.palavras_chave || '').toLowerCase().trim();
             const categoriaFiltro = (config.categoria_filtro || '').toLowerCase().trim();
             const precoMin = config.preco_min ? parseFloat(config.preco_min) : null;
             const precoMax = config.preco_max ? parseFloat(config.preco_max) : null;
             const descontoMin = config.desconto_min ? parseInt(config.desconto_min) : null;
-            const ratingMin = config.rating_min ? parseFloat(config.rating_min) : null;
-            const limiteShopee = Number(config.limite_produtos || 50);
+            const rawLim = config.limite_produtos;
+            const limiteShopee = (rawLim !== null && rawLim !== undefined && rawLim !== '' && !isNaN(Number(rawLim))) ? Number(rawLim) : 0;
 
-            function parseFirstNCSVRows(text, maxRows) {
+            function parseCSVFull(text, maxRows) {
               const cleanText = text.replace(/^[\uFEFF\xFF\xFE]/, '');
               const rows = [];
               let currentRow = [];
               let currentField = '';
               let inQuotes = false;
-              for (let i = 0; i < cleanText.length && rows.length <= maxRows; i++) {
+              const shouldLimit = maxRows > 0;
+
+              for (let i = 0; i < cleanText.length; i++) {
                 const ch = cleanText[i];
                 const nextCh = cleanText[i + 1];
                 if (ch === '"') {
@@ -3280,21 +3349,27 @@ async function handleProductScraping(bodyData) {
                 } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
                   if (ch === '\r' && nextCh === '\n') i++;
                   currentRow.push(currentField.trim());
-                  if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+                  if (currentRow.some(f => f.length > 0)) {
+                    rows.push(currentRow);
+                    if (shouldLimit && rows.length >= maxRows) break;
+                  }
                   currentRow = [];
                   currentField = '';
                 } else {
                   currentField += ch;
                 }
               }
-              if ((currentField || currentRow.length > 0) && rows.length <= maxRows) {
-                currentRow.push(currentField.trim());
-                if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+              if (!shouldLimit || rows.length < maxRows) {
+                if (currentField || currentRow.length > 0) {
+                  currentRow.push(currentField.trim());
+                  if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+                }
               }
               return rows;
             }
 
-            const allRows = parseFirstNCSVRows(csvText, limiteShopee + 5);
+            const maxRowsToParse = limiteShopee > 0 ? (limiteShopee + 5) : 0;
+            const allRows = parseCSVFull(csvText, maxRowsToParse);
             if (allRows.length > 1) {
               const headers = allRows[0].map(h => h.trim().toLowerCase().replace(/^[\uFEFF\xFF\xFE]/, '').replace(/[^a-z0-9]+/g, '_'));
               
@@ -3338,23 +3413,18 @@ async function handleProductScraping(bodyData) {
                 }
 
                 const productLink = row.offer_link || row.product_short_link || row.product_link || row.link || row.url || '';
-                const imageUrl = row.image_link || row.image_url || row.image || row.imageurl || '';
-                const desc = (row.description || '').replace(/<[^>]*>/g, '').trim();
-                const discountPct = row.discount_percentage || row.discount || '';
+                const imageUrl = row.image_link || row.image_url || row.image || row.imageurl || row.cover_image || row.picture || '';
 
                 extractedProducts.push({
-                  nome: title.slice(0, 200),
+                  codigo: itemId ? `SHP-${itemId}` : null,
+                  nome: title,
                   preco: salePrice,
-                  imagem_url: imageUrl,
-                  codigo: itemId || null,
-                  codigo_barras: null,
-                  descricao: desc.slice(0, 800),
                   url_afiliado: productLink,
-                  shopee_shop: row.shop_name || row.seller_name || 'Shopee',
-                  shopee_rating: row.item_rating || row.shop_rating || '',
-                  desconto: discountPct ? `${discountPct}% OFF` : ''
+                  imagem_url: imageUrl,
+                  desconto_percentual: discountPctNum,
+                  rating: itemRating,
+                  shopee_shop: row.shop_name || row.seller_name || 'Vendedor Shopee'
                 });
-
                 shopeeCount++;
               }
             }
@@ -3363,81 +3433,6 @@ async function handleProductScraping(bodyData) {
               `🟠 Feed Shopee: ${extractedProducts.length} produto(s) extraídos do catálogo CSV de afiliado.${config.palavras_chave ? ` Filtro: "${config.palavras_chave}"` : ' (sem filtro por keyword)'}`, 50);
           } catch(shopeeErr) {
             console.error('❌ [Shopee Feed] Erro no parsing CSV:', shopeeErr.message);
-          }
-        }
-
-        // Tentativa A: Engine VTEX API (Atacadão, Carrefour, Mobly, Electrolux, etc.)
-        try {
-          const parsedUrl = new URL(targetUrl);
-          const vtexApi = `https://${parsedUrl.hostname}/api/catalog_system/pub/products/search${parsedUrl.pathname}${parsedUrl.search}`;
-          const vtexRes = await fetch(vtexApi, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-              'Accept': 'application/json'
-            }
-          });
-          if (vtexRes.status === 200 || vtexRes.status === 206) {
-            const vtexData = await vtexRes.json();
-            if (Array.isArray(vtexData) && vtexData.length > 0) {
-              for (const item of vtexData) {
-                const sku = item.items?.[0];
-                const seller = sku?.sellers?.[0];
-                const offer = seller?.commertialOffer;
-                const price = offer?.Price || offer?.ListPrice || 0;
-                const image = sku?.images?.[0]?.imageUrl || '';
-                const nome = item.productName || item.productTitle || item.name;
-
-                // Extrair código interno do produto (RefID, ItemID, ProductId ou regex da URL)
-                const urlCodeMatch = (item.linkText || targetUrl).match(/-(\d+)(?:\/p|$|[\?#])/);
-                const codigo = sku?.referenceId?.[0]?.Value || item.productReference || urlCodeMatch?.[1] || sku?.itemId || item.productId;
-                const codigoBarras = sku?.ean && sku.ean.length >= 8 ? sku.ean : null;
-
-                if (nome && price > 0) {
-                  const desc = (item.description || item.metaTagDescription || item.productDescription || '').replace(/<[^>]*>/g, '').trim();
-                  extractedProducts.push({ 
-                    nome: String(nome).trim(), 
-                    preco: price, 
-                    imagem_url: image,
-                    codigo: codigo ? String(codigo) : null,
-                    codigo_barras: codigoBarras,
-                    descricao: desc
-                  });
-                }
-              }
-            }
-          }
-        } catch(vtexErr) {}
-
-        // Tentativa B: JSON-LD structured data (<script type="application/ld+json">)
-        if (extractedProducts.length === 0) {
-          const jsonLdMatches = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
-          for (const match of jsonLdMatches) {
-            try {
-              const parsed = JSON.parse(match[1].trim());
-              const items = Array.isArray(parsed) ? parsed : (parsed['@graph'] || [parsed]);
-              for (const item of items) {
-                if (item['@type'] === 'Product' || item.offers) {
-                  const nome = item.name || '';
-                  const offers = Array.isArray(item.offers) ? item.offers[0] : (item.offers || {});
-                  const preco = parseFloat(offers.price || offers.lowPrice || 0);
-                  const imagem = Array.isArray(item.image) ? item.image[0] : (item.image?.url || item.image || '');
-                  const codigo = item.sku || item.mpn || item.productID || (targetUrl.match(/-(\d+)(?:\/p|$|[\?#])/) || [])[1];
-                  const codigoBarras = item.gtin13 || item.gtin8 || item.gtin || null;
-                  const desc = (item.description || '').replace(/<[^>]*>/g, '').trim();
-
-                  if (nome && preco > 0) {
-                    extractedProducts.push({ 
-                      nome, 
-                      preco, 
-                      imagem_url: typeof imagem === 'string' ? imagem : '',
-                      codigo: codigo ? String(codigo) : null,
-                      codigo_barras: codigoBarras,
-                      descricao: desc
-                    });
-                  }
-                }
-              }
-            } catch(e) {}
           }
         }
 
@@ -3537,69 +3532,89 @@ async function handleProductScraping(bodyData) {
           produtos_limitados: productsToProcess.length
         });
 
-        // 3. Inserção / Atualização dos produtos no Supabase
+        // 3. Inserção / Atualização dos produtos no Supabase em lotes (high-speed batching)
         let inseridos = 0;
-        for (const prod of productsToProcess) {
-          const precoCusto = prod.preco;
-          const precoVenda = Math.ceil(precoCusto * (1 + margem / 100) * 100) / 100;
-          
-          // Se encontrou o código do produto na loja (ex: 19839), usa como código interno exclusivo. Caso contrário, gera código auto.
-          const urlCodeMatch = targetUrl.match(/-(\d{3,10})(?:\/p|$|[\?#])/);
-          const storeCode = prod.codigo || (urlCodeMatch ? urlCodeMatch[1] : null) || `PRD-${syncId}-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random()*900+100)}`;
+        let atualizados = 0;
+        const batchSize = 200;
 
-          // Descrição pública limpa (nunca exibe mensagens de fornecedor para clientes)
-          const cleanDesc = prod.descricao && prod.descricao.length > 5 && !prod.descricao.toLowerCase().includes('fornecedor')
-            ? prod.descricao.slice(0, 500)
-            : `${prod.nome}. Produto disponível com garantia de entrega e excelente qualidade na GSA Store.`;
+        for (let b = 0; b < productsToProcess.length; b += batchSize) {
+          const chunk = productsToProcess.slice(b, b + batchSize);
+          const newProds = [];
+          const fornConfigsMap = [];
 
-          const newProd = {
-            codigo_produto: String(storeCode),
-            codigo_barras: prod.codigo_barras || null,
-            nome: prod.nome.slice(0, 200),
-            descricao: cleanDesc,
-            valor: precoVenda,
-            valor_custo: precoCusto,
-            porcentagem_lucro: margem,
-            estoque: 99,
-            estoque_disponivel: 99,
-            status: 'ativo',
-            visivel_na_loja: true,
-            tipo_cliente: 'ambos',
-            categoria_id: categoriaId,
-            imagem_url: prod.imagem_url || null,
-            identificador_preferencial: 'interno'
-          };
+          for (let idx = 0; idx < chunk.length; idx++) {
+            const prod = chunk[idx];
+            const precoCusto = prod.preco;
+            const precoVenda = Math.ceil(precoCusto * (1 + margem / 100) * 100) / 100;
+            const urlCodeMatch = targetUrl.match(/-(\d{3,10})(?:\/p|$|[\?#])/);
+            const storeCode = prod.codigo || (urlCodeMatch ? urlCodeMatch[1] : null) || `PRD-${syncId}-${b + idx + 1}-${Date.now().toString(36).toUpperCase()}`;
+
+            const cleanDesc = prod.descricao && prod.descricao.length > 5 && !prod.descricao.toLowerCase().includes('fornecedor')
+              ? prod.descricao.slice(0, 500)
+              : `${prod.nome}. Produto disponível com garantia de entrega e excelente qualidade na GSA Store.`;
+
+            newProds.push({
+              codigo_produto: String(storeCode),
+              codigo_barras: prod.codigo_barras || null,
+              nome: prod.nome.slice(0, 200),
+              descricao: cleanDesc,
+              valor: precoVenda,
+              valor_custo: precoCusto,
+              porcentagem_lucro: margem,
+              estoque: 99,
+              estoque_disponivel: 99,
+              status: 'ativo',
+              visivel_na_loja: true,
+              tipo_cliente: 'ambos',
+              categoria_id: categoriaId,
+              imagem_url: prod.imagem_url || null,
+              identificador_preferencial: 'interno'
+            });
+            fornConfigsMap.push({ storeCode: String(storeCode), prod: prod });
+          }
 
           await new Promise((resolve) => {
-            supabasePost('/rest/v1/produtos', newProd, (errP, resP) => {
+            supabaseUpsertProduct('/rest/v1/produtos', newProds, (errP, resP, statusCode) => {
               if (!errP) {
-                inseridos++;
-                let insertedId = null;
-                if (Array.isArray(resP) && resP[0]?.id) insertedId = resP[0].id;
-                else if (resP && resP.id) insertedId = resP.id;
+                const resArr = Array.isArray(resP) ? resP : (resP ? [resP] : []);
+                if (statusCode === 201) inseridos += resArr.length;
+                else atualizados += resArr.length;
 
-                if (insertedId) {
-                  const fornConfig = {
-                    produto_id: insertedId,
+                const fornConfigs = resArr.map(p => {
+                  const match = fornConfigsMap.find(f => f.storeCode === p.codigo_produto);
+                  const prodObj = match ? match.prod : {};
+                  return {
+                    produto_id: p.id,
                     fornecimento_externo_ativo: true,
-                    tipo_fornecedor: isShopeeCSVFeed ? 'shopee_afiliado' : 'online',
-                    nome_fornecedor: isShopeeCSVFeed ? `Shopee - ${prod.shopee_shop || 'Vendedor Shopee'}` : (config.nome || 'Fornecedor Externo'),
-                    url_produto: prod.url_afiliado || targetUrl // usa link de afiliado Shopee quando disponível
+                    tipo_fornecedor: 'online',
+                    nome_fornecedor: isShopeeCSVFeed ? `Shopee - ${prodObj.shopee_shop || 'Vendedor Shopee'}` : (config.nome || 'Fornecedor Externo'),
+                    url_produto: prodObj.url_afiliado || targetUrl
                   };
-                  supabasePost('/rest/v1/produto_fornecedor_config', fornConfig, () => {});
+                });
+                if (fornConfigs.length > 0) {
+                  supabasePost('/rest/v1/produto_fornecedor_config?on_conflict=produto_id', fornConfigs, () => {});
                 }
+              } else {
+                console.error('❌ Erro no lote de produtos:', errP?.message || errP);
               }
               resolve();
             });
           });
+
+          const pct = Math.min(98, 75 + Math.floor(((b + chunk.length) / productsToProcess.length) * 23));
+          logScrapingStep(currentId, 'processamento', 'executando', `Processando lote de produtos (${Math.min(b + chunk.length, productsToProcess.length)} / ${productsToProcess.length})...`, pct);
         }
 
         // 4. Atualizar última execução e registrar sucesso 100%
         supabasePatch(`/rest/v1/automacao_scraping_configs?id=eq.${currentId}`, { ultima_execucao: new Date().toISOString() }, () => {});
 
-        logScrapingStep(currentId, 'sucesso', 'sucesso', `Sincronização 100% concluída com sucesso! ${inseridos} produto(s) cadastrado(s) no catálogo da loja com a margem de ${margem}%.`, 100, {
+        const msgFinal = inseridos > 0 
+          ? `Sincronização 100% concluída com sucesso! ${inseridos} novo(s) e ${atualizados} atualizado(s) no catálogo da loja com a margem de ${margem}%.`
+          : `Sincronização 100% concluída com sucesso! ${atualizados} produto(s) atualizados com a margem de ${margem}%.`;
+
+        logScrapingStep(currentId, 'sucesso', 'sucesso', msgFinal, 100, {
           novos: inseridos,
-          atualizados: 0,
+          atualizados: atualizados,
           esgotados: 0,
           produtos_encontrados: extractedProducts.length,
           erros: []

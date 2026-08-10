@@ -41,9 +41,9 @@ export function ScrapingExecutionMonitorModal({ isOpen, onClose, automacao, onRe
 
   const lastLog = logs[logs.length - 1];
   
-  // O status SÓ é concluído se houver um log explícito de 'sucesso' ou progresso 100% no banco
-  const isFinishedSuccess = logs.some(l => l.status === 'sucesso' || l.passo === 'sucesso' || l.progresso === 100);
-  const isError = logs.some(l => l.status === 'erro' || l.passo === 'erro') || lastLog?.status === 'erro';
+  // O status SÓ é concluído se o ÚLTIMO log da execução atual for 'sucesso' ou progresso 100%
+  const isFinishedSuccess = lastLog?.status === 'sucesso' || lastLog?.passo === 'sucesso' || lastLog?.progresso === 100;
+  const isError = lastLog?.status === 'erro' || lastLog?.passo === 'erro';
   const isFinished = isFinishedSuccess || isError;
 
   // Extrair estatísticas dos detalhes dos logs

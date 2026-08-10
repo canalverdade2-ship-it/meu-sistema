@@ -72,9 +72,9 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
       onClick={onClick}
       onKeyDown={handleCardKeyDown}
       aria-label={`Ver detalhes de ${item.nome}`}
-      className="group flex w-full self-start cursor-pointer flex-col overflow-hidden rounded-[20px] border border-slate-200 bg-white text-left shadow-[0_10px_28px_rgba(15,23,42,0.06)] outline-none transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.11)] focus-visible:ring-2 focus-visible:ring-[#17345f] focus-visible:ring-offset-2"
+      className="group flex w-full h-full cursor-pointer flex-col overflow-hidden rounded-[20px] border border-slate-200 bg-white text-left shadow-[0_10px_28px_rgba(15,23,42,0.06)] outline-none transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.11)] focus-visible:ring-2 focus-visible:ring-[#17345f] focus-visible:ring-offset-2"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-[#f4f6f8]">
+      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[#f4f6f8]">
         {item.imagem_url ? (
           <img
             src={item.imagem_url}
@@ -110,34 +110,50 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
         </div>
       </div>
 
-      <div className="flex flex-col px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4 sm:pt-3.5">
-        <div className="mb-2 flex min-w-0 items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em]">
-          <span className="text-[#17345f]">{getTypeLabel(tipo)}</span>
-          {categoryLabel && (
-            <>
-              <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" aria-hidden="true" />
-              <span className="truncate text-slate-400">{categoryLabel}</span>
-            </>
+      <div className="flex flex-1 flex-col justify-between px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4 sm:pt-3.5">
+        <div>
+          <div className="mb-2 flex min-w-0 items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em]">
+            <span className="text-[#17345f]">{getTypeLabel(tipo)}</span>
+            {categoryLabel && (
+              <>
+                <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" aria-hidden="true" />
+                <span className="truncate text-slate-400">{categoryLabel}</span>
+              </>
+            )}
+          </div>
+
+          <h3
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}
+            className="h-[40px] text-[15px] font-extrabold leading-5 text-slate-950 transition-colors group-hover:text-[#17345f] sm:text-base"
+          >
+            {item.nome}
+          </h3>
+
+          <p
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}
+            className="mt-1.5 h-[60px] text-xs leading-5 text-slate-500"
+          >
+            {item.descricao || 'Produto de alta qualidade disponível na GSA Store.'}
+          </p>
+
+          {promotionQuantity?.limitadoPorQuantidade && promotionQuantity.quantidadeRestante !== null && (
+            <p className="mt-2 text-[11px] font-semibold text-emerald-700">
+              {promotionQuantity.quantidadeRestante} {promotionQuantity.quantidadeRestante === 1 ? 'unidade promocional' : 'unidades promocionais'}
+            </p>
           )}
         </div>
 
-        <h3 className="line-clamp-2 min-h-[40px] text-[15px] font-extrabold leading-5 text-slate-950 transition-colors group-hover:text-[#17345f] sm:text-base">
-          {item.nome}
-        </h3>
-
-        {item.descricao && (
-          <p className="mt-1.5 hidden line-clamp-2 text-xs leading-5 text-slate-500 sm:block">
-            {item.descricao}
-          </p>
-        )}
-
-        {promotionQuantity?.limitadoPorQuantidade && promotionQuantity.quantidadeRestante !== null && (
-          <p className="mt-2 text-[11px] font-semibold text-emerald-700">
-            {promotionQuantity.quantidadeRestante} {promotionQuantity.quantidadeRestante === 1 ? 'unidade promocional' : 'unidades promocionais'}
-          </p>
-        )}
-
-        <div className="mt-3">
+        <div className="mt-3 pt-2">
           {item.ocultar_valor ? (
             <div className="text-sm font-bold text-slate-700">Valor sob consulta</div>
           ) : (

@@ -122,9 +122,10 @@ export default function CartDrawer({
   const totalDiscount = roundMoney(promotionDiscount + couponDiscount);
   const total = roundMoney(Math.max(0, subtotal - totalDiscount));
   const hasOutOfStockItems = cartItems.some((item) => (
-    item.tipo === 'produto'
+    !item.item_detalhes
+    || (item.tipo === 'produto'
     && item.item_detalhes?.controle_estoque
-    && Number(item.item_detalhes?.estoque_disponivel || 0) <= 0
+    && Number(item.item_detalhes?.estoque_disponivel || 0) <= 0)
   ));
 
   if (!isOpen) return null;
@@ -139,39 +140,36 @@ export default function CartDrawer({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="gsa-cart-title"
-        className="flex h-[94dvh] w-full flex-col overflow-hidden rounded-t-[22px] border border-slate-200 bg-white shadow-[0_-24px_70px_rgba(15,23,42,0.25)] md:h-full md:max-w-[470px] md:rounded-none md:border-y-0 md:border-r-0"
-      >
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#17345f] text-white">
+      <aside className="flex h-[92vh] w-full max-w-md flex-col bg-white shadow-2xl transition-transform md:h-full md:rounded-l-3xl">
+        <div className="flex items-center justify-between border-b border-slate-100 p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#17345f]/10 text-[#17345f]">
               <ShoppingBag className="h-5 w-5" aria-hidden="true" />
             </div>
-            <div className="min-w-0">
-              <h2 id="gsa-cart-title" className="text-lg font-black tracking-[-0.025em] text-slate-950">Seu carrinho</h2>
-              <p className="text-xs text-slate-500">{cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}</p>
+            <div>
+              <h2 className="text-lg font-black text-slate-900">Seu carrinho</h2>
+              <p className="text-xs font-medium text-slate-500">
+                {cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}
+              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             aria-label="Fechar carrinho"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+        <div className="flex-1 overflow-y-auto p-5">
           {cartItems.length === 0 ? (
-            <div className="flex min-h-[430px] flex-col items-center justify-center text-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-[20px] border border-slate-200 bg-slate-50">
-                <ShoppingBag className="h-9 w-9 text-slate-300" aria-hidden="true" />
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-100 text-slate-400">
+                <ShoppingBag className="h-10 w-10" aria-hidden="true" />
               </div>
-              <h3 className="mt-5 text-lg font-extrabold text-slate-950">Seu carrinho está vazio</h3>
+              <h3 className="mt-4 text-base font-extrabold text-slate-900">Carrinho vazio</h3>
               <p className="mt-2 max-w-[280px] text-sm leading-6 text-slate-500">
                 Continue navegando e escolha os produtos ou planos ideais para você.
               </p>
@@ -187,9 +185,11 @@ export default function CartDrawer({
             <div className="space-y-3">
               {cartItems.map((item) => {
                 const isProduct = item.tipo === 'produto';
-                const outOfStock = isProduct
+                const isItemDeleted = !item.item_detalhes;
+                const outOfStock = isItemDeleted
+                  || (isProduct
                   && item.item_detalhes?.controle_estoque
-                  && Number(item.item_detalhes?.estoque_disponivel || 0) <= 0;
+                  && Number(item.item_detalhes?.estoque_disponivel || 0) <= 0);
                 const subtotalForItem = itemSubtotal(item);
                 const originalSubtotal = roundMoney(Number(item.item_detalhes?.valor || 0) * Number(item.quantidade || 1));
                 const hasDiscount = isProduct && hasActiveProductDiscount(item.item_detalhes) && subtotalForItem < originalSubtotal;
@@ -217,7 +217,7 @@ export default function CartDrawer({
                           {itemTypeLabel(item.tipo)}
                         </p>
                         <h3 className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-slate-950">
-                          {item.item_detalhes?.nome || 'Item da GSA Store'}
+                          {item.item_detalhes?.nome || 'Item não encontrado (excluído)'}
                         </h3>
                         {item.prazo_meses && (
                           <p className="mt-1 text-xs font-semibold text-slate-500">
@@ -228,7 +228,7 @@ export default function CartDrawer({
                         {outOfStock ? (
                           <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-red-700">
                             <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                            Item indisponível
+                            {isItemDeleted ? 'Item não disponível mais no catálogo' : 'Item indisponível no estoque'}
                           </div>
                         ) : (
                           <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
