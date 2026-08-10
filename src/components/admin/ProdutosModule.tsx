@@ -19,8 +19,7 @@ import { BulkProductImportModal } from './products/BulkProductImportModal';
 import { BarcodeScannerModal } from './products/BarcodeScannerModal';
 import { getProductDisplayCode, getProductDisplayCodeLabel, validateBarcode, detectBarcodeType, normalizeBarcode, BarcodeType } from '../../lib/productIdentification';
 import { sessionService } from '../../lib/sessionService';
-import { hasActiveProductDiscount, getProductRegularPrice, getProductEffectivePrice, getProductDiscountAmount, getProductDiscountPercentage, formatProductDiscountPercentage, getProductDiscountValidityInfo, getProductRemainingDaysText } from '../../lib/productPricing';
-import { adjustAdminProductStock, archiveAdminCatalogItems, saveAdminProductCatalog } from '../../lib/adminStoreOperations';
+import { adjustAdminProductStock, archiveAdminCatalogItems, deleteAdminProductsBulk, saveAdminProductCatalog } from '../../lib/adminStoreOperations';
 import { removePublicStoreImage, removeUnusedPublicStoreImages, uploadPublicStoreImage } from '../../lib/publicStoreImage';
 
 // Helper functions for gallery mapping
@@ -363,7 +362,10 @@ const handleBulkDelete = async () => {
     }
 
     const count = selectedIds.size;
-    if (!await confirm({ title: 'Atenção', message: `Deseja inativar ${count} produto(s)? Eles deixarão de aparecer na loja e poderão ser reativados posteriormente.` })) {
+    if (!await confirm({ 
+      title: 'Excluir Produtos', 
+      message: `Deseja excluir definitivamente os ${count} produto(s) selecionados? Esta ação removerá os produtos do catálogo e da loja.` 
+    })) {
       return;
     }
 
@@ -371,17 +373,17 @@ const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds) as string[];
     try {
       setSelectedIds(new Set());
-      await archiveAdminCatalogItems('produto', ids);
-      toast.success(`${ids.length} produto(s) inativado(s) com sucesso.`);
+      await deleteAdminProductsBulk(ids);
+      toast.success(`${ids.length} produto(s) excluído(s) com sucesso.`);
       await logService.logAction({
         acao: 'EXCLUIR_PRODUTO_LOTE',
         ator_tipo: 'admin',
         ator_nome: 'Administrador',
-        detalhes: `Inativou ${ids.length} produtos em lote.`
+        detalhes: `Excluiu ${ids.length} produtos em lote.`
       });
       await fetchProdutos();
     } catch (err: any) {
-      toast.error(handleError(err, 'Alguns produtos não puderam ser excluídos pois possuem vínculos.'));
+      toast.error(handleError(err, 'Ocorreu um erro ao excluir os produtos.'));
       await fetchProdutos();
     } finally {
       setIsDeleting(false);

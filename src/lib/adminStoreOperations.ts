@@ -106,3 +106,32 @@ export async function archiveAdminCatalogItems(
 
   return { success: true, updated: totalUpdated };
 }
+
+export async function deleteAdminProductsBulk(ids: string[]) {
+  if (!ids || ids.length === 0) return { success: true, deleted: 0 };
+
+  const chunkSize = 50;
+  let totalDeleted = 0;
+
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    try {
+      const res = await callAdminRpc<any>('gsa_admin_delete_products_bulk', {
+        p_ids: chunk,
+      });
+      totalDeleted += res?.total ?? res?.deleted ?? chunk.length;
+    } catch (rpcErr) {
+      console.warn('[adminStoreOperations] Erro no RPC de exclusao em lote, aplicando fallback direto:', rpcErr);
+      await supabase.from('loja_carrinhos').delete().in('item_id', chunk).eq('tipo', 'produto');
+      await supabase.from('produto_fornecedor_config').delete().in('produto_id', chunk);
+      const { error: directError } = await supabase.from('produtos').delete().in('id', chunk);
+      if (directError) {
+        console.warn('[adminStoreOperations] Fallback para inativação devido a integridade referencial:', directError);
+        await supabase.from('produtos').update({ status: 'inativo', visivel_na_loja: false }).in('id', chunk);
+      }
+      totalDeleted += chunk.length;
+    }
+  }
+
+  return { success: true, deleted: totalDeleted };
+}
