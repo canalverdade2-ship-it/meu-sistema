@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreHorizontal, Package, Trash2, User, Building2, Store, Image as ImageIcon, Upload, Loader2, History, Settings2, Check, Minus, AlertCircle, PackagePlus, Camera, Tag } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Package, Trash2, User, Building2, Store, Image as ImageIcon, Upload, Loader2, History, Settings2, Check, Minus, AlertCircle, PackagePlus, Camera, Tag, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Produto } from '../../types';
 import { Modal } from '../ui/Modal';
@@ -61,6 +61,21 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkMenu, setShowBulkMenu] = useState(false);
+
+  // Paginação inteligente para máxima performance com milhares de produtos
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState<number>(24);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [search, categoriaFilter, tipoClienteFilter, activeTab]);
+
+  const totalPages = Math.max(1, Math.ceil(produtos.length / pageSize));
+  const paginatedProdutos = React.useMemo(() => {
+    if (pageSize >= produtos.length) return produtos;
+    const start = currentPage * pageSize;
+    return produtos.slice(start, start + pageSize);
+  }, [produtos, currentPage, pageSize]);
 
   const toggleSelection = (id: string) => {
     const newSet = new Set(selectedIds);
@@ -490,7 +505,7 @@ const handleBulkDelete = async () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {produtos.map((produto) => (
+        {paginatedProdutos.map((produto) => (
           <div 
             key={produto.id} 
             id={`prod-${produto.id}`}
@@ -514,7 +529,7 @@ const handleBulkDelete = async () => {
                 )}
                 <div className="flex h-12 w-12 overflow-hidden items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 shrink-0">
                 {produto.imagem_url ? (
-                  <img src={produto.imagem_url} alt={produto.nome} className="h-full w-full object-cover" />
+                  <img src={produto.imagem_url} alt={produto.nome} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 ) : (
                   <Package className="h-6 w-6" />
                 )}
@@ -579,6 +594,76 @@ const handleBulkDelete = async () => {
           </div>
           ))}
       </div>
+
+      {/* Barra de Paginação de Alta Performance */}
+      {produtos.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-neutral-200 shadow-sm mt-6">
+          <div className="flex items-center gap-3 text-xs text-neutral-600 font-medium">
+            <span>
+              Exibindo <strong className="text-neutral-900 font-bold">{Math.min(produtos.length, currentPage * pageSize + 1)}</strong> - <strong className="text-neutral-900 font-bold">{Math.min(produtos.length, (currentPage + 1) * pageSize)}</strong> de <strong className="text-neutral-900 font-bold">{produtos.length}</strong> produtos
+            </span>
+            <span className="text-neutral-300">|</span>
+            <div className="flex items-center gap-2">
+              <span>Por página:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(0);
+                }}
+                className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1 text-xs font-bold text-neutral-900 cursor-pointer focus:ring-2 focus:ring-indigo-500/20"
+              >
+                <option value={24}>24</option>
+                <option value={48}>48</option>
+                <option value={96}>96</option>
+                <option value={1000}>Todos</option>
+              </select>
+            </div>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage(0)}
+                disabled={currentPage === 0}
+                className="p-2 rounded-xl border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Primeira Página"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                className="p-2 rounded-xl border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Página Anterior"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              <span className="px-4 py-1.5 text-xs font-bold text-neutral-800 bg-neutral-100 rounded-xl">
+                {currentPage + 1} / {totalPages}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={currentPage >= totalPages - 1}
+                className="p-2 rounded-xl border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Próxima Página"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={currentPage >= totalPages - 1}
+                className="p-2 rounded-xl border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Última Página"
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Cadastrar Produto" size="wide">
         <ProdutoForm onSubmit={handleCreate} onCancel={() => setIsModalOpen(false)} categorias={categorias} />

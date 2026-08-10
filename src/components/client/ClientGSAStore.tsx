@@ -979,6 +979,17 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     }));
   }, [activeTab, deferredSearch, produtos, servicos, assinaturas, sortBy, minPrice, maxPrice, selectedCategoriaId]);
 
+  // Paginação progressiva para máxima performance na loja do cliente
+  const [visibleCount, setVisibleCount] = useState(24);
+
+  useEffect(() => {
+    setVisibleCount(24);
+  }, [activeTab, deferredSearch, selectedCategoriaId, sortBy, minPrice, maxPrice]);
+
+  const displayedItems = React.useMemo(() => {
+    return filteredItems.slice(0, visibleCount);
+  }, [filteredItems, visibleCount]);
+
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 pb-24 md:space-y-4 max-w-7xl mx-auto">
       {/* Título e Seletor de Abas Luxuoso */}
@@ -1064,7 +1075,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       ) : (
         <React.Suspense fallback={<div className="flex justify-center py-32"><Loader2 className="w-10 h-10 text-indigo-600 animate-spin" /></div>}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-5 lg:grid-cols-4 2xl:grid-cols-5">
-            {filteredItems.map(item => (
+            {displayedItems.map(item => (
               <StoreItemCard 
                 key={`${item._tipo}-${item.id}`} 
                 item={item} 
@@ -1074,6 +1085,32 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
               />
             ))}
           </div>
+
+          {/* Botão Carregar Mais Produtos para Alta Performance */}
+          {visibleCount < filteredItems.length && (
+            <div className="mt-12 flex flex-col items-center justify-center gap-3">
+              <p className="text-xs font-semibold text-neutral-500">
+                Mostrando <strong className="text-neutral-900">{displayedItems.length}</strong> de <strong className="text-neutral-900">{filteredItems.length}</strong> itens
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount(v => v + 24)}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#17345f] px-8 py-3.5 text-xs font-extrabold text-white shadow-lg shadow-[#17345f]/20 transition-all hover:bg-[#102746] active:scale-95 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  Carregar Mais Produtos ({filteredItems.length - displayedItems.length} restantes)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount(filteredItems.length)}
+                  className="rounded-2xl border border-neutral-200 bg-white px-5 py-3.5 text-xs font-bold text-neutral-700 shadow-sm transition-all hover:bg-neutral-50 active:scale-95 cursor-pointer"
+                >
+                  Ver Todos
+                </button>
+              </div>
+            </div>
+          )}
         </React.Suspense>
       )}
 

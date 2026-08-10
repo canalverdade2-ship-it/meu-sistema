@@ -200,7 +200,7 @@ export function ScrapingExecutionMonitorModal({ isOpen, onClose, automacao, onRe
               <PackagePlus className="h-4 w-4 text-emerald-600" />
             </div>
             <p className="text-2xl font-black text-emerald-900">{novosCount}</p>
-            <p className="text-[10px] text-emerald-700/80">Inseridos na loja</p>
+            <p className="text-[10px] text-emerald-700/80">{automacao?.tipo === 'viagens' ? 'Pacotes no GSA Viagens' : 'Inseridos na loja'}</p>
           </div>
 
           <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-3.5 text-indigo-950 space-y-1">
@@ -218,7 +218,7 @@ export function ScrapingExecutionMonitorModal({ isOpen, onClose, automacao, onRe
               <PackageX className="h-4 w-4 text-amber-600" />
             </div>
             <p className="text-2xl font-black text-amber-900">{esgotadosCount}</p>
-            <p className="text-[10px] text-amber-700/80">Sumiu da loja alvo</p>
+            <p className="text-[10px] text-amber-700/80">{automacao?.tipo === 'viagens' ? 'Sem vagas' : 'Sumiu da loja alvo'}</p>
           </div>
 
           <div className={`rounded-2xl border p-3.5 space-y-1 ${listaErros.length > 0 ? 'border-red-200 bg-red-50 text-red-950' : 'border-neutral-200 bg-neutral-50 text-neutral-700'}`}>
