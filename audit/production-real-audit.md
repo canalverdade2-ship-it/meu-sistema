@@ -1,12 +1,12 @@
 # Auditoria de operação real
 
-Gerada em: 2026-08-10T19:12:00.657Z
+Gerada em: 2026-08-11T18:32:54.999Z
 
-Arquivos executáveis examinados: **385**
+Arquivos executáveis examinados: **403**
 
 Bloqueadores explícitos: **0**
 
-Ocorrências para revisão humana: **24**
+Ocorrências para revisão humana: **28**
 
 ## Bloqueadores
 
@@ -17,6 +17,10 @@ Nenhum bloqueador explícito encontrado.
 - `src/components/admin/demandas/DemandasDetalhesModal.tsx:201` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Informe o motivo da recusa:');`
 - `src/components/admin/demandas/DemandasDetalhesModal.tsx:397` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Motivo para recusar a contraproposta do prestador:');`
 - `src/components/admin/demandas/DemandasDetalhesModal.tsx:442` — Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real — `const motivo = prompt('Por que deseja cancelar esta demanda?');`
+- `src/components/client/store/BlogHome.tsx:32` — Referência a demonstração em código executável — `// Se estiver vazio, exibe alguns mockados temporariamente só para demonstração até N8N popular`
+- `src/components/client/store/BlogHome.tsx:36` — Referência a demonstração em código executável — `id: 'demo-1',`
+- `src/components/client/store/BlogPostPage.tsx:28` — Referência a demonstração em código executável — `} else if (postId.startsWith('demo-')) {`
+- `src/components/client/store/WishlistPage.tsx:14` — Referência a mock em código executável — `// MOCK: Na falta de uma tabela \`wishlist\`, vamos simular buscando produtos aleatórios`
 - `src/components/ui/AccessibleDialog.tsx:57` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) {`
 - `src/components/ui/AccessibleDialog.tsx:63` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:first-child {`
 - `src/components/ui/AccessibleDialog.tsx:67` — Referência a demonstração em código executável — `[role="dialog"][aria-label^="Laboratório de demonstração"] > div > div:nth-child(2) > aside:nth-child(3) {`

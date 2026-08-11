@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-08-10T19:12:00.657Z",
+  "generated_at": "2026-08-11T18:32:54.999Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
-  "scanned_files": 385,
+  "scanned_files": 403,
   "blocker_count": 0,
-  "review_count": 24,
+  "review_count": 28,
   "blockers": [],
   "review": [
     {
@@ -32,6 +32,38 @@
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
       "line": 442,
       "excerpt": "const motivo = prompt('Por que deseja cancelar esta demanda?');"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/client/store/BlogHome.tsx",
+      "line": 32,
+      "excerpt": "// Se estiver vazio, exibe alguns mockados temporariamente só para demonstração até N8N popular"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/client/store/BlogHome.tsx",
+      "line": 36,
+      "excerpt": "id: 'demo-1',"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/client/store/BlogPostPage.tsx",
+      "line": 28,
+      "excerpt": "} else if (postId.startsWith('demo-')) {"
+    },
+    {
+      "severity": "review",
+      "rule": "mock-reference",
+      "description": "Referência a mock em código executável",
+      "file": "src/components/client/store/WishlistPage.tsx",
+      "line": 14,
+      "excerpt": "// MOCK: Na falta de uma tabela `wishlist`, vamos simular buscando produtos aleatórios"
     },
     {
       "severity": "review",
