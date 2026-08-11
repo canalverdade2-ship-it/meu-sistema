@@ -7,6 +7,7 @@ import 'jspdf-autotable';
 import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
 import { generateExtratoPDF } from '../../lib/pdf';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
+import { uploadToR2 } from '../../lib/r2Storage';
 import { supabase } from '../../lib/supabase';
 import { Cliente, LojaCreditoSolicitacao, LojaCreditoDocumento, LojaCreditoMovimentacao } from '../../types';
 import { notificationService } from '../../lib/notificationService';
@@ -498,9 +499,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
       const filePath = `credito_documentos/${fileName}`;
       
       // Upload para storage bucket 'documentos_cliente'
-      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_cliente', filePath);
-
-      if (uploadError) throw uploadError;
+      const { url: publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_cliente', filePath);
 
       // Obter URL pública do arquivo
       // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
@@ -544,9 +543,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
       const filePath = `credito_contratos/${fileName}`;
       
       // Upload para storage bucket 'documentos_cliente'
-      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_cliente', filePath);
-
-      if (uploadError) throw uploadError;
+      const { url: publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_cliente', filePath);
 
       // Obter URL pública do arquivo
       // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
@@ -618,12 +615,11 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
       setUploadingContrato(true);
       const dataUrl = signPadRef.current.toDataURL('image/png');
       const blob = await (await fetch(dataUrl)).blob();
+      const signatureFile = new File([blob], 'assinatura.png', { type: blob.type });
       const path = `credito_contratos/${clientId}/assinatura_${solicitacao.id}_${Date.now()}.png`;
       
-      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(blob, 'documentos_cliente', path);
+      const { url: publicUrl, path: __r2Path } = await uploadToR2(signatureFile, 'documentos_cliente', path);
         
-      if (uploadError) throw uploadError;
-      
       // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         
       await clientOperationalWrite(clientId, 'loja_credito_solicitacoes', 'update', {

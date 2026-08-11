@@ -13,6 +13,7 @@ import {
   Truck,
   MessageSquare,
   Loader2,
+  ArrowRight,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
@@ -288,15 +289,21 @@ export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd
           <div className="mt-6 bg-white pb-4 pt-2 md:sticky md:bottom-0 md:mt-auto md:pb-6 md:pt-6">
             <button
               type="button"
-              disabled={outOfStock}
-              onClick={onAdd}
+              disabled={outOfStock && !(item as any).link_afiliado}
+              onClick={() => {
+                if ((item as any).link_afiliado) {
+                  window.open((item as any).link_afiliado, '_blank', 'noopener,noreferrer');
+                } else {
+                  onAdd();
+                }
+              }}
               className="inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-xl bg-[#17345f] px-5 py-4 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(23,52,95,0.18)] transition hover:bg-[#102746] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
             >
-              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-              {outOfStock ? 'Produto indisponível' : tipo === 'assinatura' ? 'Escolher período' : 'Adicionar ao carrinho'}
+              {(item as any).link_afiliado ? <ArrowRight className="h-5 w-5" aria-hidden="true" /> : <ShoppingBag className="h-5 w-5" aria-hidden="true" />}
+              {(item as any).link_afiliado ? 'Comprar no Parceiro' : (outOfStock ? 'Produto indisponível' : tipo === 'assinatura' ? 'Escolher período' : 'Adicionar ao carrinho')}
             </button>
 
-            {outOfStock && (
+            {outOfStock && !(item as any).link_afiliado && (
               <button
                 type="button"
                 disabled={isRequestingTicket}

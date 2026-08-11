@@ -99,7 +99,7 @@ export function ViagensCategoriasModule() {
 
     setSaving(true);
     try {
-      const result = await callAdminRpc('gsa_admin_save_travel_category', { p_payload: payload });
+      const result = await callAdminRpc('gsa_admin_save_travel_category', { p_payload: payload }) as { error?: string };
       if (result.error) throw new Error(result.error);
       
       toast.success(editingItem.id ? 'Categoria atualizada' : 'Categoria criada');
@@ -117,7 +117,7 @@ export function ViagensCategoriasModule() {
     const toastId = toast.loading(`Marcando como ${newStatus}...`);
     try {
       const payload = { ...item, status: newStatus };
-      const result = await callAdminRpc('gsa_admin_save_travel_category', { p_payload: payload });
+      const result = await callAdminRpc('gsa_admin_save_travel_category', { p_payload: payload }) as { error?: string };
       if (result.error) throw new Error(result.error);
       toast.success('Status atualizado!', { id: toastId });
       loadData();
@@ -163,7 +163,7 @@ export function ViagensCategoriasModule() {
           <p className="text-sm font-bold text-neutral-500">Carregando categorias...</p>
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={ListTree} title="Nenhuma categoria" message="Nenhuma categoria de viagem foi criada ainda." />
+        <EmptyState icon={Map} title="Nenhuma categoria" description="Crie a primeira categoria de viagens." />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (

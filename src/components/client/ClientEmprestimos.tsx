@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { supabase } from '../../lib/supabase';
+import { uploadToR2 } from '../../lib/r2Storage';
 import { Emprestimo, EmprestimoParcela, EmprestimoComentario, EmprestimoHistorico } from '../../types';
 import { formatCurrency, formatDate, formatDateTime, handleError, generateCode } from '../../lib/utils';
 import { Landmark, CreditCard, Clock, CheckCircle, XCircle, MessageSquare, Send, ChevronRight, Download, AlertTriangle, HelpCircle, Plus, ChevronLeft, Info } from 'lucide-react';
@@ -163,7 +164,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
         if (!file) continue;
         const ext = (file as File).name.split('.').pop();
         const path = `solicitacoes/${clientId}/${tipo}-${Date.now()}.${ext}`;
-        const { error: upErr , url: __publicUrl, path: __r2Path } = await uploadToR2(file as File, 'emprestimos', path);
+        const { error: upErr , url: publicUrl, path: __r2Path } = await uploadToR2(file as File, 'emprestimos', path);
         if (upErr) throw upErr;
         // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         uploadedDocs.push({ tipo, nome: (file as File).name, url: publicUrl });
@@ -303,8 +304,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
       setUploadingDocId(docId);
       const ext = file.name.split('.').pop();
       const path = `${clientId}/${Date.now()}_${tipo}.${ext}`;
-      const { error: upErr , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'emprestimos', path);
-      if (upErr) throw upErr;
+      const { url: publicUrl, path: __r2Path } = await uploadToR2(file, 'emprestimos', path);
 
       // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
@@ -384,8 +384,8 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
     const dataUrl = signPadRef.current.toDataURL('image/png');
     const blob = await (await fetch(dataUrl)).blob();
     const path = `assinaturas/${clientId}/${selected.id}-${Date.now()}.png`;
-    const { error, url: publicUrl, path: r2Path } = await uploadToR2(blob, 'emprestimos', path);
-    if (error) { toast.error('Erro ao salvar assinatura.'); return; }
+    const signatureFile = new File([blob], 'assinatura.png', { type: blob.type });
+    const { url: publicUrl, path: r2Path } = await uploadToR2(signatureFile, 'emprestimos', path);
     // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
     await clientOperationalWrite(clientId, 'emprestimos', 'update', { assinatura_url: publicUrl, data_assinatura: new Date().toISOString(), status: 'analise_contrato' }, { id: selected.id });
     await clientOperationalWrite(clientId, 'emprestimo_historico', 'insert', { emprestimo_id: selected.id, tipo_acao: 'contrato_assinado', descricao: 'Cliente assinou contrato digitalmente', usuario_tipo: 'cliente', usuario_id: clientId });

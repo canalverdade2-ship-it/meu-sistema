@@ -139,6 +139,7 @@ export type Produto = {
   valor_custo?: number;
   porcentagem_lucro?: number;
   imagens_adicionais?: string[];
+  link_afiliado?: string;
   
   // Desconto individual de produtos
   desconto_ativo?: boolean;
@@ -321,7 +322,7 @@ export type Fatura = {
   cliente_id: string;
   valor_total: number;
   valor_pago: number;
-  status: 'pendente' | 'pago' | 'cancelado' | 'revisada' | 'vencida' | 'aguardando_link' | 'pendente_pagamento' | 'fatura_negociada';
+  status: 'pendente' | 'pago' | 'cancelado' | 'revisada' | 'vencida' | 'aguardando_link' | 'pendente_pagamento' | 'fatura_negociada' | 'protestado';
   tem_cobranca?: boolean;
   data_vencimento: string;
   data_emissao?: string;
@@ -947,3 +948,15 @@ export type PromocaoQuantidadeUso = {
   detalhes?: Record<string, unknown>;
   created_at: string;
 };
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string | null;
+  content: string | null;
+  image: string | null;
+  category: string | null;
+  author: string | null;
+  published_at: string;
+  created_at: string;
+}

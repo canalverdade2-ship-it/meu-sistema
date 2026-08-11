@@ -73,7 +73,7 @@ export function RelatorioLoja({ periodo, dataInicio, dataFim }: Props) {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
           <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600 mb-3"><TrendingUp className="h-5 w-5"/></div>
           <p className="text-2xl font-black text-neutral-900">{formatarMoeda(dados?.receitaTotal || 0)}</p>
@@ -85,9 +85,14 @@ export function RelatorioLoja({ periodo, dataInicio, dataFim }: Props) {
           <p className="text-xs text-neutral-500 mt-1">Vendas (Faturas Pagas)</p>
         </div>
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-indigo-50 text-indigo-600 mb-3"><TrendingUp className="h-5 w-5"/></div>
+          <p className="text-2xl font-black text-neutral-900">{formatarMoeda(dados?.qtdVendas > 0 ? dados.receitaTotal / dados.qtdVendas : 0)}</p>
+          <p className="text-xs text-neutral-500 mt-1">Ticket Médio</p>
+        </div>
+        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
           <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-violet-50 text-violet-600 mb-3"><Package className="h-5 w-5"/></div>
           <p className="text-2xl font-black text-neutral-900">{formatarNumero(dados?.totalProdutosAtivos || 0)}</p>
-          <p className="text-xs text-neutral-500 mt-1">Produtos Ativos no Catálogo</p>
+          <p className="text-xs text-neutral-500 mt-1">Produtos Ativos</p>
         </div>
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-neutral-200">
           <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-amber-50 text-amber-600 mb-3"><ArrowLeftRight className="h-5 w-5"/></div>

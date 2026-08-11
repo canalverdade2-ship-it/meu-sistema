@@ -591,10 +591,10 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
                     </div>
                   )}
 
-                  {premio.clientes?.telefone && (
+                  {(premio.clientes as any)?.telefone && (
                     <div className="flex justify-center scale-90 origin-center mt-3">
                       <AdminWhatsAppButton
-                        telefone={premio.clientes.telefone}
+                        telefone={(premio.clientes as any).telefone}
                         mensagem={whatsappNotificationService.gerarMensagemWhatsApp({
                           tipo: 'premio',
                           clienteNome: premio.clientes.nome,

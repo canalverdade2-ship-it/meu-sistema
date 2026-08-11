@@ -101,9 +101,7 @@ export async function uploadProviderPrivateFile(input: {
   if (!scope) throw new Error('Escopo de arquivo inválido.');
 
   const path = `${providerId}/${scope}/${Date.now()}_${crypto.randomUUID()}.${extension}`;
-  const { path: r2Path, error } = await uploadToR2(input.file, input.bucket, path);
-  
-  if (error) throw error;
+  const { path: r2Path } = await uploadToR2(input.file, input.bucket, path);
   return toStorageReference(input.bucket, r2Path);
 }
 

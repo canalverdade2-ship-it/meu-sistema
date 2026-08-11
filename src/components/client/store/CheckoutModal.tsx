@@ -632,8 +632,37 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Finalizar Compra" size="wide">
-      <div className="flex flex-col lg:flex-row gap-8">
-        <div className="flex-1 space-y-8">
+      <div className="flex flex-col lg:flex-row min-h-0 bg-neutral-50 rounded-b-3xl">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+          
+          {/* Barra de Progresso Visual (Fase 3.2) */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between relative">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-neutral-200 rounded-full z-0"></div>
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2/3 h-1 bg-[#17345f] rounded-full z-0 transition-all"></div>
+              
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#17345f] text-white flex items-center justify-center font-bold text-sm shadow-md">
+                  <Check className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-bold text-[#17345f] uppercase tracking-wider hidden sm:block">Carrinho</span>
+              </div>
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#17345f] text-white flex items-center justify-center font-bold text-sm shadow-md">
+                  <Check className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-bold text-[#17345f] uppercase tracking-wider hidden sm:block">Identificação</span>
+              </div>
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                <div className="w-8 h-8 rounded-full border-2 border-[#17345f] bg-white text-[#17345f] flex items-center justify-center font-bold text-sm shadow-sm">
+                  3
+                </div>
+                <span className="text-[10px] font-bold text-[#17345f] uppercase tracking-wider hidden sm:block">Pagamento</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-3xl mx-auto space-y-6">
           
           {/* Sessão de Endereço */}
           {temProdutos && (
@@ -1113,8 +1142,9 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
             )}
           </div>
         </div>
+      </div>
 
-        {/* Resumo */}
+      {/* Resumo */}
         <div className="w-full lg:w-[320px] bg-[#1a1a1a] rounded-3xl p-6 text-white h-fit shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl"></div>
           <h3 className="text-lg font-black uppercase tracking-wider mb-6 relative z-10">Resumo</h3>
@@ -1223,20 +1253,24 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               </div>
             )}
             
-            <div className="border-t border-white/10 pt-4 mt-2 flex justify-between items-end">
-              {cartItems.some(c => c.tipo === 'assinatura') ? (
-                <>
-                  <div className="flex flex-col">
-                    <span className="text-indigo-400 text-xs font-black uppercase tracking-widest">A Pagar Hoje</span>
-                    <span className="text-neutral-500 text-[10px] uppercase font-bold mt-1">Total do Contrato: {formatCurrency(totalContratoFinal)}</span>
-                  </div>
-                  <span className="text-3xl font-black text-white">{formatCurrency(totalHojeFinal)}</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-neutral-400 text-xs font-bold uppercase tracking-wider">Total Final</span>
-                  <span className="text-3xl font-black text-white">{formatCurrency(totalHojeFinal)}</span>
-                </>
+            <div className="pt-4 border-t border-neutral-800">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-sm font-bold text-neutral-400">Total Hoje</span>
+                <span className="text-3xl font-black text-white">{formatCurrency(totalHojeFinal)}</span>
+              </div>
+              
+              {/* Pontos Ganhos (Fase 3.3) */}
+              <div className="flex justify-end mt-1 mb-4">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#d8bd73] bg-[#d8bd73]/10 px-2 py-1 rounded-md">
+                  <Sparkles className="w-3 h-3" /> Ganhe + {Math.floor(totalHojeFinal / 10)} pontos GSA
+                </span>
+              </div>
+
+              {((subtotalContrato - subtotalInicial) > 0) && (
+                <div className="flex justify-between items-end mt-2">
+                  <span className="text-xs font-bold text-neutral-500">Total do Contrato<br/><span className="text-[10px] font-normal">(Soma de todas as mensalidades)</span></span>
+                  <span className="text-lg font-black text-neutral-400">{formatCurrency(totalContratoFinal)}</span>
+                </div>
               )}
             </div>
           </div>

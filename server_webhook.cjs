@@ -3284,6 +3284,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 5,
     preco_custo: 1290.00,
     imagem_url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/gra/pacotes-para-gramado',
     categoria: 'nacional'
   },
   {
@@ -3297,6 +3298,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 7,
     preco_custo: 1890.00,
     imagem_url: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/rec/pacotes-para-porto-de-galinhas',
     categoria: 'nacional'
   },
   {
@@ -3310,6 +3312,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 6,
     preco_custo: 2490.00,
     imagem_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/mcx/pacotes-para-maceio',
     categoria: 'nacional'
   },
   {
@@ -3323,6 +3326,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 5,
     preco_custo: 3890.00,
     imagem_url: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/fen/pacotes-para-fernando-de-noronha',
     categoria: 'nacional'
   },
   {
@@ -3336,6 +3340,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 6,
     preco_custo: 1650.00,
     imagem_url: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/nat/pacotes-para-natal',
     categoria: 'nacional'
   },
   {
@@ -3349,6 +3354,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 4,
     preco_custo: 1150.00,
     imagem_url: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/rio/pacotes-para-rio-de-janeiro',
     categoria: 'nacional'
   },
   {
@@ -3362,6 +3368,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 4,
     preco_custo: 1090.00,
     imagem_url: 'https://images.unsplash.com/photo-1583855282680-6dbdc69b0932?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/igu/pacotes-para-foz-do-iguacu',
     categoria: 'nacional'
   },
   {
@@ -3375,6 +3382,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 5,
     preco_custo: 2190.00,
     imagem_url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/byo/pacotes-para-bonito',
     categoria: 'nacional'
   },
   {
@@ -3388,6 +3396,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 5,
     preco_custo: 2250.00,
     imagem_url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/fln/pacotes-para-florianopolis',
     categoria: 'nacional'
   },
   {
@@ -3401,6 +3410,7 @@ const GSA_PACOTES_NACIONAIS = [
     dias: 6,
     preco_custo: 3490.00,
     imagem_url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/pmw/pacotes-para-palmas',
     categoria: 'nacional'
   }
 ];
@@ -3417,6 +3427,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 7,
     preco_custo: 4890.00,
     imagem_url: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/cun/pacotes-para-cancun',
     categoria: 'internacional'
   },
   {
@@ -3430,6 +3441,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 8,
     preco_custo: 5490.00,
     imagem_url: 'https://images.unsplash.com/photo-1597466765990-64ad1c35dafc?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/orl/pacotes-para-orlando',
     categoria: 'internacional'
   },
   {
@@ -3443,6 +3455,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 7,
     preco_custo: 6890.00,
     imagem_url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/par/pacotes-para-paris',
     categoria: 'internacional'
   },
   {
@@ -3456,6 +3469,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 8,
     preco_custo: 5990.00,
     imagem_url: 'https://images.unsplash.com/photo-1509822929063-6b6cfc9b42f2?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/lis/pacotes-para-lisboa',
     categoria: 'internacional'
   },
   {
@@ -3469,6 +3483,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 5,
     preco_custo: 1890.00,
     imagem_url: 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/bue/pacotes-para-buenos-aires',
     categoria: 'internacional'
   },
   {
@@ -3482,6 +3497,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 6,
     preco_custo: 2390.00,
     imagem_url: 'https://images.unsplash.com/photo-1589802829985-817e51171b92?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/scl/pacotes-para-santiago-do-chile',
     categoria: 'internacional'
   },
   {
@@ -3495,6 +3511,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 7,
     preco_custo: 4690.00,
     imagem_url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/puj/pacotes-para-punta-cana',
     categoria: 'internacional'
   },
   {
@@ -3508,6 +3525,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 6,
     preco_custo: 6450.00,
     imagem_url: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/nyc/pacotes-para-nova-york',
     categoria: 'internacional'
   },
   {
@@ -3521,6 +3539,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 7,
     preco_custo: 6390.00,
     imagem_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/rom/pacotes-para-roma',
     categoria: 'internacional'
   },
   {
@@ -3534,6 +3553,7 @@ const GSA_PACOTES_INTERNACIONAIS = [
     dias: 7,
     preco_custo: 7890.00,
     imagem_url: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/dxb/pacotes-para-dubai',
     categoria: 'internacional'
   }
 ];
@@ -3550,6 +3570,7 @@ const GSA_PACOTES_PROMOCOES = [
     dias: 8,
     preco_custo: 1490.00,
     imagem_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/bps/pacotes-para-porto-seguro',
     categoria: 'promocoes-exclusivas'
   },
   {
@@ -3563,6 +3584,7 @@ const GSA_PACOTES_PROMOCOES = [
     dias: 5,
     preco_custo: 1790.00,
     imagem_url: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/mcx/pacotes-para-maragogi',
     categoria: 'promocoes-exclusivas'
   },
   {
@@ -3576,6 +3598,7 @@ const GSA_PACOTES_PROMOCOES = [
     dias: 6,
     preco_custo: 2890.00,
     imagem_url: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/brc/pacotes-para-bariloche',
     categoria: 'promocoes-exclusivas'
   }
 ];
@@ -3638,6 +3661,7 @@ async function handleViagensScraping(config) {
             const cost = parseFloat(item.preco_custo || item.preco || item.price || item.valor || 0);
             const img = item.imagem_url || item.imagem || item.image || item.photo || item.thumbnail || item.cover_url || '';
             const code = String(item.codigo || item.id || item.codigo_oferta || `PKG-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+            const providerUrl = item.url_fornecedor || item.affiliate_url || item.link || item.url || item.product_url || (code ? `https://www.decolar.com/pacotes/${slugifyViagens(dest)}` : '');
             const cat = categoriaId || item.categoria || (dest.toLowerCase().includes('orlando') || dest.toLowerCase().includes('cancun') || dest.toLowerCase().includes('paris') || dest.toLowerCase().includes('disney') || dest.toLowerCase().includes('miami') || dest.toLowerCase().includes('lisboa') ? 'internacional' : 'nacional');
 
             if (title && cost > 0) {
@@ -3652,6 +3676,7 @@ async function handleViagensScraping(config) {
                 preco_custo: cost,
                 imagem_url: img,
                 codigo_oferta_fornecedor: code,
+                url_fornecedor: providerUrl,
                 categoria: cat
               });
             }
@@ -3706,6 +3731,7 @@ async function handleViagensScraping(config) {
           const nightsIdx = findCol(['noite', 'night', 'duracao', 'duration', 'dia', 'day']);
           const imgIdx = findCol(['imagem', 'image', 'foto', 'photo', 'url_imagem', 'pic', 'thumbnail']);
           const codeIdx = findCol(['codigo', 'code', 'id', 'sku', 'ref']);
+          const linkIdx = findCol(['url_fornecedor', 'link', 'url', 'product_url', 'affiliate_url', 'deeplink']);
           const catIdx = findCol(['categoria', 'category']);
 
           for (let r = 1; r < rows.length; r++) {
@@ -3723,6 +3749,7 @@ async function handleViagensScraping(config) {
               const noites = nightsIdx >= 0 ? (parseInt(row[nightsIdx], 10) || 4) : 4;
               const img = imgIdx >= 0 ? row[imgIdx] : '';
               const code = codeIdx >= 0 && row[codeIdx] ? row[codeIdx] : `PKG-CSV-${r}`;
+              const providerUrl = linkIdx >= 0 && row[linkIdx] ? row[linkIdx] : `https://www.decolar.com/pacotes/${slugifyViagens(finalDest)}`;
               const cat = categoriaId || (catIdx >= 0 && row[catIdx] ? row[catIdx] : (finalDest.toLowerCase().includes('orlando') || finalDest.toLowerCase().includes('cancun') || finalDest.toLowerCase().includes('europa') ? 'internacional' : 'nacional'));
 
               extractedPackages.push({
@@ -3876,6 +3903,7 @@ async function handleViagensScraping(config) {
           bagagem_inclusa: '1 mala de mão (10kg) inclusa',
           traslado_incluso: true,
           codigo_oferta_fornecedor: pkg.codigo_oferta_fornecedor || null,
+          url_fornecedor: pkg.url_fornecedor || (targetUrl.startsWith('http') && !targetUrl.includes('feed.gsa.com') ? targetUrl : `https://www.decolar.com/pacotes/${slugifyViagens(pkg.destino || pkg.titulo)}`),
           preco_custo: precoCusto,
           margem_porcentagem: margem,
           margem_valor: margemValor,

@@ -345,7 +345,7 @@ export function ScrapingAdminModule() {
           <p className="text-sm font-bold text-neutral-500">Carregando automações...</p>
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={Webhook} title="Nenhuma automação" message="Nenhuma configuração de scraping foi criada." />
+        <EmptyState icon={Webhook} title="Nenhuma automação" description="Nenhuma configuração de scraping foi criada." />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {items.map((item) => (

@@ -11,6 +11,7 @@ import {
   Tag,
   Trash2,
   X,
+  Diamond,
 } from 'lucide-react';
 import { formatCurrency } from '../../../lib/utils';
 import type { Produto } from '../../../types';
@@ -383,6 +384,11 @@ export default function CartDrawer({
                   <p className="mt-0.5 text-[26px] font-black leading-none tracking-[-0.04em] text-[#17345f]">{formatCurrency(total)}</p>
                 </div>
                 <span className="text-[11px] text-slate-400">Frete calculado no checkout</span>
+              </div>
+              
+              <div className="mt-2 flex items-center justify-between rounded-lg bg-[#d8bd73]/10 px-3 py-2 text-xs font-bold text-[#b89547]">
+                <span className="flex items-center gap-1.5"><Diamond className="w-3.5 h-3.5 fill-current" /> Pontos GSA</span>
+                <span>Ganhe + {Math.floor(total / 10)} pts</span>
               </div>
             </div>
 

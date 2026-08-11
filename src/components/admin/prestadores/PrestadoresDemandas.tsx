@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
+import { uploadToR2 } from '../../../lib/r2';
 import { toast } from 'react-hot-toast';
 import { SupportConversationModal } from '../../common/SupportConversationModal';
 import { 
@@ -375,9 +376,8 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
         for (const file of novaDemandaArquivos) {
           const ext = file.name.split('.').pop();
           const path = `briefings/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-          const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'entregas_demandas', path);
-          if (uploadError) throw uploadError;
-
+          const { url: publicUrl } = await uploadToR2(file, 'entregas_demandas', path);
+          
           // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
           arquivosBriefing.push({ nome: file.name, url: publicUrl, tipo: file.type, tamanho: file.size });
         }
@@ -865,8 +865,7 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
         const fileExt = transferFile.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
         const filePath = `transfers/${selectedDemanda.id}/${fileName}`;
-        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(transferFile, 'entregas_demandas', filePath);
-        if (uploadError) throw uploadError;
+        const { url: publicUrl } = await uploadToR2(transferFile, 'entregas_demandas', filePath);
         // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         arquivoUrl = publicUrl;
       }
@@ -2831,8 +2830,7 @@ export function AdminOSSuporteChat({ osId, remetenteId, remetenteNome, clienteId
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         const path = `suporte/${osId}/${fileName}`;
         
-        const { error: uErr , url: __publicUrl, path: __r2Path } = await uploadToR2(anexoFile, 'entregas_demandas', path);
-        if (uErr) throw uErr;
+        const { url: publicUrl } = await uploadToR2(anexoFile, 'entregas_demandas', path);
         
         // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         

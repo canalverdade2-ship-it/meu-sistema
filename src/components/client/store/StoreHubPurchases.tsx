@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { Modal } from '../../ui/Modal';
 import { formatCurrency, formatDate } from '../../../lib/utils';
+import { OrderReviewModal } from './OrderReviewModal';
+import { Star } from 'lucide-react';
 
 export interface StoreHubPurchasesProps {
   isPurchasesModalOpen: boolean;
@@ -152,6 +154,7 @@ export default function StoreHubPurchases({
   setSelectedOrderTimeline,
 }: StoreHubPurchasesProps) {
   const [purchasesTab, setPurchasesTab] = useState<PurchaseTab>('pendentes');
+  const [selectedOrderReview, setSelectedOrderReview] = useState<any>(null);
 
   const grouped = useMemo(() => groupedPurchases(allPurchases), [allPurchases, groupedPurchases]);
   const filtered = useMemo(
@@ -310,6 +313,17 @@ export default function StoreHubPurchases({
                       </button>
                     )}
 
+                    {presentation.status === 'concluido' && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrderReview(order)}
+                        className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 text-xs font-extrabold text-amber-700 transition hover:bg-amber-100 sm:flex-none"
+                      >
+                        <Star className="h-4 w-4" aria-hidden="true" />
+                        Avaliar
+                      </button>
+                    )}
+
                     {presentation.canPay && (
                       <button
                         type="button"
@@ -382,6 +396,13 @@ export default function StoreHubPurchases({
           Fechar pedidos
         </button>
       </div>
+      
+      {/* Avaliação Modal (Fase 4.4) */}
+      <OrderReviewModal 
+        isOpen={!!selectedOrderReview}
+        onClose={() => setSelectedOrderReview(null)}
+        order={selectedOrderReview}
+      />
     </Modal>
   );
 }

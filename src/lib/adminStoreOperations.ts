@@ -1,4 +1,5 @@
 import { callAdminRpc } from './adminRpc';
+import { supabase } from './supabase';
 
 export type StoreOrderStatus = 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido';
 

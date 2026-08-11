@@ -1,4 +1,5 @@
 import { uploadToR2 } from './r2Storage';
+import { supabase } from './supabase';
 
 
 /**

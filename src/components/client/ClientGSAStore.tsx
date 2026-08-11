@@ -8,10 +8,10 @@ import { formatCurrency, generateCode, formatDate, isLocalDevHost } from '../../
 import { toast } from 'react-hot-toast';
 import { notificationService } from '../../lib/notificationService';
 import { logService } from '../../lib/logService';
+import { PromoResult, avaliarPromocoes } from '../../lib/promocaoQuantidadeEngine';
 import { Modal } from '../ui/Modal';
 import { createNotification } from '../../lib/notifications';
 import { notifyWhatsAppModal } from '../ui/WhatsAppButton';
-import { avaliarPromocoes, PromoResult } from '../../lib/promocaoQuantidadeEngine';
 import { VIP_LEVELS } from '../../constants';
 import { getProductEffectivePrice, getProductDiscountPercentage } from '../../lib/productPricing';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
@@ -20,6 +20,7 @@ import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { useAppLocation } from '../../routing/useAppLocation';
 import { navigate, updateRouteQuery } from '../../routing/navigationService';
 import { routes } from '../../routing/routeCatalog';
+import { useSEO } from '../../hooks/useSEO';
 
 const roundMoney = (value: number): number => Math.round(value * 100) / 100;
 
@@ -31,6 +32,8 @@ const ProductDetailsModal = React.lazy(() => import('./store/ProductDetailsModal
 const FilterModal = React.lazy(() => import('./store/FilterModal'));
 const AvailableCouponsModal = React.lazy(() => import('./store/AvailableCouponsModal'));
 const SubscriptionDurationModal = React.lazy(() => import('./store/SubscriptionDurationModal'));
+import { StoryHighlights } from './store/StoryHighlights';
+
 
 type Tab = 'produtos' | 'assinaturas';
 type ItemType = 'produto' | 'servico' | 'assinatura';
@@ -121,6 +124,30 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     ativo: true,
     tamanho: 'M',
     posicao: 'direita'
+  });
+
+  // Montagem do título e descrição para SEO
+  const seoData = useMemo(() => {
+    let title = 'Loja GSA Store';
+    let desc = 'Encontre os melhores produtos com a curadoria GSA Store.';
+    
+    if (activeTab === 'produtos' && selectedProdutoCategoriaId !== 'todas') {
+      const cat = categorias.find(c => c.id === selectedProdutoCategoriaId);
+      if (cat) {
+        title = `${cat.nome} - Loja GSA Store`;
+        desc = `Compre ${cat.nome} na GSA Store com os melhores preços.`;
+      }
+    } else if (activeTab === 'assinaturas') {
+      title = 'Assinaturas - Loja GSA Store';
+      desc = 'Conheça nossos planos e assinaturas exclusivos.';
+    }
+    return { title, desc };
+  }, [activeTab, selectedProdutoCategoriaId, categorias]);
+
+  useSEO({
+    title: seoData.title,
+    description: seoData.desc,
+    type: 'website'
   });
 
   // 1. Sincronizar Abas, Itens e Modais a partir da URL
@@ -455,7 +482,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
         if (pendingCartOpenRef.current) {
           pendingCartOpenRef.current = false;
           setTimeout(() => {
-            setIsCartOpen(true);
+            updateRouteQuery({ modal: 'carrinho' });
             updateRouteQuery({ modal: 'carrinho' });
             if (justMigrated) toast.success('Carrinho recuperado! Continue sua compra.');
           }, 50);
@@ -482,7 +509,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       sessionStorage.removeItem('gsa_cart_just_migrated');
       fetchCart().then(() => {
         setTimeout(() => {
-          setIsCartOpen(true);
+          updateRouteQuery({ modal: 'carrinho' });
           updateRouteQuery({ modal: 'carrinho' });
           toast.success('Carrinho recuperado! Continue sua compra.');
         }, 50);
@@ -530,13 +557,13 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     fetchWASettings();
 
     const handleOpenCart = () => {
-      setIsCartOpen(true);
+      updateRouteQuery({ modal: 'carrinho' });
     };
     window.addEventListener('open-store-cart', handleOpenCart);
 
     // Escuta o evento global para ocultar o botão flutuante do carrinho
     const handleModalState = (e: Event) => {
-      setIsAnyModalOpen((e as CustomEvent).detail.open);
+      
     };
     window.addEventListener('whatsapp-modal-state', handleModalState);
 
@@ -1088,11 +1115,8 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
           {/* Botão Carregar Mais Produtos para Alta Performance */}
           {visibleCount < filteredItems.length && (
-            <div className="mt-12 flex flex-col items-center justify-center gap-3">
-              <p className="text-xs font-semibold text-neutral-500">
-                Mostrando <strong className="text-neutral-900">{displayedItems.length}</strong> de <strong className="text-neutral-900">{filteredItems.length}</strong> itens
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-8 flex justify-center">
+              <div className="flex flex-col sm:flex-row items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setVisibleCount(v => v + 24)}

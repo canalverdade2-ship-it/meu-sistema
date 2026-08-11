@@ -240,17 +240,11 @@ export function ReembolsosModule({
         setIsUploadingComprovante(true);
         const ext = comprovanteFile.name.split('.').pop();
         const fileName = `reembolso-${selectedRefund.codigo_reembolso}-${Date.now()}.${ext}`;
-        const { error, url: publicUrl, path: r2Path } = await uploadToR2(comprovanteFile, 'documentos_cliente', `reembolsos/${fileName}`);
+        const { url: publicUrl } = await uploadToR2(comprovanteFile, 'documentos_cliente', `reembolsos/${fileName}`);
         setIsUploadingComprovante(false);
 
-        if (uploadErr) {
-          toast.error('Erro ao enviar comprovante. Tente novamente.');
-          setIsSubmittingPayment(false);
-          return;
-        }
-
         // publicUrl is handled directly
-        comprovanteUrl = publicUrl.publicUrl;
+        comprovanteUrl = publicUrl;
       }
 
       const { error } = await supabase

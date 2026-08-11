@@ -1,6 +1,11 @@
-import React from 'react';
 import { MarketplaceHome } from './MarketplaceHome';
+import { EcommerceHome } from '../store/EcommerceHome';
+import { ProductPage } from '../store/ProductPage';
+import { OrderSuccessPage } from '../store/OrderSuccessPage';
+import { WishlistPage } from '../store/WishlistPage';
 import { StoreHub } from '../StoreHub';
+import { BlogHome } from '../store/BlogHome';
+import { BlogPostPage } from '../store/BlogPostPage';
 import { ClassifiedsHubPage } from './ClassifiedsHubPage';
 import { useAppLocation } from '../../../routing/useAppLocation';
 import { routes } from '../../../routing/routeCatalog';
@@ -306,6 +311,36 @@ export function MarketplaceGSAStore({
 
   if (currentSubmodule?.startsWith('loja')) {
     const tabMapped = currentSubmodule.replace('loja-', '');
+    
+    // Se for rota de um produto específico, renderiza a nova ProductPage
+    if (currentSubmodule === 'loja-produtos' && route.itemId) {
+      return (
+        <ProductPage 
+          productId={route.itemId} 
+          clientId={clientId} 
+          onRequireAuth={onRequireAuth} 
+        />
+      );
+    }
+    
+    // Se for rota de pedido confirmado
+    if (currentSubmodule === 'loja-pedido-confirmado') {
+      return <OrderSuccessPage />;
+    }
+
+    // Se for rota de wishlist
+    if (currentSubmodule === 'loja-wishlist') {
+      return <WishlistPage clientId={clientId} onRequireAuth={onRequireAuth} />;
+    }
+
+    // Se for rota de blog
+    if (currentSubmodule === 'loja-blog') {
+      if (route.itemId) {
+        return <BlogPostPage postId={route.itemId} clientId={clientId} />;
+      }
+      return <BlogHome clientId={clientId} />;
+    }
+
     return (
       <StoreHub
         clientId={clientId}
@@ -326,10 +361,9 @@ export function MarketplaceGSAStore({
   }
 
   return (
-    <MarketplaceHome
-      onSelectModule={handleSelectModule}
-      onBackToSite={onBackToSite || (() => handleNavigate(routes.public.home()))}
-      isPublic={!clientId}
+    <EcommerceHome
+      clientId={clientId}
+      onRequireAuth={onRequireAuth}
     />
   );
 }

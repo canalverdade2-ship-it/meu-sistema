@@ -430,7 +430,15 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
 export function useClientNotifications() {
   const context = useContext(ClientNotificationContext);
   if (context === undefined) {
-    throw new Error('useClientNotifications must be used within a ClientNotificationProvider');
+    // Retorna valores padrão vazios em vez de estourar erro, permitindo uso na loja por visitantes
+    return {
+      pendencies: defaultCounts,
+      notifications: [],
+      unreadNotifications: 0,
+      markAsRead: async () => {},
+      markAllAsRead: async () => {},
+      refreshCounts: async () => {}
+    };
   }
   return context;
 }

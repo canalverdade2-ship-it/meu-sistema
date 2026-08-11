@@ -126,11 +126,10 @@ export function AdminPrestadorDocumentos({
         const fileName = `${uploadData.tipo}-admin-${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
         const filePath = `${prestadorId}/${fileName}`;
 
-        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_prestador', filePath);
-        if (uploadError) throw uploadError;
+        const { url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_prestador', filePath);
 
         // publicUrl is handled directly
-        return publicUrlData.publicUrl;
+        return __publicUrl;
       });
 
       const uploadedUrls = await Promise.all(uploadPromises);
@@ -225,7 +224,7 @@ export function AdminPrestadorDocumentos({
       const { error } = await supabase.from('prestador_documentos').delete().eq('id', id);
       if (error) {
         // If error, refetch to restore state
-        fetchDocumentos();
+        fetchDocumentosLocal();
         throw error;
       }
       toast.success('Excluído.');

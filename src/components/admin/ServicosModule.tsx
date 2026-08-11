@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, MoreHorizontal, Briefcase, Trash2, User, Building2, Store, Image as ImageIcon, Upload, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { uploadToR2 } from '../../lib/r2';
 import { Servico } from '../../types';
 import { Modal } from '../ui/Modal';
 import { formatCurrency, formatDate, generateCode } from '../../lib/utils';
@@ -99,8 +100,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
 
     setUploadingImage(true);
     try {
-      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'gsa-store-images', filePath);
-      if (uploadError) throw uploadError;
+      const { url: publicUrl } = await uploadToR2(file, 'gsa-store-images', filePath);
 
       // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
@@ -611,8 +611,7 @@ function ServicoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
 
     setUploadingGallery(true);
     try {
-      const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'gsa-store-images', filePath);
-      if (uploadError) throw uploadError;
+      const { url: publicUrl } = await uploadToR2(file, 'gsa-store-images', filePath);
 
       // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
       

@@ -21,6 +21,7 @@ import { getProductDisplayCode, getProductDisplayCodeLabel, validateBarcode, det
 import { sessionService } from '../../lib/sessionService';
 import { adjustAdminProductStock, archiveAdminCatalogItems, deleteAdminProductsBulk, saveAdminProductCatalog } from '../../lib/adminStoreOperations';
 import { removePublicStoreImage, removeUnusedPublicStoreImages, uploadPublicStoreImage } from '../../lib/publicStoreImage';
+import { hasActiveProductDiscount, formatProductDiscountPercentage, getProductDiscountValidityInfo, getProductRemainingDaysText } from '../../lib/productPricing';
 
 // Helper functions for gallery mapping
 const mapGalleryToColumns = (images: string[]) => {
@@ -2358,7 +2359,7 @@ const removeGalleryImage = (index: number) => {
                                         <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Valor de Custo</p>
                                         <p className="text-sm font-bold text-neutral-900">{importData.moeda} {importData.preco.toFixed(2)}</p>
                                         {importData.moeda !== 'BRL' && <p className="mt-0.5 text-[10px] font-semibold text-amber-600">Preço em moeda estrangeira. Insira o custo manualmente.</p>}
-                                        {importData.moeda === 'BRL' && formData.valor_custo > 0 && importSelection.preco && <p className="mt-0.5 text-[10px] font-semibold text-amber-600">Substituirá custo atual (Recalculando valor final)</p>}
+                                        {importData.moeda === 'BRL' && Number(formData.valor_custo) > 0 && importSelection.preco && <p className="mt-0.5 text-[10px] font-semibold text-amber-600">Substituirá custo atual (Recalculando valor final)</p>}
                                       </div>
                                     </label>
                                   )}

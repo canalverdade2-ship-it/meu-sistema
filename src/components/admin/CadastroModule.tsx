@@ -14,6 +14,8 @@ import { ReembolsosModule } from './ReembolsosModule';
 import { PrestadoresCadastro } from './prestadores/PrestadoresCadastro';
 import { LojaCategoriasModule } from './LojaCategoriasModule';
 import { ServicePackagesModule } from './ServicePackagesModule';
+import { EcommerceAnalytics } from './ecommerce/EcommerceAnalytics';
+import { PricingPanel } from './ecommerce/PricingPanel';
 import { Users, Scissors, Package, Boxes, Zap, Share2, Ticket, Trophy, Megaphone, ShieldCheck, Building2, Store, Tag, ChevronLeft, Tags } from 'lucide-react';
 import { useAdminNotifications } from '../../hooks/useAdminNotifications';
 
@@ -67,6 +69,8 @@ const SUB_TABS: Record<MainTab, { id: string, label: string }[]> = {
     { id: 'desligado', label: 'Desligados' }
   ],
   gsa_store: [
+    { id: 'analytics', label: 'Analytics' },
+    { id: 'precificacao', label: 'Precificação N8N' },
     { id: 'cupons', label: 'Cupons de Desconto' },
     { id: 'trocas', label: 'Trocas e Devoluções' },
     { id: 'reembolsos', label: 'Reembolsos' }
@@ -105,7 +109,7 @@ export function CadastroModule({
     }
     
     // Se for uma sub-aba de gsa_store
-    if (['cupons', 'trocas', 'reembolsos'].includes(initialTab)) {
+    if (['analytics', 'precificacao', 'cupons', 'trocas', 'reembolsos'].includes(initialTab)) {
       return { main: isAllowedTab('gsa_store') ? 'gsa_store' as MainTab : firstAllowedTab, sub: isAllowedTab('gsa_store') ? initialTab : SUB_TABS[firstAllowedTab][0].id };
     }
     
@@ -367,6 +371,8 @@ export function CadastroModule({
         {activeTab === 'gsa_store' && activeSubTab === 'cupons' && <CuponsLojaModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'gsa_store' && activeSubTab === 'trocas' && <LojaTrocasModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'gsa_store' && activeSubTab === 'reembolsos' && <ReembolsosModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
+        {activeTab === 'gsa_store' && activeSubTab === 'analytics' && <EcommerceAnalytics colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
+        {activeTab === 'gsa_store' && activeSubTab === 'precificacao' && <PricingPanel colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'categorias_loja' && <LojaCategoriasModule />}
         {activeTab === 'prestadores' && (
           <PrestadoresCadastro 

@@ -7,6 +7,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { supabase } from '../../lib/supabase';
+import { uploadToR2 } from '../../lib/r2Storage';
 import type {
   SiteCampaign, SiteCampaignAdminOverview, SiteCampaignAudience,
   SiteCampaignCategory, SiteCampaignDevice, SiteCampaignFormat,
@@ -130,7 +131,7 @@ export function SiteCampaignAdminModule() {
       const { error, url: publicUrl, path: r2Path } = await uploadToR2(file, 'gsa-site-campaigns', path);
       if (error) throw error;
       // url handled directly
-      set(variant === 'desktop' ? 'image_desktop_url' : 'image_mobile_url', url);
+      set(variant === 'desktop' ? 'image_desktop_url' : 'image_mobile_url', publicUrl);
       toast.success('Imagem enviada.');
     } catch (error) { toast.error(message(error, 'Não foi possível enviar a imagem.')); }
     finally { setUploading(null); }

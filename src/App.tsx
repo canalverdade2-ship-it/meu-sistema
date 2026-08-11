@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { AdminNotificationProvider } from './hooks/useAdminNotifications';
 import { logService } from './lib/logService';
 import { useAutoLogout } from './hooks/useAutoLogout';
+import { GSAChatbotWidget } from './components/ui/GSAChatbotWidget';
 import { sessionService, type ClientPersonType } from './lib/sessionService';
 import { validateProviderSessionAccess } from './lib/providerSessionAccess';
 import { ClientNotificationProvider } from './hooks/useClientNotifications';
@@ -705,6 +706,7 @@ export default function App() {
           {['public', 'marketplace', 'client'].includes(activeView) && <AdvertisingSlot placementCode="SITE_STICKY_BOTTOM" variant="sticky" />}
           {isSessionActive && <FullscreenPrompt />}
           {isSessionActive && <WhatsAppButton />}
+          <GSAChatbotWidget />
           <Toaster position="top-right" />
         </div>
       </QueryClientProvider>

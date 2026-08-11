@@ -31,7 +31,8 @@ export type AdminModule =
   | 'sistema'
   | 'promocoes'
   | 'area_vip'
-  | 'afiliados';
+  | 'afiliados'
+  | 'automacoes';
 
 const VALID_MODULES = new Set<AdminModule>([
   'dashboard',

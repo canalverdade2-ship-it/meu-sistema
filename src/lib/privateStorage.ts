@@ -179,9 +179,7 @@ export async function uploadPrivateDocument(
   const uniqueName = `${generateUUID()}-${safeName}`;
   const path = `${options.scope}/${ownerId}/${options.context}/${options.contextId}/${uniqueName}`;
 
-  const { path: r2Path, error } = await uploadToR2(file, PRIVATE_DOCUMENT_BUCKET, path);
-  
-  if (error) throw error;
+  const { path: r2Path } = await uploadToR2(file, PRIVATE_DOCUMENT_BUCKET, path);
 
   return {
     reference: buildPrivateDocumentReference(r2Path),

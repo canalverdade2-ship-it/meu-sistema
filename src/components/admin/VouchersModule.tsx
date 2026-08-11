@@ -623,7 +623,7 @@ function VoucherForm({ onSubmit, onCancel }: { onSubmit: (data: any) => Promise<
     validade: '',
     usage_limit: '1'
   });
-  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clientes, setClientes] = useState<Partial<Cliente>[]>([]);
 
   useEffect(() => {
     let isMounted = true;

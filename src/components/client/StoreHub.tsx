@@ -1218,10 +1218,10 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
           onBack={() => setView('hub')}
           initialAssinaturaId={view === 'shop' && initialTab === 'shop' && initialItemId ? initialItemId : undefined}
           onSuccess={(orderId) => {
-            setView('hub');
             if (orderId) {
-              setSelectedOrderId(orderId);
-              setIsPurchasesModalOpen(true);
+              navigate(routes.marketplace.store.orderSuccess(orderId));
+            } else {
+              navigate(routes.marketplace.store.orderSuccess('unknown'));
             }
           }}
         />
