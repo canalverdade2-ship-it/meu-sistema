@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
-import { uploadToR2 } from '../../../lib/r2';
+import { uploadToR2 } from '../../../lib/r2Storage';
 import { toast } from 'react-hot-toast';
 import { SupportConversationModal } from '../../common/SupportConversationModal';
 import { 

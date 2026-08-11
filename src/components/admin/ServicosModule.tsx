@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, MoreHorizontal, Briefcase, Trash2, User, Building2, Store, Image as ImageIcon, Upload, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { uploadToR2 } from '../../lib/r2';
+import { uploadToR2 } from '../../lib/r2Storage';
 import { Servico } from '../../types';
 import { Modal } from '../ui/Modal';
 import { formatCurrency, formatDate, generateCode } from '../../lib/utils';
