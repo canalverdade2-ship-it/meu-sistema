@@ -20,6 +20,7 @@ export const routes = {
     affiliateSupport: () => '/afiliados/suporte',
     careers: () => '/trabalhe-conosco',
     serviceDetail: (id: string) => `/servicos-e-assinaturas/${id}`,
+    vipProgram: () => '/programa-vip',
   },
   // Login
   login: {
@@ -145,6 +146,8 @@ export const routes = {
       wishlist: () => '/marketplace/loja/wishlist',
       blog: () => '/marketplace/loja/blog',
       blogPost: (id: string) => `/marketplace/loja/blog/${id}`,
+      vipProgram: () => '/marketplace/loja/programa-vip',
+      vip: () => '/marketplace/loja/programa-vip',
     },
   },
   // Portal do Cliente

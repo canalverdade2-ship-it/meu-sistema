@@ -87,6 +87,9 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     if (segments[1]) itemId = segments[1];
     return { pathname, search, hash, area, module, itemId, query };
   }
+  if (normalizedPath === '/programa-vip') {
+    return { pathname, search, hash, area: 'public', module: 'vip', query };
+  }
 
   // 3. MARKETPLACE
   if (segments[0] === 'marketplace') {

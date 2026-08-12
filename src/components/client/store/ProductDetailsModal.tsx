@@ -285,6 +285,11 @@ export default function ProductDetailsModal({ isOpen, onClose, item, tipo, onAdd
             </div>
           )}
 
+          <div className="mt-4 flex items-center justify-between text-xs font-bold text-slate-500 border-t border-slate-100 pt-3">
+            <span>Compra protegida</span>
+            <span>Entrega acompanhada</span>
+          </div>
+
 
           <div className="mt-6 bg-white pb-4 pt-2 md:sticky md:bottom-0 md:mt-auto md:pb-6 md:pt-6">
             <button

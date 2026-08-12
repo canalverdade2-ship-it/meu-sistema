@@ -1,6 +1,11 @@
 import { uploadPublicStoreImageR2, removeFromR2, getR2PathFromUrl } from './r2Storage';
 import { generateUUID } from './utils';
 
+// Função para garantir contrato de utilitário de ID único
+export function generateStoreImageId() {
+  return generateUUID();
+}
+
 const MAX_STORE_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_STORE_IMAGE_TYPES = new Set([
   'image/jpeg',

@@ -290,6 +290,7 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
           color: dbLevel.cor || '#f5f5f5',
           textColor: dbLevel.cor_texto || '#1a1a1a',
           visualStyle: (dbLevel.visual_style as any) || 'clean',
+          discountPercentage: Number(dbLevel.desconto_porcentagem || 0),
           feePercentage: Number(dbLevel.taxa_saque_transferencia),
           price: Number(dbLevel.preco),
           benefits: Array.isArray(dbLevel.benefits) ? dbLevel.benefits : [],
@@ -504,6 +505,7 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
           pontos_maximos: editingLevel.maxPoints,
           pontos_por_real: editingLevel.multiplier,
           taxa_saque_transferencia: editingLevel.feePercentage,
+          desconto_porcentagem: editingLevel.discountPercentage || 0,
           cor: editingLevel.color,
           cor_texto: editingLevel.textColor,
           visual_style: editingLevel.visualStyle,
@@ -1093,15 +1095,30 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Taxa (Saque/Transf.) %</label>
+                    <label className="block text-[11px] font-black text-neutral-500 uppercase tracking-widest mb-2">
+                      Taxa Fin. (Saque/Transf %)
+                    </label>
                     <input 
                       type="number"
-                      step="0.1"
                       value={editingLevel.feePercentage}
-                      onChange={(e) => setEditingLevel({...editingLevel, feePercentage: parseFloat(e.target.value)})}
+                      onChange={(e) => setEditingLevel({...editingLevel, feePercentage: parseFloat(e.target.value) || 0})}
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 border-none ring-1 ring-neutral-200 focus:ring-2 focus:ring-indigo-500 font-bold"
                     />
                   </div>
+                  <div>
+                    <label className="block text-[11px] font-black text-neutral-500 uppercase tracking-widest mb-2">
+                      Desconto VIP Loja/Serviços (%)
+                    </label>
+                    <input 
+                      type="number"
+                      value={editingLevel.discountPercentage || 0}
+                      onChange={(e) => setEditingLevel({...editingLevel, discountPercentage: parseFloat(e.target.value) || 0})}
+                      className="w-full px-4 py-3 rounded-xl bg-neutral-50 border-none ring-1 ring-neutral-200 focus:ring-2 focus:ring-indigo-500 font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] font-black text-neutral-500 uppercase tracking-widest mb-2">
                       Valor da Compra do Nível (R$)

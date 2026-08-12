@@ -35,6 +35,7 @@ import { MyClassifiedCommissionsPage } from './classifieds/MyClassifiedCommissio
 import { HealthMarketplaceLandingPage } from './protection/HealthMarketplaceLandingPage';
 import { InsuranceMarketplaceLandingPage } from './protection/InsuranceMarketplaceLandingPage';
 import { ProtectionMarketplace } from './protection/ProtectionMarketplace';
+import { PublicVIPPresentationPage } from '../../public/PublicVIPPresentationPage';
 
 interface MarketplaceGSAStoreProps {
   clientId?: string;
@@ -339,6 +340,16 @@ export function MarketplaceGSAStore({
         return <BlogPostPage postId={route.itemId} clientId={clientId} />;
       }
       return <BlogHome clientId={clientId} />;
+    }
+
+    // Se for rota de apresentação pública do Programa VIP
+    if (currentSubmodule === 'loja-programa-vip' || currentSubmodule === 'loja-vip') {
+      return (
+        <PublicVIPPresentationPage 
+          clientId={clientId}
+          onBack={() => handleNavigate(routes.marketplace.store.root())}
+        />
+      );
     }
 
     return (

@@ -948,6 +948,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
   };
 
   const deferredSearch = React.useDeferredValue(search);
+  const activeFiltro = route.query.filtro || '';
 
   const filteredItems = useMemo(() => {
     let base: any[] = [];
@@ -961,6 +962,18 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
     if (selectedCategoriaId !== 'todas') {
       base = base.filter(i => i.categoria_id === selectedCategoriaId);
+    }
+
+    // Filtros Especiais da Home (Ofertas Relâmpago, Lançamentos, Mais Vendidos, Recomendados)
+    if (activeFiltro === 'ofertas') {
+      const comDesconto = base.filter(i => (i.valor_promocional && i.valor_promocional < i.valor) || i.destaque);
+      base = comDesconto.length > 0 ? comDesconto : base;
+    } else if (activeFiltro === 'novidades') {
+      base.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    } else if (activeFiltro === 'mais-vendidos') {
+      base.sort((a, b) => (b.total_vendas || b.vendas_count || 0) - (a.total_vendas || a.vendas_count || 0));
+    } else if (activeFiltro === 'recomendados') {
+      base.sort((a, b) => (b.pontos_gsa || 0) - (a.pontos_gsa || 0));
     }
 
     // Filtrar por preço
@@ -977,7 +990,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       });
     }
 
-    // Ordenar (Padrão: Menor preço para o maior preço)
+    // Ordenar (Padrão: Menor preço para o maior preço, exceto quando houver ordenação especial por filtro)
     if (sortBy === 'price-desc') {
       base.sort((a, b) => {
         const pA = tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
@@ -988,7 +1001,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       base.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
     } else if (sortBy === 'alpha-desc') {
       base.sort((a, b) => (b.nome || '').localeCompare(a.nome || ''));
-    } else {
+    } else if (!activeFiltro || activeFiltro === 'ofertas') {
       // Padrão (price-asc ou none): Do menor para o maior preço
       base.sort((a, b) => {
         const pA = tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
@@ -1004,14 +1017,14 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       ...b, 
       _tipo: tipo 
     }));
-  }, [activeTab, deferredSearch, produtos, servicos, assinaturas, sortBy, minPrice, maxPrice, selectedCategoriaId]);
+  }, [activeTab, deferredSearch, produtos, servicos, assinaturas, sortBy, minPrice, maxPrice, selectedCategoriaId, activeFiltro]);
 
   // Paginação progressiva para máxima performance na loja do cliente
   const [visibleCount, setVisibleCount] = useState(24);
 
   useEffect(() => {
     setVisibleCount(24);
-  }, [activeTab, deferredSearch, selectedCategoriaId, sortBy, minPrice, maxPrice]);
+  }, [activeTab, deferredSearch, selectedCategoriaId, sortBy, minPrice, maxPrice, activeFiltro]);
 
   const displayedItems = React.useMemo(() => {
     return filteredItems.slice(0, visibleCount);
@@ -1063,7 +1076,38 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
         <div className="hidden md:block w-24"></div>
       </div>
 
-
+      {/* Banner Exclusivo de Filtro (Ofertas Relâmpago / Mais Vendidos / Novidades / Recomendados) */}
+      {activeFiltro && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-[#17345f] p-4 text-white shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+              {activeFiltro === 'ofertas' && <Zap className="h-6 w-6 text-amber-400 animate-bounce" />}
+              {activeFiltro === 'mais-vendidos' && <TrendingUp className="h-6 w-6 text-emerald-400" />}
+              {activeFiltro === 'novidades' && <Sparkles className="h-6 w-6 text-purple-300" />}
+              {activeFiltro === 'recomendados' && <Star className="h-6 w-6 text-amber-300" />}
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-black tracking-tight">
+                {activeFiltro === 'ofertas' && '⚡ Ofertas Relâmpago Exclusivas'}
+                {activeFiltro === 'mais-vendidos' && '🔥 Mais Vendidos da GSA Store'}
+                {activeFiltro === 'novidades' && '✨ Lançamentos & Novidades'}
+                {activeFiltro === 'recomendados' && '⭐ Recomendados para Você'}
+              </h2>
+              <p className="text-xs text-white/80 font-medium">
+                {filteredItems.length} {filteredItems.length === 1 ? 'item encontrado nesta seleção' : 'itens encontrados nesta seleção'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => updateRouteQuery({ filtro: null })}
+            className="flex items-center gap-1.5 self-start sm:self-auto rounded-xl bg-white/15 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-white/25 cursor-pointer"
+          >
+            <X className="h-4 w-4" />
+            <span>Ver todos os produtos</span>
+          </button>
+        </div>
+      )}
 
       {/* Search & Utility Bar */}
       <div className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm md:gap-3 md:rounded-[2rem] md:border-white md:bg-white/60 md:p-3 md:shadow-[0_10px_30px_rgba(0,0,0,0.02)] max-w-4xl mx-auto">

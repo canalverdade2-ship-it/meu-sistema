@@ -146,7 +146,7 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
           {isLowStock && !isOutOfStock && (
             <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-800">
               <AlertCircle className="h-3 w-3" />
-              Restam {item.estoque_disponivel}
+              Últimas {item.estoque_disponivel} unidades
             </span>
           )}
 
@@ -259,7 +259,7 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
                 className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-[#17345f] px-3 text-xs font-extrabold text-white transition hover:bg-[#102746] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
               >
                 {item.link_afiliado ? <ArrowRight className="h-4 w-4" aria-hidden="true" /> : <ShoppingBag className="h-4 w-4" aria-hidden="true" />}
-                {item.link_afiliado ? 'Comprar no Parceiro' : (isOutOfStock ? 'Indisponível' : 'Adicionar')}
+                {isOutOfStock ? 'Indisponível' : 'Adicionar'}
               </button>
             ) : (
               <span className="inline-flex min-h-10 flex-1 items-center justify-center rounded-xl bg-[#17345f] px-3 text-xs font-extrabold text-white">

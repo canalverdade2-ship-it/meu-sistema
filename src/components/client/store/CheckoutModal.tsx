@@ -512,7 +512,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       if (productIds.length > 0) {
         const { data: dbProducts } = await supabase
           .from('produtos')
-          .select('id, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada')
+          .select('id, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada, visivel_na_loja, estoque_disponivel')
           .in('id', productIds);
         if (dbProducts) {
           let priceChanged = false;
@@ -553,6 +553,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       }
     } catch (err) {
       console.error('Erro ao validar alteração de preço:', err);
+      toast.error('Não foi possível validar preços e estoque');
     }
 
     const hasInvalidOrDeleted = cartItems.some((c: any) => 

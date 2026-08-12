@@ -154,6 +154,7 @@ export function ClientAreaVIP({
           color: dbLevel.cor || '#f5f5f5',
           textColor: dbLevel.cor_texto || '#1a1a1a',
           visualStyle: (dbLevel.visual_style as any) || 'clean',
+          discountPercentage: Number(dbLevel.desconto_porcentagem || 0),
           feePercentage: Number(dbLevel.taxa_saque_transferencia),
           price: Number(dbLevel.preco),
           benefits: Array.isArray(dbLevel.benefits) ? dbLevel.benefits : [],

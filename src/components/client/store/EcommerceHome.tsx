@@ -187,8 +187,8 @@ export function EcommerceHome({
                   title="Recomendados para Você" 
                   icon={Star} 
                   subtitle="Baseado no seu histórico e preferências de compra" 
-                  actionText="Atualizar"
-                  onAction={() => setRecomendados([...produtos].sort(() => 0.5 - Math.random()).slice(0, 4))}
+                  actionText="Ver recomendados"
+                  onAction={() => navigate(routes.marketplace.store.products() + '?filtro=recomendados')}
                 />
                 <div className="relative z-10">
                   <ProductGrid items={recomendados} />
@@ -204,7 +204,7 @@ export function EcommerceHome({
                   icon={Zap} 
                   subtitle="Preços imperdíveis por tempo limitado" 
                   actionText="Ver todas as ofertas"
-                  onAction={() => navigate(routes.marketplace.store.products())}
+                  onAction={() => navigate(routes.marketplace.store.products() + '?filtro=ofertas')}
                 />
                 <div className="hidden sm:flex items-center gap-2 mb-8 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl border border-rose-100">
                   <Clock className="w-4 h-4 animate-pulse" />
@@ -238,8 +238,8 @@ export function EcommerceHome({
                   Ative seu VIP e economize até 30% adicional em produtos selecionados.
                 </p>
                 <button 
-                  onClick={() => navigate(routes.client.loyalty.vip())}
-                  className="mt-6 rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#17345f] transition-all hover:bg-neutral-100 shadow-lg"
+                  onClick={() => navigate(routes.marketplace.store.vip())}
+                  className="mt-6 rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#17345f] transition-all hover:bg-neutral-100 shadow-lg cursor-pointer hover:scale-105 active:scale-95"
                 >
                   Conhecer o Programa
                 </button>
@@ -252,6 +252,8 @@ export function EcommerceHome({
                 title="Mais Vendidos" 
                 icon={TrendingUp} 
                 subtitle="Os produtos favoritos da nossa comunidade" 
+                actionText="Ver mais vendidos"
+                onAction={() => navigate(routes.marketplace.store.products() + '?filtro=mais-vendidos')}
               />
               <ProductGrid items={maisVendidos} />
             </section>
@@ -287,7 +289,7 @@ export function EcommerceHome({
                 icon={Star} 
                 subtitle="Acabaram de chegar na loja" 
                 actionText="Ver lançamentos"
-                onAction={() => navigate(routes.marketplace.store.products())}
+                onAction={() => navigate(routes.marketplace.store.products() + '?filtro=novidades')}
               />
               <ProductGrid items={novidades} />
             </section>

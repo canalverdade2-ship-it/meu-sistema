@@ -141,14 +141,14 @@ export default function CartDrawer({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <aside className="flex h-[92vh] w-full max-w-md flex-col bg-white shadow-2xl transition-transform md:h-full md:rounded-l-3xl">
+      <aside aria-labelledby="gsa-cart-title" className="flex h-[92vh] w-full max-w-md flex-col bg-white shadow-2xl transition-transform md:h-full md:rounded-l-3xl">
         <div className="flex items-center justify-between border-b border-slate-100 p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#17345f]/10 text-[#17345f]">
               <ShoppingBag className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900">Seu carrinho</h2>
+              <h2 id="gsa-cart-title" className="text-lg font-black text-slate-900">Seu carrinho</h2>
               <p className="text-xs font-medium text-slate-500">
                 {cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}
               </p>

@@ -26,6 +26,7 @@ import { supabase } from './lib/supabase';
 import { clientOperationalWrite } from './lib/clientOperationalWrite';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AffiliateTrackingBridge } from './components/AffiliateTrackingBridge';
+import { PublicVIPPresentationPage } from './components/public/PublicVIPPresentationPage';
 
 const PENDING_STORE_CHECKOUT_KEY = 'gsa_pending_store_checkout';
 const PENDING_STORE_COUPONS_KEY = 'gsa_pending_store_coupons';
@@ -487,7 +488,14 @@ export default function App() {
               />
             )}
 
-            {activeView === 'public' && !['affiliates', 'trabalhe-conosco', 'careers'].includes(route.module) && (
+            {activeView === 'public' && route.module === 'vip' && (
+              <PublicVIPPresentationPage
+                clientId={session.clientId}
+                onBack={() => navigate(routes.marketplace.root())}
+              />
+            )}
+
+            {activeView === 'public' && !['affiliates', 'trabalhe-conosco', 'careers', 'vip'].includes(route.module) && (
               <Home
                 onLoginClient={handleLoginClient}
                 onGuestStore={() => navigate(routes.marketplace.root())}
