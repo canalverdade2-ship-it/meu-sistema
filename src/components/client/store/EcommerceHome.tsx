@@ -360,25 +360,29 @@ export function EcommerceHome({
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-3 sm:py-6 space-y-4 sm:space-y-8">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-2.5 sm:py-6 space-y-3.5 sm:space-y-8">
 
-          {/* ── Categories Grid (Compacto em mobile, expansivo em desktop) ── */}
-          <section className="rounded-2xl bg-white p-3 sm:p-5 shadow-sm border border-gray-100">
-            <p className="mb-2 sm:mb-4 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-gray-400">Departamentos</p>
-            <div className="grid grid-cols-4 gap-1.5 sm:gap-3 sm:grid-cols-8">
+          {/* ── Categories Grid (Super compacto em mobile, sem título, com animação nos ícones) ── */}
+          <section className="rounded-2xl bg-white p-2.5 sm:p-5 shadow-sm border border-gray-100">
+            <div className="grid grid-cols-4 gap-x-1 gap-y-1.5 sm:gap-3 sm:grid-cols-8">
               {CATEGORIES.map((cat, i) => (
                 <button
                   key={i}
                   onClick={() => goCategory(cat)}
-                  className="group flex cursor-pointer flex-col items-center gap-1 sm:gap-2 rounded-xl p-1 sm:p-2 transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
+                  className="group flex cursor-pointer flex-col items-center gap-1 sm:gap-2 rounded-xl p-0.5 sm:p-2 transition-all hover:bg-gray-50 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
                 >
                   <div
-                    className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-xl sm:rounded-2xl transition-transform group-hover:scale-105 group-hover:shadow-md"
-                    style={{ backgroundColor: cat.bg, color: cat.color }}
+                    className="flex h-9 w-9 sm:h-16 sm:w-16 items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-md group-active:scale-90"
+                    style={{ 
+                      backgroundColor: cat.bg, 
+                      color: cat.color,
+                      animation: 'deptFloat 3s ease-in-out infinite',
+                      animationDelay: `${i * 180}ms`
+                    }}
                   >
-                    <cat.Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
+                    <cat.Icon className="h-4.5 w-4.5 sm:h-6 sm:w-6 transition-transform duration-300 group-hover:rotate-6" strokeWidth={1.75} />
                   </div>
-                  <span className="text-center text-[9.5px] sm:text-[11px] font-bold text-gray-700 group-hover:text-[#17345f] leading-tight line-clamp-2">
+                  <span className="text-center text-[9px] sm:text-[11px] font-bold text-gray-700 group-hover:text-[#17345f] leading-tight line-clamp-2">
                     {cat.name}
                   </span>
                 </button>
