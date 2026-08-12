@@ -139,9 +139,23 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
     type: 'product'
   });
 
-  // Atualizar contador do carrinho
+  // Atualizar contador do carrinho (para visitante e autenticado)
   const fetchCart = async () => {
-    if (!clientId) return;
+    if (!clientId) {
+      try {
+        const raw = localStorage.getItem('gsa_pending_store_checkout');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const items = Array.isArray(parsed?.items) ? parsed.items : [];
+          setCartCount(items.reduce((acc: number, curr: any) => acc + (Number(curr.quantidade) || 1), 0));
+        } else {
+          setCartCount(0);
+        }
+      } catch {
+        setCartCount(0);
+      }
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('loja_carrinhos')
@@ -156,9 +170,14 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
   };
 
   useEffect(() => {
-    if (clientId) {
-      fetchCart();
-    }
+    fetchCart();
+    const handleCartUpdated = () => fetchCart();
+    window.addEventListener('gsa-cart-updated', handleCartUpdated);
+    window.addEventListener('storage', handleCartUpdated);
+    return () => {
+      window.removeEventListener('gsa-cart-updated', handleCartUpdated);
+      window.removeEventListener('storage', handleCartUpdated);
+    };
   }, [clientId]);
 
   // Seed aleatória estável baseada no ID para prova social
@@ -244,21 +263,48 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
   const installmentValue = currentPrice > 0 ? (currentPrice / 12).toFixed(2).replace('.', ',') : '0,00';
   const pixDiscountPrice = currentPrice > 0 ? (currentPrice * 0.95).toFixed(2).replace('.', ',') : '0,00';
 
-  // Adicionar ao carrinho
+  // Adicionar ao carrinho (não exige login imediatamente; login só será solicitado no checkout)
   const handleAddToCart = async (openCartAfter = false) => {
-    if (!clientId) {
-      if (onRequireAuth) {
-        onRequireAuth();
-      } else {
-        navigate(`${routes.login.root()}?returnTo=${encodeURIComponent(window.location.pathname)}`);
-      }
-      return;
-    }
-
     try {
       setIsAddingToCart(true);
 
-      // Verificar se já existe no carrinho
+      if (!clientId) {
+        // Fluxo de visitante: persistir no localStorage
+        const PENDING_STORE_CHECKOUT_KEY = 'gsa_pending_store_checkout';
+        const rawCart = localStorage.getItem(PENDING_STORE_CHECKOUT_KEY);
+        let parsed = rawCart ? JSON.parse(rawCart) : { items: [] };
+        if (!Array.isArray(parsed?.items)) parsed.items = [];
+
+        const existingIdx = parsed.items.findIndex(
+          (c: any) => c.item_id === product.id && c.tipo === 'produto'
+        );
+
+        if (existingIdx >= 0) {
+          parsed.items[existingIdx].quantidade = Number(parsed.items[existingIdx].quantidade || 1) + quantity;
+        } else {
+          parsed.items.push({
+            item_id: product.id,
+            tipo: 'produto',
+            quantidade: quantity,
+          });
+        }
+        parsed.updatedAt = new Date().toISOString();
+        localStorage.setItem(PENDING_STORE_CHECKOUT_KEY, JSON.stringify(parsed));
+
+        // Notificar componentes e cabeçalho sobre a alteração
+        window.dispatchEvent(new CustomEvent('gsa-cart-updated'));
+        window.dispatchEvent(new Event('storage'));
+
+        fetchCart();
+        toast.success(`${quantity}x ${product.nome} adicionado ao carrinho!`);
+
+        if (openCartAfter) {
+          navigate(routes.marketplace.store.products() + '?modal=carrinho');
+        }
+        return;
+      }
+
+      // Fluxo autenticado: salvar no Supabase
       const { data: existing } = await supabase
         .from('loja_carrinhos')
         .select('id, quantidade')

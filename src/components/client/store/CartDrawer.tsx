@@ -388,7 +388,7 @@ export default function CartDrawer({
               
               <div className="mt-2 flex items-center justify-between rounded-lg bg-[#d8bd73]/10 px-3 py-2 text-xs font-bold text-[#b89547]">
                 <span className="flex items-center gap-1.5"><Diamond className="w-3.5 h-3.5 fill-current" /> Pontos GSA</span>
-                <span>Ganhe + {Math.floor(total / 10)} pts</span>
+                <span>Ganhe + {Math.floor(total)} pts</span>
               </div>
             </div>
 

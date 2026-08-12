@@ -271,14 +271,41 @@ export function EcommerceHome({
     type: 'website',
   });
 
-  /* Cart count from DB */
+  /* Cart count from DB or guest localStorage */
   useEffect(() => {
-    if (clientId && cartItemCount === 0) {
-      supabase.from('loja_carrinhos').select('quantidade').eq('cliente_id', clientId)
-        .then(({ data }) => {
-          if (data) setLocalCartCount(data.reduce((a, c) => a + (c.quantidade || 1), 0));
-        });
-    }
+    const updateCount = () => {
+      if (cartItemCount > 0) {
+        setLocalCartCount(cartItemCount);
+        return;
+      }
+      if (clientId) {
+        supabase.from('loja_carrinhos').select('quantidade').eq('cliente_id', clientId)
+          .then(({ data }) => {
+            if (data) setLocalCartCount(data.reduce((a, c) => a + (Number(c.quantidade) || 1), 0));
+          });
+      } else {
+        try {
+          const raw = localStorage.getItem('gsa_pending_store_checkout');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const items = Array.isArray(parsed?.items) ? parsed.items : [];
+            setLocalCartCount(items.reduce((a: number, c: any) => a + (Number(c.quantidade) || 1), 0));
+          } else {
+            setLocalCartCount(0);
+          }
+        } catch {
+          setLocalCartCount(0);
+        }
+      }
+    };
+
+    updateCount();
+    window.addEventListener('gsa-cart-updated', updateCount);
+    window.addEventListener('storage', updateCount);
+    return () => {
+      window.removeEventListener('gsa-cart-updated', updateCount);
+      window.removeEventListener('storage', updateCount);
+    };
   }, [clientId, cartItemCount]);
 
   /* Home data fetch */
