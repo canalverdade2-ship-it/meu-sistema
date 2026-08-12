@@ -87,7 +87,7 @@ function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRan
     return () => observer.disconnect();
   }, []);
 
-  // 2. Auto-advance item-by-item when visible & not being touched
+  // 2. Auto-advance item-by-item when visible & not being touched (every 2.0s)
   useEffect(() => {
     if (!isVisible || isInteracting || items.length <= 1) return;
 
@@ -104,12 +104,12 @@ function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRan
       } else {
         el.scrollBy({ left: step, behavior: 'smooth' });
       }
-    }, 3200);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [isVisible, isInteracting, items.length]);
 
-  // Helper to pause auto-scroll during touch / drag and resume after 3.5s
+  // Helper to pause auto-scroll during touch / drag and resume after 2.5s
   const handleInteractionStart = () => {
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     setIsInteracting(true);
@@ -119,7 +119,7 @@ function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRan
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     resumeTimerRef.current = setTimeout(() => {
       setIsInteracting(false);
-    }, 3500);
+    }, 2500);
   };
 
   const scrollBy = (dir: number) => {
