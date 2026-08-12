@@ -457,27 +457,26 @@ export function EcommerceHome({
 
               {/* ── Destaque 1: Eletrônicos & Tecnologia ── */}
               {eletronicos.length > 0 && (
-                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-blue-100/70 p-5">
-                  <div className="mb-5 flex items-end justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-blue-100/70 p-4 sm:p-5">
+                  <div className="mb-4 sm:mb-5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
                         <Laptop size={18} strokeWidth={2} />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Eletrônicos & Tecnologia</h2>
-                          <span className="rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-blue-600">
-                            Tecnologia
-                          </span>
-                        </div>
-                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Os melhores dispositivos, gadgets e acessórios</p>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-sm sm:text-lg font-black text-gray-900 leading-tight truncate sm:whitespace-normal">
+                          Eletrônicos & Tecnologia
+                        </h2>
+                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium truncate">Os melhores dispositivos, gadgets e acessórios</p>
                       </div>
                     </div>
                     <button
                       onClick={() => navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent('Eletrônicos')}`)}
-                      className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline cursor-pointer"
+                      className="shrink-0 flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline cursor-pointer"
                     >
-                      Ver departamento <ChevronRight size={14} />
+                      <span className="hidden sm:inline">Ver departamento</span>
+                      <span className="sm:hidden">Ver mais</span>
+                      <ChevronRight size={14} />
                     </button>
                   </div>
                   <HorizontalShelf items={eletronicos} />
@@ -486,27 +485,26 @@ export function EcommerceHome({
 
               {/* ── Destaque 2: Casa, Mesa & Eletro ── */}
               {casa.length > 0 && (
-                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-amber-100/70 p-5">
-                  <div className="mb-5 flex items-end justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 text-white shadow-sm">
+                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-amber-100/70 p-4 sm:p-5">
+                  <div className="mb-4 sm:mb-5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-600 text-white shadow-sm">
                         <Home size={18} strokeWidth={2} />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Casa, Mesa & Eletro</h2>
-                          <span className="rounded-full bg-amber-50 border border-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700">
-                            Conforto
-                          </span>
-                        </div>
-                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Praticidade e elegância para o seu lar</p>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-sm sm:text-lg font-black text-gray-900 leading-tight truncate sm:whitespace-normal">
+                          Casa, Mesa & Eletro
+                        </h2>
+                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium truncate">Praticidade e elegância para o seu lar</p>
                       </div>
                     </div>
                     <button
                       onClick={() => navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent('Casa')}`)}
-                      className="flex items-center gap-1 text-xs font-bold text-amber-700 hover:underline cursor-pointer"
+                      className="shrink-0 flex items-center gap-1 text-xs font-bold text-amber-700 hover:underline cursor-pointer"
                     >
-                      Ver departamento <ChevronRight size={14} />
+                      <span className="hidden sm:inline">Ver departamento</span>
+                      <span className="sm:hidden">Ver mais</span>
+                      <ChevronRight size={14} />
                     </button>
                   </div>
                   <HorizontalShelf items={casa} />
@@ -515,27 +513,26 @@ export function EcommerceHome({
 
               {/* ── Destaque 3: Moda & Estilo ── */}
               {moda.length > 0 && (
-                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-pink-100/70 p-5">
-                  <div className="mb-5 flex items-end justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-pink-600 text-white shadow-sm">
+                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-pink-100/70 p-4 sm:p-5">
+                  <div className="mb-4 sm:mb-5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white shadow-sm">
                         <Shirt size={18} strokeWidth={2} />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Moda & Estilo</h2>
-                          <span className="rounded-full bg-pink-50 border border-pink-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-pink-600">
-                            Tendências
-                          </span>
-                        </div>
-                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Roupas, calçados e acessórios para todos os estilos</p>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-sm sm:text-lg font-black text-gray-900 leading-tight truncate sm:whitespace-normal">
+                          Moda & Estilo
+                        </h2>
+                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium truncate">Roupas, calçados e acessórios para todos os estilos</p>
                       </div>
                     </div>
                     <button
                       onClick={() => navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent('Moda')}`)}
-                      className="flex items-center gap-1 text-xs font-bold text-pink-600 hover:underline cursor-pointer"
+                      className="shrink-0 flex items-center gap-1 text-xs font-bold text-pink-600 hover:underline cursor-pointer"
                     >
-                      Ver departamento <ChevronRight size={14} />
+                      <span className="hidden sm:inline">Ver departamento</span>
+                      <span className="sm:hidden">Ver mais</span>
+                      <ChevronRight size={14} />
                     </button>
                   </div>
                   <HorizontalShelf items={moda} />
@@ -544,27 +541,26 @@ export function EcommerceHome({
 
               {/* ── Destaque 4: Beleza & Saúde ── */}
               {beleza.length > 0 && (
-                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-purple-100/70 p-5">
-                  <div className="mb-5 flex items-end justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-600 text-white shadow-sm">
+                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-purple-100/70 p-4 sm:p-5">
+                  <div className="mb-4 sm:mb-5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white shadow-sm">
                         <FlaskConical size={18} strokeWidth={2} />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Beleza & Saúde</h2>
-                          <span className="rounded-full bg-purple-50 border border-purple-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-purple-600">
-                            Cuidados Pessoais
-                          </span>
-                        </div>
-                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Cosméticos, skincare e bem-estar</p>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-sm sm:text-lg font-black text-gray-900 leading-tight truncate sm:whitespace-normal">
+                          Beleza & Saúde
+                        </h2>
+                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium truncate">Cosméticos, skincare e bem-estar</p>
                       </div>
                     </div>
                     <button
                       onClick={() => navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent('Beleza')}`)}
-                      className="flex items-center gap-1 text-xs font-bold text-purple-600 hover:underline cursor-pointer"
+                      className="shrink-0 flex items-center gap-1 text-xs font-bold text-purple-600 hover:underline cursor-pointer"
                     >
-                      Ver departamento <ChevronRight size={14} />
+                      <span className="hidden sm:inline">Ver departamento</span>
+                      <span className="sm:hidden">Ver mais</span>
+                      <ChevronRight size={14} />
                     </button>
                   </div>
                   <HorizontalShelf items={beleza} />
