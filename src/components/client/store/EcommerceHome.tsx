@@ -66,29 +66,101 @@ const TRUST_BADGES = [
   { Icon: PhoneCall, title: 'Suporte 24 horas', sub: 'Atendimento especializado', color: '#7c3aed' },
 ];
 
-/* ─── Horizontal Scroll Shelf ─── */
+/* ─── Horizontal Scroll Shelf with Auto-Scroll & Touch Swipe ─── */
 function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRanking?: boolean }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const scrollBy = (dir: number) => ref.current?.scrollBy({ left: dir * 280, behavior: 'smooth' });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isInteracting, setIsInteracting] = useState(false);
+  const resumeTimerRef = useRef<any>(null);
+
+  // 1. Observe when shelf enters the screen
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // 2. Auto-advance item-by-item when visible & not being touched
+  useEffect(() => {
+    if (!isVisible || isInteracting || items.length <= 1) return;
+
+    const interval = setInterval(() => {
+      const el = containerRef.current;
+      if (!el) return;
+
+      const firstChild = el.querySelector<HTMLElement>(':scope > div');
+      const step = firstChild ? firstChild.offsetWidth + 12 : 182; // card width + gap
+      const maxScroll = el.scrollWidth - el.clientWidth;
+
+      if (el.scrollLeft >= maxScroll - 15) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: step, behavior: 'smooth' });
+      }
+    }, 3200);
+
+    return () => clearInterval(interval);
+  }, [isVisible, isInteracting, items.length]);
+
+  // Helper to pause auto-scroll during touch / drag and resume after 3.5s
+  const handleInteractionStart = () => {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    setIsInteracting(true);
+  };
+
+  const handleInteractionEnd = () => {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      setIsInteracting(false);
+    }, 3500);
+  };
+
+  const scrollBy = (dir: number) => {
+    handleInteractionStart();
+    const el = containerRef.current;
+    if (!el) return;
+    const firstChild = el.querySelector<HTMLElement>(':scope > div');
+    const step = firstChild ? (firstChild.offsetWidth + 12) * 2 : 280;
+    el.scrollBy({ left: dir * step, behavior: 'smooth' });
+    handleInteractionEnd();
+  };
 
   if (!items.length) return null;
+
   return (
-    <div className="relative group/shelf">
+    <div
+      className="relative group/shelf"
+      onMouseEnter={handleInteractionStart}
+      onMouseLeave={handleInteractionEnd}
+      onTouchStart={handleInteractionStart}
+      onTouchEnd={handleInteractionEnd}
+    >
       {/* Left arrow */}
       <button
         onClick={() => scrollBy(-1)}
-        className="absolute -left-4 top-1/2 z-10 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 text-gray-600 opacity-0 group-hover/shelf:opacity-100 transition-opacity hover:bg-gray-50 cursor-pointer"
+        className="absolute -left-4 top-1/2 z-10 -translate-y-1/2 hidden sm:flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 text-gray-600 opacity-0 group-hover/shelf:opacity-100 transition-opacity hover:bg-gray-50 cursor-pointer"
         aria-label="Rolar para esquerda"
       >
         <ChevronRight size={18} className="rotate-180" />
       </button>
 
+      {/* Horizontal Carousel Strip */}
       <div
-        ref={ref}
-        className="flex gap-3 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        ref={containerRef}
+        className="flex gap-3 overflow-x-auto scroll-smooth pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
       >
         {items.map((item, idx) => (
-          <div key={item.id} className="relative w-[170px] sm:w-[200px] shrink-0">
+          <div
+            key={item.id}
+            className="relative w-[170px] sm:w-[200px] shrink-0 snap-start"
+          >
             {showRanking && (
               <div className="absolute -left-1.5 -top-1.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-xs font-black text-white shadow-md ring-2 ring-white">
                 {idx + 1}
@@ -107,7 +179,7 @@ function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRan
       {/* Right arrow */}
       <button
         onClick={() => scrollBy(1)}
-        className="absolute -right-4 top-1/2 z-10 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 text-gray-600 opacity-0 group-hover/shelf:opacity-100 transition-opacity hover:bg-gray-50 cursor-pointer"
+        className="absolute -right-4 top-1/2 z-10 -translate-y-1/2 hidden sm:flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-lg border border-gray-200 text-gray-600 opacity-0 group-hover/shelf:opacity-100 transition-opacity hover:bg-gray-50 cursor-pointer"
         aria-label="Rolar para direita"
       >
         <ChevronRight size={18} />
@@ -254,7 +326,7 @@ export function EcommerceHome({
 
 
         {/* ── Trust Bar (Amazon/ML style, below fold) ── */}
-        <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="hidden sm:block bg-white border-b border-gray-200 shadow-sm">
           <div className="mx-auto grid max-w-7xl grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100 px-4">
             {TRUST_BADGES.map(({ Icon, title, sub, color }, i) => (
               <div key={i} className="flex items-center gap-3 px-4 py-4 sm:py-3">
