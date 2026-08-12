@@ -412,62 +412,6 @@ export function EcommerceHome({
                 </section>
               )}
 
-              {/* ── Duplo Banner Intermediário (Magazine Luiza / Shopee style) ── */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {/* Banner 1 — VIP */}
-                <div
-                  onClick={() => navigate(routes.marketplace.store.vip())}
-                  className="group relative overflow-hidden rounded-2xl bg-[#17345f] cursor-pointer transition-all hover:shadow-xl hover:scale-[1.01]"
-                  style={{ minHeight: '160px' }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#17345f] via-[#1e4a8a] to-[#0d2240]" />
-                  <div className="absolute -right-8 -bottom-8 h-44 w-44 rounded-full bg-white/5 blur-2xl" />
-                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-400/10" />
-                  <div className="relative z-10 flex h-full flex-col justify-between p-6">
-                    <div>
-                      <span className="rounded-full bg-amber-400/20 border border-amber-400/30 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-amber-400">
-                        Clube VIP
-                      </span>
-                      <h3 className="mt-3 text-xl font-black text-white leading-tight">
-                        Economize até <span className="text-amber-400">30%</span> em cada compra
-                      </h3>
-                      <p className="mt-1.5 text-xs text-white/70 font-medium leading-relaxed">
-                        Pontos acumulativos e resgate via PIX
-                      </p>
-                    </div>
-                    <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-black text-amber-400 group-hover:gap-2.5 transition-all">
-                      Conhecer o Programa <ArrowRight size={14} />
-                    </span>
-                  </div>
-                </div>
-
-                {/* Banner 2 — Frete Grátis */}
-                <div
-                  onClick={() => navigate(routes.marketplace.store.products())}
-                  className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all hover:shadow-xl hover:scale-[1.01]"
-                  style={{ minHeight: '160px', background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)' }}
-                >
-                  <div className="absolute -left-8 -top-8 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
-                  <div className="absolute right-4 bottom-4 h-20 w-20 rounded-full bg-white/10" />
-                  <div className="relative z-10 flex h-full flex-col justify-between p-6">
-                    <div>
-                      <span className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
-                        Frete Grátis
-                      </span>
-                      <h3 className="mt-3 text-xl font-black text-white leading-tight">
-                        Grátis em compras <span className="text-emerald-300">acima de R$ 99</span>
-                      </h3>
-                      <p className="mt-1.5 text-xs text-white/80 font-medium leading-relaxed">
-                        Entrega expressa para todo o Brasil
-                      </p>
-                    </div>
-                    <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-black text-white group-hover:gap-2.5 transition-all">
-                      Ver produtos elegíveis <ArrowRight size={14} />
-                    </span>
-                  </div>
-                </div>
-              </div>
-
               {/* ── Mais Vendidos ── */}
               {maisVendidos.length > 0 && (
                 <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 p-5">
@@ -568,6 +512,62 @@ export function EcommerceHome({
                 </section>
               )}
 
+
+              {/* ── Banners Promocionais Inferiores (Clube VIP & Frete Grátis) ── */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {/* Banner 1 — VIP */}
+                <div
+                  onClick={() => navigate(routes.marketplace.store.vip())}
+                  className="group relative overflow-hidden rounded-2xl bg-[#17345f] cursor-pointer transition-all hover:shadow-xl hover:scale-[1.01]"
+                  style={{ minHeight: '160px' }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#17345f] via-[#1e4a8a] to-[#0d2240]" />
+                  <div className="absolute -right-8 -bottom-8 h-44 w-44 rounded-full bg-white/5 blur-2xl" />
+                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-400/10" />
+                  <div className="relative z-10 flex h-full flex-col justify-between p-6">
+                    <div>
+                      <span className="rounded-full bg-amber-400/20 border border-amber-400/30 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-amber-400">
+                        Clube VIP
+                      </span>
+                      <h3 className="mt-3 text-xl font-black text-white leading-tight">
+                        Economize até <span className="text-amber-400">30%</span> em cada compra
+                      </h3>
+                      <p className="mt-1.5 text-xs text-white/70 font-medium leading-relaxed">
+                        Pontos acumulativos e resgate via PIX
+                      </p>
+                    </div>
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-black text-amber-400 group-hover:gap-2.5 transition-all">
+                      Conhecer o Programa <ArrowRight size={14} />
+                    </span>
+                  </div>
+                </div>
+
+                {/* Banner 2 — Frete Grátis */}
+                <div
+                  onClick={() => navigate(routes.marketplace.store.products())}
+                  className="group relative overflow-hidden rounded-2xl cursor-pointer transition-all hover:shadow-xl hover:scale-[1.01]"
+                  style={{ minHeight: '160px', background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)' }}
+                >
+                  <div className="absolute -left-8 -top-8 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
+                  <div className="absolute right-4 bottom-4 h-20 w-20 rounded-full bg-white/10" />
+                  <div className="relative z-10 flex h-full flex-col justify-between p-6">
+                    <div>
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
+                        Frete Grátis
+                      </span>
+                      <h3 className="mt-3 text-xl font-black text-white leading-tight">
+                        Grátis em compras <span className="text-emerald-300">acima de R$ 99</span>
+                      </h3>
+                      <p className="mt-1.5 text-xs text-white/80 font-medium leading-relaxed">
+                        Entrega expressa para todo o Brasil
+                      </p>
+                    </div>
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-black text-white group-hover:gap-2.5 transition-all">
+                      Ver produtos elegíveis <ArrowRight size={14} />
+                    </span>
+                  </div>
+                </div>
+              </div>
 
               {/* ── Pagamento & Garantias Footer Strip ── */}
               <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
