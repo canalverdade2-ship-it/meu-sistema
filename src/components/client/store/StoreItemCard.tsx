@@ -22,6 +22,7 @@ import {
   getProductPromotionQuantityInfo,
   hasActiveProductDiscount,
 } from '../../../lib/productPricing';
+import { calculateProductRating } from '../../../lib/productRatings';
 
 type ItemType = 'produto' | 'servico' | 'assinatura';
 
@@ -82,21 +83,24 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
   // Parcelamento em até 10x
   const valorParcela = (currentPrice / 10).toFixed(2).replace('.', ',');
 
+  const ratingSummary = calculateProductRating(item);
+
   const renderStars = () => {
-    const rating = Number(item.avaliacao_media || item.rating || 5.0);
-    const count = Number(item.total_avaliacoes || item.total_vendas || 0);
     return (
       <div className="flex items-center gap-1">
         <div className="flex text-amber-400">
-          <Star className="h-3 w-3 fill-current" />
-          <Star className="h-3 w-3 fill-current" />
-          <Star className="h-3 w-3 fill-current" />
-          <Star className="h-3 w-3 fill-current" />
-          <Star className="h-3 w-3 fill-current" />
+          {[1, 2, 3, 4, 5].map((s) => (
+            <Star
+              key={s}
+              className={`h-3 w-3 ${
+                s <= Math.round(ratingSummary.rating) ? 'fill-current' : 'fill-none text-slate-300'
+              }`}
+            />
+          ))}
         </div>
-        {count > 0 && (
-          <span className="text-[11px] font-bold text-slate-500">{rating.toFixed(1)} ({count})</span>
-        )}
+        <span className="text-[11px] font-bold text-slate-500">
+          {ratingSummary.rating.toFixed(1)} ({ratingSummary.totalCount})
+        </span>
       </div>
     );
   };

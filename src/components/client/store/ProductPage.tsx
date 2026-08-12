@@ -28,6 +28,8 @@ import { routes } from '../../../routing/routeCatalog';
 import { EcommerceHeader } from './EcommerceHeader';
 import { ProductShareModal } from './ProductShareModal';
 import { GroupBuyModal } from './GroupBuyModal';
+import { ProductReviews } from './ProductReviews';
+import { calculateProductRating } from '../../../lib/productRatings';
 import { getProductEffectivePrice, getProductDiscountPercentage, hasActiveProductDiscount } from '../../../lib/productPricing';
 import { useSEO } from '../../../hooks/useSEO';
 import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
@@ -51,6 +53,11 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
+  // Estados de Avaliações Reais e Presença em Tempo Real
+  const [displayRating, setDisplayRating] = useState(4.9);
+  const [displayRatingCount, setDisplayRatingCount] = useState(0);
+  const [realViewersCount, setRealViewersCount] = useState(1);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -62,14 +69,12 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
 
       setLoading(true);
       try {
-        // 1. Tenta buscar produto com relação da categoria da loja
         let { data, error } = await supabase
           .from('produtos')
           .select('*, loja_categoria:loja_categorias(id, nome)')
           .eq('id', productId)
           .maybeSingle();
 
-        // 2. Fallback de busca simples caso a relação acima falhe
         if (!data || error) {
           const fallbackRes = await supabase
             .from('produtos')
@@ -82,8 +87,10 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
         if (isMounted) {
           if (data) {
             setProduct(data);
+            const initialSummary = calculateProductRating(data);
+            setDisplayRating(initialSummary.rating);
+            setDisplayRatingCount(initialSummary.totalCount);
 
-            // Buscar produtos relacionados da mesma categoria ou gerais
             try {
               let relatedQuery = supabase
                 .from('produtos')
@@ -100,7 +107,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               if (relatedData && relatedData.length > 0) {
                 setRelatedProducts(relatedData);
               } else {
-                // Se não houver da mesma categoria, busca produtos ativos gerais
                 const { data: generalData } = await supabase
                   .from('produtos')
                   .select('id, nome, valor, valor_promocional, desconto_ativo, desconto_percentual, imagem_url, status')
@@ -139,7 +145,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
     type: 'product'
   });
 
-  // Atualizar contador do carrinho (para visitante e autenticado)
   const fetchCart = async () => {
     if (!clientId) {
       try {
@@ -180,15 +185,34 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
     };
   }, [clientId]);
 
-  // Seed aleatória estável baseada no ID para prova social
-  const viewersCount = useMemo(() => {
-    let hash = 0;
-    const str = productId || 'default';
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return Math.abs(hash % 45) + 14; // Entre 14 e 58 pessoas
-  }, [productId]);
+  // Presença em Tempo Real de Visitantes na Página (100% Real via Supabase Realtime Presence)
+  useEffect(() => {
+    if (!productId) return;
+    const presenceKey = clientId || `visitor_${Math.random().toString(36).slice(2, 9)}`;
+    const channel = supabase.channel(`presence:product:${productId}`, {
+      config: { presence: { key: presenceKey } }
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const count = Object.keys(state).length;
+        setRealViewersCount(Math.max(1, count));
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            online_at: new Date().toISOString(),
+            user: clientId ? 'client' : 'visitor'
+          });
+        }
+      });
+
+    return () => {
+      channel.untrack();
+      supabase.removeChannel(channel);
+    };
+  }, [productId, clientId]);
 
   if (loading) {
     return (
@@ -244,7 +268,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
     );
   }
 
-  // Lista de imagens válidas
   const images = [
     product.imagem_url,
     product.imagem_url_2,
@@ -257,19 +280,18 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
   const hasDiscount = hasActiveProductDiscount(product);
   const currentPrice = hasDiscount ? getProductEffectivePrice(product) : Number(product.valor || 0);
   const regularPrice = Number(product.valor || 0);
+  const discountPct = hasDiscount ? getProductDiscountPercentage(product) : 0;
   const pontosGanhos = Math.floor(currentPrice);
   const categoryName = product.loja_categoria?.nome || product.categorias?.nome || product.categoria_nome || product.categoria || 'Produtos GSA';
 
   const installmentValue = currentPrice > 0 ? (currentPrice / 12).toFixed(2).replace('.', ',') : '0,00';
   const pixDiscountPrice = currentPrice > 0 ? (currentPrice * 0.95).toFixed(2).replace('.', ',') : '0,00';
 
-  // Adicionar ao carrinho (não exige login imediatamente; login só será solicitado no checkout)
   const handleAddToCart = async (openCartAfter = false) => {
     try {
       setIsAddingToCart(true);
 
       if (!clientId) {
-        // Fluxo de visitante: persistir no localStorage
         const PENDING_STORE_CHECKOUT_KEY = 'gsa_pending_store_checkout';
         const rawCart = localStorage.getItem(PENDING_STORE_CHECKOUT_KEY);
         let parsed = rawCart ? JSON.parse(rawCart) : { items: [] };
@@ -291,7 +313,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
         parsed.updatedAt = new Date().toISOString();
         localStorage.setItem(PENDING_STORE_CHECKOUT_KEY, JSON.stringify(parsed));
 
-        // Notificar componentes e cabeçalho sobre a alteração
         window.dispatchEvent(new CustomEvent('gsa-cart-updated'));
         window.dispatchEvent(new Event('storage'));
 
@@ -304,7 +325,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
         return;
       }
 
-      // Fluxo autenticado: salvar no Supabase
       const { data: existing } = await supabase
         .from('loja_carrinhos')
         .select('id, quantidade')
@@ -340,16 +360,15 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
     }
   };
 
-  // Pedido direto pelo WhatsApp
   const handleWhatsAppOrder = () => {
     const message = encodeURIComponent(
       `Olá! Tenho interesse em comprar o produto:\n\n*${product.nome}*\nPreço: ${formatCurrency(currentPrice)}\nQuantidade: ${quantity}\n\nLink: ${window.location.href}`
     );
-    window.open(`https://api.whatsapp.com/send?phone=5511999999999&text=${message}`, '_blank');
+    window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pb-16">
+    <div className="flex min-h-screen flex-col bg-[#f8f9fa] text-neutral-900 selection:bg-[#17345f] selection:text-white">
       <EcommerceHeader 
         clientId={clientId}
         cartItemCount={cartCount}
@@ -359,7 +378,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         
-        {/* Breadcrumb Navegação */}
         <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-2 text-xs font-medium text-neutral-500">
           <button 
             type="button" 
@@ -382,12 +400,9 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
           <span className="text-neutral-900 font-bold truncate max-w-[200px] sm:max-w-xs">{product.nome}</span>
         </nav>
 
-        {/* Card Principal do Produto */}
         <div className="grid grid-cols-1 gap-10 rounded-3xl bg-white p-6 shadow-sm border border-neutral-100 lg:grid-cols-12 lg:p-10">
           
-          {/* Coluna Esquerda: Galeria de Imagens (5 colunas) */}
           <div className="flex flex-col-reverse gap-4 md:flex-row lg:col-span-6">
-            {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2 md:flex-col md:overflow-visible md:pb-0">
                 {images.map((img, idx) => (
@@ -407,7 +422,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               </div>
             )}
             
-            {/* Imagem Principal */}
             <div className="group relative aspect-square flex-1 overflow-hidden rounded-3xl bg-[#fdfdfd] p-6 shadow-inner border border-neutral-100 flex items-center justify-center">
               {currentImage ? (
                 <img 
@@ -422,7 +436,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                 </div>
               )}
 
-              {/* Botão de Favoritar */}
               <button 
                 type="button"
                 onClick={() => {
@@ -435,7 +448,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                 <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
               </button>
 
-              {/* Tag de Desconto */}
               {hasDiscount && discountPct > 0 && (
                 <span className="absolute left-4 top-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 px-3.5 py-1.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-red-500/20">
                   {discountPct}% OFF
@@ -444,10 +456,8 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
             </div>
           </div>
 
-          {/* Coluna Direita: Informações & Compra (7 colunas) */}
           <div className="flex flex-col lg:col-span-6">
             
-            {/* Categoria Badge */}
             <div className="flex items-center gap-2">
               <span className="rounded-lg bg-neutral-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#17345f]">
                 {categoryName}
@@ -457,32 +467,36 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               </span>
             </div>
 
-            {/* Título do Produto */}
             <h1 className="mt-3 text-2xl font-black leading-snug text-neutral-900 sm:text-3xl lg:text-4xl">
               {product.nome}
             </h1>
             
-            {/* Avaliações & Prova Social */}
             <div className="mt-3 flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-1 text-amber-400">
-                <Star className="h-4 w-4 fill-amber-400" />
-                <Star className="h-4 w-4 fill-amber-400" />
-                <Star className="h-4 w-4 fill-amber-400" />
-                <Star className="h-4 w-4 fill-amber-400" />
-                <Star className="h-4 w-4 fill-amber-400" />
-                <span className="ml-1.5 text-xs font-bold text-neutral-700">4.9</span>
-                <span className="text-xs text-neutral-400 font-medium">(48 avaliações)</span>
+              <div 
+                className="flex items-center gap-1 text-amber-400 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => {
+                  document.getElementById('reviews-section-title')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                title="Ver avaliações deste produto"
+              >
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star 
+                    key={s} 
+                    className={`h-4 w-4 ${s <= Math.round(displayRating) ? 'fill-amber-400 text-amber-400' : 'fill-neutral-200 text-neutral-200'}`} 
+                  />
+                ))}
+                <span className="ml-1.5 text-xs font-bold text-neutral-700">{displayRating.toFixed(1)}</span>
+                <span className="text-xs text-neutral-400 font-medium">({displayRatingCount} {displayRatingCount === 1 ? 'avaliação' : 'avaliações'})</span>
               </div>
               
               <div className="h-3.5 w-px bg-neutral-200" />
 
               <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600 border border-rose-100">
                 <Eye className="h-3.5 w-3.5 animate-pulse" />
-                <span>{viewersCount} pessoas de olho agora</span>
+                <span>{realViewersCount} {realViewersCount === 1 ? 'pessoa de olho agora' : 'pessoas de olho agora'}</span>
               </div>
             </div>
 
-            {/* Bloco de Preço & Condições */}
             <div className="mt-6 rounded-2xl bg-neutral-50/80 p-5 border border-neutral-100">
               {hasDiscount && regularPrice > currentPrice && (
                 <div className="flex items-center gap-2">
@@ -499,39 +513,34 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                 <span className="text-3xl font-black text-[#17345f] sm:text-4xl">
                   {formatCurrency(currentPrice)}
                 </span>
-                <span className="text-xs font-bold text-neutral-500 uppercase">no cartão</span>
+                <span className="text-xs font-bold text-neutral-400 uppercase">no cartão</span>
               </div>
 
-              {/* Preço com Desconto no PIX */}
-              <div className="mt-2 flex items-center gap-2 text-sm font-bold text-emerald-700">
+              <div className="mt-2 flex items-center gap-2 text-xs font-extrabold text-emerald-700">
                 <QrCode className="h-4 w-4" />
                 <span>R$ {pixDiscountPrice} via PIX à vista (5% de desconto)</span>
               </div>
 
-              {/* Parcelamento */}
-              <div className="mt-1 flex items-center gap-2 text-xs font-medium text-neutral-600">
-                <CreditCard className="h-3.5 w-3.5 text-neutral-400" />
-                <span>ou até <strong>12x de R$ {installmentValue}</strong> sem juros</span>
+              <div className="mt-1.5 flex items-center gap-2 text-xs font-semibold text-neutral-600">
+                <CreditCard className="h-4 w-4 text-neutral-400" />
+                <span>ou até 12x de R$ {installmentValue} sem juros</span>
               </div>
               
-              {/* Pontos de Fidelidade */}
-              <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-800 border border-amber-500/20">
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-50 p-2.5 text-xs font-bold text-amber-800 border border-amber-200/60">
                 <Sparkles className="h-4 w-4 text-amber-600" />
-                <span>Ganhe <strong>+{pontosGanhos} pontos GSA Fidelidade</strong> nesta compra</span>
+                <span>Ganhe +{pontosGanhos} pontos GSA Fidelidade nesta compra</span>
               </div>
             </div>
 
-            {/* Quantidade e Ações */}
             <div className="mt-6 space-y-4">
-              
-              {/* Seletor de Quantidade */}
               <div className="flex items-center gap-4">
-                <span className="text-sm font-bold text-neutral-700">Quantidade:</span>
-                <div className="flex items-center rounded-xl border border-neutral-200 bg-white shadow-sm">
+                <span className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Quantidade:</span>
+                <div className="flex items-center rounded-xl border border-neutral-300 bg-white">
                   <button 
                     type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 rounded-l-xl transition-colors cursor-pointer"
+                    disabled={quantity <= 1}
+                    className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-30 rounded-l-xl transition-colors cursor-pointer"
                     aria-label="Diminuir quantidade"
                   >
                     <Minus className="h-4 w-4" />
@@ -548,7 +557,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                 </div>
               </div>
 
-              {/* Botões de Ação Principal */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button 
                   type="button"
@@ -571,7 +579,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                 </button>
               </div>
 
-              {/* Botões Secundários: WhatsApp & Compartilhar */}
               <div className="flex flex-wrap gap-2.5">
                 <button 
                   type="button"
@@ -593,7 +600,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               </div>
             </div>
 
-            {/* Vaquinha de Presente (Compra em Grupo) */}
             <div className="mt-6">
               <button 
                 type="button"
@@ -613,7 +619,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               </button>
             </div>
 
-            {/* Selos de Confiança & Garantia */}
             <div className="mt-8 grid grid-cols-3 gap-3 rounded-2xl bg-neutral-50 p-4 border border-neutral-100 text-center">
               <div className="flex flex-col items-center gap-1">
                 <ShieldCheck className="h-5 w-5 text-[#17345f]" />
@@ -635,7 +640,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
           </div>
         </div>
         
-        {/* Bloco de Descrição Detalhada */}
         <div className="mt-12 rounded-3xl bg-white p-8 shadow-sm border border-neutral-100 lg:p-12">
           <h3 className="text-2xl font-black text-[#17345f] border-b border-neutral-100 pb-4">
             Descrição do Produto
@@ -656,7 +660,16 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
           </div>
         </div>
 
-        {/* Bloco de Produtos Relacionados */}
+        <ProductReviews
+          productId={productId}
+          product={product}
+          clientId={clientId}
+          onRatingCalculated={(newRating, newTotal) => {
+            setDisplayRating(newRating);
+            setDisplayRatingCount(newTotal);
+          }}
+        />
+
         {relatedProducts.length > 0 && (
           <div className="mt-14">
             <div className="mb-6 flex items-center justify-between">
