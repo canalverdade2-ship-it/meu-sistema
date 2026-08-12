@@ -106,7 +106,11 @@ function supabasePost(path, body, callback) {
     res.on('data', chunk => { data += chunk; });
     res.on('end', () => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        callback(null, JSON.parse(data || '[]'));
+        try {
+          callback(null, JSON.parse(data || '[]'));
+        } catch (e) {
+          callback(null, []);
+        }
       } else {
         console.error('❌ Erro POST Supabase:', data);
         callback(new Error(data), null);
@@ -138,7 +142,11 @@ function supabasePatch(path, body, callback) {
     res.on('data', chunk => { data += chunk; });
     res.on('end', () => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        callback(null, JSON.parse(data || '[]'));
+        try {
+          callback(null, JSON.parse(data || '[]'));
+        } catch (e) {
+          callback(null, []);
+        }
       } else {
         console.error('❌ Erro PATCH Supabase:', data);
         callback(new Error(data), null);
@@ -636,7 +644,7 @@ function sendWhatsAppMedia(to, mediaUrl, fileName, caption, mediaType = 'documen
   });
 
   const options = {
-    hostname: 'evolution-api',
+    hostname: '127.0.0.1',
     port: 8080,
     path: '/message/sendMedia/GSA_WhatsApp',
     method: 'POST',
@@ -980,6 +988,7 @@ function processMessage(fromPhone, textBody, messageType) {
           const saldoPts = pData.saldo_pontos || pData.pontos_fidelidade || pData.pontos_acumulados || 0;
           const nivel = pData.nivel_manual_info || (pData.is_vip ? 'VIP' : 'Padrão GSA');
 
+          session.client = pData;
           session.clientData = pData;
           session.state = 'LOYALTY_ACTIONS';
           userSessions[fromPhone] = session;
@@ -1793,7 +1802,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: CLIENT_DOC ──────────────────────────────────────────────────────
   if (session.state === 'CLIENT_DOC') {
-    const docClean = text.replace(/\\D/g, '');
+    const docClean = text.replace(/\D/g, '');
     if (docClean.length < 11) {
       sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Por favor, digite apenas os números.');
       return;
@@ -2641,7 +2650,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: TRAVEL_DOC ─────────────────────────────────────────────────────
   if (session.state === 'TRAVEL_DOC') {
-    const docClean = text.replace(/\\D/g, '');
+    const docClean = text.replace(/\D/g, '');
     if (docClean.length < 11) {
       sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Digite apenas os números (mínimo 11 dígitos).');
       return;
@@ -2745,7 +2754,7 @@ function processMessage(fromPhone, textBody, messageType) {
   }
 
   if (session.state === 'INSURANCE_DOC') {
-    const docClean = text.replace(/\\D/g, '');
+    const docClean = text.replace(/\D/g, '');
     if (docClean.length < 11) {
       sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Digite apenas os números.');
       return;
@@ -2857,7 +2866,7 @@ function processMessage(fromPhone, textBody, messageType) {
     }
     if (messageType === 'imageMessage') {
       // In a real scenario, you would upload the photo or save the media ID.
-      supabasePost('/rest/v1/classificados', {
+      supabasePost('/rest/v1/classificados_anuncios', {
         titulo: session.pubTitle,
         preco: session.pubPrice,
         status: 'pendente_aprovacao',
@@ -2877,7 +2886,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: CLASSIFIED_DOC ─────────────────────────────────────────────────
   if (session.state === 'CLASSIFIED_DOC') {
-    const docClean = text.replace(/\\D/g, '');
+    const docClean = text.replace(/\D/g, '');
     if (docClean.length < 11) {
       sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Digite apenas os números.');
       return;
@@ -2885,20 +2894,20 @@ function processMessage(fromPhone, textBody, messageType) {
     sendWhatsAppReply(fromPhone, '🔄 Registrando sua proposta...');
     fetchClientByDoc(docClean, (err, client) => {
       const clientId = client ? client.id : null;
-      const ad = session.selectedAd;
+      const ad = session.selectedAd || {};
       
       const description = [
         'Solicitação de proposta moderada pelos Classificados GSA (Via WhatsApp).',
         '',
-        `Anúncio: ${ad.titulo}`,
-        `Código do anúncio: ${ad.id}`,
-        `Valor anunciado: R$ ${ad.preco?.toFixed(2)}`,
+        `Anúncio: ${ad.titulo || 'N/A'}`,
+        `Código do anúncio: ${ad.id || 'N/A'}`,
+        `Valor anunciado: R$ ${ad.preco?.toFixed(2) || '0.00'}`,
         '',
         'Mensagem do comprador:',
-        session.classifiedProposal,
+        session.classifiedProposal || session.classifiedMsg || 'Proposta de compra enviada via WhatsApp.',
         '',
         'A negociação deve permanecer dentro dos canais da GSA até a liberação administrativa.'
-      ].join('\\n');
+      ].join('\n');
       
       const ticketData = {
         cliente_id: clientId,
@@ -2917,41 +2926,6 @@ function processMessage(fromPhone, textBody, messageType) {
           userSessions[fromPhone] = session;
           sendWhatsAppReply(fromPhone, `✅ *Proposta Enviada com Sucesso!*\n\n📋 *Anúncio:* ${ad.titulo}\n🛡️ A moderação da GSA analisará sua proposta e o colocará em contato direto com o vendedor pelo sistema seguro.\n\n🌟 *Como você avalia nosso atendimento automático neste momento? (Digite de 1 a 5)*`);
         }
-      });
-    });
-    return;
-  }
-
-  // ── ESTADO: AFFILIATE_DOC ───────────────────────────────────────────────────
-  if (session.state === 'AFFILIATE_DOC') {
-    const docClean = text.replace(/\\D/g, '');
-    if (docClean.length < 11) {
-      sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Digite apenas os números.');
-      return;
-    }
-    sendWhatsAppReply(fromPhone, '🔄 Buscando seu perfil de afiliado...');
-    fetchClientByDoc(docClean, (err, client) => {
-      if (!client) {
-        session.state = 'MAIN_MENU';
-        userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, '❌ Nenhum cadastro de cliente encontrado para este documento. Utilize a opção 2 no menu principal para criar seu cadastro.\n\n_Digite 0 para voltar._');
-        return;
-      }
-      
-      supabaseGet(`/rest/v1/gsa_afiliados?cliente_id=eq.${client.id}&select=*`, (errA, resA) => {
-        session.state = 'MAIN_MENU';
-        userSessions[fromPhone] = session;
-        
-        if (errA || !resA || resA.length === 0) {
-          sendWhatsAppReply(fromPhone, '🤝 *Portal do Afiliado GSA HUB*\n\nVocê ainda não ativou seu perfil de Afiliado!\n\nAcesse nosso painel web, vá em "Minha Conta -> Fidelidade -> Afiliados" e ative agora mesmo para começar a ganhar comissões por indicações.\n\n🌐 https://gsahub.pages.dev/\n\n_Digite 0 para voltar ao menu principal._');
-          return;
-        }
-        
-        const afiliado = resA[0];
-        const status = afiliado.status === 'ativo' ? '✅ Ativo' : '⚠️ ' + afiliado.status.toUpperCase();
-        const link = `https://gsahub.pages.dev/?ref=${afiliado.codigo_publico}`;
-        
-        sendWhatsAppReply(fromPhone, `🤝 *Seu Painel de Afiliado*\n\n👤 *Nome:* ${afiliado.nome_divulgacao}\n📊 *Status:* ${status}\n\n🔗 *Seu Link Padrão de Indicação:*\n${link}\n\nCopie e envie esse link para seus contatos! Qualquer compra ou contratação feita por ele gerará comissões para você.\n\nPara ver saldos e solicitar saques, acesse o painel web.\n\n_Digite 0 para voltar ao menu principal._`);
       });
     });
     return;
