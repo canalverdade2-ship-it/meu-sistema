@@ -315,11 +315,12 @@ export function MarketplaceGSAStore({
   if (currentSubmodule?.startsWith('loja')) {
     const tabMapped = currentSubmodule.replace('loja-', '');
     
-    // Se for rota de um produto específico, renderiza a nova ProductPage
-    if (currentSubmodule === 'loja-produtos' && route.itemId) {
+    // Se for rota de um produto específico, renderiza a ProductPage
+    const targetProductId = route.itemId || initialItemId || currentItemId;
+    if (['loja-produtos', 'loja-produto'].includes(currentSubmodule) && targetProductId) {
       return (
         <ProductPage 
-          productId={route.itemId} 
+          productId={targetProductId} 
           clientId={clientId} 
           onRequireAuth={onRequireAuth} 
         />
