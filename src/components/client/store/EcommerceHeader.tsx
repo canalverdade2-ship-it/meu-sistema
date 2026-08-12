@@ -107,43 +107,44 @@ export function EcommerceHeader({
 
   // Debounce para busca inteligente
   useEffect(() => {
-    const handler = setTimeout(async () => {
-      if (searchQuery.length > 2) {
-        setIsSearching(true);
+    const trimmed = searchQuery.trim();
+    if (trimmed.length >= 2) {
+      setIsSearching(true);
+      const handler = setTimeout(async () => {
         try {
           const { data, error } = await supabase
             .from('produtos')
-            .select('id, nome, valor, imagem_url, categoria_id, categorias(nome)')
+            .select('id, nome, valor, valor_promocional, imagem_url, categoria_id, loja_categoria:loja_categorias(id, nome)')
             .eq('status', 'ativo')
             .eq('visivel_na_loja', true)
-            .ilike('nome', `%${searchQuery}%`)
-            .limit(5);
+            .ilike('nome', `%${trimmed}%`)
+            .limit(6);
             
           if (data && !error) {
             setSuggestions(data);
             setShowSuggestions(true);
+          } else {
+            setSuggestions([]);
           }
         } catch (err) {
           console.error('Erro na busca inteligente:', err);
+          setSuggestions([]);
         } finally {
           setIsSearching(false);
         }
-      } else {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-      
-      if (onSearch) {
-        onSearch(searchQuery);
-      }
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [searchQuery, onSearch]);
+      }, 250);
+      return () => clearTimeout(handler);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsSearching(false);
+    }
+  }, [searchQuery]);
 
-  // Fecha sugestões ao clicar fora (simplificado)
+  // Fecha sugestões ao clicar fora
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (!(e.target as Element).closest('.search-container')) {
+      if (!(e.target as Element).closest('.search-container') && !(e.target as Element).closest('.mobile-search-container')) {
         setShowSuggestions(false);
       }
       if (!(e.target as Element).closest('.notifications-container')) {
@@ -154,10 +155,17 @@ export function EcommerceHeader({
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = searchQuery.trim();
+    setShowSuggestions(false);
     if (onSearch) {
-      onSearch(searchQuery);
+      onSearch(query);
+    }
+    if (query) {
+      navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent(query)}`);
+    } else {
+      navigate(routes.marketplace.store.products());
     }
   };
 
@@ -233,66 +241,119 @@ export function EcommerceHeader({
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  if (e.target.value.length <= 2) setShowSuggestions(false);
+                  if (e.target.value.trim().length <= 1) setShowSuggestions(false);
                 }}
                 onFocus={() => {
                   if (suggestions.length > 0) setShowSuggestions(true);
                 }}
                 placeholder="Buscar produtos, marcas, categorias e serviços..."
-                className="w-full rounded-full border-0 bg-white py-2.5 pl-5 pr-14 text-sm font-semibold text-slate-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#d8bd73]"
+                className="w-full rounded-full border-0 bg-white py-2.5 pl-5 pr-20 text-sm font-semibold text-slate-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#d8bd73]"
               />
+              {searchQuery.trim() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSuggestions([]);
+                    setShowSuggestions(false);
+                  }}
+                  className="absolute right-14 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  title="Limpar"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
               <button
                 type="submit"
-                className="absolute right-1 top-1/2 -translate-y-1/2 flex h-9 w-12 items-center justify-center rounded-full bg-[#17345f] text-white transition-colors hover:bg-[#0f2342]"
+                className="absolute right-1 top-1/2 -translate-y-1/2 flex h-9 w-12 items-center justify-center rounded-full bg-[#17345f] text-white transition-colors hover:bg-[#0f2342] cursor-pointer"
                 title="Pesquisar"
               >
                 {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               </button>
               
               {/* Dropdown de Sugestões Inteligentes */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute left-0 top-full mt-2 w-full overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 z-50">
-                  <ul className="max-h-96 overflow-y-auto py-2 divide-y divide-slate-100">
-                    {suggestions.map((item) => (
-                      <li key={item.id}>
-                        <button
-                          onClick={() => {
-                            setShowSuggestions(false);
-                            setSearchQuery('');
-                            navigate(routes.marketplace.store.product(item.id));
-                          }}
-                          className="flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-slate-50"
-                        >
-                          <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200">
-                            {item.imagem_url ? (
-                              <img src={item.imagem_url} alt={item.nome} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-slate-400">
-                                <Search className="h-4 w-4" />
+              {showSuggestions && (
+                <div className="absolute left-0 top-full mt-2 w-full overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                  {suggestions.length > 0 ? (
+                    <>
+                      <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                          Sugestões de Produtos
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {suggestions.length} encontrados
+                        </span>
+                      </div>
+                      <ul className="max-h-96 overflow-y-auto divide-y divide-slate-100">
+                        {suggestions.map((item) => (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowSuggestions(false);
+                                setSearchQuery('');
+                                navigate(routes.marketplace.store.product(item.id));
+                              }}
+                              className="flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-blue-50/50 cursor-pointer"
+                            >
+                              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200">
+                                {item.imagem_url ? (
+                                  <img src={item.imagem_url} alt={item.nome} className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                    <Search className="h-4 w-4" />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="truncate text-sm font-extrabold text-slate-900">{item.nome}</p>
-                            <p className="truncate text-xs font-medium text-slate-400">
-                              {item.categorias?.nome || 'Produto GSA'}
-                            </p>
-                          </div>
-                          <div className="shrink-0 text-right">
-                            <p className="text-sm font-black text-[#17345f]">{formatCurrency(item.valor)}</p>
-                          </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="truncate text-sm font-bold text-slate-900">{item.nome}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[11px] font-medium text-slate-500">
+                                    {item.loja_categoria?.nome || 'GSA Store'}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded">
+                                    Frete Grátis
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="shrink-0 text-right">
+                                {item.valor_promocional && item.valor_promocional < item.valor ? (
+                                  <div>
+                                    <p className="text-xs text-slate-400 line-through">{formatCurrency(item.valor)}</p>
+                                    <p className="text-sm font-black text-emerald-600">{formatCurrency(item.valor_promocional)}</p>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm font-black text-[#17345f]">{formatCurrency(item.valor)}</p>
+                                )}
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="border-t border-slate-100 bg-slate-50 px-4 py-2.5">
+                        <button 
+                          type="button"
+                          onClick={() => handleSearchSubmit()}
+                          className="w-full text-center text-xs font-black text-[#17345f] hover:text-[#0f2342] py-1 cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          Ver todos os resultados para "{searchQuery}" <Search size={12} />
                         </button>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="border-t border-slate-100 bg-slate-50 px-4 py-3">
-                    <button 
-                      onClick={handleSearchSubmit}
-                      className="w-full text-center text-xs font-bold text-[#17345f] hover:text-[#0f2342]"
-                    >
-                      Ver todos os resultados da busca
-                    </button>
-                  </div>
+                      </div>
+                    </>
+                  ) : (
+                    !isSearching && (
+                      <div className="p-4 text-center">
+                        <p className="text-xs font-semibold text-slate-600">Nenhum produto encontrado para "{searchQuery}"</p>
+                        <button
+                          type="button"
+                          onClick={() => handleSearchSubmit()}
+                          className="mt-2 text-xs font-bold text-[#17345f] hover:underline cursor-pointer"
+                        >
+                          Buscar no catálogo completo →
+                        </button>
+                      </div>
+                    )
+                  )}
                 </div>
               )}
             </form>
@@ -403,21 +464,112 @@ export function EcommerceHeader({
         </div>
 
         {/* Campo de Busca (Mobile) */}
-        <div className="bg-[#0f2342] px-4 py-2.5 lg:hidden border-t border-white/5">
+        <div className="bg-[#0f2342] px-4 py-2.5 lg:hidden border-t border-white/5 relative mobile-search-container" onClick={(e) => e.stopPropagation()}>
           <form onSubmit={handleSearchSubmit} className="relative w-full">
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (e.target.value.trim().length <= 1) setShowSuggestions(false);
+              }}
+              onFocus={() => {
+                if (suggestions.length > 0) setShowSuggestions(true);
+              }}
               placeholder="Buscar produtos, categorias..."
-              className="w-full rounded-full border-0 bg-white py-2 pl-4 pr-10 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#d8bd73]"
+              className="w-full rounded-full border-0 bg-white py-2 pl-4 pr-16 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#d8bd73]"
             />
+            {searchQuery.trim() && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSuggestions([]);
+                  setShowSuggestions(false);
+                }}
+                className="absolute right-9 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:text-slate-600"
+                title="Limpar"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
             <button
               type="submit"
-              className="absolute right-0 top-0 flex h-full items-center justify-center px-3 text-slate-500"
+              className="absolute right-0 top-0 flex h-full items-center justify-center px-3 text-slate-700 hover:text-[#17345f]"
+              title="Pesquisar"
             >
-              <Search className="h-4 w-4" />
+              {isSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[#17345f]" /> : <Search className="h-4 w-4" />}
             </button>
+
+            {/* Dropdown de Sugestões Inteligentes (Mobile) */}
+            {showSuggestions && (
+              <div className="absolute left-0 top-full mt-1.5 w-full overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/10 z-50">
+                {suggestions.length > 0 ? (
+                  <>
+                    <ul className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                      {suggestions.map((item) => (
+                        <li key={item.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowSuggestions(false);
+                              setSearchQuery('');
+                              navigate(routes.marketplace.store.product(item.id));
+                            }}
+                            className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-slate-50"
+                          >
+                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200">
+                              {item.imagem_url ? (
+                                <img src={item.imagem_url} alt={item.nome} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                  <Search className="h-3.5 w-3.5" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate text-xs font-bold text-slate-900">{item.nome}</p>
+                              <p className="truncate text-[10px] text-slate-400">
+                                {item.loja_categoria?.nome || 'GSA Store'}
+                              </p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              {item.valor_promocional && item.valor_promocional < item.valor ? (
+                                <p className="text-xs font-black text-emerald-600">{formatCurrency(item.valor_promocional)}</p>
+                              ) : (
+                                <p className="text-xs font-black text-[#17345f]">{formatCurrency(item.valor)}</p>
+                              )}
+                            </div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="border-t border-slate-100 bg-slate-50 p-2">
+                      <button 
+                        type="button"
+                        onClick={() => handleSearchSubmit()}
+                        className="w-full text-center text-[11px] font-bold text-[#17345f] py-1"
+                      >
+                        Ver todos os resultados →
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  !isSearching && (
+                    <div className="p-3 text-center">
+                      <p className="text-[11px] text-slate-600">Nenhum produto encontrado</p>
+                      <button
+                        type="button"
+                        onClick={() => handleSearchSubmit()}
+                        className="mt-1 text-[11px] font-bold text-[#17345f] hover:underline"
+                      >
+                        Buscar no catálogo completo →
+                      </button>
+                    </div>
+                  )
+                )}
+              </div>
+            )}
           </form>
         </div>
 
