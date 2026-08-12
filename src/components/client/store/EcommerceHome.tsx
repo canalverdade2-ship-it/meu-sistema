@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { EcommerceHeader } from './EcommerceHeader';
-import { HeroBannerCarousel } from './HeroBannerCarousel';
+
 import StoreItemCard from './StoreItemCard';
 import { TermosDeUsoDialog } from '../../public/TermosDeUsoDialog';
 import { PrivacyPolicyDialog } from '../../public/PrivacyPolicyDialog';
@@ -252,8 +252,6 @@ export function EcommerceHome({
 
       <main>
 
-        {/* ── Hero Carousel ── */}
-        <HeroBannerCarousel />
 
         {/* ── Trust Bar (Amazon/ML style, below fold) ── */}
         <div className="bg-white border-b border-gray-200 shadow-sm">
