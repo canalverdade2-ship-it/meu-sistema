@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ShoppingCart, User, Menu, X, ChevronDown, Bell, LogIn, Diamond, Loader2 } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, Bell, LogIn, Diamond, Loader2, Zap, TrendingUp, Sparkles, Plane, Car, HeartPulse, Shield, Gem, LayoutGrid, MapPin } from 'lucide-react';
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
 import { useAppLocation } from '../../../routing/useAppLocation';
@@ -162,15 +162,15 @@ export function EcommerceHeader({
   };
 
   const departments = [
-    { label: 'Todas as Categorias', action: () => navigate(routes.marketplace.store.products()), isPrimary: true },
-    { label: '⚡ Ofertas do Dia', action: () => navigate(routes.marketplace.store.products() + '?filtro=ofertas') },
-    { label: '🔥 Mais Vendidos', action: () => navigate(routes.marketplace.store.products() + '?filtro=mais-vendidos') },
-    { label: '✨ Lançamentos', action: () => navigate(routes.marketplace.store.products() + '?filtro=novidades') },
-    { label: '✈️ Viagens', action: () => navigate(routes.marketplace.travelPackages.root()) },
-    { label: '🚗 Classificados', action: () => navigate(routes.marketplace.classifieds.root()) },
-    { label: '🩺 Saúde', action: () => navigate(routes.marketplace.saude.root()) },
-    { label: '🛡️ Seguros', action: () => navigate(routes.marketplace.seguros.root()) },
-    { label: '💎 Clube VIP', action: () => navigate(routes.marketplace.store.vip()) },
+    { label: 'Categorias', Icon: LayoutGrid, action: () => navigate(routes.marketplace.store.products()), isPrimary: true },
+    { label: 'Ofertas do Dia', Icon: Zap, action: () => navigate(routes.marketplace.store.products() + '?filtro=ofertas'), highlight: true },
+    { label: 'Mais Vendidos', Icon: TrendingUp, action: () => navigate(routes.marketplace.store.products() + '?filtro=mais-vendidos') },
+    { label: 'Lançamentos', Icon: Sparkles, action: () => navigate(routes.marketplace.store.products() + '?filtro=novidades') },
+    { label: 'Viagens', Icon: Plane, action: () => navigate(routes.marketplace.travelPackages.root()) },
+    { label: 'Classificados', Icon: Car, action: () => navigate(routes.marketplace.classifieds.root()) },
+    { label: 'Saúde', Icon: HeartPulse, action: () => navigate(routes.marketplace.saude.root()) },
+    { label: 'Seguros', Icon: Shield, action: () => navigate(routes.marketplace.seguros.root()) },
+    { label: 'Clube VIP', Icon: Gem, action: () => navigate(routes.marketplace.store.vip()), isVip: true },
   ];
 
   return (
@@ -180,12 +180,12 @@ export function EcommerceHeader({
         <div className="bg-[#0f2342] text-xs text-white/80 py-1.5 px-4 hidden sm:block border-b border-white/5">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1 font-semibold text-white/90">
-                <span className="text-[#d8bd73]">📍</span> Enviar para: <strong className="text-white font-bold cursor-pointer hover:underline">São Paulo 01000-000</strong>
+              <span className="flex items-center gap-1.5 font-semibold text-white/90">
+                <MapPin size={11} className="text-[#d8bd73]" /> Enviar para: <strong className="text-white font-bold cursor-pointer hover:underline">São Paulo 01000-000</strong>
               </span>
-              <span className="text-white/30">|</span>
-              <span className="text-emerald-400 font-bold flex items-center gap-1">
-                ⚡ Frete Grátis nas compras acima de R$ 99
+              <span className="text-white/20">·</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                <Zap size={11} /> Frete Grátis acima de R$ 99
               </span>
             </div>
             
@@ -421,21 +421,25 @@ export function EcommerceHeader({
           </form>
         </div>
 
-        {/* Sub-Navegação por Departamentos (Pílulas Estilo Mercado Livre / Shopee) */}
+        {/* Sub-Navegação por Departamentos */}
         <div className="hidden bg-[#0f2342] lg:block border-t border-white/5">
           <div className="mx-auto flex max-w-7xl items-center px-4 sm:px-6 lg:px-8">
-            <ul className="flex flex-1 items-center gap-1 overflow-x-auto py-1">
+            <ul className="flex flex-1 items-center overflow-x-auto py-0.5">
               {departments.map((dept, idx) => (
                 <li key={idx}>
                   <button
                     onClick={dept.action}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-all whitespace-nowrap ${
-                      dept.isPrimary 
-                        ? 'bg-[#17345f] text-[#d8bd73] hover:bg-white/10' 
-                        : 'text-white/90 hover:bg-white/10 hover:text-white'
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+                      dept.isPrimary
+                        ? 'text-[#d8bd73] hover:bg-white/10'
+                        : dept.isVip
+                          ? 'text-amber-400 hover:bg-white/10 hover:text-amber-300'
+                          : dept.highlight
+                            ? 'text-rose-400 hover:bg-white/10 hover:text-rose-300'
+                            : 'text-white/85 hover:bg-white/10 hover:text-white'
                     }`}
                   >
-                    {dept.isPrimary && <Menu className="h-3.5 w-3.5" />}
+                    {dept.Icon && <dept.Icon size={13} strokeWidth={2} />}
                     {dept.label}
                   </button>
                 </li>
@@ -455,8 +459,13 @@ export function EcommerceHeader({
                       dept.action();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full px-5 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-[#17345f]"
+                    className={`flex items-center gap-3 w-full px-5 py-3 text-left text-sm font-bold hover:bg-slate-50 ${
+                      dept.isVip ? 'text-amber-600 hover:text-amber-700' :
+                      dept.highlight ? 'text-rose-600 hover:text-rose-700' :
+                      'text-slate-700 hover:text-[#17345f]'
+                    }`}
                   >
+                    {dept.Icon && <dept.Icon size={15} strokeWidth={2} className="shrink-0" />}
                     {dept.label}
                   </button>
                 </li>
