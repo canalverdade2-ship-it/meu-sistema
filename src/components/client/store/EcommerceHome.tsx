@@ -6,10 +6,9 @@ import StoreItemCard from './StoreItemCard';
 import {
   Loader2, TrendingUp, Zap, Clock, Star, ArrowRight,
   ShieldCheck, Truck, CreditCard, Award, Flame,
-  Sparkles, ChevronRight, Tag, Package, Users,
+  Sparkles, ChevronRight, Tag, Package,
   Laptop, Home, Shirt, FlaskConical, Plane, Wrench,
   Car, Gem, BadgePercent, MapPin, PhoneCall, RefreshCw,
-  BarChart2
 } from 'lucide-react';
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
@@ -491,30 +490,6 @@ export function EcommerceHome({
                 </section>
               )}
 
-              {/* ── Stats / Prova Social (Magazine Luiza style) ── */}
-              <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                  {[
-                    { Icon: Users,    stat: '+45.000',   label: 'Clientes Ativos',        sub: 'Confiam no ecossistema GSA', color: '#2563eb' },
-                    { Icon: Package,  stat: '+12.000',   label: 'Produtos Disponíveis',   sub: 'Catálogo atualizado diariamente', color: '#16a34a' },
-                    { Icon: BarChart2, stat: '99,1%',    label: 'Avaliações Positivas',   sub: 'Satisfação dos compradores GSA', color: '#d97706' },
-                  ].map(({ Icon: I, stat, label, sub, color }, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <div
-                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
-                        style={{ background: color + '15', color }}
-                      >
-                        <I size={26} strokeWidth={1.75} />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-black text-gray-900 sm:text-3xl">{stat}</p>
-                        <p className="text-sm font-bold text-gray-800">{label}</p>
-                        <p className="text-xs text-gray-400 font-medium">{sub}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
 
               {/* ── Pagamento & Garantias Footer Strip ── */}
               <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
