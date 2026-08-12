@@ -49,16 +49,14 @@ function useCountdown(targetHour = 23) {
 
 /* ─── Category definitions (SVG icons, NO emojis) ─── */
 const CATEGORIES = [
-  // ── Principais Serviços / Hubs GSA (Parte Superior) ──
-  { name: 'Viagens', Icon: Plane,           color: '#0891b2', bg: '#ecfeff', route: 'travel', isMain: true },
-  { name: 'Serviços', Icon: Wrench,         color: '#16a34a', bg: '#f0fdf4', route: 'services', isMain: true },
-  { name: 'Classificados', Icon: Car,        color: '#1e293b', bg: '#f8fafc', route: 'classifieds', isMain: true },
-  { name: 'Clube VIP', Icon: Gem,           color: '#b45309', bg: '#fffbeb', route: 'vip', isMain: true },
-  // ── Categorias de Produtos (Parte Inferior) ──
   { name: 'Eletrônicos', Icon: Laptop,      color: '#2563eb', bg: '#eff6ff', filter: 'eletronicos' },
   { name: 'Casa & Eletro', Icon: Home,       color: '#d97706', bg: '#fffbeb', filter: 'casa' },
   { name: 'Moda & Estilo', Icon: Shirt,      color: '#db2777', bg: '#fdf2f8', filter: 'moda' },
   { name: 'Beleza & Saúde', Icon: FlaskConical, color: '#7c3aed', bg: '#f5f3ff', filter: 'beleza' },
+  { name: 'Viagens', Icon: Plane,           color: '#0891b2', bg: '#ecfeff', route: 'travel' },
+  { name: 'Serviços', Icon: Wrench,         color: '#16a34a', bg: '#f0fdf4', route: 'services' },
+  { name: 'Classificados', Icon: Car,        color: '#1e293b', bg: '#f8fafc', route: 'classifieds' },
+  { name: 'Clube VIP', Icon: Gem,           color: '#b45309', bg: '#fffbeb', route: 'vip' },
 ];
 
 const TRUST_BADGES = [
@@ -364,74 +362,27 @@ export function EcommerceHome({
 
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-8">
 
-          {/* ── Categories Grid (Principais no topo, categorias de produtos abaixo) ── */}
-          <section className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 space-y-4">
-            {/* Linha Superior: Principais Serviços & Hubs GSA */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">
-                  Principais Serviços & Ecossistema GSA
-                </p>
-                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                  Hubs Oficiais
-                </span>
-              </div>
-              <div className="grid grid-cols-4 gap-2.5 sm:gap-4">
-                {CATEGORIES.slice(0, 4).map((cat, i) => (
-                  <button
-                    key={i}
-                    onClick={() => goCategory(cat)}
-                    className="group flex cursor-pointer flex-col items-center gap-2 rounded-xl p-2 sm:p-3 transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
-                  >
-                    <div
-                      className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 group-hover:shadow-md"
-                      style={{ backgroundColor: cat.bg, color: cat.color }}
-                    >
-                      <cat.Icon size={24} strokeWidth={1.75} />
-                    </div>
-                    <span className="text-center text-[11px] sm:text-xs font-black text-gray-800 group-hover:text-[#17345f] leading-tight line-clamp-2">
-                      {cat.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Divisor sutil */}
-            <div className="border-t border-gray-100" />
-
-            {/* Linha Inferior: Categorias da Loja (Casa, Moda, Beleza, Eletrônicos) */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">
-                  Departamentos de Produtos
-                </p>
+          {/* ── Categories Grid (Shopee style with REAL icons) ── */}
+          <section className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
+            <p className="mb-4 text-[11px] font-black uppercase tracking-widest text-gray-400">Departamentos</p>
+            <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
+              {CATEGORIES.map((cat, i) => (
                 <button
-                  onClick={() => navigate(routes.marketplace.store.products())}
-                  className="text-[10px] font-bold text-gray-500 hover:text-[#17345f] cursor-pointer"
+                  key={i}
+                  onClick={() => goCategory(cat)}
+                  className="group flex cursor-pointer flex-col items-center gap-2 rounded-xl p-2 transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
                 >
-                  Ver catálogo completo →
-                </button>
-              </div>
-              <div className="grid grid-cols-4 gap-2.5 sm:gap-4">
-                {CATEGORIES.slice(4, 8).map((cat, i) => (
-                  <button
-                    key={i}
-                    onClick={() => goCategory(cat)}
-                    className="group flex cursor-pointer flex-col items-center gap-2 rounded-xl p-2 sm:p-3 transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
+                  <div
+                    className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 group-hover:shadow-md"
+                    style={{ backgroundColor: cat.bg, color: cat.color }}
                   >
-                    <div
-                      className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 group-hover:shadow-md"
-                      style={{ backgroundColor: cat.bg, color: cat.color }}
-                    >
-                      <cat.Icon size={24} strokeWidth={1.75} />
-                    </div>
-                    <span className="text-center text-[11px] sm:text-xs font-bold text-gray-700 group-hover:text-[#17345f] leading-tight line-clamp-2">
-                      {cat.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
+                    <cat.Icon size={26} strokeWidth={1.75} />
+                  </div>
+                  <span className="text-center text-[11px] font-bold text-gray-700 group-hover:text-[#17345f] leading-tight line-clamp-2">
+                    {cat.name}
+                  </span>
+                </button>
+              ))}
             </div>
           </section>
 
