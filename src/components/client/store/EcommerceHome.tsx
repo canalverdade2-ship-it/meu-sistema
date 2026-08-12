@@ -87,7 +87,7 @@ function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRan
     return () => observer.disconnect();
   }, []);
 
-  // 2. Auto-advance item-by-item when visible & not being touched (every 2.0s)
+  // 2. Auto-advance item-by-item when visible & not being touched (every 1.0s)
   useEffect(() => {
     if (!isVisible || isInteracting || items.length <= 1) return;
 
@@ -104,7 +104,7 @@ function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRan
       } else {
         el.scrollBy({ left: step, behavior: 'smooth' });
       }
-    }, 2000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [isVisible, isInteracting, items.length]);
