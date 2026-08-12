@@ -150,7 +150,7 @@ export function EcommerceHome({
     { name: 'Viagens', icon: '✈️', color: 'from-cyan-500 to-blue-600', route: routes.marketplace.travelPackages.root() },
     { name: 'Serviços', icon: '🔧', color: 'from-emerald-500 to-teal-600', route: routes.public.services() },
     { name: 'Classificados', icon: '🚗', color: 'from-[#17345f] to-slate-900', route: routes.marketplace.classifieds.root() },
-    { name: 'Clube VIP', icon: '💎', color: 'from-amber-400 to-[#a77a2c]', route: routes.client.loyalty.vip() },
+    { name: 'Clube VIP', icon: '💎', color: 'from-amber-400 to-[#a77a2c]', route: routes.marketplace.store.vip() },
   ];
 
   return (
@@ -281,7 +281,7 @@ export function EcommerceHome({
                     Faça parte do nosso programa de fidelidade e garanta descontos adicionais e pontos acumulativos.
                   </p>
                   <button 
-                    onClick={() => navigate(routes.client.loyalty.vip())}
+                    onClick={() => navigate(routes.marketplace.store.vip())}
                     className="mt-6 rounded-xl bg-white px-7 py-3.5 text-sm font-extrabold text-[#17345f] transition-all hover:bg-slate-100 shadow-xl cursor-pointer hover:scale-105 active:scale-95"
                   >
                     Conhecer o Programa VIP

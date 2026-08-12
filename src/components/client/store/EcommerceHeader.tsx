@@ -170,7 +170,7 @@ export function EcommerceHeader({
     { label: '🚗 Classificados', action: () => navigate(routes.marketplace.classifieds.root()) },
     { label: '🩺 Saúde', action: () => navigate(routes.marketplace.saude.root()) },
     { label: '🛡️ Seguros', action: () => navigate(routes.marketplace.seguros.root()) },
-    { label: '💎 Clube VIP', action: () => navigate(routes.client.loyalty.vip()) },
+    { label: '💎 Clube VIP', action: () => navigate(routes.marketplace.store.vip()) },
   ];
 
   return (
@@ -196,7 +196,7 @@ export function EcommerceHeader({
               <button onClick={() => navigate(routes.marketplace.store.cupons())} className="hover:text-[#d8bd73] transition-colors">
                 Cupons
               </button>
-              <button onClick={() => navigate(routes.client.loyalty.vip())} className="hover:text-[#d8bd73] transition-colors text-[#d8bd73] font-bold">
+              <button onClick={() => navigate(routes.marketplace.store.vip())} className="hover:text-[#d8bd73] transition-colors text-[#d8bd73] font-bold">
                 Clube VIP GSA
               </button>
               <button onClick={() => navigate(routes.public.services())} className="hover:text-[#d8bd73] transition-colors">
