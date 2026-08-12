@@ -360,25 +360,25 @@ export function EcommerceHome({
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-8">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-3 sm:py-6 space-y-4 sm:space-y-8">
 
-          {/* ── Categories Grid (Shopee style with REAL icons) ── */}
-          <section className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
-            <p className="mb-4 text-[11px] font-black uppercase tracking-widest text-gray-400">Departamentos</p>
-            <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
+          {/* ── Categories Grid (Compacto em mobile, expansivo em desktop) ── */}
+          <section className="rounded-2xl bg-white p-3 sm:p-5 shadow-sm border border-gray-100">
+            <p className="mb-2 sm:mb-4 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-gray-400">Departamentos</p>
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-3 sm:grid-cols-8">
               {CATEGORIES.map((cat, i) => (
                 <button
                   key={i}
                   onClick={() => goCategory(cat)}
-                  className="group flex cursor-pointer flex-col items-center gap-2 rounded-xl p-2 transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
+                  className="group flex cursor-pointer flex-col items-center gap-1 sm:gap-2 rounded-xl p-1 sm:p-2 transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
                 >
                   <div
-                    className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 group-hover:shadow-md"
+                    className="flex h-10 w-10 sm:h-16 sm:w-16 items-center justify-center rounded-xl sm:rounded-2xl transition-transform group-hover:scale-105 group-hover:shadow-md"
                     style={{ backgroundColor: cat.bg, color: cat.color }}
                   >
-                    <cat.Icon size={26} strokeWidth={1.75} />
+                    <cat.Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
                   </div>
-                  <span className="text-center text-[11px] font-bold text-gray-700 group-hover:text-[#17345f] leading-tight line-clamp-2">
+                  <span className="text-center text-[9.5px] sm:text-[11px] font-bold text-gray-700 group-hover:text-[#17345f] leading-tight line-clamp-2">
                     {cat.name}
                   </span>
                 </button>
