@@ -989,13 +989,13 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     // Filtrar por preço
     if (minPrice !== '') {
       base = base.filter(i => {
-        const price = tipo === 'produto' ? getProductEffectivePrice(i) : i.valor;
+        const price = i._tipo === 'produto' ? getProductEffectivePrice(i) : i.valor;
         return price >= Number(minPrice);
       });
     }
     if (maxPrice !== '') {
       base = base.filter(i => {
-        const price = tipo === 'produto' ? getProductEffectivePrice(i) : i.valor;
+        const price = i._tipo === 'produto' ? getProductEffectivePrice(i) : i.valor;
         return price <= Number(maxPrice);
       });
     }
@@ -1003,8 +1003,8 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     // Ordenar (Padrão: Menor preço para o maior preço, exceto quando houver ordenação especial por filtro)
     if (sortBy === 'price-desc') {
       base.sort((a, b) => {
-        const pA = tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
-        const pB = tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
+        const pA = a._tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
+        const pB = b._tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
         return (pB || 0) - (pA || 0);
       });
     } else if (sortBy === 'alpha-asc') {
@@ -1014,8 +1014,8 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     } else if (!activeFiltro || activeFiltro === 'ofertas') {
       // Padrão (price-asc ou none): Do menor para o maior preço
       base.sort((a, b) => {
-        const pA = tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
-        const pB = tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
+        const pA = a._tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
+        const pB = b._tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
         if (pA !== pB) {
           return (pA || 0) - (pB || 0);
         }
@@ -1023,10 +1023,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       });
     }
 
-    return base.map(b => ({ 
-      ...b, 
-      _tipo: tipo 
-    }));
+    return base;
   }, [activeTab, deferredSearch, produtos, servicos, assinaturas, sortBy, minPrice, maxPrice, selectedCategoriaId, activeFiltro]);
 
   // Paginação progressiva para máxima performance na loja do cliente
