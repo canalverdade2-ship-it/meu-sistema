@@ -1263,7 +1263,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               {/* Pontos Ganhos (Fase 3.3) */}
               <div className="flex justify-end mt-1 mb-4">
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#d8bd73] bg-[#d8bd73]/10 px-2 py-1 rounded-md">
-                  <Sparkles className="w-3 h-3" /> Ganhe + {Math.floor(totalHojeFinal / 10)} pontos GSA
+                  <Sparkles className="w-3 h-3" /> Ganhe + {Math.floor(totalHojeFinal)} pontos GSA
                 </span>
               </div>
 

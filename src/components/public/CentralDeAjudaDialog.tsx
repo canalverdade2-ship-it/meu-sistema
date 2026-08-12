@@ -75,7 +75,7 @@ const FAQ_ITEMS = [
     questions: [
       {
         q: 'Como funciona o acúmulo de pontos GSA?',
-        a: 'A cada R$ 1,00 gasto na plataforma você acumula pontos. O multiplicador vai de 0,5× (Básico) até 5× (Black VIP). Os pontos não expiram.',
+        a: 'A cada R$ 1,00 gasto em compras ou serviços você ganha 1 ponto GSA base (R$ 1 = 1 ponto), com multiplicadores para membros VIP. Os pontos não expiram.',
       },
       {
         q: 'Como resgato meus pontos?',

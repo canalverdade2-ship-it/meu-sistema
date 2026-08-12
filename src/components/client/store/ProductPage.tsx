@@ -238,8 +238,7 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
   const hasDiscount = hasActiveProductDiscount(product);
   const currentPrice = hasDiscount ? getProductEffectivePrice(product) : Number(product.valor || 0);
   const regularPrice = Number(product.valor || 0);
-  const discountPct = hasDiscount ? getProductDiscountPercentage(product) : 0;
-  const pontosGanhos = Math.max(1, Math.floor(currentPrice / 10));
+  const pontosGanhos = Math.floor(currentPrice);
   const categoryName = product.loja_categoria?.nome || product.categorias?.nome || product.categoria_nome || product.categoria || 'Produtos GSA';
 
   const installmentValue = currentPrice > 0 ? (currentPrice / 12).toFixed(2).replace('.', ',') : '0,00';

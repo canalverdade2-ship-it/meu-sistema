@@ -76,16 +76,15 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
     }
   };
 
-  // Simulação de prova social
-  const viewCount = React.useMemo(() => Math.floor(Math.random() * 50) + 12, [item.id]);
-
-  // Pontos GSA (10% do valor)
-  const pontosGanhos = Math.floor(currentPrice / 10);
+  // Pontos GSA reais: R$ 1,00 gasto = 1 ponto GSA
+  const pontosGanhos = Math.floor(currentPrice);
   
   // Parcelamento em até 10x
   const valorParcela = (currentPrice / 10).toFixed(2).replace('.', ',');
 
   const renderStars = () => {
+    const rating = Number(item.avaliacao_media || item.rating || 5.0);
+    const count = Number(item.total_avaliacoes || item.total_vendas || 0);
     return (
       <div className="flex items-center gap-1">
         <div className="flex text-amber-400">
@@ -93,9 +92,11 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
           <Star className="h-3 w-3 fill-current" />
           <Star className="h-3 w-3 fill-current" />
           <Star className="h-3 w-3 fill-current" />
-          <Star className="h-3 w-3 fill-current opacity-40" />
+          <Star className="h-3 w-3 fill-current" />
         </div>
-        <span className="text-[11px] font-bold text-slate-500">4.9 (42)</span>
+        {count > 0 && (
+          <span className="text-[11px] font-bold text-slate-500">{rating.toFixed(1)} ({count})</span>
+        )}
       </div>
     );
   };
