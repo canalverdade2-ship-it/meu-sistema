@@ -11,8 +11,8 @@ import { VolteEganheModal } from './VolteEganheModal';
 
 interface EcommerceHeaderProps {
   clientId?: string;
-  cartItemCount: number;
-  onOpenCart: () => void;
+  cartItemCount?: number;
+  onOpenCart?: () => void;
   onRequireAuth?: () => void;
   onSearch?: (query: string) => void;
   initialSearchQuery?: string;
@@ -39,6 +39,53 @@ export function EcommerceHeader({
   const route = useAppLocation();
 
   const [pointsBalance, setPointsBalance] = useState(0);
+  const [localCartCount, setLocalCartCount] = useState(cartItemCount || 0);
+
+  // Auto-sincronização do contador do carrinho para visitor e cliente logado
+  useEffect(() => {
+    const updateCount = () => {
+      if (clientId) {
+        supabase.from('loja_carrinhos').select('quantidade').eq('cliente_id', clientId)
+          .then(({ data }) => {
+            if (data) setLocalCartCount(data.reduce((a, c) => a + (Number(c.quantidade) || 1), 0));
+          });
+      } else {
+        try {
+          const raw = localStorage.getItem('gsa_pending_store_checkout');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const items = Array.isArray(parsed?.items) ? parsed.items : [];
+            setLocalCartCount(items.reduce((a: number, c: any) => a + (Number(c.quantidade) || 1), 0));
+          } else {
+            setLocalCartCount(0);
+          }
+        } catch {
+          setLocalCartCount(0);
+        }
+      }
+    };
+
+    if (cartItemCount !== undefined && cartItemCount > 0) {
+      setLocalCartCount(cartItemCount);
+    } else {
+      updateCount();
+    }
+
+    window.addEventListener('gsa-cart-updated', updateCount);
+    window.addEventListener('storage', updateCount);
+    return () => {
+      window.removeEventListener('gsa-cart-updated', updateCount);
+      window.removeEventListener('storage', updateCount);
+    };
+  }, [cartItemCount, clientId]);
+
+  const handleCartClick = () => {
+    if (onOpenCart) {
+      onOpenCart();
+    } else {
+      navigate(routes.marketplace.store.products() + '?modal=carrinho');
+    }
+  };
 
   // Volte e Ganhe Logic
   const [showVolteGanhe, setShowVolteGanhe] = useState(false);
@@ -448,13 +495,13 @@ export function EcommerceHeader({
             {/* Carrinho GSA estilo Mercado Livre */}
             <button 
               className="flex items-center gap-2 rounded-xl bg-[#d8bd73] px-3.5 py-2 text-slate-950 hover:bg-[#c4a961] transition-all font-black text-xs shadow-md hover:shadow-lg cursor-pointer"
-              onClick={onOpenCart}
+              onClick={handleCartClick}
             >
               <div className="relative flex items-center justify-center">
                 <ShoppingCart className="h-4 w-4" />
-                {cartItemCount > 0 && (
+                {localCartCount > 0 && (
                   <span className="absolute -top-2.5 -right-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow-sm">
-                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                    {localCartCount > 99 ? '99+' : localCartCount}
                   </span>
                 )}
               </div>

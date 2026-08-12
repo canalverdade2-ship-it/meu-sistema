@@ -533,27 +533,51 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
             </div>
 
             <div className="mt-6 space-y-4">
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Quantidade:</span>
-                <div className="flex items-center rounded-xl border border-neutral-300 bg-white">
-                  <button 
-                    type="button"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
-                    className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-30 rounded-l-xl transition-colors cursor-pointer"
-                    aria-label="Diminuir quantidade"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-12 text-center font-black text-neutral-900">{quantity}</span>
-                  <button 
-                    type="button"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 rounded-r-xl transition-colors cursor-pointer"
-                    aria-label="Aumentar quantidade"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-slate-50/90 p-3.5 border border-slate-200/80 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Quantidade:</span>
+                  <div className="flex items-center rounded-xl border border-neutral-300 bg-white shadow-xs">
+                    <button 
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={quantity <= 1}
+                      className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-30 rounded-l-xl transition-colors cursor-pointer"
+                      aria-label="Diminuir quantidade"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-12 text-center font-black text-neutral-900">{quantity}</span>
+                    <button 
+                      type="button"
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 rounded-r-xl transition-colors cursor-pointer"
+                      aria-label="Aumentar quantidade"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Instant Simulation Display */}
+                <div className="flex flex-1 items-center justify-between min-w-[250px] gap-2.5 rounded-xl bg-white px-3.5 py-2 border border-emerald-200/80 shadow-xs transition-all">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                      Total Simulado ({quantity} {quantity === 1 ? 'un' : 'unidades'})
+                    </span>
+                    <div className="flex flex-wrap items-baseline gap-1.5 mt-0.5">
+                      <span className="text-sm font-black text-[#17345f]">
+                        {formatCurrency(currentPrice * quantity)}
+                      </span>
+                      <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
+                        {formatCurrency(currentPrice * quantity * 0.95)} no PIX (5% OFF)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-xs font-black text-amber-700 bg-amber-50 px-2 py-1.5 rounded-lg border border-amber-200/60 shrink-0">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                    <span>+{pontosGanhos * quantity} pts</span>
+                  </div>
                 </div>
               </div>
 

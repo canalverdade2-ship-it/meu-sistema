@@ -361,8 +361,7 @@ export function MarketplaceGSAStore({
         <div className="min-h-screen bg-[#f8f9fa]">
           <EcommerceHeader 
             clientId={clientId}
-            cartItemCount={0}
-            onOpenCart={() => {}}
+            onOpenCart={() => handleNavigate(routes.marketplace.store.products() + '?modal=carrinho')}
             onRequireAuth={onRequireAuth}
           />
           <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
