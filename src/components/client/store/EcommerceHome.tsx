@@ -49,14 +49,16 @@ function useCountdown(targetHour = 23) {
 
 /* ─── Category definitions (SVG icons, NO emojis) ─── */
 const CATEGORIES = [
+  // ── Principais Serviços / Hubs GSA (Parte Superior) ──
+  { name: 'Viagens', Icon: Plane,           color: '#0891b2', bg: '#ecfeff', route: 'travel', isMain: true },
+  { name: 'Serviços', Icon: Wrench,         color: '#16a34a', bg: '#f0fdf4', route: 'services', isMain: true },
+  { name: 'Classificados', Icon: Car,        color: '#1e293b', bg: '#f8fafc', route: 'classifieds', isMain: true },
+  { name: 'Clube VIP', Icon: Gem,           color: '#b45309', bg: '#fffbeb', route: 'vip', isMain: true },
+  // ── Categorias de Produtos (Parte Inferior) ──
   { name: 'Eletrônicos', Icon: Laptop,      color: '#2563eb', bg: '#eff6ff', filter: 'eletronicos' },
   { name: 'Casa & Eletro', Icon: Home,       color: '#d97706', bg: '#fffbeb', filter: 'casa' },
   { name: 'Moda & Estilo', Icon: Shirt,      color: '#db2777', bg: '#fdf2f8', filter: 'moda' },
   { name: 'Beleza & Saúde', Icon: FlaskConical, color: '#7c3aed', bg: '#f5f3ff', filter: 'beleza' },
-  { name: 'Viagens', Icon: Plane,           color: '#0891b2', bg: '#ecfeff', route: 'travel' },
-  { name: 'Serviços', Icon: Wrench,         color: '#16a34a', bg: '#f0fdf4', route: 'services' },
-  { name: 'Classificados', Icon: Car,        color: '#1e293b', bg: '#f8fafc', route: 'classifieds' },
-  { name: 'Clube VIP', Icon: Gem,           color: '#b45309', bg: '#fffbeb', route: 'vip' },
 ];
 
 const TRUST_BADGES = [
@@ -252,6 +254,10 @@ export function EcommerceHome({
   const [novidades, setNovidades] = useState<any[]>([]);
   const [ofertas, setOfertas] = useState<any[]>([]);
   const [recomendados, setRecomendados] = useState<any[]>([]);
+  const [eletronicos, setEletronicos] = useState<any[]>([]);
+  const [casa, setCasa] = useState<any[]>([]);
+  const [moda, setModa] = useState<any[]>([]);
+  const [beleza, setBeleza] = useState<any[]>([]);
   const [localCartCount, setLocalCartCount] = useState(cartItemCount);
 
   // Modal states
@@ -288,14 +294,24 @@ export function EcommerceHome({
           .eq('status', 'ativo')
           .eq('visivel_na_loja', true)
           .order('created_at', { ascending: false })
-          .limit(60);
+          .limit(150);
 
-        if (data) {
+        if (data && data.length > 0) {
           setNovidades(data.slice(0, 12));
           setMaisVendidos([...data].sort(() => 0.5 - Math.random()).slice(0, 12));
           const withDiscount = data.filter(p => p.valor_promocional && p.valor_promocional < p.valor);
           setOfertas(withDiscount.length >= 6 ? withDiscount.slice(0, 12) : data.slice(3, 15));
           setRecomendados([...data].sort(() => 0.5 - Math.random()).slice(0, 8));
+
+          const eletroData = data.filter(p => /fone|smart|tv|cabo|carregador|usb|eletr|airfryer|forno|mixer|bluetooth|caixa|led|bateria|sound|relogio|computador|notebook|teclado|mouse/i.test(p.nome) || p.categoria_id === 'c7abd6df-c781-44f3-9120-9983b720b6ef');
+          const casaData = data.filter(p => /toalha|mesa|cama|manta|cozinha|panela|fritadeira|almofada|decor|tapete|organizador|lençol|copo|garrafa|xícara|prato|travesseiro|cortina/i.test(p.nome));
+          const modaData = data.filter(p => /camiset|sapato|bota|roupa|mochila|bolsa|calça|bermuda|tenis|vestido|jaqueta|meia|chinelo|sandalia|acessorio|cinto|carteira/i.test(p.nome) || p.categoria_id === 'e58c3ab6-f1c5-49df-8d31-54c16ec4c52b');
+          const belezaData = data.filter(p => /creme|colágeno|pele|cabelo|shampoo|perfume|beleza|anti-rugas|hidratante|maquiagem|facial|corpo|sabonete|condicionador|estética/i.test(p.nome));
+
+          setEletronicos(eletroData.length >= 3 ? eletroData.slice(0, 12) : data.slice(0, 8));
+          setCasa(casaData.length >= 3 ? casaData.slice(0, 12) : data.slice(4, 12));
+          setModa(modaData.length >= 3 ? modaData.slice(0, 12) : data.slice(8, 16));
+          setBeleza(belezaData.length >= 3 ? belezaData.slice(0, 12) : data.slice(12, 20));
         }
       } catch (err) {
         console.error('Erro home:', err);
@@ -310,6 +326,7 @@ export function EcommerceHome({
     else if (cat.route === 'services') navigate(routes.public.services());
     else if (cat.route === 'classifieds') navigate(routes.marketplace.classifieds.root());
     else if (cat.route === 'vip') navigate(routes.marketplace.store.vip());
+    else if (cat.name) navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent(cat.name)}`);
     else navigate(routes.marketplace.store.products());
   };
 
@@ -347,27 +364,74 @@ export function EcommerceHome({
 
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-8">
 
-          {/* ── Categories Grid (Shopee style with REAL icons) ── */}
-          <section className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
-            <p className="mb-4 text-[11px] font-black uppercase tracking-widest text-gray-400">Departamentos</p>
-            <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
-              {CATEGORIES.map((cat, i) => (
-                <button
-                  key={i}
-                  onClick={() => goCategory(cat)}
-                  className="group flex cursor-pointer flex-col items-center gap-2 rounded-xl p-2 transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
-                >
-                  <div
-                    className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 group-hover:shadow-md"
-                    style={{ backgroundColor: cat.bg, color: cat.color }}
+          {/* ── Categories Grid (Principais no topo, categorias de produtos abaixo) ── */}
+          <section className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 space-y-4">
+            {/* Linha Superior: Principais Serviços & Hubs GSA */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">
+                  Principais Serviços & Ecossistema GSA
+                </p>
+                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  Hubs Oficiais
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-2.5 sm:gap-4">
+                {CATEGORIES.slice(0, 4).map((cat, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goCategory(cat)}
+                    className="group flex cursor-pointer flex-col items-center gap-2 rounded-xl p-2 sm:p-3 transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
                   >
-                    <cat.Icon size={26} strokeWidth={1.75} />
-                  </div>
-                  <span className="text-center text-[11px] font-bold text-gray-700 group-hover:text-[#17345f] leading-tight line-clamp-2">
-                    {cat.name}
-                  </span>
+                    <div
+                      className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 group-hover:shadow-md"
+                      style={{ backgroundColor: cat.bg, color: cat.color }}
+                    >
+                      <cat.Icon size={24} strokeWidth={1.75} />
+                    </div>
+                    <span className="text-center text-[11px] sm:text-xs font-black text-gray-800 group-hover:text-[#17345f] leading-tight line-clamp-2">
+                      {cat.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Divisor sutil */}
+            <div className="border-t border-gray-100" />
+
+            {/* Linha Inferior: Categorias da Loja (Casa, Moda, Beleza, Eletrônicos) */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">
+                  Departamentos de Produtos
+                </p>
+                <button
+                  onClick={() => navigate(routes.marketplace.store.products())}
+                  className="text-[10px] font-bold text-gray-500 hover:text-[#17345f] cursor-pointer"
+                >
+                  Ver catálogo completo →
                 </button>
-              ))}
+              </div>
+              <div className="grid grid-cols-4 gap-2.5 sm:gap-4">
+                {CATEGORIES.slice(4, 8).map((cat, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goCategory(cat)}
+                    className="group flex cursor-pointer flex-col items-center gap-2 rounded-xl p-2 sm:p-3 transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
+                  >
+                    <div
+                      className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 group-hover:shadow-md"
+                      style={{ backgroundColor: cat.bg, color: cat.color }}
+                    >
+                      <cat.Icon size={24} strokeWidth={1.75} />
+                    </div>
+                    <span className="text-center text-[11px] sm:text-xs font-bold text-gray-700 group-hover:text-[#17345f] leading-tight line-clamp-2">
+                      {cat.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </section>
 
@@ -436,6 +500,122 @@ export function EcommerceHome({
                 </section>
               )}
 
+              {/* ── Destaque 1: Eletrônicos & Tecnologia ── */}
+              {eletronicos.length > 0 && (
+                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-blue-100/70 p-5">
+                  <div className="mb-5 flex items-end justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                        <Laptop size={18} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Eletrônicos & Tecnologia</h2>
+                          <span className="rounded-full bg-blue-50 border border-blue-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-blue-600">
+                            Tecnologia
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Os melhores dispositivos, gadgets e acessórios</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent('Eletrônicos')}`)}
+                      className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline cursor-pointer"
+                    >
+                      Ver departamento <ChevronRight size={14} />
+                    </button>
+                  </div>
+                  <HorizontalShelf items={eletronicos} />
+                </section>
+              )}
+
+              {/* ── Destaque 2: Casa, Mesa & Eletro ── */}
+              {casa.length > 0 && (
+                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-amber-100/70 p-5">
+                  <div className="mb-5 flex items-end justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 text-white shadow-sm">
+                        <Home size={18} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Casa, Mesa & Eletro</h2>
+                          <span className="rounded-full bg-amber-50 border border-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700">
+                            Conforto
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Praticidade e elegância para o seu lar</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent('Casa')}`)}
+                      className="flex items-center gap-1 text-xs font-bold text-amber-700 hover:underline cursor-pointer"
+                    >
+                      Ver departamento <ChevronRight size={14} />
+                    </button>
+                  </div>
+                  <HorizontalShelf items={casa} />
+                </section>
+              )}
+
+              {/* ── Destaque 3: Moda & Estilo ── */}
+              {moda.length > 0 && (
+                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-pink-100/70 p-5">
+                  <div className="mb-5 flex items-end justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-pink-600 text-white shadow-sm">
+                        <Shirt size={18} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Moda & Estilo</h2>
+                          <span className="rounded-full bg-pink-50 border border-pink-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-pink-600">
+                            Tendências
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Roupas, calçados e acessórios para todos os estilos</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent('Moda')}`)}
+                      className="flex items-center gap-1 text-xs font-bold text-pink-600 hover:underline cursor-pointer"
+                    >
+                      Ver departamento <ChevronRight size={14} />
+                    </button>
+                  </div>
+                  <HorizontalShelf items={moda} />
+                </section>
+              )}
+
+              {/* ── Destaque 4: Beleza & Saúde ── */}
+              {beleza.length > 0 && (
+                <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-purple-100/70 p-5">
+                  <div className="mb-5 flex items-end justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-600 text-white shadow-sm">
+                        <FlaskConical size={18} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Beleza & Saúde</h2>
+                          <span className="rounded-full bg-purple-50 border border-purple-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-purple-600">
+                            Cuidados Pessoais
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Cosméticos, skincare e bem-estar</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent('Beleza')}`)}
+                      className="flex items-center gap-1 text-xs font-bold text-purple-600 hover:underline cursor-pointer"
+                    >
+                      Ver departamento <ChevronRight size={14} />
+                    </button>
+                  </div>
+                  <HorizontalShelf items={beleza} />
+                </section>
+              )}
+
               {/* ── Banner Único Wide (Shopee / ML style) ── */}
               <div
                 onClick={() => navigate(routes.marketplace.store.products())}
@@ -473,7 +653,7 @@ export function EcommerceHome({
                         <Sparkles size={18} strokeWidth={2} />
                       </div>
                       <div>
-                        <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Novidades & Lançamentos</h2>
+                        <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Novidades do Catálogo</h2>
                         <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Chegaram agora no catálogo GSA</p>
                       </div>
                     </div>
