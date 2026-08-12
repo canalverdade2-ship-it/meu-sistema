@@ -146,8 +146,8 @@ export const routes = {
       wishlist: () => '/marketplace/loja/wishlist',
       blog: () => '/marketplace/loja/blog',
       blogPost: (id: string) => `/marketplace/loja/blog/${id}`,
-      vipProgram: () => '/marketplace/loja/programa-vip',
-      vip: () => '/marketplace/loja/programa-vip',
+      vipProgram: () => '/programa-vip',
+      vip: () => '/programa-vip',
     },
   },
   // Portal do Cliente

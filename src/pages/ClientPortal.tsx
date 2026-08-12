@@ -550,7 +550,18 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
         table: 'level_history',
         filter: `cliente_id=eq.${clientId}`
       }, () => {
-        // Admin inserted a level history record — fetch updated client data
+        // Admin or Trigger inserted a level history record — fetch updated client data
+        playPremiumBeep();
+        toast.success('👑 PARABÉNS! Você subiu de Nível VIP! Seus novos benefícios foram liberados automaticamente.', {
+          duration: 7000,
+          style: {
+            background: '#1a1a1a',
+            color: '#ffd700',
+            fontWeight: 'bold',
+            borderRadius: '1.5rem',
+            border: '1px solid rgba(255,215,0,0.3)'
+          }
+        });
         fetchClienteRef.current();
       })
       .subscribe();

@@ -82,6 +82,10 @@ export function ClientAreaVIP({
       .on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {
         fetchLevels();
       })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'level_history', filter: `cliente_id=eq.${cliente.id}` }, () => {
+        fetchLevels();
+        fetchHistory();
+      })
       .subscribe();
 
     return () => {

@@ -180,7 +180,13 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     }
   }, [route.submodule, route.itemId, route.query.modal]);
 
-  // 2. Debounce na busca de texto para evitar inundar o histórico do navegador
+  // 2. Debounce e Sincronização na busca de texto da URL
+  useEffect(() => {
+    if (route.query.busca !== undefined && route.query.busca !== search) {
+      setSearch(route.query.busca || '');
+    }
+  }, [route.query.busca]);
+
   useEffect(() => {
     const handler = setTimeout(() => {
       updateRouteQuery({ busca: search || null }, { replace: true });
@@ -952,9 +958,13 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
   const filteredItems = useMemo(() => {
     let base: any[] = [];
-    let tipo: ItemType = 'produto';
-    if (activeTab === 'produtos') { base = [...produtos]; tipo = 'produto'; }
-    if (activeTab === 'assinaturas') { base = [...assinaturas]; tipo = 'assinatura'; }
+    if (activeTab === 'assinaturas') {
+      base = assinaturas.map(a => ({ ...a, _tipo: 'assinatura' as ItemType }));
+    } else {
+      const prods = produtos.map(p => ({ ...p, _tipo: 'produto' as ItemType }));
+      const subs = assinaturas.map(a => ({ ...a, _tipo: 'assinatura' as ItemType }));
+      base = [...prods, ...subs];
+    }
 
     if (deferredSearch) {
       base = base.filter(i => i.nome.toLowerCase().includes(deferredSearch.toLowerCase()));
@@ -1032,48 +1042,27 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 pb-24 md:space-y-4 max-w-7xl mx-auto">
-      {/* Título e Seletor de Abas Luxuoso */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      {/* Barra de Ação Superior (Voltar + Filtros) */}
+      <div className="flex items-center justify-between gap-4 mb-2">
         {onBack ? (
           <button 
             onClick={onBack}
-            className="hidden md:inline-flex self-start md:self-auto h-9 items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 text-xs font-black text-neutral-800 shadow-sm transition-colors hover:bg-neutral-50 sm:h-10 sm:rounded-full sm:px-4 sm:text-sm"
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-800 shadow-sm transition-colors hover:bg-slate-50 cursor-pointer"
           >
             <ChevronLeft className="h-4 w-4 shrink-0" />
             <span>Voltar</span>
           </button>
         ) : (
-          <div className="hidden md:block w-24"></div>
+          <div />
         )}
-        <div className="mx-auto md:mx-0 w-full max-w-2xl flex-1">
-          <div className="grid grid-cols-2 gap-1 rounded-2xl border border-neutral-200 bg-white p-1 shadow-sm md:flex md:rounded-[2.5rem] md:border-white md:bg-white/70 md:p-1.5 md:shadow-[0_20px_50px_rgba(79,70,229,0.08)] md:ring-1 md:ring-black/5">
-            {[
-              { id: 'produtos', label: 'Produtos', icon: Package, color: 'from-indigo-600 to-blue-500' },
-              { id: 'assinaturas', label: 'Assinaturas', icon: Calendar, color: 'from-pink-600 to-purple-600' }
-            ].map(t => (
-              <button
-                key={t.id}
-                onClick={() => handleSelectTab(t.id as Tab)}
-                className={`relative flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-[0.12em] transition-all duration-500 md:flex-1 md:gap-3 md:rounded-full md:py-5 md:text-xs md:tracking-[0.25em] ${
-                  activeTab === t.id ? 'text-white' : 'text-neutral-400 hover:text-indigo-600'
-                }`}
-              >
-                {activeTab === t.id && (
-                  <motion.div
-                    layoutId="activeStoreTab"
-                    className={`absolute inset-0 rounded-xl bg-gradient-to-r ${t.color} shadow-lg shadow-indigo-200 md:rounded-full md:shadow-xl`}
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center gap-2 md:gap-3">
-                  <t.icon className={`h-4 w-4 transition-transform duration-500 md:h-4.5 md:w-4.5 ${activeTab === t.id ? 'scale-110 rotate-3' : 'scale-100 opacity-50'}`} />
-                  <span className="xs:inline">{t.label}</span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="hidden md:block w-24"></div>
+
+        <button 
+          onClick={() => updateRouteQuery({ modal: 'filtros' })}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-extrabold text-[#17345f] shadow-sm transition-all hover:bg-slate-50 cursor-pointer"
+        >
+          <SlidersHorizontal className="h-4 w-4 text-[#17345f]" />
+          <span>Filtros e Ordenação</span>
+        </button>
       </div>
 
       {/* Banner Exclusivo de Filtro (Ofertas Relâmpago / Mais Vendidos / Novidades / Recomendados) */}
@@ -1108,27 +1097,6 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
           </button>
         </div>
       )}
-
-      {/* Search & Utility Bar */}
-      <div className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm md:gap-3 md:rounded-[2rem] md:border-white md:bg-white/60 md:p-3 md:shadow-[0_10px_30px_rgba(0,0,0,0.02)] max-w-4xl mx-auto">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-400 transition-colors group-focus-within:text-indigo-600 md:left-4" />
-          <input 
-            id="storeSearchInput"
-            type="text" 
-            placeholder="Buscar produto" 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-11 w-full rounded-xl border-none bg-neutral-100/70 pl-10 pr-3 text-sm font-bold text-neutral-900 outline-none transition-all placeholder:text-neutral-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 md:h-auto md:rounded-2xl md:py-3.5 md:pl-12 md:pr-4"
-          />
-        </div>
-        <button 
-          onClick={() => updateRouteQuery({ modal: 'filtros' })}
-          className="group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white shadow-md transition-all hover:shadow-indigo-500/40 md:h-12 md:w-12 md:rounded-2xl md:shadow-lg"
-        >
-          <SlidersHorizontal className="h-4.5 w-4.5 transition-transform duration-500 group-hover:rotate-12" />
-        </button>
-      </div>
 
 
 

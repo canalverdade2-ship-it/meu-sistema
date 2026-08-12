@@ -4,6 +4,8 @@ import { ProductPage } from '../store/ProductPage';
 import { OrderSuccessPage } from '../store/OrderSuccessPage';
 import { WishlistPage } from '../store/WishlistPage';
 import { StoreHub } from '../StoreHub';
+import { ClientGSAStore } from '../ClientGSAStore';
+import { EcommerceHeader } from '../store/EcommerceHeader';
 import { BlogHome } from '../store/BlogHome';
 import { BlogPostPage } from '../store/BlogPostPage';
 import { ClassifiedsHubPage } from './ClassifiedsHubPage';
@@ -349,6 +351,27 @@ export function MarketplaceGSAStore({
           clientId={clientId}
           onBack={() => handleNavigate(routes.marketplace.store.root())}
         />
+      );
+    }
+
+    // Se for rota de catálogo da loja de produtos ou assinaturas
+    if (currentSubmodule === 'loja-produtos' || currentSubmodule === 'loja-assinaturas') {
+      return (
+        <div className="min-h-screen bg-[#f8f9fa]">
+          <EcommerceHeader 
+            clientId={clientId}
+            cartItemCount={0}
+            onOpenCart={() => {}}
+            onRequireAuth={onRequireAuth}
+          />
+          <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <ClientGSAStore 
+              clientId={clientId}
+              onRequireAuth={onRequireAuth}
+              onBack={() => handleNavigate(routes.marketplace.root())}
+            />
+          </main>
+        </div>
       );
     }
 
