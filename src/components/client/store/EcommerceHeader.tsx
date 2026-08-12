@@ -228,7 +228,7 @@ export function EcommerceHeader({
             </button>
             
             <div className="flex-shrink-0 cursor-pointer transition-transform hover:scale-105" onClick={() => navigate(routes.marketplace.root())}>
-              <LogoGSA size="md" variant="light" />
+              <LogoGSA size="sm" variant="light" showText />
             </div>
           </div>
 
