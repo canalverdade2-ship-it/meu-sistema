@@ -3,6 +3,9 @@ import { supabase } from '../../../lib/supabase';
 import { EcommerceHeader } from './EcommerceHeader';
 import { HeroBannerCarousel } from './HeroBannerCarousel';
 import StoreItemCard from './StoreItemCard';
+import { TermosDeUsoDialog } from '../../public/TermosDeUsoDialog';
+import { PrivacyPolicyDialog } from '../../public/PrivacyPolicyDialog';
+import { CentralDeAjudaDialog } from '../../public/CentralDeAjudaDialog';
 import {
   Loader2, TrendingUp, Zap, Clock, Star, ArrowRight,
   ShieldCheck, Truck, CreditCard, Award, Flame,
@@ -178,6 +181,11 @@ export function EcommerceHome({
   const [ofertas, setOfertas] = useState<any[]>([]);
   const [recomendados, setRecomendados] = useState<any[]>([]);
   const [localCartCount, setLocalCartCount] = useState(cartItemCount);
+
+  // Modal states
+  const [showTermos, setShowTermos] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showAjuda, setShowAjuda] = useState(false);
 
   useEffect(() => { setLocalCartCount(cartItemCount); }, [cartItemCount]);
 
@@ -538,22 +546,36 @@ export function EcommerceHome({
           © 2026 <strong className="text-gray-600">GSA HUB</strong> — Gestão de Serviços & Tecnologia. Todos os direitos reservados.
         </p>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-4">
-          {[
-            ['Termos de Uso', '#'],
-            ['Política de Privacidade', '#'],
-            ['Central de Ajuda', '#'],
-            ['Vender no GSA', routes.public.services()],
-          ].map(([label, href], i) => (
-            <button
-              key={i}
-              onClick={() => href !== '#' && navigate(href)}
-              className="text-xs text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
-            >
-              {label}
-            </button>
-          ))}
+          <button
+            onClick={() => setShowTermos(true)}
+            className="text-xs text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+          >
+            Termos de Uso
+          </button>
+          <button
+            onClick={() => setShowPrivacy(true)}
+            className="text-xs text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+          >
+            Política de Privacidade
+          </button>
+          <button
+            onClick={() => setShowAjuda(true)}
+            className="text-xs text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+          >
+            Central de Ajuda
+          </button>
+          <button
+            onClick={() => navigate(routes.public.services())}
+            className="text-xs text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+          >
+            Vender no GSA
+          </button>
         </div>
       </footer>
+      {/* ── Modais do Footer ── */}
+      <TermosDeUsoDialog isOpen={showTermos} onClose={() => setShowTermos(false)} />
+      <PrivacyPolicyDialog isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+      <CentralDeAjudaDialog isOpen={showAjuda} onClose={() => setShowAjuda(false)} clientId={clientId} />
     </div>
   );
 }
