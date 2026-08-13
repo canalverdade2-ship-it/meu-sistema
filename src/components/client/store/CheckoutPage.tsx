@@ -2354,14 +2354,16 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         onClose={() => setIsSelectorOpen(false)}
         coupons={availableCoupons}
         category={selectorCategory}
-        onSelectCoupon={(c) => {
+        subtotal={subtotalInicial}
+        onSelect={(code) => {
           if (selectorCategory === 'desconto') {
-            setCupomDesconto(c);
+            setCupomDescInput(code);
+            aplicarCupom(code, 'desconto');
           } else {
-            setCupomEntrega(c);
+            setCupomEntInput(code);
+            aplicarCupom(code, 'entrega');
           }
           setIsSelectorOpen(false);
-          toast.success('Cupom selecionado com sucesso!');
         }}
       />
     </div>

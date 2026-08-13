@@ -1813,6 +1813,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         isOpen={isSelectorOpen}
         onClose={() => setIsSelectorOpen(false)}
         coupons={availableCoupons}
+        subtotal={subtotalInicial}
         onSelect={(code) => {
           if (selectorCategory === 'desconto') {
             setCupomDescInput(code);
