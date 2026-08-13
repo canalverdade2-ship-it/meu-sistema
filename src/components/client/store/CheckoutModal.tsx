@@ -866,15 +866,15 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Finalizar Compra" size="wide">
-      <div className="bg-neutral-50 rounded-b-3xl flex flex-col min-h-0 max-h-[85vh]">
+    <Modal isOpen={isOpen} onClose={onClose} title="Finalizar Compra" size="2xl">
+      <div className="-m-5 sm:-m-6 lg:-m-7 flex flex-col bg-neutral-50 min-h-0">
         
-        {/* Barra de Progresso Visual das 3 Etapas */}
-        <div className="bg-white border-b border-neutral-200/80 px-4 sm:px-8 py-3.5 shrink-0">
-          <div className="flex items-center justify-between relative max-w-xl mx-auto">
-            <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-neutral-200 rounded-full z-0"></div>
+        {/* Barra de Progresso Visual Compacta e Elegante */}
+        <div className="bg-white border-b border-neutral-200 px-4 sm:px-6 py-2.5 shrink-0">
+          <div className="flex items-center justify-between relative max-w-md mx-auto">
+            <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-neutral-200 rounded-full z-0"></div>
             <div 
-              className="absolute left-6 top-1/2 -translate-y-1/2 h-1 bg-[#17345f] rounded-full z-0 transition-all duration-300"
+              className="absolute left-6 top-1/2 -translate-y-1/2 h-0.5 bg-[#17345f] rounded-full z-0 transition-all duration-300"
               style={{
                 width: etapaCheckout === 1 ? '0%' : etapaCheckout === 2 ? '50%' : 'calc(100% - 3rem)'
               }}
@@ -884,18 +884,18 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
             <button
               type="button"
               onClick={() => setEtapaCheckout(1)}
-              className="relative z-10 flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
+              className="relative z-10 flex flex-col items-center gap-1 group cursor-pointer focus:outline-none"
             >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-md ${
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
                 etapaCheckout > 1 
                   ? 'bg-[#17345f] text-white' 
                   : etapaCheckout === 1 
-                    ? 'bg-[#17345f] text-white ring-4 ring-indigo-100' 
-                    : 'bg-white text-neutral-400 border-2 border-neutral-300'
+                    ? 'bg-[#17345f] text-white ring-2 ring-indigo-200' 
+                    : 'bg-white text-neutral-400 border border-neutral-300'
               }`}>
-                {etapaCheckout > 1 ? <Check className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+                {etapaCheckout > 1 ? <Check className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />}
               </div>
-              <span className={`text-[10px] font-extrabold uppercase tracking-wider ${etapaCheckout === 1 ? 'text-[#17345f]' : 'text-neutral-500'}`}>
+              <span className={`text-[9px] font-extrabold uppercase tracking-wider ${etapaCheckout === 1 ? 'text-[#17345f]' : 'text-neutral-500'}`}>
                 1. Endereço
               </span>
             </button>
@@ -910,18 +910,18 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                 }
                 setEtapaCheckout(2);
               }}
-              className="relative z-10 flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
+              className="relative z-10 flex flex-col items-center gap-1 group cursor-pointer focus:outline-none"
             >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-md ${
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
                 etapaCheckout > 2 
                   ? 'bg-[#17345f] text-white' 
                   : etapaCheckout === 2 
-                    ? 'bg-[#17345f] text-white ring-4 ring-indigo-100' 
-                    : 'bg-white text-neutral-400 border-2 border-neutral-300'
+                    ? 'bg-[#17345f] text-white ring-2 ring-indigo-200' 
+                    : 'bg-white text-neutral-400 border border-neutral-300'
               }`}>
-                {etapaCheckout > 2 ? <Check className="w-4 h-4" /> : <Tag className="w-4 h-4" />}
+                {etapaCheckout > 2 ? <Check className="w-3.5 h-3.5" /> : <Tag className="w-3.5 h-3.5" />}
               </div>
-              <span className={`text-[10px] font-extrabold uppercase tracking-wider ${etapaCheckout === 2 ? 'text-[#17345f]' : 'text-neutral-500'}`}>
+              <span className={`text-[9px] font-extrabold uppercase tracking-wider ${etapaCheckout === 2 ? 'text-[#17345f]' : 'text-neutral-500'}`}>
                 2. Benefícios
               </span>
             </button>
@@ -936,16 +936,16 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                 }
                 setEtapaCheckout(3);
               }}
-              className="relative z-10 flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
+              className="relative z-10 flex flex-col items-center gap-1 group cursor-pointer focus:outline-none"
             >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-md ${
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
                 etapaCheckout === 3 
-                  ? 'bg-[#17345f] text-white ring-4 ring-indigo-100' 
-                  : 'bg-white text-neutral-400 border-2 border-neutral-300'
+                  ? 'bg-[#17345f] text-white ring-2 ring-indigo-200' 
+                  : 'bg-white text-neutral-400 border border-neutral-300'
               }`}>
-                <CreditCard className="w-4 h-4" />
+                <CreditCard className="w-3.5 h-3.5" />
               </div>
-              <span className={`text-[10px] font-extrabold uppercase tracking-wider ${etapaCheckout === 3 ? 'text-[#17345f]' : 'text-neutral-500'}`}>
+              <span className={`text-[9px] font-extrabold uppercase tracking-wider ${etapaCheckout === 3 ? 'text-[#17345f]' : 'text-neutral-500'}`}>
                 3. Pagamento
               </span>
             </button>
@@ -956,19 +956,19 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         {/* ETAPA 1: CONFIRMAR ENDEREÇO DE ENTREGA */}
         {/* ========================================================================= */}
         {etapaCheckout === 1 && (
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 custom-scrollbar max-w-3xl mx-auto w-full">
-            <div className="bg-white rounded-2xl p-5 sm:p-7 border border-neutral-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between gap-2 border-b border-neutral-100 pb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                    <MapPin className="w-5 h-5" />
+          <div className="p-4 sm:p-6 space-y-4 max-w-xl mx-auto w-full">
+            <div className="bg-white rounded-xl p-4 sm:p-5 border border-neutral-200/90 shadow-xs space-y-3.5">
+              <div className="flex items-center justify-between gap-2 border-b border-neutral-100 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <MapPin className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-neutral-900 uppercase tracking-wider">
+                    <h3 className="text-xs font-black text-neutral-900 uppercase tracking-wider">
                       Endereço de Entrega
                     </h3>
-                    <p className="text-[11px] text-neutral-400 font-semibold">
-                      {temProdutos ? 'Confirme o local para envio dos seus produtos' : 'Confirmação de identificação para o pedido'}
+                    <p className="text-[10px] text-neutral-400 font-medium">
+                      {temProdutos ? 'Confirme o local para envio dos produtos' : 'Identificação para o pedido'}
                     </p>
                   </div>
                 </div>
@@ -977,7 +977,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                   <button 
                     type="button"
                     onClick={() => setIsEditingEndereco(true)}
-                    className="text-xs font-bold text-[#17345f] hover:text-[#0c2242] uppercase tracking-wider flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl hover:bg-slate-100 cursor-pointer shadow-xs transition-all"
+                    className="text-[11px] font-bold text-[#17345f] hover:text-[#0c2242] uppercase tracking-wider flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg hover:bg-slate-100 cursor-pointer shadow-xs transition-all"
                   >
                     ✏️ Alterar
                   </button>
@@ -986,22 +986,16 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
 
               {temProdutos ? (
                 !isEditingEndereco && endereco.cep ? (
-                  <div className="bg-neutral-50 border border-neutral-200/80 rounded-2xl p-5 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50/50 rounded-full -mr-8 -mt-8 pointer-events-none" />
-                    <div className="space-y-2 relative z-10">
-                      <p className="text-base text-neutral-900 font-bold leading-normal">
-                        {endereco.logradouro}, {endereco.numero}
-                        {endereco.complemento && ` - ${endereco.complemento}`}
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs text-neutral-600">
-                        <p><strong className="text-neutral-800">Bairro:</strong> {endereco.bairro}</p>
-                        <p><strong className="text-neutral-800">Cidade:</strong> {endereco.cidade} - {endereco.uf}</p>
-                        <p><strong className="text-neutral-800">CEP:</strong> <span className="font-mono">{endereco.cep}</span></p>
-                      </div>
-                    </div>
+                  <div className="bg-neutral-50 border border-neutral-200/80 rounded-xl p-3.5 text-xs text-neutral-700 space-y-1">
+                    <p className="font-bold text-neutral-900 leading-tight">
+                      {endereco.logradouro}, {endereco.numero} {endereco.complemento && `(${endereco.complemento})`}
+                    </p>
+                    <p className="text-[11px] text-neutral-500">
+                      {endereco.bairro} — {endereco.cidade}/{endereco.uf} · CEP: <span className="font-mono font-semibold text-neutral-700">{endereco.cep}</span>
+                    </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {endereco.cep && (
                       <div className="flex justify-end">
                         <button 
@@ -1010,15 +1004,15 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                             fetchDadosCredito();
                             setIsEditingEndereco(false);
                           }}
-                          className="text-xs font-bold text-neutral-500 hover:text-neutral-700 uppercase tracking-wider cursor-pointer"
+                          className="text-[10px] font-bold text-neutral-500 hover:text-neutral-700 uppercase tracking-wider cursor-pointer"
                         >
-                          Cancelar alteração / Usar endereço cadastrado
+                          Usar endereço cadastrado
                         </button>
                       </div>
                     )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                       <div>
-                        <label className="text-xs font-bold text-neutral-500 uppercase">CEP *</label>
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase block mb-0.5">CEP *</label>
                         <input 
                           type="text" 
                           value={endereco.cep} 
@@ -1026,75 +1020,75 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                             setEndereco({...endereco, cep: e.target.value}); 
                             if(e.target.value.length >= 8) buscarCep(e.target.value); 
                           }} 
-                          className="w-full mt-1 px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
-                          placeholder="XXXXX-XXX" 
+                          className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-lg text-xs font-medium focus:ring-1 focus:ring-indigo-500 focus:outline-none" 
+                          placeholder="00000-000" 
                         />
                       </div>
-                      <div className="sm:col-span-2">
-                        <label className="text-xs font-bold text-neutral-500 uppercase">Logradouro *</label>
-                        <input type="text" readOnly value={endereco.logradouro} className="w-full mt-1 px-4 py-2.5 bg-neutral-100 border border-neutral-200 rounded-xl text-sm text-neutral-600" />
+                      <div className="col-span-2 sm:col-span-2">
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase block mb-0.5">Logradouro *</label>
+                        <input type="text" readOnly value={endereco.logradouro} className="w-full px-3 py-1.5 bg-neutral-100 border border-neutral-200 rounded-lg text-xs text-neutral-600" />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-neutral-500 uppercase">Número *</label>
-                        <input type="text" value={endereco.numero} onChange={e => setEndereco({...endereco, numero: e.target.value})} className="w-full mt-1 px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase block mb-0.5">Número *</label>
+                        <input type="text" value={endereco.numero} onChange={e => setEndereco({...endereco, numero: e.target.value})} className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-lg text-xs font-medium focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-neutral-500 uppercase">Complemento</label>
-                        <input type="text" value={endereco.complemento} onChange={e => setEndereco({...endereco, complemento: e.target.value})} className="w-full mt-1 px-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase block mb-0.5">Complemento</label>
+                        <input type="text" value={endereco.complemento} onChange={e => setEndereco({...endereco, complemento: e.target.value})} className="w-full px-3 py-1.5 bg-white border border-neutral-300 rounded-lg text-xs font-medium focus:ring-1 focus:ring-indigo-500 focus:outline-none" />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-neutral-500 uppercase">Bairro *</label>
-                        <input type="text" readOnly value={endereco.bairro} className="w-full mt-1 px-4 py-2.5 bg-neutral-100 border border-neutral-200 rounded-xl text-sm text-neutral-600" />
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase block mb-0.5">Bairro *</label>
+                        <input type="text" readOnly value={endereco.bairro} className="w-full px-3 py-1.5 bg-neutral-100 border border-neutral-200 rounded-lg text-xs text-neutral-600" />
                       </div>
-                      <div>
-                        <label className="text-xs font-bold text-neutral-500 uppercase">Cidade / UF *</label>
-                        <input type="text" readOnly value={`${endereco.cidade} - ${endereco.uf}`} className="w-full mt-1 px-4 py-2.5 bg-neutral-100 border border-neutral-200 rounded-xl text-sm text-neutral-600" />
+                      <div className="col-span-2 sm:col-span-3">
+                        <label className="text-[10px] font-bold text-neutral-500 uppercase block mb-0.5">Cidade / UF *</label>
+                        <input type="text" readOnly value={`${endereco.cidade} - ${endereco.uf}`} className="w-full px-3 py-1.5 bg-neutral-100 border border-neutral-200 rounded-lg text-xs text-neutral-600" />
                       </div>
                     </div>
                   </div>
                 )
               ) : (
-                <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 flex items-center gap-3">
-                  <Package className="w-5 h-5 text-indigo-600 shrink-0" />
-                  <p className="text-xs font-bold text-indigo-900 leading-normal">
-                    Seu pedido contém apenas serviços ou assinaturas digitais e não necessita de entrega física.
+                <div className="p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 flex items-center gap-2">
+                  <Package className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <p className="text-[11px] font-bold text-indigo-900 leading-normal">
+                    Seu pedido contém apenas itens digitais e não requer entrega física.
                   </p>
                 </div>
               )}
             </div>
 
             {/* Mini Box de Conferência */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200 shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
-                  <ShoppingCart className="w-5 h-5" />
+            <div className="bg-white rounded-xl p-3 sm:p-4 border border-neutral-200/90 shadow-xs flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                  <ShoppingCart className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black uppercase text-neutral-800 tracking-wider">Itens no Pedido</h4>
-                  <p className="text-xs text-neutral-500 font-medium">
-                    {cartItems.reduce((acc: number, c: CartItem) => acc + c.quantidade, 0)} {cartItems.reduce((acc: number, c: CartItem) => acc + c.quantidade, 0) === 1 ? 'item selecionado' : 'itens selecionados'}
+                  <h4 className="text-[11px] font-black uppercase text-neutral-800 tracking-wider">Itens no Carrinho</h4>
+                  <p className="text-[10px] text-neutral-400">
+                    {cartItems.reduce((acc: number, c: CartItem) => acc + c.quantidade, 0)} {cartItems.reduce((acc: number, c: CartItem) => acc + c.quantidade, 0) === 1 ? 'item' : 'itens'}
                   </p>
                 </div>
               </div>
-              <span className="text-base font-black text-neutral-900">{formatCurrency(subtotalInicial)}</span>
+              <span className="text-sm font-black text-neutral-900">{formatCurrency(subtotalInicial)}</span>
             </div>
 
             {/* Botão de Avançar Etapa 1 */}
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-1">
               <button
                 type="button"
                 disabled={temProdutos && !enderecoCompletoValido}
                 onClick={() => {
                   if (temProdutos && !enderecoCompletoValido) {
-                    toast.error('Preencha todos os campos obrigatórios do endereço de entrega.');
+                    toast.error('Preencha os campos de endereço para avançar.');
                     return;
                   }
                   setEtapaCheckout(2);
                 }}
-                className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white rounded-xl font-black text-sm transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white rounded-xl font-bold text-xs transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 Avançar para Cupons & Benefícios
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -1104,47 +1098,32 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         {/* ETAPA 2: CUPONS, PONTOS VIP E CARTEIRA */}
         {/* ========================================================================= */}
         {etapaCheckout === 2 && (
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 custom-scrollbar max-w-3xl mx-auto w-full">
+          <div className="p-4 sm:p-6 space-y-3.5 max-w-xl mx-auto w-full">
             
             {/* Seção Cupons da Loja */}
-            <div className="bg-white rounded-2xl p-5 sm:p-7 border border-neutral-200 shadow-sm space-y-4">
-              <h3 className="text-sm font-black text-neutral-900 uppercase tracking-widest flex items-center gap-2">
-                <Tag className="w-4 h-4 text-indigo-600" /> Cupons da Loja
+            <div className="bg-white rounded-xl p-4 border border-neutral-200/90 shadow-xs space-y-3">
+              <h3 className="text-xs font-black text-neutral-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-indigo-600" /> Cupons da Loja
               </h3>
               
               {/* Cupom Desconto */}
-              <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                <label className="text-xs font-bold text-blue-800 uppercase flex items-center gap-1 mb-2"><Tag className="w-3 h-3" /> Cupom de Desconto</label>
+              <div className="bg-blue-50/40 p-3 rounded-xl border border-blue-100 space-y-1.5">
+                <label className="text-[10px] font-bold text-blue-800 uppercase flex items-center gap-1"><Tag className="w-3 h-3" /> Cupom de Desconto</label>
                 {cupomDesconto ? (
-                  <div className="flex flex-col gap-2 bg-white border border-blue-200 p-3 rounded-xl">
-                    <div className="flex items-center justify-between w-full">
-                      <span className="font-mono text-sm font-bold text-blue-700">{cupomDesconto.codigo_cupom} - {cupomDesconto.tipo_desconto === 'porcentagem' ? `${cupomDesconto.valor_desconto}% OFF` : `R$ ${cupomDesconto.valor_desconto} OFF`}</span>
-                      <button onClick={() => setCupomDesconto(null)} className="text-xs font-bold text-red-500 hover:text-red-700 cursor-pointer">Remover</button>
-                    </div>
-                    {cupomDesconto.produto_id && (() => {
-                      const benefitedItem = cartItems.find(c => c.item_id === cupomDesconto.produto_id);
-                      const itemCode = (benefitedItem?.tipo === 'produto' ? getProductDisplayCode(benefitedItem?.item_detalhes as any) : (benefitedItem?.item_detalhes?.codigo_produto || benefitedItem?.item_detalhes?.codigo_servico || benefitedItem?.item_detalhes?.codigo_assinatura || ''));
-                      return (
-                        <div className="flex items-start gap-2 bg-blue-50/50 p-2 rounded-lg border border-blue-100/50">
-                          <AlertCircle className="w-3 h-3 text-blue-500 shrink-0 mt-0.5" />
-                          <p className="text-[10px] font-bold text-blue-600 leading-tight">
-                            Regra do Cupom: Desconto aplicado exclusivamente ao item <span className="font-mono text-indigo-600 bg-indigo-50 px-1 rounded">{itemCode}</span> - <span className="underline italic">"{benefitedItem?.item_detalhes?.nome || 'selecionado'}"</span>.
-                          </p>
-                        </div>
-                      );
-                    })()}
+                  <div className="flex items-center justify-between bg-white border border-blue-200 px-3 py-2 rounded-lg text-xs">
+                    <span className="font-mono font-bold text-blue-700">{cupomDesconto.codigo_cupom} - {cupomDesconto.tipo_desconto === 'porcentagem' ? `${cupomDesconto.valor_desconto}% OFF` : `R$ ${cupomDesconto.valor_desconto} OFF`}</span>
+                    <button onClick={() => setCupomDesconto(null)} className="text-[11px] font-bold text-red-500 hover:text-red-700 cursor-pointer">Remover</button>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <input type="text" value={cupomDescInput} onChange={e => setCupomDescInput(e.target.value.toUpperCase())} placeholder="CÓDIGO" className="flex-1 px-4 py-2 bg-white border border-blue-200 rounded-xl text-sm font-mono uppercase" />
-                      <button onClick={() => aplicarCupom(cupomDescInput, 'desconto')} className="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl text-xs hover:bg-blue-700 transition-all active:scale-95 shadow-sm cursor-pointer">Aplicar</button>
+                  <div className="space-y-1.5">
+                    <div className="flex gap-1.5">
+                      <input type="text" value={cupomDescInput} onChange={e => setCupomDescInput(e.target.value.toUpperCase())} placeholder="CÓDIGO" className="flex-1 px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-mono uppercase" />
+                      <button onClick={() => aplicarCupom(cupomDescInput, 'desconto')} className="px-4 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs hover:bg-blue-700 cursor-pointer shadow-xs">Aplicar</button>
                     </div>
                     <button 
                       onClick={() => handleOpenSelector('desconto')}
-                      className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-colors ml-1 cursor-pointer"
+                      className="text-[9px] font-black text-blue-600 uppercase tracking-wider hover:text-blue-800 cursor-pointer block"
                     >
-                      <Ticket className="w-3.5 h-3.5" />
                       Ver Cupons Disponíveis
                     </button>
                   </div>
@@ -1153,37 +1132,24 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
 
               {/* Cupom Entrega */}
               {temProdutos && (
-                <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
-                  <label className="text-xs font-bold text-emerald-800 uppercase flex items-center gap-1 mb-2"><Package className="w-3 h-3" /> Benefício de Entrega</label>
+                <div className="bg-emerald-50/40 p-3 rounded-xl border border-emerald-100 space-y-1.5">
+                  <label className="text-[10px] font-bold text-emerald-800 uppercase flex items-center gap-1"><Package className="w-3 h-3" /> Benefício de Frete</label>
                   {cupomEntrega ? (
-                    <div className="flex flex-col gap-2 bg-white border border-emerald-200 p-3 rounded-xl">
-                      <div className="flex items-center justify-between w-full">
-                        <span className="font-mono text-sm font-bold text-emerald-700">{cupomEntrega.codigo_cupom} - {cupomEntrega.tipo_entrega === 'frete_gratis' ? 'Frete Grátis' : 'Frete Fixo'}</span>
-                        <button onClick={() => setCupomEntrega(null)} className="text-xs font-bold text-red-500 hover:text-red-700 cursor-pointer">Remover</button>
-                      </div>
-                      <div className="flex items-center gap-2 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-100">
-                        <CheckCircle className="w-4 h-4 text-emerald-600" />
-                        <div>
-                          <p className="text-xs font-bold text-emerald-800">
-                            {cupomEntrega.tipo_entrega === 'frete_gratis' || cupomEntrega.tipo_entrega === 'frete_gratis_minimo' 
-                              ? 'Frete Grátis' 
-                              : `Frete Fixo de ${formatCurrency(cupomEntrega.taxa_fixa_entrega || 0)}`}
-                          </p>
-                        </div>
-                      </div>
+                    <div className="flex items-center justify-between bg-white border border-emerald-200 px-3 py-2 rounded-lg text-xs">
+                      <span className="font-mono font-bold text-emerald-700">{cupomEntrega.codigo_cupom} - {cupomEntrega.tipo_entrega === 'frete_gratis' ? 'Frete Grátis' : 'Frete Fixo'}</span>
+                      <button onClick={() => setCupomEntrega(null)} className="text-[11px] font-bold text-red-500 hover:text-red-700 cursor-pointer">Remover</button>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <input type="text" value={cupomEntInput} onChange={e => setCupomEntInput(e.target.value.toUpperCase())} placeholder="CÓDIGO DE ENTREGA" className="flex-1 px-4 py-2 bg-white border border-emerald-200 rounded-xl text-sm font-mono uppercase" />
-                        <button onClick={() => aplicarCupom(cupomEntInput, 'entrega')} className="px-6 py-2 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition-all active:scale-95 shadow-sm cursor-pointer">Aplicar</button>
+                    <div className="space-y-1.5">
+                      <div className="flex gap-1.5">
+                        <input type="text" value={cupomEntInput} onChange={e => setCupomEntInput(e.target.value.toUpperCase())} placeholder="CÓDIGO FRETE" className="flex-1 px-3 py-1.5 bg-white border border-emerald-200 rounded-lg text-xs font-mono uppercase" />
+                        <button onClick={() => aplicarCupom(cupomEntInput, 'entrega')} className="px-4 py-1.5 bg-emerald-600 text-white font-bold rounded-lg text-xs hover:bg-emerald-700 cursor-pointer shadow-xs">Aplicar</button>
                       </div>
                       <button 
                         onClick={() => handleOpenSelector('entrega')}
-                        className="flex items-center gap-1.5 text-[10px] font-black text-emerald-700 uppercase tracking-widest hover:text-emerald-900 transition-colors ml-1 cursor-pointer"
+                        className="text-[9px] font-black text-emerald-700 uppercase tracking-wider hover:text-emerald-900 cursor-pointer block"
                       >
-                        <Package className="w-3.5 h-3.5" />
-                        Ver Benefícios de Entrega
+                        Ver Benefícios de Frete
                       </button>
                     </div>
                   )}
@@ -1193,17 +1159,15 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
 
             {/* Sessão de Resgate de Pontos VIP */}
             {!isTravelCheckout && (
-              <div className="relative overflow-hidden rounded-2xl border border-purple-800/40 bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 p-5 sm:p-6 text-white shadow-lg">
-                <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-amber-400/10 blur-xl"></div>
-                
-                <div className="relative z-10 mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="rounded-xl bg-amber-400 p-2.5 text-purple-950 shadow-md shadow-amber-400/20">
-                      <Coins className="h-4 w-4" />
+              <div className="rounded-xl border border-purple-800/40 bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 p-3.5 text-white shadow-xs space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-lg bg-amber-400 p-1.5 text-purple-950">
+                      <Coins className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black uppercase tracking-widest text-white">Resgatar Pontos VIP</h3>
-                      <p className="text-[10px] font-bold text-purple-200/90">Cada 100 pontos equivalem a R$ 1,00</p>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-white">Resgatar Pontos VIP</h3>
+                      <p className="text-[9px] text-purple-200">100 pts = R$ 1,00</p>
                     </div>
                   </div>
 
@@ -1215,101 +1179,59 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                       onChange={e => handleTogglePontos(e.target.checked)}
                       className="peer sr-only" 
                     />
-                    <div className="h-6 w-11 rounded-full border-2 border-purple-400/60 bg-purple-950/90 shadow-inner after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-purple-200 after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:border-amber-400 peer-checked:bg-amber-400 peer-checked:after:translate-x-full peer-checked:after:border-purple-900 peer-focus:outline-none"></div>
+                    <div className="h-5 w-9 rounded-full bg-purple-950 peer-checked:bg-amber-400 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-purple-950 border border-purple-400/40"></div>
                   </label>
                 </div>
 
-                <div className="relative z-10 space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-purple-200/80">Seu Saldo:</span>
-                    <span className="font-black text-amber-300 flex items-center gap-1.5">
-                      👑 {saldoPontos.toLocaleString()} pontos ({formatCurrency(saldoPontos / 100)})
-                    </span>
-                  </div>
-
-                  {usarPontos && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }} 
-                      animate={{ opacity: 1, height: 'auto' }} 
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-3 border-t border-purple-800/60 pt-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex-grow">
-                          <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-purple-200">Pontos a Usar</label>
-                          <input 
-                            type="number" 
-                            value={pontosAplicados || ''} 
-                            min="0"
-                            max={maxPontosValidos}
-                            onChange={e => handlePontosChange(parseInt(e.target.value) || 0)}
-                            className="w-full rounded-xl border border-purple-400/30 bg-white px-3 py-2 text-sm font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400" 
-                            placeholder="Ex: 500"
-                          />
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-purple-200">Desconto Aplicado</label>
-                          <span className="block pt-1.5 text-base font-black text-amber-300">
-                            - {formatCurrency(descontoPontos)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {saldoPontos >= 100 && maxPontosValidos >= 100 && (
-                          <button 
-                            type="button"
-                            onClick={() => handlePontosChange(100)}
-                            className="rounded-lg border border-purple-400/40 bg-purple-900/60 px-2.5 py-1 text-[10px] font-black text-amber-200 transition-all hover:bg-purple-800 active:scale-95 cursor-pointer"
-                          >
-                            100 pts
-                          </button>
-                        )}
-                        {saldoPontos >= 500 && maxPontosValidos >= 500 && (
-                          <button 
-                            type="button"
-                            onClick={() => handlePontosChange(500)}
-                            className="rounded-lg border border-purple-400/40 bg-purple-900/60 px-2.5 py-1 text-[10px] font-black text-amber-200 transition-all hover:bg-purple-800 active:scale-95 cursor-pointer"
-                          >
-                            500 pts
-                          </button>
-                        )}
-                        {saldoPontos >= 1000 && maxPontosValidos >= 1000 && (
-                          <button 
-                            type="button"
-                            onClick={() => handlePontosChange(1000)}
-                            className="rounded-lg border border-purple-400/40 bg-purple-900/60 px-2.5 py-1 text-[10px] font-black text-amber-200 transition-all hover:bg-purple-800 active:scale-95 cursor-pointer"
-                          >
-                            1.000 pts
-                          </button>
-                        )}
-                        <button 
-                          type="button"
-                          onClick={() => handlePontosChange(maxPontosValidos)}
-                          className="ml-auto rounded-lg bg-amber-400 px-2.5 py-1 text-[10px] font-black text-purple-950 transition-all hover:bg-amber-300 active:scale-95 shadow-sm shadow-amber-400/20 cursor-pointer"
-                        >
-                          Usar Máximo ({maxPontosValidos.toLocaleString()} pts)
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-purple-800/40">
+                  <span className="text-purple-200/80 text-[11px]">Saldo Disponível:</span>
+                  <span className="font-black text-amber-300 text-xs">
+                    👑 {saldoPontos.toLocaleString()} pts ({formatCurrency(saldoPontos / 100)})
+                  </span>
                 </div>
+
+                {usarPontos && (
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        value={pontosAplicados || ''} 
+                        min="0"
+                        max={maxPontosValidos}
+                        onChange={e => handlePontosChange(parseInt(e.target.value) || 0)}
+                        className="flex-1 rounded-lg border border-purple-400/30 bg-white px-2.5 py-1 text-xs font-bold text-neutral-900 focus:outline-none" 
+                        placeholder="Ex: 500"
+                      />
+                      <span className="text-xs font-black text-amber-300 shrink-0">
+                        - {formatCurrency(descontoPontos)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {saldoPontos >= 100 && maxPontosValidos >= 100 && (
+                        <button type="button" onClick={() => handlePontosChange(100)} className="rounded bg-purple-900/60 px-2 py-0.5 text-[9px] font-bold text-amber-200">100 pts</button>
+                      )}
+                      {saldoPontos >= 500 && maxPontosValidos >= 500 && (
+                        <button type="button" onClick={() => handlePontosChange(500)} className="rounded bg-purple-900/60 px-2 py-0.5 text-[9px] font-bold text-amber-200">500 pts</button>
+                      )}
+                      <button type="button" onClick={() => handlePontosChange(maxPontosValidos)} className="ml-auto rounded bg-amber-400 px-2 py-0.5 text-[9px] font-black text-purple-950">Máximo ({maxPontosValidos.toLocaleString()} pts)</button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Sessão de Saldo da Carteira Virtual */}
             {!isTravelCheckout && (
-              <div className="relative overflow-hidden rounded-2xl border border-emerald-700/50 bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-900 p-5 sm:p-6 text-white shadow-lg">
-                <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-emerald-400/10 blur-xl"></div>
-                
-                <div className="relative z-10 mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="rounded-xl bg-emerald-400 p-2.5 text-emerald-950 shadow-md shadow-emerald-400/20">
-                      <Wallet className="h-4 w-4" />
+              <div className="rounded-xl border border-emerald-700/50 bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-900 p-3.5 text-white shadow-xs space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-lg bg-emerald-400 p-1.5 text-emerald-950">
+                      <Wallet className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black uppercase tracking-widest text-white">Usar Saldo da Carteira</h3>
-                      <p className="text-[10px] font-bold text-emerald-200/90">Abata o valor com seu saldo disponível</p>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-white">Usar Saldo da Carteira</h3>
+                      <p className="text-[9px] text-emerald-200">Abata o valor com seu saldo</p>
                     </div>
                   </div>
 
@@ -1321,59 +1243,35 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                       onChange={e => handleToggleSaldoCarteira(e.target.checked)}
                       className="peer sr-only" 
                     />
-                    <div className="h-6 w-11 rounded-full border-2 border-emerald-300/60 bg-emerald-950/90 shadow-inner after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-emerald-200 after:bg-white after:shadow-sm after:transition-all after:content-[''] peer-checked:border-emerald-400 peer-checked:bg-emerald-400 peer-checked:after:translate-x-full peer-checked:after:border-emerald-500 peer-focus:outline-none"></div>
+                    <div className="h-5 w-9 rounded-full bg-emerald-950 peer-checked:bg-emerald-400 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-emerald-950 border border-emerald-300/40"></div>
                   </label>
                 </div>
 
-                <div className="relative z-10 space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-emerald-200/80">Seu Saldo:</span>
-                    <span className="font-black text-emerald-300">
-                      {formatCurrency(saldoCarteira)}
-                    </span>
-                  </div>
-
-                  {usarSaldoCarteira && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }} 
-                      animate={{ opacity: 1, height: 'auto' }} 
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-3 border-t border-emerald-800/60 pt-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex-grow">
-                          <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-emerald-200">Valor a Usar</label>
-                          <input 
-                            type="number" 
-                            value={saldoCarteiraAplicado ? Number(saldoCarteiraAplicado.toFixed(2)) : ''} 
-                            min="0"
-                            max={maxSaldoValido}
-                            step="0.01"
-                            onChange={e => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
-                            className="w-full rounded-xl border border-emerald-400/30 bg-white px-3 py-2 text-sm font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-emerald-400" 
-                            placeholder="Ex: 50.00"
-                          />
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-emerald-200">Desconto Aplicado</label>
-                          <span className="block pt-1.5 text-base font-black text-emerald-300">
-                            - {formatCurrency(descontoCarteira)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        <button 
-                          type="button"
-                          onClick={() => handleSaldoCarteiraChange(maxSaldoValido)}
-                          className="ml-auto rounded-lg bg-emerald-400 px-2.5 py-1 text-[10px] font-black text-emerald-950 transition-all hover:bg-emerald-300 active:scale-95 shadow-sm shadow-emerald-400/20 cursor-pointer"
-                        >
-                          Usar Máximo ({formatCurrency(maxSaldoValido)})
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-emerald-800/60">
+                  <span className="text-emerald-200/80 text-[11px]">Saldo Disponível:</span>
+                  <span className="font-black text-emerald-300 text-xs">{formatCurrency(saldoCarteira)}</span>
                 </div>
+
+                {usarSaldoCarteira && (
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        value={saldoCarteiraAplicado ? Number(saldoCarteiraAplicado.toFixed(2)) : ''} 
+                        min="0"
+                        max={maxSaldoValido}
+                        step="0.01"
+                        onChange={e => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
+                        className="flex-1 rounded-lg border border-emerald-400/30 bg-white px-2.5 py-1 text-xs font-bold text-neutral-900 focus:outline-none" 
+                        placeholder="Ex: 50.00"
+                      />
+                      <span className="text-xs font-black text-emerald-300 shrink-0">
+                        - {formatCurrency(descontoCarteira)}
+                      </span>
+                    </div>
+                    <button type="button" onClick={() => handleSaldoCarteiraChange(maxSaldoValido)} className="block ml-auto rounded bg-emerald-400 px-2 py-0.5 text-[9px] font-black text-emerald-950">Usar Máximo ({formatCurrency(maxSaldoValido)})</button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1382,65 +1280,57 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               <button
                 type="button"
                 onClick={() => setEtapaCheckout(1)}
-                className="px-6 py-3.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+                className="px-4 py-2 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <ArrowLeft className="w-4 h-4" />
-                Voltar para Endereço
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Voltar
               </button>
 
               <button
                 type="button"
                 onClick={() => setEtapaCheckout(3)}
-                className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2 cursor-pointer"
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5 cursor-pointer"
               >
                 Avançar para Pagamento
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* ETAPA 3: PAGAMENTO (ESTREITO/ENFILEIRADO) & RESUMO DO PEDIDO (AMPLO) */}
+        {/* ETAPA 3: PAGAMENTO (COMPACTO) & RESUMO DO PEDIDO (AMPLO E PROPORCIONAL) */}
         {/* ========================================================================= */}
         {etapaCheckout === 3 && (
-          <div className="flex flex-col lg:flex-row min-h-0 flex-1">
+          <div className="flex flex-col md:flex-row min-h-0 flex-1">
             
-            {/* Coluna Esquerda: Opção de Pagamento Compacta e Enfileirada */}
-            <div className="w-full lg:w-[280px] xl:w-[300px] shrink-0 p-4 sm:p-5 overflow-y-auto max-h-[85vh] custom-scrollbar border-b lg:border-b-0 lg:border-r border-neutral-200 flex flex-col justify-between space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2.5 border-b border-neutral-100 pb-3">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
-                    <CreditCard className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-black text-neutral-900 uppercase tracking-wider">Forma de Pagamento</h3>
-                    <p className="text-[10px] text-neutral-400 font-bold">Selecione uma opção</p>
-                  </div>
+            {/* Coluna Esquerda: Formas de Pagamento Compactas */}
+            <div className="w-full md:w-[230px] lg:w-[250px] shrink-0 p-3.5 border-b md:border-b-0 md:border-r border-neutral-200 flex flex-col justify-between space-y-3">
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-1.5 border-b border-neutral-100 pb-2">
+                  <CreditCard className="w-3.5 h-3.5 text-indigo-600" />
+                  <h3 className="text-[11px] font-black text-neutral-800 uppercase tracking-wider">Pagamento</h3>
                 </div>
                 
-                {/* Opções Enfileiradas Verticalmente */}
-                <div className="flex flex-col gap-2.5">
+                {/* Opções Enfileiradas */}
+                <div className="flex flex-col gap-1.5">
                   {checkoutMetodoPixAtivo && (
                     <button
                       type="button"
                       onClick={() => setFormaPagamento('pix')}
-                      className={`flex items-center justify-between p-3.5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                      className={`flex items-center justify-between p-2.5 rounded-xl border-2 transition-all text-left cursor-pointer ${
                         formaPagamento === 'pix'
-                          ? 'border-indigo-600 bg-indigo-50/30 text-indigo-950 shadow-sm'
+                          ? 'border-indigo-600 bg-indigo-50/40 text-indigo-950 font-bold shadow-xs'
                           : 'border-neutral-200/80 bg-white text-neutral-700 hover:border-neutral-300'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${formaPagamento === 'pix' ? 'bg-indigo-600' : 'bg-neutral-300'}`}></div>
-                        <div>
-                          <span className="font-black text-xs block leading-tight">PIX</span>
-                          <span className="text-[10px] text-neutral-400 block font-medium">Aprovação imediata</span>
-                        </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${formaPagamento === 'pix' ? 'bg-indigo-600' : 'bg-neutral-300'}`}></div>
+                        <span className="text-xs font-black">PIX</span>
                       </div>
                       {lojaPixDescontoAtivo && (
-                        <span className="shrink-0 text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-lg">
-                          -{lojaPixDescontoPorcentagem}% OFF
+                        <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">
+                          -{lojaPixDescontoPorcentagem}%
                         </span>
                       )}
                     </button>
@@ -1450,18 +1340,15 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                     <button
                       type="button"
                       onClick={() => setFormaPagamento('cartao')}
-                      className={`flex items-center justify-between p-3.5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                      className={`flex items-center justify-between p-2.5 rounded-xl border-2 transition-all text-left cursor-pointer ${
                         formaPagamento === 'cartao'
-                          ? 'border-indigo-600 bg-indigo-50/30 text-indigo-950 shadow-sm'
+                          ? 'border-indigo-600 bg-indigo-50/40 text-indigo-950 font-bold shadow-xs'
                           : 'border-neutral-200/80 bg-white text-neutral-700 hover:border-neutral-300'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${formaPagamento === 'cartao' ? 'bg-indigo-600' : 'bg-neutral-300'}`}></div>
-                        <div>
-                          <span className="font-black text-xs block leading-tight">Cartão de Crédito</span>
-                          <span className="text-[10px] text-neutral-400 block font-medium">Em até {maxParcelas}x</span>
-                        </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${formaPagamento === 'cartao' ? 'bg-indigo-600' : 'bg-neutral-300'}`}></div>
+                        <span className="text-xs font-black">Cartão de Crédito</span>
                       </div>
                     </button>
                   )}
@@ -1470,18 +1357,15 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                     <button
                       type="button"
                       onClick={() => setFormaPagamento('boleto')}
-                      className={`flex items-center justify-between p-3.5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                      className={`flex items-center justify-between p-2.5 rounded-xl border-2 transition-all text-left cursor-pointer ${
                         formaPagamento === 'boleto'
-                          ? 'border-indigo-600 bg-indigo-50/30 text-indigo-950 shadow-sm'
+                          ? 'border-indigo-600 bg-indigo-50/40 text-indigo-950 font-bold shadow-xs'
                           : 'border-neutral-200/80 bg-white text-neutral-700 hover:border-neutral-300'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${formaPagamento === 'boleto' ? 'bg-indigo-600' : 'bg-neutral-300'}`}></div>
-                        <div>
-                          <span className="font-black text-xs block leading-tight">Boleto Bancário</span>
-                          <span className="text-[10px] text-neutral-400 block font-medium">À vista (1 a 3 dias)</span>
-                        </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${formaPagamento === 'boleto' ? 'bg-indigo-600' : 'bg-neutral-300'}`}></div>
+                        <span className="text-xs font-black">Boleto Bancário</span>
                       </div>
                     </button>
                   )}
@@ -1492,110 +1376,85 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                     onClick={() => {
                       const totalInicialComJuros = totalHoje * (1 + calcularTaxaJuros(numParcelas) / 100);
                       if (totalInicialComJuros > limiteCreditoDisponivel) {
-                        toast.error(`Saldo de crédito disponível insuficiente (${formatCurrency(limiteCreditoDisponivel)}).`);
+                        toast.error(`Saldo de crédito insuficiente (${formatCurrency(limiteCreditoDisponivel)}).`);
                         return;
                       }
                       setFormaPagamento('credito_loja');
                     }}
-                    className={`flex flex-col items-start p-3.5 rounded-xl border-2 transition-all text-left relative cursor-pointer ${
+                    className={`flex flex-col p-2.5 rounded-xl border-2 transition-all text-left cursor-pointer ${
                       limiteCreditoTotal <= 0
                         ? 'opacity-50 cursor-not-allowed border-neutral-100 bg-neutral-50/50 text-neutral-400'
                         : formaPagamento === 'credito_loja'
-                          ? 'border-emerald-600 bg-emerald-50/20 text-emerald-950 shadow-sm'
+                          ? 'border-emerald-600 bg-emerald-50/30 text-emerald-950 font-bold shadow-xs'
                           : 'border-neutral-200/80 bg-white text-neutral-700 hover:border-neutral-300'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 w-full mb-1">
-                      <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${formaPagamento === 'credito_loja' ? 'bg-emerald-600' : 'bg-neutral-300'}`}></div>
-                      <span className="font-black text-xs block leading-tight">Crédito GSA Store</span>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${formaPagamento === 'credito_loja' ? 'bg-emerald-600' : 'bg-neutral-300'}`}></div>
+                      <span className="text-xs font-black">Crédito GSA</span>
                     </div>
-                    {limiteCreditoTotal <= 0 ? (
-                      <span className="text-[9px] text-neutral-400 font-bold ml-5">Não contratado / sem limite</span>
-                    ) : (
-                      <div className="ml-5 space-y-0.5">
-                        <span className="text-[10px] text-neutral-500 font-medium block">
-                          Disponível: <strong className={(totalHoje * (1 + calcularTaxaJuros(numParcelas) / 100)) > limiteCreditoDisponivel ? 'text-red-500 font-black' : 'text-emerald-700 font-black'}>{formatCurrency(limiteCreditoDisponivel)}</strong>
-                        </span>
-                        {(totalHoje * (1 + calcularTaxaJuros(numParcelas) / 100)) > limiteCreditoDisponivel && (
-                          <span className="text-[8px] text-red-600 font-black uppercase tracking-wider block bg-red-100 px-1 py-0.2 rounded">Saldo Insuficiente</span>
-                        )}
-                      </div>
+                    {limiteCreditoTotal > 0 && (
+                      <span className="text-[9px] text-neutral-400 ml-4">
+                        Disp: <strong className="text-emerald-700">{formatCurrency(limiteCreditoDisponivel)}</strong>
+                      </span>
                     )}
                   </button>
                 </div>
 
-                {formaPagamento === 'credito_loja' && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-neutral-100/80 border border-neutral-200 rounded-xl space-y-2"
-                  >
-                    <label className="text-[10px] font-black text-neutral-500 uppercase tracking-wider block">Parcelas</label>
-                    {opcaoPagamentoParcelado ? (
-                      <select
-                        value={numParcelas}
-                        onChange={e => setNumParcelas(parseInt(e.target.value))}
-                        className="w-full px-2.5 py-2 bg-white border border-neutral-300 rounded-lg text-xs font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        <option value={1}>À vista (30 dias) - {formatCurrency(totalHoje * (1 + calcularTaxaJuros(1) / 100))}</option>
-                        {Array.from({ length: Math.max(0, maxParcelas - 1) }, (_, i) => i + 2).map(n => {
-                          const taxaN = calcularTaxaJuros(n);
-                          const totalComJuros = totalHoje * (1 + taxaN / 100);
-                          const valorParcela = totalComJuros / n;
-                          return (
-                            <option key={n} value={n}>{n}x de {formatCurrency(valorParcela)} (+{taxaN}%)</option>
-                          );
-                        })}
-                      </select>
-                    ) : (
-                      <span className="text-[10px] text-neutral-600 block">Pagamento Único (30 dias)</span>
-                    )}
-                  </motion.div>
+                {formaPagamento === 'credito_loja' && opcaoPagamentoParcelado && (
+                  <div className="p-2 bg-neutral-100 rounded-lg space-y-1">
+                    <label className="text-[9px] font-bold text-neutral-500 uppercase block">Parcelas</label>
+                    <select
+                      value={numParcelas}
+                      onChange={e => setNumParcelas(parseInt(e.target.value))}
+                      className="w-full px-2 py-1 bg-white border border-neutral-300 rounded text-[11px] font-bold text-neutral-800"
+                    >
+                      <option value={1}>À vista (30d) - {formatCurrency(totalHoje * (1 + calcularTaxaJuros(1) / 100))}</option>
+                      {Array.from({ length: Math.max(0, maxParcelas - 1) }, (_, i) => i + 2).map(n => {
+                        const taxaN = calcularTaxaJuros(n);
+                        const totalComJuros = totalHoje * (1 + taxaN / 100);
+                        return (
+                          <option key={n} value={n}>{n}x de {formatCurrency(totalComJuros / n)} (+{taxaN}%)</option>
+                        );
+                      })}
+                    </select>
+                  </div>
                 )}
               </div>
 
-              {/* Botão de Retorno para Etapa 2 */}
+              {/* Botão Retornar */}
               <div className="pt-2">
                 <button
                   type="button"
                   onClick={() => setEtapaCheckout(2)}
-                  className="w-full px-3 py-2.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  className="w-full px-2.5 py-1.5 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-lg font-bold text-[11px] transition-all flex items-center justify-center gap-1 cursor-pointer"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  Voltar para Benefícios
+                  <ArrowLeft className="w-3 h-3" />
+                  Voltar
                 </button>
               </div>
             </div>
 
-            {/* Coluna Direita: Resumo Amplo do Pedido (Ocupando praticamente todo o modal) */}
-            <div className="flex-1 p-4 sm:p-6 lg:p-7 overflow-y-auto max-h-[85vh] custom-scrollbar bg-neutral-100/80 flex flex-col">
-              <div className="w-full bg-[#1a1a1a] rounded-[2rem] p-5 sm:p-7 text-white shadow-2xl relative overflow-hidden flex-1 flex flex-col justify-between">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
-                
+            {/* Coluna Direita: Resumo do Pedido Amplo e Proporcional */}
+            <div className="flex-1 p-3.5 sm:p-4.5 bg-neutral-100/70 flex flex-col justify-between">
+              <div className="w-full bg-[#181818] rounded-2xl p-4 sm:p-5 text-white shadow-xl flex-1 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center justify-between mb-5 relative z-10 border-b border-white/10 pb-4">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-white">
-                        <ShoppingCart className="w-4.5 h-4.5" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-black uppercase tracking-wider text-white">Resumo do Pedido</h3>
-                        <p className="text-xs text-neutral-400 font-medium">Confira todos os itens e valores antes de confirmar</p>
-                      </div>
+                  <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <ShoppingCart className="w-4 h-4 text-neutral-300" />
+                      <h3 className="text-xs font-black uppercase tracking-wider text-white">Resumo do Pedido</h3>
                     </div>
-                    <span className="text-xs font-bold text-neutral-200 bg-white/10 px-3 py-1.5 rounded-xl">
-                      {cartItems.reduce((acc: number, c: CartItem) => acc + c.quantidade, 0)} {cartItems.reduce((acc: number, c: CartItem) => acc + c.quantidade, 0) === 1 ? 'item selecionado' : 'itens selecionados'}
+                    <span className="text-[10px] font-bold text-neutral-300 bg-white/10 px-2 py-0.5 rounded-md">
+                      {cartItems.reduce((acc: number, c: CartItem) => acc + c.quantidade, 0)} {cartItems.reduce((acc: number, c: CartItem) => acc + c.quantidade, 0) === 1 ? 'item' : 'itens'}
                     </span>
                   </div>
                   
-                  {/* Lista Ampla dos Itens com Scroll Generoso */}
-                  <div className="space-y-3 mb-6 relative z-10 max-h-[46vh] overflow-y-auto pr-2 custom-scrollbar">
+                  {/* Lista de Itens do Pedido */}
+                  <div className="space-y-1.5 mb-4 max-h-44 overflow-y-auto pr-1.5 custom-scrollbar">
                     {cartItems.map((c: CartItem) => {
                       const itemSubtotalEfetivo = c.tipo === 'produto'
                         ? getProductQuantityPriceBreakdown(c.item_detalhes, c.quantidade).subtotalFinal
                         : (c.item_detalhes?.valor || 0) * c.quantidade;
-
-                      const itemSubtotalOriginal = (c.item_detalhes?.valor || 0) * c.quantidade;
 
                       const itemPixEligivel = formaPagamento === 'pix' && lojaPixDescontoAtivo
                         && c.tipo === 'produto'
@@ -1605,177 +1464,95 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                         : itemSubtotalEfetivo;
 
                       return (
-                        <div key={c.id} className="flex justify-between items-center py-2.5 px-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                          <div className="pr-4 min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider bg-white/10 text-neutral-300 px-2 py-0.5 rounded">
-                                {c.quantidade}x {c.tipo}
-                              </span>
-                              <span className="font-mono text-indigo-300 text-[11px] font-bold">
-                                {c.tipo === 'produto' ? getProductDisplayCode(c.item_detalhes as any) : ((c.item_detalhes as any)?.codigo_produto || (c.item_detalhes as any)?.codigo_servico || (c.item_detalhes as any)?.codigo_assinatura || '')}
-                              </span>
-                            </div>
-                            <span className="font-bold text-sm leading-tight text-white block">
-                              {c.item_detalhes?.nome}
+                        <div key={c.id} className="flex justify-between items-center py-1.5 px-2.5 rounded-lg bg-white/5 text-xs">
+                          <div className="pr-2 min-w-0 flex-1">
+                            <span className="text-[9px] text-neutral-400 block">
+                              {c.quantidade}x · <span className="font-mono text-indigo-300">{c.tipo === 'produto' ? getProductDisplayCode(c.item_detalhes as any) : ''}</span>
                             </span>
+                            <span className="font-bold truncate text-[11px] block leading-tight text-white">{c.item_detalhes?.nome}</span>
                           </div>
 
-                          <div className="text-right flex-shrink-0">
+                          <div className="text-right shrink-0">
                             {itemPixEligivel ? (
-                              <div className="flex flex-col items-end gap-0.5">
-                                <span className="text-xs text-neutral-400 line-through leading-none">
-                                  {formatCurrency(itemSubtotalEfetivo)}
-                                </span>
-                                <span className="font-black text-emerald-400 text-sm leading-none">
-                                  {formatCurrency(itemPrecoComPix)}
-                                </span>
-                                <span className="text-[9px] font-black text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-md leading-none mt-1">
-                                  -{lojaPixDescontoPorcentagem}% PIX
-                                </span>
-                              </div>
-                            ) : c.tipo === 'produto' && hasActiveProductDiscount(c.item_detalhes) ? (
-                              <div className="flex flex-col items-end">
-                                <span className="text-xs text-neutral-400 line-through">
-                                  {formatCurrency(itemSubtotalOriginal)}
-                                </span>
-                                <span className="font-bold text-emerald-400 text-sm">
-                                  {formatCurrency(itemSubtotalEfetivo)}
-                                </span>
+                              <div className="flex flex-col items-end leading-none gap-0.5">
+                                <span className="text-[10px] text-neutral-500 line-through">{formatCurrency(itemSubtotalEfetivo)}</span>
+                                <span className="font-black text-emerald-400 text-xs">{formatCurrency(itemPrecoComPix)}</span>
+                                <span className="text-[8px] font-black text-emerald-300 bg-emerald-500/20 px-1 rounded">-{lojaPixDescontoPorcentagem}% PIX</span>
                               </div>
                             ) : (
-                              <span className="font-bold text-white text-sm block">
-                                {formatCurrency(itemSubtotalEfetivo)}
-                              </span>
+                              <span className="font-bold text-white text-xs">{formatCurrency(itemSubtotalEfetivo)}</span>
                             )}
-                            <span className="text-[10px] font-extrabold text-amber-400 flex items-center justify-end gap-1 mt-1">
-                              <Diamond className="w-2.5 h-2.5 fill-current shrink-0" />
-                              +{Math.floor(c.tipo === 'produto' && hasActiveProductDiscount(c.item_detalhes) ? getProductQuantityPriceBreakdown(c.item_detalhes, c.quantidade).subtotalFinal : (c.item_detalhes?.valor || 0) * c.quantidade)} pts
-                            </span>
                           </div>
                         </div>
                       );
                     })}
-                    
-                    {/* Brindes no Resumo */}
-                    {promosAplicadas.filter((p: any) => p.status === 'ativa' && p.item_brinde).map((promo: any, index: number) => (
-                      <div key={`resumo-brinde-${promo.promocao_id}-${index}`} className="flex justify-between items-center py-2.5 px-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                        <div className="pr-2">
-                          <span className="text-indigo-300 block text-[10px] font-bold">
-                            {promo.item_brinde?.quantidade}x · BRINDE EXCLUSIVO
-                          </span>
-                          <span className="font-bold text-sm text-indigo-100 block">{promo.item_brinde?.produto_nome}</span>
-                        </div>
-                        <span className="font-black text-emerald-400 uppercase text-xs">Grátis</span>
-                      </div>
-                    ))}
-                    
-                    {/* Descontos no Resumo */}
-                    {promosAplicadas.filter((p: any) => p.status === 'ativa' && p.desconto_aplicado).map((promo: any, index: number) => (
-                      <div key={`resumo-desc-${promo.promocao_id}-${index}`} className="flex justify-between items-center py-2.5 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                        <div className="pr-2">
-                          <span className="text-emerald-300 block text-[10px] font-bold uppercase tracking-wider">
-                            DESCONTO PROMOCIONAL
-                          </span>
-                          <span className="font-bold text-sm text-emerald-100 block">{promo.desconto_aplicado?.produto_nome}</span>
-                        </div>
-                        <span className="font-black text-emerald-400 uppercase text-xs">- {formatCurrency(promo.desconto_aplicado?.valor_desconto || 0)}</span>
-                      </div>
-                    ))}
                   </div>
 
-                  {/* Subtotais e Descontos */}
-                  <div className="border-t border-white/10 pt-4 space-y-2.5 relative z-10 text-xs sm:text-sm">
-                    <div className="flex justify-between text-neutral-300">
-                      <span>{cartItems.every((c: CartItem) => c.tipo === 'produto') ? 'Subtotal' : 'Subtotal (1ª Parc.)'}</span>
+                  {/* Detalhamento de Valores */}
+                  <div className="border-t border-white/10 pt-2.5 space-y-1.5 text-xs">
+                    <div className="flex justify-between text-neutral-300 text-[11px]">
+                      <span>Subtotal</span>
                       <span className="font-bold">{formatCurrency(subtotalInicial)}</span>
                     </div>
                     
-                    {descontoPromocoes > 0 && (
-                      <div className="flex justify-between text-emerald-400 font-bold">
-                        <span>Descontos Promocionais</span>
-                        <span>-{formatCurrency(descontoPromocoes)}</span>
-                      </div>
-                    )}
-                    
                     {pixDiscountValue > 0 && (
-                      <div className="flex justify-between items-center font-black rounded-xl bg-emerald-500/15 border border-emerald-500/30 px-3.5 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-emerald-300 text-base">🏷️</span>
-                          <div>
-                            <span className="text-emerald-300 text-xs sm:text-sm block font-black uppercase tracking-wider">Desconto PIX</span>
-                            <span className="text-emerald-400/70 text-[10px]">Economia de {lojaPixDescontoPorcentagem}% no pagamento à vista via PIX</span>
-                          </div>
-                        </div>
-                        <span className="text-emerald-300 font-black text-sm sm:text-base">-{formatCurrency(pixDiscountValue)}</span>
+                      <div className="flex justify-between items-center bg-emerald-500/15 border border-emerald-500/30 px-2 py-1 rounded-lg">
+                        <span className="text-[10px] font-black text-emerald-300 uppercase tracking-wider">🏷️ Desconto PIX ({lojaPixDescontoPorcentagem}%)</span>
+                        <span className="text-xs font-black text-emerald-300">-{formatCurrency(pixDiscountValue)}</span>
                       </div>
                     )}
                     
                     {cupomDesconto && (
-                      <div className="flex justify-between text-blue-400 font-bold">
-                        <span>Desconto Cupom ({cupomDesconto.codigo_cupom})</span>
+                      <div className="flex justify-between text-blue-400 text-[11px] font-bold">
+                        <span>Cupom ({cupomDesconto.codigo_cupom})</span>
                         <span>-{formatCurrency(descontoCalculado)}</span>
                       </div>
                     )}
                     
                     {usarPontos && descontoPontos > 0 && (
-                      <div className="flex justify-between text-[#d6bbfb] font-bold">
-                        <span>Desconto VIP (Pontos)</span>
+                      <div className="flex justify-between text-purple-300 text-[11px] font-bold">
+                        <span>Desconto VIP</span>
                         <span>-{formatCurrency(descontoPontos)}</span>
                       </div>
                     )}
                     
                     {usarSaldoCarteira && descontoCarteira > 0 && (
-                      <div className="flex justify-between text-emerald-400 font-bold">
-                        <span>Uso de Saldo da Carteira</span>
+                      <div className="flex justify-between text-emerald-400 text-[11px] font-bold">
+                        <span>Saldo Carteira</span>
                         <span>-{formatCurrency(descontoCarteira)}</span>
                       </div>
                     )}
                     
                     {temProdutos && (
-                      <div className="flex justify-between text-xs font-bold text-red-400">
-                        <span>Frete Total</span>
+                      <div className="flex justify-between text-[11px] font-bold text-red-400">
+                        <span>Frete</span>
                         <span>
                           {cupomEntrega 
-                            ? (cupomEntrega.tipo_entrega === 'frete_gratis' || cupomEntrega.tipo_entrega === 'frete_gratis_minimo' ? 'Grátis (Cupom)' : formatCurrency(cupomEntrega.taxa_fixa_entrega || 0)) 
-                            : (temProdutos ? formatCurrency(taxaEntregaFixa) : 'A calcular')}
+                            ? (cupomEntrega.tipo_entrega === 'frete_gratis' ? 'Grátis' : formatCurrency(cupomEntrega.taxa_fixa_entrega || 0)) 
+                            : formatCurrency(taxaEntregaFixa)}
                         </span>
                       </div>
                     )}
                     
                     {formaPagamento === 'credito_loja' && (
-                      <div className="flex justify-between text-amber-400 font-bold">
+                      <div className="flex justify-between text-amber-400 text-[11px] font-bold">
                         <span>Juros Crédito (+{taxaJurosAplicada}%)</span>
                         <span>+{formatCurrency(valorJurosCredito)}</span>
                       </div>
                     )}
-                    
-                    <div className="pt-3 border-t border-neutral-800">
-                      <div className="flex justify-between items-end mb-1">
-                        <div>
-                          <span className="text-xs font-bold text-neutral-400 block">Total Hoje</span>
-                          <span className="text-[10px] text-neutral-500 font-medium">À vista ou 1ª parcela</span>
-                        </div>
-                        <span className="text-2xl sm:text-4xl font-black text-white">{formatCurrency(totalHojeFinal)}</span>
-                      </div>
-                      
-                      <div className="flex justify-end mb-2">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#d8bd73] bg-[#d8bd73]/10 px-2.5 py-1 rounded-lg">
-                          <Gift className="w-3 h-3" /> Ganhe + {Math.floor(totalHojeFinal)} pontos fidelidade GSA
-                        </span>
-                      </div>
 
-                      {((subtotalContrato - subtotalInicial) > 0) && (
-                        <div className="flex justify-between items-end mt-1 text-neutral-400">
-                          <span className="text-xs">Total do Contrato</span>
-                          <span className="text-base font-black">{formatCurrency(totalContratoFinal)}</span>
-                        </div>
-                      )}
+                    <div className="pt-2 border-t border-neutral-800 flex justify-between items-end">
+                      <div>
+                        <span className="text-[10px] font-bold text-neutral-400 block">Total Hoje</span>
+                        <span className="text-[8px] text-[#d8bd73] font-bold">+{Math.floor(totalHojeFinal)} pts VIP</span>
+                      </div>
+                      <span className="text-xl font-black text-white">{formatCurrency(totalHojeFinal)}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Botão de Finalização dentro do Card de Resumo Amplo */}
-                <div className="mt-5 pt-2">
+                {/* Botão de Finalização */}
+                <div className="mt-3 pt-1">
                   <button 
                     onClick={handleFinalizar}
                     disabled={
@@ -1783,21 +1560,11 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                       || (temProdutos && !enderecoCompletoValido)
                       || (formaPagamento === 'credito_loja' && totalHojeFinal > limiteCreditoDisponivel)
                     }
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white py-4 rounded-xl font-black text-base transition-all shadow-xl shadow-indigo-500/25 flex items-center justify-center gap-2 relative z-10 cursor-pointer disabled:cursor-not-allowed"
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white py-2.5 rounded-xl font-bold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     Confirmar Pedido
                   </button>
-                  {temProdutos && !enderecoCompletoValido && (
-                    <p className="mt-2 text-center text-xs font-semibold text-amber-400 leading-tight">
-                      Preencha o endereço completo para continuar.
-                    </p>
-                  )}
-                  {formaPagamento === 'credito_loja' && totalHojeFinal > limiteCreditoDisponivel && (
-                    <p className="mt-2 text-center text-xs font-semibold text-red-400 leading-tight">
-                      Crédito GSA insuficiente ({formatCurrency(limiteCreditoDisponivel)} disponível).
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
