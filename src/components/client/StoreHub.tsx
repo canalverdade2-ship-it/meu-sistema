@@ -150,6 +150,14 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
   const [isPurchasesModalOpen, setIsPurchasesModalOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<any>(null);
+  const hasAutoOpenedOrderIdRef = useRef<string | null>(null);
+
+  const handleCloseOrderDetail = () => {
+    setSelectedOrderDetail(null);
+    if (route.query.orderId) {
+      navigate(routes.marketplace.store.compras());
+    }
+  };
   const [faturasCredito, setFaturasCredito] = useState<any[]>([]);
   const [faturaRealDoPedido, setFaturaRealDoPedido] = useState<any>(null);
   const [selectedOrderTimeline, setSelectedOrderTimeline] = useState<any>(null);
@@ -689,12 +697,13 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
     }
   }, [initialTab, route.query.orderId, route.submodule]);
 
-  // Se vier com orderId na URL, abre automaticamente o modal com os detalhes daquela compra
+  // Se vier com orderId na URL, abre automaticamente o modal com os detalhes daquela compra (apenas uma vez)
   useEffect(() => {
     const targetOrderId = route.query.orderId || initialItemId;
-    if (targetOrderId && allPurchases.length > 0 && !selectedOrderDetail) {
+    if (targetOrderId && allPurchases.length > 0 && !selectedOrderDetail && hasAutoOpenedOrderIdRef.current !== targetOrderId) {
       const match = allPurchases.find(p => p.id === targetOrderId || p.codigo_orcamento === targetOrderId);
       if (match) {
+        hasAutoOpenedOrderIdRef.current = targetOrderId;
         setSelectedOrderDetail(match);
       }
     }
@@ -2420,7 +2429,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
       />
 
       {/* Modal de Detalhes do Pedido */}
-      <Modal isOpen={!!selectedOrderDetail} onClose={() => setSelectedOrderDetail(null)} title="Detalhes do Pedido" size="md">
+      <Modal isOpen={!!selectedOrderDetail} onClose={handleCloseOrderDetail} title="Detalhes do Pedido" size="md">
         {selectedOrderDetail && (
           <div className="space-y-8">
             <div className="flex items-center justify-between">
@@ -2755,8 +2764,8 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
             )}
 
             <button 
-              onClick={() => setSelectedOrderDetail(null)}
-              className="w-full py-4 bg-[#1a1a1a] text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-black transition-all shadow-xl shadow-neutral-200"
+              onClick={handleCloseOrderDetail}
+              className="w-full py-4 bg-[#1a1a1a] text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-black transition-all shadow-xl shadow-neutral-200 cursor-pointer"
             >
               Fechar Detalhes
             </button>
