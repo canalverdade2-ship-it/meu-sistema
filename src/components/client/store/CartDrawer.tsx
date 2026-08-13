@@ -292,6 +292,10 @@ export default function CartDrawer({
                                 <p className="text-[11px] text-slate-400 line-through">{formatCurrency(originalSubtotal)}</p>
                               )}
                               <p className="text-base font-black text-[#17345f]">{formatCurrency(subtotalForItem)}</p>
+                              <p className="text-[11px] font-extrabold text-[#b89547] flex items-center gap-1 mt-0.5" title="Pontos GSA acumulados neste item">
+                                <Diamond className="w-3 h-3 fill-current shrink-0" />
+                                +{Math.floor(subtotalForItem)} pts GSA
+                              </p>
                             </div>
 
                             {isProduct && (

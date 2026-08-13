@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Search, Package, Scissors, Calendar, Trash2, X, Plus, Minus, Tag, Check, AlertCircle, Loader2, ChevronLeft, ChevronRight, Filter, SlidersHorizontal, Briefcase, ArrowRight, Ticket, Coins, CreditCard, CheckCircle, Clock, CheckCircle2, Wallet, Gift } from 'lucide-react';
+import { ShoppingCart, Search, Package, Scissors, Calendar, Trash2, X, Plus, Minus, Tag, Check, AlertCircle, Loader2, ChevronLeft, ChevronRight, Filter, SlidersHorizontal, Briefcase, ArrowRight, Ticket, Coins, CreditCard, CheckCircle, Clock, CheckCircle2, Wallet, Gift, Diamond } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { getProductDisplayCode } from '../../../lib/productIdentification';
 import { formatCurrency, generateUUID } from '../../../lib/utils';
@@ -1368,7 +1368,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                   <span className="font-bold truncate max-w-[150px] block leading-tight text-white">{c.item_detalhes?.nome}</span>
                 </div>
                 <div className="text-right">
-                  {c.tipo === 'produto' && hasActiveProductDiscount(c.item_detalhes) && (
+                  {c.tipo === 'produto' && hasActiveProductDiscount(c.item_detalhes) ? (
                     <div className="flex flex-col items-end">
                       <span className="text-[9px] text-neutral-400 line-through">
                         {formatCurrency((c.item_detalhes.valor || 0) * c.quantidade)}
@@ -1377,12 +1377,15 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                         {formatCurrency(getProductQuantityPriceBreakdown(c.item_detalhes, c.quantidade).subtotalFinal)}
                       </span>
                     </div>
-                  )}
-                  {(!hasActiveProductDiscount(c.item_detalhes) || c.tipo !== 'produto') && (
-                    <span className="font-bold text-white">
+                  ) : (
+                    <span className="font-bold text-white block">
                       {formatCurrency((c.item_detalhes?.valor || 0) * c.quantidade)}
                     </span>
                   )}
+                  <span className="text-[10px] font-extrabold text-amber-400 flex items-center justify-end gap-1 mt-0.5" title="Pontos GSA acumulados neste item">
+                    <Diamond className="w-2.5 h-2.5 fill-current shrink-0" />
+                    +{Math.floor(c.tipo === 'produto' && hasActiveProductDiscount(c.item_detalhes) ? getProductQuantityPriceBreakdown(c.item_detalhes, c.quantidade).subtotalFinal : (c.item_detalhes?.valor || 0) * c.quantidade)} pts GSA
+                  </span>
                 </div>
               </div>
             ))}
