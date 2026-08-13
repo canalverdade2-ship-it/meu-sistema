@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-08-13T16:16:28.460Z",
-  "validated_sha": "99e2a809b837318fddecf518646a8a8657f3f0a1",
+  "generated_at_utc": "2026-08-13T16:20:20.131Z",
+  "validated_sha": "5ff4411c6433a349fdd66315c84f943e95a1b289",
   "install_exit_code": 0,
   "test_exit_code": 1,
   "result": "failure",
-  "install_log_sha256": "539a32171ba58184d6ba13019df90911738c3bf6db72d68618a4061b10e570fe",
-  "test_log_sha256": "7bf742736146c19f44fe15a85af9cd4164a93d6026b4a4881dc3a93a103504c4",
+  "install_log_sha256": "31d969dab7dd1cb644013511850f283434efa73aaed9cd8fb7102ba2085de4ee",
+  "test_log_sha256": "a4e8c5043996821bff0e979d460d3bcffc1bf07ad6bd8c6e361f21946ac145a6",
   "failed_markers": [
     "AssertionError [ERR_ASSERTION]: Painel administrativo seguro deve ser carregado sob demanda",
     "  code: 'ERR_ASSERTION',",
@@ -193,6 +193,6 @@
     "  operator: 'match',",
     "  diff: 'simple'",
     "}",
-    "Node.js v22.23.2"
+    "Node.js v22.23.1"
   ]
 }
