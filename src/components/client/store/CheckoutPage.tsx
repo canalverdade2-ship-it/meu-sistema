@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, Package, MapPin, Tag, Check, AlertCircle, Loader2, 
   ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Coins, CreditCard, 
   Wallet, Gift, Diamond, ShieldCheck, Lock, QrCode, FileText, 
-  Building, RefreshCw, CheckCircle2, Plus, Minus, Sparkles, ExternalLink
+  Building, RefreshCw, CheckCircle2, Plus, Minus, Sparkles, ExternalLink,
+  Truck, Edit3
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { getProductDisplayCode } from '../../../lib/productIdentification';
@@ -16,7 +17,6 @@ import { PromoResult, avaliarPromocoes } from '../../../lib/promocaoQuantidadeEn
 import { callClientRpc } from '../../../lib/clientRpc';
 import { getProductEffectivePrice, hasActiveProductDiscount, getProductQuantityPriceBreakdown } from '../../../lib/productPricing';
 import { checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
-import { EcommerceHeader } from './EcommerceHeader';
 import { routes } from '../../../routing/routeCatalog';
 import { navigate } from '../../../routing/navigationService';
 import { useSEO } from '../../../hooks/useSEO';
@@ -57,7 +57,10 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   const [promocoesAtivas, setPromocoesAtivas] = useState<any[]>([]);
   const [promosAtivadasIds, setPromosAtivadasIds] = useState<Set<string>>(new Set());
 
-  // Etapas: 1 = Endereço, 2 = Benefícios & Cupons, 3 = Pagamento
+  // Etapas:
+  // 1 = Endereço & Cupons da Loja
+  // 2 = Benefícios (Pontos VIP, Saldo Carteira) & Forma de Pagamento
+  // 3 = Resumo Completo do Pedido & Confirmação Final
   const [etapaCheckout, setEtapaCheckout] = useState<1 | 2 | 3>(1);
 
   // Endereço
@@ -115,7 +118,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   // Submissão
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1. Carregar itens do carrinho e detalhes
+  // 1. Carregar itens do carrinho
   const fetchCartItems = async () => {
     setLoadingCart(true);
     try {
@@ -225,7 +228,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     }
   };
 
-  // 2. Carregar promoções ativas e avaliar
+  // 2. Carregar promoções
   const fetchPromos = async () => {
     try {
       const { data: promos } = await supabase
@@ -255,7 +258,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     }
   }, [cartItems, promocoesAtivas, promosAtivadasIds]);
 
-  // 3. Carregar dados de crédito, endereço do cliente, taxas e PIX
+  // 3. Carregar dados de crédito, taxas e endereço
   const fetchDadosCredito = async () => {
     try {
       if (clientId) {
@@ -302,7 +305,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         }
       }
 
-      // Buscar taxas de juros de Crédito GSA e configs de PIX
       const { data: setts } = await supabase
         .from('system_settings')
         .select('key, value')
@@ -355,7 +357,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         if (mBol) setCheckoutMetodoBoletoAtivo(mBol.value !== 'false');
       }
     } catch (err) {
-      console.error('[CheckoutPage] Erro ao buscar dados de crédito e configurações:', err);
+      console.error('[CheckoutPage] Erro ao carregar dados:', err);
     }
   };
 
@@ -365,7 +367,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     fetchDadosCredito();
   }, [clientId]);
 
-  // 4. Carregar cupons pendentes (se houver no localStorage)
+  // 4. Carregar cupons pendentes
   useEffect(() => {
     if (!clientId) return;
 
@@ -403,7 +405,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     loadPendingCoupons();
   }, [clientId]);
 
-  // Cupons disponíveis para o modal seletor
   const fetchCoupons = async (category: 'desconto' | 'entrega') => {
     if (!clientId) {
       setAvailableCoupons([]);
@@ -619,14 +620,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     return acc + ((cur.item_detalhes?.valor || 0) * cur.quantidade);
   }, 0);
 
-  const subtotalContrato = cartItems.reduce((acc: number, cur: CartItem) => {
-    const multiplicadorPeriodo = cur.tipo === 'assinatura' ? (cur.prazo_meses || 1) : 1;
-    if (cur.tipo === 'produto') {
-      return acc + (getProductQuantityPriceBreakdown(cur.item_detalhes, cur.quantidade).subtotalFinal * multiplicadorPeriodo);
-    }
-    return acc + ((cur.item_detalhes?.valor || 0) * cur.quantidade * multiplicadorPeriodo);
-  }, 0);
-
   const descontoPromocoes = (promosAplicadas || []).reduce((acc: number, promo: PromoResult) => {
     if (promo.status === 'ativa' && promo.desconto_aplicado) {
       return acc + promo.desconto_aplicado.valor_desconto;
@@ -764,7 +757,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   const totalHojeFinal = Number(Math.max(0, totalHoje + valorJurosCredito - pixDiscountValue).toFixed(2));
   const totalPontosGanhos = Math.floor(totalHojeFinal);
 
-  // Revalidação reativa de cupons
+  // Revalidação de Cupons
   useEffect(() => {
     if (cupomEntrega) {
       if (!temProdutos) {
@@ -793,7 +786,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     }
   }, [subtotalInicial, temProdutos, cartItems, cupomEntrega, cupomDesconto]);
 
-  // Finalização do Pedido
+  // Finalização
   const handleFinalizar = async () => {
     if (isSubmittingRef.current) return;
 
@@ -813,7 +806,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     setIsSubmitting(true);
 
     try {
-      // 1. Validação de Estoque e Preço
       const productIds = cartItems.filter((c: any) => c.tipo === 'produto').map((c: any) => c.item_id);
       if (productIds.length > 0) {
         const { data: dbProducts } = await supabase
@@ -851,7 +843,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         }
       }
 
-      // Validação de itens excluídos ou esgotados
       const hasInvalidOrDeleted = cartItems.some((c: any) => 
         !c.item_detalhes 
         || (c.tipo === 'produto' && c.item_detalhes?.controle_estoque && (c.item_detalhes?.estoque_disponivel <= 0))
@@ -874,7 +865,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         return;
       }
 
-      // 2. Revalidação de Saldos do Cliente
       const { data: freshCli, error: freshErr } = await supabase
         .from('clientes')
         .select('limite_credito_disponivel, saldo_carteira, saldo_pontos')
@@ -910,7 +900,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         return;
       }
 
-      // 3. Execução RPC de Checkout
       const enderecoCompleto = temProdutos ? endereco : null;
       const data = await callClientRpc<any>('gsa_client_checkout_store', {
         p_payload: {
@@ -934,7 +923,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
       toast.success('🎉 Pedido Confirmado com Sucesso!');
       checkoutRequestId.current = generateUUID();
 
-      // Limpar localStorage de carrinho pendente se houver
       localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
       localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
       window.dispatchEvent(new CustomEvent('gsa-cart-updated'));
@@ -1020,7 +1008,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         ) : (
           <div className="space-y-6">
             
-            {/* Indicador de Progresso Visual das Etapas */}
+            {/* Indicador de Progresso Visual das 3 Etapas Reconfiguradas */}
             <div className="bg-white rounded-2xl p-4 border border-neutral-200/90 shadow-xs">
               <div className="relative flex items-center justify-between max-w-2xl mx-auto">
                 <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1 bg-neutral-100 rounded-full z-0"></div>
@@ -1031,7 +1019,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                   }}
                 ></div>
 
-                {/* Passo 1 */}
+                {/* Passo 1: Endereço & Cupons */}
                 <button
                   type="button"
                   onClick={() => setEtapaCheckout(1)}
@@ -1049,14 +1037,20 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                   <span className={`text-xs font-extrabold uppercase tracking-wider ${
                     etapaCheckout === 1 ? 'text-[#17345f]' : etapaCheckout > 1 ? 'text-emerald-700' : 'text-neutral-400'
                   }`}>
-                    1. Endereço
+                    1. Endereço & Cupons
                   </span>
                 </button>
 
-                {/* Passo 2 */}
+                {/* Passo 2: Benefícios (Pontos VIP, Saldo Carteira) & Pagamento */}
                 <button
                   type="button"
-                  onClick={() => setEtapaCheckout(2)}
+                  onClick={() => {
+                    if (temProdutos && !enderecoCompletoValido) {
+                      toast.error('Preencha todo o endereço de entrega antes de avançar.');
+                      return;
+                    }
+                    setEtapaCheckout(2);
+                  }}
                   className="relative z-10 flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
                 >
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all shadow-xs ${
@@ -1066,19 +1060,25 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                         ? 'bg-[#17345f] text-white ring-4 ring-[#17345f]/15' 
                         : 'bg-white text-neutral-400 border border-neutral-200'
                   }`}>
-                    {etapaCheckout > 2 ? <Check className="w-5 h-5" /> : <Tag className="w-5 h-5" />}
+                    {etapaCheckout > 2 ? <Check className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
                   </div>
                   <span className={`text-xs font-extrabold uppercase tracking-wider ${
                     etapaCheckout === 2 ? 'text-[#17345f]' : etapaCheckout > 2 ? 'text-emerald-700' : 'text-neutral-400'
                   }`}>
-                    2. Benefícios
+                    2. Benefícios & Pagamento
                   </span>
                 </button>
 
-                {/* Passo 3 */}
+                {/* Passo 3: Resumo Completo do Pedido */}
                 <button
                   type="button"
-                  onClick={() => setEtapaCheckout(3)}
+                  onClick={() => {
+                    if (temProdutos && !enderecoCompletoValido) {
+                      toast.error('Preencha todo o endereço de entrega antes de avançar.');
+                      return;
+                    }
+                    setEtapaCheckout(3);
+                  }}
                   className="relative z-10 flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
                 >
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all shadow-xs ${
@@ -1086,286 +1086,212 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       ? 'bg-[#17345f] text-white ring-4 ring-[#17345f]/15' 
                       : 'bg-white text-neutral-400 border border-neutral-200'
                   }`}>
-                    <CreditCard className="w-5 h-5" />
+                    <FileText className="w-5 h-5" />
                   </div>
                   <span className={`text-xs font-extrabold uppercase tracking-wider ${
                     etapaCheckout === 3 ? 'text-[#17345f]' : 'text-neutral-400'
                   }`}>
-                    3. Pagamento
+                    3. Resumo do Pedido
                   </span>
                 </button>
               </div>
             </div>
 
-            {/* Grid Principal do Checkout: Coluna da Esquerda (Formulário da Etapa) & Coluna da Direita (Resumo Fixo) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-              
-              {/* Coluna da Esquerda: Etapas do Checkout (7 Colunas em Desktop) */}
-              <div className="lg:col-span-7 space-y-6">
+            {/* Grid Principal: Se for Etapa 1 ou 2 -> Form na Esquerda + Preview na Direita. Se for Etapa 3 -> Resumo Completo Amplo! */}
+            {etapaCheckout !== 3 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
                 
-                {/* ========================================================= */}
-                {/* ETAPA 1: ENDEREÇO DE ENTREGA */}
-                {/* ========================================================= */}
-                {etapaCheckout === 1 && (
-                  <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/90 shadow-sm space-y-6 animate-in fade-in duration-300">
-                    <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                          <MapPin className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h2 className="text-base font-black text-neutral-900 uppercase tracking-wide">
-                            Endereço de Entrega
-                          </h2>
-                          <p className="text-xs text-neutral-500 font-medium">
-                            {temProdutos ? 'Informe onde deseja receber seus produtos físicos' : 'Produtos e serviços digitais (não requerem entrega)'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {!temProdutos ? (
-                      <div className="rounded-2xl bg-blue-50/60 p-5 border border-blue-100 flex items-start gap-3.5">
-                        <Package className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                          <h4 className="text-xs font-extrabold text-blue-900">Itens Digitais e Serviços</h4>
-                          <p className="text-xs text-blue-800/80 leading-relaxed font-medium">
-                            Seu carrinho contém apenas serviços ou assinaturas digitais. Não será cobrado nenhum frete e a liberação é imediata após o pagamento!
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        {enderecoCompletoValido && !isEditingEndereco ? (
-                          <div className="rounded-2xl border border-emerald-200/90 bg-emerald-50/40 p-5 space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white">
-                                  <Check className="h-3.5 w-3.5" />
-                                </span>
-                                <span className="text-xs font-black text-emerald-900 uppercase tracking-wider">Endereço Confirmado</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setIsEditingEndereco(true)}
-                                className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline cursor-pointer"
-                              >
-                                Alterar endereço
-                              </button>
+                {/* Coluna da Esquerda: Formulários da Etapa 1 ou Etapa 2 */}
+                <div className="lg:col-span-7 space-y-6">
+                  
+                  {/* ========================================================= */}
+                  {/* ETAPA 1: CONFIRMAÇÃO DO ENDEREÇO & CUPONS DA LOJA */}
+                  {/* ========================================================= */}
+                  {etapaCheckout === 1 && (
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/90 shadow-sm space-y-6 animate-in fade-in duration-300">
+                      
+                      {/* Seção de Endereço */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-neutral-100 pb-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                              <MapPin className="h-5 w-5" />
                             </div>
-                            <div className="text-xs text-neutral-700 font-medium space-y-0.5 pl-8">
-                              <p className="font-bold text-neutral-900">{endereco.logradouro}, {endereco.numero} {endereco.complemento ? `(${endereco.complemento})` : ''}</p>
-                              <p>{endereco.bairro} — {endereco.cidade}/{endereco.uf}</p>
-                              <p className="font-mono text-neutral-500">CEP: {endereco.cep}</p>
+                            <div>
+                              <h2 className="text-base font-black text-neutral-900 uppercase tracking-wide">
+                                Endereço de Entrega
+                              </h2>
+                              <p className="text-xs text-neutral-500 font-medium">
+                                {temProdutos ? 'Informe onde deseja receber seus produtos' : 'Itens digitais (não requerem entrega física)'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {!temProdutos ? (
+                          <div className="rounded-2xl bg-blue-50/60 p-4 border border-blue-100 flex items-start gap-3">
+                            <Package className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                            <div className="space-y-0.5">
+                              <h4 className="text-xs font-extrabold text-blue-900">Itens Digitais e Serviços</h4>
+                              <p className="text-xs text-blue-800/80 font-medium leading-relaxed">
+                                Seu carrinho contém apenas serviços ou assinaturas digitais com liberação imediata. Não é cobrado frete.
+                              </p>
                             </div>
                           </div>
                         ) : (
-                          <div className="space-y-4">
-                            <div className="flex flex-col sm:flex-row gap-3">
-                              <div className="w-full sm:w-1/2 space-y-1.5">
-                                <label className="text-xs font-bold text-neutral-700 uppercase">CEP *</label>
-                                <div className="relative">
-                                  <input 
-                                    type="text" 
-                                    placeholder="00000-000" 
-                                    value={endereco.cep} 
-                                    onChange={e => {
-                                      const val = e.target.value;
-                                      setEndereco(p => ({ ...p, cep: val }));
-                                      if (val.replace(/\D/g, '').length === 8) buscarCep(val);
-                                    }}
-                                    maxLength={9}
-                                    className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-mono font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
-                                  />
-                                  {buscandoCep && (
-                                    <Loader2 className="w-4 h-4 text-blue-600 animate-spin absolute right-3 top-3" />
-                                  )}
+                          <>
+                            {enderecoCompletoValido && !isEditingEndereco ? (
+                              <div className="rounded-2xl border border-emerald-200/90 bg-emerald-50/40 p-5 space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white">
+                                      <Check className="h-3.5 w-3.5" />
+                                    </span>
+                                    <span className="text-xs font-black text-emerald-900 uppercase tracking-wider">Endereço Confirmado</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsEditingEndereco(true)}
+                                    className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline cursor-pointer"
+                                  >
+                                    Alterar endereço
+                                  </button>
+                                </div>
+                                <div className="text-xs text-neutral-700 font-medium space-y-0.5 pl-8">
+                                  <p className="font-bold text-neutral-900">{endereco.logradouro}, {endereco.numero} {endereco.complemento ? `(${endereco.complemento})` : ''}</p>
+                                  <p>{endereco.bairro} — {endereco.cidade}/{endereco.uf}</p>
+                                  <p className="font-mono text-neutral-500">CEP: {endereco.cep}</p>
                                 </div>
                               </div>
+                            ) : (
+                              <div className="space-y-4 pt-1">
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                  <div className="w-full sm:w-1/2 space-y-1.5">
+                                    <label className="text-xs font-bold text-neutral-700 uppercase">CEP *</label>
+                                    <div className="relative">
+                                      <input 
+                                        type="text" 
+                                        placeholder="00000-000" 
+                                        value={endereco.cep} 
+                                        onChange={e => {
+                                          const val = e.target.value;
+                                          setEndereco(p => ({ ...p, cep: val }));
+                                          if (val.replace(/\D/g, '').length === 8) buscarCep(val);
+                                        }}
+                                        maxLength={9}
+                                        className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-mono font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                      />
+                                      {buscandoCep && (
+                                        <Loader2 className="w-4 h-4 text-blue-600 animate-spin absolute right-3 top-3" />
+                                      )}
+                                    </div>
+                                  </div>
 
-                              <div className="w-full sm:w-1/2 space-y-1.5">
-                                <label className="text-xs font-bold text-neutral-700 uppercase">Número *</label>
-                                <input 
-                                  type="text" 
-                                  placeholder="Ex: 123" 
-                                  value={endereco.numero} 
-                                  onChange={e => setEndereco(p => ({ ...p, numero: e.target.value }))}
-                                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
-                                />
-                              </div>
-                            </div>
+                                  <div className="w-full sm:w-1/2 space-y-1.5">
+                                    <label className="text-xs font-bold text-neutral-700 uppercase">Número *</label>
+                                    <input 
+                                      type="text" 
+                                      placeholder="Ex: 123" 
+                                      value={endereco.numero} 
+                                      onChange={e => setEndereco(p => ({ ...p, numero: e.target.value }))}
+                                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                    />
+                                  </div>
+                                </div>
 
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-bold text-neutral-700 uppercase">Logradouro (Rua / Av) *</label>
-                              <input 
-                                type="text" 
-                                placeholder="Nome da rua ou avenida" 
-                                value={endereco.logradouro} 
-                                onChange={e => setEndereco(p => ({ ...p, logradouro: e.target.value }))}
-                                className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
-                              />
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-neutral-700 uppercase">Complemento</label>
-                                <input 
-                                  type="text" 
-                                  placeholder="Apto, Bloco, etc." 
-                                  value={endereco.complemento} 
-                                  onChange={e => setEndereco(p => ({ ...p, complemento: e.target.value }))}
-                                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
-                                />
-                              </div>
-
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-neutral-700 uppercase">Bairro *</label>
-                                <input 
-                                  type="text" 
-                                  placeholder="Bairro" 
-                                  value={endereco.bairro} 
-                                  onChange={e => setEndereco(p => ({ ...p, bairro: e.target.value }))}
-                                  className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
-                                />
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1.5">
-                                  <label className="text-xs font-bold text-neutral-700 uppercase">Cidade *</label>
+                                  <label className="text-xs font-bold text-neutral-700 uppercase">Logradouro (Rua / Av) *</label>
                                   <input 
                                     type="text" 
-                                    placeholder="Cidade" 
-                                    value={endereco.cidade} 
-                                    onChange={e => setEndereco(p => ({ ...p, cidade: e.target.value }))}
-                                    className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                    placeholder="Nome da rua ou avenida" 
+                                    value={endereco.logradouro} 
+                                    onChange={e => setEndereco(p => ({ ...p, logradouro: e.target.value }))}
+                                    className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
                                   />
                                 </div>
-                                <div className="space-y-1.5">
-                                  <label className="text-xs font-bold text-neutral-700 uppercase">UF *</label>
-                                  <input 
-                                    type="text" 
-                                    placeholder="SP" 
-                                    maxLength={2}
-                                    value={endereco.uf} 
-                                    onChange={e => setEndereco(p => ({ ...p, uf: e.target.value.toUpperCase() }))}
-                                    className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-mono font-bold uppercase focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all text-center" 
-                                  />
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-neutral-700 uppercase">Complemento</label>
+                                    <input 
+                                      type="text" 
+                                      placeholder="Apto, Bloco, etc." 
+                                      value={endereco.complemento} 
+                                      onChange={e => setEndereco(p => ({ ...p, complemento: e.target.value }))}
+                                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                    />
+                                  </div>
+
+                                  <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-neutral-700 uppercase">Bairro *</label>
+                                    <input 
+                                      type="text" 
+                                      placeholder="Bairro" 
+                                      value={endereco.bairro} 
+                                      onChange={e => setEndereco(p => ({ ...p, bairro: e.target.value }))}
+                                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                    />
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1.5">
+                                      <label className="text-xs font-bold text-neutral-700 uppercase">Cidade *</label>
+                                      <input 
+                                        type="text" 
+                                        placeholder="Cidade" 
+                                        value={endereco.cidade} 
+                                        onChange={e => setEndereco(p => ({ ...p, cidade: e.target.value }))}
+                                        className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <label className="text-xs font-bold text-neutral-700 uppercase">UF *</label>
+                                      <input 
+                                        type="text" 
+                                        placeholder="SP" 
+                                        maxLength={2}
+                                        value={endereco.uf} 
+                                        onChange={e => setEndereco(p => ({ ...p, uf: e.target.value.toUpperCase() }))}
+                                        className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-mono font-bold uppercase focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all text-center" 
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Seção de Cupons da Loja */}
+                      <div className="space-y-4 pt-4 border-t border-neutral-100">
+                        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <Tag className="h-5 w-5 text-indigo-600" />
+                            <div>
+                              <h3 className="text-sm font-black text-neutral-900 uppercase tracking-wide">
+                                Cupons da Loja
+                              </h3>
+                              <p className="text-[11px] text-neutral-500 font-medium">
+                                Aplique cupons de desconto e benefícios de frete
+                              </p>
                             </div>
                           </div>
-                        )}
-                      </>
-                    )}
-
-                    {/* Botão de Avanço da Etapa 1 */}
-                    <div className="flex items-center justify-end pt-4 border-t border-neutral-100">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (temProdutos && !enderecoCompletoValido) {
-                            toast.error('Preencha todo o endereço de entrega antes de prosseguir.');
-                            return;
-                          }
-                          setEtapaCheckout(2);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-[#17345f] px-8 py-3.5 text-xs font-black text-white shadow-md shadow-[#17345f]/20 transition-all hover:bg-[#102746] cursor-pointer"
-                      >
-                        <span>Avançar para Benefícios & Cupons</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* ========================================================= */}
-                {/* ETAPA 2: BENEFÍCIOS, CUPONS E CARTEIRA (2 COLUNAS EQUILIBRADAS) */}
-                {/* ========================================================= */}
-                {etapaCheckout === 2 && (
-                  <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/90 shadow-sm space-y-6 animate-in fade-in duration-300">
-                    <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
-                          <Tag className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h2 className="text-base font-black text-neutral-900 uppercase tracking-wide">
-                            Benefícios, Cupons e Fidelidade
-                          </h2>
-                          <p className="text-xs text-neutral-500 font-medium">
-                            Aproveite seus descontos, resgate pontos VIP e utilize o saldo da sua carteira
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Grid Interno de 2 Colunas */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-                      
-                      {/* Coluna 1: Cupons da Loja */}
-                      <div className="rounded-2xl border border-neutral-200/90 bg-neutral-50/50 p-5 space-y-4">
-                        <div className="flex items-center gap-2 border-b border-neutral-200/80 pb-3">
-                          <Tag className="h-4 w-4 text-[#17345f]" />
-                          <h3 className="text-xs font-black text-neutral-900 uppercase tracking-wider">Cupons da Loja</h3>
                         </div>
 
-                        {/* Cupom Desconto */}
-                        <div className="rounded-xl border border-blue-200/80 bg-blue-50/40 p-3.5 space-y-2">
-                          <label className="text-[11px] font-bold text-blue-900 uppercase flex items-center gap-1.5">
-                            <Tag className="h-3.5 w-3.5 text-blue-600" /> Cupom de Desconto
-                          </label>
-                          {cupomDesconto ? (
-                            <div className="flex items-center justify-between bg-white border border-blue-200 px-3.5 py-2.5 rounded-xl text-xs">
-                              <span className="font-mono font-black text-blue-700">
-                                {cupomDesconto.codigo_cupom} — {cupomDesconto.tipo_desconto === 'porcentagem' ? `${cupomDesconto.valor_desconto}% OFF` : `R$ ${cupomDesconto.valor_desconto} OFF`}
-                              </span>
-                              <button 
-                                onClick={() => setCupomDesconto(null)} 
-                                className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer"
-                              >
-                                Remover
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <div className="flex gap-2">
-                                <input 
-                                  type="text" 
-                                  value={cupomDescInput} 
-                                  onChange={e => setCupomDescInput(e.target.value.toUpperCase())} 
-                                  placeholder="CÓDIGO DO CUPOM" 
-                                  className="flex-1 px-3.5 py-2 bg-white border border-blue-200 rounded-xl text-xs font-mono uppercase font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none" 
-                                />
-                                <button 
-                                  onClick={() => aplicarCupom(cupomDescInput, 'desconto')} 
-                                  className="px-5 py-2 bg-blue-600 text-white font-black rounded-xl text-xs hover:bg-blue-700 cursor-pointer shadow-xs transition-all"
-                                >
-                                  Aplicar
-                                </button>
-                              </div>
-                              <button 
-                                onClick={() => handleOpenSelector('desconto')}
-                                className="text-[10px] font-black text-blue-600 uppercase tracking-wider hover:text-blue-800 cursor-pointer block pt-0.5"
-                              >
-                                Ver Cupons Disponíveis
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Cupom Entrega */}
-                        {temProdutos && (
-                          <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/40 p-3.5 space-y-2">
-                            <label className="text-[11px] font-bold text-emerald-900 uppercase flex items-center gap-1.5">
-                              <Package className="h-3.5 w-3.5 text-emerald-600" /> Benefício de Frete
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Cupom Desconto */}
+                          <div className="rounded-2xl border border-blue-200/80 bg-blue-50/40 p-4 space-y-2.5">
+                            <label className="text-xs font-bold text-blue-900 uppercase flex items-center gap-1.5">
+                              <Tag className="h-3.5 w-3.5 text-blue-600" /> Cupom de Desconto
                             </label>
-                            {cupomEntrega ? (
-                              <div className="flex items-center justify-between bg-white border border-emerald-200 px-3.5 py-2.5 rounded-xl text-xs">
-                                <span className="font-mono font-black text-emerald-700">
-                                  {cupomEntrega.codigo_cupom} — {cupomEntrega.tipo_entrega === 'frete_gratis' ? 'Frete Grátis' : 'Frete Fixo'}
+                            {cupomDesconto ? (
+                              <div className="flex items-center justify-between bg-white border border-blue-200 px-3.5 py-2.5 rounded-xl text-xs">
+                                <span className="font-mono font-black text-blue-700">
+                                  {cupomDesconto.codigo_cupom} — {cupomDesconto.tipo_desconto === 'porcentagem' ? `${cupomDesconto.valor_desconto}% OFF` : `R$ ${cupomDesconto.valor_desconto} OFF`}
                                 </span>
                                 <button 
-                                  onClick={() => setCupomEntrega(null)} 
+                                  onClick={() => setCupomDesconto(null)} 
                                   className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer"
                                 >
                                   Remover
@@ -1376,359 +1302,571 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                                 <div className="flex gap-2">
                                   <input 
                                     type="text" 
-                                    value={cupomEntInput} 
-                                    onChange={e => setCupomEntInput(e.target.value.toUpperCase())} 
-                                    placeholder="CÓDIGO DE FRETE" 
-                                    className="flex-1 px-3.5 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-mono uppercase font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                                    value={cupomDescInput} 
+                                    onChange={e => setCupomDescInput(e.target.value.toUpperCase())} 
+                                    placeholder="CÓDIGO DO CUPOM" 
+                                    className="flex-1 px-3.5 py-2 bg-white border border-blue-200 rounded-xl text-xs font-mono uppercase font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none" 
                                   />
                                   <button 
-                                    onClick={() => aplicarCupom(cupomEntInput, 'entrega')} 
-                                    className="px-5 py-2 bg-emerald-600 text-white font-black rounded-xl text-xs hover:bg-emerald-700 cursor-pointer shadow-xs transition-all"
+                                    onClick={() => aplicarCupom(cupomDescInput, 'desconto')} 
+                                    className="px-4 py-2 bg-blue-600 text-white font-black rounded-xl text-xs hover:bg-blue-700 cursor-pointer shadow-xs transition-all"
                                   >
                                     Aplicar
                                   </button>
                                 </div>
                                 <button 
-                                  onClick={() => handleOpenSelector('entrega')}
-                                  className="text-[10px] font-black text-emerald-700 uppercase tracking-wider hover:text-emerald-900 cursor-pointer block pt-0.5"
+                                  onClick={() => handleOpenSelector('desconto')}
+                                  className="text-[10px] font-black text-blue-600 uppercase tracking-wider hover:text-blue-800 cursor-pointer block pt-0.5"
                                 >
-                                  Ver Benefícios de Frete
+                                  Ver Cupons Disponíveis
                                 </button>
                               </div>
                             )}
                           </div>
-                        )}
-                      </div>
 
-                      {/* Coluna 2: Pontos VIP & Saldo da Carteira */}
-                      <div className="space-y-4">
-                        
-                        {/* Box de Pontos VIP */}
-                        <div className="rounded-2xl border border-purple-800/40 bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-900 p-5 text-white shadow-sm space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                              <div className="rounded-xl bg-amber-400 p-2 text-purple-950 shadow-xs">
-                                <Coins className="h-4 w-4" />
-                              </div>
-                              <div>
-                                <h3 className="text-xs font-black uppercase tracking-wider text-white">Resgatar Pontos VIP</h3>
-                                <p className="text-[10px] text-purple-200 font-medium">100 pts = R$ 1,00 de desconto</p>
-                              </div>
-                            </div>
-
-                            <label className="relative inline-flex cursor-pointer items-center">
-                              <input 
-                                type="checkbox" 
-                                checked={usarPontos} 
-                                disabled={saldoPontos <= 0 || maxPontosValidos <= 0}
-                                onChange={e => handleTogglePontos(e.target.checked)}
-                                className="peer sr-only" 
-                              />
-                              <div className="h-6 w-11 rounded-full bg-purple-950 peer-checked:bg-amber-400 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-purple-950 border border-purple-400/40"></div>
-                            </label>
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs pt-2 border-t border-purple-800/50">
-                            <span className="text-purple-200/80">Saldo Disponível:</span>
-                            <span className="font-black text-amber-300">
-                              👑 {saldoPontos.toLocaleString()} pts ({formatCurrency(saldoPontos / 100)})
-                            </span>
-                          </div>
-
-                          {usarPontos && (
-                            <div className="space-y-2.5 pt-2">
-                              <div className="flex items-center gap-2">
-                                <input 
-                                  type="number" 
-                                  value={pontosAplicados || ''} 
-                                  min="0"
-                                  max={maxPontosValidos}
-                                  onChange={e => handlePontosChange(parseInt(e.target.value) || 0)}
-                                  className="flex-1 rounded-xl border border-purple-400/40 bg-white px-3.5 py-2 text-xs font-black text-neutral-900 focus:outline-none" 
-                                  placeholder="Ex: 500"
-                                />
-                                <span className="text-xs font-black text-amber-300 shrink-0">
-                                  - {formatCurrency(descontoPontos)}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5">
-                                {saldoPontos >= 100 && maxPontosValidos >= 100 && (
-                                  <button type="button" onClick={() => handlePontosChange(100)} className="rounded-lg bg-purple-900/80 px-2.5 py-1 text-[10px] font-black text-amber-200 cursor-pointer hover:bg-purple-800">100 pts</button>
-                                )}
-                                {saldoPontos >= 500 && maxPontosValidos >= 500 && (
-                                  <button type="button" onClick={() => handlePontosChange(500)} className="rounded-lg bg-purple-900/80 px-2.5 py-1 text-[10px] font-black text-amber-200 cursor-pointer hover:bg-purple-800">500 pts</button>
-                                )}
-                                <button type="button" onClick={() => handlePontosChange(maxPontosValidos)} className="ml-auto rounded-lg bg-amber-400 px-3 py-1 text-[10px] font-black text-purple-950 cursor-pointer hover:bg-amber-300">Máximo ({maxPontosValidos.toLocaleString()} pts)</button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Box de Saldo da Carteira Virtual */}
-                        <div className="rounded-2xl border border-emerald-700/50 bg-gradient-to-br from-emerald-950 via-teal-950 to-emerald-900 p-5 text-white shadow-sm space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                              <div className="rounded-xl bg-emerald-400 p-2 text-emerald-950 shadow-xs">
-                                <Wallet className="h-4 w-4" />
-                              </div>
-                              <div>
-                                <h3 className="text-xs font-black uppercase tracking-wider text-white">Usar Saldo da Carteira</h3>
-                                <p className="text-[10px] text-emerald-200 font-medium">Abata o valor com seu saldo em conta</p>
-                              </div>
-                            </div>
-
-                            <label className="relative inline-flex cursor-pointer items-center">
-                              <input 
-                                type="checkbox" 
-                                checked={usarSaldoCarteira} 
-                                disabled={saldoCarteira <= 0 || maxSaldoValido <= 0}
-                                onChange={e => handleToggleSaldoCarteira(e.target.checked)}
-                                className="peer sr-only" 
-                              />
-                              <div className="h-6 w-11 rounded-full bg-emerald-950 peer-checked:bg-emerald-400 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-emerald-950 border border-emerald-300/40"></div>
-                            </label>
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs pt-2 border-t border-emerald-800/60">
-                            <span className="text-emerald-200/80">Saldo Disponível:</span>
-                            <span className="font-black text-emerald-300">{formatCurrency(saldoCarteira)}</span>
-                          </div>
-
-                          {usarSaldoCarteira && (
-                            <div className="space-y-2.5 pt-2">
-                              <div className="flex items-center gap-2">
-                                <input 
-                                  type="number" 
-                                  value={saldoCarteiraAplicado ? Number(saldoCarteiraAplicado.toFixed(2)) : ''} 
-                                  min="0"
-                                  max={maxSaldoValido}
-                                  step="0.01"
-                                  onChange={e => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
-                                  className="flex-1 rounded-xl border border-emerald-400/40 bg-white px-3.5 py-2 text-xs font-black text-neutral-900 focus:outline-none" 
-                                  placeholder="Ex: 50.00"
-                                />
-                                <span className="text-xs font-black text-emerald-300 shrink-0">
-                                  - {formatCurrency(descontoCarteira)}
-                                </span>
-                              </div>
-                              <button type="button" onClick={() => handleSaldoCarteiraChange(maxSaldoValido)} className="block ml-auto rounded-lg bg-emerald-400 px-3 py-1 text-[10px] font-black text-emerald-950 cursor-pointer hover:bg-emerald-300">Usar Máximo ({formatCurrency(maxSaldoValido)})</button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Navegação da Etapa 2 */}
-                    <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
-                      <button
-                        type="button"
-                        onClick={() => setEtapaCheckout(1)}
-                        className="inline-flex items-center gap-2 rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-xs font-black text-neutral-700 shadow-2xs hover:bg-neutral-50 cursor-pointer"
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                        <span>Voltar para Endereço</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setEtapaCheckout(3)}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-[#17345f] px-8 py-3.5 text-xs font-black text-white shadow-md shadow-[#17345f]/20 transition-all hover:bg-[#102746] cursor-pointer"
-                      >
-                        <span>Avançar para Pagamento</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* ========================================================= */}
-                {/* ETAPA 3: FORMAS DE PAGAMENTO */}
-                {/* ========================================================= */}
-                {etapaCheckout === 3 && (
-                  <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/90 shadow-sm space-y-6 animate-in fade-in duration-300">
-                    <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-                          <CreditCard className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h2 className="text-base font-black text-neutral-900 uppercase tracking-wide">
-                            Forma de Pagamento
-                          </h2>
-                          <p className="text-xs text-neutral-500 font-medium">
-                            Selecione como prefere pagar pelo seu pedido
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Opções de Pagamento */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      
-                      {/* Opção PIX */}
-                      {checkoutMetodoPixAtivo && (
-                        <div 
-                          onClick={() => setFormaPagamento('pix')}
-                          className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                            formaPagamento === 'pix' 
-                              ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-2 ring-emerald-600/10' 
-                              : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
-                          }`}
-                        >
-                          <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                            formaPagamento === 'pix' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-neutral-300 bg-white'
-                          }`}>
-                            {formaPagamento === 'pix' && <div className="h-2 w-2 rounded-full bg-white" />}
-                          </div>
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-black text-neutral-900 uppercase">PIX Instantâneo</span>
-                              {lojaPixDescontoAtivo && (
-                                <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white">
-                                  -{lojaPixDescontoPorcentagem}% OFF
-                                </span>
+                          {/* Cupom Entrega */}
+                          {temProdutos && (
+                            <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-4 space-y-2.5">
+                              <label className="text-xs font-bold text-emerald-900 uppercase flex items-center gap-1.5">
+                                <Package className="h-3.5 w-3.5 text-emerald-600" /> Benefício de Frete
+                              </label>
+                              {cupomEntrega ? (
+                                <div className="flex items-center justify-between bg-white border border-emerald-200 px-3.5 py-2.5 rounded-xl text-xs">
+                                  <span className="font-mono font-black text-emerald-700">
+                                    {cupomEntrega.codigo_cupom} — {cupomEntrega.tipo_entrega === 'frete_gratis' ? 'Frete Grátis' : 'Frete Fixo'}
+                                  </span>
+                                  <button 
+                                    onClick={() => setCupomEntrega(null)} 
+                                    className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer"
+                                  >
+                                    Remover
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <div className="flex gap-2">
+                                    <input 
+                                      type="text" 
+                                      value={cupomEntInput} 
+                                      onChange={e => setCupomEntInput(e.target.value.toUpperCase())} 
+                                      placeholder="CÓDIGO DE FRETE" 
+                                      className="flex-1 px-3.5 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-mono uppercase font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                                    />
+                                    <button 
+                                      onClick={() => aplicarCupom(cupomEntInput, 'entrega')} 
+                                      className="px-4 py-2 bg-emerald-600 text-white font-black rounded-xl text-xs hover:bg-emerald-700 cursor-pointer shadow-xs transition-all"
+                                    >
+                                      Aplicar
+                                    </button>
+                                  </div>
+                                  <button 
+                                    onClick={() => handleOpenSelector('entrega')}
+                                    className="text-[10px] font-black text-emerald-700 uppercase tracking-wider hover:text-emerald-900 cursor-pointer block pt-0.5"
+                                  >
+                                    Ver Benefícios de Frete
+                                  </button>
+                                </div>
                               )}
                             </div>
-                            <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
-                              Aprovação imediata e liberação instantânea do pedido.
-                            </p>
-                          </div>
+                          )}
                         </div>
-                      )}
+                      </div>
 
-                      {/* Opção Cartão de Crédito */}
-                      {checkoutMetodoCartaoAtivo && (
-                        <div 
-                          onClick={() => setFormaPagamento('cartao')}
-                          className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                            formaPagamento === 'cartao' 
-                              ? 'border-[#17345f] bg-blue-50/30 shadow-xs ring-2 ring-[#17345f]/10' 
-                              : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
-                          }`}
+                      {/* Botão de Avanço da Etapa 1 */}
+                      <div className="flex items-center justify-end pt-4 border-t border-neutral-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (temProdutos && !enderecoCompletoValido) {
+                              toast.error('Preencha todo o endereço de entrega antes de prosseguir.');
+                              return;
+                            }
+                            setEtapaCheckout(2);
+                          }}
+                          className="inline-flex items-center gap-2 rounded-2xl bg-[#17345f] px-8 py-3.5 text-xs font-black text-white shadow-md shadow-[#17345f]/20 transition-all hover:bg-[#102746] cursor-pointer"
                         >
-                          <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                            formaPagamento === 'cartao' ? 'border-[#17345f] bg-[#17345f] text-white' : 'border-neutral-300 bg-white'
-                          }`}>
-                            {formaPagamento === 'cartao' && <div className="h-2 w-2 rounded-full bg-white" />}
-                          </div>
-                          <div className="flex-1 space-y-1">
-                            <span className="text-xs font-black text-neutral-900 uppercase block">Cartão de Crédito</span>
-                            <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
-                              Parcele em até 12x no cartão com total segurança.
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                          <span>Avançar para Benefícios & Pagamento</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-                      {/* Opção Boleto Bancário */}
-                      {checkoutMetodoBoletoAtivo && (
-                        <div 
-                          onClick={() => setFormaPagamento('boleto')}
-                          className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                            formaPagamento === 'boleto' 
-                              ? 'border-[#17345f] bg-blue-50/30 shadow-xs ring-2 ring-[#17345f]/10' 
-                              : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
-                          }`}
-                        >
-                          <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                            formaPagamento === 'boleto' ? 'border-[#17345f] bg-[#17345f] text-white' : 'border-neutral-300 bg-white'
-                          }`}>
-                            {formaPagamento === 'boleto' && <div className="h-2 w-2 rounded-full bg-white" />}
-                          </div>
-                          <div className="flex-1 space-y-1">
-                            <span className="text-xs font-black text-neutral-900 uppercase block">Boleto Bancário</span>
-                            <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
-                              Pagamento à vista com compensação em até 1 dia útil.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Opção Crédito GSA Store */}
-                      {solicitacaoAtivaId && limiteCreditoDisponivel > 0 && (
-                        <div 
-                          onClick={() => setFormaPagamento('credito_loja')}
-                          className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer sm:col-span-2 ${
-                            formaPagamento === 'credito_loja' 
-                              ? 'border-indigo-600 bg-indigo-50/50 shadow-xs ring-2 ring-indigo-600/10' 
-                              : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
-                          }`}
-                        >
-                          <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                            formaPagamento === 'credito_loja' ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-neutral-300 bg-white'
-                          }`}>
-                            {formaPagamento === 'credito_loja' && <div className="h-2 w-2 rounded-full bg-white" />}
-                          </div>
-                          <div className="flex-1 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-black text-indigo-950 uppercase">Crédito GSA Store</span>
-                              <span className="text-xs font-black text-indigo-700">Disponível: {formatCurrency(limiteCreditoDisponivel)}</span>
+                  {/* ========================================================= */}
+                  {/* ETAPA 2: RESGATE DE PONTOS, SALDO DA CARTEIRA & FORMA DE PAGAMENTO */}
+                  {/* ========================================================= */}
+                  {etapaCheckout === 2 && (
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/90 shadow-sm space-y-6 animate-in fade-in duration-300">
+                      
+                      {/* Seção de Fidelidade e Carteira */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-neutral-100 pb-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                              <Gift className="h-5 w-5" />
                             </div>
-                            <p className="text-[11px] text-neutral-500 font-medium">
-                              Utilize seu limite pré-aprovado para comprar agora e pagar depois.
-                            </p>
+                            <div>
+                              <h2 className="text-base font-black text-neutral-900 uppercase tracking-wide">
+                                Resgate de Pontos & Saldo da Carteira
+                              </h2>
+                              <p className="text-xs text-neutral-500 font-medium">
+                                Abata o valor do pedido com seus pontos VIP ou saldo em conta
+                              </p>
+                            </div>
+                          </div>
+                        </div>
 
-                            {formaPagamento === 'credito_loja' && opcaoPagamentoParcelado && (
-                              <div className="pt-2 border-t border-indigo-200/60 flex items-center gap-3">
-                                <label className="text-xs font-bold text-neutral-700">Parcelamento:</label>
-                                <select
-                                  value={numParcelas}
-                                  onChange={e => setNumParcelas(parseInt(e.target.value) || 1)}
-                                  className="px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-neutral-900"
-                                >
-                                  {Array.from({ length: maxParcelas }, (_, i) => i + 1).map(p => (
-                                    <option key={p} value={p}>
-                                      {p}x de {formatCurrency(totalHojeFinal / p)} ({calcularTaxaJuros(p)}% juros)
-                                    </option>
-                                  ))}
-                                </select>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Box de Pontos VIP */}
+                          <div className="rounded-2xl border border-purple-800/40 bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-900 p-5 text-white shadow-sm space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2.5">
+                                <div className="rounded-xl bg-amber-400 p-2 text-purple-950 shadow-xs">
+                                  <Coins className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <h3 className="text-xs font-black uppercase tracking-wider text-white">Resgatar Pontos VIP</h3>
+                                  <p className="text-[10px] text-purple-200 font-medium">100 pts = R$ 1,00</p>
+                                </div>
+                              </div>
+
+                              <label className="relative inline-flex cursor-pointer items-center">
+                                <input 
+                                  type="checkbox" 
+                                  checked={usarPontos} 
+                                  disabled={saldoPontos <= 0 || maxPontosValidos <= 0}
+                                  onChange={e => handleTogglePontos(e.target.checked)}
+                                  className="peer sr-only" 
+                                />
+                                <div className="h-6 w-11 rounded-full bg-purple-950 peer-checked:bg-amber-400 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-purple-950 border border-purple-400/40"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs pt-2 border-t border-purple-800/50">
+                              <span className="text-purple-200/80">Saldo Disponível:</span>
+                              <span className="font-black text-amber-300">
+                                👑 {saldoPontos.toLocaleString()} pts ({formatCurrency(saldoPontos / 100)})
+                              </span>
+                            </div>
+
+                            {usarPontos && (
+                              <div className="space-y-2.5 pt-2">
+                                <div className="flex items-center gap-2">
+                                  <input 
+                                    type="number" 
+                                    value={pontosAplicados || ''} 
+                                    min="0"
+                                    max={maxPontosValidos}
+                                    onChange={e => handlePontosChange(parseInt(e.target.value) || 0)}
+                                    className="flex-1 rounded-xl border border-purple-400/40 bg-white px-3.5 py-2 text-xs font-black text-neutral-900 focus:outline-none" 
+                                    placeholder="Ex: 500"
+                                  />
+                                  <span className="text-xs font-black text-amber-300 shrink-0">
+                                    - {formatCurrency(descontoPontos)}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  {saldoPontos >= 100 && maxPontosValidos >= 100 && (
+                                    <button type="button" onClick={() => handlePontosChange(100)} className="rounded-lg bg-purple-900/80 px-2.5 py-1 text-[10px] font-black text-amber-200 cursor-pointer hover:bg-purple-800">100 pts</button>
+                                  )}
+                                  {saldoPontos >= 500 && maxPontosValidos >= 500 && (
+                                    <button type="button" onClick={() => handlePontosChange(500)} className="rounded-lg bg-purple-900/80 px-2.5 py-1 text-[10px] font-black text-amber-200 cursor-pointer hover:bg-purple-800">500 pts</button>
+                                  )}
+                                  <button type="button" onClick={() => handlePontosChange(maxPontosValidos)} className="ml-auto rounded-lg bg-amber-400 px-3 py-1 text-[10px] font-black text-purple-950 cursor-pointer hover:bg-amber-300">Máximo ({maxPontosValidos.toLocaleString()} pts)</button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Box de Saldo da Carteira Virtual */}
+                          <div className="rounded-2xl border border-emerald-700/50 bg-gradient-to-br from-emerald-950 via-teal-950 to-emerald-900 p-5 text-white shadow-sm space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2.5">
+                                <div className="rounded-xl bg-emerald-400 p-2 text-emerald-950 shadow-xs">
+                                  <Wallet className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <h3 className="text-xs font-black uppercase tracking-wider text-white">Usar Saldo da Carteira</h3>
+                                  <p className="text-[10px] text-emerald-200 font-medium">Abata o valor do seu saldo</p>
+                                </div>
+                              </div>
+
+                              <label className="relative inline-flex cursor-pointer items-center">
+                                <input 
+                                  type="checkbox" 
+                                  checked={usarSaldoCarteira} 
+                                  disabled={saldoCarteira <= 0 || maxSaldoValido <= 0}
+                                  onChange={e => handleToggleSaldoCarteira(e.target.checked)}
+                                  className="peer sr-only" 
+                                />
+                                <div className="h-6 w-11 rounded-full bg-emerald-950 peer-checked:bg-emerald-400 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-emerald-950 border border-emerald-300/40"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs pt-2 border-t border-emerald-800/60">
+                              <span className="text-emerald-200/80">Saldo Disponível:</span>
+                              <span className="font-black text-emerald-300">{formatCurrency(saldoCarteira)}</span>
+                            </div>
+
+                            {usarSaldoCarteira && (
+                              <div className="space-y-2.5 pt-2">
+                                <div className="flex items-center gap-2">
+                                  <input 
+                                    type="number" 
+                                    value={saldoCarteiraAplicado ? Number(saldoCarteiraAplicado.toFixed(2)) : ''} 
+                                    min="0"
+                                    max={maxSaldoValido}
+                                    step="0.01"
+                                    onChange={e => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
+                                    className="flex-1 rounded-xl border border-emerald-400/40 bg-white px-3.5 py-2 text-xs font-black text-neutral-900 focus:outline-none" 
+                                    placeholder="Ex: 50.00"
+                                  />
+                                  <span className="text-xs font-black text-emerald-300 shrink-0">
+                                    - {formatCurrency(descontoCarteira)}
+                                  </span>
+                                </div>
+                                <button type="button" onClick={() => handleSaldoCarteiraChange(maxSaldoValido)} className="block ml-auto rounded-lg bg-emerald-400 px-3 py-1 text-[10px] font-black text-emerald-950 cursor-pointer hover:bg-emerald-300">Usar Máximo ({formatCurrency(maxSaldoValido)})</button>
                               </div>
                             )}
                           </div>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Seção de Escolha de Forma de Pagamento */}
+                      <div className="space-y-4 pt-4 border-t border-neutral-100">
+                        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <CreditCard className="h-5 w-5 text-emerald-600" />
+                            <div>
+                              <h3 className="text-sm font-black text-neutral-900 uppercase tracking-wide">
+                                Escolha a Forma de Pagamento
+                              </h3>
+                              <p className="text-[11px] text-neutral-500 font-medium">
+                                Selecione como deseja realizar o pagamento deste pedido
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          {/* PIX */}
+                          {checkoutMetodoPixAtivo && (
+                            <div 
+                              onClick={() => setFormaPagamento('pix')}
+                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                                formaPagamento === 'pix' 
+                                  ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-2 ring-emerald-600/10' 
+                                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
+                              }`}
+                            >
+                              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                formaPagamento === 'pix' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-neutral-300 bg-white'
+                              }`}>
+                                {formaPagamento === 'pix' && <div className="h-2 w-2 rounded-full bg-white" />}
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-black text-neutral-900 uppercase">PIX Instantâneo</span>
+                                  {lojaPixDescontoAtivo && (
+                                    <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white">
+                                      -{lojaPixDescontoPorcentagem}% OFF
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                                  Aprovação imediata e liberação instantânea.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Cartão de Crédito */}
+                          {checkoutMetodoCartaoAtivo && (
+                            <div 
+                              onClick={() => setFormaPagamento('cartao')}
+                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                                formaPagamento === 'cartao' 
+                                  ? 'border-[#17345f] bg-blue-50/30 shadow-xs ring-2 ring-[#17345f]/10' 
+                                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
+                              }`}
+                            >
+                              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                formaPagamento === 'cartao' ? 'border-[#17345f] bg-[#17345f] text-white' : 'border-neutral-300 bg-white'
+                              }`}>
+                                {formaPagamento === 'cartao' && <div className="h-2 w-2 rounded-full bg-white" />}
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <span className="text-xs font-black text-neutral-900 uppercase block">Cartão de Crédito</span>
+                                <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                                  Parcele em até 12x no cartão de crédito.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Boleto Bancário */}
+                          {checkoutMetodoBoletoAtivo && (
+                            <div 
+                              onClick={() => setFormaPagamento('boleto')}
+                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                                formaPagamento === 'boleto' 
+                                  ? 'border-[#17345f] bg-blue-50/30 shadow-xs ring-2 ring-[#17345f]/10' 
+                                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
+                              }`}
+                            >
+                              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                formaPagamento === 'boleto' ? 'border-[#17345f] bg-[#17345f] text-white' : 'border-neutral-300 bg-white'
+                              }`}>
+                                {formaPagamento === 'boleto' && <div className="h-2 w-2 rounded-full bg-white" />}
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <span className="text-xs font-black text-neutral-900 uppercase block">Boleto Bancário</span>
+                                <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                                  Pagamento à vista com compensação rápida.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Crédito GSA Store */}
+                          {solicitacaoAtivaId && limiteCreditoDisponivel > 0 && (
+                            <div 
+                              onClick={() => setFormaPagamento('credito_loja')}
+                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer sm:col-span-2 ${
+                                formaPagamento === 'credito_loja' 
+                                  ? 'border-indigo-600 bg-indigo-50/50 shadow-xs ring-2 ring-indigo-600/10' 
+                                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
+                              }`}
+                            >
+                              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                formaPagamento === 'credito_loja' ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-neutral-300 bg-white'
+                              }`}>
+                                {formaPagamento === 'credito_loja' && <div className="h-2 w-2 rounded-full bg-white" />}
+                              </div>
+                              <div className="flex-1 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-black text-indigo-950 uppercase">Crédito GSA Store</span>
+                                  <span className="text-xs font-black text-indigo-700">Disponível: {formatCurrency(limiteCreditoDisponivel)}</span>
+                                </div>
+                                <p className="text-[11px] text-neutral-500 font-medium">
+                                  Utilize seu limite pré-aprovado para comprar agora e pagar parcelado.
+                                </p>
+
+                                {formaPagamento === 'credito_loja' && opcaoPagamentoParcelado && (
+                                  <div className="pt-2 border-t border-indigo-200/60 flex items-center gap-3">
+                                    <label className="text-xs font-bold text-neutral-700">Parcelamento:</label>
+                                    <select
+                                      value={numParcelas}
+                                      onChange={e => setNumParcelas(parseInt(e.target.value) || 1)}
+                                      className="px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-neutral-900"
+                                    >
+                                      {Array.from({ length: maxParcelas }, (_, i) => i + 1).map(p => (
+                                        <option key={p} value={p}>
+                                          {p}x de {formatCurrency(totalHojeFinal / p)} ({calcularTaxaJuros(p)}% juros)
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Navegação da Etapa 2 */}
+                      <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
+                        <button
+                          type="button"
+                          onClick={() => setEtapaCheckout(1)}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-xs font-black text-neutral-700 shadow-2xs hover:bg-neutral-50 cursor-pointer"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          <span>Voltar para Endereço & Cupons</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setEtapaCheckout(3)}
+                          className="inline-flex items-center gap-2 rounded-2xl bg-[#17345f] px-8 py-3.5 text-xs font-black text-white shadow-md shadow-[#17345f]/20 transition-all hover:bg-[#102746] cursor-pointer"
+                        >
+                          <span>Avançar para Resumo do Pedido</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Coluna da Direita: Preview Rápido nas Etapas 1 e 2 */}
+                <div className="lg:col-span-5">
+                  <div className="sticky top-24 rounded-3xl border border-neutral-200/90 bg-white p-6 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-3.5">
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="h-4 w-4 text-[#17345f]" />
+                        <h3 className="text-xs font-black uppercase tracking-wider text-neutral-900">
+                          Prévia do Pedido
+                        </h3>
+                      </div>
+                      <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-bold text-neutral-600">
+                        {cartItems.length} {cartItems.length === 1 ? 'item' : 'itens'}
+                      </span>
                     </div>
 
-                    {/* Navegação da Etapa 3 */}
-                    <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
-                      <button
-                        type="button"
-                        onClick={() => setEtapaCheckout(2)}
-                        className="inline-flex items-center gap-2 rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-xs font-black text-neutral-700 shadow-2xs hover:bg-neutral-50 cursor-pointer"
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                        <span>Voltar para Benefícios</span>
-                      </button>
+                    {/* Itens compactos */}
+                    <div className="max-h-48 overflow-y-auto space-y-2.5 pr-1 divide-y divide-neutral-100 text-xs">
+                      {cartItems.map((item) => (
+                        <div key={item.id} className="pt-2 first:pt-0 flex items-center justify-between gap-2">
+                          <div className="truncate flex-1 min-w-0">
+                            <span className="font-bold text-neutral-900 truncate block">{item.item_detalhes?.nome || 'Item'}</span>
+                            <span className="text-[10px] text-neutral-500 font-medium">{item.quantidade}x</span>
+                          </div>
+                          <span className="font-black text-neutral-900 shrink-0">
+                            {formatCurrency((item.tipo === 'produto' ? getProductEffectivePrice(item.item_detalhes) : item.item_detalhes?.valor || 0) * item.quantidade)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
 
-                      <div className="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
-                        <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                        <span>Revise o resumo ao lado e confirme</span>
+                    {/* Total Rápido */}
+                    <div className="border-t border-neutral-200/80 pt-3 flex items-baseline justify-between">
+                      <span className="text-xs font-black uppercase tracking-wider text-neutral-600">Total Previsto:</span>
+                      <span className="text-xl font-black text-[#17345f]">{formatCurrency(totalHojeFinal)}</span>
+                    </div>
+
+                    <div className="rounded-xl bg-amber-50 p-2.5 text-center text-xs font-black text-amber-800 border border-amber-200/80">
+                      Ganhe +{totalPontosGanhos} pontos VIP nesta compra
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* ========================================================= */
+              /* ETAPA 3: RESUMO COMPLETO DO PEDIDO (AMPLO E DETALHADO) */
+              /* ========================================================= */
+              <div className="space-y-6 animate-in fade-in duration-300">
+                
+                {/* Cards de Confirmação Rápida (Grid de 3 Colunas) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  {/* Card 1: Endereço de Entrega */}
+                  <div className="bg-white rounded-2xl p-5 border border-neutral-200/90 shadow-xs flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-[#17345f] flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4 text-blue-600" /> Entrega
+                        </span>
+                        <button 
+                          onClick={() => setEtapaCheckout(1)}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="h-3 w-3" /> Editar
+                        </button>
+                      </div>
+                      {temProdutos ? (
+                        <div className="text-xs text-neutral-700 font-medium leading-relaxed">
+                          <p className="font-bold text-neutral-900">{endereco.logradouro}, {endereco.numero}</p>
+                          <p>{endereco.bairro} — {endereco.cidade}/{endereco.uf}</p>
+                          <p className="text-[10px] text-neutral-500 font-mono">CEP: {endereco.cep}</p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-neutral-500 font-medium">Serviços / Assinaturas digitais sem entrega física.</p>
+                      )}
+                    </div>
+                    <div className="pt-2 border-t border-neutral-100 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700">
+                      <Truck className="h-3.5 w-3.5" />
+                      <span>{taxaEntregaFinal === 0 ? 'Frete Grátis' : `Frete: ${formatCurrency(taxaEntregaFinal)}`}</span>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Forma de Pagamento */}
+                  <div className="bg-white rounded-2xl p-5 border border-neutral-200/90 shadow-xs flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-[#17345f] flex items-center gap-1.5">
+                          <CreditCard className="h-4 w-4 text-emerald-600" /> Pagamento
+                        </span>
+                        <button 
+                          onClick={() => setEtapaCheckout(2)}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="h-3 w-3" /> Editar
+                        </button>
+                      </div>
+                      <div className="text-xs text-neutral-700 font-medium">
+                        {formaPagamento === 'pix' && (
+                          <p className="font-bold text-emerald-800">
+                            PIX Instantâneo {lojaPixDescontoAtivo ? `(-${lojaPixDescontoPorcentagem}% OFF)` : ''}
+                          </p>
+                        )}
+                        {formaPagamento === 'cartao' && <p className="font-bold text-neutral-900">Cartão de Crédito</p>}
+                        {formaPagamento === 'boleto' && <p className="font-bold text-neutral-900">Boleto Bancário</p>}
+                        {formaPagamento === 'credito_loja' && (
+                          <p className="font-bold text-indigo-900">
+                            Crédito GSA Store ({numParcelas}x de {formatCurrency(totalHojeFinal / numParcelas)})
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-neutral-100 text-[11px] text-neutral-500 font-medium flex items-center gap-1">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Processamento criptografado</span>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Benefícios Aplicados */}
+                  <div className="bg-white rounded-2xl p-5 border border-neutral-200/90 shadow-xs flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-[#17345f] flex items-center gap-1.5">
+                          <Tag className="h-4 w-4 text-amber-600" /> Benefícios
+                        </span>
+                        <button 
+                          onClick={() => setEtapaCheckout(2)}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="h-3 w-3" /> Editar
+                        </button>
+                      </div>
+                      <div className="text-xs text-neutral-700 font-medium space-y-0.5">
+                        {cupomDesconto && <p className="text-blue-700 font-bold">Cupom: {cupomDesconto.codigo_cupom}</p>}
+                        {usarPontos && <p className="text-amber-700 font-bold">Pontos: {pontosAplicados.toLocaleString()} pts (-{formatCurrency(descontoPontos)})</p>}
+                        {usarSaldoCarteira && <p className="text-emerald-700 font-bold">Carteira: -{formatCurrency(descontoCarteira)}</p>}
+                        {!cupomDesconto && !usarPontos && !usarSaldoCarteira && (
+                          <p className="text-neutral-400">Nenhum benefício adicional aplicado.</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-neutral-100 text-[11px] font-black text-amber-800 flex items-center gap-1">
+                      <Gift className="h-3.5 w-3.5 text-amber-600" />
+                      <span>+{totalPontosGanhos} pts a ganhar</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tabela de Itens e Discriminação Financeira Completa */}
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/90 shadow-sm space-y-6">
+                  
+                  {/* Cabeçalho da Lista */}
+                  <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#17345f]/10 text-[#17345f]">
+                        <ShoppingBag className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-black text-neutral-900 uppercase tracking-wide">
+                          Itens do Pedido
+                        </h2>
+                        <p className="text-xs text-neutral-500 font-medium">
+                          {cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                        </p>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Coluna da Direita: Resumo do Pedido Sticky (5 Colunas em Desktop) */}
-              <div className="lg:col-span-5">
-                <div className="sticky top-24 rounded-3xl border border-neutral-200/90 bg-white p-6 shadow-sm space-y-5">
-                  
-                  {/* Cabeçalho do Resumo */}
-                  <div className="flex items-center justify-between border-b border-neutral-100 pb-3.5">
-                    <div className="flex items-center gap-2">
-                      <ShoppingBag className="h-4 w-4 text-[#17345f]" />
-                      <h3 className="text-sm font-black uppercase tracking-wider text-neutral-900">
-                        Resumo do Pedido
-                      </h3>
-                    </div>
-                    <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-bold text-neutral-600">
-                      {cartItems.length} {cartItems.length === 1 ? 'item' : 'itens'}
-                    </span>
-                  </div>
-
-                  {/* Lista de Itens do Pedido */}
-                  <div className="max-h-64 overflow-y-auto space-y-3 pr-1 divide-y divide-neutral-100">
+                  {/* Lista Completa dos Itens */}
+                  <div className="divide-y divide-neutral-100">
                     {cartItems.map((item) => {
                       const isProduct = item.tipo === 'produto';
                       const displayCode = isProduct ? getProductDisplayCode(item.item_detalhes as any) : null;
@@ -1738,37 +1876,39 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       const itemSubtotal = currentPrice * item.quantidade;
 
                       return (
-                        <div key={item.id} className="pt-3 first:pt-0 flex items-start gap-3">
-                          {item.item_detalhes?.imagem_url ? (
-                            <img 
-                              src={item.item_detalhes.imagem_url} 
-                              alt={item.item_detalhes.nome} 
-                              className="h-12 w-12 rounded-xl object-cover border border-neutral-200 shrink-0" 
-                            />
-                          ) : (
-                            <div className="h-12 w-12 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0 text-neutral-400">
-                              <Package className="h-6 w-6" />
-                            </div>
-                          )}
+                        <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 min-w-0">
+                            {item.item_detalhes?.imagem_url ? (
+                              <img 
+                                src={item.item_detalhes.imagem_url} 
+                                alt={item.item_detalhes.nome} 
+                                className="h-16 w-16 rounded-2xl object-cover border border-neutral-200 shrink-0" 
+                              />
+                            ) : (
+                              <div className="h-16 w-16 rounded-2xl bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0 text-neutral-400">
+                                <Package className="h-8 w-8" />
+                              </div>
+                            )}
 
-                          <div className="flex-1 min-w-0 space-y-0.5">
-                            <h4 className="text-xs font-bold text-neutral-900 truncate">
-                              {item.item_detalhes?.nome || 'Item do Catálogo'}
-                            </h4>
-                            <div className="flex items-center gap-2 text-[10px] text-neutral-500 font-medium">
-                              {displayCode && <span className="font-mono">{displayCode}</span>}
-                              <span>Qtd: {item.quantidade}x</span>
-                              {item.prazo_meses && <span>({item.prazo_meses} meses)</span>}
+                            <div className="space-y-1 min-w-0">
+                              <h4 className="text-sm font-black text-neutral-900 truncate">
+                                {item.item_detalhes?.nome || 'Item do Catálogo'}
+                              </h4>
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500 font-medium">
+                                {displayCode && <span className="font-mono bg-neutral-100 px-2 py-0.5 rounded text-[11px]">{displayCode}</span>}
+                                <span>Quantidade: <strong className="text-neutral-800">{item.quantidade}x</strong></span>
+                                {item.prazo_meses && <span>({item.prazo_meses} meses)</span>}
+                              </div>
                             </div>
                           </div>
 
-                          <div className="text-right shrink-0">
+                          <div className="text-right sm:shrink-0 flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center">
                             {hasDiscount && regularPrice > currentPrice && (
-                              <span className="text-[10px] font-semibold text-neutral-400 line-through block">
+                              <span className="text-xs font-semibold text-neutral-400 line-through">
                                 {formatCurrency(regularPrice * item.quantidade)}
                               </span>
                             )}
-                            <span className="text-xs font-black text-neutral-900">
+                            <span className="text-base font-black text-neutral-900">
                               {formatCurrency(itemSubtotal)}
                             </span>
                           </div>
@@ -1777,8 +1917,8 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                     })}
                   </div>
 
-                  {/* Detalhamento de Valores */}
-                  <div className="space-y-2 border-t border-neutral-100 pt-4 text-xs font-medium text-neutral-600">
+                  {/* Fechamento de Valores Completo */}
+                  <div className="border-t border-neutral-200/90 pt-6 space-y-3 max-w-md ml-auto text-xs font-medium text-neutral-600">
                     <div className="flex justify-between">
                       <span>Subtotal dos itens</span>
                       <span className="font-bold text-neutral-900">{formatCurrency(subtotalInicial)}</span>
@@ -1800,7 +1940,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
 
                     {descontoCalculado > 0 && (
                       <div className="flex justify-between text-blue-600 font-bold">
-                        <span>Cupom ({cupomDesconto?.codigo_cupom})</span>
+                        <span>Cupom de Desconto ({cupomDesconto?.codigo_cupom})</span>
                         <span>- {formatCurrency(descontoCalculado)}</span>
                       </div>
                     )}
@@ -1814,15 +1954,15 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
 
                     {temProdutos && (
                       <div className="flex justify-between">
-                        <span>Frete & Entrega</span>
-                        <span className={`font-bold ${taxaEntregaFinal === 0 ? 'text-emerald-700 uppercase tracking-wider text-[11px]' : 'text-neutral-900'}`}>
+                        <span>Taxa de Entrega / Frete</span>
+                        <span className={`font-bold ${taxaEntregaFinal === 0 ? 'text-emerald-700 uppercase tracking-wider' : 'text-neutral-900'}`}>
                           {taxaEntregaFinal === 0 ? 'Frete Grátis' : formatCurrency(taxaEntregaFinal)}
                         </span>
                       </div>
                     )}
 
                     {formaPagamento === 'pix' && lojaPixDescontoAtivo && pixDiscountValue > 0 && (
-                      <div className="flex justify-between text-emerald-600 font-extrabold bg-emerald-50 px-2 py-1 rounded-lg">
+                      <div className="flex justify-between text-emerald-600 font-extrabold bg-emerald-50 px-2.5 py-1.5 rounded-lg">
                         <span>Desconto Especial PIX ({lojaPixDescontoPorcentagem}%)</span>
                         <span>- {formatCurrency(pixDiscountValue)}</span>
                       </div>
@@ -1835,34 +1975,34 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       </div>
                     )}
 
-                    {/* Total Geral em Destaque */}
-                    <div className="border-t border-neutral-200/90 pt-3.5 flex items-baseline justify-between">
+                    {/* Total Geral */}
+                    <div className="border-t border-neutral-200 pt-4 flex items-baseline justify-between">
                       <div>
-                        <span className="text-sm font-black text-neutral-900 block">Total a Pagar</span>
-                        <span className="text-[10px] text-neutral-500 font-medium">À vista ou parcelado</span>
+                        <span className="text-base font-black text-neutral-900 block">Total Final a Pagar</span>
+                        <span className="text-xs text-neutral-500 font-medium">À vista ou parcelado</span>
                       </div>
-                      <span className="text-2xl font-black text-[#17345f] tracking-tight">
+                      <span className="text-3xl font-black text-[#17345f] tracking-tight">
                         {formatCurrency(totalHojeFinal)}
                       </span>
                     </div>
-
-                    {/* Pontos Fidelidade Acumulados */}
-                    <div className="flex items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-xs font-black text-amber-800 border border-amber-200/80">
-                      <span className="flex items-center gap-1.5">
-                        <Gift className="h-4 w-4 text-amber-600" />
-                        Pontos VIP a Ganhar
-                      </span>
-                      <span>+{totalPontosGanhos} pts</span>
-                    </div>
                   </div>
 
-                  {/* Botão de Finalização / Ação Principal */}
-                  <div className="space-y-3 pt-2">
+                  {/* Rodapé de Ação Final */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-neutral-100">
+                    <button
+                      type="button"
+                      onClick={() => setEtapaCheckout(2)}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-300 bg-white px-6 py-4 text-xs font-black text-neutral-700 shadow-2xs hover:bg-neutral-50 cursor-pointer"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      <span>Voltar para Benefícios & Pagamento</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={handleFinalizar}
                       disabled={isSubmitting}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#17345f] py-4 text-sm font-black text-white shadow-xl shadow-[#17345f]/25 transition-all hover:bg-[#102746] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 cursor-pointer"
+                      className="w-full sm:w-auto flex-1 sm:max-w-md inline-flex items-center justify-center gap-2 rounded-2xl bg-[#17345f] px-8 py-4 text-sm font-black text-white shadow-xl shadow-[#17345f]/25 transition-all hover:bg-[#102746] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 cursor-pointer"
                     >
                       {isSubmitting ? (
                         <>
@@ -1876,22 +2016,10 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                         </>
                       )}
                     </button>
-
-                    {/* Selos de Confiança */}
-                    <div className="space-y-2 pt-2 border-t border-neutral-100 text-[11px] text-neutral-500 font-medium">
-                      <div className="flex items-center gap-2">
-                        <Lock className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                        <span>Transação segura com criptografia SSL 256 bits</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                        <span>Garantia de entrega e suporte pós-venda GSA</span>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </main>
