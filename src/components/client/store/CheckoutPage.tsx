@@ -2355,6 +2355,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         coupons={availableCoupons}
         category={selectorCategory}
         subtotal={subtotalInicial}
+        selectedCouponCode={selectorCategory === 'desconto' ? cupomDesconto?.codigo_cupom : cupomEntrega?.codigo_cupom}
         onSelect={(code) => {
           if (selectorCategory === 'desconto') {
             setCupomDescInput(code);

@@ -1814,6 +1814,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         onClose={() => setIsSelectorOpen(false)}
         coupons={availableCoupons}
         subtotal={subtotalInicial}
+        selectedCouponCode={selectorCategory === 'desconto' ? cupomDesconto?.codigo_cupom : cupomEntrega?.codigo_cupom}
         onSelect={(code) => {
           if (selectorCategory === 'desconto') {
             setCupomDescInput(code);
