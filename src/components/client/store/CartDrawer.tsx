@@ -165,19 +165,33 @@ export default function CartDrawer({
       }}
     >
       <aside aria-labelledby="gsa-cart-title" className="flex h-[92vh] w-full max-w-md flex-col bg-white shadow-2xl transition-transform md:h-full md:rounded-l-3xl">
-        <div className="flex items-center justify-between border-b border-slate-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#17345f]/10 text-[#17345f]">
-              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+        {/* Cabeçalho do Carrinho */}
+        <div className="border-b border-slate-100 bg-white">
+          {/* Linha Principal: Ícone, Título e Botão Fechar */}
+          <div className="flex items-center justify-between px-5 pt-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#17345f]/10 text-[#17345f]">
+                <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <h2 id="gsa-cart-title" className="text-lg font-black text-slate-900 tracking-tight whitespace-nowrap">
+                Seu carrinho
+              </h2>
             </div>
-            <div>
-              <h2 id="gsa-cart-title" className="text-lg font-black text-slate-900">Seu carrinho</h2>
-              <p className="text-xs font-medium text-slate-500">
-                {cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}
-              </p>
-            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition hover:bg-slate-200 hover:text-slate-800"
+              aria-label="Fechar carrinho"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Linha Secundária: Contagem de Itens e Botão Limpar Carrinho */}
+          <div className="flex items-center justify-between bg-slate-50/80 px-5 py-2.5 border-t border-slate-100/80">
+            <p className="text-xs font-semibold text-slate-500">
+              {cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}
+            </p>
             {cartItems.length > 0 && onClearCart && (
               <button
                 type="button"
@@ -186,21 +200,13 @@ export default function CartDrawer({
                     onClearCart();
                   }
                 }}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/80 px-3 py-1.5 text-xs font-extrabold text-red-600 transition hover:bg-red-100 hover:text-red-700 cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50/90 px-2.5 py-1 text-xs font-bold text-red-600 transition hover:bg-red-100 hover:text-red-700 cursor-pointer shadow-2xs whitespace-nowrap"
                 title="Esvaziar todos os itens do carrinho"
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Limpar carrinho</span>
               </button>
             )}
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-              aria-label="Fechar carrinho"
-            >
-              <X className="h-5 w-5" aria-hidden="true" />
-            </button>
           </div>
         </div>
 
