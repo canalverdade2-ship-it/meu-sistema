@@ -286,6 +286,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     ? (route.module === 'classificados' ? 'classificados' : 'gsa_store') 
     : route.module) as Module;
   const isMarketplaceArea = route.area === 'marketplace' || (activeModule as string) === 'gsa_store' || (activeModule as string) === 'classificados';
+  const isCheckoutPage = route.submodule === 'loja-checkout' || route.pathname.includes('/marketplace/loja/checkout') || route.pathname.endsWith('/checkout');
   const activeTab = route.submodule;
   const activeItemId = route.itemId;
   
@@ -1014,30 +1015,33 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   const isEffectiveExpanded = isSidebarPinned || !isSidebarCollapsed || isSidebarHovered;
 
   return (
-    <div className="flex min-h-screen bg-[#f8f7f5] overflow-hidden font-sans">
+    <div className={`flex min-h-screen ${isCheckoutPage ? 'bg-[#f8f9fa]' : 'bg-[#f8f7f5]'} overflow-hidden font-sans`}>
       {/* Mobile Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
-          />
-        )}
-      </AnimatePresence>
+      {!isCheckoutPage && (
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+            />
+          )}
+        </AnimatePresence>
+      )}
 
-      {/* Sidebar */}
-      <aside 
-        onMouseEnter={() => !isMobile && setIsSidebarHovered(true)}
-        onMouseLeave={() => !isMobile && setIsSidebarHovered(false)}
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-black/5 bg-[#fdfcfb] transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 ${
-          isMobileMenuOpen ? 'translate-x-0 w-72' : (isMobile ? '-translate-x-full w-72' : '')
-        } ${
-          !isMobile ? (isEffectiveExpanded ? 'lg:w-72' : 'lg:w-20') : ''
-        }`}
-      >
+      {/* Sidebar - Oculto na tela de Checkout */}
+      {!isCheckoutPage && (
+        <aside 
+          onMouseEnter={() => !isMobile && setIsSidebarHovered(true)}
+          onMouseLeave={() => !isMobile && setIsSidebarHovered(false)}
+          className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-black/5 bg-[#fdfcfb] transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 ${
+            isMobileMenuOpen ? 'translate-x-0 w-72' : (isMobile ? '-translate-x-full w-72' : '')
+          } ${
+            !isMobile ? (isEffectiveExpanded ? 'lg:w-72' : 'lg:w-20') : ''
+          }`}
+        >
         <div className="flex h-24 items-center justify-between px-6">
           {isEffectiveExpanded ? (
             <span className="text-xl tracking-tight text-[#1a1a1a] font-medium truncate">Grupo GSA</span>
@@ -1212,9 +1216,10 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
           </button>
         </div>
       </aside>
+      )}
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 w-full overflow-y-auto">
         {!isMarketplaceArea && (
           <header className="sticky top-0 z-30 flex h-24 items-center justify-between bg-[#f8f7f5]/80 px-6 backdrop-blur-md lg:px-12">
             <div className="flex items-center gap-4">
