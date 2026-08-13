@@ -2284,18 +2284,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                     type="button"
                     onClick={() => {
                       setFormaPagamento('pix');
-                      setModalAlertaPix(null);
-                      toast(`Forma de pagamento alterada para PIX (mantendo resgates).`);
-                    }}
-                    className="w-full rounded-xl border border-neutral-300 bg-white py-3 px-3 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition-all cursor-pointer text-center"
-                  >
-                    Manter resgates
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFormaPagamento('pix');
                       setUsarPontos(false);
                       setPontosAplicados(0);
                       setUsarSaldoCarteira(false);
@@ -2306,6 +2294,18 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                     className="w-full rounded-xl bg-emerald-600 py-3 px-3 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all cursor-pointer text-center"
                   >
                     Aplicar desconto de {pixPercentage}%
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormaPagamento('pix');
+                      setModalAlertaPix(null);
+                      toast(`Forma de pagamento alterada para PIX (mantendo resgates).`);
+                    }}
+                    className="w-full rounded-xl border border-neutral-300 bg-white py-3 px-3 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition-all cursor-pointer text-center"
+                  >
+                    Manter resgates
                   </button>
                 </>
               ) : (
