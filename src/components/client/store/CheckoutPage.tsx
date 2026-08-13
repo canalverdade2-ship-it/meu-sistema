@@ -111,7 +111,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   const [lojaPixDescontoPermitirPontos, setLojaPixDescontoPermitirPontos] = useState(false);
   const [lojaPixDescontoPermitirCarteira, setLojaPixDescontoPermitirCarteira] = useState(false);
   const [modalAlertaPix, setModalAlertaPix] = useState<{
-    tipo: 'carteira' | 'pontos';
+    tipo: 'carteira' | 'pontos' | 'troca_pix';
     pendingValue?: number;
   } | null>(null);
   const [pixSettings, setPixSettings] = useState<{ativo: boolean, porcentagem: number, tipoAplicacao: any, categorias: string[], produtos: string[]}>({
@@ -779,6 +779,16 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   };
 
   const descontoCarteira = usarSaldoCarteira ? Number(Math.min(saldoCarteiraAplicado, maxSaldoValido).toFixed(2)) : 0;
+
+  const handleSelectPix = () => {
+    const hasRedemption = (usarPontos && pontosAplicados > 0 && !lojaPixDescontoPermitirPontos) || 
+                          (usarSaldoCarteira && saldoCarteiraAplicado > 0 && !lojaPixDescontoPermitirCarteira);
+    if (formaPagamento !== 'pix' && hasRedemption && lojaPixDescontoAtivo) {
+      setModalAlertaPix({ tipo: 'troca_pix' });
+      return;
+    }
+    setFormaPagamento('pix');
+  };
 
   useEffect(() => {
     setPontosAplicados((prev) => (prev > maxPontosValidos ? maxPontosValidos : prev));
@@ -1600,7 +1610,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                           {/* PIX */}
                           {checkoutMetodoPixAtivo && (
                             <div 
-                              onClick={() => setFormaPagamento('pix')}
+                              onClick={handleSelectPix}
                               className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                                 formaPagamento === 'pix' 
                                   ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-2 ring-emerald-600/10' 
@@ -2223,10 +2233,15 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-black text-neutral-900 leading-snug">
-                  Desconto Exclusivo no PIX ({pixPercentage}%)
+                  {modalAlertaPix.tipo === 'troca_pix'
+                    ? `Aplicar Desconto de ${pixPercentage}% no PIX`
+                    : `Desconto Exclusivo no PIX (${pixPercentage}%)`
+                  }
                 </h3>
                 <p className="text-xs text-neutral-600 leading-relaxed">
-                  {modalAlertaPix.tipo === 'carteira'
+                  {modalAlertaPix.tipo === 'troca_pix'
+                    ? `Aplicar o desconto de ${pixPercentage}% no PIX desativará os resgates de saldo e pontos de fidelidade, pois o desconto é exclusivo para pagamento 100% no PIX. Deseja desativar os resgates para aplicar o desconto de ${pixPercentage}%?`
+                    : modalAlertaPix.tipo === 'carteira'
                     ? `O desconto de ${pixPercentage}% no PIX é exclusivo para pagamento integral via PIX. Ao aplicar o saldo da sua carteira, o desconto de ${pixPercentage}% no PIX será anulado (mas você ainda poderá pagar o valor restante via PIX normalmente).`
                     : `O desconto de ${pixPercentage}% no PIX é exclusivo para pagamento integral via PIX. Ao resgatar pontos VIP para desconto, o desconto de ${pixPercentage}% no PIX será anulado (mas você ainda poderá pagar o valor restante via PIX normalmente).`
                   }
@@ -2235,50 +2250,99 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
             </div>
 
             <div className="rounded-2xl bg-amber-50/60 p-3.5 border border-amber-200/80 text-xs text-amber-900 space-y-1.5">
-              <div className="flex justify-between items-center text-[11px] font-bold">
-                <span className="text-neutral-500">Opção 1:</span>
-                <span className="text-emerald-700 font-extrabold">Manter {pixPercentage}% de Desconto no PIX</span>
-              </div>
-              <div className="flex justify-between items-center text-[11px] font-bold">
-                <span className="text-neutral-500">Opção 2:</span>
-                <span className="text-purple-700 font-extrabold">
-                  {modalAlertaPix.tipo === 'carteira' ? 'Resgatar Saldo da Carteira (Anula Desc. PIX)' : 'Resgatar Pontos VIP (Anula Desc. PIX)'}
-                </span>
-              </div>
+              {modalAlertaPix.tipo === 'troca_pix' ? (
+                <>
+                  <div className="flex justify-between items-center text-[11px] font-bold">
+                    <span className="text-neutral-500">Opção 1:</span>
+                    <span className="text-emerald-700 font-extrabold">Aplicar {pixPercentage}% PIX (Desativa resgates)</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[11px] font-bold">
+                    <span className="text-neutral-500">Opção 2:</span>
+                    <span className="text-neutral-700 font-extrabold">Manter resgates (Sem desc. PIX)</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center text-[11px] font-bold">
+                    <span className="text-neutral-500">Opção 1:</span>
+                    <span className="text-emerald-700 font-extrabold">Manter {pixPercentage}% de Desconto no PIX</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[11px] font-bold">
+                    <span className="text-neutral-500">Opção 2:</span>
+                    <span className="text-purple-700 font-extrabold">
+                      {modalAlertaPix.tipo === 'carteira' ? 'Resgatar Saldo da Carteira (Anula Desc. PIX)' : 'Resgatar Pontos VIP (Anula Desc. PIX)'}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setModalAlertaPix(null);
-                  toast(`Desconto de ${pixPercentage}% no PIX mantido.`);
-                }}
-                className="w-full rounded-xl border border-neutral-300 bg-white py-3 px-3 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition-all cursor-pointer text-center"
-              >
-                Continuar com desconto
-              </button>
+              {modalAlertaPix.tipo === 'troca_pix' ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormaPagamento('pix');
+                      setModalAlertaPix(null);
+                      toast(`Forma de pagamento alterada para PIX (mantendo resgates).`);
+                    }}
+                    className="w-full rounded-xl border border-neutral-300 bg-white py-3 px-3 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition-all cursor-pointer text-center"
+                  >
+                    Manter resgates
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  const tipo = modalAlertaPix.tipo;
-                  const pending = modalAlertaPix.pendingValue;
-                  setModalAlertaPix(null);
-                  if (tipo === 'carteira') {
-                    setUsarSaldoCarteira(true);
-                    setSaldoCarteiraAplicado(pending ?? maxSaldoValido);
-                    toast.success('Saldo da carteira aplicado. Desconto do PIX anulado.');
-                  } else {
-                    setUsarPontos(true);
-                    setPontosAplicados(pending ?? maxPontosValidos);
-                    toast.success('Pontos VIP aplicados. Desconto do PIX anulado.');
-                  }
-                }}
-                className="w-full rounded-xl bg-indigo-600 py-3 px-3 text-xs font-black text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer text-center"
-              >
-                {modalAlertaPix.tipo === 'carteira' ? 'Resgatar saldo' : 'Resgatar pontos'}
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormaPagamento('pix');
+                      setUsarPontos(false);
+                      setPontosAplicados(0);
+                      setUsarSaldoCarteira(false);
+                      setSaldoCarteiraAplicado(0);
+                      setModalAlertaPix(null);
+                      toast.success(`Desconto de ${pixPercentage}% no PIX aplicado! Resgates desativados.`);
+                    }}
+                    className="w-full rounded-xl bg-emerald-600 py-3 px-3 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all cursor-pointer text-center"
+                  >
+                    Aplicar desconto de {pixPercentage}%
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalAlertaPix(null);
+                      toast(`Desconto de ${pixPercentage}% no PIX mantido.`);
+                    }}
+                    className="w-full rounded-xl border border-neutral-300 bg-white py-3 px-3 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition-all cursor-pointer text-center"
+                  >
+                    Continuar com desconto
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const tipo = modalAlertaPix.tipo;
+                      const pending = modalAlertaPix.pendingValue;
+                      setModalAlertaPix(null);
+                      if (tipo === 'carteira') {
+                        setUsarSaldoCarteira(true);
+                        setSaldoCarteiraAplicado(pending ?? maxSaldoValido);
+                        toast.success('Saldo da carteira aplicado. Desconto do PIX anulado.');
+                      } else {
+                        setUsarPontos(true);
+                        setPontosAplicados(pending ?? maxPontosValidos);
+                        toast.success('Pontos VIP aplicados. Desconto do PIX anulado.');
+                      }
+                    }}
+                    className="w-full rounded-xl bg-indigo-600 py-3 px-3 text-xs font-black text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer text-center"
+                  >
+                    {modalAlertaPix.tipo === 'carteira' ? 'Resgatar saldo' : 'Resgatar pontos'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
