@@ -1,37 +1,35 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-let cachedPixDiscount: { 
-  ativo: boolean; 
-  porcentagem: number; 
-  tipoAplicacao: 'todos' | 'categorias' | 'produtos';
-  categorias: string[];
-  produtos: string[];
-} | null = null;
-
-let fetchPromise: Promise<{ 
-  ativo: boolean; 
+export interface PixDiscountSettings {
+  ativo: boolean;
   porcentagem: number;
   tipoAplicacao: 'todos' | 'categorias' | 'produtos';
   categorias: string[];
   produtos: string[];
-}> | null = null;
+  permitirPontos: boolean;
+  permitirSaldoCarteira: boolean;
+}
 
-const DEFAULT_STATE = { 
-  ativo: false, 
-  porcentagem: 5, 
-  tipoAplicacao: 'todos' as const, 
-  categorias: [], 
-  produtos: [] 
+let cachedPixDiscount: PixDiscountSettings | null = null;
+let fetchPromise: Promise<PixDiscountSettings> | null = null;
+
+const DEFAULT_STATE: PixDiscountSettings = {
+  ativo: false,
+  porcentagem: 5,
+  tipoAplicacao: 'todos',
+  categorias: [],
+  produtos: [],
+  permitirPontos: false,
+  permitirSaldoCarteira: false,
 };
 
 export function usePixDiscount() {
-  const [pixDiscount, setPixDiscount] = useState(DEFAULT_STATE);
+  const [pixDiscount, setPixDiscount] = useState<PixDiscountSettings>(DEFAULT_STATE);
 
   useEffect(() => {
     let mounted = true;
 
-    // Só usa cache se tiver dados válidos (ativo === true ou dados já foram carregados com sucesso)
     if (cachedPixDiscount !== null) {
       setPixDiscount(cachedPixDiscount);
       return;
@@ -42,37 +40,48 @@ export function usePixDiscount() {
         .from('system_settings')
         .select('key, value')
         .in('key', [
-          'loja_pix_desconto_ativo', 
+          'loja_pix_desconto_ativo',
           'loja_pix_desconto_porcentagem',
           'loja_pix_desconto_tipo_aplicacao',
           'loja_pix_desconto_categorias',
-          'loja_pix_desconto_produtos'
+          'loja_pix_desconto_produtos',
+          'loja_pix_desconto_permitir_pontos',
+          'loja_pix_desconto_permitir_saldo_carteira',
         ])
         .then(({ data, error }) => {
           if (error) {
-            // Em caso de erro, limpa o promise para tentar de novo
             fetchPromise = null;
             return DEFAULT_STATE;
           }
-          
-          // Se não há dados, retorna default mas NÃO cacheia (para tentar de novo)
+
           if (!data || data.length === 0) {
             fetchPromise = null;
             return DEFAULT_STATE;
           }
-          
+
           const ativo = data.find((s) => s.key === 'loja_pix_desconto_ativo')?.value === 'true';
           const porcentagem = Number(data.find((s) => s.key === 'loja_pix_desconto_porcentagem')?.value) || 5;
           const tipoAplicacao = (data.find((s) => s.key === 'loja_pix_desconto_tipo_aplicacao')?.value as 'todos' | 'categorias' | 'produtos') || 'todos';
-          
-          const catsStr = data.find((s) => s.key === 'loja_pix_desconto_categorias')?.value || '';
-          const categorias = catsStr.split(',').map(s => s.trim()).filter(Boolean);
-          
-          const prodsStr = data.find((s) => s.key === 'loja_pix_desconto_produtos')?.value || '';
-          const produtos = prodsStr.split(',').map(s => s.trim()).filter(Boolean);
 
-          const result = { ativo, porcentagem, tipoAplicacao, categorias, produtos };
-          // Cacheia apenas quando há dados reais
+          const catsStr = data.find((s) => s.key === 'loja_pix_desconto_categorias')?.value || '';
+          const categorias = catsStr.split(',').map((s) => s.trim()).filter(Boolean);
+
+          const prodsStr = data.find((s) => s.key === 'loja_pix_desconto_produtos')?.value || '';
+          const produtos = prodsStr.split(',').map((s) => s.trim()).filter(Boolean);
+
+          const permitirPontos = data.find((s) => s.key === 'loja_pix_desconto_permitir_pontos')?.value === 'true';
+          const permitirSaldoCarteira = data.find((s) => s.key === 'loja_pix_desconto_permitir_saldo_carteira')?.value === 'true';
+
+          const result: PixDiscountSettings = {
+            ativo,
+            porcentagem,
+            tipoAplicacao,
+            categorias,
+            produtos,
+            permitirPontos,
+            permitirSaldoCarteira,
+          };
+
           cachedPixDiscount = result;
           return result;
         })
@@ -107,18 +116,21 @@ export function checkPixDiscountApplies(
   if (pixSettings.tipoAplicacao === 'todos') return true;
 
   if (pixSettings.tipoAplicacao === 'produtos') {
-    return pixSettings.produtos.includes(String(item.id));
+    return pixSettings.produtos.includes(String(item?.id || item?.produto_id));
   }
 
   if (pixSettings.tipoAplicacao === 'categorias') {
-    const catName = typeof item?.categoria === 'string' ? item.categoria :
-                    typeof item?.categorias?.nome === 'string' ? item.categorias.nome :
-                    typeof item?.categoria_nome === 'string' ? item.categoria_nome : '';
-                    
-    // Compara ignorando case
-    return pixSettings.categorias.some(c => c.toLowerCase() === catName.toLowerCase());
+    const catName =
+      typeof item?.categoria === 'string'
+        ? item.categoria
+        : typeof item?.categorias?.nome === 'string'
+        ? item.categorias.nome
+        : typeof item?.categoria_nome === 'string'
+        ? item.categoria_nome
+        : '';
+
+    return pixSettings.categorias.some((c) => c.toLowerCase() === catName.toLowerCase());
   }
 
   return false;
 }
-

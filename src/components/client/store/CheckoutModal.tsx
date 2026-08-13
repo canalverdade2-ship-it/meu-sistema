@@ -61,6 +61,12 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   const [jurosCreditoParcelado, setJurosCreditoParcelado] = useState(50);
   const [lojaPixDescontoAtivo, setLojaPixDescontoAtivo] = useState(false);
   const [lojaPixDescontoPorcentagem, setLojaPixDescontoPorcentagem] = useState(5);
+  const [lojaPixDescontoPermitirPontos, setLojaPixDescontoPermitirPontos] = useState(false);
+  const [lojaPixDescontoPermitirCarteira, setLojaPixDescontoPermitirCarteira] = useState(false);
+  const [modalAlertaPix, setModalAlertaPix] = useState<{
+    tipo: 'carteira' | 'pontos';
+    pendingValue?: number;
+  } | null>(null);
   const [pixSettings, setPixSettings] = useState<{ativo: boolean, porcentagem: number, tipoAplicacao: any, categorias: string[], produtos: string[]}>({
     ativo: false, porcentagem: 5, tipoAplicacao: 'todos', categorias: [], produtos: []
   });
@@ -114,13 +120,24 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         
       if (solData && solData.length > 0) {
         setSolicitacaoAtivaId(solData[0].id);
-      }
-
-      // Buscar taxas de juros de Crédito GSA do system_settings e configs do PIX
+      }      // Buscar taxas de juros de Crédito GSA do system_settings e configs do PIX
       const { data: setts } = await supabase
         .from('system_settings')
         .select('key, value')
-        .in('key', ['loja_credito_juros_avista', 'loja_credito_juros_parcelado', 'loja_pix_desconto_ativo', 'loja_pix_desconto_porcentagem', 'loja_pix_desconto_tipo_aplicacao', 'loja_pix_desconto_categorias', 'loja_pix_desconto_produtos', 'checkout_metodo_pix_ativo', 'checkout_metodo_cartao_ativo', 'checkout_metodo_boleto_ativo']);
+        .in('key', [
+          'loja_credito_juros_avista', 
+          'loja_credito_juros_parcelado', 
+          'loja_pix_desconto_ativo', 
+          'loja_pix_desconto_porcentagem', 
+          'loja_pix_desconto_tipo_aplicacao', 
+          'loja_pix_desconto_categorias', 
+          'loja_pix_desconto_produtos', 
+          'loja_pix_desconto_permitir_pontos', 
+          'loja_pix_desconto_permitir_saldo_carteira',
+          'checkout_metodo_pix_ativo', 
+          'checkout_metodo_cartao_ativo', 
+          'checkout_metodo_boleto_ativo'
+        ]);
         
       if (setts) {
         const av = setts.find(s => s.key === 'loja_credito_juros_avista');
@@ -133,9 +150,11 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         const pixTA = setts.find(s => s.key === 'loja_pix_desconto_tipo_aplicacao');
         const pixCat = setts.find(s => s.key === 'loja_pix_desconto_categorias');
         const pixProd = setts.find(s => s.key === 'loja_pix_desconto_produtos');
+        const pixPermPontos = setts.find(s => s.key === 'loja_pix_desconto_permitir_pontos');
+        const pixPermCart = setts.find(s => s.key === 'loja_pix_desconto_permitir_saldo_carteira');
         
         const settings = {
-          ativo: pixD?.value === 'true',
+          ativo: pixD ? pixD.value === 'true' : true,
           porcentagem: Number(pixP?.value) || 5,
           tipoAplicacao: pixTA?.value || 'todos',
           categorias: (pixCat?.value || '').split(',').map(s => s.trim()).filter(Boolean),
@@ -145,6 +164,13 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
 
         if (pixD) setLojaPixDescontoAtivo(settings.ativo);
         if (pixP) setLojaPixDescontoPorcentagem(settings.porcentagem);
+        if (pixPermPontos) setLojaPixDescontoPermitirPontos(pixPermPontos.value === 'true');
+        if (pixPermCart) setLojaPixDescontoPermitirCarteira(pixPermCart.value === 'true');
+
+        const mPix = setts.find(s => s.key === 'checkout_metodo_pix_ativo');
+        const mCar = setts.find(s => s.key === 'checkout_metodo_cartao_ativo');
+        const mBol = setts.find(s => s.key === 'checkout_metodo_boleto_ativo');
+
         if (mPix) setCheckoutMetodoPixAtivo(mPix.value !== 'false');
         if (mCar) setCheckoutMetodoCartaoAtivo(mCar.value !== 'false');
         if (mBol) setCheckoutMetodoBoletoAtivo(mBol.value !== 'false');
@@ -356,21 +382,35 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   const maxPontosEmCentavos = Math.floor(subtotalComPromos * 100);
   const maxPontosValidos = Math.min(saldoPontos, Math.max(0, maxPontosEmCentavos));
 
+  // Regra de Exclusividade PIX
+  const isPixDescontoAtivoNoMomento = formaPagamento === 'pix' && lojaPixDescontoAtivo;
+
   const handleTogglePontos = (checked: boolean) => {
-    setUsarPontos(checked);
     if (checked) {
+      if (isPixDescontoAtivoNoMomento && !lojaPixDescontoPermitirPontos && !usarPontos) {
+        setModalAlertaPix({ tipo: 'pontos', pendingValue: maxPontosValidos });
+        return;
+      }
+      setUsarPontos(true);
       setPontosAplicados(maxPontosValidos);
     } else {
+      setUsarPontos(false);
       setPontosAplicados(0);
     }
   };
 
   const handlePontosChange = (val: number) => {
-    if (isNaN(val) || val < 0) {
+    if (isNaN(val) || val <= 0) {
+      setUsarPontos(false);
       setPontosAplicados(0);
       return;
     }
     const cleanVal = Math.min(val, maxPontosValidos);
+    if (!usarPontos && isPixDescontoAtivoNoMomento && !lojaPixDescontoPermitirPontos) {
+      setModalAlertaPix({ tipo: 'pontos', pendingValue: cleanVal });
+      return;
+    }
+    setUsarPontos(true);
     setPontosAplicados(cleanVal);
   };
 
@@ -422,20 +462,31 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   const maxSaldoValido = Number(Math.min(saldoCarteiraUtilizavel, totalAntesCarteira).toFixed(2));
   
   const handleToggleSaldoCarteira = (checked: boolean) => {
-    setUsarSaldoCarteira(checked);
     if (checked) {
+      if (isPixDescontoAtivoNoMomento && !lojaPixDescontoPermitirCarteira && !usarSaldoCarteira) {
+        setModalAlertaPix({ tipo: 'carteira', pendingValue: maxSaldoValido });
+        return;
+      }
+      setUsarSaldoCarteira(true);
       setSaldoCarteiraAplicado(maxSaldoValido);
     } else {
+      setUsarSaldoCarteira(false);
       setSaldoCarteiraAplicado(0);
     }
   };
 
   const handleSaldoCarteiraChange = (val: number) => {
-    if (isNaN(val) || val < 0) {
+    if (isNaN(val) || val <= 0) {
+      setUsarSaldoCarteira(false);
       setSaldoCarteiraAplicado(0);
       return;
     }
     const cleanVal = Number(Math.min(val, maxSaldoValido).toFixed(2));
+    if (!usarSaldoCarteira && isPixDescontoAtivoNoMomento && !lojaPixDescontoPermitirCarteira) {
+      setModalAlertaPix({ tipo: 'carteira', pendingValue: cleanVal });
+      return;
+    }
+    setUsarSaldoCarteira(true);
     setSaldoCarteiraAplicado(cleanVal);
   };
 
@@ -477,7 +528,12 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   // E evitamos dar mais desconto do que o totalHoje (que já deduziu carteira etc)
   const maxPixDiscountBase = Math.min(eligiblePixSubtotal, totalHoje);
 
-  const pixDiscountValue = (formaPagamento === 'pix' && lojaPixDescontoAtivo)
+  // Desconto PIX só é concedido se o pagamento for PIX e não houver bloqueio por pontos ou saldo da carteira
+  const pixDiscountBlockedByPoints = usarPontos && pontosAplicados > 0 && !lojaPixDescontoPermitirPontos;
+  const pixDiscountBlockedByWallet = usarSaldoCarteira && saldoCarteiraAplicado > 0 && !lojaPixDescontoPermitirCarteira;
+  const isPixDiscountEligible = formaPagamento === 'pix' && lojaPixDescontoAtivo && !pixDiscountBlockedByPoints && !pixDiscountBlockedByWallet;
+
+  const pixDiscountValue = isPixDiscountEligible
     ? parseFloat((maxPixDiscountBase * (lojaPixDescontoPorcentagem / 100)).toFixed(2))
     : 0;
 
@@ -486,7 +542,6 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
 
   const isTravelCheckout = cartItems.some((c: CartItem) => c.tipo === ('pacote_viagem' as any));
 
-  // Revalida reativamente os cupons quando o carrinho muda (item removido, quantidade alterada)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -1371,11 +1426,15 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                         <div className={`w-2 h-2 rounded-full shrink-0 ${formaPagamento === 'pix' ? 'bg-indigo-600' : 'bg-neutral-300'}`}></div>
                         <span className="text-xs font-black">PIX</span>
                       </div>
-                      {lojaPixDescontoAtivo && (
+                      {lojaPixDescontoAtivo && isPixDiscountEligible ? (
                         <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">
                           -{lojaPixDescontoPorcentagem}%
                         </span>
-                      )}
+                      ) : lojaPixDescontoAtivo && (pixDiscountBlockedByPoints || pixDiscountBlockedByWallet) ? (
+                        <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded" title="Desconto no PIX não aplicável devido ao uso de saldo/pontos">
+                          Sem desc. (Saldo/Pontos)
+                        </span>
+                      ) : null}
                     </button>
                   )}
 
@@ -1499,7 +1558,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                         ? getProductQuantityPriceBreakdown(c.item_detalhes, c.quantidade).subtotalFinal
                         : (c.item_detalhes?.valor || 0) * c.quantidade;
 
-                      const itemPixEligivel = formaPagamento === 'pix' && lojaPixDescontoAtivo
+                      const itemPixEligivel = formaPagamento === 'pix' && isPixDiscountEligible
                         && c.tipo === 'produto'
                         && checkPixDiscountApplies(c.item_detalhes, pixSettings);
                       const itemPrecoComPix = itemPixEligivel
@@ -1614,6 +1673,77 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           </div>
         )}
       </div>
+
+      {/* Pop-up Modal Informativo de Exclusividade do Desconto PIX */}
+      {modalAlertaPix && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 sm:p-7 shadow-2xl border border-neutral-200 space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 border border-amber-500/30">
+                <AlertCircle className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-black text-neutral-900 leading-snug">
+                  Desconto Exclusivo no PIX ({lojaPixDescontoPorcentagem}%)
+                </h3>
+                <p className="text-xs text-neutral-600 leading-relaxed">
+                  {modalAlertaPix.tipo === 'carteira'
+                    ? `O desconto de ${lojaPixDescontoPorcentagem}% no PIX é exclusivo para pagamento integral via PIX. Ao aplicar o saldo da sua carteira, o desconto de ${lojaPixDescontoPorcentagem}% no PIX será anulado (mas você ainda poderá pagar o valor restante via PIX normalmente).`
+                    : `O desconto de ${lojaPixDescontoPorcentagem}% no PIX é exclusivo para pagamento integral via PIX. Ao resgatar pontos VIP para desconto, o desconto de ${lojaPixDescontoPorcentagem}% no PIX será anulado (mas você ainda poderá pagar o valor restante via PIX normalmente).`
+                  }
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-amber-50/60 p-3.5 border border-amber-200/80 text-xs text-amber-900 space-y-1.5">
+              <div className="flex justify-between items-center text-[11px] font-bold">
+                <span className="text-neutral-500">Opção 1:</span>
+                <span className="text-emerald-700 font-extrabold">Manter {lojaPixDescontoPorcentagem}% de Desconto no PIX</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px] font-bold">
+                <span className="text-neutral-500">Opção 2:</span>
+                <span className="text-purple-700 font-extrabold">
+                  {modalAlertaPix.tipo === 'carteira' ? 'Resgatar Saldo da Carteira (Anula Desc. PIX)' : 'Resgatar Pontos VIP (Anula Desc. PIX)'}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalAlertaPix(null);
+                  toast(`Desconto de ${lojaPixDescontoPorcentagem}% no PIX mantido.`);
+                }}
+                className="w-full rounded-xl border border-neutral-300 bg-white py-3 px-3 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition-all cursor-pointer text-center"
+              >
+                Continuar com desconto
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const tipo = modalAlertaPix.tipo;
+                  const pending = modalAlertaPix.pendingValue;
+                  setModalAlertaPix(null);
+                  if (tipo === 'carteira') {
+                    setUsarSaldoCarteira(true);
+                    setSaldoCarteiraAplicado(pending ?? maxSaldoValido);
+                    toast.success('Saldo da carteira aplicado. Desconto do PIX anulado.');
+                  } else {
+                    setUsarPontos(true);
+                    setPontosAplicados(pending ?? maxPontosValidos);
+                    toast.success('Pontos VIP aplicados. Desconto do PIX anulado.');
+                  }
+                }}
+                className="w-full rounded-xl bg-indigo-600 py-3 px-3 text-xs font-black text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer text-center"
+              >
+                {modalAlertaPix.tipo === 'carteira' ? 'Resgatar saldo' : 'Resgatar pontos'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <AvailableCouponsModal 
         isOpen={isSelectorOpen}

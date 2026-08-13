@@ -129,11 +129,31 @@ export function ConfiguracoesModule() {
 
     {activeTab === 'financeiro' && <section className="space-y-6"><CalculatorProPaymentConfiguration />
       <Card title="Desconto PIX" icon={Wallet}>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SelectField label="Desconto PIX Ativo" value={value('loja_pix_desconto_ativo', 'false')} onChange={(next) => setValue('loja_pix_desconto_ativo', next)} options={[["true", "Sim"], ["false", "Não"]]} />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <SelectField label="Desconto PIX Ativo" value={value('loja_pix_desconto_ativo', 'true')} onChange={(next) => setValue('loja_pix_desconto_ativo', next)} options={[["true", "Sim"], ["false", "Não"]]} />
           <NumberField label="Porcentagem de Desconto (%)" value={value('loja_pix_desconto_porcentagem', '5')} onChange={(next) => setValue('loja_pix_desconto_porcentagem', next)} />
           <SelectField label="Aplicar em" value={value('loja_pix_desconto_tipo_aplicacao', 'todos')} onChange={(next) => setValue('loja_pix_desconto_tipo_aplicacao', next)} options={[["todos", "Todos os Produtos"], ["categorias", "Apenas Categorias Específicas"], ["produtos", "Apenas Produtos Específicos"]]} />
           
+          <SelectField 
+            label="Permitir com Pontos de Fidelidade" 
+            value={value('loja_pix_desconto_permitir_pontos', 'false')} 
+            onChange={(next) => setValue('loja_pix_desconto_permitir_pontos', next)} 
+            options={[
+              ["false", "Não (Desconto Exclusivo PIX - Anula ao usar Pontos)"], 
+              ["true", "Sim (Permite Acumular com Pontos)"]
+            ]} 
+          />
+
+          <SelectField 
+            label="Permitir com Saldo da Carteira" 
+            value={value('loja_pix_desconto_permitir_saldo_carteira', 'false')} 
+            onChange={(next) => setValue('loja_pix_desconto_permitir_saldo_carteira', next)} 
+            options={[
+              ["false", "Não (Desconto Exclusivo PIX - Anula ao usar Carteira)"], 
+              ["true", "Sim (Permite Acumular com Carteira)"]
+            ]} 
+          />
+
           {value('loja_pix_desconto_tipo_aplicacao', 'todos') === 'categorias' && (
             <TextField label="Nomes das Categorias (separados por vírgula)" value={value('loja_pix_desconto_categorias', '')} onChange={(next) => setValue('loja_pix_desconto_categorias', next)} />
           )}
@@ -142,7 +162,15 @@ export function ConfiguracoesModule() {
             <TextField label="IDs dos Produtos (separados por vírgula)" value={value('loja_pix_desconto_produtos', '')} onChange={(next) => setValue('loja_pix_desconto_produtos', next)} />
           )}
         </div>
-        <SaveButton saving={saving} onClick={() => void saveSettings(['loja_pix_desconto_ativo', 'loja_pix_desconto_porcentagem', 'loja_pix_desconto_tipo_aplicacao', 'loja_pix_desconto_categorias', 'loja_pix_desconto_produtos'], 'Configurações de Desconto PIX salvas.')} />
+
+        <div className="mt-4 rounded-xl bg-amber-50 p-3 text-xs text-amber-900 border border-amber-200">
+          <p className="font-bold">Regra de Exclusividade do PIX:</p>
+          <p className="mt-0.5 text-[11px] text-amber-800">
+            Quando configurado como "Não (Exclusivo)", se o cliente estiver com o pagamento 100% no PIX e for aplicar Pontos ou Saldo da Carteira, o sistema exibirá o pop-up informativo dando a opção de manter o desconto ou prosseguir com o resgate anulando o desconto do PIX.
+          </p>
+        </div>
+
+        <SaveButton saving={saving} onClick={() => void saveSettings(['loja_pix_desconto_ativo', 'loja_pix_desconto_porcentagem', 'loja_pix_desconto_tipo_aplicacao', 'loja_pix_desconto_categorias', 'loja_pix_desconto_produtos', 'loja_pix_desconto_permitir_pontos', 'loja_pix_desconto_permitir_saldo_carteira'], 'Configurações de Desconto PIX salvas.')} />
       </Card>
 
       <Card title="Métodos de Pagamento Padrão (Checkout)" icon={CreditCard}>
