@@ -16,7 +16,6 @@ import type { CupomLoja, Produto, Servico, Assinatura } from '../../../types';
 import { PromoResult, avaliarPromocoes } from '../../../lib/promocaoQuantidadeEngine';
 import { callClientRpc } from '../../../lib/clientRpc';
 import { getProductEffectivePrice, hasActiveProductDiscount, getProductQuantityPriceBreakdown } from '../../../lib/productPricing';
-import { checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
 import { routes } from '../../../routing/routeCatalog';
 import { navigate } from '../../../routing/navigationService';
 import { useSEO } from '../../../hooks/useSEO';
@@ -106,11 +105,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   const [solicitacaoAtivaId, setSolicitacaoAtivaId] = useState<string | null>(null);
   const [jurosCreditoAvista, setJurosCreditoAvista] = useState(20);
   const [jurosCreditoParcelado, setJurosCreditoParcelado] = useState(50);
-  const [lojaPixDescontoAtivo, setLojaPixDescontoAtivo] = useState(false);
   const [lojaPixDescontoPorcentagem, setLojaPixDescontoPorcentagem] = useState(5);
-  const [pixSettings, setPixSettings] = useState<{ativo: boolean, porcentagem: number, tipoAplicacao: any, categorias: string[], produtos: string[]}>({
-    ativo: false, porcentagem: 5, tipoAplicacao: 'todos', categorias: [], produtos: []
-  });
   const [checkoutMetodoPixAtivo, setCheckoutMetodoPixAtivo] = useState(true);
   const [checkoutMetodoCartaoAtivo, setCheckoutMetodoCartaoAtivo] = useState(true);
   const [checkoutMetodoBoletoAtivo, setCheckoutMetodoBoletoAtivo] = useState(true);
@@ -314,9 +309,6 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
           'loja_credito_juros_parcelado', 
           'loja_pix_desconto_ativo', 
           'loja_pix_desconto_porcentagem', 
-          'loja_pix_desconto_tipo_aplicacao', 
-          'loja_pix_desconto_categorias', 
-          'loja_pix_desconto_produtos', 
           'checkout_metodo_pix_ativo', 
           'checkout_metodo_cartao_ativo', 
           'checkout_metodo_boleto_ativo'
@@ -331,27 +323,13 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         if (av) setJurosCreditoAvista(Number(av.value) ?? 20);
         if (pa) setJurosCreditoParcelado(Number(pa.value) ?? 50);
 
-        const pixD = setts.find(s => s.key === 'loja_pix_desconto_ativo');
         const pixP = setts.find(s => s.key === 'loja_pix_desconto_porcentagem');
-        const pixTA = setts.find(s => s.key === 'loja_pix_desconto_tipo_aplicacao');
-        const pixCat = setts.find(s => s.key === 'loja_pix_desconto_categorias');
-        const pixProd = setts.find(s => s.key === 'loja_pix_desconto_produtos');
-        
+        if (pixP && Number(pixP.value) > 0) setLojaPixDescontoPorcentagem(Number(pixP.value));
+
         const mPix = setts.find(s => s.key === 'checkout_metodo_pix_ativo');
         const mCar = setts.find(s => s.key === 'checkout_metodo_cartao_ativo');
         const mBol = setts.find(s => s.key === 'checkout_metodo_boleto_ativo');
 
-        const settings = {
-          ativo: pixD?.value === 'true',
-          porcentagem: Number(pixP?.value) || 5,
-          tipoAplicacao: pixTA?.value || 'todos',
-          categorias: (pixCat?.value || '').split(',').map(s => s.trim()).filter(Boolean),
-          produtos: (pixProd?.value || '').split(',').map(s => s.trim()).filter(Boolean)
-        };
-        setPixSettings(settings);
-
-        if (pixD) setLojaPixDescontoAtivo(settings.ativo);
-        if (pixP) setLojaPixDescontoPorcentagem(settings.porcentagem);
         if (mPix) setCheckoutMetodoPixAtivo(mPix.value !== 'false');
         if (mCar) setCheckoutMetodoCartaoAtivo(mCar.value !== 'false');
         if (mBol) setCheckoutMetodoBoletoAtivo(mBol.value !== 'false');
@@ -613,6 +591,9 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     && endereco.uf?.trim()
   );
 
+  const isPix = formaPagamento === 'pix';
+  const pixPercentage = lojaPixDescontoPorcentagem > 0 ? lojaPixDescontoPorcentagem : 5;
+
   const subtotalInicial = cartItems.reduce((acc: number, cur: CartItem) => {
     if (cur.tipo === 'produto') {
       return acc + getProductQuantityPriceBreakdown(cur.item_detalhes, cur.quantidade).subtotalFinal;
@@ -629,7 +610,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   
   const subtotalComPromos = Math.max(0, subtotalInicial - descontoPromocoes);
 
-  // Pontos
+  // Pontos VIP
   const maxPontosEmCentavos = Math.floor(subtotalComPromos * 100);
   const maxPontosValidos = Math.min(saldoPontos, Math.max(0, maxPontosEmCentavos));
 
@@ -728,7 +709,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
 
   const totalHoje = Number(Math.max(totalAntesCarteira - descontoCarteira, 0).toFixed(2));
   
-  // Juros de Crédito
+  // Juros de Crédito GSA
   const calcularTaxaJuros = (parcelas: number) =>
     parcelas <= 1 ? jurosCreditoAvista : jurosCreditoAvista + (jurosCreditoParcelado * parcelas);
 
@@ -739,9 +720,9 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     ? parseFloat((totalHoje * (taxaJurosAplicada / 100)).toFixed(2))
     : 0;
     
-  // Desconto PIX
+  // Desconto PIX Geral (aplicável sobre produtos físicos elegíveis ou subtotal da compra)
   const eligiblePixSubtotal = cartItems.reduce((acc: number, item: any) => {
-    if (item.tipo === 'produto' && checkPixDiscountApplies(item.item_detalhes, pixSettings)) {
+    if (item.tipo === 'produto') {
       const unitVal = (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) || (item.item_detalhes?.valor || 0);
       return acc + (unitVal * item.quantidade);
     }
@@ -750,8 +731,8 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
 
   const maxPixDiscountBase = Math.min(eligiblePixSubtotal, totalHoje);
 
-  const pixDiscountValue = (formaPagamento === 'pix' && lojaPixDescontoAtivo)
-    ? parseFloat((maxPixDiscountBase * (lojaPixDescontoPorcentagem / 100)).toFixed(2))
+  const pixDiscountValue = isPix
+    ? parseFloat((maxPixDiscountBase * (pixPercentage / 100)).toFixed(2))
     : 0;
 
   const totalHojeFinal = Number(Math.max(0, totalHoje + valorJurosCredito - pixDiscountValue).toFixed(2));
@@ -1008,7 +989,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         ) : (
           <div className="space-y-6">
             
-            {/* Indicador de Progresso Visual das 3 Etapas Reconfiguradas */}
+            {/* Indicador de Progresso Visual das 3 Etapas */}
             <div className="bg-white rounded-2xl p-4 border border-neutral-200/90 shadow-xs">
               <div className="relative flex items-center justify-between max-w-2xl mx-auto">
                 <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1 bg-neutral-100 rounded-full z-0"></div>
@@ -1041,7 +1022,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                   </span>
                 </button>
 
-                {/* Passo 2: Benefícios (Pontos VIP, Saldo Carteira) & Pagamento */}
+                {/* Passo 2: Benefícios & Pagamento */}
                 <button
                   type="button"
                   onClick={() => {
@@ -1568,14 +1549,12 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                               <div className="flex-1 space-y-1">
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs font-black text-neutral-900 uppercase">PIX Instantâneo</span>
-                                  {lojaPixDescontoAtivo && (
-                                    <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white">
-                                      -{lojaPixDescontoPorcentagem}% OFF
-                                    </span>
-                                  )}
+                                  <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white">
+                                    -{pixPercentage}% OFF
+                                  </span>
                                 </div>
                                 <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
-                                  Aprovação imediata e liberação instantânea.
+                                  Aprovação imediata e desconto de {pixPercentage}% em cada item.
                                 </p>
                               </div>
                             </div>
@@ -1599,7 +1578,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                               <div className="flex-1 space-y-1">
                                 <span className="text-xs font-black text-neutral-900 uppercase block">Cartão de Crédito</span>
                                 <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
-                                  Parcele em até 12x no cartão de crédito.
+                                  Valor cheio sem desconto, parcele em até 12x.
                                 </p>
                               </div>
                             </div>
@@ -1623,7 +1602,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                               <div className="flex-1 space-y-1">
                                 <span className="text-xs font-black text-neutral-900 uppercase block">Boleto Bancário</span>
                                 <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
-                                  Pagamento à vista com compensação rápida.
+                                  Valor integral à vista com compensação bancária.
                                 </p>
                               </div>
                             </div>
@@ -1715,28 +1694,63 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                     </div>
 
                     {/* Itens compactos */}
-                    <div className="max-h-48 overflow-y-auto space-y-2.5 pr-1 divide-y divide-neutral-100 text-xs">
-                      {cartItems.map((item) => (
-                        <div key={item.id} className="pt-2 first:pt-0 flex items-center justify-between gap-2">
-                          <div className="truncate flex-1 min-w-0">
-                            <span className="font-bold text-neutral-900 truncate block">{item.item_detalhes?.nome || 'Item'}</span>
-                            <span className="text-[10px] text-neutral-500 font-medium">{item.quantidade}x</span>
+                    <div className="max-h-56 overflow-y-auto space-y-2.5 pr-1 divide-y divide-neutral-100 text-xs">
+                      {cartItems.map((item) => {
+                        const isProduct = item.tipo === 'produto';
+                        const regularPrice = item.item_detalhes?.valor || 0;
+                        const basePrice = isProduct ? (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) : regularPrice;
+                        const itemSubtotalBase = basePrice * item.quantidade;
+                        const itemPixDiscount = (isPix && isProduct) ? Number((itemSubtotalBase * (pixPercentage / 100)).toFixed(2)) : 0;
+                        const itemFinalPrice = Number(Math.max(0, itemSubtotalBase - itemPixDiscount).toFixed(2));
+                        const itemPontos = Math.floor(itemFinalPrice);
+
+                        return (
+                          <div key={item.id} className="pt-2 first:pt-0 flex items-center justify-between gap-2">
+                            <div className="truncate flex-1 min-w-0">
+                              <span className="font-bold text-neutral-900 truncate block">{item.item_detalhes?.nome || 'Item'}</span>
+                              <div className="flex items-center gap-2 text-[10px] text-neutral-500 font-medium">
+                                <span>{item.quantidade}x</span>
+                                <span className="text-amber-700 font-bold">👑 +{itemPontos} pts</span>
+                                {isPix && itemPixDiscount > 0 && (
+                                  <span className="text-emerald-700 font-bold bg-emerald-50 px-1 rounded">-{pixPercentage}% PIX</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              {isPix && itemPixDiscount > 0 && (
+                                <span className="text-[10px] font-semibold text-neutral-400 line-through block">
+                                  {formatCurrency(itemSubtotalBase)}
+                                </span>
+                              )}
+                              <span className={`font-black ${isPix && itemPixDiscount > 0 ? 'text-emerald-700' : 'text-neutral-900'}`}>
+                                {formatCurrency(itemFinalPrice)}
+                              </span>
+                            </div>
                           </div>
-                          <span className="font-black text-neutral-900 shrink-0">
-                            {formatCurrency((item.tipo === 'produto' ? getProductEffectivePrice(item.item_detalhes) : item.item_detalhes?.valor || 0) * item.quantidade)}
-                          </span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {/* Total Rápido */}
-                    <div className="border-t border-neutral-200/80 pt-3 flex items-baseline justify-between">
-                      <span className="text-xs font-black uppercase tracking-wider text-neutral-600">Total Previsto:</span>
-                      <span className="text-xl font-black text-[#17345f]">{formatCurrency(totalHojeFinal)}</span>
+                    <div className="border-t border-neutral-200/80 pt-3 space-y-1.5">
+                      {isPix && pixDiscountValue > 0 && (
+                        <div className="flex items-center justify-between text-xs font-bold text-emerald-700">
+                          <span className="flex items-center gap-1">
+                            <QrCode className="h-3.5 w-3.5" /> Desconto {pixPercentage}% PIX:
+                          </span>
+                          <span>- {formatCurrency(pixDiscountValue)}</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-baseline justify-between pt-1">
+                        <span className="text-xs font-black uppercase tracking-wider text-neutral-600">Total Previsto:</span>
+                        <span className="text-xl font-black text-[#17345f]">{formatCurrency(totalHojeFinal)}</span>
+                      </div>
                     </div>
 
-                    <div className="rounded-xl bg-amber-50 p-2.5 text-center text-xs font-black text-amber-800 border border-amber-200/80">
-                      Ganhe +{totalPontosGanhos} pontos VIP nesta compra
+                    <div className="rounded-xl bg-amber-50 p-2.5 text-center text-xs font-black text-amber-800 border border-amber-200/80 flex items-center justify-center gap-1.5">
+                      <Coins className="h-4 w-4 text-amber-600" />
+                      <span>Ganhe +{totalPontosGanhos} pontos VIP nesta compra</span>
                     </div>
                   </div>
                 </div>
@@ -1796,12 +1810,13 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       </div>
                       <div className="text-xs text-neutral-700 font-medium">
                         {formaPagamento === 'pix' && (
-                          <p className="font-bold text-emerald-800">
-                            PIX Instantâneo {lojaPixDescontoAtivo ? `(-${lojaPixDescontoPorcentagem}% OFF)` : ''}
+                          <p className="font-black text-emerald-700 flex items-center gap-1.5">
+                            <QrCode className="h-4 w-4" />
+                            <span>PIX Instantâneo (-{pixPercentage}% OFF)</span>
                           </p>
                         )}
-                        {formaPagamento === 'cartao' && <p className="font-bold text-neutral-900">Cartão de Crédito</p>}
-                        {formaPagamento === 'boleto' && <p className="font-bold text-neutral-900">Boleto Bancário</p>}
+                        {formaPagamento === 'cartao' && <p className="font-bold text-neutral-900">Cartão de Crédito (Valor Cheio)</p>}
+                        {formaPagamento === 'boleto' && <p className="font-bold text-neutral-900">Boleto Bancário (Valor Cheio)</p>}
                         {formaPagamento === 'credito_loja' && (
                           <p className="font-bold text-indigo-900">
                             Crédito GSA Store ({numParcelas}x de {formatCurrency(totalHojeFinal / numParcelas)})
@@ -1865,15 +1880,20 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                     </div>
                   </div>
 
-                  {/* Lista Completa dos Itens */}
+                  {/* Lista Completa dos Itens com Desconto PIX e Pontos por Item */}
                   <div className="divide-y divide-neutral-100">
                     {cartItems.map((item) => {
                       const isProduct = item.tipo === 'produto';
                       const displayCode = isProduct ? getProductDisplayCode(item.item_detalhes as any) : null;
                       const hasDiscount = isProduct && hasActiveProductDiscount(item.item_detalhes);
                       const regularPrice = item.item_detalhes?.valor || 0;
-                      const currentPrice = isProduct ? getProductEffectivePrice(item.item_detalhes) : regularPrice;
-                      const itemSubtotal = currentPrice * item.quantidade;
+                      const basePrice = isProduct ? (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) : regularPrice;
+                      const itemSubtotalBase = basePrice * item.quantidade;
+
+                      // Se PIX estiver ativo, aplica desconto de 5% no item
+                      const itemPixDiscount = (isPix && isProduct) ? Number((itemSubtotalBase * (pixPercentage / 100)).toFixed(2)) : 0;
+                      const itemFinalPrice = Number(Math.max(0, itemSubtotalBase - itemPixDiscount).toFixed(2));
+                      const itemPontos = Math.floor(itemFinalPrice);
 
                       return (
                         <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1890,27 +1910,60 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                               </div>
                             )}
 
-                            <div className="space-y-1 min-w-0">
+                            <div className="space-y-1.5 min-w-0">
                               <h4 className="text-sm font-black text-neutral-900 truncate">
                                 {item.item_detalhes?.nome || 'Item do Catálogo'}
                               </h4>
-                              <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500 font-medium">
-                                {displayCode && <span className="font-mono bg-neutral-100 px-2 py-0.5 rounded text-[11px]">{displayCode}</span>}
+                              <div className="flex flex-wrap items-center gap-2.5 text-xs text-neutral-500 font-medium">
+                                {displayCode && <span className="font-mono bg-neutral-100 px-2 py-0.5 rounded text-[11px] font-bold">{displayCode}</span>}
                                 <span>Quantidade: <strong className="text-neutral-800">{item.quantidade}x</strong></span>
                                 {item.prazo_meses && <span>({item.prazo_meses} meses)</span>}
+                                
+                                {/* Badge de Pontos VIP do Item */}
+                                <span className="inline-flex items-center gap-1 text-[11px] font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/70">
+                                  <Coins className="h-3 w-3 text-amber-600" />
+                                  +{itemPontos} pts
+                                </span>
+
+                                {/* Badge de Desconto PIX se for PIX */}
+                                {isPix && itemPixDiscount > 0 && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                                    <QrCode className="h-3 w-3" />
+                                    -{pixPercentage}% no PIX
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
 
                           <div className="text-right sm:shrink-0 flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center">
-                            {hasDiscount && regularPrice > currentPrice && (
-                              <span className="text-xs font-semibold text-neutral-400 line-through">
-                                {formatCurrency(regularPrice * item.quantidade)}
-                              </span>
+                            {isPix && itemPixDiscount > 0 ? (
+                              <>
+                                {/* Preço Cheio Riscado no PIX */}
+                                <span className="text-xs font-semibold text-neutral-400 line-through block">
+                                  {formatCurrency(itemSubtotalBase)}
+                                </span>
+                                {/* Preço com Desconto no PIX */}
+                                <span className="text-base font-black text-emerald-700">
+                                  {formatCurrency(itemFinalPrice)}
+                                </span>
+                                <span className="text-[10px] font-bold text-emerald-600">
+                                  Economia de {formatCurrency(itemPixDiscount)}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                {/* Se não for PIX (Cartão, Boleto, etc): Exibe o valor cheio */}
+                                {hasDiscount && regularPrice * item.quantidade > itemSubtotalBase && (
+                                  <span className="text-xs font-semibold text-neutral-400 line-through block">
+                                    {formatCurrency(regularPrice * item.quantidade)}
+                                  </span>
+                                )}
+                                <span className="text-base font-black text-neutral-900">
+                                  {formatCurrency(itemSubtotalBase)}
+                                </span>
+                              </>
                             )}
-                            <span className="text-base font-black text-neutral-900">
-                              {formatCurrency(itemSubtotal)}
-                            </span>
                           </div>
                         </div>
                       );
@@ -1961,13 +2014,18 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       </div>
                     )}
 
-                    {formaPagamento === 'pix' && lojaPixDescontoAtivo && pixDiscountValue > 0 && (
-                      <div className="flex justify-between text-emerald-600 font-extrabold bg-emerald-50 px-2.5 py-1.5 rounded-lg">
-                        <span>Desconto Especial PIX ({lojaPixDescontoPorcentagem}%)</span>
-                        <span>- {formatCurrency(pixDiscountValue)}</span>
+                    {/* Desconto Total no PIX (Apenas quando a forma de pagamento for PIX) */}
+                    {isPix && pixDiscountValue > 0 && (
+                      <div className="flex justify-between items-center text-emerald-700 font-black bg-emerald-50/90 border border-emerald-200/80 px-3.5 py-2.5 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <QrCode className="h-4 w-4 text-emerald-600" />
+                          <span>Desconto Total no PIX ({pixPercentage}%)</span>
+                        </div>
+                        <span className="text-sm font-black">- {formatCurrency(pixDiscountValue)}</span>
                       </div>
                     )}
 
+                    {/* Juros de Crédito GSA se for Crédito GSA Parcelado */}
                     {formaPagamento === 'credito_loja' && valorJurosCredito > 0 && (
                       <div className="flex justify-between text-indigo-700 font-bold">
                         <span>Juros Crédito GSA ({taxaJurosAplicada}%)</span>
@@ -1975,11 +2033,13 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       </div>
                     )}
 
-                    {/* Total Geral */}
+                    {/* Total Geral Dinâmico */}
                     <div className="border-t border-neutral-200 pt-4 flex items-baseline justify-between">
                       <div>
                         <span className="text-base font-black text-neutral-900 block">Total Final a Pagar</span>
-                        <span className="text-xs text-neutral-500 font-medium">À vista ou parcelado</span>
+                        <span className="text-xs text-neutral-500 font-medium">
+                          {isPix ? 'No PIX com 5% de desconto' : formaPagamento === 'cartao' ? 'No Cartão de Crédito (Valor Cheio)' : 'À vista ou parcelado'}
+                        </span>
                       </div>
                       <span className="text-3xl font-black text-[#17345f] tracking-tight">
                         {formatCurrency(totalHojeFinal)}
