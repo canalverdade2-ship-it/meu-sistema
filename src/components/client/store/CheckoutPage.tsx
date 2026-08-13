@@ -1731,10 +1731,52 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       })}
                     </div>
 
-                    {/* Total Rápido */}
-                    <div className="border-t border-neutral-200/80 pt-3 space-y-1.5">
+                    {/* Discriminação Completa de Lançamentos na Prévia */}
+                    <div className="border-t border-neutral-200/80 pt-3 space-y-2 text-xs font-medium text-neutral-600">
+                      <div className="flex justify-between">
+                        <span>Subtotal dos itens</span>
+                        <span className="font-bold text-neutral-900">{formatCurrency(subtotalInicial)}</span>
+                      </div>
+
+                      {descontoPromocoes > 0 && (
+                        <div className="flex justify-between text-emerald-600 font-bold">
+                          <span>Descontos promocionais</span>
+                          <span>- {formatCurrency(descontoPromocoes)}</span>
+                        </div>
+                      )}
+
+                      {descontoPontos > 0 && (
+                        <div className="flex justify-between text-amber-700 font-bold">
+                          <span>Pontos VIP ({pontosAplicados.toLocaleString()} pts)</span>
+                          <span>- {formatCurrency(descontoPontos)}</span>
+                        </div>
+                      )}
+
+                      {descontoCalculado > 0 && (
+                        <div className="flex justify-between text-blue-600 font-bold">
+                          <span>Cupom ({cupomDesconto?.codigo_cupom})</span>
+                          <span>- {formatCurrency(descontoCalculado)}</span>
+                        </div>
+                      )}
+
+                      {descontoCarteira > 0 && (
+                        <div className="flex justify-between text-emerald-700 font-bold">
+                          <span>Saldo da Carteira</span>
+                          <span>- {formatCurrency(descontoCarteira)}</span>
+                        </div>
+                      )}
+
+                      {temProdutos && (
+                        <div className="flex justify-between">
+                          <span>Frete / Entrega</span>
+                          <span className={`font-bold ${taxaEntregaFinal === 0 ? 'text-emerald-700 uppercase tracking-wider' : 'text-neutral-900'}`}>
+                            {taxaEntregaFinal === 0 ? 'Frete Grátis' : formatCurrency(taxaEntregaFinal)}
+                          </span>
+                        </div>
+                      )}
+
                       {isPix && pixDiscountValue > 0 && (
-                        <div className="flex items-center justify-between text-xs font-bold text-emerald-700">
+                        <div className="flex items-center justify-between text-emerald-700 font-black bg-emerald-50/80 px-2.5 py-1.5 rounded-lg border border-emerald-200/60">
                           <span className="flex items-center gap-1">
                             <QrCode className="h-3.5 w-3.5" /> Desconto {pixPercentage}% PIX:
                           </span>
@@ -1742,8 +1784,15 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                         </div>
                       )}
 
-                      <div className="flex items-baseline justify-between pt-1">
-                        <span className="text-xs font-black uppercase tracking-wider text-neutral-600">Total Previsto:</span>
+                      {formaPagamento === 'credito_loja' && valorJurosCredito > 0 && (
+                        <div className="flex justify-between text-indigo-700 font-bold">
+                          <span>Juros Crédito GSA ({taxaJurosAplicada}%)</span>
+                          <span>+ {formatCurrency(valorJurosCredito)}</span>
+                        </div>
+                      )}
+
+                      <div className="border-t border-neutral-200 pt-2.5 flex items-baseline justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-neutral-800">Total Previsto:</span>
                         <span className="text-xl font-black text-[#17345f]">{formatCurrency(totalHojeFinal)}</span>
                       </div>
                     </div>
