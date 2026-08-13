@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Search, Package, Scissors, Calendar, Trash2, X, Plus, Minus, Tag, Check, AlertCircle, Loader2, ChevronLeft, ChevronRight, Filter, SlidersHorizontal, Briefcase, ArrowRight, Ticket, Coins, Sparkles, CreditCard, CheckCircle, Clock, CheckCircle2, Wallet, Gift } from 'lucide-react';
+import { ShoppingCart, Search, Package, Scissors, Calendar, Trash2, X, Plus, Minus, Tag, Check, AlertCircle, Loader2, ChevronLeft, ChevronRight, Filter, SlidersHorizontal, Briefcase, ArrowRight, Ticket, Coins, CreditCard, CheckCircle, Clock, CheckCircle2, Wallet, Gift } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { getProductDisplayCode } from '../../../lib/productIdentification';
 import { formatCurrency, generateUUID } from '../../../lib/utils';
@@ -37,6 +37,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   const [cupomDesconto, setCupomDesconto] = useState<CupomLoja | null>(null);
   const [cupomEntrega, setCupomEntrega] = useState<CupomLoja | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
   const [taxaEntregaFixa, setTaxaEntregaFixa] = useState(0);
 
   // Estados para pontos
@@ -221,7 +222,11 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
 
   useEffect(() => {
     if (isOpen) {
-      checkoutRequestId.current = generateUUID();
+      // Não regenera o id de idempotência enquanto uma submissão anterior estiver em voo
+      // (evita pedido duplicado quando o cliente fecha e reabre o modal em rede lenta).
+      if (!isSubmitting) {
+        checkoutRequestId.current = generateUUID();
+      }
       fetchTaxaEntrega();
       fetchSaldoPontos();
       fetchDadosCredito();
@@ -281,6 +286,14 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   };
 
   const temProdutos = cartItems.some((c: CartItem) => c.tipo === 'produto');
+  const enderecoCompletoValido = Boolean(
+    endereco.cep?.trim()
+    && endereco.logradouro?.trim()
+    && endereco.numero?.trim()
+    && endereco.bairro?.trim()
+    && endereco.cidade?.trim()
+    && endereco.uf?.trim(),
+  );
   const subtotalInicial = cartItems.reduce((acc: number, cur: CartItem) => {
     if (cur.tipo === 'produto') {
       return acc + getProductQuantityPriceBreakdown(cur.item_detalhes, cur.quantidade).subtotalFinal;
@@ -370,7 +383,9 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   const totalAntesCarteira = Number(Math.max(subtotalComPromos - descontoPontos - descontoCalculado + taxaEntregaFinal, 0).toFixed(2));
 
   // 1.5 Lógica de Saldo na Carteira Virtual
-  const maxSaldoValido = Number(Math.min(saldoCarteira, totalAntesCarteira).toFixed(2));
+  // Saldo negativo nunca pode virar "desconto negativo" (aumentando o total).
+  const saldoCarteiraUtilizavel = Math.max(0, saldoCarteira);
+  const maxSaldoValido = Number(Math.min(saldoCarteiraUtilizavel, totalAntesCarteira).toFixed(2));
   
   const handleToggleSaldoCarteira = (checked: boolean) => {
     setUsarSaldoCarteira(checked);
@@ -391,17 +406,70 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   };
 
   const descontoCarteira = usarSaldoCarteira ? Number(Math.min(saldoCarteiraAplicado, maxSaldoValido).toFixed(2)) : 0;
-  
+
+  // Se o carrinho/total diminuir, reduz automaticamente os valores aplicados
+  // para que a tela e o que é enviado ao servidor nunca fiquem dessincronizados.
+  useEffect(() => {
+    setPontosAplicados((prev) => (prev > maxPontosValidos ? maxPontosValidos : prev));
+  }, [maxPontosValidos]);
+
+  useEffect(() => {
+    setSaldoCarteiraAplicado((prev) => (prev > maxSaldoValido ? maxSaldoValido : prev));
+  }, [maxSaldoValido]);
+
   const totalHoje = Number(Math.max(totalAntesCarteira - descontoCarteira, 0).toFixed(2));
   
-  const taxaJurosAplicada = formaPagamento === 'credito_loja' 
-    ? (numParcelas === 1 ? jurosCreditoAvista : jurosCreditoAvista + (jurosCreditoParcelado * numParcelas))
+  // Taxa de juros do Crédito GSA: à vista aplica a taxa base; parcelado aplica a taxa base
+  // + a taxa por parcela adicional (conforme configuração em Admin > Crédito).
+  const calcularTaxaJuros = (parcelas: number) =>
+    parcelas <= 1 ? jurosCreditoAvista : jurosCreditoAvista + (jurosCreditoParcelado * parcelas);
+
+  const taxaJurosAplicada = formaPagamento === 'credito_loja'
+    ? calcularTaxaJuros(numParcelas)
     : 0;
   const valorJurosCredito = formaPagamento === 'credito_loja'
     ? parseFloat((totalHoje * (taxaJurosAplicada / 100)).toFixed(2))
     : 0;
   const totalHojeFinal = totalHoje + valorJurosCredito;
   const totalContratoFinal = totalHojeFinal + (subtotalContrato - subtotalInicial);
+
+  const isTravelCheckout = cartItems.some((c: CartItem) => c.tipo === ('pacote_viagem' as any));
+
+  // Revalida reativamente os cupons quando o carrinho muda (item removido, quantidade alterada)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (cupomEntrega) {
+      if (!temProdutos) {
+        setCupomEntrega(null);
+        toast.error('Cupom de entrega removido: não há mais produtos físicos no carrinho.');
+      } else if (
+        cupomEntrega.tipo_entrega === 'frete_gratis_minimo' &&
+        subtotalInicial < (cupomEntrega.valor_minimo_compra || 0)
+      ) {
+        setCupomEntrega(null);
+        toast.error(
+          `Cupom de frete grátis removido: a compra mínima é ${formatCurrency(cupomEntrega.valor_minimo_compra || 0)}.`,
+        );
+      }
+    }
+
+    if (cupomDesconto?.produto_id) {
+      const itemNoCarrinho = cartItems.find((c: CartItem) => c.item_id === cupomDesconto.produto_id);
+      if (!itemNoCarrinho) {
+        setCupomDesconto(null);
+        toast.error('Cupom removido: o produto exigido por este cupom não está mais no carrinho.');
+      }
+    }
+
+    if (cupomDesconto && (cupomDesconto.valor_minimo_compra || 0) > 0 && subtotalInicial < (cupomDesconto.valor_minimo_compra || 0)) {
+      setCupomDesconto(null);
+      toast.error(
+        `Cupom removido: a compra mínima para este cupom é ${formatCurrency(cupomDesconto.valor_minimo_compra || 0)}.`,
+      );
+    }
+
+  }, [isOpen, subtotalInicial, temProdutos, cartItems, cupomEntrega, cupomDesconto]);
 
   const buscarCep = async (cep: string) => {
     const limpo = cep.replace(/\D/g, '');
@@ -435,7 +503,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       
       // Validações básicas
       if (cupom.status !== 'ativo') return toast.error('Este cupom não está mais ativo.');
-      if (cupom.total_usos >= cupom.limite_usos) return toast.error('Limite de uso do cupom esgotado.');
+      if (Number(cupom.limite_usos || 0) > 0 && Number(cupom.total_usos || 0) >= Number(cupom.limite_usos)) return toast.error('Limite de uso do cupom esgotado.');
       if (cupom.data_validade) {
         const [year, month, day] = String(cupom.data_validade).split('T')[0].split('-').map(Number);
         const expiryDate = new Date(year, month - 1, day, 23, 59, 59);
@@ -496,16 +564,32 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         setCupomEntInput('');
         toast.success('Benefício de entrega aplicado!');
       } else {
+        // Cupom de desconto também respeita o valor mínimo de compra configurado.
+        if ((cupom.valor_minimo_compra || 0) > 0 && subtotalInicial < (cupom.valor_minimo_compra || 0)) {
+          return toast.error(`A compra mínima para usar este cupom é ${formatCurrency(cupom.valor_minimo_compra || 0)}.`);
+        }
         setCupomDesconto(cupom);
         setCupomDescInput('');
         toast.success('Desconto aplicado com sucesso!');
       }
+
     } catch {
       toast.error('Erro ao processar cupom.');
     }
   };
 
   const handleFinalizar = async () => {
+    // Trava síncrona contra duplo-clique (o estado do React pode não ter propagado ainda).
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    try {
+      await executarFinalizacao();
+    } finally {
+      isSubmittingRef.current = false;
+    }
+  };
+
+  const executarFinalizacao = async () => {
     // Verificar se houve alteração de preço no banco antes de fechar
     try {
       const productIds = cartItems.filter((c: any) => c.tipo === 'produto').map((c: any) => c.item_id);
@@ -553,8 +637,10 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       }
     } catch (err) {
       console.error('Erro ao validar alteração de preço:', err);
-      toast.error('Não foi possível validar preços e estoque');
+      toast.error('Não foi possível validar preços e estoque. Tente novamente.');
+      return;
     }
+
 
     const hasInvalidOrDeleted = cartItems.some((c: any) => 
       !c.item_detalhes 
@@ -565,30 +651,121 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       return;
     }
 
-    if (temProdutos && (!endereco.cep || !endereco.numero)) {
-      toast.error('Endereço completo é obrigatório para entrega de produtos.');
+    // Quantidade solicitada não pode ultrapassar o estoque disponível.
+    const itemSemEstoqueSuficiente = cartItems.find((c: any) => (
+      c.tipo === 'produto'
+      && c.item_detalhes?.controle_estoque
+      && Number(c.quantidade || 0) > Number(c.item_detalhes?.estoque_disponivel || 0)
+    ));
+    if (itemSemEstoqueSuficiente) {
+      toast.error(
+        `Estoque insuficiente para "${itemSemEstoqueSuficiente.item_detalhes?.nome || 'um produto'}": `
+        + `restam ${Number(itemSemEstoqueSuficiente.item_detalhes?.estoque_disponivel || 0)} unidade(s).`,
+      );
       return;
     }
 
-    if (formaPagamento === 'credito_loja') {
-      if (totalHojeFinal > limiteCreditoDisponivel) {
-        toast.error('Saldo de crédito disponível insuficiente para esta compra (incluindo taxas de juros).');
+    if (temProdutos && !enderecoCompletoValido) {
+      toast.error('Endereço completo é obrigatório para entrega de produtos (CEP, logradouro, número, bairro, cidade e UF).');
+      return;
+    }
+
+    // Revalida saldo de carteira, pontos e limite de crédito imediatamente antes do envio
+    // (podem ter sido consumidos em outra aba/pedido concorrente).
+    try {
+      const { data: freshCli, error: freshErr } = await supabase
+        .from('clientes')
+        .select('limite_credito_disponivel, saldo_carteira, saldo_pontos')
+        .eq('id', clientId)
+        .single();
+      if (freshErr) throw freshErr;
+
+      const freshLimite = Number(freshCli?.limite_credito_disponivel || 0);
+      const freshCarteira = Number(freshCli?.saldo_carteira || 0);
+      const freshPontos = Number(freshCli?.saldo_pontos || 0);
+
+      setLimiteCreditoDisponivel(freshLimite);
+      setSaldoCarteira(freshCarteira);
+      setSaldoPontos(freshPontos);
+
+      if (usarSaldoCarteira && saldoCarteiraAplicado > freshCarteira + 0.001) {
+        toast.error('Seu saldo em carteira mudou. Revise o valor aplicado antes de finalizar.');
+        setSaldoCarteiraAplicado(Number(Math.min(saldoCarteiraAplicado, freshCarteira).toFixed(2)));
         return;
       }
+
+      if (usarPontos && pontosAplicados > freshPontos) {
+        toast.error('Seu saldo de pontos mudou. Revise a quantidade aplicada antes de finalizar.');
+        setPontosAplicados(Math.min(pontosAplicados, freshPontos));
+        return;
+      }
+
+      if (formaPagamento === 'credito_loja' && totalHojeFinal > freshLimite) {
+        toast.error(
+          `Crédito GSA insuficiente: esta compra exige ${formatCurrency(totalHojeFinal)} `
+          + `(com juros) e você tem ${formatCurrency(freshLimite)} disponível.`,
+        );
+        return;
+      }
+    } catch (err) {
+      console.error('Erro ao revalidar saldos do cliente:', err);
+      toast.error('Não foi possível validar seus saldos. Tente novamente.');
+      return;
     }
-    
+
+    // Revalida os cupons aplicados imediatamente antes do envio (podem ter expirado
+    // ou esgotado o limite de usos enquanto o checkout ficou aberto).
+    try {
+      const cupomIds = [cupomDesconto?.id, cupomEntrega?.id].filter(Boolean) as string[];
+      if (cupomIds.length > 0) {
+        const { data: freshCupons, error: cupErr } = await supabase
+          .from('cupons_loja')
+          .select('id, status, data_validade, total_usos, limite_usos')
+          .in('id', cupomIds);
+        if (cupErr) throw cupErr;
+
+        const invalido = (id?: string | null) => {
+          if (!id) return false;
+          const c: any = (freshCupons || []).find((f: any) => f.id === id);
+          if (!c) return true;
+          if (c.status !== 'ativo') return true;
+          if (Number(c.limite_usos || 0) > 0 && Number(c.total_usos || 0) >= Number(c.limite_usos)) return true;
+          if (c.data_validade) {
+            const [y, m, d] = String(c.data_validade).split('T')[0].split('-').map(Number);
+            if (new Date(y, m - 1, d, 23, 59, 59) < new Date()) return true;
+          }
+          return false;
+        };
+
+        if (invalido(cupomDesconto?.id)) {
+          setCupomDesconto(null);
+          toast.error('O cupom de desconto aplicado não é mais válido e foi removido. Revise o total antes de finalizar.');
+          return;
+        }
+        if (invalido(cupomEntrega?.id)) {
+          setCupomEntrega(null);
+          toast.error('O cupom de entrega aplicado não é mais válido e foi removido. Revise o total antes de finalizar.');
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao revalidar cupons:', err);
+      toast.error('Não foi possível validar os cupons aplicados. Tente novamente.');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
-      const isTravelCheckout = cartItems.some((c: any) => c.tipo === 'pacote_viagem');
-      
       if (isTravelCheckout) {
         // Fluxo de checkout de viagem
         const pacote = cartItems.find((c: any) => c.tipo === 'pacote_viagem');
         const data = await callClientRpc<any>('gsa_client_checkout_travel', {
           p_payload: {
+            request_id: checkoutRequestId.current,
             proposta_id: pacote.item_id,
             forma_pagamento: formaPagamento,
+            parcelas: normalizedTravelInstallments,
           }
         });
         
@@ -608,8 +785,11 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               ...(item.tipo === 'assinatura' ? { prazo_meses: item.prazo_meses || 1 } : {}),
             })),
             forma_pagamento: formaPagamento,
-            pontos_usados: usarPontos ? pontosAplicados : 0,
-            saldo_carteira_usado: usarSaldoCarteira ? saldoCarteiraAplicado : 0,
+            // Envia exatamente o que foi descontado na tela (valores já limitados
+            // ao subtotal/saldo atual), evitando debitar mais pontos ou saldo do
+            // que o desconto realmente concedido quando o carrinho muda.
+            pontos_usados: usarPontos ? Math.min(pontosAplicados, maxPontosValidos) : 0,
+            saldo_carteira_usado: descontoCarteira,
             cupom_desconto_id: cupomDesconto?.id || null,
             cupom_entrega_id: cupomEntrega?.id || null,
             endereco_entrega: enderecoCompleto,
@@ -624,8 +804,13 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
       
     } catch (e: any) {
       console.error('Erro no checkout RPC:', e);
-      toast.error(e.message || 'Falha ao processar compra. Tente novamente.');
+      const raw = String(e?.message || '');
+      const friendly = /produto indispon/i.test(raw)
+        ? 'Um dos produtos do carrinho saiu do catálogo. Abra o carrinho e remova o item indisponível para concluir a compra.'
+        : raw || 'Falha ao processar compra. Tente novamente.';
+      toast.error(friendly);
     } finally {
+
       setIsSubmitting(false);
     }
   };
@@ -667,16 +852,19 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
           
           {/* Sessão de Endereço */}
           {temProdutos && (
-            <div className="bg-neutral-50 rounded-2xl p-6 border border-neutral-200">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-black text-neutral-900 uppercase tracking-widest">📍 Endereço de Entrega</h3>
+            <div className="bg-neutral-50 rounded-2xl p-4 sm:p-6 border border-neutral-200">
+              <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
+                <h3 className="text-xs sm:text-sm font-black text-neutral-900 uppercase tracking-wide sm:tracking-widest flex items-center gap-1.5 min-w-0">
+                  <span className="shrink-0">📍</span>
+                  <span className="truncate">Endereço de Entrega</span>
+                </h3>
                 {endereco.cep && !isEditingEndereco && (
                   <button 
                     type="button"
                     onClick={() => setIsEditingEndereco(true)}
-                    className="text-xs font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-wider flex items-center gap-1 transition-all bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-xl hover:bg-indigo-100 cursor-pointer"
+                    className="shrink-0 text-[10px] sm:text-xs font-bold text-[#17345f] hover:text-[#0c2242] uppercase tracking-wider flex items-center gap-1 transition-all bg-white border border-slate-200 px-2.5 py-1 rounded-lg hover:bg-slate-100 cursor-pointer shadow-xs whitespace-nowrap"
                   >
-                    ✏️ Alterar Endereço
+                    ✏️ Alterar
                   </button>
                 )}
               </div>
@@ -756,7 +944,20 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
             </div>
           )}
 
+          {/* Cupons, pontos e carteira não se aplicam ao checkout de pacotes de viagem
+              (a reserva é processada por RPC própria que não aceita esses benefícios). */}
+          {isTravelCheckout && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-[11px] font-bold text-amber-800 leading-normal">
+                Cupons, pontos VIP e saldo da carteira não podem ser aplicados em pacotes de viagem.
+                Finalize a reserva e utilize seus benefícios em compras da loja.
+              </p>
+            </div>
+          )}
+
           {/* Sessão Cupons */}
+          {!isTravelCheckout && (
           <div className="space-y-4">
             <h3 className="text-sm font-black text-neutral-900 uppercase tracking-widest">Cupons da Loja</h3>
             
@@ -849,8 +1050,10 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               </div>
             )}
           </div>
+          )}
 
           {/* Sessão de Pontos Fidelidade GSA VIP */}
+          {!isTravelCheckout && (
           <div className="relative overflow-hidden rounded-2xl border border-purple-700/50 bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 p-5 text-white shadow-lg">
             <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-amber-400/10 blur-xl"></div>
             
@@ -881,7 +1084,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-purple-200/80">Seu Saldo:</span>
                 <span className="flex items-center gap-1 font-black text-amber-300">
-                  <Sparkles className="h-3.5 w-3.5 fill-current text-amber-300" />
+                  <Gift className="h-3.5 w-3.5 fill-current text-amber-300" />
                   {saldoPontos.toLocaleString()} pontos ({formatCurrency(saldoPontos * 0.01)})
                 </span>
               </div>
@@ -955,7 +1158,10 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
             </div>
           </div>
 
+          )}
+
           {/* Sessão de Saldo da Carteira Virtual */}
+          {!isTravelCheckout && (
           <div className="relative mt-4 overflow-hidden rounded-2xl border border-emerald-700/50 bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-900 p-5 text-white shadow-lg">
             <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-emerald-400/10 blur-xl"></div>
             
@@ -1032,6 +1238,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               )}
             </div>
           </div>
+          )}
 
           {/* Opção de Pagamento (Novo Módulo Meu Crédito) */}
           <div className="bg-[#fcfcfc] rounded-[2rem] p-6 border-2 border-neutral-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
@@ -1066,9 +1273,9 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                 type="button"
                 disabled={limiteCreditoTotal <= 0}
                 onClick={() => {
-                  const totalInicialComJuros = totalHoje * (1 + jurosCreditoAvista / 100);
+                  const totalInicialComJuros = totalHoje * (1 + calcularTaxaJuros(numParcelas) / 100);
                   if (totalInicialComJuros > limiteCreditoDisponivel) {
-                    toast.error(`Saldo de crédito disponível insuficiente para esta compra (incluindo juros de ${jurosCreditoAvista}%).`);
+                    toast.error(`Saldo de crédito disponível insuficiente para esta compra (incluindo juros de ${calcularTaxaJuros(numParcelas)}%).`);
                     return;
                   }
                   setFormaPagamento('credito_loja');
@@ -1089,8 +1296,8 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                   <span className="text-[10px] text-neutral-400 font-bold leading-normal">Crédito GSA Store não contratado ou sem limite. Solicite no painel.</span>
                 ) : (
                   <div className="space-y-1">
-                    <span className="text-[10px] text-neutral-400 font-bold leading-normal block">Disponível: <strong className={(formaPagamento === 'credito_loja' ? totalHojeFinal : (totalHoje * (1 + jurosCreditoAvista / 100))) > limiteCreditoDisponivel ? 'text-red-500 font-black' : 'text-emerald-600 font-black'}>{formatCurrency(limiteCreditoDisponivel)}</strong> / {formatCurrency(limiteCreditoTotal)}</span>
-                    {(formaPagamento === 'credito_loja' ? totalHojeFinal : (totalHoje * (1 + jurosCreditoAvista / 100))) > limiteCreditoDisponivel && (
+                    <span className="text-[10px] text-neutral-400 font-bold leading-normal block">Disponível: <strong className={(totalHoje * (1 + calcularTaxaJuros(numParcelas) / 100)) > limiteCreditoDisponivel ? 'text-red-500 font-black' : 'text-emerald-600 font-black'}>{formatCurrency(limiteCreditoDisponivel)}</strong> / {formatCurrency(limiteCreditoTotal)}</span>
+                    {(totalHoje * (1 + calcularTaxaJuros(numParcelas) / 100)) > limiteCreditoDisponivel && (
                       <span className="text-[9px] text-red-500 font-black uppercase tracking-wider block bg-red-50 px-1.5 py-0.5 rounded w-fit">Saldo Insuficiente</span>
                     )}
                   </div>
@@ -1113,12 +1320,13 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                         onChange={e => setNumParcelas(parseInt(e.target.value))}
                         className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer"
                       >
-                        <option value={1}>À vista (30 dias) - {formatCurrency(totalHoje * (1 + jurosCreditoAvista / 100))} (+{jurosCreditoAvista}% juros)</option>
+                        <option value={1}>À vista (30 dias) - {formatCurrency(totalHoje * (1 + calcularTaxaJuros(1) / 100))} (+{calcularTaxaJuros(1)}% juros)</option>
                         {Array.from({ length: Math.max(0, maxParcelas - 1) }, (_, i) => i + 2).map(n => {
-                          const totalComJuros = totalHoje * (1 + jurosCreditoParcelado / 100);
+                          const taxaN = calcularTaxaJuros(n);
+                          const totalComJuros = totalHoje * (1 + taxaN / 100);
                           const valorParcela = totalComJuros / n;
                           return (
-                            <option key={n} value={n}>{n}x de {formatCurrency(valorParcela)} (+{jurosCreditoParcelado}% juros)</option>
+                            <option key={n} value={n}>{n}x de {formatCurrency(valorParcela)} — total {formatCurrency(totalComJuros)} (+{taxaN}% juros)</option>
                           );
                         })}
                       </select>
@@ -1263,7 +1471,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               {/* Pontos Ganhos (Fase 3.3) */}
               <div className="flex justify-end mt-1 mb-4">
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#d8bd73] bg-[#d8bd73]/10 px-2 py-1 rounded-md">
-                  <Sparkles className="w-3 h-3" /> Ganhe + {Math.floor(totalHojeFinal)} pontos GSA
+                  <Gift className="w-3 h-3" /> Ganhe + {Math.floor(totalHojeFinal)} pontos GSA
                 </span>
               </div>
 
@@ -1278,12 +1486,26 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
 
           <button 
             onClick={handleFinalizar}
-            disabled={isSubmitting || (temProdutos && (!endereco.cep || !endereco.numero))}
+            disabled={
+              isSubmitting
+              || (temProdutos && !enderecoCompletoValido)
+              || (formaPagamento === 'credito_loja' && totalHojeFinal > limiteCreditoDisponivel)
+            }
             className="w-full mt-8 bg-indigo-600 hover:bg-indigo-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white py-4 rounded-xl font-bold text-sm transition-all shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 relative z-10"
           >
             {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
             Confirmar Pedido
           </button>
+          {temProdutos && !enderecoCompletoValido && (
+            <p className="mt-3 text-center text-xs font-semibold text-amber-600">
+              Preencha o endereço de entrega completo (CEP, logradouro, número, bairro, cidade e UF) para continuar.
+            </p>
+          )}
+          {formaPagamento === 'credito_loja' && totalHojeFinal > limiteCreditoDisponivel && (
+            <p className="mt-3 text-center text-xs font-semibold text-red-600">
+              Crédito GSA insuficiente: necessário {formatCurrency(totalHojeFinal)} e disponível {formatCurrency(limiteCreditoDisponivel)}.
+            </p>
+          )}
         </div>
       </div>
 
