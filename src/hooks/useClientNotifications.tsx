@@ -283,28 +283,23 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
       table: 'promocoes',
     }, () => debouncedFetch());
 
-    channel.subscribe((status, err) => {
-      console.log(`[Realtime Client] Canal ${clientId} status:`, status);
-      
+    channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         isSubscribedRef.current = true;
         if (reconnectTimerRef.current) {
           clearTimeout(reconnectTimerRef.current);
           reconnectTimerRef.current = null;
         }
-        // Buscar dados frescos ao reconectar
         fetchNotifications();
         fetchPendencies();
       }
       
       if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.warn(`[Realtime Client] Canal com problema (${status}). Reconectando em ${RECONNECT_DELAY_MS}ms...`, err);
         isSubscribedRef.current = false;
         
         if (!reconnectTimerRef.current) {
           reconnectTimerRef.current = setTimeout(() => {
             reconnectTimerRef.current = null;
-            console.log('[Realtime Client] Tentando reconexão...');
             fetchNotifications();
             fetchPendencies();
           }, RECONNECT_DELAY_MS);
@@ -359,15 +354,10 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
       }
     });
 
-    securityChannel.subscribe((status) => {
-      console.log(`[Realtime Client] Canal segurança status:`, status);
-    });
+    securityChannel.subscribe();
 
     // Heartbeat: Polling de fallback para garantir dados frescos
     const heartbeatInterval = setInterval(() => {
-      if (!isSubscribedRef.current) {
-        console.log('[Realtime Client] Heartbeat detectou desconexão. Fetch manual...');
-      }
       if (document.visibilityState === 'visible') {
         fetchPendencies();
         fetchNotifications();

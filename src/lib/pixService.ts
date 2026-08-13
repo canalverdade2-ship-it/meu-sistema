@@ -158,12 +158,20 @@ export async function createInfinitePayOrderCheckout({
         redirect_url: `${redirectBase}/marketplace/loja/compras?orderId=${orcamentoId}`,
       };
 
-      if (clienteNome) {
-        ipPayload.customer = {
-          name: clienteNome,
-          email: clienteEmail || undefined,
-          phone_number: clienteTelefone ? `+55${clienteTelefone.replace(/\D/g, '')}` : undefined,
-        };
+      const customer: any = {};
+      if (clienteNome && clienteNome.trim().length >= 2) {
+        customer.name = clienteNome.trim();
+      }
+      if (clienteEmail && clienteEmail.trim().length > 3 && clienteEmail.includes('@') && clienteEmail.includes('.')) {
+        customer.email = clienteEmail.trim();
+      }
+      const rawPhone = clienteTelefone ? clienteTelefone.replace(/\D/g, '') : '';
+      if (rawPhone.length >= 10) {
+        customer.phone_number = `+55${rawPhone}`;
+      }
+
+      if (Object.keys(customer).length > 0) {
+        ipPayload.customer = customer;
       }
 
       const resp = await fetch('https://api.checkout.infinitepay.io/links', {
