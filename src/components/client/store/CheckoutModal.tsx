@@ -1095,195 +1095,238 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         )}
 
         {/* ========================================================================= */}
-        {/* ETAPA 2: CUPONS, PONTOS VIP E CARTEIRA */}
+        {/* ETAPA 2: CUPONS (ESQUERDA) & PONTOS VIP E CARTEIRA (DIREITA) */}
         {/* ========================================================================= */}
         {etapaCheckout === 2 && (
-          <div className="p-4 sm:p-6 space-y-3.5 max-w-xl mx-auto w-full">
+          <div className="p-4 sm:p-5 w-full flex flex-col justify-between min-h-0 flex-1 space-y-4">
             
-            {/* Seção Cupons da Loja */}
-            <div className="bg-white rounded-xl p-4 border border-neutral-200/90 shadow-xs space-y-3">
-              <h3 className="text-xs font-black text-neutral-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-indigo-600" /> Cupons da Loja
-              </h3>
+            {/* Grid de 2 Colunas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5 items-start">
               
-              {/* Cupom Desconto */}
-              <div className="bg-blue-50/40 p-3 rounded-xl border border-blue-100 space-y-1.5">
-                <label className="text-[10px] font-bold text-blue-800 uppercase flex items-center gap-1"><Tag className="w-3 h-3" /> Cupom de Desconto</label>
-                {cupomDesconto ? (
-                  <div className="flex items-center justify-between bg-white border border-blue-200 px-3 py-2 rounded-lg text-xs">
-                    <span className="font-mono font-bold text-blue-700">{cupomDesconto.codigo_cupom} - {cupomDesconto.tipo_desconto === 'porcentagem' ? `${cupomDesconto.valor_desconto}% OFF` : `R$ ${cupomDesconto.valor_desconto} OFF`}</span>
-                    <button onClick={() => setCupomDesconto(null)} className="text-[11px] font-bold text-red-500 hover:text-red-700 cursor-pointer">Remover</button>
-                  </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    <div className="flex gap-1.5">
-                      <input type="text" value={cupomDescInput} onChange={e => setCupomDescInput(e.target.value.toUpperCase())} placeholder="CÓDIGO" className="flex-1 px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-mono uppercase" />
-                      <button onClick={() => aplicarCupom(cupomDescInput, 'desconto')} className="px-4 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs hover:bg-blue-700 cursor-pointer shadow-xs">Aplicar</button>
-                    </div>
-                    <button 
-                      onClick={() => handleOpenSelector('desconto')}
-                      className="text-[9px] font-black text-blue-600 uppercase tracking-wider hover:text-blue-800 cursor-pointer block"
-                    >
-                      Ver Cupons Disponíveis
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Cupom Entrega */}
-              {temProdutos && (
-                <div className="bg-emerald-50/40 p-3 rounded-xl border border-emerald-100 space-y-1.5">
-                  <label className="text-[10px] font-bold text-emerald-800 uppercase flex items-center gap-1"><Package className="w-3 h-3" /> Benefício de Frete</label>
-                  {cupomEntrega ? (
-                    <div className="flex items-center justify-between bg-white border border-emerald-200 px-3 py-2 rounded-lg text-xs">
-                      <span className="font-mono font-bold text-emerald-700">{cupomEntrega.codigo_cupom} - {cupomEntrega.tipo_entrega === 'frete_gratis' ? 'Frete Grátis' : 'Frete Fixo'}</span>
-                      <button onClick={() => setCupomEntrega(null)} className="text-[11px] font-bold text-red-500 hover:text-red-700 cursor-pointer">Remover</button>
+              {/* Coluna Esquerda: Cupons da Loja */}
+              <div className="bg-white rounded-xl p-4 border border-neutral-200/90 shadow-xs space-y-3">
+                <div className="flex items-center gap-1.5 border-b border-neutral-100 pb-2.5">
+                  <Tag className="w-4 h-4 text-indigo-600" />
+                  <h3 className="text-xs font-black text-neutral-900 uppercase tracking-wider">Cupons da Loja</h3>
+                </div>
+                
+                {/* Cupom Desconto */}
+                <div className="bg-blue-50/40 p-3 rounded-xl border border-blue-100 space-y-1.5">
+                  <label className="text-[10px] font-bold text-blue-800 uppercase flex items-center gap-1">
+                    <Tag className="w-3 h-3" /> Cupom de Desconto
+                  </label>
+                  {cupomDesconto ? (
+                    <div className="flex items-center justify-between bg-white border border-blue-200 px-3 py-2 rounded-lg text-xs">
+                      <span className="font-mono font-bold text-blue-700">
+                        {cupomDesconto.codigo_cupom} - {cupomDesconto.tipo_desconto === 'porcentagem' ? `${cupomDesconto.valor_desconto}% OFF` : `R$ ${cupomDesconto.valor_desconto} OFF`}
+                      </span>
+                      <button onClick={() => setCupomDesconto(null)} className="text-[11px] font-bold text-red-500 hover:text-red-700 cursor-pointer">
+                        Remover
+                      </button>
                     </div>
                   ) : (
                     <div className="space-y-1.5">
                       <div className="flex gap-1.5">
-                        <input type="text" value={cupomEntInput} onChange={e => setCupomEntInput(e.target.value.toUpperCase())} placeholder="CÓDIGO FRETE" className="flex-1 px-3 py-1.5 bg-white border border-emerald-200 rounded-lg text-xs font-mono uppercase" />
-                        <button onClick={() => aplicarCupom(cupomEntInput, 'entrega')} className="px-4 py-1.5 bg-emerald-600 text-white font-bold rounded-lg text-xs hover:bg-emerald-700 cursor-pointer shadow-xs">Aplicar</button>
+                        <input 
+                          type="text" 
+                          value={cupomDescInput} 
+                          onChange={e => setCupomDescInput(e.target.value.toUpperCase())} 
+                          placeholder="CÓDIGO DO CUPOM" 
+                          className="flex-1 px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-mono uppercase focus:ring-1 focus:ring-blue-500 focus:outline-none" 
+                        />
+                        <button 
+                          onClick={() => aplicarCupom(cupomDescInput, 'desconto')} 
+                          className="px-4 py-1.5 bg-blue-600 text-white font-bold rounded-lg text-xs hover:bg-blue-700 cursor-pointer shadow-xs transition-all"
+                        >
+                          Aplicar
+                        </button>
                       </div>
                       <button 
-                        onClick={() => handleOpenSelector('entrega')}
-                        className="text-[9px] font-black text-emerald-700 uppercase tracking-wider hover:text-emerald-900 cursor-pointer block"
+                        onClick={() => handleOpenSelector('desconto')}
+                        className="text-[9px] font-black text-blue-600 uppercase tracking-wider hover:text-blue-800 cursor-pointer block pt-0.5"
                       >
-                        Ver Benefícios de Frete
+                        Ver Cupons Disponíveis
                       </button>
                     </div>
                   )}
                 </div>
-              )}
+
+                {/* Cupom Entrega */}
+                {temProdutos && (
+                  <div className="bg-emerald-50/40 p-3 rounded-xl border border-emerald-100 space-y-1.5">
+                    <label className="text-[10px] font-bold text-emerald-800 uppercase flex items-center gap-1">
+                      <Package className="w-3 h-3" /> Benefício de Frete
+                    </label>
+                    {cupomEntrega ? (
+                      <div className="flex items-center justify-between bg-white border border-emerald-200 px-3 py-2 rounded-lg text-xs">
+                        <span className="font-mono font-bold text-emerald-700">
+                          {cupomEntrega.codigo_cupom} - {cupomEntrega.tipo_entrega === 'frete_gratis' ? 'Frete Grátis' : 'Frete Fixo'}
+                        </span>
+                        <button onClick={() => setCupomEntrega(null)} className="text-[11px] font-bold text-red-500 hover:text-red-700 cursor-pointer">
+                          Remover
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <div className="flex gap-1.5">
+                          <input 
+                            type="text" 
+                            value={cupomEntInput} 
+                            onChange={e => setCupomEntInput(e.target.value.toUpperCase())} 
+                            placeholder="CÓDIGO DE FRETE" 
+                            className="flex-1 px-3 py-1.5 bg-white border border-emerald-200 rounded-lg text-xs font-mono uppercase focus:ring-1 focus:ring-emerald-500 focus:outline-none" 
+                          />
+                          <button 
+                            onClick={() => aplicarCupom(cupomEntInput, 'entrega')} 
+                            className="px-4 py-1.5 bg-emerald-600 text-white font-bold rounded-lg text-xs hover:bg-emerald-700 cursor-pointer shadow-xs transition-all"
+                          >
+                            Aplicar
+                          </button>
+                        </div>
+                        <button 
+                          onClick={() => handleOpenSelector('entrega')}
+                          className="text-[9px] font-black text-emerald-700 uppercase tracking-wider hover:text-emerald-900 cursor-pointer block pt-0.5"
+                        >
+                          Ver Benefícios de Frete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Coluna Direita: Pontos VIP & Saldo da Carteira */}
+              <div className="space-y-3">
+                
+                {/* Sessão de Resgate de Pontos VIP */}
+                {!isTravelCheckout && (
+                  <div className="rounded-xl border border-purple-800/40 bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 p-3.5 text-white shadow-xs space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-lg bg-amber-400 p-1.5 text-purple-950">
+                          <Coins className="h-3.5 w-3.5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-black uppercase tracking-wider text-white">Resgatar Pontos VIP</h3>
+                          <p className="text-[9px] text-purple-200">100 pts = R$ 1,00 de desconto</p>
+                        </div>
+                      </div>
+
+                      <label className="relative inline-flex cursor-pointer items-center">
+                        <input 
+                          type="checkbox" 
+                          checked={usarPontos} 
+                          disabled={saldoPontos <= 0 || maxPontosValidos <= 0}
+                          onChange={e => handleTogglePontos(e.target.checked)}
+                          className="peer sr-only" 
+                        />
+                        <div className="h-5 w-9 rounded-full bg-purple-950 peer-checked:bg-amber-400 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-purple-950 border border-purple-400/40"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-purple-800/40">
+                      <span className="text-purple-200/80 text-[11px]">Saldo Disponível:</span>
+                      <span className="font-black text-amber-300 text-xs">
+                        👑 {saldoPontos.toLocaleString()} pts ({formatCurrency(saldoPontos / 100)})
+                      </span>
+                    </div>
+
+                    {usarPontos && (
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="number" 
+                            value={pontosAplicados || ''} 
+                            min="0"
+                            max={maxPontosValidos}
+                            onChange={e => handlePontosChange(parseInt(e.target.value) || 0)}
+                            className="flex-1 rounded-lg border border-purple-400/30 bg-white px-2.5 py-1 text-xs font-bold text-neutral-900 focus:outline-none" 
+                            placeholder="Ex: 500"
+                          />
+                          <span className="text-xs font-black text-amber-300 shrink-0">
+                            - {formatCurrency(descontoPontos)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          {saldoPontos >= 100 && maxPontosValidos >= 100 && (
+                            <button type="button" onClick={() => handlePontosChange(100)} className="rounded bg-purple-900/60 px-2 py-0.5 text-[9px] font-bold text-amber-200 cursor-pointer">100 pts</button>
+                          )}
+                          {saldoPontos >= 500 && maxPontosValidos >= 500 && (
+                            <button type="button" onClick={() => handlePontosChange(500)} className="rounded bg-purple-900/60 px-2 py-0.5 text-[9px] font-bold text-amber-200 cursor-pointer">500 pts</button>
+                          )}
+                          <button type="button" onClick={() => handlePontosChange(maxPontosValidos)} className="ml-auto rounded bg-amber-400 px-2 py-0.5 text-[9px] font-black text-purple-950 cursor-pointer">Máximo ({maxPontosValidos.toLocaleString()} pts)</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Sessão de Saldo da Carteira Virtual */}
+                {!isTravelCheckout && (
+                  <div className="rounded-xl border border-emerald-700/50 bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-900 p-3.5 text-white shadow-xs space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-lg bg-emerald-400 p-1.5 text-emerald-950">
+                          <Wallet className="h-3.5 w-3.5" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-black uppercase tracking-wider text-white">Usar Saldo da Carteira</h3>
+                          <p className="text-[9px] text-emerald-200">Abata o valor com seu saldo</p>
+                        </div>
+                      </div>
+
+                      <label className="relative inline-flex cursor-pointer items-center">
+                        <input 
+                          type="checkbox" 
+                          checked={usarSaldoCarteira} 
+                          disabled={saldoCarteira <= 0 || maxSaldoValido <= 0}
+                          onChange={e => handleToggleSaldoCarteira(e.target.checked)}
+                          className="peer sr-only" 
+                        />
+                        <div className="h-5 w-9 rounded-full bg-emerald-950 peer-checked:bg-emerald-400 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-emerald-950 border border-emerald-300/40"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-emerald-800/60">
+                      <span className="text-emerald-200/80 text-[11px]">Saldo Disponível:</span>
+                      <span className="font-black text-emerald-300 text-xs">{formatCurrency(saldoCarteira)}</span>
+                    </div>
+
+                    {usarSaldoCarteira && (
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="number" 
+                            value={saldoCarteiraAplicado ? Number(saldoCarteiraAplicado.toFixed(2)) : ''} 
+                            min="0"
+                            max={maxSaldoValido}
+                            step="0.01"
+                            onChange={e => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
+                            className="flex-1 rounded-lg border border-emerald-400/30 bg-white px-2.5 py-1 text-xs font-bold text-neutral-900 focus:outline-none" 
+                            placeholder="Ex: 50.00"
+                          />
+                          <span className="text-xs font-black text-emerald-300 shrink-0">
+                            - {formatCurrency(descontoCarteira)}
+                          </span>
+                        </div>
+                        <button type="button" onClick={() => handleSaldoCarteiraChange(maxSaldoValido)} className="block ml-auto rounded bg-emerald-400 px-2 py-0.5 text-[9px] font-black text-emerald-950 cursor-pointer">Usar Máximo ({formatCurrency(maxSaldoValido)})</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Sessão de Resgate de Pontos VIP */}
-            {!isTravelCheckout && (
-              <div className="rounded-xl border border-purple-800/40 bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 p-3.5 text-white shadow-xs space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-amber-400 p-1.5 text-purple-950">
-                      <Coins className="h-3.5 w-3.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black uppercase tracking-wider text-white">Resgatar Pontos VIP</h3>
-                      <p className="text-[9px] text-purple-200">100 pts = R$ 1,00</p>
-                    </div>
-                  </div>
-
-                  <label className="relative inline-flex cursor-pointer items-center">
-                    <input 
-                      type="checkbox" 
-                      checked={usarPontos} 
-                      disabled={saldoPontos <= 0 || maxPontosValidos <= 0}
-                      onChange={e => handleTogglePontos(e.target.checked)}
-                      className="peer sr-only" 
-                    />
-                    <div className="h-5 w-9 rounded-full bg-purple-950 peer-checked:bg-amber-400 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-purple-950 border border-purple-400/40"></div>
-                  </label>
-                </div>
-
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-purple-800/40">
-                  <span className="text-purple-200/80 text-[11px]">Saldo Disponível:</span>
-                  <span className="font-black text-amber-300 text-xs">
-                    👑 {saldoPontos.toLocaleString()} pts ({formatCurrency(saldoPontos / 100)})
-                  </span>
-                </div>
-
-                {usarPontos && (
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
-                        value={pontosAplicados || ''} 
-                        min="0"
-                        max={maxPontosValidos}
-                        onChange={e => handlePontosChange(parseInt(e.target.value) || 0)}
-                        className="flex-1 rounded-lg border border-purple-400/30 bg-white px-2.5 py-1 text-xs font-bold text-neutral-900 focus:outline-none" 
-                        placeholder="Ex: 500"
-                      />
-                      <span className="text-xs font-black text-amber-300 shrink-0">
-                        - {formatCurrency(descontoPontos)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {saldoPontos >= 100 && maxPontosValidos >= 100 && (
-                        <button type="button" onClick={() => handlePontosChange(100)} className="rounded bg-purple-900/60 px-2 py-0.5 text-[9px] font-bold text-amber-200">100 pts</button>
-                      )}
-                      {saldoPontos >= 500 && maxPontosValidos >= 500 && (
-                        <button type="button" onClick={() => handlePontosChange(500)} className="rounded bg-purple-900/60 px-2 py-0.5 text-[9px] font-bold text-amber-200">500 pts</button>
-                      )}
-                      <button type="button" onClick={() => handlePontosChange(maxPontosValidos)} className="ml-auto rounded bg-amber-400 px-2 py-0.5 text-[9px] font-black text-purple-950">Máximo ({maxPontosValidos.toLocaleString()} pts)</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Sessão de Saldo da Carteira Virtual */}
-            {!isTravelCheckout && (
-              <div className="rounded-xl border border-emerald-700/50 bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-900 p-3.5 text-white shadow-xs space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-emerald-400 p-1.5 text-emerald-950">
-                      <Wallet className="h-3.5 w-3.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black uppercase tracking-wider text-white">Usar Saldo da Carteira</h3>
-                      <p className="text-[9px] text-emerald-200">Abata o valor com seu saldo</p>
-                    </div>
-                  </div>
-
-                  <label className="relative inline-flex cursor-pointer items-center">
-                    <input 
-                      type="checkbox" 
-                      checked={usarSaldoCarteira} 
-                      disabled={saldoCarteira <= 0 || maxSaldoValido <= 0}
-                      onChange={e => handleToggleSaldoCarteira(e.target.checked)}
-                      className="peer sr-only" 
-                    />
-                    <div className="h-5 w-9 rounded-full bg-emerald-950 peer-checked:bg-emerald-400 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-emerald-950 border border-emerald-300/40"></div>
-                  </label>
-                </div>
-
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-emerald-800/60">
-                  <span className="text-emerald-200/80 text-[11px]">Saldo Disponível:</span>
-                  <span className="font-black text-emerald-300 text-xs">{formatCurrency(saldoCarteira)}</span>
-                </div>
-
-                {usarSaldoCarteira && (
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="number" 
-                        value={saldoCarteiraAplicado ? Number(saldoCarteiraAplicado.toFixed(2)) : ''} 
-                        min="0"
-                        max={maxSaldoValido}
-                        step="0.01"
-                        onChange={e => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
-                        className="flex-1 rounded-lg border border-emerald-400/30 bg-white px-2.5 py-1 text-xs font-bold text-neutral-900 focus:outline-none" 
-                        placeholder="Ex: 50.00"
-                      />
-                      <span className="text-xs font-black text-emerald-300 shrink-0">
-                        - {formatCurrency(descontoCarteira)}
-                      </span>
-                    </div>
-                    <button type="button" onClick={() => handleSaldoCarteiraChange(maxSaldoValido)} className="block ml-auto rounded bg-emerald-400 px-2 py-0.5 text-[9px] font-black text-emerald-950">Usar Máximo ({formatCurrency(maxSaldoValido)})</button>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Navegação da Etapa 2 */}
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between pt-3 border-t border-neutral-200/80">
               <button
                 type="button"
                 onClick={() => setEtapaCheckout(1)}
-                className="px-4 py-2 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Voltar
+                Voltar para Endereço
               </button>
 
               <button
