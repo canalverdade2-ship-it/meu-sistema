@@ -1776,7 +1776,9 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                         const regularPrice = item.item_detalhes?.valor || 0;
                         const basePrice = isProduct ? (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) : regularPrice;
                         const itemSubtotalBase = basePrice * item.quantidade;
-                        const itemPixDiscount = (isPix && isProduct) ? Number((itemSubtotalBase * (pixPercentage / 100)).toFixed(2)) : 0;
+                        const itemPixDiscount = (isPixDiscountEligible && isProduct && checkPixDiscountApplies(item.item_detalhes, pixSettings)) 
+                          ? Number((itemSubtotalBase * (pixPercentage / 100)).toFixed(2)) 
+                          : 0;
                         const itemFinalPrice = Number(Math.max(0, itemSubtotalBase - itemPixDiscount).toFixed(2));
                         const itemPontos = Math.floor(itemFinalPrice);
 
@@ -1787,18 +1789,18 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                               <div className="flex items-center gap-2 text-[10px] text-neutral-500 font-medium">
                                 <span>{item.quantidade}x</span>
                                 <span className="text-amber-700 font-bold">👑 +{itemPontos} pts</span>
-                                {isPix && itemPixDiscount > 0 && (
+                                {isPixDiscountEligible && itemPixDiscount > 0 && (
                                   <span className="text-emerald-700 font-bold bg-emerald-50 px-1 rounded">-{pixPercentage}% PIX</span>
                                 )}
                               </div>
                             </div>
                             <div className="text-right shrink-0">
-                              {isPix && itemPixDiscount > 0 && (
+                              {isPixDiscountEligible && itemPixDiscount > 0 && (
                                 <span className="text-[10px] font-semibold text-neutral-400 line-through block">
                                   {formatCurrency(itemSubtotalBase)}
                                 </span>
                               )}
-                              <span className={`font-black ${isPix && itemPixDiscount > 0 ? 'text-emerald-700' : 'text-neutral-900'}`}>
+                              <span className={`font-black ${isPixDiscountEligible && itemPixDiscount > 0 ? 'text-emerald-700' : 'text-neutral-900'}`}>
                                 {formatCurrency(itemFinalPrice)}
                               </span>
                             </div>
@@ -2053,7 +2055,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                                 </span>
 
                                 {/* Badge de Desconto PIX se for PIX */}
-                                {isPix && itemPixDiscount > 0 && (
+                                {isPixDiscountEligible && itemPixDiscount > 0 && (
                                   <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
                                     <QrCode className="h-3 w-3" />
                                     -{pixPercentage}% no PIX
@@ -2064,7 +2066,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                           </div>
 
                           <div className="text-right sm:shrink-0 flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center">
-                            {isPix && itemPixDiscount > 0 ? (
+                            {isPixDiscountEligible && itemPixDiscount > 0 ? (
                               <>
                                 {/* Preço Cheio Riscado no PIX */}
                                 <span className="text-xs font-semibold text-neutral-400 line-through block">
@@ -2080,7 +2082,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                               </>
                             ) : (
                               <>
-                                {/* Se não for PIX (Cartão, Boleto, etc): Exibe o valor cheio */}
+                                {/* Se não for PIX com desconto (Cartão, Boleto, ou PIX sem desconto): Exibe o valor cheio */}
                                 {hasDiscount && regularPrice * item.quantidade > itemSubtotalBase && (
                                   <span className="text-xs font-semibold text-neutral-400 line-through block">
                                     {formatCurrency(regularPrice * item.quantidade)}
@@ -2141,8 +2143,8 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       </div>
                     )}
 
-                    {/* Desconto Total no PIX (Apenas quando a forma de pagamento for PIX) */}
-                    {isPix && pixDiscountValue > 0 && (
+                    {/* Desconto Total no PIX (Apenas quando a forma de pagamento for PIX com desconto elegível) */}
+                    {isPixDiscountEligible && pixDiscountValue > 0 && (
                       <div className="flex justify-between items-center text-emerald-700 font-black bg-emerald-50/90 border border-emerald-200/80 px-3.5 py-2.5 rounded-xl">
                         <div className="flex items-center gap-2">
                           <QrCode className="h-4 w-4 text-emerald-600" />
@@ -2165,7 +2167,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       <div>
                         <span className="text-base font-black text-neutral-900 block">Total Final a Pagar</span>
                         <span className="text-xs text-neutral-500 font-medium">
-                          {isPix ? 'No PIX com 5% de desconto' : formaPagamento === 'cartao' ? 'No Cartão de Crédito (Valor Cheio)' : 'À vista ou parcelado'}
+                          {isPix ? (isPixDiscountEligible ? `No PIX com ${pixPercentage}% de desconto` : 'No PIX (sem desconto por uso de saldo/pontos)') : formaPagamento === 'cartao' ? 'No Cartão de Crédito (Valor Cheio)' : 'À vista ou parcelado'}
                         </span>
                       </div>
                       <span className="text-3xl font-black text-[#17345f] tracking-tight">
