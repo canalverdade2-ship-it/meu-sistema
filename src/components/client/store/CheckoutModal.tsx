@@ -12,6 +12,8 @@ import type { PromoResult } from '../../../lib/promocaoQuantidadeEngine';
 import { callClientRpc } from '../../../lib/clientRpc';
 import { getProductEffectivePrice, hasActiveProductDiscount, getProductQuantityPriceBreakdown } from '../../../lib/productPricing';
 import { checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
+import { CheckoutPixModal } from './CheckoutPixModal';
+import { createInfinitePayOrderCheckout } from '../../../lib/pixService';
 
 type CartItem = {
   id: string;
@@ -74,17 +76,35 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   const [checkoutMetodoCartaoAtivo, setCheckoutMetodoCartaoAtivo] = useState(true);
   const [checkoutMetodoBoletoAtivo, setCheckoutMetodoBoletoAtivo] = useState(true);
 
+  // Parcelamento Cartão e Modal PIX InfinitePay
+  const [parcelasCartao, setParcelasCartao] = useState(1);
+  const [clienteInfo, setClienteInfo] = useState({ nome: '', email: '', telefone: '' });
+  const [pixModalOpen, setPixModalOpen] = useState(false);
+  const [pixModalData, setPixModalData] = useState<{
+    orderId: string;
+    orderCode: string;
+    total: number;
+    pixCode: string;
+    qrCodeUrl: string;
+    checkoutUrl?: string;
+  } | null>(null);
+
   const fetchDadosCredito = async () => {
     if (!clientId) return;
     try {
       const { data: cliData, error: cliErr } = await supabase
         .from('clientes')
-        .select('limite_credito_total, limite_credito_disponivel, opcao_pagamento_parcelado, max_parcelas, cep, endereco, numero, bairro, cidade, estado, saldo_carteira')
+        .select('id, nome, email, telefone, limite_credito_total, limite_credito_disponivel, opcao_pagamento_parcelado, max_parcelas, cep, endereco, numero, bairro, cidade, estado, saldo_carteira')
         .eq('id', clientId)
         .single();
         
       if (cliErr) throw cliErr;
       if (cliData) {
+        setClienteInfo({
+          nome: cliData.nome || '',
+          email: cliData.email || '',
+          telefone: cliData.telefone || '',
+        });
         setLimiteCreditoTotal(Number(cliData.limite_credito_total || 0));
         setLimiteCreditoDisponivel(Number(cliData.limite_credito_disponivel || 0));
         setSaldoCarteira(Number(cliData.saldo_carteira || 0));
@@ -542,7 +562,21 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
     ? parseFloat((totalHojeSemJuros * (taxaJurosAplicada / 100)).toFixed(2))
     : 0;
 
-  const totalHojeFinal = Number(Math.max(0, totalHojeSemJuros + valorJurosCredito).toFixed(2));
+  // Parcelamento e Juros de Cartão de Crédito (Taxa InfinitePay)
+  const taxaJurosCartaoMensal = 2.99; // % a.m. a partir de 2x (por conta do comprador)
+  const calcularParcelaCartao = (n: number, base: number) => {
+    if (n <= 1) return { parcela: base, total: base, juros: 0, comJuros: false, taxa: 0 };
+    const taxaTotal = Number(((taxaJurosCartaoMensal * n)).toFixed(2));
+    const jurosTotal = parseFloat((base * (taxaTotal / 100)).toFixed(2));
+    const totalComJuros = Number((base + jurosTotal).toFixed(2));
+    const valorParcela = Number((totalComJuros / n).toFixed(2));
+    return { parcela: valorParcela, total: totalComJuros, juros: jurosTotal, comJuros: true, taxa: taxaTotal };
+  };
+
+  const infoParcelaCartao = calcularParcelaCartao(parcelasCartao, totalHojeSemJuros);
+  const valorJurosCartao = formaPagamento === 'cartao' ? infoParcelaCartao.juros : 0;
+
+  const totalHojeFinal = Number(Math.max(0, totalHojeSemJuros + valorJurosCredito + valorJurosCartao).toFixed(2));
   const totalContratoFinal = totalHojeFinal + (subtotalContrato - subtotalInicial);
 
   const isTravelCheckout = cartItems.some((c: CartItem) => c.tipo === ('pacote_viagem' as any));
@@ -896,21 +930,74 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               ...(item.tipo === 'assinatura' ? { prazo_meses: item.prazo_meses || 1 } : {}),
             })),
             forma_pagamento: formaPagamento,
-            // Envia exatamente o que foi descontado na tela (valores já limitados
-            // ao subtotal/saldo atual), evitando debitar mais pontos ou saldo do
-            // que o desconto realmente concedido quando o carrinho muda.
             pontos_usados: usarPontos ? Math.min(pontosAplicados, maxPontosValidos) : 0,
             saldo_carteira_usado: descontoCarteira,
             cupom_desconto_id: cupomDesconto?.id || null,
             cupom_entrega_id: cupomEntrega?.id || null,
             endereco_entrega: enderecoCompleto,
-            parcelas: opcaoPagamentoParcelado ? numParcelas : 1,
+            parcelas: formaPagamento === 'cartao' ? parcelasCartao : opcaoPagamentoParcelado ? numParcelas : 1,
           }
         });
 
+        const orcamentoId = data.orcamento_id;
+        const codigoOrcamento = data.codigo_orcamento || `ODC-${orcamentoId?.slice(0, 8)}`;
+
+        // 1. PIX Instantâneo
+        if (formaPagamento === 'pix') {
+          const checkoutInfo = await createInfinitePayOrderCheckout({
+            orcamentoId: orcamentoId,
+            codigoOrcamento: codigoOrcamento,
+            clienteId: clientId,
+            valorLiquido: totalHojeFinal,
+            clienteNome: clienteInfo.nome,
+            clienteEmail: clienteInfo.email,
+            clienteTelefone: clienteInfo.telefone,
+          });
+
+          setPixModalData({
+            orderId: orcamentoId,
+            orderCode: codigoOrcamento,
+            total: totalHojeFinal,
+            pixCode: checkoutInfo.pixCode || '',
+            qrCodeUrl: checkoutInfo.qrCodeUrl || '',
+            checkoutUrl: checkoutInfo.link,
+          });
+          setPixModalOpen(true);
+          return;
+        }
+
+        // 2. Cartão de Crédito
+        if (formaPagamento === 'cartao') {
+          const checkoutInfo = await createInfinitePayOrderCheckout({
+            orcamentoId: orcamentoId,
+            codigoOrcamento: codigoOrcamento,
+            clienteId: clientId,
+            valorLiquido: totalHojeFinal,
+            clienteNome: clienteInfo.nome,
+            clienteEmail: clienteInfo.email,
+            clienteTelefone: clienteInfo.telefone,
+          });
+
+          toast.success('🎉 Pedido Registrado! Abrindo pagamento seguro do cartão...', { duration: 4000 });
+          checkoutRequestId.current = generateUUID();
+          if (checkoutInfo.link && checkoutInfo.link.startsWith('http')) {
+            window.open(checkoutInfo.link, '_blank');
+          }
+          onSuccess(orcamentoId);
+          return;
+        }
+
+        // 3. Boleto Bancário
+        if (formaPagamento === 'boleto') {
+          toast.success('🎉 Pedido Registrado! Seu boleto bancário está disponível para pagamento.', { duration: 5000 });
+          checkoutRequestId.current = generateUUID();
+          onSuccess(orcamentoId);
+          return;
+        }
+
         toast.success('🎉 Pedido Confirmado com Sucesso!');
         checkoutRequestId.current = generateUUID();
-        onSuccess(data.orcamento_id);
+        onSuccess(orcamentoId);
       }
       
     } catch (e: any) {
@@ -1508,6 +1595,26 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                   </button>
                 </div>
 
+                {formaPagamento === 'cartao' && (
+                  <div className="p-2 bg-neutral-100 rounded-lg space-y-1">
+                    <label className="text-[9px] font-bold text-neutral-500 uppercase block">Parcelas do Cartão</label>
+                    <select
+                      value={parcelasCartao}
+                      onChange={e => setParcelasCartao(parseInt(e.target.value) || 1)}
+                      className="w-full px-2 py-1 bg-white border border-neutral-300 rounded text-[11px] font-bold text-neutral-800"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(p => {
+                        const calc = calcularParcelaCartao(p, totalHojeSemJuros);
+                        return (
+                          <option key={p} value={p}>
+                            {p}x de {formatCurrency(calc.parcela)} {calc.comJuros ? `(Total: ${formatCurrency(calc.total)} c/ juros)` : '(sem juros à vista)'}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+
                 {formaPagamento === 'credito_loja' && opcaoPagamentoParcelado && (
                   <div className="p-2 bg-neutral-100 rounded-lg space-y-1">
                     <label className="text-[9px] font-bold text-neutral-500 uppercase block">Parcelas</label>
@@ -1821,6 +1928,27 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
         }}
         category={selectorCategory}
       />
+
+      {/* Modal de Pagamento PIX Instantâneo (InfinitePay) */}
+      {pixModalData && (
+        <CheckoutPixModal
+          isOpen={pixModalOpen}
+          onClose={() => {
+            setPixModalOpen(false);
+            onSuccess(pixModalData.orderId);
+          }}
+          orderId={pixModalData.orderId}
+          orderCode={pixModalData.orderCode}
+          total={pixModalData.total}
+          pixCode={pixModalData.pixCode}
+          qrCodeUrl={pixModalData.qrCodeUrl}
+          checkoutUrl={pixModalData.checkoutUrl}
+          onPaymentSuccess={(orderId) => {
+            setPixModalOpen(false);
+            onSuccess(orderId);
+          }}
+        />
+      )}
     </Modal>
   );
 }

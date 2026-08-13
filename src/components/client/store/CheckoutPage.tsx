@@ -21,6 +21,8 @@ import { checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
 import { routes } from '../../../routing/routeCatalog';
 import { navigate } from '../../../routing/navigationService';
 import { useSEO } from '../../../hooks/useSEO';
+import { CheckoutPixModal } from './CheckoutPixModal';
+import { createInfinitePayOrderCheckout } from '../../../lib/pixService';
 
 type CartItem = {
   id: string;
@@ -139,6 +141,19 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   const [checkoutMetodoPixAtivo, setCheckoutMetodoPixAtivo] = useState(true);
   const [checkoutMetodoCartaoAtivo, setCheckoutMetodoCartaoAtivo] = useState(true);
   const [checkoutMetodoBoletoAtivo, setCheckoutMetodoBoletoAtivo] = useState(true);
+
+  // Parcelas Cartão de Crédito e Modal PIX InfinitePay
+  const [parcelasCartao, setParcelasCartao] = useState(1);
+  const [clienteInfo, setClienteInfo] = useState({ nome: '', email: '', telefone: '' });
+  const [pixModalOpen, setPixModalOpen] = useState(false);
+  const [pixModalData, setPixModalData] = useState<{
+    orderId: string;
+    orderCode: string;
+    total: number;
+    pixCode: string;
+    qrCodeUrl: string;
+    checkoutUrl?: string;
+  } | null>(null);
 
   // Submissão
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -289,11 +304,16 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
       if (clientId) {
         const { data: cliData, error: cliErr } = await supabase
           .from('clientes')
-          .select('limite_credito_total, limite_credito_disponivel, opcao_pagamento_parcelado, max_parcelas, cep, endereco, numero, bairro, cidade, estado, saldo_carteira, saldo_pontos')
+          .select('id, nome, email, telefone, limite_credito_total, limite_credito_disponivel, opcao_pagamento_parcelado, max_parcelas, cep, endereco, numero, bairro, cidade, estado, saldo_carteira, saldo_pontos')
           .eq('id', clientId)
           .single();
           
         if (!cliErr && cliData) {
+          setClienteInfo({
+            nome: cliData.nome || '',
+            email: cliData.email || '',
+            telefone: cliData.telefone || '',
+          });
           setLimiteCreditoTotal(Number(cliData.limite_credito_total || 0));
           setLimiteCreditoDisponivel(Number(cliData.limite_credito_disponivel || 0));
           setSaldoCarteira(Number(cliData.saldo_carteira || 0));
@@ -832,7 +852,21 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     ? parseFloat((totalHojeSemJuros * (taxaJurosAplicada / 100)).toFixed(2))
     : 0;
 
-  const totalHojeFinal = Number(Math.max(0, totalHojeSemJuros + valorJurosCredito).toFixed(2));
+  // Parcelamento e Juros de Cartão de Crédito (Taxa InfinitePay)
+  const taxaJurosCartaoMensal = 2.99; // % a.m. a partir de 2x (por conta do comprador)
+  const calcularParcelaCartao = (n: number, base: number) => {
+    if (n <= 1) return { parcela: base, total: base, juros: 0, comJuros: false, taxa: 0 };
+    const taxaTotal = Number(((taxaJurosCartaoMensal * n)).toFixed(2));
+    const jurosTotal = parseFloat((base * (taxaTotal / 100)).toFixed(2));
+    const totalComJuros = Number((base + jurosTotal).toFixed(2));
+    const valorParcela = Number((totalComJuros / n).toFixed(2));
+    return { parcela: valorParcela, total: totalComJuros, juros: jurosTotal, comJuros: true, taxa: taxaTotal };
+  };
+
+  const infoParcelaCartao = calcularParcelaCartao(parcelasCartao, totalHojeSemJuros);
+  const valorJurosCartao = formaPagamento === 'cartao' ? infoParcelaCartao.juros : 0;
+
+  const totalHojeFinal = Number(Math.max(0, totalHojeSemJuros + valorJurosCredito + valorJurosCartao).toFixed(2));
   const totalPontosGanhos = Math.floor(totalHojeFinal);
 
   // Revalidação de Cupons
@@ -994,10 +1028,74 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
           cupom_desconto_id: cupomDesconto?.id || null,
           cupom_entrega_id: cupomEntrega?.id || null,
           endereco_entrega: enderecoCompleto,
-          parcelas: opcaoPagamentoParcelado ? numParcelas : 1,
+          parcelas: formaPagamento === 'cartao' ? parcelasCartao : opcaoPagamentoParcelado ? numParcelas : 1,
         }
       });
 
+      const orcamentoId = data.orcamento_id;
+      const codigoOrcamento = data.codigo_orcamento || `ODC-${orcamentoId?.slice(0, 8)}`;
+
+      // 1. Se for PIX Instantâneo: Abre o Modal integrado na tela com QR Code e Copia e Cola
+      if (formaPagamento === 'pix') {
+        const checkoutInfo = await createInfinitePayOrderCheckout({
+          orcamentoId: orcamentoId,
+          codigoOrcamento: codigoOrcamento,
+          clienteId: clientId,
+          valorLiquido: totalHojeFinal,
+          clienteNome: clienteInfo.nome,
+          clienteEmail: clienteInfo.email,
+          clienteTelefone: clienteInfo.telefone,
+        });
+
+        setPixModalData({
+          orderId: orcamentoId,
+          orderCode: codigoOrcamento,
+          total: totalHojeFinal,
+          pixCode: checkoutInfo.pixCode || '',
+          qrCodeUrl: checkoutInfo.qrCodeUrl || '',
+          checkoutUrl: checkoutInfo.link,
+        });
+        setPixModalOpen(true);
+        return;
+      }
+
+      // 2. Se for Cartão de Crédito
+      if (formaPagamento === 'cartao') {
+        const checkoutInfo = await createInfinitePayOrderCheckout({
+          orcamentoId: orcamentoId,
+          codigoOrcamento: codigoOrcamento,
+          clienteId: clientId,
+          valorLiquido: totalHojeFinal,
+          clienteNome: clienteInfo.nome,
+          clienteEmail: clienteInfo.email,
+          clienteTelefone: clienteInfo.telefone,
+        });
+
+        toast.success('🎉 Pedido Registrado! Abrindo pagamento seguro do cartão...', { duration: 4000 });
+        checkoutRequestId.current = generateUUID();
+        localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+        localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
+        window.dispatchEvent(new CustomEvent('gsa-cart-updated'));
+
+        if (checkoutInfo.link && checkoutInfo.link.startsWith('http')) {
+          window.open(checkoutInfo.link, '_blank');
+        }
+        navigate(routes.marketplace.store.compras() + `?orderId=${orcamentoId}`);
+        return;
+      }
+
+      // 3. Se for Boleto Bancário
+      if (formaPagamento === 'boleto') {
+        toast.success('🎉 Pedido Registrado! Seu boleto bancário está disponível para pagamento.', { duration: 5000 });
+        checkoutRequestId.current = generateUUID();
+        localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+        localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
+        window.dispatchEvent(new CustomEvent('gsa-cart-updated'));
+        navigate(routes.marketplace.store.compras() + `?orderId=${orcamentoId}`);
+        return;
+      }
+
+      // 4. Crédito GSA Store ou Outros
       toast.success('🎉 Pedido Confirmado com Sucesso!');
       checkoutRequestId.current = generateUUID();
 
@@ -1005,7 +1103,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
       localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
       window.dispatchEvent(new CustomEvent('gsa-cart-updated'));
 
-      navigate(routes.marketplace.store.orderSuccess(data.orcamento_id));
+      navigate(routes.marketplace.store.compras() + `?orderId=${orcamentoId}`);
     } catch (e: any) {
       console.error('[CheckoutPage] Erro no RPC:', e);
       const raw = String(e?.message || '');
@@ -1682,11 +1780,34 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                               }`}>
                                 {formaPagamento === 'cartao' && <div className="h-2 w-2 rounded-full bg-white" />}
                               </div>
-                              <div className="flex-1 space-y-1">
+                              <div className="flex-1 space-y-2 min-w-0">
                                 <span className="text-xs font-black text-neutral-900 uppercase block">Cartão de Crédito</span>
                                 <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
-                                  Valor cheio sem desconto, parcele em até 12x.
+                                  Pague online com segurança em até 12x via InfinitePay.
                                 </p>
+
+                                {formaPagamento === 'cartao' && (
+                                  <div className="pt-2 border-t border-blue-200/60 flex flex-col gap-1.5" onClick={e => e.stopPropagation()}>
+                                    <label className="text-[11px] font-bold text-neutral-700">Quantidade de Parcelas:</label>
+                                    <select
+                                      value={parcelasCartao}
+                                      onChange={e => setParcelasCartao(parseInt(e.target.value) || 1)}
+                                      className="w-full px-2.5 py-2 bg-white border border-blue-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#17345f]"
+                                    >
+                                      {Array.from({ length: 12 }, (_, i) => i + 1).map(p => {
+                                        const calc = calcularParcelaCartao(p, totalHojeSemJuros);
+                                        return (
+                                          <option key={p} value={p}>
+                                            {p}x de {formatCurrency(calc.parcela)} {calc.comJuros ? `(Total: ${formatCurrency(calc.total)} c/ juros)` : '(sem juros à vista)'}
+                                          </option>
+                                        );
+                                      })}
+                                    </select>
+                                    <p className="text-[10px] text-neutral-500">
+                                      * Parcelamento com juros por conta do comprador calculados pela InfinitePay.
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )}
@@ -2282,6 +2403,14 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       </div>
                     )}
 
+                    {/* Juros de Parcelamento do Cartão de Crédito */}
+                    {formaPagamento === 'cartao' && valorJurosCartao > 0 && (
+                      <div className="flex justify-between text-blue-700 font-bold">
+                        <span>Juros de Parcelamento Cartão ({infoParcelaCartao.taxa}%)</span>
+                        <span>+ {formatCurrency(valorJurosCartao)}</span>
+                      </div>
+                    )}
+
                     {/* Juros de Crédito GSA se for Crédito GSA Parcelado */}
                     {formaPagamento === 'credito_loja' && valorJurosCredito > 0 && (
                       <div className="flex justify-between text-indigo-700 font-bold">
@@ -2295,7 +2424,11 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                       <div>
                         <span className="text-base font-black text-neutral-900 block">Total Final a Pagar</span>
                         <span className="text-xs text-neutral-500 font-medium">
-                          {isPix ? (isPixDiscountEligible ? `No PIX com ${pixPercentage}% de desconto` : 'No PIX (sem desconto por uso de saldo/pontos)') : formaPagamento === 'cartao' ? 'No Cartão de Crédito (Valor Cheio)' : 'À vista ou parcelado'}
+                          {isPix 
+                            ? (isPixDiscountEligible ? `No PIX com ${pixPercentage}% de desconto` : 'No PIX (sem desconto por uso de saldo/pontos)') 
+                            : formaPagamento === 'cartao' 
+                            ? `No Cartão de Crédito (${parcelasCartao}x de ${formatCurrency(infoParcelaCartao.parcela)})` 
+                            : 'À vista ou parcelado'}
                         </span>
                       </div>
                       <span className="text-3xl font-black text-[#17345f] tracking-tight">
@@ -2485,6 +2618,33 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
           setIsSelectorOpen(false);
         }}
       />
+
+      {/* Modal de Pagamento PIX Instantâneo (InfinitePay) */}
+      {pixModalData && (
+        <CheckoutPixModal
+          isOpen={pixModalOpen}
+          onClose={() => {
+            setPixModalOpen(false);
+            localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+            localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
+            window.dispatchEvent(new CustomEvent('gsa-cart-updated'));
+            navigate(routes.marketplace.store.compras() + `?orderId=${pixModalData.orderId}`);
+          }}
+          orderId={pixModalData.orderId}
+          orderCode={pixModalData.orderCode}
+          total={pixModalData.total}
+          pixCode={pixModalData.pixCode}
+          qrCodeUrl={pixModalData.qrCodeUrl}
+          checkoutUrl={pixModalData.checkoutUrl}
+          onPaymentSuccess={(orderId) => {
+            setPixModalOpen(false);
+            localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
+            localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
+            window.dispatchEvent(new CustomEvent('gsa-cart-updated'));
+            navigate(routes.marketplace.store.compras() + `?orderId=${orderId}`);
+          }}
+        />
+      )}
     </div>
   );
 }

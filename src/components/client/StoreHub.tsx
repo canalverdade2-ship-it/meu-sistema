@@ -683,8 +683,22 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
     if (initialTab === 'acompanhar') {
       setIsTrocaModalOpen(true);
       setExchangeActiveTab('acompanhar');
+    } else if (initialTab === 'compras' || route.query.orderId || route.submodule === 'loja-compras') {
+      setIsPurchasesModalOpen(true);
+      fetchAllPurchases();
     }
-  }, [initialTab]);
+  }, [initialTab, route.query.orderId, route.submodule]);
+
+  // Se vier com orderId na URL, abre automaticamente o modal com os detalhes daquela compra
+  useEffect(() => {
+    const targetOrderId = route.query.orderId || initialItemId;
+    if (targetOrderId && allPurchases.length > 0 && !selectedOrderDetail) {
+      const match = allPurchases.find(p => p.id === targetOrderId || p.codigo_orcamento === targetOrderId);
+      if (match) {
+        setSelectedOrderDetail(match);
+      }
+    }
+  }, [route.query.orderId, initialItemId, allPurchases, selectedOrderDetail]);
 
   useEffect(() => {
     if (selectedOrderDetail) {
