@@ -17,8 +17,8 @@ export function WhatsAppButton() {
     tooltip: 'Falar no WhatsApp'
   });
 
-  // Quando true, o botão sobe para o topo (evitar sobreposição em modais de pagamento/loja)
   const [movedToTop, setMovedToTop] = useState(false);
+  const [isCheckoutMobile, setIsCheckoutMobile] = useState(false);
 
   const fetchSettings = async () => {
     try {
@@ -49,20 +49,31 @@ export function WhatsAppButton() {
       })
       .subscribe();
 
-    // Escuta o evento global emitido por modais críticos (pagamento, loja, etc.)
     const handleModalState = (e: Event) => {
       const { open } = (e as CustomEvent).detail;
       setMovedToTop(open);
     };
     window.addEventListener('whatsapp-modal-state', handleModalState);
 
+    const checkCheckoutMobile = () => {
+      const isCheckout = typeof window !== 'undefined' && window.location.pathname.includes('/checkout');
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+      setIsCheckoutMobile(isCheckout && isMobile);
+    };
+
+    checkCheckoutMobile();
+    window.addEventListener('resize', checkCheckoutMobile);
+    window.addEventListener('popstate', checkCheckoutMobile);
+
     return () => {
       supabase.removeChannel(channel);
       window.removeEventListener('whatsapp-modal-state', handleModalState);
+      window.removeEventListener('resize', checkCheckoutMobile);
+      window.removeEventListener('popstate', checkCheckoutMobile);
     };
   }, []);
 
-  if (!settings.ativo || movedToTop) return null;
+  if (!settings.ativo || movedToTop || isCheckoutMobile) return null;
 
   // Cleanup phone
   const cleanPhone = settings.telefone.replace(/\D/g, '');

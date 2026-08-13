@@ -5,13 +5,14 @@ import {
   ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Coins, CreditCard, 
   Wallet, Gift, Diamond, ShieldCheck, Lock, QrCode, FileText, 
   Building, RefreshCw, CheckCircle2, Plus, Minus, Sparkles, ExternalLink,
-  Truck, Edit3
+  Truck, Edit3, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { getProductDisplayCode } from '../../../lib/productIdentification';
 import { formatCurrency, generateUUID } from '../../../lib/utils';
 import { toast } from 'react-hot-toast';
 import AvailableCouponsModal from './AvailableCouponsModal';
+import { notifyWhatsAppModal } from '../../ui/WhatsAppButton';
 import type { CupomLoja, Produto, Servico, Assinatura } from '../../../types';
 import { PromoResult, avaliarPromocoes } from '../../../lib/promocaoQuantidadeEngine';
 import { callClientRpc } from '../../../lib/clientRpc';
@@ -56,6 +57,24 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   const [promosAplicadas, setPromosAplicadas] = useState<PromoResult[]>([]);
   const [promocoesAtivas, setPromocoesAtivas] = useState<any[]>([]);
   const [promosAtivadasIds, setPromosAtivadasIds] = useState<Set<string>>(new Set());
+
+  // Controle de exibição no mobile para não poluir tela
+  const [expandMobileItems, setExpandMobileItems] = useState(false);
+
+  // Ocultar WhatsApp flutuante no mobile durante o checkout
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window !== 'undefined') {
+        notifyWhatsAppModal(window.innerWidth < 1024);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      notifyWhatsAppModal(false);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Etapas:
   // 1 = Endereço & Cupons da Loja
@@ -1084,19 +1103,19 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                   onClick={() => setEtapaCheckout(1)}
                   className="relative z-10 flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
                 >
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all shadow-xs ${
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center font-black text-xs sm:text-sm transition-all shadow-xs ${
                     etapaCheckout > 1 
                       ? 'bg-emerald-600 text-white' 
                       : etapaCheckout === 1 
                         ? 'bg-[#17345f] text-white ring-4 ring-[#17345f]/15' 
                         : 'bg-white text-neutral-400 border border-neutral-200'
                   }`}>
-                    {etapaCheckout > 1 ? <Check className="w-5 h-5" /> : <MapPin className="w-5 h-5" />}
+                    {etapaCheckout > 1 ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </div>
-                  <span className={`text-xs font-extrabold uppercase tracking-wider ${
+                  <span className={`text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-center ${
                     etapaCheckout === 1 ? 'text-[#17345f]' : etapaCheckout > 1 ? 'text-emerald-700' : 'text-neutral-400'
                   }`}>
-                    1. Endereço & Cupons
+                    1. Endereço <span className="hidden sm:inline">& Cupons</span>
                   </span>
                 </button>
 
@@ -1112,19 +1131,19 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                   }}
                   className="relative z-10 flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
                 >
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all shadow-xs ${
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center font-black text-xs sm:text-sm transition-all shadow-xs ${
                     etapaCheckout > 2 
                       ? 'bg-emerald-600 text-white' 
                       : etapaCheckout === 2 
                         ? 'bg-[#17345f] text-white ring-4 ring-[#17345f]/15' 
                         : 'bg-white text-neutral-400 border border-neutral-200'
                   }`}>
-                    {etapaCheckout > 2 ? <Check className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                    {etapaCheckout > 2 ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </div>
-                  <span className={`text-xs font-extrabold uppercase tracking-wider ${
+                  <span className={`text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-center ${
                     etapaCheckout === 2 ? 'text-[#17345f]' : etapaCheckout > 2 ? 'text-emerald-700' : 'text-neutral-400'
                   }`}>
-                    2. Benefícios & Pagamento
+                    2. Pagamento <span className="hidden sm:inline">& Benefícios</span>
                   </span>
                 </button>
 
@@ -1140,17 +1159,17 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                   }}
                   className="relative z-10 flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
                 >
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm transition-all shadow-xs ${
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center font-black text-xs sm:text-sm transition-all shadow-xs ${
                     etapaCheckout === 3 
                       ? 'bg-[#17345f] text-white ring-4 ring-[#17345f]/15' 
                       : 'bg-white text-neutral-400 border border-neutral-200'
                   }`}>
-                    <FileText className="w-5 h-5" />
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <span className={`text-xs font-extrabold uppercase tracking-wider ${
+                  <span className={`text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-center ${
                     etapaCheckout === 3 ? 'text-[#17345f]' : 'text-neutral-400'
                   }`}>
-                    3. Resumo do Pedido
+                    3. Resumo <span className="hidden sm:inline">do Pedido</span>
                   </span>
                 </button>
               </div>
@@ -1768,7 +1787,104 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
 
                 {/* Coluna da Direita: Preview Rápido nas Etapas 1 e 2 */}
                 <div className="lg:col-span-5">
-                  <div className="sticky top-24 rounded-3xl border border-neutral-200/90 bg-white p-6 shadow-sm space-y-4">
+                  {/* Versão Mobile Ultracompacta (Para não ter que descer a tela no celular) */}
+                  <div className="block lg:hidden rounded-2xl border border-neutral-200/90 bg-white p-4 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="h-4 w-4 text-[#17345f]" />
+                        <div>
+                          <span className="text-xs font-black uppercase tracking-wider text-neutral-900 block">
+                            Resumo Rápido
+                          </span>
+                          <span className="text-[11px] text-neutral-500 font-medium">
+                            {cartItems.length} {cartItems.length === 1 ? 'item' : 'itens'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-black text-[#17345f]">
+                          {formatCurrency(totalHojeFinal)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setExpandMobileItems(!expandMobileItems)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[11px] font-bold transition-colors cursor-pointer"
+                          title={expandMobileItems ? 'Recolher detalhes' : 'Ver detalhes dos itens'}
+                        >
+                          <span>{expandMobileItems ? 'Ocultar' : 'Ver itens'}</span>
+                          {expandMobileItems ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Lista retrátil de itens apenas se o usuário quiser expandir */}
+                    {expandMobileItems && (
+                      <div className="pt-2 border-t border-neutral-100 max-h-48 overflow-y-auto divide-y divide-neutral-100 text-xs space-y-2 animate-in fade-in duration-200">
+                        {cartItems.map((item) => {
+                          const isProduct = item.tipo === 'produto';
+                          const regularPrice = item.item_detalhes?.valor || 0;
+                          const basePrice = isProduct ? (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) : regularPrice;
+                          const itemSubtotalBase = basePrice * item.quantidade;
+                          const itemPixDiscount = (isPixDiscountEligible && isProduct && checkPixDiscountApplies(item.item_detalhes, pixSettings)) 
+                            ? Number((itemSubtotalBase * (pixPercentage / 100)).toFixed(2)) 
+                            : 0;
+                          const itemFinalPrice = Number(Math.max(0, itemSubtotalBase - itemPixDiscount).toFixed(2));
+
+                          return (
+                            <div key={item.id} className="pt-2 first:pt-0 flex items-center justify-between gap-2">
+                              <span className="truncate flex-1 font-medium text-neutral-800">
+                                {item.quantidade}x {item.item_detalhes?.nome || 'Item'}
+                              </span>
+                              <span className="font-bold text-neutral-900 shrink-0">
+                                {formatCurrency(itemFinalPrice)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Linhas Financeiras Condensadas no Mobile */}
+                    <div className="pt-2 border-t border-neutral-100 space-y-1.5 text-xs text-neutral-600">
+                      <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span className="font-bold text-neutral-900">{formatCurrency(subtotalInicial)}</span>
+                      </div>
+                      {(descontoPromocoes > 0 || descontoPontos > 0 || descontoCalculado > 0 || descontoCarteira > 0 || (isPix && pixDiscountValue > 0)) && (
+                        <div className="flex justify-between text-emerald-600 font-bold">
+                          <span>Descontos / Benefícios</span>
+                          <span>- {formatCurrency(descontoPromocoes + descontoPontos + descontoCalculado + descontoCarteira + (isPix ? pixDiscountValue : 0))}</span>
+                        </div>
+                      )}
+                      {temProdutos && (
+                        <div className="flex justify-between">
+                          <span>Frete</span>
+                          <span className={taxaEntregaFinal === 0 ? 'text-emerald-700 font-bold' : 'font-bold text-neutral-900'}>
+                            {taxaEntregaFinal === 0 ? 'Grátis' : formatCurrency(taxaEntregaFinal)}
+                          </span>
+                        </div>
+                      )}
+                      {formaPagamento === 'credito_loja' && valorJurosCredito > 0 && (
+                        <div className="flex justify-between text-indigo-700 font-bold">
+                          <span>Juros Crédito GSA</span>
+                          <span>+ {formatCurrency(valorJurosCredito)}</span>
+                        </div>
+                      )}
+                      <div className="pt-1.5 border-t border-neutral-200 flex justify-between items-baseline">
+                        <span className="font-black text-neutral-800 uppercase tracking-wider text-xs">Total Previsto:</span>
+                        <span className="text-lg font-black text-[#17345f]">{formatCurrency(totalHojeFinal)}</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-amber-50 p-2 text-center text-[11px] font-black text-amber-800 border border-amber-200/80 flex items-center justify-center gap-1">
+                      <Coins className="h-3.5 w-3.5 text-amber-600" />
+                      <span>+{totalPontosGanhos} pts VIP a ganhar</span>
+                    </div>
+                  </div>
+
+                  {/* Versão Desktop Completa (Fixa na lateral direita) */}
+                  <div className="hidden lg:block sticky top-24 rounded-3xl border border-neutral-200/90 bg-white p-6 shadow-sm space-y-4">
                     <div className="flex items-center justify-between border-b border-neutral-100 pb-3.5">
                       <div className="flex items-center gap-2">
                         <ShoppingBag className="h-4 w-4 text-[#17345f]" />
