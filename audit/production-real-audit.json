@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-08-13T16:02:59.200Z",
+  "generated_at": "2026-08-13T16:16:18.435Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
-  "scanned_files": 409,
+  "scanned_files": 416,
   "blocker_count": 0,
-  "review_count": 28,
+  "review_count": 26,
   "blockers": [],
   "review": [
     {
@@ -14,7 +14,7 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
-      "line": 201,
+      "line": 202,
       "excerpt": "const motivo = prompt('Informe o motivo da recusa:');"
     },
     {
@@ -22,7 +22,7 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
-      "line": 397,
+      "line": 403,
       "excerpt": "const motivo = prompt('Motivo para recusar a contraproposta do prestador:');"
     },
     {
@@ -30,7 +30,7 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
-      "line": 442,
+      "line": 448,
       "excerpt": "const motivo = prompt('Por que deseja cancelar esta demanda?');"
     },
     {
@@ -39,14 +39,6 @@
       "description": "Referência a demonstração em código executável",
       "file": "src/components/client/store/BlogHome.tsx",
       "line": 32,
-      "excerpt": "// Se estiver vazio, exibe alguns mockados temporariamente só para demonstração até N8N popular"
-    },
-    {
-      "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/components/client/store/BlogHome.tsx",
-      "line": 36,
       "excerpt": "id: 'demo-1',"
     },
     {
@@ -56,14 +48,6 @@
       "file": "src/components/client/store/BlogPostPage.tsx",
       "line": 28,
       "excerpt": "} else if (postId.startsWith('demo-')) {"
-    },
-    {
-      "severity": "review",
-      "rule": "mock-reference",
-      "description": "Referência a mock em código executável",
-      "file": "src/components/client/store/WishlistPage.tsx",
-      "line": 14,
-      "excerpt": "// MOCK: Na falta de uma tabela `wishlist`, vamos simular buscando produtos aleatórios"
     },
     {
       "severity": "review",
