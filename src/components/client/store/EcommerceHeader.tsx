@@ -368,6 +368,9 @@ export function EcommerceHeader({
             </div>
             
             <div className="flex items-center gap-5 font-semibold text-xs text-white/80">
+              <button onClick={() => navigate(routes.marketplace.store.compras())} className="hover:text-[#d8bd73] transition-colors">
+                Minhas Compras
+              </button>
               <button onClick={() => navigate(routes.marketplace.store.products() + '?filtro=ofertas')} className="hover:text-[#d8bd73] transition-colors">
                 Ofertas do Dia
               </button>
@@ -591,10 +594,10 @@ export function EcommerceHeader({
                   )}
                 </div>
 
-                {/* Minha Conta */}
+                {/* Minha Conta -> Leva para a Central GSA Store Hub */}
                 <div 
                   className="flex items-center gap-2.5 cursor-pointer text-white hover:text-[#d8bd73] transition-colors p-1.5 rounded-xl hover:bg-white/10"
-                  onClick={() => navigate(routes.client.dashboard())}
+                  onClick={() => navigate(routes.marketplace.store.root())}
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white">
                     <User className="h-4 w-4" />
@@ -791,6 +794,20 @@ export function EcommerceHeader({
         {isMobileMenuOpen && (
           <div className="absolute left-0 top-[116px] z-50 w-full bg-white shadow-2xl lg:hidden border-t border-slate-200">
             <ul className="flex flex-col py-2 divide-y divide-slate-100">
+              {clientId && (
+                <li>
+                  <button
+                    onClick={() => {
+                      navigate(routes.marketplace.store.compras());
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 w-full px-5 py-3 text-left text-sm font-black text-[#17345f] bg-[#17345f]/5 hover:bg-[#17345f]/10"
+                  >
+                    <Package size={16} className="text-[#17345f]" />
+                    Minhas Compras & Pedidos
+                  </button>
+                </li>
+              )}
               {departments.map((dept, idx) => (
                 <li key={idx}>
                   <button

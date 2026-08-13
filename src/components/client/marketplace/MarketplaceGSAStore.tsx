@@ -3,6 +3,7 @@ import { EcommerceHome } from '../store/EcommerceHome';
 import { ProductPage } from '../store/ProductPage';
 import { OrderSuccessPage } from '../store/OrderSuccessPage';
 import { CheckoutPage } from '../store/CheckoutPage';
+import { PurchasesPage } from '../store/PurchasesPage';
 import { WishlistPage } from '../store/WishlistPage';
 import { StoreHub } from '../StoreHub';
 import { ClientGSAStore } from '../ClientGSAStore';
@@ -342,6 +343,17 @@ export function MarketplaceGSAStore({
     // Se for rota de pedido confirmado
     if (currentSubmodule === 'loja-pedido-confirmado') {
       return <OrderSuccessPage />;
+    }
+
+    // Se for rota de compras da loja (Página Completa e Dedicada de Minhas Compras)
+    if (currentSubmodule === 'loja-compras') {
+      return (
+        <PurchasesPage 
+          clientId={clientId}
+          onRequireAuth={onRequireAuth}
+          initialOrderId={route.itemId || (route.query?.orderId as string)}
+        />
+      );
     }
 
     // Se for rota de wishlist

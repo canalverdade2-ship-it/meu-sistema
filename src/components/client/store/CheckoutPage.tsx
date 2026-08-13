@@ -1102,16 +1102,23 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
           clienteTelefone: clienteInfo.telefone,
         });
 
-        toast.success('🎉 Pedido Registrado! Abrindo pagamento seguro do cartão...', { duration: 4000 });
         checkoutRequestId.current = generateUUID();
         localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
         localStorage.removeItem(PENDING_STORE_COUPONS_KEY);
         window.dispatchEvent(new CustomEvent('gsa-cart-updated'));
 
         if (checkoutInfo.link && checkoutInfo.link.startsWith('http')) {
-          window.open(checkoutInfo.link, '_blank');
+          // Abre o checkout InfinitePay na mesma aba.
+          // Após o pagamento, a InfinitePay redireciona para redirect_url (/compras?orderId=...)
+          toast.success('🎉 Pedido Registrado! Redirecionando para o pagamento...', { duration: 3000 });
+          setTimeout(() => {
+            window.location.href = checkoutInfo.link!;
+          }, 1000);
+        } else {
+          // Sem link gerado, vai direto para acompanhar o pedido
+          toast.success('🎉 Pedido registrado! Acompanhe o status do seu pedido.', { duration: 4000 });
+          navigate(routes.marketplace.store.compras() + `?orderId=${orcamentoId}`);
         }
-        navigate(routes.marketplace.store.compras() + `?orderId=${orcamentoId}`);
         return;
       }
 

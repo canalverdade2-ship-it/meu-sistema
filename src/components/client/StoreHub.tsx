@@ -1306,7 +1306,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
       accentColor: '#4f46e5',
       visible: true,
       badge: null,
-      onClick: () => navigate(routes.marketplace.store.products()),
+      onClick: () => navigate(routes.marketplace.root()),
     },
     {
       id: 'compras',
