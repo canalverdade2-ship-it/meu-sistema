@@ -140,29 +140,44 @@ export async function createInfinitePayOrderCheckout({
 
     const qrCodeUrl = getQrCodeImageUrl(pixCode, 320);
 
-    // 2. Chamar a Edge Function de pagamentos da InfinitePay para sincronizar a transação
+    // 2. Chamar a API pública oficial da InfinitePay para gerar o link com token dinâmico
+    const valorEmCentavos = Math.round(valorLiquido * 100);
     const orderNsu = `${codigoOrcamento}-${Date.now()}`;
-    let checkoutLink = `https://checkout.infinitepay.io/getsemani-gsa`;
+    let checkoutLink = '';
 
     try {
-      const { data, error } = await supabase.functions.invoke('gsa-payments', {
-        body: {
-          action: 'create_order_checkout',
-          orcamento_id: orcamentoId,
-          codigo_orcamento: codigoOrcamento,
-          cliente_id: clienteId,
-          valor_liquido: valorLiquido,
-          customer_name: clienteNome,
-          customer_email: clienteEmail,
-          customer_phone: clienteTelefone,
-        },
+      const redirectBase = typeof window !== 'undefined' ? window.location.origin : 'https://sistema.grupogsaservicos.com.br';
+      const ipPayload: any = {
+        handle: 'getsemani-gsa',
+        items: [{
+          quantity: 1,
+          price: valorEmCentavos,
+          description: `Pedido ${codigoOrcamento} - Grupo GSA`,
+        }],
+        order_nsu: orderNsu,
+        redirect_url: `${redirectBase}/marketplace/loja/compras?orderId=${orcamentoId}`,
+      };
+
+      if (clienteNome) {
+        ipPayload.customer = {
+          name: clienteNome,
+          email: clienteEmail || undefined,
+          phone_number: clienteTelefone ? `+55${clienteTelefone.replace(/\D/g, '')}` : undefined,
+        };
+      }
+
+      const resp = await fetch('https://api.checkout.infinitepay.io/links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ipPayload),
       });
 
-      if (!error && data?.link) {
-        checkoutLink = data.link;
+      if (resp.ok) {
+        const ipData = await resp.json();
+        checkoutLink = ipData.url || ipData.link || ipData.payment_url || '';
       }
-    } catch (edgeErr) {
-      console.warn('[pixService] Edge function gsa-payments fallback:', edgeErr);
+    } catch (apiErr) {
+      console.warn('[pixService] Aviso ao gerar link dinâmico InfinitePay:', apiErr);
     }
 
     return {
