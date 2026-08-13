@@ -673,7 +673,22 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     ? taxaEntregaFixa 
     : (cupomEntrega?.tipo_entrega === 'taxa_fixa' ? (cupomEntrega.taxa_fixa_entrega || 0) : 0);
 
-  const totalAntesCarteira = Number(Math.max(subtotalComPromos - descontoPontos - descontoCalculado + taxaEntregaFinal, 0).toFixed(2));
+  // Desconto PIX Geral (incide sobre os produtos do carrinho quando PIX for selecionado)
+  const eligiblePixSubtotal = cartItems.reduce((acc: number, item: any) => {
+    if (item.tipo === 'produto') {
+      const unitVal = (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) || (item.item_detalhes?.valor || 0);
+      return acc + (unitVal * item.quantidade);
+    }
+    return acc;
+  }, 0);
+
+  const baseCalculoPix = Math.max(0, eligiblePixSubtotal - (descontoCalculado || 0));
+  const pixDiscountValue = isPix
+    ? parseFloat((baseCalculoPix * (pixPercentage / 100)).toFixed(2))
+    : 0;
+
+  // Total Líquido antes de abater o saldo da carteira (já considerando cupons, pontos, frete e desconto PIX)
+  const totalAntesCarteira = Number(Math.max(0, subtotalComPromos - descontoPontos - descontoCalculado - pixDiscountValue + taxaEntregaFinal).toFixed(2));
 
   // Carteira Virtual
   const saldoCarteiraUtilizavel = Math.max(0, saldoCarteira);
@@ -707,7 +722,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     setSaldoCarteiraAplicado((prev) => (prev > maxSaldoValido ? maxSaldoValido : prev));
   }, [maxSaldoValido]);
 
-  const totalHoje = Number(Math.max(totalAntesCarteira - descontoCarteira, 0).toFixed(2));
+  const totalHojeSemJuros = Number(Math.max(0, totalAntesCarteira - descontoCarteira).toFixed(2));
   
   // Juros de Crédito GSA
   const calcularTaxaJuros = (parcelas: number) =>
@@ -717,25 +732,10 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     ? calcularTaxaJuros(numParcelas)
     : 0;
   const valorJurosCredito = formaPagamento === 'credito_loja'
-    ? parseFloat((totalHoje * (taxaJurosAplicada / 100)).toFixed(2))
-    : 0;
-    
-  // Desconto PIX Geral (aplicável sobre produtos físicos elegíveis ou subtotal da compra)
-  const eligiblePixSubtotal = cartItems.reduce((acc: number, item: any) => {
-    if (item.tipo === 'produto') {
-      const unitVal = (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) || (item.item_detalhes?.valor || 0);
-      return acc + (unitVal * item.quantidade);
-    }
-    return acc;
-  }, 0);
-
-  const maxPixDiscountBase = Math.min(eligiblePixSubtotal, totalHoje);
-
-  const pixDiscountValue = isPix
-    ? parseFloat((maxPixDiscountBase * (pixPercentage / 100)).toFixed(2))
+    ? parseFloat((totalHojeSemJuros * (taxaJurosAplicada / 100)).toFixed(2))
     : 0;
 
-  const totalHojeFinal = Number(Math.max(0, totalHoje + valorJurosCredito - pixDiscountValue).toFixed(2));
+  const totalHojeFinal = Number(Math.max(0, totalHojeSemJuros + valorJurosCredito).toFixed(2));
   const totalPontosGanhos = Math.floor(totalHojeFinal);
 
   // Revalidação de Cupons
