@@ -1698,7 +1698,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                           {solicitacaoAtivaId && limiteCreditoDisponivel > 0 && (
                             <div 
                               onClick={() => setFormaPagamento('credito_loja')}
-                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer sm:col-span-2 ${
+                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                                 formaPagamento === 'credito_loja' 
                                   ? 'border-indigo-600 bg-indigo-50/50 shadow-xs ring-2 ring-indigo-600/10' 
                                   : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
@@ -1709,22 +1709,22 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                               }`}>
                                 {formaPagamento === 'credito_loja' && <div className="h-2 w-2 rounded-full bg-white" />}
                               </div>
-                              <div className="flex-1 space-y-2">
-                                <div className="flex items-center justify-between">
+                              <div className="flex-1 space-y-2 min-w-0">
+                                <div className="flex flex-wrap items-center justify-between gap-1">
                                   <span className="text-xs font-black text-indigo-950 uppercase">Crédito GSA Store</span>
-                                  <span className="text-xs font-black text-indigo-700">Disponível: {formatCurrency(limiteCreditoDisponivel)}</span>
+                                  <span className="text-[11px] font-black text-indigo-700">Disp: {formatCurrency(limiteCreditoDisponivel)}</span>
                                 </div>
-                                <p className="text-[11px] text-neutral-500 font-medium">
-                                  Utilize seu limite pré-aprovado para comprar agora e pagar parcelado.
+                                <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                                  Compre agora e pague parcelado com seu limite pré-aprovado.
                                 </p>
 
                                 {formaPagamento === 'credito_loja' && opcaoPagamentoParcelado && (
-                                  <div className="pt-2 border-t border-indigo-200/60 flex items-center gap-3">
-                                    <label className="text-xs font-bold text-neutral-700">Parcelamento:</label>
+                                  <div className="pt-2 border-t border-indigo-200/60 flex flex-col gap-1.5">
+                                    <label className="text-[11px] font-bold text-neutral-700">Parcelamento:</label>
                                     <select
                                       value={numParcelas}
                                       onChange={e => setNumParcelas(parseInt(e.target.value) || 1)}
-                                      className="px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-neutral-900"
+                                      className="w-full px-2 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-neutral-900 focus:outline-none"
                                     >
                                       {Array.from({ length: maxParcelas }, (_, i) => i + 1).map(p => (
                                         <option key={p} value={p}>
