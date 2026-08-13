@@ -378,8 +378,45 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   
   const subtotalComPromos = Math.max(0, subtotalInicial - descontoPromocoes);
 
-  // 1. Lógica de pontos fidelidade (1 ponto = R$ 0,01) - Pontos têm prioridade absoluta sobre o cupom
-  const maxPontosEmCentavos = Math.floor(subtotalComPromos * 100);
+  // 1. Calcula descontos lógicos baseado no cupom selecionado (sobre o subtotal de mercadorias)
+  const calcularDesconto = () => {
+    if (!cupomDesconto) return 0;
+    
+    let baseCalculo = subtotalComPromos;
+    if (cupomDesconto.produto_id) {
+      const itemEsp = cartItems.find((c: CartItem) => c.item_id === cupomDesconto.produto_id);
+      if (!itemEsp) return 0;
+      const descontoPromocionalDoProduto = (promosAplicadas || []).reduce((acc: number, promo: PromoResult) => {
+        if (promo.status !== 'ativa') return acc;
+        if (promo.desconto_aplicado?.produto_id === cupomDesconto.produto_id) {
+          return acc + Number(promo.desconto_aplicado.valor_desconto || 0);
+        }
+        return acc;
+      }, 0);
+      const unitVal = itemEsp.tipo === 'produto' ? (getProductQuantityPriceBreakdown(itemEsp.item_detalhes, itemEsp.quantidade).subtotalFinal / itemEsp.quantidade) : (itemEsp.item_detalhes?.valor || 0);
+      baseCalculo = Math.max(0, (unitVal * itemEsp.quantidade) - descontoPromocionalDoProduto);
+    }
+
+    let desc = 0;
+    if (cupomDesconto.tipo_desconto === 'porcentagem') {
+      desc = baseCalculo * ((cupomDesconto.valor_desconto || 0) / 100);
+    } else {
+      desc = cupomDesconto.valor_desconto || 0;
+    }
+
+    return Math.min(desc, subtotalComPromos);
+  };
+
+  const descontoCalculado = Number(calcularDesconto().toFixed(2));
+  
+  // Taxa de entrega final (0 se cupom de frete grátis, caso contrário a taxa fixa se houver produtos)
+  const taxaEntregaFinal = (temProdutos && !cupomEntrega) ? taxaEntregaFixa : (cupomEntrega?.tipo_entrega === 'taxa_fixa' ? (cupomEntrega.taxa_fixa_entrega || 0) : 0);
+
+  // Total líquido a pagar antes das formas de resgate (Pontos VIP e Saldo da Carteira)
+  const totalAntesResgates = Number(Math.max(0, subtotalComPromos - descontoCalculado + taxaEntregaFinal).toFixed(2));
+
+  // 2. Lógica de pontos fidelidade (1 ponto = R$ 0,01) - Limitado ao saldo do cliente e ao total restante a pagar
+  const maxPontosEmCentavos = Math.floor(totalAntesResgates * 100);
   const maxPontosValidos = Math.min(saldoPontos, Math.max(0, maxPontosEmCentavos));
 
   // Regra de Exclusividade PIX
@@ -415,49 +452,29 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
   };
 
   const descontoPontos = usarPontos ? Number((Math.min(pontosAplicados, maxPontosValidos) * 0.01).toFixed(2)) : 0;
-  const subtotalAposPontos = Number(Math.max(0, subtotalComPromos - descontoPontos).toFixed(2));
 
-  // 2. Calcula descontos lógicos baseado no cupom selecionado
-  const calcularDesconto = () => {
-    if (!cupomDesconto) return 0;
-    
-    // Calcula base de desconto
-    let baseCalculo = subtotalAposPontos;
-    if (cupomDesconto.produto_id) {
-      // Cupom restrito a um produto
-      const itemEsp = cartItems.find((c: CartItem) => c.item_id === cupomDesconto.produto_id);
-      if (!itemEsp) return 0; // não devia acontecer, pois a validação barra
-      const descontoPromocionalDoProduto = (promosAplicadas || []).reduce((acc: number, promo: PromoResult) => {
-        if (promo.status !== 'ativa') return acc;
-        if (promo.desconto_aplicado?.produto_id === cupomDesconto.produto_id) {
-          return acc + Number(promo.desconto_aplicado.valor_desconto || 0);
-        }
-        return acc;
-      }, 0);
-      const unitVal = itemEsp.tipo === 'produto' ? (getProductQuantityPriceBreakdown(itemEsp.item_detalhes, itemEsp.quantidade).subtotalFinal / itemEsp.quantidade) : (itemEsp.item_detalhes?.valor || 0);
-      baseCalculo = Math.max(0, (unitVal * itemEsp.quantidade) - descontoPromocionalDoProduto);
+  // Desconto PIX
+  const eligiblePixSubtotal = cartItems.reduce((acc: number, item: any) => {
+    if (item.tipo === 'produto' && checkPixDiscountApplies(item.item_detalhes, pixSettings)) {
+      const unitVal = (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) || (item.item_detalhes?.valor || 0);
+      return acc + (unitVal * item.quantidade);
     }
+    return acc;
+  }, 0);
 
-    let desc = 0;
-    if (cupomDesconto.tipo_desconto === 'porcentagem') {
-      desc = baseCalculo * ((cupomDesconto.valor_desconto || 0) / 100);
-    } else {
-      desc = cupomDesconto.valor_desconto || 0;
-    }
+  const pixDiscountBlockedByPoints = usarPontos && pontosAplicados > 0 && !lojaPixDescontoPermitirPontos;
+  const pixDiscountBlockedByWallet = usarSaldoCarteira && saldoCarteiraAplicado > 0 && !lojaPixDescontoPermitirCarteira;
+  const isPixDiscountEligible = formaPagamento === 'pix' && lojaPixDescontoAtivo && !pixDiscountBlockedByPoints && !pixDiscountBlockedByWallet;
 
-    // O cupom é aplicado após os pontos, limitando-se ao valor restante para não negativar nem ultrapassar
-    return Math.min(desc, subtotalAposPontos);
-  };
+  const baseCalculoPix = Math.max(0, eligiblePixSubtotal - (descontoCalculado || 0) - descontoPontos);
+  const pixDiscountValue = isPixDiscountEligible
+    ? parseFloat((baseCalculoPix * (lojaPixDescontoPorcentagem / 100)).toFixed(2))
+    : 0;
 
-  const descontoCalculado = Number(calcularDesconto().toFixed(2));
-  
-  // Taxa de entrega final (0 se cupom de frete grátis, caso contrário a taxa fixa se houver produtos)
-  const taxaEntregaFinal = (temProdutos && !cupomEntrega) ? taxaEntregaFixa : (cupomEntrega?.tipo_entrega === 'taxa_fixa' ? (cupomEntrega.taxa_fixa_entrega || 0) : 0);
-
-  const totalAntesCarteira = Number(Math.max(subtotalComPromos - descontoPontos - descontoCalculado + taxaEntregaFinal, 0).toFixed(2));
+  // Total Líquido antes de abater o saldo da carteira (já considerando cupons, pontos, frete e desconto PIX)
+  const totalAntesCarteira = Number(Math.max(0, totalAntesResgates - descontoPontos - pixDiscountValue).toFixed(2));
 
   // 1.5 Lógica de Saldo na Carteira Virtual
-  // Saldo negativo nunca pode virar "desconto negativo" (aumentando o total).
   const saldoCarteiraUtilizavel = Math.max(0, saldoCarteira);
   const maxSaldoValido = Number(Math.min(saldoCarteiraUtilizavel, totalAntesCarteira).toFixed(2));
   
@@ -512,10 +529,9 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
     setSaldoCarteiraAplicado((prev) => (prev > maxSaldoValido ? maxSaldoValido : prev));
   }, [maxSaldoValido]);
 
-  const totalHoje = Number(Math.max(totalAntesCarteira - descontoCarteira, 0).toFixed(2));
+  const totalHojeSemJuros = Number(Math.max(0, totalAntesCarteira - descontoCarteira).toFixed(2));
   
-  // Taxa de juros do Crédito GSA: à vista aplica a taxa base; parcelado aplica a taxa base
-  // + a taxa por parcela adicional (conforme configuração em Admin > Crédito).
+  // Taxa de juros do Crédito GSA
   const calcularTaxaJuros = (parcelas: number) =>
     parcelas <= 1 ? jurosCreditoAvista : jurosCreditoAvista + (jurosCreditoParcelado * parcelas);
 
@@ -523,31 +539,10 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
     ? calcularTaxaJuros(numParcelas)
     : 0;
   const valorJurosCredito = formaPagamento === 'credito_loja'
-    ? parseFloat((totalHoje * (taxaJurosAplicada / 100)).toFixed(2))
-    : 0;
-    
-  const eligiblePixSubtotal = cartItems.reduce((acc: number, item: any) => {
-    if (item.tipo === 'produto' && checkPixDiscountApplies(item.item_detalhes, pixSettings)) {
-      const unitVal = (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) || (item.item_detalhes?.valor || 0);
-      return acc + (unitVal * item.quantidade);
-    }
-    return acc;
-  }, 0);
-
-  // O desconto PIX incide sobre os itens elegíveis no carrinho (após desconto de pontos proporcionais, se quisermos ser super estritos, mas aqui usamos o subtotal bruto deles).
-  // E evitamos dar mais desconto do que o totalHoje (que já deduziu carteira etc)
-  const maxPixDiscountBase = Math.min(eligiblePixSubtotal, totalHoje);
-
-  // Desconto PIX só é concedido se o pagamento for PIX e não houver bloqueio por pontos ou saldo da carteira
-  const pixDiscountBlockedByPoints = usarPontos && pontosAplicados > 0 && !lojaPixDescontoPermitirPontos;
-  const pixDiscountBlockedByWallet = usarSaldoCarteira && saldoCarteiraAplicado > 0 && !lojaPixDescontoPermitirCarteira;
-  const isPixDiscountEligible = formaPagamento === 'pix' && lojaPixDescontoAtivo && !pixDiscountBlockedByPoints && !pixDiscountBlockedByWallet;
-
-  const pixDiscountValue = isPixDiscountEligible
-    ? parseFloat((maxPixDiscountBase * (lojaPixDescontoPorcentagem / 100)).toFixed(2))
+    ? parseFloat((totalHojeSemJuros * (taxaJurosAplicada / 100)).toFixed(2))
     : 0;
 
-  const totalHojeFinal = totalHoje + valorJurosCredito - pixDiscountValue;
+  const totalHojeFinal = Number(Math.max(0, totalHojeSemJuros + valorJurosCredito).toFixed(2));
   const totalContratoFinal = totalHojeFinal + (subtotalContrato - subtotalInicial);
 
   const isTravelCheckout = cartItems.some((c: CartItem) => c.tipo === ('pacote_viagem' as any));
