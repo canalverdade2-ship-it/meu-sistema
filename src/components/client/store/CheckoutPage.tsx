@@ -274,15 +274,21 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
       const { data: promos } = await supabase
         .from('promocoes_quantidade')
         .select('*')
-        .eq('ativo', true);
+        .eq('status', 'ativa');
       setPromocoesAtivas(promos || []);
 
       if (clientId) {
-        const { data: ativadas } = await supabase
-          .from('promocoes_ativadas')
-          .select('promocao_id')
-          .eq('cliente_id', clientId);
-        setPromosAtivadasIds(new Set((ativadas || []).map((a: any) => a.promocao_id)));
+        try {
+          const { data: ativadas } = await supabase
+            .from('promocoes_quantidade_ativadas')
+            .select('promocao_quantidade_id')
+            .eq('cliente_id', clientId);
+          if (ativadas) {
+            setPromosAtivadasIds(new Set(ativadas.map((a: any) => a.promocao_quantidade_id)));
+          }
+        } catch {
+          // ignora caso não haja ativadas
+        }
       }
     } catch (err) {
       console.error('[CheckoutPage] Erro ao carregar promoções:', err);
@@ -1022,13 +1028,13 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
             quantidade: item.quantidade,
             ...(item.tipo === 'assinatura' ? { prazo_meses: item.prazo_meses || 1 } : {}),
           })),
-          forma_pagamento: formaPagamento,
+          forma_pagamento: formaPagamento === 'credito_loja' ? 'credito_loja' : 'outros',
           pontos_usados: usarPontos ? Math.min(pontosAplicados, maxPontosValidos) : 0,
           saldo_carteira_usado: descontoCarteira,
           cupom_desconto_id: cupomDesconto?.id || null,
           cupom_entrega_id: cupomEntrega?.id || null,
           endereco_entrega: enderecoCompleto,
-          parcelas: formaPagamento === 'cartao' ? parcelasCartao : opcaoPagamentoParcelado ? numParcelas : 1,
+          parcelas: formaPagamento === 'credito_loja' && opcaoPagamentoParcelado ? numParcelas : 1,
         }
       });
 

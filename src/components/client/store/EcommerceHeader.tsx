@@ -249,24 +249,13 @@ export function EcommerceHeader({
       const fetchPoints = async () => {
         try {
           const { data, error } = await supabase
-            .from('points_balances')
-            .select('balance')
-            .eq('cliente_id', clientId)
+            .from('clientes')
+            .select('saldo_pontos')
+            .eq('id', clientId)
             .maybeSingle();
             
           if (data && !error) {
-            setPointsBalance(data.balance || 0);
-          } else {
-            // Se a view não existir, tenta pela tabela de movimentações
-            const { data: movData, error: movError } = await supabase
-              .from('pontos_movimentacoes')
-              .select('pontos')
-              .eq('cliente_id', clientId);
-              
-            if (movData && !movError) {
-              const total = movData.reduce((acc, curr) => acc + (curr.pontos || 0), 0);
-              setPointsBalance(total);
-            }
+            setPointsBalance(data.saldo_pontos || 0);
           }
         } catch (err) {
           console.error('Erro ao buscar saldo de pontos:', err);

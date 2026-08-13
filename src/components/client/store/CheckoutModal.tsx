@@ -929,13 +929,13 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               quantidade: item.quantidade,
               ...(item.tipo === 'assinatura' ? { prazo_meses: item.prazo_meses || 1 } : {}),
             })),
-            forma_pagamento: formaPagamento,
+            forma_pagamento: formaPagamento === 'credito_loja' ? 'credito_loja' : 'outros',
             pontos_usados: usarPontos ? Math.min(pontosAplicados, maxPontosValidos) : 0,
             saldo_carteira_usado: descontoCarteira,
             cupom_desconto_id: cupomDesconto?.id || null,
             cupom_entrega_id: cupomEntrega?.id || null,
             endereco_entrega: enderecoCompleto,
-            parcelas: formaPagamento === 'cartao' ? parcelasCartao : opcaoPagamentoParcelado ? numParcelas : 1,
+            parcelas: formaPagamento === 'credito_loja' && opcaoPagamentoParcelado ? numParcelas : 1,
           }
         });
 
