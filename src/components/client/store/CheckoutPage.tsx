@@ -297,12 +297,36 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
 
   useEffect(() => {
     if (cartItems.length > 0 && promocoesAtivas.length > 0) {
-      const aplicadas = avaliarPromocoes(cartItems, promocoesAtivas, promosAtivadasIds);
-      setPromosAplicadas(aplicadas);
+      const ativasFiltradas = promocoesAtivas.filter(p => promosAtivadasIds.has(p.id));
+      const mappedItems = cartItems
+        .filter(i => i.tipo === 'produto' && i.item_detalhes)
+        .map(i => ({
+          produto: i.item_detalhes as any,
+          quantidade: i.quantidade,
+          categoria_id: i.item_detalhes?.categoria_id,
+        }));
+
+      if (mappedItems.length > 0 && ativasFiltradas.length > 0) {
+        avaliarPromocoes(
+          mappedItems,
+          { id: clientId } as any,
+          ativasFiltradas,
+          []
+        )
+          .then(res => {
+            setPromosAplicadas(Array.isArray(res) ? res : []);
+          })
+          .catch(err => {
+            console.error('[CheckoutPage] Erro ao avaliar promoções:', err);
+            setPromosAplicadas([]);
+          });
+      } else {
+        setPromosAplicadas([]);
+      }
     } else {
       setPromosAplicadas([]);
     }
-  }, [cartItems, promocoesAtivas, promosAtivadasIds]);
+  }, [cartItems, promocoesAtivas, promosAtivadasIds, clientId]);
 
   // 3. Carregar dados de crédito, taxas e endereço
   const fetchDadosCredito = async () => {
@@ -681,7 +705,8 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     return acc + ((cur.item_detalhes?.valor || 0) * cur.quantidade);
   }, 0);
 
-  const descontoPromocoes = (promosAplicadas || []).reduce((acc: number, promo: PromoResult) => {
+  const listaPromos = Array.isArray(promosAplicadas) ? promosAplicadas : [];
+  const descontoPromocoes = listaPromos.reduce((acc: number, promo: PromoResult) => {
     if (promo.status === 'ativa' && promo.desconto_aplicado) {
       return acc + promo.desconto_aplicado.valor_desconto;
     }
@@ -698,7 +723,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     if (cupomDesconto.produto_id) {
       const itemEsp = cartItems.find((c: CartItem) => c.item_id === cupomDesconto.produto_id);
       if (!itemEsp) return 0;
-      const descontoPromocionalDoProduto = (promosAplicadas || []).reduce((acc: number, promo: PromoResult) => {
+      const descontoPromocionalDoProduto = listaPromos.reduce((acc: number, promo: PromoResult) => {
         if (promo.status !== 'ativa') return acc;
         if (promo.desconto_aplicado?.produto_id === cupomDesconto.produto_id) {
           return acc + Number(promo.desconto_aplicado.valor_desconto || 0);
