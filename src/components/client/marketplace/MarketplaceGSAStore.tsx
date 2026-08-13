@@ -2,6 +2,7 @@ import { MarketplaceHome } from './MarketplaceHome';
 import { EcommerceHome } from '../store/EcommerceHome';
 import { ProductPage } from '../store/ProductPage';
 import { OrderSuccessPage } from '../store/OrderSuccessPage';
+import { CheckoutPage } from '../store/CheckoutPage';
 import { WishlistPage } from '../store/WishlistPage';
 import { StoreHub } from '../StoreHub';
 import { ClientGSAStore } from '../ClientGSAStore';
@@ -327,6 +328,17 @@ export function MarketplaceGSAStore({
       );
     }
     
+    // Se for rota de checkout da loja (Página Completa e Dedicada)
+    if (currentSubmodule === 'loja-checkout') {
+      return (
+        <CheckoutPage 
+          clientId={clientId} 
+          onRequireAuth={onRequireAuth} 
+          onBack={() => handleNavigate(routes.marketplace.store.products())} 
+        />
+      );
+    }
+
     // Se for rota de pedido confirmado
     if (currentSubmodule === 'loja-pedido-confirmado') {
       return <OrderSuccessPage />;

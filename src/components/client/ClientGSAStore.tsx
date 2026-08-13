@@ -181,6 +181,10 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     } else {
       setSelectedDurationId(null);
     }
+
+    if (route.query.modal === 'checkout') {
+      navigate(routes.marketplace.store.checkout(), { replace: true });
+    }
   }, [route.submodule, route.itemId, route.query.modal]);
 
   // 2. Debounce e Sincronização na busca de texto da URL
@@ -1365,7 +1369,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
               return;
             }
 
-            updateRouteQuery({ modal: 'checkout' });
+            navigate(routes.marketplace.store.checkout());
           }}
         />
 

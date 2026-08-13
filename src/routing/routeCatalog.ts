@@ -142,6 +142,7 @@ export const routes = {
       promocoes: () => '/marketplace/loja/promocoes',
       trocas: () => '/marketplace/loja/trocas',
       reembolsos: () => '/marketplace/loja/reembolsos',
+      checkout: () => '/marketplace/loja/checkout',
       orderSuccess: (orderId: string) => `/marketplace/loja/pedido-confirmado?orderId=${orderId}`,
       wishlist: () => '/marketplace/loja/wishlist',
       blog: () => '/marketplace/loja/blog',
