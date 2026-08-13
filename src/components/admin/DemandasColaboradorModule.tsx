@@ -76,12 +76,17 @@ export function DemandasColaboradorModule({ colaboradorId, colaboradorNome, admi
       return;
     }
 
-    const [colabRes, prestRes] = await Promise.all([
-      supabase.from('colaboradores').select('id, nome').eq('status', 'ativo'),
-      supabase.from('prestadores').select('id, nome_razao').eq('status', 'ativo'),
-    ]);
-    setColaboradores(colabRes.data || []);
-    setPrestadores(prestRes.data || []);
+    try {
+      const [colabRes, prestRes] = await Promise.all([
+        supabase.from('colaboradores').select('id, nome').eq('status', 'ativo'),
+        supabase.from('prestadores').select('id, nome_razao').eq('status', 'ativo'),
+      ]);
+      setColaboradores(colabRes.data || []);
+      setPrestadores(prestRes.data || []);
+    } catch (error) {
+      console.error('Erro ao buscar auxiliares:', error);
+      toast.error('Erro ao buscar colaboradores e prestadores.');
+    }
   };
 
   const refreshHistorico = async (demandaId: string) => {

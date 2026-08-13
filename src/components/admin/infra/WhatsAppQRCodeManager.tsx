@@ -209,24 +209,10 @@ export function WhatsAppQRCodeManager() {
         return;
       }
 
-      // 2. Fallback via polling da Evolution API
-      try {
-        const evoRes = await fetch(`http://147.15.43.141:8080/instance/connect/GSA_WhatsApp`, {
-          headers: { apikey: 'gsa_hub_evolution_token_2026' }
-        });
-        if (evoRes.ok) {
-          const evoData = await evoRes.json();
-          if (evoData?.base64 || evoData?.code) {
-            setQrCodeBase64(evoData.base64 || evoData.code);
-            if (evoData?.pairingCode) setPairingCode(evoData.pairingCode);
-            setStatus('connecting');
-            toast.success('QR Code gerado diretamente da Evolution API!');
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('Fallback direto Evolution API:', err);
-      }
+      // Sem fallback direto à Evolution API: a chave de API não pode ser
+      // embutida no bundle do navegador. O acesso é feito apenas pela
+      // Edge Function "vps-api", que guarda a credencial no servidor.
+
 
       setStatus('connecting');
       toast.success('Serviço inicializado na VPS Nova! Execute a leitura do QR Code.');
@@ -438,10 +424,15 @@ export function WhatsAppQRCodeManager() {
         );
 
       // Sincroniza com a tabela nativa
-      if (selectedRamal) {
-        await supabase.from('gsa_whatsapp_ramais').update(payload).eq('id', selectedRamal.id);
-      } else {
-        await supabase.from('gsa_whatsapp_ramais').insert([payload]);
+      try {
+        if (selectedRamal) {
+          await supabase.from('gsa_whatsapp_ramais').update(payload).eq('id', selectedRamal.id).throwOnError();
+        } else {
+          await supabase.from('gsa_whatsapp_ramais').insert([payload]).throwOnError();
+        }
+      } catch (err) {
+        console.error('Erro ao sincronizar com gsa_whatsapp_ramais:', err);
+        toast.error('Erro ao salvar ramal no banco de dados.');
       }
 
       setIsRamalModalOpen(false);

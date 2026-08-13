@@ -382,15 +382,26 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
   useEffect(() => {
     fetchNotas();
     if (!clienteInfo && os.cliente_id) {
-      supabase.from('clientes').select('id, nome, telefone').eq('id', os.cliente_id).maybeSingle().then(({ data }) => {
-        if (data) setClienteInfo(data);
-      });
+      (async () => {
+        try {
+          const { data, error } = await supabase.from('clientes').select('id, nome, telefone').eq('id', os.cliente_id).maybeSingle();
+          if (error) toast.error('Erro ao buscar dados do cliente.');
+          else if (data) setClienteInfo(data);
+        } catch {
+          toast.error('Erro ao buscar dados do cliente.');
+        }
+      })();
     }
   }, [os.id, os.cliente_id]);
 
   const fetchNotas = async () => {
-    const { data } = await supabase.from('os_notas').select('*').eq('os_id', os.id).order('data_criacao', { ascending: false });
-    if (data) setNotas(data);
+    try {
+      const { data, error } = await supabase.from('os_notas').select('*').eq('os_id', os.id).order('data_criacao', { ascending: false });
+      if (error) throw error;
+      if (data) setNotas(data);
+    } catch (err) {
+      toast.error('Erro ao carregar notas da OS.');
+    }
   };
 
   const handleAddNota = async () => {

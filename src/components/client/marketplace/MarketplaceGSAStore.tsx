@@ -316,7 +316,7 @@ export function MarketplaceGSAStore({
     const tabMapped = currentSubmodule.replace('loja-', '');
     
     // Se for rota de um produto específico, renderiza a ProductPage
-    const targetProductId = route.itemId || initialItemId || currentItemId;
+    const targetProductId = route.itemId || initialItemId;
     if (['loja-produtos', 'loja-produto'].includes(currentSubmodule) && targetProductId) {
       return (
         <ProductPage 
@@ -398,7 +398,9 @@ export function MarketplaceGSAStore({
     <EcommerceHome
       clientId={clientId}
       onRequireAuth={onRequireAuth}
+      onOpenCart={() => handleNavigate(routes.marketplace.store.products() + '?modal=carrinho')}
     />
+
   );
 }
 

@@ -48,9 +48,17 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
   const [categorias, setCategorias] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['servico', 'todos']).order('ordem').then(({data}) => {
-      if (data) setCategorias(data);
-    });
+    const loadCategorias = async () => {
+      try {
+        const { data, error } = await supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['servico', 'todos']).order('ordem');
+        if (error) throw error;
+        if (data) setCategorias(data);
+      } catch (err) {
+        console.error(err);
+        toast.error('Não foi possível carregar as categorias.');
+      }
+    };
+    loadCategorias();
   }, []);
 
   useEffect(() => {
@@ -136,21 +144,20 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
   };
 
   const handleCreate = async (formData: any) => {
-    const { imagens_adicionais, ...otherData } = formData;
-    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
+    try {
+      const { imagens_adicionais, ...otherData } = formData;
+      const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
 
-    const { data, error } = await supabase.from('servicos').insert([{
-      ...otherData,
-      ...galleryCols,
-      descricao: otherData.descricao || '',
-      codigo_servico: generateCode('SRV'),
-      status: 'ativo'
-    }]).select().single();
+      const { data, error } = await supabase.from('servicos').insert([{
+        ...otherData,
+        ...galleryCols,
+        descricao: otherData.descricao || '',
+        codigo_servico: generateCode('SRV'),
+        status: 'ativo'
+      }]).select().single();
 
-    if (error) {
-      toast.error('Erro ao cadastrar serviço.');
-      return false;
-    } else {
+      if (error) throw error;
+
       toast.success('Serviço cadastrado com sucesso.');
       
       // Log Action
@@ -169,24 +176,27 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
         setIsDetailOpen(true);
       }
       return true;
+    } catch (err) {
+      console.error(err);
+      toast.error('Ocorreu um erro ao cadastrar o serviço. Tente novamente.');
+      return false;
     }
   };
 
   const handleUpdate = async (formData: any) => {
     if (!selectedServico) return false;
-    const { imagens_adicionais, ...otherData } = formData;
-    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
+    try {
+      const { imagens_adicionais, ...otherData } = formData;
+      const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
 
-    const { error } = await supabase.from('servicos').update({
-      ...otherData,
-      ...galleryCols,
-      descricao: otherData.descricao || '',
-    }).eq('id', selectedServico.id);
+      const { error } = await supabase.from('servicos').update({
+        ...otherData,
+        ...galleryCols,
+        descricao: otherData.descricao || '',
+      }).eq('id', selectedServico.id);
 
-    if (error) {
-      toast.error('Erro ao atualizar serviço.');
-      return false;
-    } else {
+      if (error) throw error;
+
       toast.success('Serviço atualizado com sucesso.');
       
       await logService.logAction({
@@ -200,6 +210,10 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
       setIsEditModalOpen(false);
       fetchServicos();
       return true;
+    } catch (err) {
+      console.error(err);
+      toast.error('Ocorreu um erro ao atualizar o serviço. Tente novamente.');
+      return false;
     }
   };
 
@@ -389,10 +403,11 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
 
                           if (next === current) return;
 
-                          setSelectedServico({ ...selectedServico, tipo_cliente: next });
-                          const { error } = await supabase.from('servicos').update({ tipo_cliente: next }).eq('id', selectedServico.id);
-                          if (error) toast.error('Erro ao atualizar tipo de cliente.');
-                          else { 
+                          try {
+                            setSelectedServico({ ...selectedServico, tipo_cliente: next });
+                            const { error } = await supabase.from('servicos').update({ tipo_cliente: next }).eq('id', selectedServico.id);
+                            if (error) throw error;
+
                             toast.success('Tipo de cliente atualizado.');
                             
                             await logService.logAction({
@@ -404,6 +419,9 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                             });
 
                             fetchServicos(); 
+                          } catch (err) {
+                            console.error(err);
+                            toast.error('Ops! Tivemos um problema ao atualizar o tipo de cliente.');
                           }
                         }}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border-2 ${
@@ -433,12 +451,17 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                       className="sr-only peer"
                       checked={selectedServico.ocultar_valor || false}
                       onChange={async (e) => {
-                        const newOcultar = e.target.checked;
-                        setSelectedServico({ ...selectedServico, ocultar_valor: newOcultar });
-                        const { error } = await supabase.from('servicos').update({ ocultar_valor: newOcultar }).eq('id', selectedServico.id);
-                        if (!error) {
+                        try {
+                          const newOcultar = e.target.checked;
+                          setSelectedServico({ ...selectedServico, ocultar_valor: newOcultar });
+                          const { error } = await supabase.from('servicos').update({ ocultar_valor: newOcultar }).eq('id', selectedServico.id);
+                          if (error) throw error;
+                          
                           toast.success('Visibilidade de preço atualizada.');
                           fetchServicos();
+                        } catch (err) {
+                          console.error(err);
+                          toast.error('Ops! Tivemos um problema ao atualizar a visibilidade do preço.');
                         }
                       }}
                     />
@@ -493,10 +516,10 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                         return;
                       }
 
-                      const { error } = await supabase.from('servicos').delete().eq('id', selectedServico.id);
-                      if (error) {
-                        toast.error('Erro ao excluir. O serviço pode estar em uso.');
-                      } else {
+                      try {
+                        const { error } = await supabase.from('servicos').delete().eq('id', selectedServico.id);
+                        if (error) throw error;
+
                         toast.success('Serviço excluído com sucesso.');
                         
                         // Log Action
@@ -511,6 +534,9 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                         setIsDetailOpen(false);
                         setIsDeleting(false);
                         fetchServicos();
+                      } catch (err) {
+                        console.error(err);
+                        toast.error('Não foi possível excluir o serviço. Ele pode estar em uso.');
                       }
                     }}
                     className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 transition-all shadow-lg shadow-red-600/20"
@@ -524,13 +550,13 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button 
                     onClick={async () => {
-                      const newStatus = selectedServico.status === 'ativo' ? 'inativo' : 'ativo';
-                      const { error } = await supabase.from('servicos').update({ 
-                        status: newStatus
-                      }).eq('id', selectedServico.id);
-                      if (error) {
-                        toast.error('Erro ao alterar status.');
-                      } else {
+                      try {
+                        const newStatus = selectedServico.status === 'ativo' ? 'inativo' : 'ativo';
+                        const { error } = await supabase.from('servicos').update({ 
+                          status: newStatus
+                        }).eq('id', selectedServico.id);
+                        if (error) throw error;
+
                         toast.success(`Serviço ${newStatus === 'ativo' ? 'ativado' : 'inativado'} com sucesso.`);
                         
                         // Log Action
@@ -544,6 +570,9 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
 
                         setIsDetailOpen(false);
                         fetchServicos();
+                      } catch (err) {
+                        console.error(err);
+                        toast.error('Ocorreu um problema ao alterar o status do serviço.');
                       }
                     }}
                     className={`flex-1 rounded-xl py-4 font-bold transition-all ${selectedServico.status === 'ativo' ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}

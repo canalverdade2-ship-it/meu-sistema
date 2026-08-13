@@ -39,18 +39,21 @@ export function EmpresaModule() {
   }, []);
 
   const fetchEmpresa = async () => {
-    const { data, error } = await supabase.from('empresa').select('*').limit(1).maybeSingle();
-    if (error) {
+    try {
+      const { data, error } = await supabase.from('empresa').select('*').limit(1).maybeSingle();
+      if (error) throw error;
+      if (data) {
+        setEmpresa(data);
+        setFormData({
+          razao_social: data.razao_social,
+          cnpj: data.cnpj,
+          telefone: data.telefone || '',
+          responsavel: data.responsavel || ''
+        });
+      }
+    } catch (error) {
       console.error('Error fetching empresa:', error);
-    }
-    if (data) {
-      setEmpresa(data);
-      setFormData({
-        razao_social: data.razao_social,
-        cnpj: data.cnpj,
-        telefone: data.telefone || '',
-        responsavel: data.responsavel || ''
-      });
+      toast.error('Erro ao buscar dados da empresa.');
     }
     setLoading(false);
   };

@@ -9,7 +9,7 @@ import { CentralDeAjudaDialog } from '../../public/CentralDeAjudaDialog';
 import {
   Loader2, TrendingUp, Zap, Clock, Star, ArrowRight,
   ShieldCheck, Truck, CreditCard, Award, Flame,
-  Sparkles, ChevronRight, Tag, Package,
+  ChevronRight, Tag, Package,
   Laptop, Home, Shirt, FlaskConical, Plane, Wrench,
   Car, Gem, BadgePercent, MapPin, PhoneCall, RefreshCw,
 } from 'lucide-react';
@@ -244,7 +244,7 @@ function FlashSaleTimer() {
 export function EcommerceHome({
   clientId,
   onRequireAuth,
-  onOpenCart = () => {},
+  onOpenCart,
   cartItemCount = 0,
 }: EcommerceHomeProps) {
   const [loading, setLoading] = useState(true);
@@ -628,7 +628,7 @@ export function EcommerceHome({
                   <div className="mb-5 flex items-end justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
-                        <Sparkles size={18} strokeWidth={2} />
+                        <Tag size={18} strokeWidth={2} />
                       </div>
                       <div>
                         <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Novidades do Catálogo</h2>

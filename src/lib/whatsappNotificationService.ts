@@ -85,6 +85,8 @@ function formatList(items: (string | null | undefined)[]): string {
 // ─── Serviço Principal ────────────────────────────────────────────────────────
 
 export type SendDirectOptions = {
+  clienteNome?: string;
+  codigoFatura?: string;
   mediaBase64?: string;
   pdfUrl?: string;
   pdfPath?: string;

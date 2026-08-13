@@ -110,19 +110,26 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
   }, []);
 
   const fetchConfigs = async (isMounted = true) => {
-    const { data } = await supabase.from('system_settings').select('*');
-    if (data && isMounted) {
-      const parsed = data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {});
-      setConfigs(parsed);
-      setEditingConfigs(parsed);
+    try {
+      const { data, error } = await supabase.from('system_settings').select('*');
+      if (error) throw error;
+      if (data && isMounted) {
+        const parsed = data.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
+        setConfigs(parsed);
+        setEditingConfigs(parsed);
+      }
+    } catch (err: any) {
+      toast.error('Erro ao buscar configurações.');
     }
   };
 
   // Fix #7: Recalcular dias_atraso e valor_atualizado dinamicamente
   const fetchDados = async (isMounted = true) => {
     if (isMounted) setLoading(true);
-    const { data: configData } = await supabase.from('system_settings').select('key, value');
-    const settings = (configData || []).reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
+    try {
+      const { data: configData, error: configError } = await supabase.from('system_settings').select('key, value');
+      if (configError) throw configError;
+      const settings = (configData || []).reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
     const multaPct = Number(settings.cobranca_multa_porcentagem) || 2;
     const jurosMensal = Number(settings.cobranca_juros_mensal) || 1;
     const jurosTipo = settings.cobranca_juros_tipo || 'diario';
@@ -167,6 +174,9 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
         };
       });
       if (isMounted) setCobrancas(updated);
+    }
+    } catch (err: any) {
+      toast.error('Erro ao carregar dados de cobrança.');
     }
     if (isMounted) setLoading(false);
   };
@@ -710,8 +720,13 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
       });
 
       fetchDados();
-      const { data } = await supabase.from('cobrancas').select('*, cobranca_historico(*)').eq('id', selectedCobranca.id).single();
-      if (data) setSelectedCobranca((prev: any) => ({ ...prev, cobranca_historico: data.cobranca_historico }));
+      try {
+        const { data, error } = await supabase.from('cobrancas').select('*, cobranca_historico(*)').eq('id', selectedCobranca.id).single();
+        if (error) throw error;
+        if (data) setSelectedCobranca((prev: any) => ({ ...prev, cobranca_historico: data.cobranca_historico }));
+      } catch (err: any) {
+        toast.error('Erro ao atualizar histórico da cobrança.');
+      }
     } catch (err: any) {
       console.error('Erro ao registrar historico:', err);
       toast.error(err?.message || 'Erro ao registrar historico.');

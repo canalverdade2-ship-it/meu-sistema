@@ -127,8 +127,12 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
       setCuponsAtivados(prev => new Set([...prev, cupomId]));
       toast.success('Cupom ativado com sucesso!');
     } catch (error: any) {
-      if (String(error?.message || '').includes('duplicate')) {
-        toast.error('Você já ativou este cupom!');
+      const code = String(error?.code || '');
+      const msg = String(error?.message || error?.details || '').toLowerCase();
+      if (code === '23505' || msg.includes('duplicate') || msg.includes('already exists') || msg.includes('unique')) {
+        // Cupom já estava ativado: reflete o estado real na interface
+        setCuponsAtivados(prev => new Set([...prev, cupomId]));
+        toast.success('Você já ativou este cupom!');
         return;
       }
       console.error('Erro ao ativar cupom:', error);

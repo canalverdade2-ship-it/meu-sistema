@@ -133,25 +133,30 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
         ? clienteData?.cnpj
         : clienteData?.cpf;
 
-      await supabase.from('ordens_fiscais').insert([{
-        codigo_fiscal: generateCode('FISC'),
-        fatura_id: faturaId,
-        demanda_id: demanda.id,
-        cliente_id: osObj?.cliente_id || null,
-        cliente_nome: clienteData?.nome || osObj?.cliente?.nome || null,
-        cliente_documento: documento || null,
-        cliente_telefone: clienteData?.telefone || osObj?.cliente?.telefone || null,
-        tipo_compra: 'servico',
-        descricao_item: orcObj?.servico?.nome || demanda.titulo || null,
-        codigo_ordem: osObj?.codigo_os || null,
-        codigo_orcamento: orcObj?.codigo_orcamento || null,
-        valor_bruto: orcTotal,
-        valor_desconto: 0,
-        valor_acrescimo: 0,
-        valor_total: orcTotal,
-        status_pagamento: 'pendente',
-        status_emissao: 'pendente_emissao',
-      }]).throwOnError();
+      try {
+        await supabase.from('ordens_fiscais').insert([{
+          codigo_fiscal: generateCode('FISC'),
+          fatura_id: faturaId,
+          demanda_id: demanda.id,
+          cliente_id: osObj?.cliente_id || null,
+          cliente_nome: clienteData?.nome || osObj?.cliente?.nome || null,
+          cliente_documento: documento || null,
+          cliente_telefone: clienteData?.telefone || osObj?.cliente?.telefone || null,
+          tipo_compra: 'servico',
+          descricao_item: orcObj?.servico?.nome || demanda.titulo || null,
+          codigo_ordem: osObj?.codigo_os || null,
+          codigo_orcamento: orcObj?.codigo_orcamento || null,
+          valor_bruto: orcTotal,
+          valor_desconto: 0,
+          valor_acrescimo: 0,
+          valor_total: orcTotal,
+          status_pagamento: 'pendente',
+          status_emissao: 'pendente_emissao',
+        }]).throwOnError();
+      } catch (error) {
+        console.error('Erro ao criar ordem fiscal:', error);
+        toast.error('Erro ao criar ordem fiscal.');
+      }
     } catch (err) {
       console.error('Erro ao criar ordem fiscal:', err);
       throw err;
@@ -488,16 +493,21 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
         }
       );
 
-      if (isGestaoInterna && selectedDemanda.os_id) {
-        await supabase.from('os_notas').insert({
-          os_id: selectedDemanda.os_id,
-          nota: 'Demanda direcionada para o fluxo de Gestão Interna.'
-        }).throwOnError();
-      } else if (selectedDemanda.os_id) {
-        await supabase.from('os_notas').insert({
-          os_id: selectedDemanda.os_id,
-          nota: `Demanda direcionada para o prestador externo: ${destNome}.`
-        }).throwOnError();
+      try {
+        if (isGestaoInterna && selectedDemanda.os_id) {
+          await supabase.from('os_notas').insert({
+            os_id: selectedDemanda.os_id,
+            nota: 'Demanda direcionada para o fluxo de Gestão Interna.'
+          }).throwOnError();
+        } else if (selectedDemanda.os_id) {
+          await supabase.from('os_notas').insert({
+            os_id: selectedDemanda.os_id,
+            nota: `Demanda direcionada para o prestador externo: ${destNome}.`
+          }).throwOnError();
+        }
+      } catch (error) {
+        console.error('Erro ao adicionar nota na OS:', error);
+        toast.error('Erro ao adicionar nota na OS.');
       }
 
       if (!isGestaoInterna) {
@@ -702,7 +712,14 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
       // 2. Atualizar OS e linkar entrega
       if (demanda.os_id) {
         // Obter anexos atuais da OS
-        const { data: osData } = await supabase.from('ordens_servico').select('anexos_os').eq('id', demanda.os_id).single();
+        let osData = null;
+        try {
+          const { data } = await supabase.from('ordens_servico').select('anexos_os').eq('id', demanda.os_id).single();
+          osData = data;
+        } catch (error) {
+          console.error('Erro ao buscar anexos da OS:', error);
+          toast.error('Erro ao buscar anexos da OS.');
+        }
         let currentAnexos = osData?.anexos_os || [];
         
         // Mapear arquivos da entrega
@@ -742,11 +759,16 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
           .eq('id', demanda.os_id);
         if (errorOS) throw errorOS;
 
-        // Registrar nota de conclusão na OS para o cliente ver no histórico
-        await supabase.from('os_notas').insert({
-          os_id: demanda.os_id,
-          nota: '✅ Atendimento concluído com sucesso! Os arquivos finais foram disponibilizados e a fatura gerada. Obrigado por confiar na GSA!'
-        }).throwOnError();
+        try {
+          // Registrar nota de conclusão na OS para o cliente ver no histórico
+          await supabase.from('os_notas').insert({
+            os_id: demanda.os_id,
+            nota: '✅ Atendimento concluído com sucesso! Os arquivos finais foram disponibilizados e a fatura gerada. Obrigado por confiar na GSA!'
+          }).throwOnError();
+        } catch (error) {
+          console.error('Erro ao adicionar nota na OS:', error);
+          toast.error('Erro ao adicionar nota na OS.');
+        }
 
         // 3. Gerar Fatura para o Cliente (Valor do Orçamento)
         const { data: fatura, error: errorFatura } = await supabase
@@ -912,10 +934,15 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
 
       const prevName = selectedDemanda.prestador_id ? 'Equipe Externa' : (selectedDemanda.colaborador_id ? 'Departamento Interno' : 'Equipe Interna');
       
-      await supabase.from('os_notas').insert({
-        os_id: selectedDemanda.os_id,
-        nota: `Demanda transferida de "${prevName}" para "${targetName}".`
-      }).throwOnError();
+      try {
+        await supabase.from('os_notas').insert({
+          os_id: selectedDemanda.os_id,
+          nota: `Demanda transferida de "${prevName}" para "${targetName}".`
+        }).throwOnError();
+      } catch (error) {
+        console.error('Erro ao adicionar nota na OS:', error);
+        toast.error('Erro ao adicionar nota na OS.');
+      }
 
       if (transferTarget === 'prestador') {
         await notificationService.notifyProvider(
@@ -2389,10 +2416,15 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
               );
               
               if (selectedDemanda.os_id) {
-                await supabase.from('os_notas').insert({
-                  os_id: selectedDemanda.os_id,
-                  nota: `Ajuste solicitado ao prestador pela administração.`
-                }).throwOnError();
+                try {
+                  await supabase.from('os_notas').insert({
+                    os_id: selectedDemanda.os_id,
+                    nota: `Ajuste solicitado ao prestador pela administração.`
+                  }).throwOnError();
+                } catch (error) {
+                  console.error('Erro ao adicionar nota na OS:', error);
+                  toast.error('Erro ao adicionar nota na OS.');
+                }
               }
 
               toast.success('Ajuste solicitado!');

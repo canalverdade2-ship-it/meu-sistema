@@ -80,8 +80,13 @@ export function IndicacoesModule({ activeSubTab, initialItemId, colaboradorId, c
   }, [activeTab, filters, search]);
 
   const fetchClientes = async () => {
-    const { data } = await supabase.from('clientes').select('id, nome, cpf').eq('status', 'ativo').order('nome');
-    if (data) setClientes(data);
+    try {
+      const { data, error } = await supabase.from('clientes').select('id, nome, cpf').eq('status', 'ativo').order('nome');
+      if (error) throw error;
+      if (data) setClientes(data);
+    } catch (err: any) {
+      toast.error('Erro ao carregar clientes.');
+    }
   };
 
   const fetchIndicacoes = async () => {

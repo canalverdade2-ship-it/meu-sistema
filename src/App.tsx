@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Home } from './pages/Home';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { AdminNotificationProvider } from './hooks/useAdminNotifications';
 import { logService } from './lib/logService';
 import { useAutoLogout } from './hooks/useAutoLogout';
@@ -27,6 +27,7 @@ import { clientOperationalWrite } from './lib/clientOperationalWrite';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AffiliateTrackingBridge } from './components/AffiliateTrackingBridge';
 import { PublicVIPPresentationPage } from './components/public/PublicVIPPresentationPage';
+import { PublicNotFoundPage } from './components/public/PublicNotFoundPage';
 
 const PENDING_STORE_CHECKOUT_KEY = 'gsa_pending_store_checkout';
 const PENDING_STORE_COUPONS_KEY = 'gsa_pending_store_coupons';
@@ -62,21 +63,50 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
     const validServiceIds = new Set(servRes.data?.map((s: any) => s.id));
     const validSubscriptionIds = new Set(assRes.data?.map((a: any) => a.id));
 
-    await Promise.all(pendingItems.map(async (item) => {
-      if (!item?.item_id || !item?.tipo) return;
+    // Carrinho já existente na conta: evita duplicar linhas ao migrar o carrinho do visitante
+    const { data: existingCart } = await supabase
+      .from('loja_carrinhos')
+      .select('id, item_id, tipo, quantidade')
+      .eq('cliente_id', clientId);
 
-      if (item.tipo === 'produto' && !validProductIds.has(item.item_id)) return;
-      if (item.tipo === 'servico' && !validServiceIds.has(item.item_id)) return;
-      if (item.tipo === 'assinatura' && !validSubscriptionIds.has(item.item_id)) return;
+    const existingMap = new Map<string, any>(
+      (existingCart || []).map((row: any) => [`${row.tipo}:${row.item_id}`, row]),
+    );
+
+    // Escritas sequenciais: garante que uma falha no meio não deixe itens já inseridos
+    // sem controle e que o localStorage só seja limpo com a migração concluída.
+    for (const item of pendingItems) {
+      if (!item?.item_id || !item?.tipo) continue;
+
+      if (item.tipo === 'produto' && !validProductIds.has(item.item_id)) continue;
+      if (item.tipo === 'servico' && !validServiceIds.has(item.item_id)) continue;
+      if (item.tipo === 'assinatura' && !validSubscriptionIds.has(item.item_id)) continue;
 
       const quantidade = Math.max(1, Number(item.quantidade || 1));
       const prazoMeses = item.prazo_meses ? Number(item.prazo_meses) : undefined;
+      const key = `${item.tipo}:${item.item_id}`;
+      const existing = existingMap.get(key);
 
-      const insertData: any = { cliente_id: clientId, item_id: item.item_id, tipo: item.tipo, quantidade, updated_at: new Date().toISOString() };
-      if (prazoMeses) insertData.prazo_meses = prazoMeses;
-      await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
+      if (existing) {
+        const novaQuantidade = item.tipo === 'assinatura'
+          ? quantidade
+          : Number(existing.quantidade || 1) + quantidade;
+        await clientOperationalWrite(
+          clientId,
+          'loja_carrinhos',
+          'update',
+          { quantidade: novaQuantidade, updated_at: new Date().toISOString() },
+          { id: existing.id },
+        );
+        existing.quantidade = novaQuantidade;
+      } else {
+        const insertData: any = { cliente_id: clientId, item_id: item.item_id, tipo: item.tipo, quantidade, updated_at: new Date().toISOString() };
+        if (prazoMeses) insertData.prazo_meses = prazoMeses;
+        await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
+        existingMap.set(key, { id: null, item_id: item.item_id, tipo: item.tipo, quantidade });
+      }
       migrated = true;
-    }));
+    }
 
     const rawCoupons = localStorage.getItem(PENDING_STORE_COUPONS_KEY);
     const parsedCoupons = rawCoupons ? JSON.parse(rawCoupons) : null;
@@ -320,12 +350,15 @@ export default function App() {
             }
           } else if (restored.atorTipo === 'fornecedor') {
             const { data: access, error } = await supabase.rpc('gsa_supplier_session_access_state');
-            if (error || !(access as any)?.success) {
+            const supplierId = (access as any)?.supplier_id as string | undefined;
+            // Mesma checagem usada no prestador: a sessão local precisa apontar
+            // para o mesmo ator retornado pelo banco, senão é revogada.
+            if (error || !(access as any)?.success || !supplierId || supplierId !== restored.atorId) {
               await sessionService.endSession();
               setSession({});
               return;
             }
-            setSession({ fornecedorId: (access as any).supplier_id });
+            setSession({ fornecedorId: supplierId });
             if (window.location.pathname === '/login/fornecedor') replace(routes.supplier.dashboard());
           }
         } else if (
@@ -423,6 +456,14 @@ export default function App() {
     ? `?${new URLSearchParams({ returnTo: route.query.returnTo }).toString()}`
     : '';
 
+  // Módulos de login efetivamente renderizados abaixo. Qualquer outro módulo
+  // (ex.: /login/pessoal) caía em tela branca por não casar com nenhum bloco.
+  const knownLoginModules = [
+    'cliente', 'pessoa-fisica', 'empresa', 'acesso-restrito', 'admin',
+    'colaborador', 'prestador', 'root', 'afiliado', 'careers', 'fornecedor',
+  ];
+  const isUnknownLoginRoute = activeView === 'login' && !knownLoginModules.includes(route.module);
+
   return (
     <FileViewerProvider>
       <QueryClientProvider client={queryClient}>
@@ -486,6 +527,10 @@ export default function App() {
                 onBackToLanding={() => navigate(routes.public.careers())}
                 onBackToSite={() => navigate(routes.public.home())}
               />
+            )}
+
+            {(activeView === 'unknown' || isUnknownLoginRoute || (activeView === 'public' && route.module === 'unknown')) && (
+              <PublicNotFoundPage pathname={route.pathname} />
             )}
 
             {activeView === 'public' && route.module === 'vip' && (

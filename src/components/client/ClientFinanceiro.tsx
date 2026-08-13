@@ -92,36 +92,41 @@ export function ClientFinanceiro({
   useEffect(() => {
     if (initialItemId && hasAutoOpened.current !== initialItemId) {
       const detectTabAndSwitch = async () => {
-        // Find if it's a fatura
-        const { data: fatura } = await supabase.from('faturas').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
-        if (fatura) {
-          setActiveTab('faturas');
-          setIsSubmoduleOpen(true);
-          return;
-        }
+        try {
+          // Find if it's a fatura
+          const { data: fatura } = await supabase.from('faturas').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
+          if (fatura) {
+            setActiveTab('faturas');
+            setIsSubmoduleOpen(true);
+            return;
+          }
 
-        // Find if it's a saque
-        const { data: saque } = await supabase.from('saques').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
-        if (saque) {
-          setActiveTab('saques');
-          setIsSubmoduleOpen(true);
-          return;
-        }
+          // Find if it's a saque
+          const { data: saque } = await supabase.from('saques').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
+          if (saque) {
+            setActiveTab('saques');
+            setIsSubmoduleOpen(true);
+            return;
+          }
 
-        // Find if it's an nf
-        const { data: nf } = await supabase.from('ordens_fiscais').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
-        if (nf) {
-          setActiveTab('nf');
-          setIsSubmoduleOpen(true);
-          return;
-        }
+          // Find if it's an nf
+          const { data: nf } = await supabase.from('ordens_fiscais').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
+          if (nf) {
+            setActiveTab('nf');
+            setIsSubmoduleOpen(true);
+            return;
+          }
 
-        // Find if it's a transferencia (extrato)
-        const { data: trans } = await supabase.from('transferencias').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
-        if (trans) {
-          setActiveTab('extrato');
-          setIsSubmoduleOpen(true);
-          return;
+          // Find if it's a transferencia (extrato)
+          const { data: trans } = await supabase.from('transferencias').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle();
+          if (trans) {
+            setActiveTab('extrato');
+            setIsSubmoduleOpen(true);
+            return;
+          }
+        } catch (e: any) {
+          console.error('Erro ao detectar tab:', e);
+          toast.error('Erro ao buscar dados da área financeira.');
         }
       };
       detectTabAndSwitch();
@@ -289,8 +294,12 @@ export function ClientFinanceiro({
   };
 
   const fetchMinSaque = async () => {
-    const { data } = await supabase.from('system_settings').select('value').eq('key', 'valor_minimo_saque').maybeSingle();
-    if (data) setMinSaque(parseFloat(data.value));
+    try {
+      const { data } = await supabase.from('system_settings').select('value').eq('key', 'valor_minimo_saque').maybeSingle();
+      if (data) setMinSaque(parseFloat(data.value));
+    } catch (e: any) {
+      console.error('Erro ao buscar mínimo de saque:', e);
+    }
   };
 
   const checkFaturas = async () => {

@@ -51,9 +51,16 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
 
   useEffect(() => {
     let isMounted = true;
-    supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['assinatura', 'todos']).order('ordem').then(({data}) => {
-      if (isMounted && data) setCategorias(data);
-    });
+    const fetchCats = async () => {
+      try {
+        const { data, error } = await supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['assinatura', 'todos']).order('ordem');
+        if (error) throw error;
+        if (isMounted && data) setCategorias(data);
+      } catch (err: any) {
+        toast.error('Erro ao carregar categorias.');
+      }
+    };
+    fetchCats();
     return () => { isMounted = false; };
   }, []);
 
@@ -410,12 +417,14 @@ return (
                           if (next === current) return;
 
                           setSelectedAssinatura({ ...selectedAssinatura, tipo_cliente: next });
-                           const { error } = await supabase.from('assinaturas').update({
-                             tipo_cliente: next
-                           }).eq('id', selectedAssinatura.id);
-                          if (error) toast.error('Erro ao atualizar tipo de cliente.');
-                          else { 
+                          try {
+                            const { error } = await supabase.from('assinaturas').update({
+                              tipo_cliente: next
+                            }).eq('id', selectedAssinatura.id);
+                            if (error) throw error;
+                            
                             toast.success('Tipo de cliente atualizado.');
+
                             
                             // Log Action
                             await logService.logAction({
@@ -427,6 +436,8 @@ return (
                             });
 
                             fetchAssinaturas(); 
+                          } catch (err: any) {
+                            toast.error('Erro ao atualizar tipo de cliente.');
                           }
                         }}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border-2 ${
@@ -449,12 +460,13 @@ return (
                       const catId = e.target.value;
                       const catNome = categorias.find(c => c.id === catId)?.nome || '';
                       setSelectedAssinatura({ ...selectedAssinatura, categoria_id: catId, categoria: catNome });
-                       const { error } = await supabase.from('assinaturas').update({
-                         categoria_id: catId || null,
-                         categoria: catNome || null
-                       }).eq('id', selectedAssinatura.id);
-                      if (error) toast.error('Erro ao salvar categoria.');
-                      else { 
+                      try {
+                        const { error } = await supabase.from('assinaturas').update({
+                          categoria_id: catId || null,
+                          categoria: catNome || null
+                        }).eq('id', selectedAssinatura.id);
+                        if (error) throw error;
+                         
                         toast.success('Categoria atualizada.');
                         await logService.logAction({
                           acao: 'EDITAR_ASSINATURA',
@@ -464,6 +476,8 @@ return (
                           detalhes: `Alterou a categoria da assinatura ${selectedAssinatura.nome} para ${catNome || 'nenhuma'}`
                         });
                         fetchAssinaturas(); 
+                      } catch (err: any) {
+                        toast.error('Erro ao salvar categoria.');
                       }
                     }}
                     className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
@@ -490,14 +504,16 @@ return (
                       onChange={async (e) => {
                         const newOcultar = e.target.checked;
                         setSelectedAssinatura({ ...selectedAssinatura, ocultar_valor: newOcultar });
-                         const { error } = await supabase.from('assinaturas').update({
-                           ocultar_valor: newOcultar
-                         }).eq('id', selectedAssinatura.id);
-                        if (error) {
-                          toast.error('Erro ao atualizar visibilidade de preço.');
-                        } else {
+                        try {
+                          const { error } = await supabase.from('assinaturas').update({
+                            ocultar_valor: newOcultar
+                          }).eq('id', selectedAssinatura.id);
+                          if (error) throw error;
+                          
                           toast.success('Visibilidade de preço atualizada.');
                           fetchAssinaturas();
+                        } catch (err: any) {
+                          toast.error('Erro ao atualizar visibilidade de preço.');
                         }
                       }}
                     />
@@ -521,8 +537,14 @@ return (
                         onChange={async (e) => {
                           const val = e.target.checked;
                           setSelectedAssinatura({ ...selectedAssinatura, visivel_na_loja: val });
-                          const { error } = await supabase.from('assinaturas').update({ visivel_na_loja: val }).eq('id', selectedAssinatura.id);
-                          if (!error) { toast.success('Visibilidade na loja atualizada.'); fetchAssinaturas(); }
+                          try {
+                            const { error } = await supabase.from('assinaturas').update({ visivel_na_loja: val }).eq('id', selectedAssinatura.id);
+                            if (error) throw error;
+                            toast.success('Visibilidade na loja atualizada.'); 
+                            fetchAssinaturas();
+                          } catch (err: any) {
+                            toast.error('Erro ao atualizar visibilidade na loja.');
+                          }
                         }}
                       />
                       <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
@@ -597,13 +619,13 @@ return (
                   <button 
                     onClick={async () => {
                       const newStatus = selectedAssinatura.status === 'ativo' ? 'inativo' : 'ativo';
-                      const { error } = await supabase.from('assinaturas').update({
-                        status: newStatus
-                      }).eq('id', selectedAssinatura.id);
-                      if (error) {
-                        toast.error('Erro ao alterar status.');
-                      } else {
-                        toast.success(`Assinatura ${newStatus === 'ativo' ? 'ativado' : 'inativada'} com sucesso.`);
+                      try {
+                        const { error } = await supabase.from('assinaturas').update({
+                          status: newStatus
+                        }).eq('id', selectedAssinatura.id);
+                        if (error) throw error;
+                        
+                        toast.success(`Assinatura ${newStatus === 'ativo' ? 'ativada' : 'inativada'} com sucesso.`);
                         
                         // Log Action
                         await logService.logAction({
@@ -616,6 +638,8 @@ return (
 
                         setIsDetailOpen(false);
                         fetchAssinaturas();
+                      } catch (err: any) {
+                        toast.error('Erro ao alterar status.');
                       }
                     }}
                     className={`flex-1 rounded-xl py-4 font-bold transition-all ${selectedAssinatura.status === 'ativo' ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}

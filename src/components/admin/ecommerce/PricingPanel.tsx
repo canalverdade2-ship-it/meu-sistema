@@ -32,17 +32,25 @@ export function PricingPanel({ colaboradorId, colaboradorNome }: PricingPanelPro
 
   const loadConfigs = async () => {
     setLoading(true);
-    // Simulating loading from database
-    setTimeout(() => {
-      setConfigs([
-        { id: '1', category: 'Eletrônicos', base_markup: 30, min_margin: 15, max_margin: 50, dynamic_pricing_enabled: true },
-        { id: '2', category: 'Vestuário', base_markup: 50, min_margin: 25, max_margin: 70, dynamic_pricing_enabled: false },
-        { id: '3', category: 'Acessórios', base_markup: 60, min_margin: 30, max_margin: 80, dynamic_pricing_enabled: true },
-        { id: '4', category: 'Geral', base_markup: 40, min_margin: 20, max_margin: 60, dynamic_pricing_enabled: true },
-      ]);
+    try {
+      const { data, error } = await supabase.from('pricing_configs').select('*');
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setConfigs(data);
+      } else {
+        setConfigs([
+          { id: '1', category: 'Eletrônicos', base_markup: 30, min_margin: 15, max_margin: 50, dynamic_pricing_enabled: true },
+          { id: '2', category: 'Vestuário', base_markup: 50, min_margin: 25, max_margin: 70, dynamic_pricing_enabled: false },
+          { id: '3', category: 'Acessórios', base_markup: 60, min_margin: 30, max_margin: 80, dynamic_pricing_enabled: true },
+          { id: '4', category: 'Geral', base_markup: 40, min_margin: 20, max_margin: 60, dynamic_pricing_enabled: true },
+        ]);
+      }
       setGlobalWebhook('https://n8n.gsa.com.br/webhook/pricing-update');
+    } catch (error) {
+      toast.error('Erro ao carregar configurações de preço.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const handleConfigChange = (id: string, field: keyof PricingConfig, value: any) => {
@@ -52,11 +60,11 @@ export function PricingPanel({ colaboradorId, colaboradorNome }: PricingPanelPro
   const saveConfigs = async () => {
     setSaving(true);
     try {
-      // Aqui integraria com o Supabase para salvar as configurações
-      await new Promise(r => setTimeout(r, 1000));
+      const { error } = await supabase.from('pricing_configs').upsert(configs);
+      if (error) throw error;
       toast.success('Configurações de precificação salvas com sucesso!');
     } catch (error) {
-      toast.error('Erro ao salvar configurações');
+      toast.error('Erro ao salvar configurações de preço.');
     } finally {
       setSaving(false);
     }
@@ -70,9 +78,7 @@ export function PricingPanel({ colaboradorId, colaboradorNome }: PricingPanelPro
     
     const toastId = toast.loading('Disparando atualização de preços via N8N...');
     try {
-      // Simulação do disparo do webhook
-      // await fetch(globalWebhook, { method: 'POST', body: JSON.stringify({ action: 'update_pricing', configs }) });
-      await new Promise(r => setTimeout(r, 1500));
+      await fetch(globalWebhook, { method: 'POST', body: JSON.stringify({ action: 'update_pricing', configs }) });
       toast.success('Automação de precificação disparada com sucesso!', { id: toastId });
     } catch (error) {
       toast.error('Erro ao conectar com N8N', { id: toastId });

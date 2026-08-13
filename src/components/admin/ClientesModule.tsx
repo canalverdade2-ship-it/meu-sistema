@@ -543,8 +543,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
       if (pItem.tableName === 'tickets') {
         await supabase.from('ticket_mensagens').delete().eq('ticket_id', pItem.itemId);
       } else if (pItem.tableName === 'orcamentos') {
-        await supabase.from('orcamento_itens').delete().eq('orcamento_id', pItem.itemId);
-        await supabase.from('orcamento_historico').delete().eq('orcamento_id', pItem.itemId);
+        await supabase.from('orcamento_timeline').delete().eq('orcamento_id', pItem.itemId);
       } else if (pItem.tableName === 'emprestimos') {
         await supabase.from('emprestimo_parcelas').delete().eq('emprestimo_id', pItem.itemId);
       }
@@ -839,7 +838,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
 
       {/* Create Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Cadastrar Cliente" size="wide">
-        <ClienteForm onSubmit={handleCreate} onCancel={() => setIsModalOpen(false)} />
+        <ClienteForm onSubmit={async (data: any) => { await handleCreate(data); }} onCancel={() => setIsModalOpen(false)} />
       </Modal>
 
       {/* Detail Modal */}

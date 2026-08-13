@@ -82,75 +82,95 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       }
 
       // 2. Clientes
-      const { data: clis } = await supabase.from('clientes').select('id, nome, email, data_cadastro, status').limit(100);
-      if (clis && clis.length > 0) {
-        clis.forEach(c => {
-          if (c.id && !seenIds.has(c.id)) {
-            seenIds.add(c.id);
-            users.push({
-              id: c.id,
-              nome: c.nome || 'Cliente GSA',
-              email: c.email || '—',
-              tipo: 'Cliente GSA',
-              status: c.status === 'inativo' || c.status === 'bloqueado' ? 'Bloqueado' : 'Ativo',
-              created_at: c.data_cadastro
-            });
-          }
-        });
+      try {
+        const { data: clis, error: clisError } = await supabase.from('clientes').select('id, nome, email, data_cadastro, status').limit(100);
+        if (clisError) throw clisError;
+        if (clis && clis.length > 0) {
+          clis.forEach(c => {
+            if (c.id && !seenIds.has(c.id)) {
+              seenIds.add(c.id);
+              users.push({
+                id: c.id,
+                nome: c.nome || 'Cliente GSA',
+                email: c.email || '—',
+                tipo: 'Cliente GSA',
+                status: c.status === 'inativo' || c.status === 'bloqueado' ? 'Bloqueado' : 'Ativo',
+                created_at: c.data_cadastro
+              });
+            }
+          });
+        }
+      } catch (e) {
+        toast.error('Erro ao carregar clientes do sistema.');
       }
 
       // 3. Fornecedores
-      const { data: forns } = await supabase.from('fornecedores').select('id, razao_social, email, created_at, status').limit(100);
-      if (forns && forns.length > 0) {
-        forns.forEach(c => {
-          if (c.id && !seenIds.has(c.id)) {
-            seenIds.add(c.id);
-            users.push({
-              id: c.id,
-              nome: c.razao_social || 'Fornecedor GSA',
-              email: c.email || '—',
-              tipo: 'Fornecedor GSA',
-              status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
-              created_at: c.created_at
-            });
-          }
-        });
+      try {
+        const { data: forns, error: fornsError } = await supabase.from('fornecedores').select('id, razao_social, email, created_at, status').limit(100);
+        if (fornsError) throw fornsError;
+        if (forns && forns.length > 0) {
+          forns.forEach(c => {
+            if (c.id && !seenIds.has(c.id)) {
+              seenIds.add(c.id);
+              users.push({
+                id: c.id,
+                nome: c.razao_social || 'Fornecedor GSA',
+                email: c.email || '—',
+                tipo: 'Fornecedor GSA',
+                status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
+                created_at: c.created_at
+              });
+            }
+          });
+        }
+      } catch (e) {
+        toast.error('Erro ao carregar fornecedores do sistema.');
       }
 
       // 4. Prestadores
-      const { data: pres } = await supabase.from('prestadores').select('id, nome_razao, email, created_at, status').limit(100);
-      if (pres && pres.length > 0) {
-        pres.forEach((c: any) => {
-          if (c.id && !seenIds.has(c.id)) {
-            seenIds.add(c.id);
-            users.push({
-              id: c.id,
-              nome: c.nome_razao || 'Prestador GSA',
-              email: c.email || '—',
-              tipo: 'Prestador de Serviço',
-              status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
-              created_at: c.created_at
-            });
-          }
-        });
+      try {
+        const { data: pres, error: presError } = await supabase.from('prestadores').select('id, nome_razao, email, created_at, status').limit(100);
+        if (presError) throw presError;
+        if (pres && pres.length > 0) {
+          pres.forEach((c: any) => {
+            if (c.id && !seenIds.has(c.id)) {
+              seenIds.add(c.id);
+              users.push({
+                id: c.id,
+                nome: c.nome_razao || 'Prestador GSA',
+                email: c.email || '—',
+                tipo: 'Prestador de Serviço',
+                status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
+                created_at: c.created_at
+              });
+            }
+          });
+        }
+      } catch (e) {
+        toast.error('Erro ao carregar prestadores do sistema.');
       }
 
       // 5. Afiliados
-      const { data: afils } = await supabase.from('gsa_afiliados').select('id, nome_divulgacao, created_at, status').limit(100);
-      if (afils && afils.length > 0) {
-        afils.forEach((c: any) => {
-          if (c.id && !seenIds.has(c.id)) {
-            seenIds.add(c.id);
-            users.push({
-              id: c.id,
-              nome: c.nome_divulgacao || 'Afiliado GSA',
-              email: '—',
-              tipo: 'Afiliado GSA',
-              status: c.status === 'encerrado' ? 'Bloqueado' : 'Ativo',
-              created_at: c.created_at
-            });
-          }
-        });
+      try {
+        const { data: afils, error: afilsError } = await supabase.from('gsa_afiliados').select('id, nome_divulgacao, created_at, status').limit(100);
+        if (afilsError) throw afilsError;
+        if (afils && afils.length > 0) {
+          afils.forEach((c: any) => {
+            if (c.id && !seenIds.has(c.id)) {
+              seenIds.add(c.id);
+              users.push({
+                id: c.id,
+                nome: c.nome_divulgacao || 'Afiliado GSA',
+                email: '—',
+                tipo: 'Afiliado GSA',
+                status: c.status === 'encerrado' ? 'Bloqueado' : 'Ativo',
+                created_at: c.created_at
+              });
+            }
+          });
+        }
+      } catch (e) {
+        toast.error('Erro ao carregar afiliados do sistema.');
       }
 
       if (users.length > 0) {

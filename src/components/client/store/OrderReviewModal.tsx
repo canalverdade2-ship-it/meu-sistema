@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { X, Star, MessageSquare, Loader2, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-hot-toast';
+import { supabase } from '../../../lib/supabase';
+import { insertProductReview } from '../../../lib/storeReviews';
 
 interface OrderReviewModalProps {
   isOpen: boolean;
@@ -20,13 +23,54 @@ export function OrderReviewModal({ isOpen, onClose, order }: OrderReviewModalPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
-      alert('Por favor, selecione uma nota.');
+      toast.error('Por favor, selecione uma nota.');
       return;
     }
-    
-    setLoading(true);
-    // Simulação de salvamento no banco de dados
-    setTimeout(() => {
+
+    const produtoId =
+      order?.produto_id ||
+      order?.ordens_items?.[0]?.item_id ||
+      order?.ordens_items?.[0]?.produto_id ||
+      null;
+    const clienteId = order?.cliente_id || null;
+
+    if (!produtoId) {
+      toast.error('Não foi possível identificar o produto deste pedido para avaliação.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Evita avaliações duplicadas do mesmo cliente para o mesmo produto
+      if (clienteId) {
+        const { data: existing } = await supabase
+          .from('loja_avaliacoes')
+          .select('id')
+          .eq('produto_id', produtoId)
+          .eq('cliente_id', clienteId)
+          .limit(1);
+        if (existing && existing.length > 0) {
+          toast.error('Você já avaliou este produto.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      await insertProductReview({
+        produto_id: produtoId,
+        cliente_id: clienteId,
+        nome_autor: order?.clientes?.nome || order?.cliente_nome || 'Cliente GSA',
+        nota: rating,
+        comentario: comment.trim() || 'Compra avaliada pelo cliente.',
+        recomenda: rating >= 4,
+        origem: 'gsa',
+        verificado: true,
+        status: 'aprovado',
+        curtidas_uteis: 0,
+        created_at: new Date().toISOString(),
+      });
+
       setLoading(false);
       setSuccess(true);
       setTimeout(() => {
@@ -35,7 +79,11 @@ export function OrderReviewModal({ isOpen, onClose, order }: OrderReviewModalPro
         setComment('');
         onClose();
       }, 2000);
-    }, 1200);
+    } catch (err) {
+      console.error('[OrderReviewModal] Erro ao enviar avaliação:', err);
+      toast.error('Erro ao enviar avaliação. Tente novamente.');
+      setLoading(false);
+    }
   };
 
   return (

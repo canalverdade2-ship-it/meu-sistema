@@ -102,7 +102,7 @@ export function FileViewerProvider({ children }: { children: ReactNode }) {
       setIsOpen(true);
     } catch (error: any) {
       console.error('Erro ao abrir arquivo protegido:', error);
-      toast.error(error?.message || 'Não foi possível autorizar o acesso ao arquivo.');
+      toast.error('Não foi possível autorizar o acesso ao arquivo.');
     }
   };
 

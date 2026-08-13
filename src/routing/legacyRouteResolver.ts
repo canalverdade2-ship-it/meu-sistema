@@ -58,6 +58,17 @@ export function resolveLegacyRoute(pathname: string, search: string): string | n
     return routes.marketplace.classifieds.root();
   }
 
+  // 2b. Atalhos curtos amplamente divulgados
+  if (normalizedPath === '/classificados') {
+    return routes.marketplace.classifieds.root();
+  }
+  if (normalizedPath === '/viagens' || normalizedPath === '/pacotes-viagem') {
+    return routes.marketplace.travelPackages.legacy();
+  }
+  if (normalizedPath === '/blog') {
+    return routes.marketplace.store.blog();
+  }
+
   // 3. Portal do anunciante anterior à padronização em /anuncios
   if (normalizedPath === '/anunciante') {
     return routes.login.advertiser();

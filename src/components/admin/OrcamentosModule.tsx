@@ -1170,10 +1170,16 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
   };
 
   const fetchData = async () => {
-    const { data: c } = await supabase.from('clientes').select('id, nome, codigo_cliente, tipo_pessoa').eq('status', 'ativo');
-    const { data: s } = await supabase.from('servicos').select('*').eq('status', 'ativo');
-    if (c) setClientes(c);
-    if (s) setServicos(s);
+    try {
+      const { data: c, error: ec } = await supabase.from('clientes').select('id, nome, codigo_cliente, tipo_pessoa').eq('status', 'ativo');
+      if (ec) throw ec;
+      const { data: s, error: es } = await supabase.from('servicos').select('*').eq('status', 'ativo');
+      if (es) throw es;
+      if (c) setClientes(c);
+      if (s) setServicos(s);
+    } catch (err: any) {
+      toast.error('Erro ao buscar dados.');
+    }
   };
 
   // Filtra catálogo pelo tipo_pessoa do cliente selecionado
@@ -1774,12 +1780,19 @@ function OrcamentoDetails({
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: s } = await supabase.from('servicos').select('*').eq('status', 'ativo');
-      const { data: p } = await supabase.from('produtos').select('*').eq('status', 'ativo');
-      const { data: a } = await supabase.from('assinaturas').select('*').eq('status', 'ativo');
-      if (s) setServicos(s);
-      if (p) setProdutos(p);
-      if (a) setAssinaturas(a);
+      try {
+        const { data: s, error: es } = await supabase.from('servicos').select('*').eq('status', 'ativo');
+        if (es) throw es;
+        const { data: p, error: ep } = await supabase.from('produtos').select('*').eq('status', 'ativo');
+        if (ep) throw ep;
+        const { data: a, error: ea } = await supabase.from('assinaturas').select('*').eq('status', 'ativo');
+        if (ea) throw ea;
+        if (s) setServicos(s);
+        if (p) setProdutos(p);
+        if (a) setAssinaturas(a);
+      } catch (err: any) {
+        toast.error('Erro ao buscar catálogo.');
+      }
     };
     fetchData();
   }, []);

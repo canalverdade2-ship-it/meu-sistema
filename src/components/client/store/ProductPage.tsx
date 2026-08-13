@@ -15,7 +15,6 @@ import {
   Package,
   Check,
   MessageCircle,
-  Sparkles,
   ArrowRight,
   CreditCard,
   QrCode,
@@ -33,6 +32,7 @@ import { calculateProductRating } from '../../../lib/productRatings';
 import { getProductEffectivePrice, getProductDiscountPercentage, hasActiveProductDiscount } from '../../../lib/productPricing';
 import { useSEO } from '../../../hooks/useSEO';
 import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
+import { isInWishlist, toggleWishlist } from '../../../lib/wishlistStorage';
 import { toast } from 'react-hot-toast';
 
 interface ProductPageProps {
@@ -87,6 +87,7 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
         if (isMounted) {
           if (data) {
             setProduct(data);
+            setIsWishlisted(isInWishlist(data.id, clientId));
             const initialSummary = calculateProductRating(data);
             setDisplayRating(initialSummary.rating);
             setDisplayRatingCount(initialSummary.totalCount);
@@ -285,13 +286,32 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
   const categoryName = product.loja_categoria?.nome || product.categorias?.nome || product.categoria_nome || product.categoria || 'Produtos GSA';
 
   const installmentValue = currentPrice > 0 ? (currentPrice / 12).toFixed(2).replace('.', ',') : '0,00';
-  const pixDiscountPrice = currentPrice > 0 ? (currentPrice * 0.95).toFixed(2).replace('.', ',') : '0,00';
+
+  // Controle de estoque (mesma regra do QuantityModal)
+  const controlaEstoque = Boolean(product.controle_estoque);
+  const estoqueDisponivel = Number(product.estoque_disponivel || 0);
+  const semEstoque = controlaEstoque && estoqueDisponivel <= 0;
+  const maxQuantity = controlaEstoque ? Math.max(1, estoqueDisponivel) : 99;
 
   const handleAddToCart = async (openCartAfter = false) => {
+    console.log('[ProductPage] handleAddToCart start:', { openCartAfter, clientId, semEstoque, controlaEstoque, quantity, estoqueDisponivel, productId: product?.id });
     try {
+      if (semEstoque) {
+        console.log('[ProductPage] handleAddToCart early return: semEstoque');
+        toast.error('Produto sem estoque disponível no momento.');
+        return;
+      }
+      if (controlaEstoque && quantity > estoqueDisponivel) {
+        console.log('[ProductPage] handleAddToCart early return: quantity > estoqueDisponivel');
+        toast.error(`Apenas ${estoqueDisponivel} unidade(s) disponível(is) em estoque.`);
+        setQuantity(Math.max(1, estoqueDisponivel));
+        return;
+      }
+
       setIsAddingToCart(true);
 
       if (!clientId) {
+        console.log('[ProductPage] handleAddToCart early return: !clientId');
         const PENDING_STORE_CHECKOUT_KEY = 'gsa_pending_store_checkout';
         const rawCart = localStorage.getItem(PENDING_STORE_CHECKOUT_KEY);
         let parsed = rawCart ? JSON.parse(rawCart) : { items: [] };
@@ -302,7 +322,11 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
         );
 
         if (existingIdx >= 0) {
-          parsed.items[existingIdx].quantidade = Number(parsed.items[existingIdx].quantidade || 1) + quantity;
+          const novaQuantidade = Number(parsed.items[existingIdx].quantidade || 1) + quantity;
+          // Nunca deixa a quantidade combinada (existente + nova) ultrapassar o estoque disponível.
+          parsed.items[existingIdx].quantidade = controlaEstoque
+            ? Math.min(novaQuantidade, estoqueDisponivel)
+            : novaQuantidade;
         } else {
           parsed.items.push({
             item_id: product.id,
@@ -333,8 +357,11 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
         .maybeSingle();
 
       if (existing) {
+        const novaQuantidade = Number(existing.quantidade || 1) + quantity;
+        // Nunca deixa a quantidade combinada (existente + nova) ultrapassar o estoque disponível.
+        const quantidadeFinal = controlaEstoque ? Math.min(novaQuantidade, estoqueDisponivel) : novaQuantidade;
         await clientOperationalWrite(clientId, 'loja_carrinhos', 'update', {
-          quantidade: Number(existing.quantidade || 1) + quantity,
+          quantidade: quantidadeFinal,
           updated_at: new Date().toISOString()
         }, { id: existing.id });
       } else {
@@ -439,8 +466,9 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               <button 
                 type="button"
                 onClick={() => {
-                  setIsWishlisted(!isWishlisted);
-                  toast.success(!isWishlisted ? 'Produto salvo nos seus favoritos!' : 'Removido dos favoritos.');
+                  const nowFavorited = toggleWishlist(product.id, clientId);
+                  setIsWishlisted(nowFavorited);
+                  toast.success(nowFavorited ? 'Produto salvo nos seus favoritos!' : 'Removido dos favoritos.');
                 }}
                 className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm text-neutral-400 shadow-md transition-all hover:text-red-500 hover:scale-110 cursor-pointer"
                 title="Favoritar produto"
@@ -462,9 +490,16 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               <span className="rounded-lg bg-neutral-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#17345f]">
                 {categoryName}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
-                <Check className="h-3 w-3" /> Em Estoque
-              </span>
+              {semEstoque ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-bold text-red-700">
+                  Esgotado
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                  <Check className="h-3 w-3" /> Em Estoque
+                  {controlaEstoque && estoqueDisponivel <= 10 ? ` (${estoqueDisponivel} un.)` : ''}
+                </span>
+              )}
             </div>
 
             <h1 className="mt-3 text-2xl font-black leading-snug text-neutral-900 sm:text-3xl lg:text-4xl">
@@ -487,13 +522,6 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                 ))}
                 <span className="ml-1.5 text-xs font-bold text-neutral-700">{displayRating.toFixed(1)}</span>
                 <span className="text-xs text-neutral-400 font-medium">({displayRatingCount} {displayRatingCount === 1 ? 'avaliação' : 'avaliações'})</span>
-              </div>
-              
-              <div className="h-3.5 w-px bg-neutral-200" />
-
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600 border border-rose-100">
-                <Eye className="h-3.5 w-3.5 animate-pulse" />
-                <span>{realViewersCount} {realViewersCount === 1 ? 'pessoa de olho agora' : 'pessoas de olho agora'}</span>
               </div>
             </div>
 
@@ -518,7 +546,7 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
 
               <div className="mt-2 flex items-center gap-2 text-xs font-extrabold text-emerald-700">
                 <QrCode className="h-4 w-4" />
-                <span>R$ {pixDiscountPrice} via PIX à vista (5% de desconto)</span>
+                <span>Pague à vista via PIX, boleto ou cartão</span>
               </div>
 
               <div className="mt-1.5 flex items-center gap-2 text-xs font-semibold text-neutral-600">
@@ -527,76 +555,68 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               </div>
               
               <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-50 p-2.5 text-xs font-bold text-amber-800 border border-amber-200/60">
-                <Sparkles className="h-4 w-4 text-amber-600" />
-                <span>Ganhe +{pontosGanhos} pontos GSA Fidelidade nesta compra</span>
+                <Gift className="h-4 w-4 text-amber-600" />
+                <span>Ganhe + {pontosGanhos} pontos GSA Fidelidade nesta compra</span>
               </div>
             </div>
 
             <div className="mt-6 space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-slate-50/90 p-3.5 border border-slate-200/80 shadow-xs">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Quantidade:</span>
-                  <div className="flex items-center rounded-xl border border-neutral-300 bg-white shadow-xs">
-                    <button 
-                      type="button"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      disabled={quantity <= 1}
-                      className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-30 rounded-l-xl transition-colors cursor-pointer"
-                      aria-label="Diminuir quantidade"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="w-12 text-center font-black text-neutral-900">{quantity}</span>
-                    <button 
-                      type="button"
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 rounded-r-xl transition-colors cursor-pointer"
-                      aria-label="Aumentar quantidade"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Quantidade:</span>
+                <div className="flex items-center rounded-xl border border-neutral-300 bg-white shadow-xs">
+                  <button 
+                    type="button"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
+                    className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-30 rounded-l-xl transition-colors cursor-pointer"
+                    aria-label="Diminuir quantidade"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="w-10 text-center font-black text-neutral-900">{quantity}</span>
+                  <button 
+                    type="button"
+                    onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}
+                    disabled={quantity >= maxQuantity}
+                    className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-30 rounded-r-xl transition-colors cursor-pointer"
+                    aria-label="Aumentar quantidade"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
                 </div>
 
-                {/* Instant Simulation Display */}
-                <div className="flex flex-1 items-center justify-between min-w-[250px] gap-2.5 rounded-xl bg-white px-3.5 py-2 border border-emerald-200/80 shadow-xs transition-all">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                      Total Simulado ({quantity} {quantity === 1 ? 'un' : 'unidades'})
-                    </span>
-                    <div className="flex flex-wrap items-baseline gap-1.5 mt-0.5">
-                      <span className="text-sm font-black text-[#17345f]">
-                        {formatCurrency(currentPrice * quantity)}
-                      </span>
-                      <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
-                        {formatCurrency(currentPrice * quantity * 0.95)} no PIX (5% OFF)
-                      </span>
+                {/* Compact Total Display (PIX only + points) - Only shown when quantity > 1 */}
+                {quantity > 1 && (
+                  <div className="flex items-center gap-2.5 rounded-xl bg-emerald-50/90 px-3.5 py-2 border border-emerald-200/80 text-xs shadow-2xs animate-in fade-in duration-200">
+                    <div className="flex items-baseline gap-1 text-emerald-950 font-black">
+                      <span className="text-[11px] font-bold text-emerald-800">Total ({quantity} un):</span>
+                      <span className="text-sm font-black text-emerald-700">{formatCurrency(currentPrice * quantity)}</span>
+                    </div>
+                    <span className="text-emerald-300">|</span>
+                    <div className="flex items-center gap-1 font-extrabold text-amber-700">
+                      <Gift className="h-3.5 w-3.5 text-amber-500" />
+                      <span>+ {pontosGanhos * quantity} pts</span>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-1 text-xs font-black text-amber-700 bg-amber-50 px-2 py-1.5 rounded-lg border border-amber-200/60 shrink-0">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                    <span>+{pontosGanhos * quantity} pts</span>
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <button 
                   type="button"
                   onClick={() => handleAddToCart(true)}
-                  disabled={isAddingToCart}
+                  disabled={isAddingToCart || semEstoque}
                   className="flex items-center justify-center gap-2 rounded-2xl bg-[#17345f] px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#17345f]/25 transition-all hover:bg-[#0c2340] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:opacity-50"
                 >
                   <ShoppingCart className="h-5 w-5" />
-                  {isAddingToCart ? 'Processando...' : 'Comprar Agora'}
+                  {semEstoque ? 'Produto Esgotado' : isAddingToCart ? 'Processando...' : 'Comprar Agora'}
                 </button>
 
                 <button 
                   type="button"
                   onClick={() => handleAddToCart(false)}
-                  disabled={isAddingToCart}
-                  className="flex items-center justify-center gap-2 rounded-2xl border-2 border-[#17345f] bg-white px-6 py-4 text-sm font-black text-[#17345f] shadow-sm transition-all hover:bg-[#17345f]/5 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                  disabled={isAddingToCart || semEstoque}
+                  className="flex items-center justify-center gap-2 rounded-2xl border-2 border-[#17345f] bg-white px-6 py-4 text-sm font-black text-[#17345f] shadow-sm transition-all hover:bg-[#17345f]/5 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:opacity-50"
                 >
                   <Plus className="h-5 w-5" />
                   Adicionar ao Carrinho

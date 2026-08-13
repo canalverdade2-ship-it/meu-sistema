@@ -190,8 +190,13 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
   };
 
   const fetchClientes = async (isMounted = true) => {
-    const { data } = await supabase.from('clientes').select('id, nome, codigo_cliente').order('nome');
-    if (isMounted && data) setClientes(data);
+    try {
+      const { data, error } = await supabase.from('clientes').select('id, nome, codigo_cliente').order('nome');
+      if (error) throw error;
+      if (isMounted && data) setClientes(data);
+    } catch (err) {
+      toast.error('Erro ao carregar clientes.');
+    }
   };
 
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { supabase } from '../../lib/supabase';
-import { uploadToR2 } from '../../lib/r2Storage';
+import { uploadToR2, getR2PublicUrl } from '../../lib/r2Storage';
 import { Emprestimo, EmprestimoParcela, EmprestimoComentario, EmprestimoHistorico } from '../../types';
 import { formatCurrency, formatDate, formatDateTime, handleError, generateCode } from '../../lib/utils';
 import { Landmark, CreditCard, Clock, CheckCircle, XCircle, MessageSquare, Send, ChevronRight, Download, AlertTriangle, HelpCircle, Plus, ChevronLeft, Info } from 'lucide-react';
@@ -164,9 +164,9 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
         if (!file) continue;
         const ext = (file as File).name.split('.').pop();
         const path = `solicitacoes/${clientId}/${tipo}-${Date.now()}.${ext}`;
-        const { error: upErr , url: publicUrl, path: __r2Path } = await uploadToR2(file as File, 'emprestimos', path);
-        if (upErr) throw upErr;
-        // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
+        const __up = await uploadToR2(file as File, 'emprestimos', path);
+        const publicUrl = __up.url ?? getR2PublicUrl(__up.path);
+        const r2Path = __up.path;
         uploadedDocs.push({ tipo, nome: (file as File).name, url: publicUrl });
       }
 
@@ -186,10 +186,14 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
         if (dadosPessoais.data_nascimento) updateData.data_nascimento = dadosPessoais.data_nascimento;
         
         if (dadosPessoais.rg) {
-          const { data: clienteData } = await supabase.from('clientes').select('observacoes').eq('id', clientId).single();
-          const obsAtual = clienteData?.observacoes || '';
-          if (!obsAtual.includes('RG:')) {
-            updateData.observacoes = obsAtual ? `${obsAtual}\nRG: ${dadosPessoais.rg}` : `RG: ${dadosPessoais.rg}`;
+          try {
+            const { data: clienteData } = await supabase.from('clientes').select('observacoes').eq('id', clientId).single();
+            const obsAtual = clienteData?.observacoes || '';
+            if (!obsAtual.includes('RG:')) {
+              updateData.observacoes = obsAtual ? `${obsAtual}\nRG: ${dadosPessoais.rg}` : `RG: ${dadosPessoais.rg}`;
+            }
+          } catch (e: any) {
+            console.error('Erro ao buscar observacoes:', e);
           }
         }
         
@@ -277,23 +281,31 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
     setShowDetail(true);
     setShowChat(false);
     if (emp.parcelas_escolhidas) setParcelasEscolhidas(emp.parcelas_escolhidas);
-    const [h, c, d] = await Promise.all([
-      supabase.from('emprestimo_historico').select('*').eq('emprestimo_id', emp.id).order('created_at', { ascending: false }),
-      supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', emp.id).order('created_at'),
-      supabase.from('emprestimo_documentos').select('*').eq('emprestimo_id', emp.id)
-    ]);
-    setHistorico((h.data || []) as any);
-    setComentarios((c.data || []) as any);
-    setDocumentos((d.data || []) as any);
+    try {
+      const [h, c, d] = await Promise.all([
+        supabase.from('emprestimo_historico').select('*').eq('emprestimo_id', emp.id).order('created_at', { ascending: false }),
+        supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', emp.id).order('created_at'),
+        supabase.from('emprestimo_documentos').select('*').eq('emprestimo_id', emp.id)
+      ]);
+      setHistorico((h.data || []) as any);
+      setComentarios((c.data || []) as any);
+      setDocumentos((d.data || []) as any);
+    } catch (e: any) {
+      toast.error('Erro ao carregar detalhes do empréstimo.');
+    }
   };
 
   const sendMsg = async () => {
     if (!newMsg.trim() || !selected) return;
-    await clientOperationalWrite(clientId, 'emprestimo_comentarios', 'insert', { emprestimo_id: selected.id, autor_tipo: 'cliente', autor_id: clientId, mensagem: newMsg });
-    await notificationService.notifyAdmin('💬 Nova mensagem em empréstimo', `Cliente enviou mensagem no empréstimo ${selected.codigo_emprestimo}`, 'emprestimos', 'emprestimo_comentario', { itemId: selected.id, tab: 'propostas' });
-    setNewMsg('');
-    const { data } = await supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', selected.id).order('created_at');
-    setComentarios((data || []) as any);
+    try {
+      await clientOperationalWrite(clientId, 'emprestimo_comentarios', 'insert', { emprestimo_id: selected.id, autor_tipo: 'cliente', autor_id: clientId, mensagem: newMsg });
+      await notificationService.notifyAdmin('💬 Nova mensagem em empréstimo', `Cliente enviou mensagem no empréstimo ${selected.codigo_emprestimo}`, 'emprestimos', 'emprestimo_comentario', { itemId: selected.id, tab: 'propostas' });
+      setNewMsg('');
+      const { data } = await supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', selected.id).order('created_at');
+      setComentarios((data || []) as any);
+    } catch (e: any) {
+      toast.error('Erro ao enviar mensagem.');
+    }
   };
 
   const handleReplaceDocument = async (docId: string, tipo: string, e: ChangeEvent<HTMLInputElement>) => {
@@ -306,7 +318,6 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
       const path = `${clientId}/${Date.now()}_${tipo}.${ext}`;
       const { url: publicUrl, path: __r2Path } = await uploadToR2(file, 'emprestimos', path);
 
-      // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
       await clientOperationalWrite(clientId, 'emprestimo_documentos', 'update', {
         url: publicUrl,
@@ -336,12 +347,16 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
       toast.success('Documento reenviado com sucesso!');
       
       // reload docs and history
-      const [d, h] = await Promise.all([
-        supabase.from('emprestimo_documentos').select('*').eq('emprestimo_id', selected.id),
-        supabase.from('emprestimo_historico').select('*').eq('emprestimo_id', selected.id).order('created_at', { ascending: false })
-      ]);
-      setDocumentos((d.data || []) as any);
-      setHistorico((h.data || []) as any);
+      try {
+        const [d, h] = await Promise.all([
+          supabase.from('emprestimo_documentos').select('*').eq('emprestimo_id', selected.id),
+          supabase.from('emprestimo_historico').select('*').eq('emprestimo_id', selected.id).order('created_at', { ascending: false })
+        ]);
+        setDocumentos((d.data || []) as any);
+        setHistorico((h.data || []) as any);
+      } catch (e: any) {
+        console.error('Erro ao recarregar documentos:', e);
+      }
 
     } catch (err: any) {
       toast.error('Erro ao reenviar documento');
@@ -386,7 +401,6 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
     const path = `assinaturas/${clientId}/${selected.id}-${Date.now()}.png`;
     const signatureFile = new File([blob], 'assinatura.png', { type: blob.type });
     const { url: publicUrl, path: r2Path } = await uploadToR2(signatureFile, 'emprestimos', path);
-    // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
     await clientOperationalWrite(clientId, 'emprestimos', 'update', { assinatura_url: publicUrl, data_assinatura: new Date().toISOString(), status: 'analise_contrato' }, { id: selected.id });
     await clientOperationalWrite(clientId, 'emprestimo_historico', 'insert', { emprestimo_id: selected.id, tipo_acao: 'contrato_assinado', descricao: 'Cliente assinou contrato digitalmente', usuario_tipo: 'cliente', usuario_id: clientId });
     await notificationService.notifyAdmin('📝 Contrato assinado', `Cliente assinou contrato do empréstimo ${selected.codigo_emprestimo}`, 'emprestimos', 'emprestimo_assinado', { itemId: selected.id, tab: 'ativos' });
@@ -474,22 +488,26 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
             if (!result.elegivel) { toast.error(result.motivo || 'Você não está elegível para solicitar um empréstimo no momento.'); return; }
             
             // Buscar dados atuais do cliente para pré-preencher
-            const { data: clienteData } = await supabase.from('clientes').select('*').eq('id', clientId).single();
-            if (clienteData) {
-              setDadosPessoais({
-                nome_completo: clienteData.nome || clienteData.nome_razao || '',
-                data_nascimento: clienteData.data_nascimento || '',
-                rg: '', // RG preenchido pelo cliente
-                cpf: clienteData.cpf || clienteData.cpf_cnpj || '',
-                telefone: clienteData.telefone || '',
-                cep: clienteData.cep || '',
-                numero_casa: clienteData.numero || '',
-                endereco_rua: clienteData.endereco || '',
-                endereco_bairro: clienteData.bairro || '',
-                endereco_cidade: clienteData.cidade || '',
-                endereco_uf: clienteData.estado || '',
-                email: clienteData.email || ''
-              });
+            try {
+              const { data: clienteData } = await supabase.from('clientes').select('*').eq('id', clientId).single();
+              if (clienteData) {
+                setDadosPessoais({
+                  nome_completo: clienteData.nome || clienteData.nome_razao || '',
+                  data_nascimento: clienteData.data_nascimento || '',
+                  rg: '', // RG preenchido pelo cliente
+                  cpf: clienteData.cpf || clienteData.cpf_cnpj || '',
+                  telefone: clienteData.telefone || '',
+                  cep: clienteData.cep || '',
+                  numero_casa: clienteData.numero || '',
+                  endereco_rua: clienteData.endereco || '',
+                  endereco_bairro: clienteData.bairro || '',
+                  endereco_cidade: clienteData.cidade || '',
+                  endereco_uf: clienteData.estado || '',
+                  email: clienteData.email || ''
+                });
+              }
+            } catch (e: any) {
+              toast.error('Erro ao buscar dados do cliente.');
             }
 
             setSolicitarStep(1);

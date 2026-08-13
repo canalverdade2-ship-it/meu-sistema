@@ -524,9 +524,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
           // mesmo que uma verificação anterior (feita enquanto inativo) tenha acabado de rodar
           isCheckingBonus.current = false;
           
-          setTimeout(() => {
-            checkWelcomeBonus();
-          }, 800);
+          checkWelcomeBonus();
         } else if (newData.bloqueado === false && clientBlockedRef.current === true) {
           toast.success('Seu acesso foi liberado! Aproveite nossos serviços.');
           navigateClientModule('dashboard', undefined, undefined, true);

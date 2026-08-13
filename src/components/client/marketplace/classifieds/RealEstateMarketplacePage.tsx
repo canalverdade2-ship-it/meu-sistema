@@ -41,7 +41,7 @@ export function RealEstateMarketplacePage({ onBack }: { onBack: () => void }) {
         .from('classificados_anuncios')
         .select(`
           id, slug, titulo, preco, cidade, estado, bairro, detalhes,
-          classificados_anuncio_midias(url, tipo, ordem)
+          classificados_midias(url, tipo, ordem)
         `)
         .eq('categoria', 'imoveis')
         .in('status', ['publicado', 'reservado', 'vendido']);
@@ -50,7 +50,7 @@ export function RealEstateMarketplacePage({ onBack }: { onBack: () => void }) {
       
       const formattedAds = (adsData || []).map((ad: any) => {
         // Encontrar imagem principal
-        const midias = ad.classificados_anuncio_midias || [];
+        const midias = ad.classificados_midias || [];
         const cover = midias.find((m: any) => m.tipo === 'image' && m.ordem === 0)?.url 
                       || midias.find((m: any) => m.tipo === 'image')?.url;
                       

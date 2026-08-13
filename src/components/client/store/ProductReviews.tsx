@@ -4,7 +4,6 @@ import {
   ThumbsUp,
   ShieldCheck,
   MessageSquare,
-  Sparkles,
   Send,
   CheckCircle2,
   AlertCircle,
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
+import { fetchProductReviews, insertProductReview, likeProductReview } from '../../../lib/storeReviews';
 import {
   calculateProductRating,
   getProductDisplayComments,
@@ -66,22 +66,15 @@ export function ProductReviews({
     if (!productId) return;
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('loja_avaliacoes')
-        .select('*')
-        .eq('produto_id', productId)
-        .eq('status', 'aprovado')
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        setReviews(data as ProductReviewItem[]);
-      }
+      const data = await fetchProductReviews(productId);
+      setReviews(data);
     } catch (err) {
       console.warn('[ProductReviews] Erro ao carregar avaliações:', err);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     loadReviews();
@@ -162,12 +155,14 @@ export function ProductReviews({
 
       if (clientId) {
         try {
-          await clientOperationalWrite(clientId, 'loja_avaliacoes', 'insert', reviewPayload);
+          await insertProductReview(reviewPayload, (data) =>
+            clientOperationalWrite(clientId, 'loja_avaliacoes', 'insert', data),
+          );
         } catch {
-          await supabase.from('loja_avaliacoes').insert(reviewPayload);
+          await insertProductReview(reviewPayload);
         }
       } else {
-        await supabase.from('loja_avaliacoes').insert(reviewPayload);
+        await insertProductReview(reviewPayload);
       }
 
       toast.success('Avaliação publicada com sucesso! Obrigado pelo seu feedback.');
@@ -193,10 +188,7 @@ export function ProductReviews({
 
     try {
       setLikedReviews((prev) => new Set(prev).add(reviewId));
-      await supabase
-        .from('loja_avaliacoes')
-        .update({ curtidas_uteis: (currentLikes || 0) + 1 })
-        .eq('id', reviewId);
+      await likeProductReview(reviewId, currentLikes);
 
       setReviews((prev) =>
         prev.map((r) =>
@@ -222,7 +214,7 @@ export function ProductReviews({
       <div className="flex flex-col justify-between gap-6 border-b border-neutral-100 pb-8 md:flex-row md:items-center">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-[#17345f]/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-[#17345f]">
-            <Sparkles className="h-3.5 w-3.5" />
+            <Star className="h-3.5 w-3.5 fill-current" />
             Opinião de Quem Comprou
           </div>
           <h2 id="reviews-section-title" className="mt-2 text-2xl font-black text-neutral-900 sm:text-3xl">

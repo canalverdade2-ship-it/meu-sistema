@@ -120,16 +120,18 @@ export function PromocaoQuantidadeForm({ initialData, onSuccess, onCancel, onDel
         data_fim: dataFim || null
       };
 
-      let error;
-      if (initialData?.id) {
-        const { error: updateError } = await supabase.from('promocoes_quantidade').update(payload).eq('id', initialData.id);
-        error = updateError;
-      } else {
-        const { error: insertError } = await supabase.from('promocoes_quantidade').insert([payload]);
-        error = insertError;
+      try {
+        if (initialData?.id) {
+          await supabase.from('promocoes_quantidade').update(payload).eq('id', initialData.id).throwOnError();
+        } else {
+          await supabase.from('promocoes_quantidade').insert([payload]).throwOnError();
+        }
+      } catch (err) {
+        console.error('Erro ao salvar promoção no banco:', err);
+        toast.error('Erro ao salvar promoção no banco de dados.');
+        return; // Prevent success toast below
       }
 
-      if (error) throw error;
       toast.success(initialData?.id ? 'Promoção atualizada!' : 'Promoção Inteligente criada com sucesso!');
       onSuccess();
     } catch (err) {

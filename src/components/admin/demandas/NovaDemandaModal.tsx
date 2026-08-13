@@ -6,6 +6,7 @@ import { generateCode } from '../../../lib/utils';
 import { logService } from '../../../lib/logService';
 import { demandService } from '../../../lib/demandService';
 import { notificationService } from '../../../lib/notificationService';
+import { uploadToR2, getR2PublicUrl } from '../../../lib/r2Storage';
 
 interface Props {
   colaboradorId?: string;
@@ -45,17 +46,25 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
 
   useEffect(() => {
     let isMounted = true;
-    Promise.all([
-      supabase.from('ordens_servico').select('id, codigo_os, cliente:clientes(nome), orcamentos:orcamento_id(anexos)').eq('status', 'andamento').order('data_inicio', { ascending: false }),
-      supabase.from('colaboradores').select('id, nome').eq('status', 'ativo'),
-      supabase.from('prestadores').select('id, nome_razao').eq('status', 'ativo'),
-    ]).then(([os, colab, prest]) => {
-      if (isMounted) {
-        setOss(os.data || []);
-        setColaboradores(colab.data || []);
-        setPrestadores(prest.data || []);
+    const fetchData = async () => {
+      try {
+        const [os, colab, prest] = await Promise.all([
+          supabase.from('ordens_servico').select('id, codigo_os, cliente:clientes(nome), orcamentos:orcamento_id(anexos)').eq('status', 'andamento').order('data_inicio', { ascending: false }),
+          supabase.from('colaboradores').select('id, nome').eq('status', 'ativo'),
+          supabase.from('prestadores').select('id, nome_razao').eq('status', 'ativo'),
+        ]);
+        if (isMounted) {
+          setOss(os.data || []);
+          setColaboradores(colab.data || []);
+          setPrestadores(prest.data || []);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados iniciais:', error);
+        toast.error('Erro ao buscar dados iniciais.');
       }
-    });
+    };
+    fetchData();
+
     return () => { isMounted = false; };
   }, []);
 
@@ -76,10 +85,13 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
         const uploadPromises = arquivos.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `briefings/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-          const { error: uErr , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'entregas_demandas', path);
-          if (uErr) return null;
-          // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
-          return publicUrl;
+          try {
+            const uploaded = await uploadToR2(file, 'entregas_demandas', path);
+            return uploaded.url ?? getR2PublicUrl(uploaded.path);
+          } catch (uploadErr) {
+            console.error('Erro ao enviar anexo do briefing:', uploadErr);
+            return null;
+          }
         });
         const uploadedUrls = await Promise.all(uploadPromises);
         arquivosUrls.push(...uploadedUrls.filter(url => url !== null));
@@ -112,8 +124,17 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
         created_at: new Date().toISOString(),
       };
 
-      const { data: nova, error } = await supabase.from('prestador_demandas').insert(payload).select().single();
-      if (error) throw error;
+      let nova = null;
+      try {
+        const result = await supabase.from('prestador_demandas').insert(payload).select().single();
+        if (result.error) throw result.error;
+        nova = result.data;
+      } catch (error) {
+        console.error('Erro ao criar demanda:', error);
+        toast.error('Erro ao criar demanda.');
+        setIsSubmitting(false);
+        return;
+      }
 
       // Histórico
       await demandService.addDemandHistory({

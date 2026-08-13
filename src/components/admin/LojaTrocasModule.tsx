@@ -65,13 +65,23 @@ useEffect(() => {
       query = query.ilike('motivo', `%${search}%`);
     }
 
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+    let data;
+    let error;
+    try {
+      const res = await query
+        .order('created_at', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+      data = res.data;
+      error = res.error;
+      if (error) throw error;
+    } catch (err) {
+      toast.error('Erro ao carregar solicitações.');
+      return;
+    }
     if (error) {
       console.error('Erro ao buscar loja_solicitacoes:', error);
     }
-    if (data) setSolicitacoes(data);
+    if (data) setSolicitacoes(data as unknown as LojaSolicitacao[]);
   };
 
   const handleUpdateStatus = async (newStatus: 'em_analise' | 'aprovado' | 'rejeitado' | 'concluido') => {
@@ -219,12 +229,29 @@ useEffect(() => {
       case 'aprovado': return 'bg-emerald-100 text-emerald-700';
       case 'rejeitado': return 'bg-red-100 text-red-700';
       case 'concluido': return 'bg-purple-100 text-purple-700';
+      case 'aguardando_postagem': return 'bg-orange-100 text-orange-700';
+      case 'em_transito': return 'bg-sky-100 text-sky-700';
+      case 'devolucao_recebida': return 'bg-teal-100 text-teal-700';
+      case 'novo_produto_enviado': return 'bg-indigo-100 text-indigo-700';
+      case 'cancelado': return 'bg-neutral-200 text-neutral-700';
       default: return 'bg-neutral-100 text-neutral-700';
     }
   };
 
   const getStatusLabel = (status: string) => {
-    return status.replace('_', ' ').toUpperCase();
+    const labels: Record<string, string> = {
+      pendente: 'PENDENTE',
+      em_analise: 'EM ANÁLISE',
+      aprovado: 'APROVADO',
+      rejeitado: 'REJEITADO',
+      concluido: 'CONCLUÍDO',
+      cancelado: 'CANCELADO',
+      aguardando_postagem: 'AGUARDANDO POSTAGEM',
+      em_transito: 'EM TRÂNSITO',
+      devolucao_recebida: 'DEVOLUÇÃO RECEBIDA',
+      novo_produto_enviado: 'NOVO PRODUTO ENVIADO',
+    };
+    return labels[status] || status.replace(/_/g, ' ').toUpperCase();
   };
 
   return (
@@ -463,12 +490,28 @@ useEffect(() => {
 
                   {/* Status: APROVADO (Aguardando Pagamento da Fatura pelo Cliente se houver diferença) */}
                   {selectedSolicitacao.status === 'aprovado' && (
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-center">
-                      <p className="text-xs font-bold text-amber-800">
-                        ⏳ <strong>Aguardando Pagamento:</strong> A solicitação foi aprovada, porém o cliente precisa pagar a fatura de diferença de valor (R$ {Number(selectedSolicitacao.valor_diferenca).toFixed(2)}) para poder liberar o envio das instruções de logística.
-                      </p>
-                    </div>
+                    Number(selectedSolicitacao.valor_diferenca || 0) > 0 ? (
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-center">
+                        <p className="text-xs font-bold text-amber-800">
+                          ⏳ <strong>Aguardando Pagamento:</strong> A solicitação foi aprovada, porém o cliente precisa pagar a fatura de diferença de valor (R$ {Number(selectedSolicitacao.valor_diferenca).toFixed(2)}) para poder liberar o envio das instruções de logística.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+                        <p className="text-xs font-bold text-emerald-800">
+                          ✅ <strong>Sem diferença de valor:</strong> não há fatura a ser paga pelo cliente. Libere as instruções de logística para seguir com o fluxo.
+                        </p>
+                        <button
+                          disabled={updatingStatus}
+                          onClick={() => handleUpdateAdvancedStatus('aguardando_instrucoes', { resposta_admin: resolucaoInput })}
+                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-colors disabled:opacity-50"
+                        >
+                          Liberar Instruções de Logística
+                        </button>
+                      </div>
+                    )
                   )}
+
 
                   {/* Status: AGUARDANDO INSTRUÇÕES (Aprovado sem diferença OU com diferença paga) */}
                   {selectedSolicitacao.status === 'aguardando_instrucoes' && (
@@ -587,40 +630,57 @@ useEffect(() => {
 
                   {/* Status: DEVOLUÇÃO RECEBIDA (Correios) */}
                   {selectedSolicitacao.status === 'devolucao_recebida' && (
-                    <div className="space-y-4 bg-white p-4 rounded-xl border border-amber-150">
-                      <div className="p-3 bg-amber-50 rounded-lg text-amber-900 font-semibold text-xs leading-normal">
-                        ✅ <strong>Produto Devolvido Recebido!</strong> Agora insira o código de rastreio dos Correios do **novo produto** enviado para o cliente.
-                      </div>
+                    selectedSolicitacao.tipo === 'devolucao' ? (
+                      <div className="space-y-4 bg-white p-4 rounded-xl border border-amber-150">
+                        <div className="p-3 bg-amber-50 rounded-lg text-amber-900 font-semibold text-xs leading-normal">
+                          ✅ <strong>Produto Devolvido Recebido!</strong> Como esta solicitação é uma <strong>devolução</strong>, não há novo produto a enviar. Conclua para finalizar o estorno ao cliente.
+                        </div>
 
-                      <div>
-                        <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Código de Rastreio do Novo Produto</label>
-                        <input 
-                          type="text"
-                          value={rastreioAdminInput}
-                          onChange={(e) => setRastreioAdminInput(e.target.value)}
-                          placeholder="Ex: OB987654321BR"
-                          className="w-full rounded-xl border border-neutral-300 px-4 py-2.5 text-xs focus:ring-4 focus:ring-indigo-500/10 focus:outline-none font-bold"
-                        />
+                        <button
+                          disabled={updatingStatus}
+                          onClick={() => handleUpdateAdvancedStatus('concluido', { resposta_admin: resolucaoInput })}
+                          className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-colors disabled:opacity-50"
+                        >
+                          Concluir Devolução & Liberar Estorno
+                        </button>
                       </div>
+                    ) : (
+                      <div className="space-y-4 bg-white p-4 rounded-xl border border-amber-150">
+                        <div className="p-3 bg-amber-50 rounded-lg text-amber-900 font-semibold text-xs leading-normal">
+                          ✅ <strong>Produto Devolvido Recebido!</strong> Agora insira o código de rastreio dos Correios do <strong>novo produto</strong> enviado para o cliente.
+                        </div>
 
-                      <button
-                        disabled={updatingStatus}
-                        onClick={() => {
-                          if (!rastreioAdminInput.trim()) {
-                            toast.error('Informe o código de rastreio do novo produto enviado.');
-                            return;
-                          }
-                          handleUpdateAdvancedStatus('novo_produto_enviado', { 
-                            rastreio_admin: rastreioAdminInput.trim(),
-                            resposta_admin: resolucaoInput
-                          });
-                        }}
-                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-colors"
-                      >
-                        Enviar Novo Produto (Informar Rastreio)
-                      </button>
-                    </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Código de Rastreio do Novo Produto</label>
+                          <input 
+                            type="text"
+                            value={rastreioAdminInput}
+                            onChange={(e) => setRastreioAdminInput(e.target.value)}
+                            placeholder="Ex: OB987654321BR"
+                            className="w-full rounded-xl border border-neutral-300 px-4 py-2.5 text-xs focus:ring-4 focus:ring-indigo-500/10 focus:outline-none font-bold"
+                          />
+                        </div>
+
+                        <button
+                          disabled={updatingStatus}
+                          onClick={() => {
+                            if (!rastreioAdminInput.trim()) {
+                              toast.error('Informe o código de rastreio do novo produto enviado.');
+                              return;
+                            }
+                            handleUpdateAdvancedStatus('novo_produto_enviado', { 
+                              rastreio_admin: rastreioAdminInput.trim(),
+                              resposta_admin: resolucaoInput
+                            });
+                          }}
+                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase rounded-xl tracking-wider transition-colors disabled:opacity-50"
+                        >
+                          Enviar Novo Produto (Informar Rastreio)
+                        </button>
+                      </div>
+                    )
                   )}
+
 
                   {/* Status: NOVO PRODUTO ENVIADO (Correios) */}
                   {selectedSolicitacao.status === 'novo_produto_enviado' && (

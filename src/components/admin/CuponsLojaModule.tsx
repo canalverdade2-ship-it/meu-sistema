@@ -27,15 +27,23 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
   useEffect(() => {
     fetchCupons();
     
-    // Fetch dependencies for form
-    supabase.from('clientes').select('id, nome, email').order('nome').then(({ data, error }) => {
-      if (error) console.error("Erro clientes cupons:", error);
-      if (data) setClientes(data as any);
-    });
-    supabase.from('produtos').select('id, nome, valor').order('nome').then(({ data, error }) => {
-      if (error) console.error("Erro produtos cupons:", error);
-      if (data) setProdutos(data as any);
-    });
+    const fetchDependencies = async () => {
+      try {
+        const { data: clientesData, error: err1 } = await supabase.from('clientes').select('id, nome, email').order('nome');
+        if (err1) throw err1;
+        if (clientesData) setClientes(clientesData as any);
+      } catch (err: any) {
+        toast.error('Erro ao carregar clientes.');
+      }
+      try {
+        const { data: produtosData, error: err2 } = await supabase.from('produtos').select('id, nome, valor').order('nome');
+        if (err2) throw err2;
+        if (produtosData) setProdutos(produtosData as any);
+      } catch (err: any) {
+        toast.error('Erro ao carregar produtos.');
+      }
+    };
+    fetchDependencies();
 
     const channel = supabase
       .channel('admin-cupons-loja-updates')
@@ -62,28 +70,29 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
       query = query.ilike('nome_cupom', `%${search}%`);
     }
 
-    const { data } = await query
-      .order('created_at', { ascending: false })
-      .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
-    if (data) setCupons(data);
+    try {
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
+      
+      if (error) throw error;
+      if (data) setCupons(data);
+    } catch (err: any) {
+      toast.error('Erro ao carregar cupons.');
+    }
   };
 
   const [editingCupom, setEditingCupom] = useState<CupomLoja | null>(null);
 
   const handleSaveCupom = async (formData: any) => {
     if (editingCupom) {
-      const { error } = await supabase.from('cupons_loja').update({
-        ...formData,
-      }).eq('id', editingCupom.id);
+      try {
+        const { error } = await supabase.from('cupons_loja').update({
+          ...formData,
+        }).eq('id', editingCupom.id);
 
-      if (error) {
-        if (error.code === '23505') {
-          toast.error('Já existe um cupom com este código.');
-        } else {
-          toast.error(error.message || 'Erro ao atualizar cupom.');
-        }
-        return false;
-      } else {
+        if (error) throw error;
+        
         toast.success('Cupom atualizado com sucesso.');
         await logService.logAction({
           acao: 'EDITAR_CUPOM_LOJA',
@@ -96,6 +105,13 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
         setIsDetailOpen(false);
         fetchCupons();
         return true;
+      } catch (error: any) {
+        if (error.code === '23505') {
+          toast.error('Já existe um cupom com este código.');
+        } else {
+          toast.error(error.message || 'Erro ao atualizar cupom.');
+        }
+        return false;
       }
     } else {
       return handleCreate(formData);
@@ -103,19 +119,14 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
   };
 
   const handleCreate = async (formData: any) => {
-    const { data, error } = await supabase.from('cupons_loja').insert([{
-      ...formData,
-      status: 'ativo'
-    }]).select().single();
+    try {
+      const { data, error } = await supabase.from('cupons_loja').insert([{
+        ...formData,
+        status: 'ativo'
+      }]).select().single();
 
-    if (error) {
-      if (error.code === '23505') {
-        toast.error('Ja existe um cupom com este codigo.');
-      } else {
-        toast.error(error.message || 'Erro ao cadastrar cupom.');
-      }
-      return false;
-    } else {
+      if (error) throw error;
+      
       toast.success('Cupom cadastrado com sucesso.');
       await logService.logAction({
         acao: 'CRIAR_CUPOM_LOJA',
@@ -127,6 +138,13 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
       setIsModalOpen(false);
       fetchCupons();
       return true;
+    } catch (error: any) {
+      if (error.code === '23505') {
+        toast.error('Já existe um cupom com este código.');
+      } else {
+        toast.error(error.message || 'Erro ao cadastrar cupom.');
+      }
+      return false;
     }
   };
 

@@ -8,6 +8,8 @@ import { formatCurrency } from '../../../lib/utils';
 import { supabase } from '../../../lib/supabase';
 import { useClientNotifications } from '../../../hooks/useClientNotifications';
 import { VolteEganheModal } from './VolteEganheModal';
+import { consultarCEP, ViaCEPResult } from '../../../utils/viaCep';
+import { toast } from 'react-hot-toast';
 
 interface EcommerceHeaderProps {
   clientId?: string;
@@ -40,6 +42,128 @@ export function EcommerceHeader({
 
   const [pointsBalance, setPointsBalance] = useState(0);
   const [localCartCount, setLocalCartCount] = useState(cartItemCount || 0);
+
+  // Estados para Gestão de CEP e Localização do Cliente
+  const [userLocationLabel, setUserLocationLabel] = useState('São Paulo 01000-000');
+  const [isCepModalOpen, setIsCepModalOpen] = useState(false);
+  const [inputCep, setInputCep] = useState('');
+  const [isSearchingCep, setIsSearchingCep] = useState(false);
+  const [cepResult, setCepResult] = useState<ViaCEPResult | null>(null);
+  const [cepError, setCepError] = useState('');
+
+  // Resolução automática do CEP (Cliente logado ou localStorage)
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveLocation = async () => {
+      if (clientId) {
+        try {
+          const { data } = await supabase
+            .from('clientes')
+            .select('cidade, estado, cep')
+            .eq('id', clientId)
+            .maybeSingle();
+
+          if (isMounted && data && data.cep) {
+            const clean = data.cep.replace(/\D/g, '');
+            const formatted = clean.length === 8 ? `${clean.slice(0, 5)}-${clean.slice(5)}` : data.cep;
+            const cityState = [data.cidade, data.estado].filter(Boolean).join(' - ');
+            const label = cityState ? `${cityState} ${formatted}` : formatted;
+            setUserLocationLabel(label);
+            localStorage.setItem('gsa_user_location', label);
+            localStorage.setItem('gsa_user_cep', formatted);
+            return;
+          }
+        } catch (err) {
+          console.error('[EcommerceHeader] Erro ao buscar CEP do cliente:', err);
+        }
+      }
+
+      // Fallback para localStorage ou padrão
+      const saved = localStorage.getItem('gsa_user_location');
+      if (isMounted) {
+        if (saved) {
+          setUserLocationLabel(saved);
+        } else {
+          setUserLocationLabel('São Paulo 01000-000');
+        }
+      }
+    };
+
+    resolveLocation();
+
+    const handleCepUpdate = () => {
+      const saved = localStorage.getItem('gsa_user_location');
+      if (saved) setUserLocationLabel(saved);
+    };
+
+    window.addEventListener('gsa-cep-updated', handleCepUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('gsa-cep-updated', handleCepUpdate);
+    };
+  }, [clientId]);
+
+  const handleSearchCep = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const clean = inputCep.replace(/\D/g, '');
+    if (clean.length !== 8) {
+      setCepError('Digite um CEP válido com 8 dígitos (ex: 01000-000)');
+      setCepResult(null);
+      return;
+    }
+
+    setIsSearchingCep(true);
+    setCepError('');
+    setCepResult(null);
+
+    try {
+      const res = await consultarCEP(clean);
+      if (!res || res.erro) {
+        setCepError('CEP não encontrado. Por favor, verifique o número informado.');
+      } else {
+        setCepResult(res);
+      }
+    } catch {
+      setCepError('Erro ao consultar CEP. Tente novamente.');
+    } finally {
+      setIsSearchingCep(false);
+    }
+  };
+
+  const handleConfirmCep = async () => {
+    if (!cepResult) return;
+
+    const clean = cepResult.cep.replace(/\D/g, '');
+    const formatted = clean.length === 8 ? `${clean.slice(0, 5)}-${clean.slice(5)}` : cepResult.cep;
+    const cityState = [cepResult.localidade, cepResult.uf].filter(Boolean).join(' - ');
+    const label = `${cityState} ${formatted}`;
+
+    localStorage.setItem('gsa_user_location', label);
+    localStorage.setItem('gsa_user_cep', formatted);
+    setUserLocationLabel(label);
+
+    // Se o usuário estiver logado, atualiza o banco de dados do cliente também!
+    if (clientId) {
+      try {
+        await supabase.from('clientes').update({
+          cep: formatted,
+          cidade: cepResult.localidade,
+          estado: cepResult.uf,
+          bairro: cepResult.bairro || '',
+          endereco: cepResult.logradouro || ''
+        }).eq('id', clientId);
+      } catch (err) {
+        console.error('[EcommerceHeader] Erro ao salvar CEP no cliente:', err);
+      }
+    }
+
+    window.dispatchEvent(new CustomEvent('gsa-cep-updated'));
+    toast.success(`Endereço de entrega atualizado para ${cepResult.localidade} - ${cepResult.uf}!`);
+    setIsCepModalOpen(false);
+    setInputCep('');
+    setCepResult(null);
+  };
 
   // Auto-sincronização do contador do carrinho para visitor e cliente logado
   useEffect(() => {
@@ -235,8 +359,18 @@ export function EcommerceHeader({
         <div className="bg-[#0f2342] text-xs text-white/80 py-1.5 px-4 hidden sm:block border-b border-white/5">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5 font-semibold text-white/90">
-                <MapPin size={11} className="text-[#d8bd73]" /> Enviar para: <strong className="text-white font-bold cursor-pointer hover:underline">São Paulo 01000-000</strong>
+              <span 
+                className="flex items-center gap-1.5 font-semibold text-white/90 cursor-pointer hover:text-white group transition-colors"
+                onClick={() => {
+                  setIsCepModalOpen(true);
+                  setInputCep(localStorage.getItem('gsa_user_cep') || '');
+                  setCepResult(null);
+                  setCepError('');
+                }}
+                title="Clique para informar seu CEP de entrega"
+              >
+                <MapPin size={11} className="text-[#d8bd73] group-hover:scale-110 transition-transform" /> 
+                Enviar para: <strong className="text-white font-bold underline decoration-[#d8bd73]/70 underline-offset-2 hover:text-[#d8bd73] transition-colors">{userLocationLabel}</strong>
               </span>
               <span className="text-white/20">·</span>
               <span className="text-emerald-400 font-bold flex items-center gap-1.5">
@@ -620,6 +754,23 @@ export function EcommerceHeader({
           </form>
         </div>
 
+        {/* Barra de Localização CEP (Mobile) */}
+        <div className="bg-[#0b1b33] px-4 py-1.5 sm:hidden border-t border-white/5 flex items-center justify-between text-xs text-white/80">
+          <button 
+            type="button" 
+            onClick={() => {
+              setIsCepModalOpen(true);
+              setInputCep(localStorage.getItem('gsa_user_cep') || '');
+              setCepResult(null);
+              setCepError('');
+            }}
+            className="flex items-center gap-1.5 font-medium truncate w-full text-left cursor-pointer hover:text-white"
+          >
+            <MapPin size={11} className="text-[#d8bd73] shrink-0" />
+            <span className="truncate">Enviar para: <strong className="text-white font-bold underline decoration-[#d8bd73]/70">{userLocationLabel}</strong></span>
+          </button>
+        </div>
+
         {/* Sub-Navegação por Departamentos */}
         <div className="hidden bg-[#0f2342] lg:block border-t border-white/5">
           <div className="mx-auto flex max-w-7xl items-center px-4 sm:px-6 lg:px-8">
@@ -688,6 +839,110 @@ export function EcommerceHeader({
         couponCode={volteGanheCoupon}
         onApplyCoupon={handleApplyVolteGanhe}
       />
+
+      {/* Modal de Seleção de CEP */}
+      {isCepModalOpen && (
+        <div 
+          className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4"
+          onClick={() => setIsCepModalOpen(false)}
+        >
+          <div 
+            className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 relative text-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setIsCepModalOpen(false)}
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#17345f]/10 text-[#17345f]">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">Onde você quer receber seus pedidos?</h3>
+                <p className="text-xs text-slate-500 font-medium">Informe seu CEP para calcularmos fretes e prazos de entrega</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSearchCep} className="space-y-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={inputCep}
+                  onChange={(e) => {
+                    let v = e.target.value.replace(/\D/g, '');
+                    if (v.length > 8) v = v.slice(0, 8);
+                    if (v.length > 5) v = `${v.slice(0, 5)}-${v.slice(5)}`;
+                    setInputCep(v);
+                    setCepError('');
+                  }}
+                  placeholder="Digite o CEP (ex: 01000-000)"
+                  className="h-11 flex-1 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-[#17345f] focus:ring-2 focus:ring-[#17345f]/20"
+                  maxLength={9}
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={isSearchingCep}
+                  className="h-11 px-5 rounded-xl bg-[#17345f] text-xs font-black text-white hover:bg-[#0f2342] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-2 shrink-0"
+                >
+                  {isSearchingCep ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar CEP'}
+                </button>
+              </div>
+
+              {cepError && (
+                <p className="text-xs font-bold text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-100">{cepError}</p>
+              )}
+
+              {cepResult && (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-3 animate-in fade-in duration-200">
+                  <div className="flex items-start gap-2.5">
+                    <div className="h-7 w-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                      ✓
+                    </div>
+                    <div className="text-xs space-y-0.5">
+                      <p className="font-extrabold text-emerald-950 text-sm">
+                        {cepResult.localidade} - {cepResult.uf}
+                      </p>
+                      {cepResult.bairro && (
+                        <p className="text-emerald-800 font-medium">Bairro: {cepResult.bairro}</p>
+                      )}
+                      {cepResult.logradouro && (
+                        <p className="text-emerald-700">{cepResult.logradouro}</p>
+                      )}
+                      <p className="text-emerald-600 font-mono font-bold text-[11px]">CEP: {cepResult.cep}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleConfirmCep}
+                    className="w-full py-3 rounded-xl bg-emerald-600 text-white text-xs font-black uppercase tracking-wider hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer"
+                  >
+                    Usar este Endereço para Entrega
+                  </button>
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <a 
+                  href="https://buscacepinter.correios.com.br/app/endereco/index.php" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[#17345f] font-bold hover:underline"
+                >
+                  Não sei meu CEP →
+                </a>
+                <span>Consulta via ViaCEP API</span>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

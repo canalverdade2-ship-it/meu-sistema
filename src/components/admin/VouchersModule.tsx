@@ -220,22 +220,21 @@ export function VouchersModule({ activeSubTab, initialItemId, colaboradorId, col
   };
 
   const handleCreate = async (formData: any) => {
-    const { data: newVoucher, error } = await supabase.from('vouchers').insert([{
-      nome: formData.nome,
-      tipo: formData.categoria === 'saque' ? 'valor' : formData.tipo,
-      categoria: formData.categoria,
-      valor: formData.valor,
-      usage_limit: formData.usage_limit,
-      cliente_id: formData.cliente_id,
-      validade: formData.validade,
-      codigo_voucher: generateCode('VCH'),
-      status: 'ativo'
-    }]).select().single();
+    try {
+      const { data: newVoucher, error } = await supabase.from('vouchers').insert([{
+        nome: formData.nome,
+        tipo: formData.categoria === 'saque' ? 'valor' : formData.tipo,
+        categoria: formData.categoria,
+        valor: formData.valor,
+        usage_limit: formData.usage_limit,
+        cliente_id: formData.cliente_id,
+        validade: formData.validade,
+        codigo_voucher: generateCode('VCH'),
+        status: 'ativo'
+      }]).select().single();
 
-    if (error) {
-      console.error('Error creating voucher:', error);
-      toast.error(`Erro ao cadastrar voucher: ${error.message}`);
-    } else {
+      if (error) throw error;
+
       toast.success('Voucher cadastrado com sucesso.');
       if (formData.cliente_id) {
         await notificationService.notifyClient(
@@ -268,6 +267,9 @@ export function VouchersModule({ activeSubTab, initialItemId, colaboradorId, col
       setIsModalOpen(false);
       refreshCounts?.();
       refreshVouchers();
+    } catch (error: any) {
+      console.error('Error creating voucher:', error);
+      toast.error(`Erro ao cadastrar voucher: ${error.message || 'Erro desconhecido'}`);
     }
   };
 
@@ -628,8 +630,14 @@ function VoucherForm({ onSubmit, onCancel }: { onSubmit: (data: any) => Promise<
   useEffect(() => {
     let isMounted = true;
     const fetchClientes = async () => {
-      const { data } = await supabase.from('clientes').select('id, nome, codigo_cliente').eq('status', 'ativo');
-      if (isMounted && data) setClientes(data);
+      try {
+        const { data, error } = await supabase.from('clientes').select('id, nome, codigo_cliente').eq('status', 'ativo');
+        if (error) throw error;
+        if (isMounted && data) setClientes(data);
+      } catch (err: any) {
+        console.error('Erro ao buscar clientes:', err);
+        toast.error('Erro ao carregar clientes.');
+      }
     };
     fetchClientes();
     return () => { isMounted = false; };

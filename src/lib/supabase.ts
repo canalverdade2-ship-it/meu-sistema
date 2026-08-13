@@ -305,10 +305,14 @@ function getRpcProxy(client: SupabaseClient) {
   return rpcProxy;
 }
 
+export const SUPABASE_URL_FALLBACK = 'https://api.147-15-43-141.nip.io';
+export const SUPABASE_ANON_KEY_FALLBACK =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzczOTU2NDA5LCJleHAiOjIwODk1MzI0MDl9.05kQchOXKH2S062F8SJsb-bmnh3pni-RJE1P0jo0Igs';
+
 export const getSupabase = (): SupabaseClient => {
   if (!supabaseInstance) {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || (typeof process !== 'undefined' ? process.env.VITE_SUPABASE_URL : undefined);
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || (typeof process !== 'undefined' ? process.env.VITE_SUPABASE_ANON_KEY : undefined);
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || SUPABASE_URL_FALLBACK;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY_FALLBACK;
 
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error(

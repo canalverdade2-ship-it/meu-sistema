@@ -11,6 +11,7 @@ import { useAdminNotifications } from '../../../hooks/useAdminNotifications';
 import { notificationService } from '../../../lib/notificationService';
 import { whatsappNotificationService } from '../../../lib/whatsappNotificationService';
 import { AdminWhatsAppButton } from '../ui/AdminWhatsAppButton';
+import { uploadToR2, removeFromR2, getR2PublicUrl } from '../../../lib/r2Storage';
 
 interface AdminClienteDocumentosProps {
   clienteId: string;
@@ -99,16 +100,25 @@ export function AdminClienteDocumentos({ clienteId, clienteNome, clienteTelefone
         { tab: 'documentos' }
       );
 
-      // Automação: Registrar a pendência para habilitar resposta direta e enviar no WhatsApp
+      // Automação: Registrar a pendência para habilitar resposta direta e enviar no WhatsApp.
+      // A automação é opcional: se a função de pendência não existir no banco, o fluxo
+      // principal (documento solicitado + notificação) não pode ser interrompido.
       if (clienteTelefone) {
-        await supabase.rpc('gsa_registrar_pendencia_whatsapp', {
-          p_cliente_id: clienteId,
-          p_telefone: clienteTelefone,
-          p_modulo: 'documentos',
-          p_registro_id: docData.id,
-          p_tipo_esperado: 'arquivo',
-          p_mensagem_contexto: `Envio pendente de: ${requestData.nome}`
-        });
+        try {
+          const { error: pendenciaError } = await supabase.rpc('gsa_registrar_pendencia_whatsapp', {
+            p_cliente_id: clienteId,
+            p_telefone: clienteTelefone,
+            p_modulo: 'documentos',
+            p_registro_id: docData.id,
+            p_tipo_esperado: 'arquivo',
+            p_mensagem_contexto: `Envio pendente de: ${requestData.nome}`
+          });
+          if (pendenciaError) {
+            console.warn('Automação de pendência WhatsApp indisponível:', pendenciaError.message);
+          }
+        } catch (pendenciaError) {
+          console.warn('Automação de pendência WhatsApp indisponível:', pendenciaError);
+        }
 
         const msgWhats = whatsappNotificationService.gerarMensagemWhatsApp({
           tipo: 'documento_cliente',
@@ -147,12 +157,8 @@ export function AdminClienteDocumentos({ clienteId, clienteNome, clienteTelefone
         const fileName = `${tipo}-admin-${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
         const filePath = `${clienteId}/${fileName}`;
 
-        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'documentos_cliente', filePath);
-        if (uploadError) throw uploadError;
-
-        // publicUrl is handled directly
-        
-        urls.push(publicUrlData.publicUrl);
+        const { url: uploadedUrl, path: uploadedPath } = await uploadToR2(file, 'documentos_cliente', filePath);
+        urls.push(uploadedUrl ?? getR2PublicUrl(uploadedPath));
       }
 
       const { error: insertError } = await supabase.from('cliente_documentos').insert([{

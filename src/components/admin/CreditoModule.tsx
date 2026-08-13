@@ -34,6 +34,7 @@ import { sessionService } from '../../lib/sessionService';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { uploadToR2, getR2PublicUrl } from '../../lib/r2Storage';
 
 type CreditoSubTab = 'analise' | 'documentos_pendentes' | 'contrato_pendente_assinatura' | 'contrato_assinado' | 'liberado' | 'negado';
 
@@ -429,11 +430,8 @@ const enviarOfertaQuitacao = async () => {
       if (contratoFile) {
         const sanitizedName = contratoFile.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
         const uploadPath = `credito_modelos/${selectedRequest.id}/${Date.now()}-${sanitizedName}`;
-        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(contratoFile, 'emprestimos', uploadPath);
-        if (uploadError) throw uploadError;
-
-        // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
-        finalContratoUrl = publicUrl;
+        const { url: uploadedUrl, path: uploadedPath } = await uploadToR2(contratoFile, 'emprestimos', uploadPath);
+        finalContratoUrl = uploadedUrl ?? getR2PublicUrl(uploadedPath);
       }
 
       const session = getAdminSessionForRpc();

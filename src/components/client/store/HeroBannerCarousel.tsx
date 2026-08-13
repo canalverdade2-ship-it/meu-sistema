@@ -52,33 +52,13 @@ export function HeroBannerCarousel() {
   useEffect(() => {
     async function loadBanners() {
       try {
-        // 1. Tentar buscar da tabela gsa_hero_banners
-        const { data: heroData, error: heroError } = await supabase
-          .from('gsa_hero_banners')
-          .select('*')
-          .eq('is_active', true)
-          .order('display_order', { ascending: true });
-
-        if (!heroError && heroData && heroData.length > 0) {
-          const mapped: Banner[] = heroData.map((b) => ({
-            id: b.id,
-            imageUrl: b.image_url,
-            title: b.title,
-            subtitle: b.subtitle || undefined,
-            link: b.link_url || undefined,
-            color: b.background_color || '#17345f',
-            buttonText: b.button_text || 'Confira agora',
-          }));
-          setBanners(mapped);
-          return;
-        }
-
-        // 2. Fallback para a tabela oficial gsa_site_campaigns
+        // Banners vêm da tabela oficial de campanhas do site.
         const { data: campaignData, error: campaignError } = await supabase
           .from('gsa_site_campaigns')
           .select('*')
           .eq('status', 'active')
           .order('priority', { ascending: false });
+
 
         if (!campaignError && campaignData && campaignData.length > 0) {
           const mapped: Banner[] = campaignData.map((b) => ({

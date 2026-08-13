@@ -42,7 +42,7 @@ import { callAdminRpc } from '../../lib/adminRpc';
 import { formatCurrency, formatDateTime, generateUUID } from '../../lib/utils';
 import { Modal } from '../ui/Modal';
 import { supabase } from '../../lib/supabase';
-import { uploadToR2 } from '../../lib/r2Storage';
+import { uploadToR2, getR2PublicUrl } from '../../lib/r2Storage';
 import { ViagensCategoriasModule } from './ViagensCategoriasModule';
 import { FornecedoresModule } from './FornecedoresModule';
 
@@ -337,19 +337,28 @@ function SolicitacoesTab() {
           query = query.eq('telefone', searchPhone);
         }
 
-        query.limit(1).maybeSingle().then(({ data, error }) => {
-          if (error) console.error("Erro busca cliente travel:", error);
-          if (data) {
-            setClientDetails(data);
-            callAdminRpc('gsa_admin_travel_link_lead', { p_quote_id: detailsItem.id, p_client_id: data.id })
-              .then(() => {
+        const fetchClient = async () => {
+          try {
+            const { data, error } = await query.limit(1).maybeSingle();
+            if (error) throw error;
+            if (data) {
+              setClientDetails(data);
+              try {
+                await callAdminRpc('gsa_admin_travel_link_lead', { p_quote_id: detailsItem.id, p_client_id: data.id });
                 setDetailsItem((prev: any) => prev ? { ...prev, cliente_id: data.id } : null);
                 toast.success(`Cliente ${data.nome} vinculado automaticamente ao orçamento!`);
                 void list.load();
-              })
-              .catch(err => console.error("Erro ao vincular lead:", err));
+              } catch (err) {
+                console.error("Erro ao vincular lead:", err);
+                toast.error("Não foi possível vincular o cliente. Tente novamente.");
+              }
+            }
+          } catch (error) {
+            console.error("Erro busca cliente travel:", error);
+            toast.error("Ocorreu um erro ao buscar o cliente.");
           }
-        });
+        };
+        fetchClient();
       }
     }
   }, [detailsItem?.id]);
@@ -768,18 +777,12 @@ function PacotesTab() {
         const fileName = `pacotes/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
 
         let publicUrl = '';
-        const { error: uploadError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'gsa-store-images', fileName);
-
-        if (uploadError) {
-          const { error: fallbackError , url: __publicUrl, path: __r2Path } = await uploadToR2(file, 'classificados-midias', fileName);
-
-          if (fallbackError) throw uploadError;
-
-          const res = supabase.storage.from('classificados-midias').getPublicUrl(fileName);
-          publicUrl = res.data.publicUrl;
-        } else {
-          const res = supabase.storage.from('gsa-store-images').getPublicUrl(fileName);
-          publicUrl = res.data.publicUrl;
+        try {
+          const uploaded = await uploadToR2(file, 'gsa-store-images', fileName);
+          publicUrl = uploaded.url ?? getR2PublicUrl(uploaded.path);
+        } catch (uploadError) {
+          const fallback = await uploadToR2(file, 'classificados-midias', fileName);
+          publicUrl = fallback.url ?? getR2PublicUrl(fallback.path);
         }
 
         if (publicUrl) newUrls.push(publicUrl);
@@ -880,7 +883,12 @@ function PacotesTab() {
             ordem: idx,
           }));
 
-          await supabase.from('viagens_pacote_imagens').insert(toInsert).throwOnError();
+          try {
+            await supabase.from('viagens_pacote_imagens').insert(toInsert).throwOnError();
+          } catch (error) {
+            console.error(error);
+            toast.error('Erro ao salvar as imagens do pacote.');
+          }
         }
         toast.success('Pacote atualizado com sucesso.');
       } else {
@@ -901,7 +909,12 @@ function PacotesTab() {
             ordem: idx + 1,
           }));
 
-          await supabase.from('viagens_pacote_imagens').insert(remainingImages).throwOnError();
+          try {
+            await supabase.from('viagens_pacote_imagens').insert(remainingImages).throwOnError();
+          } catch (error) {
+            console.error(error);
+            toast.error('Erro ao salvar as imagens adicionais.');
+          }
         }
         toast.success('Pacote criado como rascunho.');
       }

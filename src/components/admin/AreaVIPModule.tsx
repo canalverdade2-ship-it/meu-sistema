@@ -366,7 +366,15 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
       }
 
       // Get current level and points before update for history
-      const { data: cData } = await supabase.from('clientes').select('nivel_id, pontos_totais').eq('id', clientId).single();
+      let cData;
+      try {
+        const { data, error } = await supabase.from('clientes').select('nivel_id, pontos_totais').eq('id', clientId).single();
+        if (error) throw error;
+        cData = data;
+      } catch (err) {
+        toast.error('Erro ao buscar dados do cliente.');
+        return;
+      }
       const currentLevelId = cData?.nivel_id;
       const clientPoints = cData?.pontos_totais || 0;
 
@@ -396,11 +404,16 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
       if (error) throw error;
 
       // Record in history so that client realtime subscription (level_history INSERT) fires
-      await supabase.from('level_history').insert([{
-        cliente_id: clientId,
-        nivel_anterior_id: currentLevelId,
-        nivel_novo_id: targetLevelId
-      }]);
+      try {
+        const { error: histError } = await supabase.from('level_history').insert([{
+          cliente_id: clientId,
+          nivel_anterior_id: currentLevelId,
+          nivel_novo_id: targetLevelId
+        }]);
+        if (histError) throw histError;
+      } catch (err) {
+        toast.error('Erro ao salvar o histórico de nível.');
+      }
 
       if (levelName) {
         await notificationService.notifyClient(

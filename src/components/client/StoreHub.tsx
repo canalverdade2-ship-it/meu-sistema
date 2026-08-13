@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Store, 
   Ticket, 
@@ -532,7 +532,9 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
         .eq('status', 'ativo')
         .eq('visivel_na_loja', true);
       if (error) throw error;
-      const sorted = (data || []).sort((a: any, b: any) => {
+      // Produtos esgotados não podem ser escolhidos como substitutos em uma troca.
+      const disponiveis = (data || []).filter((p: any) => !p.controle_estoque || Number(p.estoque_disponivel || 0) > 0);
+      const sorted = disponiveis.sort((a: any, b: any) => {
         const descA = getProductDiscountPercentage(a);
         const descB = getProductDiscountPercentage(b);
         if (descB !== descA) return descB - descA;
@@ -654,12 +656,27 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
       })
       .subscribe();
 
+    // Inscrição Realtime para solicitações de troca/devolução do cliente
+    const exchangesChannel = supabase
+      .channel(`exchanges-${clientId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'loja_solicitacoes',
+        filter: `cliente_id=eq.${clientId}`
+      }, () => {
+        fetchMyExchanges();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(refundsChannel);
       supabase.removeChannel(promosChannel);
+      supabase.removeChannel(exchangesChannel);
       notifyWhatsAppModal(false);
     };
+
   }, [isCuponsModalOpen, isTrocaModalOpen, isPurchasesModalOpen, isRefundsModalOpen, isVipPromosModalOpen, clientId]);
 
   useEffect(() => {
@@ -974,9 +991,16 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
     }
   };
 
+  // Evita disparar o cancelamento automático mais de uma vez para o mesmo pedido
+  // (fetchAllPurchases roda a cada evento realtime).
+  const autoCancelledRef = React.useRef<Set<string>>(new Set());
+
   const processAutoCancellation = async (ids: string[]) => {
+    const pendentes = ids.filter((id) => !autoCancelledRef.current.has(id));
+    if (pendentes.length === 0) return;
+    pendentes.forEach((id) => autoCancelledRef.current.add(id));
     try {
-      for (const id of ids) {
+      for (const id of pendentes) {
         await callClientRpc('gsa_client_cancel_store_order', {
           p_orcamento_id: id, 
           p_motivo: 'Cancelamento automático por prazo de pagamento expirado',
@@ -984,8 +1008,10 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
       }
     } catch (error) {
       console.error('Erro no processamento de auto-cancelamento:', error);
+      pendentes.forEach((id) => autoCancelledRef.current.delete(id));
     }
   };
+
 
   const handlePayOrder = async (groupedOrder: any) => {
     setIsProcessingPayment(true);
@@ -1080,11 +1106,16 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
       // Buscando solicitações de troca/devolução já existentes do cliente
       const { data: existingExchanges } = await supabase
         .from('loja_solicitacoes')
-        .select('orcamento_origem_id')
+        .select('orcamento_origem_id, status')
         .eq('cliente_id', clientId);
 
+      // Solicitações rejeitadas não devem bloquear uma nova tentativa de troca/devolução
+      // dentro do prazo de 7 dias, senão o cliente fica travado para sempre.
       const existingExchangeIds = new Set(
-        (existingExchanges || []).map(ex => ex.orcamento_origem_id).filter(Boolean)
+        (existingExchanges || [])
+          .filter(ex => ex.status !== 'rejeitado')
+          .map(ex => ex.orcamento_origem_id)
+          .filter(Boolean)
       );
 
       // Buscando orçamentos da loja (categoria 'loja' ou 'produto')
@@ -1119,13 +1150,16 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
               const firstProduct = items[0]?.produtos;
               const productNames = items.map((it: any) => it.produtos?.nome).filter(Boolean).join(', ');
               
-              // Cálculo do prazo de 7 dias após o pedido ser entregue/concluído
+              // Cálculo do prazo de 7 dias após o pedido ser entregue/concluído.
+              // Usa apenas a data de entrega quando disponível e conta dias inteiros
+              // de forma consistente entre "expirado" e "dias restantes".
               const deliveryDateStr = orc.data_entrega || orc.updated_at || orc.data_criacao;
               const deliveryDate = new Date(deliveryDateStr);
-              const diffTime = Date.now() - deliveryDate.getTime();
-              const diffDays = diffTime / (1000 * 60 * 60 * 24);
-              const isExpired = diffDays > 7;
-              const daysRemaining = Math.max(0, 7 - Math.floor(diffDays));
+              const deadline = new Date(deliveryDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+              const msRestantes = deadline.getTime() - Date.now();
+              const isExpired = !deliveryDateStr || isNaN(deliveryDate.getTime()) || msRestantes <= 0;
+              const daysRemaining = isExpired ? 0 : Math.ceil(msRestantes / (1000 * 60 * 60 * 24));
+
               
               return {
                 ...orc,
@@ -1157,6 +1191,13 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
       toast.error('Por favor, selecione um pedido e informe o motivo.');
       return;
     }
+
+    // Revalida o prazo de 7 dias no momento do envio (o modal pode ficar aberto por muito tempo).
+    if (selectedOrder.isExpired) {
+      toast.error('O prazo de 7 dias após a entrega para solicitar troca ou devolução deste pedido já expirou.');
+      return;
+    }
+
 
     if (selectedExchangeItems.length === 0) {
       toast.error('Selecione pelo menos 1 item do pedido para realizar a troca ou devolução.');
@@ -2782,7 +2823,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                             ? 'bg-red-50 text-red-600 border-red-200 animate-pulse'
                             : 'bg-amber-50 text-amber-600 border-amber-200'
                         }`}>
-                          {refund.status === 'pago' ? 'Pago' : refund.status === 'cancelado' ? 'Cancelado' : `Pendente: ${diffDays}d`}
+                          {refund.status === 'pago' ? 'Pago' : refund.status === 'cancelado' ? 'Cancelado' : isOverdue ? 'Atrasado' : `Pendente: ${diffDays}d`}
                         </span>
                       </div>
 
@@ -2815,7 +2856,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                                 <p className="text-[10px] font-black text-neutral-800 uppercase tracking-wider">Processando Estorno</p>
                                 <p className="text-[9px] text-neutral-400 font-semibold">
                                   {refund.status === 'pendente' 
-                                    ? `Prazo: até ${formatDate(refund.prazo_pagamento)} (${diffDays} dias restantes)` 
+                                    ? `Prazo: até ${formatDate(refund.prazo_pagamento)} ${isOverdue ? '(prazo vencido)' : `(${diffDays} dias restantes)`}` 
                                     : 'Aprovado para pagamento'}
                                 </p>
                               </div>
@@ -2981,14 +3022,16 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                 || selectedOrderTimeline.titulo_solicitacao?.toLowerCase().match(/assinatura|plano/i);
 
               const statusLevels: Record<string, number> = {
+                'em_analise': 1,
                 'aberto': 1,
+                'aprovado': 2,
                 'pago': 2,
                 'em_expedicao': 3,
                 'em_transporte': 4,
                 'concluido': 5
               };
 
-              let currentLevel = statusLevels[orderStatus] || 2;
+              let currentLevel = statusLevels[orderStatus] || 1;
               
               if (isAssinatura) {
                 if (orderStatus === 'aberto') currentLevel = 1;

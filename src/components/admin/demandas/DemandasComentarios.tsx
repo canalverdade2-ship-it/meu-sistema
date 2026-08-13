@@ -69,9 +69,9 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
         const uploadPromises = arquivos.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `comentarios/${demandaId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-          const { error, url: publicUrl, path: r2Path } = await uploadToR2(file, 'entregas_demandas', path);
-          if (error) throw error;
-          // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
+          const __up = await uploadToR2(file, 'entregas_demandas', path);
+          const publicUrl = __up.url ?? getR2PublicUrl(__up.path);
+          const r2Path = __up.path;
           return publicUrl;
         });
         const uploadedUrls = await Promise.all(uploadPromises);

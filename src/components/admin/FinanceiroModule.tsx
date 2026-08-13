@@ -962,8 +962,13 @@ export function FinanceiroModule({ initialTab, initialItemId, adminType, colabor
 
   const openCreateModal = async () => {
     setIsCreateModalOpen(true);
-    const { data } = await supabase.from('clientes').select('id, nome, cpf, cnpj').eq('status', 'ativo').order('nome');
-    if (data) setAvailableClients(data as unknown as Cliente[]);
+    try {
+      const { data, error } = await supabase.from('clientes').select('id, nome, cpf, cnpj').eq('status', 'ativo').order('nome');
+      if (error) throw error;
+      if (data) setAvailableClients(data as unknown as Cliente[]);
+    } catch (err) {
+      toast.error('Erro ao carregar clientes.');
+    }
   };
 
   const fetchOrdersForClient = async (cliente_id: string) => {

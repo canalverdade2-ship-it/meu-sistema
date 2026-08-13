@@ -15,6 +15,7 @@ import { maskCPF, maskPhone, maskCurrency, handleCurrencyInputChange } from '../
 import { sessionService } from '../../lib/sessionService';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { uploadToR2, getR2PublicUrl } from '../../lib/r2Storage';
 
 const roundMoney = (value: number): number => Math.round(value * 100) / 100;
 
@@ -91,55 +92,76 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
   }, [selected]);
 
   const refreshDetail = async (empId: string) => {
-    const { data: emp } = await supabase.from('emprestimos').select('*, clientes(*), orcamentos(*)').eq('id', empId).single();
-    if (emp) {
-      const [perf, historicoRes, comentariosRes, parcelasRes, docsRes] = await Promise.all([
-        calcularPerfilRisco(emp.cliente_id),
-        supabase.from('emprestimo_historico').select('*').eq('emprestimo_id', emp.id).order('created_at', { ascending: false }),
-        supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', emp.id).order('created_at'),
-        supabase.from('emprestimo_parcelas').select('id, valor, status, data_vencimento, numero_parcela, data_pagamento').eq('emprestimo_id', emp.id).order('numero_parcela'),
-        supabase.from('emprestimo_documentos').select('*').eq('emprestimo_id', emp.id)
-      ]);
-      setSelected({ ...emp, perfil_risco: perf } as any);
-      setHistorico((historicoRes.data || []) as any);
-      setComentarios((comentariosRes.data || []) as any);
-      setParcelas((parcelasRes.data || []) as any);
-      setDocumentos((docsRes.data || []) as any);
+    try {
+      const { data: emp, error: empError } = await supabase.from('emprestimos').select('*, clientes(*), orcamentos(*)').eq('id', empId).single();
+      if (empError) throw empError;
+      if (emp) {
+        const [perf, historicoRes, comentariosRes, parcelasRes, docsRes] = await Promise.all([
+          calcularPerfilRisco(emp.cliente_id),
+          supabase.from('emprestimo_historico').select('*').eq('emprestimo_id', emp.id).order('created_at', { ascending: false }),
+          supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', emp.id).order('created_at'),
+          supabase.from('emprestimo_parcelas').select('id, valor, status, data_vencimento, numero_parcela, data_pagamento').eq('emprestimo_id', emp.id).order('numero_parcela'),
+          supabase.from('emprestimo_documentos').select('*').eq('emprestimo_id', emp.id)
+        ]);
+        if (historicoRes.error) throw historicoRes.error;
+        if (comentariosRes.error) throw comentariosRes.error;
+        if (parcelasRes.error) throw parcelasRes.error;
+        if (docsRes.error) throw docsRes.error;
+        setSelected({ ...emp, perfil_risco: perf } as any);
+        setHistorico((historicoRes.data || []) as any);
+        setComentarios((comentariosRes.data || []) as any);
+        setParcelas((parcelasRes.data || []) as any);
+        setDocumentos((docsRes.data || []) as any);
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Ocorreu um erro ao atualizar os detalhes. Tente novamente mais tarde.');
     }
   };
 
   const fetchAll = async () => {
     setLoading(true);
-    const statusMap: Record<string, string[]> = {
-      solicitacoes: ['analise_inicial', 'pendencia_documentos'],
-      propostas: ['proposta_enviada', 'aguardando_dados_bancarios', 'analise_final', 'proposta_expirada'],
-      ativos: ['aprovado', 'ativo', 'pendencia_assinatura', 'analise_contrato', 'analise_quitacao', 'aguardando_pagamento_quitacao'],
-      quitados: ['quitado'],
-      cancelados: ['cancelado'],
-    };
-    const statuses = statusMap[activeSubTab || 'solicitacoes'] || statusMap['solicitacoes'];
-    const { data } = await supabase.from('emprestimos').select('*, clientes(*), orcamentos(*)').in('status', statuses).order('created_at', { ascending: false });
-    setEmprestimos((data || []) as any);
+    try {
+      const statusMap: Record<string, string[]> = {
+        solicitacoes: ['analise_inicial', 'pendencia_documentos'],
+        propostas: ['proposta_enviada', 'aguardando_dados_bancarios', 'analise_final', 'proposta_expirada'],
+        ativos: ['aprovado', 'ativo', 'pendencia_assinatura', 'analise_contrato', 'analise_quitacao', 'aguardando_pagamento_quitacao'],
+        quitados: ['quitado'],
+        cancelados: ['cancelado'],
+      };
+      const statuses = statusMap[activeSubTab || 'solicitacoes'] || statusMap['solicitacoes'];
+      const { data, error } = await supabase.from('emprestimos').select('*, clientes(*), orcamentos(*)').in('status', statuses).order('created_at', { ascending: false });
+      if (error) throw error;
+      setEmprestimos((data || []) as any);
 
-    // Stats
-    const [ativos, parcelas, taxa] = await Promise.all([
-      supabase.from('emprestimos').select('valor_aprovado,status').not('status', 'in', '("cancelado","proposta_expirada")'),
-      supabase.from('emprestimo_parcelas').select('status'),
-      supabase.from('emprestimos').select('taxa_servico').eq('status', 'quitado'),
-    ]);
-    const d = ativos.data || [];
-    const p = parcelas.data || [];
-    const vencidas = p.filter(x => x.status === 'vencida').length;
-    const receita = roundMoney((taxa.data || []).reduce((s: number, x: any) => s + (x.taxa_servico || 0), 0));
-    setStats({
-      total: roundMoney(d.filter((x: any) => ['aprovado','ativo','analise_quitacao','aguardando_pagamento_quitacao'].includes(x.status)).reduce((s: number, x: any) => s + (x.valor_aprovado || 0), 0)),
-      ativos: d.filter((x: any) => ['aprovado','ativo','analise_quitacao','aguardando_pagamento_quitacao'].includes(x.status)).length,
-      quitados: d.filter((x: any) => x.status === 'quitado').length,
-      pendentes: d.filter((x: any) => x.status === 'analise_inicial').length,
-      inadimplencia: p.length > 0 ? Math.round((vencidas / p.length) * 100) : 0,
-      receita,
-    });
-    setLoading(false);
+      // Stats
+      const [ativos, parcelas, taxa] = await Promise.all([
+        supabase.from('emprestimos').select('valor_aprovado,status').not('status', 'in', '("cancelado","proposta_expirada")'),
+        supabase.from('emprestimo_parcelas').select('status'),
+        supabase.from('emprestimos').select('taxa_servico').eq('status', 'quitado'),
+      ]);
+      if (ativos.error) throw ativos.error;
+      if (parcelas.error) throw parcelas.error;
+      if (taxa.error) throw taxa.error;
+
+      const d = ativos.data || [];
+      const p = parcelas.data || [];
+      const vencidas = p.filter(x => x.status === 'vencida').length;
+      const receita = roundMoney((taxa.data || []).reduce((s: number, x: any) => s + (x.taxa_servico || 0), 0));
+      setStats({
+        total: roundMoney(d.filter((x: any) => ['aprovado','ativo','analise_quitacao','aguardando_pagamento_quitacao'].includes(x.status)).reduce((s: number, x: any) => s + (x.valor_aprovado || 0), 0)),
+        ativos: d.filter((x: any) => ['aprovado','ativo','analise_quitacao','aguardando_pagamento_quitacao'].includes(x.status)).length,
+        quitados: d.filter((x: any) => x.status === 'quitado').length,
+        pendentes: d.filter((x: any) => x.status === 'analise_inicial').length,
+        inadimplencia: p.length > 0 ? Math.round((vencidas / p.length) * 100) : 0,
+        receita,
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast.error('Ocorreu um erro ao carregar os dados. Tente novamente mais tarde.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openDetail = async (emp: Emprestimo) => {
@@ -213,7 +235,8 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
         { itemId: selected.id }
       );
 
-      const { data } = await supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', selected.id).order('created_at');
+      const { data, error: comError } = await supabase.from('emprestimo_comentarios').select('*').eq('emprestimo_id', selected.id).order('created_at');
+      if (comError) throw comError;
       setComentarios((data || []) as any);
 
       await logService.logAction({ acao: 'ACAO_SISTEMA', detalhes: JSON.stringify({ comentario_id: rpcData?.comentario_id }), ator_tipo: 'admin', ator_nome: 'Administrador' });
@@ -261,12 +284,17 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
     }
     const sanitizedName = contratoFile.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
     const uploadPath = `contratos/${selected.id}/${Date.now()}-${sanitizedName}`;
-    const { error, url: publicUrl, path: r2Path } = await uploadToR2(contratoFile, 'emprestimos', uploadPath);
-    if (error) {
+    let publicUrl: string;
+    let r2Path: string;
+    try {
+      const uploaded = await uploadToR2(contratoFile, 'emprestimos', uploadPath);
+      r2Path = uploaded.path;
+      publicUrl = uploaded.url ?? getR2PublicUrl(uploaded.path);
+    } catch (uploadErr) {
+      console.error('Erro ao enviar contrato:', uploadErr);
       toast.error('Erro ao enviar contrato.');
       return;
     }
-    // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
     try {
       const session = getAdminSessionForRpc();

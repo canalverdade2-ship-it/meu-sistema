@@ -82,7 +82,10 @@ export function RelatorioExecutivo({ periodo, dataInicio, dataFim }: Props) {
         topServicos: [],
       });
       setUltimaAtt(new Date());
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+      console.error(e); 
+      toast.error('Erro ao gerar relatório');
+    }
     finally { setLoading(false); }
   };
 

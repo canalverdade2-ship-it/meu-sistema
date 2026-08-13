@@ -51,6 +51,7 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
   const [cancelReason, setCancelReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
 
   const loadData = async () => {
@@ -192,9 +193,10 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
         {activeTab === 'extrato' && (
           <button
             onClick={async () => {
+              setIsGenerating(true);
               try {
                 const { data: pData } = await supabase.from('prestadores').select('nome_completo, telefone').eq('id', prestadorId).single();
-                if (!pData?.telefone) { toast.error("Telefone não encontrado."); return; }
+                if (!pData?.telefone) { toast.error("Telefone não encontrado."); setIsGenerating(false); return; }
                 
                 const formattedTransactions = transactions.map(t => ({
                   data: t.created_at,
@@ -215,9 +217,11 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
               } catch (e) {
                 console.error(e);
                 toast.error("Erro ao gerar extrato.");
+              } finally {
+                setIsGenerating(false);
               }
             }}
-            disabled={isSendingWhatsApp || transactions.length === 0}
+            disabled={isGenerating || isSendingWhatsApp || transactions.length === 0}
             className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100 px-4 py-3 text-xs font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50"
           >
             {isSendingWhatsApp ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-800 border-t-transparent" /> : <Send className="h-4 w-4" />}

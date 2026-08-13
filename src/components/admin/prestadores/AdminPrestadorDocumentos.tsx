@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { uploadToR2, getR2PublicUrl, removeFromR2, getPrivateR2Url } from '../../../lib/r2Storage';
 import { toast } from 'react-hot-toast';
@@ -41,9 +41,7 @@ export function AdminPrestadorDocumentos({
   const [actionLoading, setActionLoading] = useState(false);
   const [monthFilter, setMonthFilter] = useState<string>('');
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchDocumentosLocal = async () => {
+  const fetchDocumentosLocal = useCallback(async () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
@@ -53,7 +51,7 @@ export function AdminPrestadorDocumentos({
           .order('created_at', { ascending: false });
         if (error) throw error;
         
-        if (data && isMounted) {
+        if (data) {
           let filtered = data;
           if (monthFilter) {
             filtered = filtered.filter((d: any) => d.created_at?.startsWith(monthFilter));
@@ -64,10 +62,11 @@ export function AdminPrestadorDocumentos({
         console.error(e);
         toast.error('Erro ao buscar documentos.');
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
-    };
+  }, [prestadorId, monthFilter]);
 
+  useEffect(() => {
     fetchDocumentosLocal();
 
     const channel = supabase
@@ -75,11 +74,10 @@ export function AdminPrestadorDocumentos({
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, fetchDocumentosLocal)
       .subscribe();
       
-    return () => { 
-      isMounted = false;
-      supabase.removeChannel(channel); 
+    return () => {
+      supabase.removeChannel(channel);
     };
-  }, [prestadorId, monthFilter]);
+  }, [fetchDocumentosLocal, prestadorId]);
 
   const handleRequestDocument = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,15 +133,21 @@ export function AdminPrestadorDocumentos({
       const uploadedUrls = await Promise.all(uploadPromises);
       urls.push(...uploadedUrls);
 
-      const { error: insertError } = await supabase.from('prestador_documentos').insert([{
-        prestador_id: prestadorId,
-        nome: uploadData.nome,
-        tipo: actualTipo,
-        status: 'aprovado',
-        urls,
-        enviado_por_admin: true
-      }]);
-      if (insertError) throw insertError;
+      try {
+        const { error: insertError } = await supabase.from('prestador_documentos').insert([{
+          prestador_id: prestadorId,
+          nome: uploadData.nome,
+          tipo: actualTipo,
+          status: 'aprovado',
+          urls,
+          enviado_por_admin: true
+        }]);
+        if (insertError) throw insertError;
+      } catch (error) {
+        console.error('Erro ao inserir documento:', error);
+        toast.error('Erro ao inserir documento.');
+        return;
+      }
 
       toast.success('Documentos adicionados diretamente.');
       refreshCounts?.();

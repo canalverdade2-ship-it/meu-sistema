@@ -20,11 +20,11 @@ export type Cliente = {
   id: string;
   codigo_cliente: string;
   nome: string;
-  cpf: string;
+  cpf?: string;
   cnpj?: string;
   tipo_pessoa: 'pf' | 'pj';
-  telefone: string;
-  data_cadastro: string;
+  telefone?: string;
+  data_cadastro?: string;
   email?: string;
   data_nascimento?: string;
   cep?: string;
@@ -33,10 +33,10 @@ export type Cliente = {
   bairro?: string;
   cidade?: string;
   estado?: string;
-  observacoes: string;
-  status: 'ativo' | 'inativo';
-  saldo_carteira: number;
-  saldo_pontos: number;
+  observacoes?: string;
+  status?: 'ativo' | 'inativo';
+  saldo_carteira?: number;
+  saldo_pontos?: number;
   indicacao_origem_id?: string;
   carteira_bloqueada?: boolean;
   pontos_bloqueados?: boolean;
@@ -341,6 +341,7 @@ export type Fatura = {
   data_envio_link?: string;
   pontos_gerados?: boolean;
   tipo?: 'servico' | 'produto' | 'assinatura' | 'pacote_nivel' | 'emprestimo' | 'taxa_servico_emprestimo' | 'avulsa';
+  clientes?: Cliente;
   gerada_automaticamente?: boolean;
   mes_referencia?: string;
   pacote_nivel_id?: string;
@@ -788,15 +789,22 @@ export type CupomLoja = {
 
 export type LojaSolicitacao = {
   id: string;
-  codigo_solicitacao: string;
+  codigo_solicitacao?: string;
   cliente_id: string;
-  orcamento_origem_id: string;
+  orcamento_origem_id?: string;
   tipo: 'troca' | 'devolucao';
   motivo: string;
   imagens?: string[] | Record<string, unknown>[];
+  imagens_anexo?: string[] | Record<string, unknown>[];
+  descricao_detalhada?: string;
+  metodo_entrega?: string;
+  endereco_devolucao?: string;
+  data_agendamento?: string;
+  rastreio_cliente?: string;
+  rastreio_admin?: string;
   produto_desejado_id?: string;
   valor_diferenca?: number;
-  status: 'em_analise' | 'aprovado' | 'rejeitado' | 'concluido';
+  status: 'pendente' | 'em_analise' | 'aprovado' | 'aguardando_instrucoes' | 'aguardando_devolucao' | 'devolucao_postada' | 'agendado' | 'devolucao_recebida' | 'novo_produto_enviado' | 'rejeitado' | 'concluido';
   resposta_admin?: string;
   novo_orcamento_id?: string;
   historico_status?: any;

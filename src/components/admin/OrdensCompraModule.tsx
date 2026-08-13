@@ -524,9 +524,14 @@ export function CompraDetails({
   useEffect(() => {
     const fetchCoupon = async () => {
       if (orcamento?.cupom_desconto_id) {
-        const { data } = await supabase.from('cupons_loja').select('codigo_cupom').eq('id', orcamento.cupom_desconto_id).single();
-        if (data?.codigo_cupom) {
-          setCouponCode(data.codigo_cupom);
+        try {
+          const { data, error } = await supabase.from('cupons_loja').select('codigo_cupom').eq('id', orcamento.cupom_desconto_id).single();
+          if (error) throw error;
+          if (data?.codigo_cupom) {
+            setCouponCode(data.codigo_cupom);
+          }
+        } catch (err) {
+          toast.error('Erro ao carregar o cupom.');
         }
       }
     };

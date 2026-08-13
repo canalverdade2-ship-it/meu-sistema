@@ -98,13 +98,17 @@ export function ClientAssinaturas({
   useEffect(() => {
     let isMounted = true;
     const fetchMinhasAssinaturas = async () => {
-      const { data } = await supabase
-        .from('ordens_assinatura')
-        .select('*, assinaturas(nome, valor), faturas(*), orcamentos(*)')
-        .eq('cliente_id', clientId)
-        .order('data_criacao', { ascending: false });
-      
-      if (data && isMounted) setMinhasAssinaturas(data);
+      try {
+        const { data } = await supabase
+          .from('ordens_assinatura')
+          .select('*, assinaturas(nome, valor), faturas(*), orcamentos(*)')
+          .eq('cliente_id', clientId)
+          .order('data_criacao', { ascending: false });
+        
+        if (data && isMounted) setMinhasAssinaturas(data);
+      } catch (err) {
+        console.error('Erro ao buscar assinaturas:', err);
+      }
     };
 
     fetchMinhasAssinaturas();
@@ -128,13 +132,17 @@ export function ClientAssinaturas({
   }, [clientId, minhasTab]);
 
   const fetchMinhasAssinaturas = async () => {
-    const { data } = await supabase
-      .from('ordens_assinatura')
-      .select('*, assinaturas(nome, valor), faturas(*), orcamentos(*)')
-      .eq('cliente_id', clientId)
-      .order('data_criacao', { ascending: false });
-    
-    if (data) setMinhasAssinaturas(data);
+    try {
+      const { data } = await supabase
+        .from('ordens_assinatura')
+        .select('*, assinaturas(nome, valor), faturas(*), orcamentos(*)')
+        .eq('cliente_id', clientId)
+        .order('data_criacao', { ascending: false });
+      
+      if (data) setMinhasAssinaturas(data);
+    } catch (err) {
+      console.error('Erro ao buscar assinaturas:', err);
+    }
   };
 
   const handleAssinarNovamente = async (assinatura: any) => {

@@ -27,26 +27,29 @@ export function BlogHome({ clientId }: { clientId?: string }) {
           .select('*')
           .order('published_at', { ascending: false });
 
-        if (error) throw error;
-        
-        // Se estiver vazio, exibe alguns mockados temporariamente só para demonstração até N8N popular
-        if (!data || data.length === 0) {
-          setPosts([
-            {
-              id: 'demo-1',
-              title: 'As 10 melhores dicas para usar seu novo Smartphone',
-              excerpt: 'Descubra os recursos ocultos e otimizações que farão a bateria do seu novo celular durar muito mais.',
-              image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=800&auto=format&fit=crop',
-              category: 'Tecnologia',
-              published_at: new Date().toISOString(),
-              author: 'GSA Curadoria (N8N)'
-            }
-          ]);
-        } else {
-          setPosts(data);
+        const fallbackPosts = [
+          {
+            id: 'demo-1',
+            title: 'As 10 melhores dicas para usar seu novo Smartphone',
+            excerpt: 'Descubra os recursos ocultos e otimizações que farão a bateria do seu novo celular durar muito mais.',
+            image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=800&auto=format&fit=crop',
+            category: 'Tecnologia',
+            published_at: new Date().toISOString(),
+            author: 'GSA Curadoria'
+          }
+        ];
+
+        // A tabela de blog pode ainda não existir no ambiente (conteúdo publicado por automação).
+        if (error) {
+          const missingTable = (error as any)?.code === '42P01';
+          if (!missingTable) console.warn('Não foi possível carregar os posts do blog:', error.message);
+          setPosts(fallbackPosts);
+          return;
         }
+
+        setPosts(!data || data.length === 0 ? fallbackPosts : data);
       } catch (err) {
-        console.error('Erro ao buscar posts:', err);
+        console.warn('Não foi possível carregar os posts do blog:', err);
       } finally {
         setLoading(false);
       }

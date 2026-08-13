@@ -4,7 +4,7 @@ import { callAdminRpc } from '../../lib/adminRpc';
 import { Modal } from '../ui/Modal';
 import { EmptyState } from '../ui/EmptyState';
 import { toast } from 'react-hot-toast';
-import { Plus, Edit, Trash2, ListTree, RefreshCw, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, ListTree, RefreshCw, Loader2, CheckCircle2, XCircle, Map as MapIcon } from 'lucide-react';
 
 interface ViagemCategoria {
   id: string;
@@ -163,7 +163,7 @@ export function ViagensCategoriasModule() {
           <p className="text-sm font-bold text-neutral-500">Carregando categorias...</p>
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={Map} title="Nenhuma categoria" description="Crie a primeira categoria de viagens." />
+        <EmptyState icon={MapIcon} title="Nenhuma categoria" description="Crie a primeira categoria de viagens." />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (

@@ -261,6 +261,8 @@ export function CareersLandingPage({ onBackToSite, onAccessPortal }: CareersLand
 
           if (confirmationError || !(confirmation as { success?: boolean } | null)?.success) {
             console.error('Falha ao confirmar o currículo enviado:', confirmationError || confirmation);
+            // Rollback storage upload
+            await supabase.storage.from(CAREER_BUCKET).remove([result.resume_upload_path]);
             uploadFailed = true;
           }
         }

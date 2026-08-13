@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Minus, Package, Plus, ShoppingBag } from 'lucide-react';
+import { Gift, Minus, Package, Plus, ShoppingBag } from 'lucide-react';
 import { formatCurrency } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
 import {
@@ -26,7 +26,10 @@ export default function QuantityModal({ isOpen, onClose, item, onConfirm, initia
 
   if (!isOpen || !item) return null;
 
-  const maxQuantity = item.controle_estoque ? Math.max(1, Number(item.estoque_disponivel || 0)) : 99;
+  // Não força mínimo de 1 quando o estoque real é 0 — isso permitia "adicionar 1 unidade"
+  // de um item esgotado através deste modal.
+  const maxQuantity = item.controle_estoque ? Math.max(0, Number(item.estoque_disponivel || 0)) : 99;
+  const isOutOfStock = item.controle_estoque && maxQuantity <= 0;
   const breakdown = getProductQuantityPriceBreakdown(item, quantity);
   const hasDiscount = hasActiveProductDiscount(item);
   const mixedPrice = breakdown.quantidadeComDesconto > 0 && breakdown.quantidadeSemDesconto > 0;
@@ -110,21 +113,29 @@ export default function QuantityModal({ isOpen, onClose, item, onConfirm, initia
           </p>
         )}
 
-        <div className="flex items-end justify-between border-t border-slate-100 pt-4">
-          <div>
-            <p className="text-xs font-semibold text-slate-500">Total</p>
-            <p className="mt-1 text-[28px] font-black leading-none tracking-[-0.04em] text-[#17345f]">{formatCurrency(total)}</p>
+        {quantity > 1 && (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50/90 p-3.5 border border-emerald-200/80 animate-in fade-in duration-200">
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold text-emerald-800">Total ({quantity} unidades):</span>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <span className="text-xl font-black text-emerald-700">{formatCurrency(total)}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-xs font-black text-amber-700 bg-amber-50 px-2.5 py-1.5 rounded-lg border border-amber-200/60 shrink-0">
+              <Gift className="h-4 w-4 text-amber-500" />
+              <span>+ {Math.floor(total)} pts</span>
+            </div>
           </div>
-          <p className="max-w-[145px] text-right text-[11px] leading-4 text-slate-400">Preço e estoque serão confirmados no checkout.</p>
-        </div>
+        )}
 
         <button
           type="button"
           onClick={() => onConfirm(quantity)}
-          className="inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-xl bg-[#17345f] px-5 py-4 text-sm font-extrabold text-white transition hover:bg-[#102746]"
+          disabled={isOutOfStock}
+          className="inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-xl bg-[#17345f] px-5 py-4 text-sm font-extrabold text-white transition hover:bg-[#102746] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
         >
           <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-          Adicionar {quantity} {quantity === 1 ? 'unidade' : 'unidades'}
+          {isOutOfStock ? 'Produto esgotado' : `Adicionar ${quantity} ${quantity === 1 ? 'unidade' : 'unidades'}`}
         </button>
       </div>
     </Modal>

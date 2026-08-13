@@ -16,6 +16,7 @@ import { DemandasComentarios } from './DemandasComentarios';
 import { useFileViewer } from '../../../contexts/FileViewerContext';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
+import { uploadToR2, getR2PublicUrl } from '../../../lib/r2Storage';
 
 interface Props {
   demanda: any;
@@ -250,10 +251,15 @@ export function DemandasDetalhesModal({
 
       // 3. Nota na OS + notificação ao cliente
       if (demanda.os_id) {
-        await supabase.from('os_notas').insert({
-          os_id: demanda.os_id,
-          nota: '✅ Sua demanda foi iniciada e está em atendimento pela equipe interna da GSA.'
-        }).throwOnError();
+        try {
+          await supabase.from('os_notas').insert({
+            os_id: demanda.os_id,
+            nota: '✅ Sua demanda foi iniciada e está em atendimento pela equipe interna da GSA.'
+          }).throwOnError();
+        } catch (error) {
+          console.error('Erro ao adicionar nota na OS:', error);
+          toast.error('Erro ao adicionar nota na OS.');
+        }
 
         const clienteId = demanda.ordem_servico?.cliente_id;
         const codigoOs = demanda.ordem_servico?.codigo_os;
@@ -497,9 +503,9 @@ export function DemandasDetalhesModal({
         const uploadPromises = transferFiles.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `transferencias/${demanda.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-          const { error, url: publicUrl, path: r2Path } = await uploadToR2(file, 'entregas_demandas', path);
-          if (error) throw error;
-          // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
+          const __up = await uploadToR2(file, 'entregas_demandas', path);
+          const publicUrl = __up.url ?? getR2PublicUrl(__up.path);
+          const r2Path = __up.path;
           return publicUrl;
         });
         const uploadedUrls = await Promise.all(uploadPromises);
@@ -530,8 +536,14 @@ export function DemandasDetalhesModal({
         upd.is_contraproposta_final = false;
       }
 
-      const { error: updError } = await supabase.from('prestador_demandas').update(upd).eq('id', demanda.id);
-      if (updError) throw updError;
+      try {
+        const { error: updError } = await supabase.from('prestador_demandas').update(upd).eq('id', demanda.id);
+        if (updError) throw updError;
+      } catch (error) {
+        console.error('Erro ao transferir demanda:', error);
+        toast.error('Erro ao transferir demanda.');
+        return;
+      }
 
       await demandService.addDemandHistory({
         demandaId: demanda.id,
@@ -596,23 +608,28 @@ export function DemandasDetalhesModal({
         const uploadPromises = deliveryFiles.map(async (file) => {
           const ext = file.name.split('.').pop();
           const path = `entregas/${demanda.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-          const { error, url: publicUrl, path: r2Path } = await uploadToR2(file, 'entregas_demandas', path);
-          if (error) throw error;
-          // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
+          const __up = await uploadToR2(file, 'entregas_demandas', path);
+          const publicUrl = __up.url ?? getR2PublicUrl(__up.path);
+          const r2Path = __up.path;
           return publicUrl;
         });
         const uploadedUrls = await Promise.all(uploadPromises);
         urls.push(...uploadedUrls);
       }
       // Usa concluida_interna para sinalizar que a gestão interna concluiu mas a finalização oficial fica no módulo Demandas
-      const { error: updateError } = await supabase.from('prestador_demandas').update({ 
-        status: 'concluida_interna', 
-        data_conclusao: new Date().toISOString(), 
-        arquivos_resultado: urls,
-        link_resultado: deliveryLink // Ensure it saves link_resultado too
-      }).eq('id', demanda.id);
-
-      if (updateError) throw updateError;
+      try {
+        const { error: updateError } = await supabase.from('prestador_demandas').update({ 
+          status: 'concluida_interna', 
+          data_conclusao: new Date().toISOString(), 
+          arquivos_resultado: urls,
+          link_resultado: deliveryLink // Ensure it saves link_resultado too
+        }).eq('id', demanda.id);
+        if (updateError) throw updateError;
+      } catch (error) {
+        console.error('Erro ao concluir demanda:', error);
+        toast.error('Erro ao concluir demanda.');
+        return;
+      }
       await demandService.addDemandHistory({
         demandaId: demanda.id,
         tipoEvento: 'entrega',
@@ -622,7 +639,12 @@ export function DemandasDetalhesModal({
 
       // Registrar nota na OS
       if (demanda.os_id) {
-        await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna concluiu a demanda. Aguardando finalização oficial pela administração.' }).throwOnError();
+        try {
+          await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna concluiu a demanda. Aguardando finalização oficial pela administração.' }).throwOnError();
+        } catch (error) {
+          console.error('Erro ao adicionar nota na OS:', error);
+          toast.error('Erro ao adicionar nota na OS.');
+        }
 
         // Quando o admin assumiu diretamente (sem prestador/colaborador), notifica o cliente também
         if (isAdmin && !demanda.prestador_id && !demanda.colaborador_id) {
@@ -727,7 +749,12 @@ export function DemandasDetalhesModal({
 
       // Registrar nota na OS
       if (demanda.os_id) {
-        await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna aprovou e concluiu a demanda. Aguardando finalização oficial pela administração.' }).throwOnError();
+        try {
+          await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna aprovou e concluiu a demanda. Aguardando finalização oficial pela administração.' }).throwOnError();
+        } catch (error) {
+          console.error('Erro ao adicionar nota na OS:', error);
+          toast.error('Erro ao adicionar nota na OS.');
+        }
       }
 
       // Notificar admin
@@ -1460,10 +1487,10 @@ function AdminOSSuporteChat({ osId, remetenteId, remetenteNome, clienteId, isCon
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         const path = `suporte/${osId}/${fileName}`;
         
-        const { error: uErr , url: __publicUrl, path: __r2Path } = await uploadToR2(anexoFile, 'entregas_demandas', path);
-        if (uErr) throw uErr;
+        const __up = await uploadToR2(anexoFile, 'entregas_demandas', path);
+        const publicUrl = __up.url ?? getR2PublicUrl(__up.path);
+        const r2Path = __up.path;
         
-        // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
         
         const anexoStr = `[ANEXO|${anexoFile.name}|${publicUrl}]`;
         mensagemTexto = mensagemTexto ? `${mensagemTexto}\n\n${anexoStr}` : anexoStr;

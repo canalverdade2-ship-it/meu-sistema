@@ -6,38 +6,56 @@ import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
 import { formatCurrency } from '../../../lib/utils';
 import StoreItemCard from './StoreItemCard';
+import { getWishlist, removeFromWishlist } from '../../../lib/wishlistStorage';
 
 export function WishlistPage({ clientId, onRequireAuth }: { clientId?: string, onRequireAuth?: () => void }) {
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // MOCK: Na falta de uma tabela `wishlist`, vamos simular buscando produtos aleatórios
-  // No futuro, isso faria um JOIN com a tabela de favoritos do cliente.
+  // Carrega os produtos realmente favoritados pelo cliente (persistidos localmente)
   useEffect(() => {
     if (!clientId) {
       if (onRequireAuth) onRequireAuth();
       return;
     }
 
-    const fetchMockWishlist = async () => {
+    let active = true;
+
+    const fetchWishlist = async () => {
       setLoading(true);
       try {
+        const ids = getWishlist(clientId);
+        if (ids.length === 0) {
+          if (active) setWishlistItems([]);
+          return;
+        }
         const { data, error } = await supabase
           .from('produtos')
           .select('*')
-          .limit(4); // Pegamos 4 produtos como favoritos
-          
+          .in('id', ids);
+
+        if (!active) return;
         if (data && !error) {
-          setWishlistItems(data);
+          // Preserva a ordem em que os produtos foram favoritados
+          const ordered = ids
+            .map((id) => data.find((p: any) => p.id === id))
+            .filter(Boolean);
+          setWishlistItems(ordered);
         }
       } catch (err) {
         console.error('Erro ao buscar wishlist:', err);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
-    
-    fetchMockWishlist();
+
+    fetchWishlist();
+    const onUpdate = () => fetchWishlist();
+    window.addEventListener('gsa-wishlist-updated', onUpdate);
+    return () => {
+      active = false;
+      window.removeEventListener('gsa-wishlist-updated', onUpdate);
+    };
   }, [clientId, onRequireAuth]);
 
   return (
@@ -90,6 +108,11 @@ export function WishlistPage({ clientId, onRequireAuth }: { clientId?: string, o
                   onClick={() => navigate(routes.marketplace.store.product(item.id))}
                 />
                 <button 
+                  type="button"
+                  onClick={() => {
+                    removeFromWishlist(item.id, clientId);
+                    setWishlistItems((prev) => prev.filter((p) => p.id !== item.id));
+                  }}
                   className="absolute left-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-400 shadow-md transition-all hover:text-red-500 opacity-0 group-hover:opacity-100"
                   title="Remover da lista"
                 >

@@ -178,8 +178,14 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
     let isMounted = true;
     fetchProdutos();
     const fetchCategorias = async () => {
-      const { data } = await supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['produto', 'todos']).order('ordem');
-      if (isMounted && data) setCategorias(data);
+      try {
+        const { data, error } = await supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['produto', 'todos']).order('ordem');
+        if (error) throw error;
+        if (isMounted && data) setCategorias(data);
+      } catch (error) {
+        console.error('Erro ao buscar categorias:', error);
+        toast.error('Ocorreu um erro ao carregar as categorias. Por favor, tente novamente mais tarde.');
+      }
     };
     fetchCategorias();
     return () => { isMounted = false; };
@@ -1246,12 +1252,13 @@ const handleBulkDelete = async () => {
 
                           setSelectedProduto({ ...selectedProduto, tipo_cliente: next });
                           const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
-                          const { error } = await supabase.from('produtos').update({ 
-                            tipo_cliente: next,
-                            descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
-                          }).eq('id', selectedProduto.id);
-                          if (error) toast.error('Erro ao atualizar tipo de cliente.');
-                          else { 
+                          try {
+                            const { error } = await supabase.from('produtos').update({ 
+                              tipo_cliente: next,
+                              descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
+                            }).eq('id', selectedProduto.id);
+                            if (error) throw error;
+                            
                             toast.success('Tipo de cliente atualizado.');
                             
                             // Log Action
@@ -1263,6 +1270,9 @@ const handleBulkDelete = async () => {
                               detalhes: `Alterou o tipo de cliente do produto ${selectedProduto.nome} para ${next}`
                             });
                             fetchProdutos();
+                          } catch (error) {
+                            console.error('Erro ao atualizar tipo de cliente:', error);
+                            toast.error('Ocorreu um erro ao atualizar o tipo de cliente. Por favor, tente novamente.');
                           }
                         }}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border-2 ${
@@ -1286,13 +1296,14 @@ const handleBulkDelete = async () => {
                       const catNome = categorias.find(c => c.id === catId)?.nome || '';
                       setSelectedProduto({ ...selectedProduto, categoria_id: catId, categoria: catNome });
                       const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
-                      const { error } = await supabase.from('produtos').update({ 
-                        categoria_id: catId || null,
-                        categoria: catNome || null,
-                        descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
-                      }).eq('id', selectedProduto.id);
-                      if (error) toast.error('Erro ao salvar categoria.');
-                      else { 
+                      try {
+                        const { error } = await supabase.from('produtos').update({ 
+                          categoria_id: catId || null,
+                          categoria: catNome || null,
+                          descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
+                        }).eq('id', selectedProduto.id);
+                        if (error) throw error;
+                        
                         toast.success('Categoria atualizada.');
                         await logService.logAction({
                           acao: 'EDITAR_PRODUTO',
@@ -1302,6 +1313,9 @@ const handleBulkDelete = async () => {
                           detalhes: `Alterou a categoria do produto ${selectedProduto.nome} para ${catNome || 'nenhuma'}`
                         });
                         fetchProdutos(); 
+                      } catch (error) {
+                        console.error('Erro ao salvar categoria:', error);
+                        toast.error('Ocorreu um erro ao atualizar a categoria. Por favor, tente novamente.');
                       }
                     }}
                     className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
@@ -1329,13 +1343,13 @@ const handleBulkDelete = async () => {
                         const newOcultar = e.target.checked;
                         setSelectedProduto({ ...selectedProduto, ocultar_valor: newOcultar });
                         const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
-                        const { error } = await supabase.from('produtos').update({ 
-                          ocultar_valor: newOcultar,
-                          descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
-                        }).eq('id', selectedProduto.id);
-                        if (error) {
-                          toast.error('Erro ao atualizar visibilidade de preço.');
-                        } else {
+                        try {
+                          const { error } = await supabase.from('produtos').update({ 
+                            ocultar_valor: newOcultar,
+                            descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
+                          }).eq('id', selectedProduto.id);
+                          if (error) throw error;
+                          
                           toast.success('Visibilidade de preço atualizada.');
                           await logService.logAction({
                             acao: 'EDITAR_PRODUTO',
@@ -1345,6 +1359,9 @@ const handleBulkDelete = async () => {
                             detalhes: `${newOcultar ? 'Ocultou' : 'Exibiu'} o valor do produto ${selectedProduto.nome} para clientes`
                           });
                           fetchProdutos();
+                        } catch (error) {
+                          console.error('Erro ao atualizar visibilidade de preço:', error);
+                          toast.error('Ocorreu um erro ao atualizar a visibilidade do preço. Por favor, tente novamente.');
                         }
                       }}
                     />
@@ -1368,8 +1385,15 @@ const handleBulkDelete = async () => {
                         onChange={async (e) => {
                           const val = e.target.checked;
                           setSelectedProduto({ ...selectedProduto, visivel_na_loja: val });
-                          const { error } = await supabase.from('produtos').update({ visivel_na_loja: val }).eq('id', selectedProduto.id);
-                          if (!error) { toast.success('Visibilidade na loja atualizada.'); fetchProdutos(); }
+                          try {
+                            const { error } = await supabase.from('produtos').update({ visivel_na_loja: val }).eq('id', selectedProduto.id);
+                            if (error) throw error;
+                            toast.success('Visibilidade na loja atualizada.');
+                            fetchProdutos();
+                          } catch (error) {
+                            console.error('Erro ao atualizar visibilidade na loja:', error);
+                            toast.error('Ocorreu um erro ao atualizar a visibilidade na loja. Por favor, tente novamente.');
+                          }
                         }}
                       />
                       <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
@@ -1389,8 +1413,15 @@ const handleBulkDelete = async () => {
                         onChange={async (e) => {
                           const val = e.target.checked;
                           setSelectedProduto({ ...selectedProduto, controle_estoque: val });
-                          const { error } = await supabase.from('produtos').update({ controle_estoque: val }).eq('id', selectedProduto.id);
-                          if (!error) { toast.success('Controle de estoque atualizado.'); fetchProdutos(); }
+                          try {
+                            const { error } = await supabase.from('produtos').update({ controle_estoque: val }).eq('id', selectedProduto.id);
+                            if (error) throw error;
+                            toast.success('Controle de estoque atualizado.');
+                            fetchProdutos();
+                          } catch (error) {
+                            console.error('Erro ao atualizar controle de estoque:', error);
+                            toast.error('Ocorreu um erro ao atualizar o controle de estoque. Por favor, tente novamente.');
+                          }
                         }}
                       />
                       <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
@@ -1555,13 +1586,13 @@ const handleBulkDelete = async () => {
                     onClick={async () => {
                       const newStatus = selectedProduto.status === 'ativo' ? 'inativo' : 'ativo';
                       const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
-                      const { error } = await supabase.from('produtos').update({ 
-                        status: newStatus,
-                        descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
-                      }).eq('id', selectedProduto.id);
-                      if (error) {
-                        toast.error('Erro ao alterar status.');
-                      } else {
+                      try {
+                        const { error } = await supabase.from('produtos').update({ 
+                          status: newStatus,
+                          descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
+                        }).eq('id', selectedProduto.id);
+                        if (error) throw error;
+                        
                         toast.success(`Produto ${newStatus === 'ativo' ? 'ativado' : 'inativado'} com sucesso.`);
                         
                         // Log Action
@@ -1575,6 +1606,9 @@ const handleBulkDelete = async () => {
 
                         setIsDetailOpen(false);
                         fetchProdutos();
+                      } catch (error) {
+                        console.error('Erro ao alterar status:', error);
+                        toast.error('Ocorreu um erro ao alterar o status. Por favor, tente novamente.');
                       }
                     }}
                     className={`flex-1 rounded-xl py-4 font-bold transition-all ${selectedProduto.status === 'ativo' ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}

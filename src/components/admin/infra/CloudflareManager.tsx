@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { infraService, CloudflareZone, CloudflareDnsRecord, CloudflareMetrics, R2FileItem } from '../../../lib/infraService';
-import { removeFromR2, getPrivateR2Url, getR2PublicUrl } from '../../../lib/r2Storage';
+import { removeFromR2, getPrivateR2Url, getR2PublicUrl, uploadToR2 } from '../../../lib/r2Storage';
 import { Globe, Shield, Zap, RefreshCw, Trash2, Edit, Activity, BarChart2, ShieldCheck, HardDrive, Search, Folder, FileText, Image as ImageIcon, ExternalLink, X, AlertCircle, ArrowUpRight, Lock, Unlock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 

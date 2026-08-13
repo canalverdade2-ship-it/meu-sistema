@@ -35,15 +35,15 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
         .from('classificados_anuncios')
         .select(`
           *,
-          classificados_anuncio_midias(url, tipo, ordem)
+          classificados_midias(url, tipo, ordem)
         `)
         .eq('slug', slug)
         .single();
 
       if (error) throw error;
 
-      if (data && data.classificados_anuncio_midias) {
-        data.classificados_anuncio_midias.sort((a: any, b: any) => a.ordem - b.ordem);
+      if (data && data.classificados_midias) {
+        data.classificados_midias.sort((a: any, b: any) => a.ordem - b.ordem);
       }
 
       setAd(data);
@@ -154,8 +154,8 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
   }
 
   const isOwner = clientId === ad.cliente_id;
-  const coverImage = ad.classificados_anuncio_midias?.find((media: any) => media.tipo === 'image')?.url;
-  const gallery = ad.classificados_anuncio_midias?.filter((media: any) => media.tipo === 'image') || [];
+  const coverImage = ad.classificados_midias?.find((media: any) => media.tipo === 'image')?.url;
+  const gallery = ad.classificados_midias?.filter((media: any) => media.tipo === 'image') || [];
 
   return (
     <div className="bg-[#FAF9F6] min-h-screen pb-24">

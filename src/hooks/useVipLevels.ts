@@ -43,8 +43,10 @@ export function useVipLevels() {
   useEffect(() => {
     fetchLevels();
 
+    // Nome único por instância: um nome fixo faz o Supabase reutilizar o mesmo
+    // canal já inscrito e lançar "cannot add postgres_changes callbacks ... after subscribe()".
     const channel = supabase
-      .channel('global-vip-changes')
+      .channel(`vip-changes-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {
         fetchLevels();
       })
@@ -54,6 +56,7 @@ export function useVipLevels() {
       supabase.removeChannel(channel);
     };
   }, []);
+
 
   return { levels, loading, refreshLevels: fetchLevels };
 }

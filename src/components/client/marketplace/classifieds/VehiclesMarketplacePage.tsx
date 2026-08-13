@@ -39,7 +39,7 @@ export function VehiclesMarketplacePage({ onBack }: { onBack: () => void }) {
         .from('classificados_anuncios')
         .select(`
           id, slug, titulo, preco, cidade, estado, detalhes,
-          classificados_anuncio_midias(url, tipo, ordem)
+          classificados_midias(url, tipo, ordem)
         `)
         .eq('categoria', 'veiculos')
         .in('status', ['publicado', 'reservado', 'vendido']);
@@ -47,7 +47,7 @@ export function VehiclesMarketplacePage({ onBack }: { onBack: () => void }) {
       if (error) throw error;
       
       const formatted = (data || []).map((ad: any) => {
-        const midias = ad.classificados_anuncio_midias || [];
+        const midias = ad.classificados_midias || [];
         const cover = midias.find((m: any) => m.tipo === 'image' && m.ordem === 0)?.url 
                       || midias.find((m: any) => m.tipo === 'image')?.url;
                       

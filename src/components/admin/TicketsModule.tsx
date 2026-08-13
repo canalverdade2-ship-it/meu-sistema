@@ -305,19 +305,22 @@ export function TicketsModule({ initialTab, initialItemId, adminType, colaborado
       setNewMessage('');
       setAttachment(null);
 
-      const { error } = await supabase.from('ticket_mensagens').insert([{
-        ticket_id: selectedTicket.id,
-        autor_id: colaboradorId || 'admin',
-        autor_nome: colaboradorNome || 'Suporte GSA',
-        mensagem: newMessage,
-        anexo_url: anexoUrl || null,
-        anexo_tipo: anexoTipo || null,
-        anexo_nome: anexoNome || null,
-        tipo: 'admin',
-      }]);
-      if (error) {
+      try {
+        const { error } = await supabase.from('ticket_mensagens').insert([{
+          ticket_id: selectedTicket.id,
+          autor_id: colaboradorId || 'admin',
+          autor_nome: colaboradorNome || 'Suporte GSA',
+          mensagem: newMessage,
+          anexo_url: anexoUrl || null,
+          anexo_tipo: anexoTipo || null,
+          anexo_nome: anexoNome || null,
+          tipo: 'admin',
+        }]);
+        if (error) throw error;
+      } catch (err) {
         setMessages(prev => prev.filter(message => message.id !== tempMessage.id));
-        throw error;
+        toast.error('Erro ao enviar mensagem no ticket.');
+        return;
       }
       messagePersisted = true;
 

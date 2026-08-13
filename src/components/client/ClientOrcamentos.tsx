@@ -167,15 +167,19 @@ export function ClientOrcamentos({
   useEffect(() => {
     if (isTrackingModalOpen && selectedTrackingOrcamento) {
       const checkStatus = async () => {
-        if (selectedTrackingOrcamento.produto_id) {
-          const { data: av } = await supabase.from('loja_avaliacoes')
-            .select('id').eq('produto_id', selectedTrackingOrcamento.produto_id).eq('cliente_id', clientId).limit(1);
-          setHasAvaliado(!!(av && av.length > 0));
-        }
+        try {
+          if (selectedTrackingOrcamento.produto_id) {
+            const { data: av } = await supabase.from('loja_avaliacoes')
+              .select('id').eq('produto_id', selectedTrackingOrcamento.produto_id).eq('cliente_id', clientId).limit(1);
+            setHasAvaliado(!!(av && av.length > 0));
+          }
 
-        const { data: tr } = await supabase.from('loja_solicitacoes')
-          .select('id').eq('orcamento_origem_id', selectedTrackingOrcamento.id).limit(1);
-        setHasTrocaRequisitada(!!(tr && tr.length > 0));
+          const { data: tr } = await supabase.from('loja_solicitacoes')
+            .select('id').eq('orcamento_origem_id', selectedTrackingOrcamento.id).limit(1);
+          setHasTrocaRequisitada(!!(tr && tr.length > 0));
+        } catch (e: any) {
+          console.error('Erro ao verificar status:', e);
+        }
       };
       checkStatus();
     }
