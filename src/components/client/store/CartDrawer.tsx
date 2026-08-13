@@ -46,10 +46,25 @@ interface CartDrawerProps {
   onRemoveCoupon?: (type: 'desconto' | 'entrega') => void;
   onUpdateQuantity: (cartId: string, quantity: number, item: any) => void;
   onRemove: (cartId: string) => void;
+  onClearCart?: () => void;
   onCheckout: () => void;
 }
 
 const roundMoney = (value: number): number => Math.round(value * 100) / 100;
+
+// Um item pode continuar no carrinho depois de o produto ser desativado ou
+// ocultado da loja. Nesse caso o checkout falha no servidor com
+// "Produto indisponivel para este cliente." — por isso bloqueamos antes.
+function isUnavailableItem(item: CartItem): boolean {
+  if (!item.item_detalhes) return true;
+  if (item.tipo !== 'produto') return false;
+  const details = item.item_detalhes as any;
+  const status = String(details?.status || '').toLowerCase();
+  if (status && status !== 'ativo') return true;
+  if (details?.visivel_na_loja === false) return true;
+  return false;
+}
+
 
 function itemSubtotal(item: CartItem): number {
   if (item.tipo === 'produto') {
@@ -80,6 +95,7 @@ export default function CartDrawer({
   onRemoveCoupon,
   onUpdateQuantity,
   onRemove,
+  onClearCart,
   onCheckout,
 }: CartDrawerProps) {
   const [showCoupons, setShowCoupons] = useState(Boolean(cupomDesconto || cupomEntrega));
@@ -124,10 +140,17 @@ export default function CartDrawer({
   const total = roundMoney(Math.max(0, subtotal - totalDiscount));
   const hasOutOfStockItems = cartItems.some((item) => (
     !item.item_detalhes
+    || isUnavailableItem(item)
     || (item.tipo === 'produto'
     && item.item_detalhes?.controle_estoque
     && Number(item.item_detalhes?.estoque_disponivel || 0) <= 0)
+    // Também bloqueia o checkout quando a quantidade no carrinho ultrapassa o estoque
+    // disponível atual (ex.: estoque reduzido após o item já estar no carrinho).
+    || (item.tipo === 'produto'
+    && item.item_detalhes?.controle_estoque
+    && Number(item.quantidade || 0) > Number(item.item_detalhes?.estoque_disponivel || 0))
   ));
+
 
   if (!isOpen) return null;
 
@@ -154,14 +177,31 @@ export default function CartDrawer({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Fechar carrinho"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
+          <div className="flex items-center gap-2">
+            {cartItems.length > 0 && onClearCart && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Deseja realmente esvaziar todos os itens do carrinho?')) {
+                    onClearCart();
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/80 px-3 py-1.5 text-xs font-extrabold text-red-600 transition hover:bg-red-100 hover:text-red-700 cursor-pointer"
+                title="Esvaziar todos os itens do carrinho"
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Limpar carrinho</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              aria-label="Fechar carrinho"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5">
@@ -187,10 +227,13 @@ export default function CartDrawer({
               {cartItems.map((item) => {
                 const isProduct = item.tipo === 'produto';
                 const isItemDeleted = !item.item_detalhes;
+                const isUnavailable = isUnavailableItem(item);
                 const outOfStock = isItemDeleted
+                  || isUnavailable
                   || (isProduct
                   && item.item_detalhes?.controle_estoque
                   && Number(item.item_detalhes?.estoque_disponivel || 0) <= 0);
+
                 const subtotalForItem = itemSubtotal(item);
                 const originalSubtotal = roundMoney(Number(item.item_detalhes?.valor || 0) * Number(item.quantidade || 1));
                 const hasDiscount = isProduct && hasActiveProductDiscount(item.item_detalhes) && subtotalForItem < originalSubtotal;
@@ -229,7 +272,12 @@ export default function CartDrawer({
                         {outOfStock ? (
                           <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-red-700">
                             <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                            {isItemDeleted ? 'Item não disponível mais no catálogo' : 'Item indisponível no estoque'}
+                            {isItemDeleted
+                              ? 'Item não disponível mais no catálogo'
+                              : isUnavailable
+                                ? 'Produto saiu do catálogo — remova para continuar'
+                                : 'Item indisponível no estoque'}
+
                           </div>
                         ) : (
                           <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
@@ -251,14 +299,23 @@ export default function CartDrawer({
                                   {item.quantidade === 1 ? <Trash2 className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
                                 </button>
                                 <span className="w-8 text-center text-xs font-extrabold tabular-nums text-slate-900">{item.quantidade}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => onUpdateQuantity(item.id, item.quantidade + 1, item.item_detalhes)}
-                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white"
-                                  aria-label="Aumentar quantidade"
-                                >
-                                  <Plus className="h-3.5 w-3.5" />
-                                </button>
+                                {(() => {
+                                  const controlaEstoque = !!item.item_detalhes?.controle_estoque;
+                                  const estoque = Number(item.item_detalhes?.estoque_disponivel || 0);
+                                  const noLimite = controlaEstoque && item.quantidade >= estoque;
+                                  return (
+                                    <button
+                                      type="button"
+                                      disabled={noLimite}
+                                      onClick={() => onUpdateQuantity(item.id, item.quantidade + 1, item.item_detalhes)}
+                                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                                      aria-label="Aumentar quantidade"
+                                      title={noLimite ? `Estoque máximo: ${estoque}` : 'Aumentar quantidade'}
+                                    >
+                                      <Plus className="h-3.5 w-3.5" />
+                                    </button>
+                                  );
+                                })()}
                               </div>
                             )}
                           </div>
