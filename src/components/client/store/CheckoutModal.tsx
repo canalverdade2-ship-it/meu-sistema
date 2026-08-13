@@ -1363,9 +1363,9 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
               <div key={c.id} className="flex justify-between items-start text-sm">
                 <div className="pr-4">
                   <span className="text-neutral-400 block text-[10px] mb-0.5">
-                    {c.quantidade}x {c.tipo} · <span className="font-mono text-indigo-300">{c.tipo === 'produto' ? getProductDisplayCode(c.item_detalhes as any) : ((c.item_detalhes as any)?.codigo_produto || (c.item_detalhes as any)?.codigo_servico || (c.item_detalhes as any)?.codigo_assinatura || '')}</span>
+                    {c.quantidade}x {c.tipo} · <span className="font-mono text-indigo-200 font-semibold">{c.tipo === 'produto' ? getProductDisplayCode(c.item_detalhes as any) : ((c.item_detalhes as any)?.codigo_produto || (c.item_detalhes as any)?.codigo_servico || (c.item_detalhes as any)?.codigo_assinatura || '')}</span>
                   </span>
-                  <span className="font-bold truncate max-w-[150px] block leading-tight">{c.item_detalhes?.nome}</span>
+                  <span className="font-bold truncate max-w-[150px] block leading-tight text-white">{c.item_detalhes?.nome}</span>
                 </div>
                 <div className="text-right">
                   {c.tipo === 'produto' && hasActiveProductDiscount(c.item_detalhes) && (
@@ -1373,13 +1373,13 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, promosAplica
                       <span className="text-[9px] text-neutral-400 line-through">
                         {formatCurrency((c.item_detalhes.valor || 0) * c.quantidade)}
                       </span>
-                      <span className="font-bold text-indigo-700">
+                      <span className="font-bold text-emerald-400">
                         {formatCurrency(getProductQuantityPriceBreakdown(c.item_detalhes, c.quantidade).subtotalFinal)}
                       </span>
                     </div>
                   )}
                   {(!hasActiveProductDiscount(c.item_detalhes) || c.tipo !== 'produto') && (
-                    <span className="font-bold text-neutral-900">
+                    <span className="font-bold text-white">
                       {formatCurrency((c.item_detalhes?.valor || 0) * c.quantidade)}
                     </span>
                   )}
