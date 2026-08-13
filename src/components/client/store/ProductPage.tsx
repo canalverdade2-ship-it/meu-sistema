@@ -34,6 +34,7 @@ import { useSEO } from '../../../hooks/useSEO';
 import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
 import { isInWishlist, toggleWishlist } from '../../../lib/wishlistStorage';
 import { toast } from 'react-hot-toast';
+import { usePixDiscount, checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
 
 interface ProductPageProps {
   productId: string;
@@ -57,6 +58,9 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
   const [displayRating, setDisplayRating] = useState(4.9);
   const [displayRatingCount, setDisplayRatingCount] = useState(0);
   const [realViewersCount, setRealViewersCount] = useState(1);
+  const pixSettings = usePixDiscount();
+  const pixAtivo = product ? checkPixDiscountApplies(product, pixSettings) : false;
+  const pixPorcentagem = pixSettings.porcentagem;
 
   useEffect(() => {
     let isMounted = true;
@@ -486,6 +490,14 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
 
           <div className="flex flex-col lg:col-span-6">
             
+            {/* Lógica de cálculo de preços (inserido no render p/ acesso seguro a pixAtivo/currentPrice) */}
+            {(() => {
+              const currentPrice = hasDiscount ? getProductEffectivePrice(product) : Number(product.valor || 0);
+              const pixPrice = pixAtivo ? currentPrice - (currentPrice * (pixPorcentagem / 100)) : currentPrice;
+              
+              return (
+                <>
+            
             <div className="flex items-center gap-2">
               <span className="rounded-lg bg-neutral-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#17345f]">
                 {categoryName}
@@ -525,29 +537,49 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl bg-neutral-50/80 p-5 border border-neutral-100">
-              {hasDiscount && regularPrice > currentPrice && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-neutral-400 line-through">
-                    {formatCurrency(regularPrice)}
-                  </span>
-                  <span className="rounded bg-rose-100 px-1.5 py-0.5 text-xs font-black text-rose-700">
-                    Economize {formatCurrency(regularPrice - currentPrice)}
-                  </span>
-                </div>
-              )}
+              <div className="mt-6 rounded-2xl bg-neutral-50/80 p-5 border border-neutral-100">
+                {hasDiscount && regularPrice > currentPrice && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-neutral-400 line-through">
+                      {formatCurrency(regularPrice)}
+                    </span>
+                    <span className="rounded bg-rose-100 px-1.5 py-0.5 text-xs font-black text-rose-700">
+                      Economize {formatCurrency(regularPrice - currentPrice)}
+                    </span>
+                  </div>
+                )}
 
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-[#17345f] sm:text-4xl">
-                  {formatCurrency(currentPrice)}
-                </span>
-                <span className="text-xs font-bold text-neutral-400 uppercase">no cartão</span>
-              </div>
-
-              <div className="mt-2 flex items-center gap-2 text-xs font-extrabold text-emerald-700">
-                <QrCode className="h-4 w-4" />
-                <span>Pague à vista via PIX, boleto ou cartão</span>
-              </div>
+                {pixAtivo ? (
+                  <>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-emerald-700 sm:text-4xl">
+                        {formatCurrency(pixPrice)}
+                      </span>
+                      <span className="text-xs font-black text-emerald-600 uppercase tracking-wider">no PIX</span>
+                    </div>
+                    
+                    <div className="mt-1.5 flex items-center gap-2 text-xs font-extrabold text-emerald-700">
+                      <QrCode className="h-4 w-4" />
+                      <span>Pague no Pix e ganhe {pixPorcentagem}% de desconto</span>
+                    </div>
+                    
+                    <div className="mt-3 text-xs text-neutral-500 font-bold border-t border-neutral-200/60 pt-3">
+                      ou <strong className="text-neutral-700">{formatCurrency(currentPrice)}</strong> no cartão em até 12x
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-[#17345f] sm:text-4xl">
+                        {formatCurrency(currentPrice)}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 text-xs font-extrabold text-emerald-700">
+                      <CreditCard className="h-4 w-4" />
+                      <span>Pague à vista via PIX, boleto ou parcele no cartão</span>
+                    </div>
+                  </>
+                )}
 
               <div className="mt-1.5 flex items-center gap-2 text-xs font-semibold text-neutral-600">
                 <CreditCard className="h-4 w-4 text-neutral-400" />
@@ -590,7 +622,9 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                   <div className="flex items-center gap-2.5 rounded-xl bg-emerald-50/90 px-3.5 py-2 border border-emerald-200/80 text-xs shadow-2xs animate-in fade-in duration-200">
                     <div className="flex items-baseline gap-1 text-emerald-950 font-black">
                       <span className="text-[11px] font-bold text-emerald-800">Total ({quantity} un):</span>
-                      <span className="text-sm font-black text-emerald-700">{formatCurrency(currentPrice * quantity)}</span>
+                      <span className="text-sm font-black text-emerald-700">
+                        {formatCurrency((pixAtivo ? pixPrice : currentPrice) * quantity)}
+                      </span>
                     </div>
                     <span className="text-emerald-300">|</span>
                     <div className="flex items-center gap-1 font-extrabold text-amber-700">
@@ -643,6 +677,11 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                 </button>
               </div>
             </div>
+            
+            {/* Fechamento do IIFE de renderização dos preços */}
+            </>
+            );
+            })()}
 
             <div className="mt-6">
               <button 

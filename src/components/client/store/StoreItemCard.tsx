@@ -23,6 +23,7 @@ import {
   hasActiveProductDiscount,
 } from '../../../lib/productPricing';
 import { calculateProductRating } from '../../../lib/productRatings';
+import { usePixDiscount, checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
 
 type ItemType = 'produto' | 'servico' | 'assinatura';
 
@@ -63,7 +64,12 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
     && Number(item.estoque_disponivel || 0) <= 5;
   const hasDiscount = isProduct && hasActiveProductDiscount(item) && !isOutOfStock;
   const categoryLabel = getCategoryLabel(item);
+  const pixSettings = usePixDiscount();
+  const pixAtivo = checkPixDiscountApplies(item, pixSettings);
+  const pixPorcentagem = pixSettings.porcentagem;
+  
   const currentPrice = hasDiscount ? getProductEffectivePrice(item) : Number(item.valor || 0);
+  const pixPrice = pixAtivo ? currentPrice - (currentPrice * (pixPorcentagem / 100)) : currentPrice;
   const promotionQuantity = hasDiscount ? getProductPromotionQuantityInfo(item) : null;
 
   const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -226,13 +232,26 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
                 </div>
               )}
               
-              <div className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
-                {formatCurrency(currentPrice)}
+              {pixAtivo && (
+                <div className="mb-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 inline-block px-1.5 py-0.5 rounded border border-emerald-100">
+                  Pague no Pix e ganhe {pixPorcentagem}% de desconto
+                </div>
+              )}
+              
+              <div className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl flex items-baseline gap-1">
+                {formatCurrency(pixAtivo ? pixPrice : currentPrice)}
+                {pixAtivo && <span className="text-xs font-bold text-emerald-600">no Pix</span>}
               </div>
+
+              {pixAtivo && (
+                <div className="text-[11px] text-slate-500 font-medium">
+                  ou {formatCurrency(currentPrice)} no cartão
+                </div>
+              )}
 
               {/* Parcelamento estilo Mercado Livre */}
               {currentPrice >= 50 && (
-                <div className="mt-0.5 text-[11px] font-bold text-emerald-600">
+                <div className="mt-1 text-[11px] font-bold text-emerald-600">
                   em 10x de R$ {valorParcela} sem juros
                 </div>
               )}
