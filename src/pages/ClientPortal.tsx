@@ -285,6 +285,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   const activeModule = (route.area === 'marketplace' 
     ? (route.module === 'classificados' ? 'classificados' : 'gsa_store') 
     : route.module) as Module;
+  const isMarketplaceArea = route.area === 'marketplace' || (activeModule as string) === 'gsa_store' || (activeModule as string) === 'classificados';
   const activeTab = route.submodule;
   const activeItemId = route.itemId;
   
@@ -1214,43 +1215,45 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
 
       {/* Content */}
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-30 flex h-24 items-center justify-between bg-[#f8f7f5]/80 px-6 backdrop-blur-md lg:px-12">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="rounded-full bg-white p-2.5 shadow-sm ring-1 ring-black/5 transition-all hover:bg-black/5 lg:hidden"
-            >
-              <Menu className="h-5 w-5 text-[#1a1a1a]" />
-            </button>
-            <h1 className="text-2xl tracking-tight text-[#1a1a1a] lg:text-3xl">
-              {menuItems.find(i => i.id === activeModule)?.label}
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={toggleFullscreen}
-              className="group hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-black/5"
-              title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
-            >
-              {isFullscreen ? (
-                <Minimize className="h-5 w-5 text-[#1a1a1a]/60 group-hover:text-[#1a1a1a]" />
-              ) : (
-                <Maximize className="h-5 w-5 text-[#1a1a1a]/60 group-hover:text-[#1a1a1a]" />
-              )}
-            </button>
-            <UniversalNotificationBell 
-              variant="client"
-              notifications={notifications}
-              unreadCount={unreadNotifications}
-              onMarkAsRead={markAsRead}
-              onMarkAllAsRead={markAllAsRead}
-              onNavigate={(mod, tab, itemId) => {
-                navigateClientModule(mod, tab, itemId);
-              }}
-            />
-          </div>
-        </header>
-        <div className={activeModule === 'area_vip' ? '' : (activeModule as string) === 'gsa_store' ? 'p-4 lg:px-6 lg:pt-2 lg:pb-12' : 'p-6 lg:p-12'}>
+        {!isMarketplaceArea && (
+          <header className="sticky top-0 z-30 flex h-24 items-center justify-between bg-[#f8f7f5]/80 px-6 backdrop-blur-md lg:px-12">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="rounded-full bg-white p-2.5 shadow-sm ring-1 ring-black/5 transition-all hover:bg-black/5 lg:hidden"
+              >
+                <Menu className="h-5 w-5 text-[#1a1a1a]" />
+              </button>
+              <h1 className="text-2xl tracking-tight text-[#1a1a1a] lg:text-3xl">
+                {menuItems.find(i => i.id === activeModule)?.label}
+              </h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={toggleFullscreen}
+                className="group hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-black/5"
+                title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
+              >
+                {isFullscreen ? (
+                  <Minimize className="h-5 w-5 text-[#1a1a1a]/60 group-hover:text-[#1a1a1a]" />
+                ) : (
+                  <Maximize className="h-5 w-5 text-[#1a1a1a]/60 group-hover:text-[#1a1a1a]" />
+                )}
+              </button>
+              <UniversalNotificationBell 
+                variant="client"
+                notifications={notifications}
+                unreadCount={unreadNotifications}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+                onNavigate={(mod, tab, itemId) => {
+                  navigateClientModule(mod, tab, itemId);
+                }}
+              />
+            </div>
+          </header>
+        )}
+        <div className={isMarketplaceArea ? 'p-0' : activeModule === 'area_vip' ? '' : 'p-6 lg:p-12'}>
           {activeModule !== 'dashboard' && (activeModule as string) !== 'gsa_store' && (activeModule as string) !== 'classificados' && activeModule !== 'financeiro' && activeModule !== 'fidelidade' && activeModule !== 'servicos_assinaturas' && (
             <button 
               onClick={() => {
@@ -1298,7 +1301,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={activeModule === 'dashboard' ? '' : activeModule === 'area_vip' ? '' : 'card-refined'}
+            className={activeModule === 'dashboard' || activeModule === 'area_vip' || isMarketplaceArea ? '' : 'card-refined'}
           >
             {activeModule === 'dashboard' && (
               <ClientDashboard 
