@@ -1,7 +1,7 @@
 {
-  "generated_at_utc": "2026-08-07T12:02:00Z",
+  "generated_at_utc": "2026-08-14T15:04:19Z",
   "result": "failure",
-  "validated_sha": "1a867a1d0da5182848bed7ed20a4763e84400727",
+  "validated_sha": "7ed6a5644743e7c0866064f7ceb0a95b122b2268",
   "client_security_contracts": "failure",
   "edge_function_validation": "failure",
   "database_objects": "failure",
