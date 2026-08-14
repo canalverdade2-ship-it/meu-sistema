@@ -72,7 +72,15 @@ function getDailyRotatingList(items: any[], count: number, salt: number = 42): a
 
 
 /* ─── Horizontal Scroll Shelf with Auto-Scroll & Touch Swipe ─── */
-function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRanking?: boolean }) {
+function HorizontalShelf({
+  items,
+  showRanking = false,
+  clientId,
+}: {
+  items: any[];
+  showRanking?: boolean;
+  clientId?: string;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -450,7 +458,7 @@ export function EcommerceHome({
                     </div>
                   </div>
                   <div className="p-5">
-                    <HorizontalShelf items={ofertas} />
+                    <HorizontalShelf items={ofertas} clientId={clientId} />
                   </div>
                 </section>
               )}
@@ -475,7 +483,7 @@ export function EcommerceHome({
                       Ver todos <ChevronRight size={14} />
                     </button>
                   </div>
-                  <HorizontalShelf items={maisVendidos} showRanking />
+                  <HorizontalShelf items={maisVendidos} showRanking clientId={clientId} />
                 </section>
               )}
 
@@ -503,7 +511,7 @@ export function EcommerceHome({
                       <ChevronRight size={14} />
                     </button>
                   </div>
-                  <HorizontalShelf items={eletronicos} />
+                  <HorizontalShelf items={eletronicos} clientId={clientId} />
                 </section>
               )}
 
@@ -531,7 +539,7 @@ export function EcommerceHome({
                       <ChevronRight size={14} />
                     </button>
                   </div>
-                  <HorizontalShelf items={casa} />
+                  <HorizontalShelf items={casa} clientId={clientId} />
                 </section>
               )}
 
@@ -559,7 +567,7 @@ export function EcommerceHome({
                       <ChevronRight size={14} />
                     </button>
                   </div>
-                  <HorizontalShelf items={moda} />
+                  <HorizontalShelf items={moda} clientId={clientId} />
                 </section>
               )}
 
@@ -587,7 +595,7 @@ export function EcommerceHome({
                       <ChevronRight size={14} />
                     </button>
                   </div>
-                  <HorizontalShelf items={beleza} />
+                  <HorizontalShelf items={beleza} clientId={clientId} />
                 </section>
               )}
 
@@ -639,7 +647,7 @@ export function EcommerceHome({
                       Ver todas <ChevronRight size={14} />
                     </button>
                   </div>
-                  <HorizontalShelf items={novidades} />
+                  <HorizontalShelf items={novidades} clientId={clientId} />
                 </section>
               )}
 
@@ -663,7 +671,7 @@ export function EcommerceHome({
                       Ver mais <ChevronRight size={14} />
                     </button>
                   </div>
-                  <HorizontalShelf items={recomendados} />
+                  <HorizontalShelf items={recomendados} clientId={clientId} />
                 </section>
               )}
 
