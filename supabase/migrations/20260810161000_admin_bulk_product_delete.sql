@@ -20,13 +20,19 @@ BEGIN
   -- 1. Autenticar sessao administrativa
   SELECT * INTO v_actor FROM public.gsa_require_admin_actor(p_sessao_id, p_session_token);
 
-  -- 2. Limpar carrinhos pendentes que referenciam estes produtos
+  -- 2. Limpar tabelas filhas sem risco de integridade
   DELETE FROM public.loja_carrinhos WHERE item_id = ANY(p_ids) AND tipo = 'produto';
-
-  -- 3. Limpar configuracoes de fornecedor associadas
   DELETE FROM public.produto_fornecedor_config WHERE produto_id = ANY(p_ids);
+  
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'loja_avaliacoes') THEN
+    DELETE FROM public.loja_avaliacoes WHERE produto_id = ANY(p_ids);
+  END IF;
 
-  -- 4. Exclusao segura com tratamento de integridade referencial
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'loja_favoritos') THEN
+    DELETE FROM public.loja_favoritos WHERE produto_id = ANY(p_ids);
+  END IF;
+
+  -- 3. Excluir produtos em lote
   FOREACH v_id IN ARRAY p_ids
   LOOP
     BEGIN
@@ -50,5 +56,4 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.gsa_admin_delete_products_bulk(UUID, TEXT, UUID[]) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.gsa_admin_delete_products_bulk(UUID, TEXT, UUID[]) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.gsa_admin_delete_products_bulk(UUID, TEXT, UUID[]) TO anon, authenticated, service_role;

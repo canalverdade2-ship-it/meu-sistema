@@ -24,6 +24,8 @@ import {
 } from '../../../lib/productPricing';
 import { calculateProductRating } from '../../../lib/productRatings';
 import { usePixDiscount, checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
+import { isInWishlist, toggleWishlist } from '../../../lib/wishlistStorage';
+import { toast } from 'react-hot-toast';
 
 type ItemType = 'produto' | 'servico' | 'assinatura';
 
@@ -32,6 +34,7 @@ interface StoreItemCardProps {
   tipo: ItemType;
   onAdd: () => any;
   onClick: () => any;
+  clientId?: string;
 }
 
 function getCategoryLabel(item: any): string {
@@ -55,9 +58,29 @@ function ItemPlaceholder({ tipo }: { tipo: ItemType }) {
   return <Package className={iconClass} aria-hidden="true" />;
 }
 
-export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemCardProps) {
+export default function StoreItemCard({ item, tipo, onAdd, onClick, clientId }: StoreItemCardProps) {
   const isProduct = tipo === 'produto';
   const isOutOfStock = isProduct && item.controle_estoque && Number(item.estoque_disponivel || 0) <= 0;
+  const [favorited, setFavorited] = React.useState(() => isProduct ? isInWishlist(item?.id, clientId) : false);
+
+  React.useEffect(() => {
+    if (!isProduct || !item?.id) return;
+    setFavorited(isInWishlist(item.id, clientId));
+    const handleUpdate = () => {
+      setFavorited(isInWishlist(item.id, clientId));
+    };
+    window.addEventListener('gsa-wishlist-updated', handleUpdate);
+    return () => window.removeEventListener('gsa-wishlist-updated', handleUpdate);
+  }, [isProduct, item?.id, clientId]);
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!item?.id) return;
+    const nextState = await toggleWishlist(item.id, clientId);
+    setFavorited(nextState);
+    toast.success(nextState ? 'Produto salvo nos seus favoritos!' : 'Removido dos favoritos.');
+  };
   const isLowStock = isProduct
     && item.controle_estoque
     && Number(item.estoque_disponivel || 0) > 0
@@ -85,9 +108,10 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
 
   // Pontos GSA reais: R$ 1,00 gasto = 1 ponto GSA
   const pontosGanhos = Math.floor(currentPrice);
-  
-  // Parcelamento em até 10x
-  const valorParcela = (currentPrice / 10).toFixed(2).replace('.', ',');
+
+  // Parcelamento no cartão em até 10x / 12x
+  const parcelasMax = currentPrice >= 60 ? 12 : 10;
+  const valorParcela = (currentPrice / parcelasMax).toFixed(2).replace('.', ',');
 
   const ratingSummary = calculateProductRating(item);
 
@@ -142,16 +166,21 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
         )}
         
         {/* Favoritos Button */}
-        <button 
-          type="button"
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:text-red-500 hover:scale-110 z-10"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          aria-label="Adicionar aos favoritos"
-        >
-          <Heart className="h-4 w-4" />
-        </button>
+        {isProduct && (
+          <button 
+            type="button"
+            className={`absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full shadow-md backdrop-blur-sm transition-all z-10 cursor-pointer ${
+              favorited 
+                ? 'bg-white text-red-500 scale-105 hover:bg-white/90 shadow-red-500/10' 
+                : 'bg-white/90 text-slate-400 hover:bg-white hover:text-red-500 hover:scale-110'
+            }`}
+            onClick={handleToggleFavorite}
+            aria-label={favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+            title={favorited ? "Remover dos favoritos" : "Salvar nos favoritos"}
+          >
+            <Heart className={`h-4 w-4 ${favorited ? 'fill-red-500 text-red-500' : ''}`} />
+          </button>
+        )}
 
         {/* Badges do Produto Stacking */}
         <div className="absolute left-3 top-3 flex max-w-[calc(100%-2rem)] flex-wrap gap-1.5 z-10">
@@ -249,10 +278,10 @@ export default function StoreItemCard({ item, tipo, onAdd, onClick }: StoreItemC
                 </div>
               )}
 
-              {/* Parcelamento estilo Mercado Livre */}
-              {currentPrice >= 50 && (
-                <div className="mt-1 text-[11px] font-bold text-emerald-600">
-                  em 10x de R$ {valorParcela} sem juros
+              {/* Parcelamento no cartão */}
+              {currentPrice > 0 && (
+                <div className="mt-0.5 text-[11px] font-bold text-emerald-600">
+                  em até {parcelasMax}x de R$ {valorParcela} no cartão
                 </div>
               )}
 

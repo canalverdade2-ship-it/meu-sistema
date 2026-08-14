@@ -252,44 +252,66 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 };
 
-const fetchProdutos = async () => {
-    let query = supabase
-      .from('produtos')
-      .select('*')
-      .eq('status', activeTab === 'ativos' ? 'ativo' : 'inativo');
-    
-    if (tipoClienteFilter === 'pf' || tipoClienteFilter === 'pj') {
-      query = query.in('tipo_cliente', [tipoClienteFilter, 'ambos']);
-    } else if (tipoClienteFilter === 'ambos') {
-      query = query.eq('tipo_cliente', 'ambos');
-    }
+  const fetchProdutos = async () => {
+    let allData: Produto[] = [];
+    let from = 0;
+    const step = 1000;
+    let hasMore = true;
 
-    const safeSearch = search.replace(/[,()]/g, ' ').trim();
-    if (safeSearch) {
-      const searchClean = safeSearch.replace(/[\s\.\-]/g, '');
-      const searchConditions = [`nome.ilike.%${safeSearch}%`];
-      if (searchClean.length > 0) {
-        searchConditions.push(`codigo_produto.ilike.%${searchClean}%`);
-        searchConditions.push(`codigo_barras.ilike.%${searchClean}%`);
+    while (hasMore) {
+      let query = supabase
+        .from('produtos')
+        .select('*')
+        .eq('status', activeTab === 'ativos' ? 'ativo' : 'inativo');
+      
+      if (tipoClienteFilter === 'pf' || tipoClienteFilter === 'pj') {
+        query = query.in('tipo_cliente', [tipoClienteFilter, 'ambos']);
+      } else if (tipoClienteFilter === 'ambos') {
+        query = query.eq('tipo_cliente', 'ambos');
       }
-      query = query.or(searchConditions.join(','));
-    }
 
-    if (categoriaFilter !== 'todos') {
-      if (categoriaFilter === 'sem_categoria') {
-        query = query.is('categoria_id', null);
+      const safeSearch = search.replace(/[,()]/g, ' ').trim();
+      if (safeSearch) {
+        const searchClean = safeSearch.replace(/[\s\.\-]/g, '');
+        const searchConditions = [`nome.ilike.%${safeSearch}%`];
+        if (searchClean.length > 0) {
+          searchConditions.push(`codigo_produto.ilike.%${searchClean}%`);
+          searchConditions.push(`codigo_barras.ilike.%${searchClean}%`);
+        }
+        query = query.or(searchConditions.join(','));
+      }
+
+      if (categoriaFilter !== 'todos') {
+        if (categoriaFilter === 'sem_categoria') {
+          query = query.is('categoria_id', null);
+        } else {
+          query = query.eq('categoria_id', categoriaFilter);
+        }
+      }
+
+      const { data, error } = await query
+        .order('codigo_produto', { ascending: false })
+        .range(from, from + step - 1);
+
+      if (error) {
+        console.error('Erro ao consultar produtos no Supabase:', error);
+        toast.error(`Falha na conexão com o banco de dados: ${error.message || 'Timeout de Conexão'}`);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        allData = allData.concat(data);
+        if (data.length < step || allData.length >= 20000) {
+          hasMore = false;
+        } else {
+          from += step;
+        }
       } else {
-        query = query.eq('categoria_id', categoriaFilter);
+        hasMore = false;
       }
     }
 
-    const { data, error } = await query.order('codigo_produto', { ascending: false });
-    if (error) {
-      console.error('Erro ao consultar produtos no Supabase:', error);
-      toast.error(`Falha na conexão com o banco de dados: ${error.message || 'Timeout de Conexão'}`);
-    } else if (data) {
-      setProdutos(data);
-    }
+    setProdutos(allData);
   };
 
 const handleCreate = async (formData: any) => {

@@ -59,7 +59,7 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
   const openProposal = () => {
     if (!clientId) {
       const returnTo = encodeURIComponent(routes.marketplace.classifieds.geralItem(slug));
-      navigate(`${routes.login.root()}?returnTo=${returnTo}`);
+      navigate(`${routes.login.personal()}?returnTo=${returnTo}`);
       return;
     }
     setShowProposalForm(true);

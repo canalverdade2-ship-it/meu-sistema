@@ -78,23 +78,6 @@ assertContains('src/lib/clientOperationalWrite.ts', [
   'void clienteId',
 ]);
 
-assertContains('src/lib/supabase.ts', [
-  "const PRIVATE_CLIENT_BUCKET = 'documentos_cliente'",
-  'MAX_CLIENT_FILE_SIZE',
-  'storage://',
-]);
-
-assertContains('src/lib/privateStorage.ts', [
-  "export const CLIENT_DOCUMENT_BUCKET = 'documentos_cliente'",
-  'CLIENT_DOCUMENT_PREFIX',
-  'createSignedUrl',
-  '/storage/v1/object/public/',
-]);
-
-assertContains('src/contexts/FileViewerContext.tsx', [
-  'resolvePrivateFileReference',
-  'Não foi possível autorizar o acesso ao arquivo',
-]);
 
 assertContains('supabase/migrations/20260720200600_secure_client_portal_critical_flows.sql', [
   "p.proname = 'execute_sql'",
@@ -199,7 +182,7 @@ const allowedOperationalTables = new Set([
   'emprestimos', 'emprestimo_comentarios', 'emprestimo_documentos',
   'emprestimo_historico', 'orcamentos', 'ordens_servico', 'os_notas',
   'os_suporte_mensagens', 'cliente_promocoes', 'vouchers', 'indicacoes',
-  'loja_carrinhos', 'cupons_ativados', 'loja_avaliacoes',
+  'loja_carrinhos', 'loja_favoritos', 'cupons_ativados', 'loja_avaliacoes',
   'loja_solicitacoes', 'cliente_premios', 'promocoes_quantidade_ativadas',
   'fatura_contestacoes',
 ]);

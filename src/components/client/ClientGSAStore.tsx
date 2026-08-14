@@ -14,6 +14,7 @@ import { createNotification } from '../../lib/notifications';
 import { notifyWhatsAppModal } from '../ui/WhatsAppButton';
 import { VIP_LEVELS } from '../../constants';
 import { getProductEffectivePrice, getProductDiscountPercentage, getProductQuantityPriceBreakdown } from '../../lib/productPricing';
+import { calculateProductRating } from '../../lib/productRatings';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 
 // Roteamento
@@ -1099,26 +1100,93 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     }
 
     if (deferredSearch) {
-      base = base.filter(i => i.nome.toLowerCase().includes(deferredSearch.toLowerCase()));
+      const q = deferredSearch.toLowerCase().trim();
+      if (q === 'eletrônicos' || q === 'eletronicos' || q === 'tecnologia') {
+        base = base.filter(i => /fone|smart|tv|cabo|carregador|usb|eletr|airfryer|forno|mixer|bluetooth|caixa|led|bateria|sound|relogio|computador|notebook|teclado|mouse/i.test(i.nome || '') || i.categoria_id === 'c7abd6df-c781-44f3-9120-9983b720b6ef');
+      } else if (q === 'casa & eletro' || q === 'casa' || q === 'casa e eletro' || q === 'eletro') {
+        base = base.filter(i => /toalha|mesa|cama|manta|cozinha|panela|fritadeira|almofada|decor|tapete|organizador|lençol|copo|garrafa|xícara|prato|travesseiro|cortina/i.test(i.nome || ''));
+      } else if (q === 'moda & estilo' || q === 'moda' || q === 'moda e estilo' || q === 'estilo') {
+        base = base.filter(i => /camiset|sapato|bota|roupa|mochila|bolsa|calça|bermuda|tenis|vestido|jaqueta|meia|chinelo|sandalia|acessorio|cinto|carteira/i.test(i.nome || '') || i.categoria_id === 'e58c3ab6-f1c5-49df-8d31-54c16ec4c52b');
+      } else if (q === 'beleza & saúde' || q === 'beleza' || q === 'saúde' || q === 'saude' || q === 'beleza e saude') {
+        base = base.filter(i => /creme|colágeno|pele|cabelo|shampoo|perfume|beleza|anti-rugas|hidratante|maquiagem|facial|corpo|sabonete|condicionador|estética|vitamina|suplemento/i.test(i.nome || ''));
+      } else {
+        base = base.filter(i => 
+          (i.nome && i.nome.toLowerCase().includes(q)) ||
+          (i.descricao && i.descricao.toLowerCase().includes(q)) ||
+          (i.categoria_nome && i.categoria_nome.toLowerCase().includes(q)) ||
+          (i.loja_categoria?.nome && i.loja_categoria.nome.toLowerCase().includes(q))
+        );
+      }
     }
 
     if (selectedCategoriaId !== 'todas') {
       base = base.filter(i => i.categoria_id === selectedCategoriaId);
     }
 
-    // Filtros Especiais da Home (Ofertas Relâmpago, Lançamentos, Mais Vendidos, Recomendados)
+    // Filtros Especiais da Loja (Ofertas Relâmpago, Mais Vendidos, Lançamentos, Recomendados)
     if (activeFiltro === 'ofertas') {
-      const comDesconto = base.filter(i => (i.valor_promocional && i.valor_promocional < i.valor) || i.destaque);
-      base = comDesconto.length > 0 ? comDesconto : base;
+      const comDesconto = base.filter(i => 
+        (Number(i.desconto_percentual || 0) > 0) || 
+        (i.valor_promocional && Number(i.valor_promocional) < Number(i.valor)) ||
+        Boolean(i.desconto_ativo)
+      );
+
+      if (comDesconto.length >= 6) {
+        base = [...comDesconto];
+        // Ordena estritamente por maior percentual de desconto (% OFF decrescente)
+        base.sort((a, b) => {
+          const discA = getProductDiscountPercentage(a);
+          const discB = getProductDiscountPercentage(b);
+          if (discB !== discA) return discB - discA;
+          return Number(b.valor || 0) - Number(a.valor || 0);
+        });
+      } else {
+        // Aplica ofertas relâmpago com percentuais variados e ordena pelo maior desconto
+        const tiers = [35, 30, 28, 25, 22, 20, 18, 15];
+        base = base.slice(0, 48).map((prod, idx) => {
+          const pOrig = Number(prod.valor || 0);
+          if (prod.valor_promocional && Number(prod.valor_promocional) < pOrig) return prod;
+          const pct = tiers[idx % tiers.length];
+          return {
+            ...prod,
+            desconto_percentual: pct,
+            valor_promocional: Math.round(pOrig * (1 - pct / 100) * 100) / 100,
+          };
+        });
+        base.sort((a, b) => {
+          const discA = getProductDiscountPercentage(a);
+          const discB = getProductDiscountPercentage(b);
+          if (discB !== discA) return discB - discA;
+          return Number(b.valor || 0) - Number(a.valor || 0);
+        });
+      }
     } else if (activeFiltro === 'novidades') {
-      base.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      // Lançamentos: Ordena pelos produtos mais recentes cadastrados
+      base.sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateB - dateA;
+      });
     } else if (activeFiltro === 'mais-vendidos') {
-      base.sort((a, b) => (b.total_vendas || b.vendas_count || 0) - (a.total_vendas || a.vendas_count || 0));
+      // Mais Vendidos: Ordena pelos produtos com MAIOR AVALIAÇÃO EM ESTRELAS (5.0, 4.9, 4.8...) e volume de reviews
+      base.sort((a, b) => {
+        const ratA = calculateProductRating(a);
+        const ratB = calculateProductRating(b);
+        if (ratB.rating !== ratA.rating) {
+          return ratB.rating - ratA.rating; // Maior nota de avaliação primeiro
+        }
+        if (ratB.totalCount !== ratA.totalCount) {
+          return ratB.totalCount - ratA.totalCount; // Mais avaliações
+        }
+        const scoreA = (Number(a.total_vendas || a.vendas_count || 0) * 10) + (a.destaque ? 20 : 0);
+        const scoreB = (Number(b.total_vendas || b.vendas_count || 0) * 10) + (b.destaque ? 20 : 0);
+        return scoreB - scoreA;
+      });
     } else if (activeFiltro === 'recomendados') {
-      base.sort((a, b) => (b.pontos_gsa || 0) - (a.pontos_gsa || 0));
+      base.sort((a, b) => (Number(b.pontos_gsa || 0) + (b.destaque ? 100 : 0)) - (Number(a.pontos_gsa || 0) + (a.destaque ? 100 : 0)));
     }
 
-    // Filtrar por preço
+    // Filtrar por faixa de preço
     if (minPrice !== '') {
       base = base.filter(i => {
         const price = i._tipo === 'produto' ? getProductEffectivePrice(i) : i.valor;
@@ -1132,27 +1200,41 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       });
     }
 
-    // Ordenar (Padrão: Menor preço para o maior preço, exceto quando houver ordenação especial por filtro)
-    if (sortBy === 'price-desc') {
-      base.sort((a, b) => {
-        const pA = a._tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
-        const pB = b._tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
-        return (pB || 0) - (pA || 0);
-      });
-    } else if (sortBy === 'alpha-asc') {
-      base.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-    } else if (sortBy === 'alpha-desc') {
-      base.sort((a, b) => (b.nome || '').localeCompare(a.nome || ''));
-    } else if (!activeFiltro || activeFiltro === 'ofertas') {
-      // Padrão (price-asc ou none): Do menor para o maior preço
-      base.sort((a, b) => {
-        const pA = a._tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
-        const pB = b._tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
-        if (pA !== pB) {
+    // Ordenação explícita do usuário: só sobrescreve se o usuário escolheu uma ordenação no modal/URL
+    const hasExplicitUserSort = Boolean(route.query.ordenacao);
+    if (hasExplicitUserSort) {
+      if (sortBy === 'price-desc') {
+        base.sort((a, b) => {
+          const pA = a._tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
+          const pB = b._tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
+          return (pB || 0) - (pA || 0);
+        });
+      } else if (sortBy === 'alpha-asc') {
+        base.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+      } else if (sortBy === 'alpha-desc') {
+        base.sort((a, b) => (b.nome || '').localeCompare(a.nome || ''));
+      } else if (sortBy === 'price-asc') {
+        base.sort((a, b) => {
+          const pA = a._tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
+          const pB = b._tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
           return (pA || 0) - (pB || 0);
-        }
-        return (a.nome || '').localeCompare(b.nome || '');
-      });
+        });
+      }
+    } else if (!activeFiltro) {
+      // Catálogo geral sem filtro temático: aplica ordenação padrão
+      if (sortBy === 'price-asc') {
+        base.sort((a, b) => {
+          const pA = a._tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
+          const pB = b._tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
+          return (pA || 0) - (pB || 0);
+        });
+      } else if (sortBy === 'price-desc') {
+        base.sort((a, b) => {
+          const pA = a._tipo === 'produto' ? getProductEffectivePrice(a) : a.valor;
+          const pB = b._tipo === 'produto' ? getProductEffectivePrice(b) : b.valor;
+          return (pB || 0) - (pA || 0);
+        });
+      }
     }
 
     return base;
@@ -1248,6 +1330,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
                 key={`${item._tipo}-${item.id}`} 
                 item={item} 
                 tipo={item._tipo} 
+                clientId={clientId}
                 onAdd={() => addToCart(item, item._tipo)} 
                 onClick={() => navigate(item._tipo === 'produto' ? routes.marketplace.store.product(item.id) : routes.marketplace.store.subscription(item.id))}
               />

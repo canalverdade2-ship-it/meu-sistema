@@ -346,7 +346,7 @@ function QuoteForm({ domain, clientId, initialCategory }: { domain: ProtectionDo
   const submit = async () => {
     if (!clientId) {
       sessionStorage.setItem(draftKey, JSON.stringify(form));
-      navigate(`${routes.login.root()}?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      navigate(`${routes.login.personal()}?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       return;
     }
     setSending(true);

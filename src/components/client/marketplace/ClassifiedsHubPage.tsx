@@ -68,7 +68,7 @@ export function ClassifiedsHubPage({ onBack, isPublic = false }: ClassifiedsHubP
   const handleRequireAuth = (actionRoute: string) => {
     if (isPublic) {
       const returnTo = encodeURIComponent(actionRoute);
-      navigate(`${routes.login.root()}?returnTo=${returnTo}`);
+      navigate(`${routes.login.personal()}?returnTo=${returnTo}`);
     } else {
       navigate(actionRoute);
     }

@@ -5,6 +5,7 @@ import { OrderSuccessPage } from '../store/OrderSuccessPage';
 import { CheckoutPage } from '../store/CheckoutPage';
 import { PurchasesPage } from '../store/PurchasesPage';
 import { WishlistPage } from '../store/WishlistPage';
+import { VaquinhaPublicPage } from '../store/VaquinhaPublicPage';
 import { StoreHub } from '../StoreHub';
 import { ClientGSAStore } from '../ClientGSAStore';
 import { EcommerceHeader } from '../store/EcommerceHeader';
@@ -376,6 +377,25 @@ export function MarketplaceGSAStore({
           clientId={clientId}
           onBack={() => handleNavigate(routes.marketplace.store.root())}
         />
+      );
+    }
+
+    // Se for rota de Vaquinha de Presente Coletivo
+    if (currentSubmodule === 'loja-vaquinha' || currentSubmodule === 'loja-vaquinhas') {
+      const targetVaquinhaCode = route.itemId || (route.query?.id as string) || (route.query?.vaquinha_id as string) || '';
+      return (
+        <div className="min-h-screen bg-[#f8f9fa]">
+          <EcommerceHeader 
+            clientId={clientId}
+            onOpenCart={() => handleNavigate(routes.marketplace.store.products() + '?modal=carrinho')}
+            onRequireAuth={onRequireAuth}
+          />
+          <VaquinhaPublicPage 
+            vaquinhaIdOrCode={targetVaquinhaCode}
+            clientId={clientId}
+            onRequireAuth={onRequireAuth}
+          />
+        </div>
       );
     }
 

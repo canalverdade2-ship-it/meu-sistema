@@ -111,7 +111,7 @@ export async function archiveAdminCatalogItems(
 export async function deleteAdminProductsBulk(ids: string[]) {
   if (!ids || ids.length === 0) return { success: true, deleted: 0 };
 
-  const chunkSize = 50;
+  const chunkSize = 200;
   let totalDeleted = 0;
 
   for (let i = 0; i < ids.length; i += chunkSize) {

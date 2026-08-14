@@ -14,7 +14,7 @@ const userSessions = {};
 
 // ─── HTTP / HTTPS FETCH HELPER (ZERO DEPENDENCIES) ──────────────────────────
 function fetchText(urlStr) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     try {
       const u = new URL(urlStr);
       const mod = u.protocol === 'https:' ? https : http;
@@ -26,38 +26,47 @@ function fetchText(urlStr) {
       }, (res) => {
         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           const redirectUrl = new URL(res.headers.location, urlStr).href;
-          return fetchText(redirectUrl).then(resolve).catch(reject);
+          return fetchText(redirectUrl).then(resolve);
         }
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          return reject(new Error(`HTTP ${res.statusCode}`));
+          return resolve('');
         }
         let data = '';
         res.setEncoding('utf8');
         res.on('data', chunk => { data += chunk; });
         res.on('end', () => resolve(data));
       });
-      req.on('error', reject);
-      req.setTimeout(45000, () => { req.destroy(); reject(new Error('Timeout na conexão')); });
-    } catch(e) { reject(e); }
+      req.on('error', (err) => {
+        console.warn('⚠️ [fetchText Warning]', err.message);
+        resolve('');
+      });
+      req.setTimeout(60000, () => {
+        req.destroy();
+        resolve('');
+      });
+    } catch(e) { resolve(''); }
   });
 }
 
 // ─── SUPABASE HELPER ────────────────────────────────────────────────────────
+const SERVICE_ROLE_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODYwNjMzNzcsImV4cCI6MjEwMTQyMzM3N30.AuVtgQf7nnOrXKoElM_y9pVGW12xledsLpZGg0qOjME';
+
 function supabaseGet(path, callback) {
+  const cleanPath = path.replace(/^\/rest\/v1/, '');
   const options = {
-    hostname: SUPABASE_HOST,
-    port: 443,
-    path: path,
+    hostname: '127.0.0.1',
+    port: 3001,
+    path: cleanPath,
     method: 'GET',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'apikey': SERVICE_ROLE_JWT,
+      'Authorization': `Bearer ${SERVICE_ROLE_JWT}`,
       'Content-Type': 'application/json'
     }
   };
   let req;
   try {
-    req = https.request(options, (res) => {
+    req = http.request(options, (res) => {
       let data = '';
       res.on('data', chunk => { data += chunk; });
       res.on('end', () => {
@@ -65,18 +74,18 @@ function supabaseGet(path, callback) {
           const result = JSON.parse(data);
           callback(null, result);
         } catch (e) {
-          console.error('❌ Erro ao parsear resposta Supabase:', e.message, '| data:', data.substring(0, 200));
+          console.error('❌ Erro ao parsear resposta local PostgREST:', e.message, '| data:', data.substring(0, 200));
           callback(e, null);
         }
       });
     });
     req.setTimeout(8000, () => {
-      console.error('⏰ Timeout na consulta Supabase:', path);
+      console.error('⏰ Timeout na consulta local PostgREST:', cleanPath);
       req.destroy();
       callback(new Error('Timeout'), null);
     });
     req.on('error', (err) => {
-      console.error('❌ Erro na requisição Supabase:', err.message);
+      console.error('❌ Erro HTTP supabaseGet local:', err.message);
       callback(err, null);
     });
     req.end();
@@ -87,32 +96,29 @@ function supabaseGet(path, callback) {
 }
 
 function supabasePost(path, body, callback) {
+  const cleanPath = path.replace(/^\/rest\/v1/, '');
   const payload = JSON.stringify(body);
   const options = {
-    hostname: SUPABASE_HOST,
-    port: 443,
-    path: path,
+    hostname: '127.0.0.1',
+    port: 3001,
+    path: cleanPath,
     method: 'POST',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'apikey': SERVICE_ROLE_JWT,
+      'Authorization': `Bearer ${SERVICE_ROLE_JWT}`,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation',
       'Content-Length': Buffer.byteLength(payload)
     }
   };
-  const req = https.request(options, (res) => {
+  const req = http.request(options, (res) => {
     let data = '';
     res.on('data', chunk => { data += chunk; });
     res.on('end', () => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        try {
-          callback(null, JSON.parse(data || '[]'));
-        } catch (e) {
-          callback(null, []);
-        }
+        try { callback(null, JSON.parse(data || '[]')); } catch(e) { callback(null, []); }
       } else {
-        console.error('❌ Erro POST Supabase:', data);
+        console.error('❌ Erro POST Supabase local:', data);
         callback(new Error(data), null);
       }
     });
@@ -123,37 +129,72 @@ function supabasePost(path, body, callback) {
 }
 
 function supabasePatch(path, body, callback) {
+  const cleanPath = path.replace(/^\/rest\/v1/, '');
   const payload = JSON.stringify(body);
   const options = {
-    hostname: SUPABASE_HOST,
-    port: 443,
-    path: path,
+    hostname: '127.0.0.1',
+    port: 3001,
+    path: cleanPath,
     method: 'PATCH',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'apikey': SERVICE_ROLE_JWT,
+      'Authorization': `Bearer ${SERVICE_ROLE_JWT}`,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation',
       'Content-Length': Buffer.byteLength(payload)
     }
   };
-  const req = https.request(options, (res) => {
+  const req = http.request(options, (res) => {
     let data = '';
     res.on('data', chunk => { data += chunk; });
     res.on('end', () => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        try {
-          callback(null, JSON.parse(data || '[]'));
-        } catch (e) {
-          callback(null, []);
-        }
+        try { callback(null, JSON.parse(data || '[]')); } catch(e) { callback(null, []); }
       } else {
-        console.error('❌ Erro PATCH Supabase:', data);
+        console.error('❌ Erro PATCH Supabase local:', data);
         callback(new Error(data), null);
       }
     });
   });
   req.on('error', err => callback(err, null));
+  req.write(payload);
+  req.end();
+}
+
+function supabaseUpsertProduct(path, body, callback) {
+  return supabaseUpsertCustom(path, 'codigo_produto', body, callback);
+}
+
+function supabaseUpsertCustom(path, onConflict, body, callback) {
+  const cleanPath = path.replace(/^\/rest\/v1/, '');
+  const payload = JSON.stringify(body);
+  const conflictParam = onConflict ? `?on_conflict=${onConflict}` : '';
+  const options = {
+    hostname: '127.0.0.1',
+    port: 3001,
+    path: `${cleanPath}${conflictParam}`,
+    method: 'POST',
+    headers: {
+      'apikey': SERVICE_ROLE_JWT,
+      'Authorization': `Bearer ${SERVICE_ROLE_JWT}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=representation',
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  };
+  const req = http.request(options, (res) => {
+    let data = '';
+    res.on('data', chunk => { data += chunk; });
+    res.on('end', () => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        try { callback(null, JSON.parse(data || '[]'), res.statusCode); } catch(e) { callback(null, [], res.statusCode); }
+      } else {
+        console.error('❌ Erro UPSERT Supabase local:', data);
+        callback(new Error(data), null, res.statusCode);
+      }
+    });
+  });
+  req.on('error', err => callback(err, null, 500));
   req.write(payload);
   req.end();
 }
@@ -644,7 +685,7 @@ function sendWhatsAppMedia(to, mediaUrl, fileName, caption, mediaType = 'documen
   });
 
   const options = {
-    hostname: '127.0.0.1',
+    hostname: 'evolution-api',
     port: 8080,
     path: '/message/sendMedia/GSA_WhatsApp',
     method: 'POST',
@@ -857,14 +898,6 @@ function processMessage(fromPhone, textBody, messageType) {
     session.state = 'MAIN_MENU';
   }
 
-  // BOTÃO DE PÂNICO GLOBAL (0)
-  if (text === '0' && session.state !== 'MAIN_MENU' && session.state !== 'HUMAN_AGENT_RELAY') {
-    session.state = 'MAIN_MENU';
-    userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, '🔄 Retornando ao Menu Principal...\n\n' + getMainMenuText(session.profile));
-    return;
-  }
-
   // 1. SAUDAÇÕES E NAVEGAÇÃO AO MENU PRINCIPAL DE INÍCIO
   if (lower === 'oi' || lower === 'olá' || lower === 'ola' || lower === 'inicio' || lower === 'início' || lower === 'start' || lower === 'hi') {
     const finalizeMenu = (profile) => {
@@ -959,7 +992,7 @@ function processMessage(fromPhone, textBody, messageType) {
       case '6':
         session.state = 'CLASSIFIEDS';
         userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, '📢 *Portal de Classificados GSA HUB*\n\nEscolha uma categoria:\n\n1️⃣ 🚗 Veículos\n2️⃣ 🏠 Imóveis\n3️⃣ 📦 Geral\n4️⃣ 📸 Publicar um Anúncio\n\n_Digite 0 para voltar ao menu._');
+        sendWhatsAppReply(fromPhone, '📢 *Portal de Classificados GSA HUB*\n\nEscolha uma categoria:\n\n1️⃣ 🚗 Veículos\n2️⃣ 🏠 Imóveis\n3️⃣ 📦 Geral\n\n_Digite 0 para voltar ao menu._');
         break;
 
       case '7':
@@ -988,7 +1021,6 @@ function processMessage(fromPhone, textBody, messageType) {
           const saldoPts = pData.saldo_pontos || pData.pontos_fidelidade || pData.pontos_acumulados || 0;
           const nivel = pData.nivel_manual_info || (pData.is_vip ? 'VIP' : 'Padrão GSA');
 
-          session.client = pData;
           session.clientData = pData;
           session.state = 'LOYALTY_ACTIONS';
           userSessions[fromPhone] = session;
@@ -1012,6 +1044,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
         // Busca ramais ativos em tempo real do banco de dados (PostgreSQL)
         supabaseGet('/rest/v1/gsa_whatsapp_ramais?ativo=eq.true&order=ordem.asc', (errR, ramaisList) => {
+          console.log('=> GET /gsa_whatsapp_ramais result:', errR ? errR.message : (ramaisList ? ramaisList.length + ' items' : 'null'));
           let textMenu = '💬 *Atendimento Humano GSA HUB*\n\nPor favor, escolha o setor desejado para atendimento:\n\n';
           if (!errR && Array.isArray(ramaisList) && ramaisList.length > 0) {
             ramaisList.forEach(r => {
@@ -1257,10 +1290,7 @@ function processMessage(fromPhone, textBody, messageType) {
         userSessions[fromPhone] = session;
         sendWhatsAppReply(fromPhone, `🔍 *Cadastro Não Encontrado*\n\nVamos fazer um pré-cadastro rápido para vincular seu pedido!\n\nQual é o seu *Nome Completo* (ou Razão Social)?\n\n_Digite 0 para cancelar._`);
       } else {
-        session.tempClientId = client.id;
-        session.state = 'CHECKOUT_CEP';
-        userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, '📍 Para finalizarmos, digite o *CEP* do local de entrega/serviço (somente números):\n\n_Digite 0 para cancelar._');
+        createOrcamento(fromPhone, session, client.id);
       }
     });
     return;
@@ -1304,10 +1334,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
         sendWhatsAppReply(fromPhone, `⚠️ *Atenção: Cadastro Já Existente!*\n\nVerificamos que ${motivo}.\n\n👤 *Cliente:* ${found.nome ? found.nome.toUpperCase() : 'CADASTRADO'}\n\n💡 *Você já possui cadastro no GSA HUB!* Vinculamos seu atendimento à sua conta existente.\n\n_Para acessar seus dados ou serviços, selecione a *Opção 1 (Área do Cliente)* no menu principal._`);
 
-        session.tempClientId = found.id;
-        session.state = 'CHECKOUT_CEP';
-        userSessions[fromPhone] = session;
-        setTimeout(() => sendWhatsAppReply(fromPhone, '📍 Para finalizarmos seu pedido, digite o *CEP* do local de entrega/serviço (somente números):\n\n_Digite 0 para cancelar._'), 1000);
+        createOrcamento(fromPhone, session, found.id);
         return;
       }
 
@@ -1335,41 +1362,9 @@ function processMessage(fromPhone, textBody, messageType) {
         }
 
         sendWhatsAppReply(fromPhone, `✅ *Cadastro Realizado com Sucesso!*\n\nSeja bem-vindo(a) ao *GSA HUB*, *${session.newName.toUpperCase()}*! 🎉`);
-        session.tempClientId = res[0].id;
-        session.state = 'CHECKOUT_CEP';
-        userSessions[fromPhone] = session;
-        setTimeout(() => sendWhatsAppReply(fromPhone, '📍 Para finalizarmos seu pedido, digite o *CEP* do local de entrega/serviço (somente números):\n\n_Digite 0 para cancelar._'), 1000);
+        createOrcamento(fromPhone, session, res[0].id);
       });
     });
-    return;
-  }
-
-  // ── ESTADO: CHECKOUT_CEP ───────────────────────────────────────────────
-  if (session.state === 'CHECKOUT_CEP') {
-    if (text === '0') {
-      session.state = 'MAIN_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '❌ Pedido cancelado.\n\n_Retornando ao menu._');
-      return;
-    }
-    const cep = text.replace(/\D/g, '');
-    if (cep.length !== 8) {
-      sendWhatsAppReply(fromPhone, '❌ CEP inválido. Por favor, digite os 8 números do seu CEP.');
-      return;
-    }
-    session.cep = cep;
-    session.state = 'CHECKOUT_ADDRESS_NUM';
-    userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, '🏠 Qual é o *Número* e *Complemento* (se houver)?\nEx: 123 - Apto 42');
-    return;
-  }
-
-  // ── ESTADO: CHECKOUT_ADDRESS_NUM ───────────────────────────────────────
-  if (session.state === 'CHECKOUT_ADDRESS_NUM') {
-    session.addressNum = text.trim();
-    userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, '🔄 Finalizando seu pedido...');
-    createOrcamento(fromPhone, session, session.tempClientId);
     return;
   }
 
@@ -1379,12 +1374,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
     if (session.checkoutType === 'store') {
       let totalCart = 0;
-      let obs = '🛒 Pedido da GSA Store via WhatsApp:\n';
-      if (session.cep) {
-        obs += `📍 Entrega: CEP ${session.cep} - Nº/Compl: ${session.addressNum}\n\n`;
-      } else {
-        obs += '\n';
-      }
+      let obs = '🛒 Pedido da GSA Store via WhatsApp:\n\n';
       session.cart.forEach(item => {
         const pUnit = item.produto.desconto_ativo && item.produto.valor_promocional ? item.produto.valor_promocional : item.produto.valor;
         const subtotal = pUnit * item.quantidade;
@@ -1425,7 +1415,7 @@ function processMessage(fromPhone, textBody, messageType) {
         valor_servico: session.selectedService.valor || 0,
         total: session.selectedService.valor || 0,
         status: 'aberto',
-        observacoes_servico: `Orçamento de Serviço gerado via WhatsApp (Pré-atendimento).\n📍 Local: CEP ${session.cep || 'N/A'} - Nº/Compl: ${session.addressNum || 'N/A'}`,
+        observacoes_servico: 'Orçamento de Serviço gerado via WhatsApp (Pré-atendimento).',
         data_criacao: new Date().toISOString()
       };
     }
@@ -1686,7 +1676,7 @@ function processMessage(fromPhone, textBody, messageType) {
       cartTotal += sub;
       msg += `• ${item.quantidade}x ${item.produto.nome} (R$ ${sub.toFixed(2)})\n`;
     });
-    msg += `\n💰 *Total Previsto: R$ ${cartTotal.toFixed(2)}*\n\nO que deseja fazer?\n1️⃣ ➕ Adicionar mais itens\n2️⃣ 🎟️ Inserir Cupom de Desconto\n3️⃣ 💳 Finalizar Compra\n\n_Digite 0 para cancelar o pedido e voltar ao menu._`;
+    msg += `\n💰 *Total Previsto: R$ ${cartTotal.toFixed(2)}*\n\nO que deseja fazer?\n1️⃣ Adicionar mais itens\n2️⃣ 💳 Finalizar Compra\n3️⃣ 🎟️ Inserir Cupom de Desconto\n\n_Digite 0 para cancelar o pedido e voltar ao menu._`;
     sendWhatsAppReply(fromPhone, msg);
     return;
   }
@@ -1763,12 +1753,6 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: CLASSIFICADOS ────────────────────────────────────────────────────
   if (session.state === 'CLASSIFIEDS') {
-    if (text === '4') {
-      session.state = 'CLASSIFIED_PUBLISH_TITLE';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '📸 *Publicar Anúncio no GSA HUB*\n\nPor favor, digite o *Título* do seu anúncio:\n\n_Digite 0 para cancelar._');
-      return;
-    }
     const catsDb = { '1': 'veiculos', '2': 'imoveis', '3': 'geral' };
     const catsLabel = { '1': '🚗 Veículos', '2': '🏠 Imóveis', '3': '📦 Geral' };
     
@@ -1802,7 +1786,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: CLIENT_DOC ──────────────────────────────────────────────────────
   if (session.state === 'CLIENT_DOC') {
-    const docClean = text.replace(/\D/g, '');
+    const docClean = text.replace(/\\D/g, '');
     if (docClean.length < 11) {
       sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Por favor, digite apenas os números.');
       return;
@@ -2204,10 +2188,7 @@ function processMessage(fromPhone, textBody, messageType) {
       sendWhatsAppReply(fromPhone, '❌ Operação cancelada.\n\n_Digite 0 para voltar._');
       return;
     }
-    let nfData = text.trim();
-    if (messageType === 'imageMessage' || messageType === 'documentMessage') {
-      nfData = 'Mídia/Arquivo de NF Recebido: ' + (text || 'Sem legenda adicional');
-    }
+    const nfData = text.trim();
     const supplier = session.supplierData;
     const proto = generateProtocolNumber();
     
@@ -2295,7 +2276,6 @@ function processMessage(fromPhone, textBody, messageType) {
           sendWhatsAppReply(fromPhone, '🛠️ Você não possui demandas de serviço ativas no momento.\n\n_Digite 0 para voltar._');
           return;
         }
-        
         let msg = '🛠️ *Suas Demandas & Ordens de Serviço:*\n\n';
         list.forEach(d => {
           msg += `🔧 *OS #${String(d.id).substring(0,6)}*\n• Servico: ${d.titulo || 'Atendimento'}\n• Status: ${d.status || 'Em Aberto'}\n\n`;
@@ -2375,8 +2355,6 @@ function processMessage(fromPhone, textBody, messageType) {
     });
     return;
   }
-
-
 
   // ── ESTADO: PORTAL DO ANUNCIANTE ──────────────────────────────────────────
   if (session.state === 'PARTNER_ADVERTISER_MENU') {
@@ -2630,27 +2608,13 @@ function processMessage(fromPhone, textBody, messageType) {
       return;
     }
     session.travelPassengers = qtd;
-    session.state = 'TRAVEL_PASSENGERS_NAMES';
-    userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, `✅ Confirmado para ${qtd} passageiro(s)!\n\nPor favor, digite o *Nome Completo e Data de Nascimento* dos passageiros (separados por vírgula ou em linhas diferentes).\n\n_Digite 0 para cancelar._`);
-    return;
-  }
-  
-  if (session.state === 'TRAVEL_PASSENGERS_NAMES') {
-    if (text === '0') {
-      session.state = 'MAIN_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '❌ Solicitação cancelada.\n\n' + getMainMenuText(session.profile));
-      return;
-    }
-    session.travelPassengerNames = text;
-    autoInjectDocument(fromPhone, session, 'TRAVEL_DOC', '✅ Dados dos passageiros anotados.\n\nPara vincularmos essa reserva/cotação ao seu cadastro, por favor digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para cancelar._');
+    autoInjectDocument(fromPhone, session, 'TRAVEL_DOC', `✅ Confirmado para ${qtd} passageiro(s)!\n\nPara vincularmos essa reserva/cotação ao seu cadastro, por favor digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para cancelar._`);
     return;
   }
 
   // ── ESTADO: TRAVEL_DOC ─────────────────────────────────────────────────────
   if (session.state === 'TRAVEL_DOC') {
-    const docClean = text.replace(/\D/g, '');
+    const docClean = text.replace(/\\D/g, '');
     if (docClean.length < 11) {
       sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Digite apenas os números (mínimo 11 dígitos).');
       return;
@@ -2666,7 +2630,7 @@ function processMessage(fromPhone, textBody, messageType) {
         pacote_id: pacote.id,
         protocolo: protocolo,
         adultos: session.travelPassengers,
-        observacoes: `[Via WhatsApp] Solicitação para o pacote: ${pacote.titulo}\nPassageiros: ${session.travelPassengerNames || 'N/A'}`
+        observacoes: `[Via WhatsApp] Solicitação para o pacote: ${pacote.titulo}`
       };
       
       supabasePost('/rest/v1/viagens_orcamentos', viagemData, (errV, resV) => {
@@ -2731,17 +2695,7 @@ function processMessage(fromPhone, textBody, messageType) {
     session.insuranceType = text;
     session.state = 'INSURANCE_DETAILS';
     userSessions[fromPhone] = session;
-    
-    const typeLower = text.toLowerCase();
-    if (text === '1' || typeLower.includes('auto') || typeLower.includes('veículo') || typeLower.includes('carro')) {
-      sendWhatsAppReply(fromPhone, '🚗 *Seguro Auto*\nPara agilizarmos, informe a *Placa e o Ano do Veículo* (ou descreva brevemente os detalhes):');
-    } else if (text === '2' || typeLower.includes('vida')) {
-      sendWhatsAppReply(fromPhone, '❤️ *Seguro de Vida*\nPara agilizarmos, informe sua *Idade e Profissão* (ou descreva brevemente):');
-    } else if (text === '3' || typeLower.includes('resid') || typeLower.includes('empres')) {
-      sendWhatsAppReply(fromPhone, '🏠 *Seguro Residencial/Empresarial*\nPara agilizarmos, informe o *CEP e o Tipo de Imóvel* (Casa/Apto/Galpão):');
-    } else {
-      sendWhatsAppReply(fromPhone, '✅ Tipo de seguro selecionado!\n\nAgora, descreva brevemente o que você precisa (ex: "seguro de frota").');
-    }
+    sendWhatsAppReply(fromPhone, '✅ Tipo de seguro selecionado!\n\nAgora, descreva brevemente o que você precisa (ex: "seguro para auto ano 2020", "seguro de vida familiar").');
     return;
   }
 
@@ -2754,7 +2708,7 @@ function processMessage(fromPhone, textBody, messageType) {
   }
 
   if (session.state === 'INSURANCE_DOC') {
-    const docClean = text.replace(/\D/g, '');
+    const docClean = text.replace(/\\D/g, '');
     if (docClean.length < 11) {
       sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Digite apenas os números.');
       return;
@@ -2806,87 +2760,20 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: CLASSIFIED_PROPOSAL ────────────────────────────────────────────
   if (session.state === 'CLASSIFIED_PROPOSAL') {
-    if (text === '0') {
-      session.state = 'MAIN_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '❌ Proposta cancelada.\n\n' + getMainMenuText(session.profile));
-      return;
-    }
     if (text.length < 10) {
-      sendWhatsAppReply(fromPhone, '⚠️ Sua mensagem está muito curta. Escreva pelo menos algumas palavras sobre sua proposta.');
+      sendWhatsAppReply(fromPhone, '❌ Sua proposta é muito curta. Por favor, detalhe melhor (mínimo 10 caracteres).');
       return;
     }
-    session.classifiedMsg = text;
+    session.classifiedProposal = text;
     session.state = 'CLASSIFIED_DOC';
     userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, '✅ Mensagem anotada.\n\nPara encaminharmos sua proposta ao anunciante, digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para cancelar._');
+    sendWhatsAppReply(fromPhone, `✅ Proposta anotada!\n\nPara enviarmos essa proposta à moderação da GSA e conectarmos você ao vendedor, digite seu *CPF ou CNPJ* (apenas números).\n\n_Digite 0 para cancelar._`);
     return;
-  }
-  
-  // ── ESTADOS: CLASSIFIED_PUBLISH (PUBLICAÇÃO DE ANÚNCIO) ─────────────────────
-  if (session.state === 'CLASSIFIED_PUBLISH_TITLE') {
-    if (text === '0') {
-      session.state = 'MAIN_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '❌ Publicação cancelada.\n\n' + getMainMenuText(session.profile));
-      return;
-    }
-    session.pubTitle = text.trim();
-    session.state = 'CLASSIFIED_PUBLISH_PRICE';
-    userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, `📝 *Título:* ${session.pubTitle}\n\nQual é o *Preço/Valor* do item? (Ex: 150.00)\n\n_Digite 0 para cancelar._`);
-    return;
-  }
-
-  if (session.state === 'CLASSIFIED_PUBLISH_PRICE') {
-    if (text === '0') {
-      session.state = 'MAIN_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '❌ Publicação cancelada.\n\n' + getMainMenuText(session.profile));
-      return;
-    }
-    const val = parseFloat(text.replace(',', '.'));
-    if (isNaN(val)) {
-      sendWhatsAppReply(fromPhone, '❌ Valor inválido. Digite apenas números, por exemplo: 150 ou 150.50.');
-      return;
-    }
-    session.pubPrice = val;
-    session.state = 'CLASSIFIED_PUBLISH_PHOTO';
-    userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, `💰 *Valor:* R$ ${val.toFixed(2)}\n\nPara finalizar, *envie uma Foto* do item (usando o ícone de câmera/anexo do WhatsApp).\n\n_Digite 0 para cancelar._`);
-    return;
-  }
-
-  if (session.state === 'CLASSIFIED_PUBLISH_PHOTO') {
-    if (text === '0') {
-      session.state = 'MAIN_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '❌ Publicação cancelada.\n\n' + getMainMenuText(session.profile));
-      return;
-    }
-    if (messageType === 'imageMessage') {
-      // In a real scenario, you would upload the photo or save the media ID.
-      supabasePost('/rest/v1/classificados_anuncios', {
-        titulo: session.pubTitle,
-        preco: session.pubPrice,
-        status: 'pendente_aprovacao',
-        descricao: 'Publicado via WhatsApp',
-        telefone_contato: fromPhone
-      }, () => {
-        session.state = 'MAIN_MENU';
-        userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, '✅ *Anúncio Recebido!*\n\nSua foto e informações foram registradas. O anúncio entrará em análise por nossa equipe e será publicado em breve na plataforma.\n\n_Retornando ao menu principal..._');
-      });
-      return;
-    } else {
-      sendWhatsAppReply(fromPhone, '⚠️ Por favor, envie uma *foto* do item (imagem).');
-      return;
-    }
   }
 
   // ── ESTADO: CLASSIFIED_DOC ─────────────────────────────────────────────────
   if (session.state === 'CLASSIFIED_DOC') {
-    const docClean = text.replace(/\D/g, '');
+    const docClean = text.replace(/\\D/g, '');
     if (docClean.length < 11) {
       sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Digite apenas os números.');
       return;
@@ -2894,20 +2781,20 @@ function processMessage(fromPhone, textBody, messageType) {
     sendWhatsAppReply(fromPhone, '🔄 Registrando sua proposta...');
     fetchClientByDoc(docClean, (err, client) => {
       const clientId = client ? client.id : null;
-      const ad = session.selectedAd || {};
+      const ad = session.selectedAd;
       
       const description = [
         'Solicitação de proposta moderada pelos Classificados GSA (Via WhatsApp).',
         '',
-        `Anúncio: ${ad.titulo || 'N/A'}`,
-        `Código do anúncio: ${ad.id || 'N/A'}`,
-        `Valor anunciado: R$ ${ad.preco?.toFixed(2) || '0.00'}`,
+        `Anúncio: ${ad.titulo}`,
+        `Código do anúncio: ${ad.id}`,
+        `Valor anunciado: R$ ${ad.preco?.toFixed(2)}`,
         '',
         'Mensagem do comprador:',
-        session.classifiedProposal || session.classifiedMsg || 'Proposta de compra enviada via WhatsApp.',
+        session.classifiedProposal,
         '',
         'A negociação deve permanecer dentro dos canais da GSA até a liberação administrativa.'
-      ].join('\n');
+      ].join('\\n');
       
       const ticketData = {
         cliente_id: clientId,
@@ -2926,6 +2813,41 @@ function processMessage(fromPhone, textBody, messageType) {
           userSessions[fromPhone] = session;
           sendWhatsAppReply(fromPhone, `✅ *Proposta Enviada com Sucesso!*\n\n📋 *Anúncio:* ${ad.titulo}\n🛡️ A moderação da GSA analisará sua proposta e o colocará em contato direto com o vendedor pelo sistema seguro.\n\n🌟 *Como você avalia nosso atendimento automático neste momento? (Digite de 1 a 5)*`);
         }
+      });
+    });
+    return;
+  }
+
+  // ── ESTADO: AFFILIATE_DOC ───────────────────────────────────────────────────
+  if (session.state === 'AFFILIATE_DOC') {
+    const docClean = text.replace(/\\D/g, '');
+    if (docClean.length < 11) {
+      sendWhatsAppReply(fromPhone, '❌ CPF ou CNPJ inválido. Digite apenas os números.');
+      return;
+    }
+    sendWhatsAppReply(fromPhone, '🔄 Buscando seu perfil de afiliado...');
+    fetchClientByDoc(docClean, (err, client) => {
+      if (!client) {
+        session.state = 'MAIN_MENU';
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, '❌ Nenhum cadastro de cliente encontrado para este documento. Utilize a opção 2 no menu principal para criar seu cadastro.\n\n_Digite 0 para voltar._');
+        return;
+      }
+      
+      supabaseGet(`/rest/v1/gsa_afiliados?cliente_id=eq.${client.id}&select=*`, (errA, resA) => {
+        session.state = 'MAIN_MENU';
+        userSessions[fromPhone] = session;
+        
+        if (errA || !resA || resA.length === 0) {
+          sendWhatsAppReply(fromPhone, '🤝 *Portal do Afiliado GSA HUB*\n\nVocê ainda não ativou seu perfil de Afiliado!\n\nAcesse nosso painel web, vá em "Minha Conta -> Fidelidade -> Afiliados" e ative agora mesmo para começar a ganhar comissões por indicações.\n\n🌐 https://gsahub.pages.dev/\n\n_Digite 0 para voltar ao menu principal._');
+          return;
+        }
+        
+        const afiliado = resA[0];
+        const status = afiliado.status === 'ativo' ? '✅ Ativo' : '⚠️ ' + afiliado.status.toUpperCase();
+        const link = `https://gsahub.pages.dev/?ref=${afiliado.codigo_publico}`;
+        
+        sendWhatsAppReply(fromPhone, `🤝 *Seu Painel de Afiliado*\n\n👤 *Nome:* ${afiliado.nome_divulgacao}\n📊 *Status:* ${status}\n\n🔗 *Seu Link Padrão de Indicação:*\n${link}\n\nCopie e envie esse link para seus contatos! Qualquer compra ou contratação feita por ele gerará comissões para você.\n\nPara ver saldos e solicitar saques, acesse o painel web.\n\n_Digite 0 para voltar ao menu principal._`);
       });
     });
     return;
@@ -2996,15 +2918,12 @@ function processMessage(fromPhone, textBody, messageType) {
           sendWhatsAppReply(fromPhone, '✅ Você não tem Ordens de Serviço em andamento no momento.\n\n_Digite 0 para voltar ao menu principal._');
           return;
         }
-        session.currentOSList = osList;
-        session.state = 'CLIENT_OS_LIST';
-        userSessions[fromPhone] = session;
         let msg = '🛠️ *Ordens de Serviço (Em Andamento):*\n\n';
         osList.forEach((os, idx) => {
           const cod = os.codigo_os || `OS-#${String(os.id).substring(0,6)}`;
           msg += `*${idx+1}.* ${cod}\n📌 Status: ${(os.status || 'em_andamento').toUpperCase()}\n\n`;
         });
-        msg += '_Digite o número da OS para ver detalhes (ex: 1)._\n_Digite 0 para voltar._';
+        msg += '_Digite 0 para voltar ou (1-5) para outro menu._';
         sendWhatsAppReply(fromPhone, msg);
       });
       return;
@@ -3017,15 +2936,12 @@ function processMessage(fromPhone, textBody, messageType) {
           sendWhatsAppReply(fromPhone, '✅ Nenhum orçamento em aberto no momento.\n\n_Digite 0 para voltar ao menu principal._');
           return;
         }
-        session.currentOrcamentos = orcs;
-        session.state = 'CLIENT_ORCAMENTO_LIST';
-        userSessions[fromPhone] = session;
         let msg = '📋 *Seus Orçamentos (Em Aberto):*\n\n';
         orcs.forEach((orc, idx) => {
           const cod = orc.codigo_orcamento || `ORC-#${String(orc.id).substring(0,6)}`;
           msg += `*${idx+1}.* ${cod}\n📌 Status: ${(orc.status || 'aberto').toUpperCase()}\n💰 Valor Estimado: R$ ${(orc.total||0).toFixed(2)}\n\n`;
         });
-        msg += '_Digite o número do Orçamento para visualizar e aprovar (ex: 1)._\n_Digite 0 para voltar._';
+        msg += '_Digite 0 para voltar ou (1-5) para outro menu._';
         sendWhatsAppReply(fromPhone, msg);
       });
       return;
@@ -3038,15 +2954,12 @@ function processMessage(fromPhone, textBody, messageType) {
           sendWhatsAppReply(fromPhone, '✅ Você não possui assinaturas ativas no momento.\n\n_Digite 0 para voltar ao menu principal._');
           return;
         }
-        session.currentAssinaturas = asList;
-        session.state = 'CLIENT_ASSINATURA_LIST';
-        userSessions[fromPhone] = session;
         let msg = '🔄 *Suas Assinaturas (Ativas):*\n\n';
         asList.forEach((ass, idx) => {
           const cod = ass.codigo_assinatura || `ASS-#${String(ass.id).substring(0,6)}`;
           msg += `*${idx+1}.* ${cod}\n📌 Status: ATIVA\n💰 Mensalidade: R$ ${(ass.valor||0).toFixed(2)}\n\n`;
         });
-        msg += '_Digite o número da assinatura para ver opções (ex: 1)._\n_Digite 0 para voltar._';
+        msg += '_Digite 0 para voltar ou (1-5) para outro menu._';
         sendWhatsAppReply(fromPhone, msg);
       });
       return;
@@ -3068,153 +2981,6 @@ function processMessage(fromPhone, textBody, messageType) {
     
     sendWhatsAppReply(fromPhone, '❌ Opção inválida.\n\n*Opções disponíveis:*\n1️⃣ Faturas em Aberto\n2️⃣ Ordens de Serviço\n3️⃣ Meus Orçamentos\n4️⃣ Minhas Assinaturas\n5️⃣ Tickets de Suporte\n0️⃣ Sair\n\n_Digite o número desejado:_');
     return;
-  }
-
-  // ── ESTADOS DE AÇÃO DA ÁREA DO CLIENTE ──────────────────────────────────
-  if (session.state === 'CLIENT_OS_LIST') {
-    if (text === '0') {
-      session.state = 'CLIENT_DASHBOARD_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...\n\n_Digite a opção desejada:_');
-      return;
-    }
-    const idx = parseInt(text, 10) - 1;
-    const osList = session.currentOSList || [];
-    if (isNaN(idx) || idx < 0 || idx >= osList.length) {
-      sendWhatsAppReply(fromPhone, `❌ Opção inválida. Escolha um número de 1 a ${osList.length}.\n\n_Digite 0 para voltar._`);
-      return;
-    }
-    const os = osList[idx];
-    const cod = os.codigo_os || `OS-#${String(os.id).substring(0,6)}`;
-    
-    let msg = `🛠️ *Detalhes da Ordem de Serviço*\n\n`;
-    msg += `🔖 *Código:* ${cod}\n`;
-    msg += `📌 *Status:* ${(os.status || 'em_andamento').toUpperCase()}\n`;
-    if (os.observacoes_tecnicas) msg += `📝 *Observações:* ${os.observacoes_tecnicas}\n`;
-    msg += `\n*Opções:*\n1️⃣ Solicitar Reagendamento\n2️⃣ Cancelar Serviço\n\n_Digite 0 para voltar._`;
-    
-    session.selectedOS = os;
-    session.state = 'CLIENT_OS_ACTION';
-    userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, msg);
-    return;
-  }
-  
-  if (session.state === 'CLIENT_OS_ACTION') {
-    if (text === '1') {
-      sendWhatsAppReply(fromPhone, '🔄 Solicitando reagendamento da equipe...\nUm atendente humano foi notificado.\n\n_Digite 0 para voltar._');
-      return;
-    } else if (text === '2') {
-      sendWhatsAppReply(fromPhone, '⚠️ Solicitando cancelamento do serviço...\nUma notificação foi enviada ao prestador.\n\n_Digite 0 para voltar._');
-      return;
-    } else {
-      session.state = 'CLIENT_DASHBOARD_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...');
-      return;
-    }
-  }
-
-  if (session.state === 'CLIENT_ORCAMENTO_LIST') {
-    if (text === '0') {
-      session.state = 'CLIENT_DASHBOARD_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...\n\n_Digite a opção desejada:_');
-      return;
-    }
-    const idx = parseInt(text, 10) - 1;
-    const orcs = session.currentOrcamentos || [];
-    if (isNaN(idx) || idx < 0 || idx >= orcs.length) {
-      sendWhatsAppReply(fromPhone, `❌ Opção inválida. Escolha um número de 1 a ${orcs.length}.\n\n_Digite 0 para voltar._`);
-      return;
-    }
-    const orc = orcs[idx];
-    const cod = orc.codigo_orcamento || `ORC-#${String(orc.id).substring(0,6)}`;
-    
-    let msg = `📋 *Detalhes do Orçamento*\n\n`;
-    msg += `🔖 *Código:* ${cod}\n`;
-    msg += `💰 *Total Estimado:* R$ ${(orc.total||0).toFixed(2)}\n`;
-    msg += `📝 *Descrição:* ${orc.observacoes_servico || 'N/A'}\n`;
-    msg += `\n*Ação:*\n1️⃣ ✅ Aprovar Orçamento e Pagar\n\n_Digite 0 para voltar._`;
-    
-    session.selectedOrcamento = orc;
-    session.state = 'CLIENT_ORCAMENTO_ACTION';
-    userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, msg);
-    return;
-  }
-  
-  if (session.state === 'CLIENT_ORCAMENTO_ACTION') {
-    if (text === '1') {
-      // Create a mock fatura from this orcamento and go to SELECT_PAYMENT_METHOD
-      const orc = session.selectedOrcamento;
-      const codFat = `FAT-${orc.codigo_orcamento || String(orc.id).substring(0,6)}`;
-      const newFat = {
-        id: orc.id + 1000,
-        codigo_fatura: codFat,
-        cliente_id: orc.cliente_id,
-        valor_total: orc.total,
-        status: 'pendente',
-        data_vencimento: new Date().toISOString()
-      };
-      session.selectedFatura = newFat;
-      session.state = 'SELECT_PAYMENT_METHOD';
-      userSessions[fromPhone] = session;
-      
-      const valor = Number(newFat.valor_total || 0).toFixed(2);
-      const msg = `✅ *Orçamento Aprovado!*\n\n💳 *Pagamento da Fatura ${codFat}*\n\n💰 *Valor Total:* R$ ${valor}\n\nComo deseja realizar o pagamento?\n\n1️⃣ 🟢 *PIX* (Gerar QR Code + Código Copia e Cola)\n2️⃣ 💳 *Cartão de Crédito* (Link Seguro InfinitePay em até 12x)\n\n_Digite 1 para PIX ou 2 para Cartão de Crédito._\n_Digite 0 para cancelar._`;
-      sendWhatsAppReply(fromPhone, msg);
-      return;
-    } else {
-      session.state = 'CLIENT_DASHBOARD_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...');
-      return;
-    }
-  }
-
-  if (session.state === 'CLIENT_ASSINATURA_LIST') {
-    if (text === '0') {
-      session.state = 'CLIENT_DASHBOARD_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...\n\n_Digite a opção desejada:_');
-      return;
-    }
-    const idx = parseInt(text, 10) - 1;
-    const assList = session.currentAssinaturas || [];
-    if (isNaN(idx) || idx < 0 || idx >= assList.length) {
-      sendWhatsAppReply(fromPhone, `❌ Opção inválida. Escolha um número de 1 a ${assList.length}.\n\n_Digite 0 para voltar._`);
-      return;
-    }
-    const ass = assList[idx];
-    const cod = ass.codigo_assinatura || `ASS-#${String(ass.id).substring(0,6)}`;
-    
-    let msg = `🔄 *Gestão de Assinatura*\n\n`;
-    msg += `🔖 *Código:* ${cod}\n`;
-    msg += `📌 *Status:* ATIVA\n`;
-    msg += `💰 *Mensalidade:* R$ ${(ass.valor||0).toFixed(2)}\n`;
-    msg += `\n*Opções:*\n1️⃣ Solicitar 2ª Via do Boleto\n2️⃣ Atualizar Cartão de Crédito\n\n_Digite 0 para voltar._`;
-    
-    session.selectedAssinatura = ass;
-    session.state = 'CLIENT_ASSINATURA_ACTION';
-    userSessions[fromPhone] = session;
-    sendWhatsAppReply(fromPhone, msg);
-    return;
-  }
-  
-  if (session.state === 'CLIENT_ASSINATURA_ACTION') {
-    if (text === '1') {
-      sendWhatsAppReply(fromPhone, '📄 Gerando 2ª via da sua fatura de assinatura...\nVocê receberá o PDF em instantes.\n\n_Digite 0 para voltar._');
-      return;
-    } else if (text === '2') {
-      sendWhatsAppReply(fromPhone, '💳 Para atualizar seu cartão de crédito, por favor acesse nosso portal seguro:\n🌐 https://gsahub.pages.dev/minhaconta\n\n_Digite 0 para voltar._');
-      return;
-    } else {
-      session.state = 'CLIENT_DASHBOARD_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '⬅️ Retornando à sua Área do Cliente...');
-      return;
-    }
   }
 
   // ── ESTADO: CLIENT_TICKETS_MENU ────────────────────────────────────────────────
@@ -3370,7 +3136,7 @@ function processMessage(fromPhone, textBody, messageType) {
 
             if (pixCode) {
               sendWhatsAppReply(fromPhone, `🟢 *PIX Copia e Cola (Fatura ${cod}):*`);
-              sendWhatsAppReply(fromPhone, `\`\`\`${pixCode}\`\`\``);
+              sendWhatsAppReply(fromPhone, pixCode);
 
               if (qrCodeUrl) {
                 sendWhatsAppMedia(fromPhone, qrCodeUrl, `qrcode_${cod}.png`, `QR Code PIX - R$ ${valor}`, 'image');
@@ -3482,7 +3248,752 @@ function logScrapingStep(automacaoId, passo, status, mensagem, progresso, detalh
   });
 }
 
-// ─── SCRAPING HANDLER FOR PRODUCTS ───────────────────────────────────────────
+// ─── AUTOMATIC SCRAPING POLLING LISTENER ─────────────────────────────────────
+const activeAutomations = new Set();
+
+function checkPendingScrapingTasks() {
+  supabaseGet('/rest/v1/automacao_scraping_logs?passo=eq.iniciando&status=eq.em_andamento&select=id,automacao_id,created_at&order=created_at.desc&limit=5', (err, logs) => {
+    if (err || !Array.isArray(logs) || logs.length === 0) return;
+    for (const log of logs) {
+      if (activeAutomations.has(log.automacao_id)) continue;
+      const logTime = new Date(log.created_at).getTime();
+      const ageMs = Math.abs(Date.now() - logTime);
+      if (ageMs > 600000) continue;
+      
+      activeAutomations.add(log.automacao_id);
+      supabasePatch(`/rest/v1/automacao_scraping_logs?automacao_id=eq.${log.automacao_id}&status=eq.em_andamento`, { status: 'processando_motor' }, () => {
+        console.log('⚡ [AutoScraping] Capturada nova execução para automação:', log.automacao_id);
+        Promise.resolve(handleProductScraping(JSON.stringify({ automacao_id: log.automacao_id }))).finally(() => {
+          setTimeout(() => activeAutomations.delete(log.automacao_id), 10000);
+        });
+      });
+    }
+  });
+}
+setInterval(checkPendingScrapingTasks, 3000);
+
+const GSA_PACOTES_NACIONAIS = [
+  {
+    codigo: 'GSA-NAC-01',
+    titulo: 'Gramado e Canela Clássico (Serra Gaúcha)',
+    destino: 'Gramado, RS',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Wish Serrano Resort & Convention',
+    hotel_categoria: '5 Estrelas',
+    noites: 4,
+    dias: 5,
+    preco_custo: 1290.00,
+    imagem_url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/gra/pacotes-para-gramado',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-02',
+    titulo: 'Porto de Galinhas Paradisíaco (Praia e Piscinas Naturais)',
+    destino: 'Porto de Galinhas, PE',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Vivá Porto de Galinhas Resort',
+    hotel_categoria: '4 Estrelas Superior',
+    noites: 6,
+    dias: 7,
+    preco_custo: 1890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/rec/pacotes-para-porto-de-galinhas',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-03',
+    titulo: 'Maceió & Maragogi Caribe Brasileiro (All Inclusive)',
+    destino: 'Maceió, AL',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pratagy Beach All Inclusive Resort',
+    hotel_categoria: 'Resort All Inclusive',
+    noites: 5,
+    dias: 6,
+    preco_custo: 2490.00,
+    imagem_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/mcx/pacotes-para-maceio',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-04',
+    titulo: 'Fernando de Noronha dos Sonhos (Arquipélago Exclusivo)',
+    destino: 'Fernando de Noronha, PE',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pousada Triboju & Spa',
+    hotel_categoria: 'Pousada de Luxo',
+    noites: 4,
+    dias: 5,
+    preco_custo: 3890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/fen/pacotes-para-fernando-de-noronha',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-05',
+    titulo: 'Natal & Praia de Pipa com Dunas de Genipabu',
+    destino: 'Natal, RN',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Serhs Natal Grand Hotel & Resort',
+    hotel_categoria: '5 Estrelas Beira-Mar',
+    noites: 5,
+    dias: 6,
+    preco_custo: 1650.00,
+    imagem_url: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/nat/pacotes-para-natal',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-06',
+    titulo: 'Rio de Janeiro Maravilhoso (Copacabana e Cristo Redentor)',
+    destino: 'Rio de Janeiro, RJ',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hilton Copacabana Hotel',
+    hotel_categoria: '5 Estrelas',
+    noites: 3,
+    dias: 4,
+    preco_custo: 1150.00,
+    imagem_url: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/rio/pacotes-para-rio-de-janeiro',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-07',
+    titulo: 'Foz do Iguaçu & Cataratas do Iguaçu (Parque Nacional)',
+    destino: 'Foz do Iguaçu, PR',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Wish Foz do Iguaçu Resort',
+    hotel_categoria: '4 Estrelas Superior',
+    noites: 3,
+    dias: 4,
+    preco_custo: 1090.00,
+    imagem_url: 'https://images.unsplash.com/photo-1583855282680-6dbdc69b0932?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/igu/pacotes-para-foz-do-iguacu',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-08',
+    titulo: 'Bonito Ecoturismo & Flutuação no Rio da Prata (Pantanal)',
+    destino: 'Bonito, MS',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Zagaia Eco Resort',
+    hotel_categoria: 'Eco Resort',
+    noites: 4,
+    dias: 5,
+    preco_custo: 2190.00,
+    imagem_url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/byo/pacotes-para-bonito',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-09',
+    titulo: 'Florianópolis Ilha da Magia & Beto Carrero World',
+    destino: 'Florianópolis, SC',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Costão do Santinho Resort All Inclusive',
+    hotel_categoria: 'Resort All Inclusive',
+    noites: 4,
+    dias: 5,
+    preco_custo: 2250.00,
+    imagem_url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/fln/pacotes-para-florianopolis',
+    categoria: 'nacional'
+  },
+  {
+    codigo: 'GSA-NAC-10',
+    titulo: 'Jalapão Expedição Safari 4x4 & Fervedouros Dourados',
+    destino: 'Jalapão, TO',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pousadas de Charme & Safari Glamping',
+    hotel_categoria: 'Safari Especial',
+    noites: 5,
+    dias: 6,
+    preco_custo: 3490.00,
+    imagem_url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/pmw/pacotes-para-palmas',
+    categoria: 'nacional'
+  }
+];
+
+const GSA_PACOTES_INTERNACIONAIS = [
+  {
+    codigo: 'GSA-INT-01',
+    titulo: 'Cancún All Inclusive Resort (Caribe Mexicano)',
+    destino: 'Cancún, México',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hard Rock Hotel Cancun All Inclusive',
+    hotel_categoria: '5 Estrelas All Inclusive',
+    noites: 6,
+    dias: 7,
+    preco_custo: 4890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/cun/pacotes-para-cancun',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-02',
+    titulo: 'Orlando Mágico & Parques Disney / Universal Studios',
+    destino: 'Orlando, Flórida, EUA',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Disney All-Star Movies Resort',
+    hotel_categoria: 'Resort Temático Disney',
+    noites: 7,
+    dias: 8,
+    preco_custo: 5490.00,
+    imagem_url: 'https://images.unsplash.com/photo-1597466765990-64ad1c35dafc?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/orl/pacotes-para-orlando',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-03',
+    titulo: 'Paris Romântica & Torre Eiffel com Museu do Louvre',
+    destino: 'Paris, França',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pullman Paris Tour Eiffel Hotel',
+    hotel_categoria: '4 Estrelas Luxo',
+    noites: 6,
+    dias: 7,
+    preco_custo: 6890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/par/pacotes-para-paris',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-04',
+    titulo: 'Lisboa & Porto Histórico com Degustação no Douro',
+    destino: 'Lisboa, Portugal',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Pestana CR7 Lisboa / Porto',
+    hotel_categoria: '4 Estrelas Boutique',
+    noites: 7,
+    dias: 8,
+    preco_custo: 5990.00,
+    imagem_url: 'https://images.unsplash.com/photo-1509822929063-6b6cfc9b42f2?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/lis/pacotes-para-lisboa',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-05',
+    titulo: 'Buenos Aires & Show de Tango com Jantar em Puerto Madero',
+    destino: 'Buenos Aires, Argentina',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hotel Madero Puerto Madero',
+    hotel_categoria: '5 Estrelas',
+    noites: 4,
+    dias: 5,
+    preco_custo: 1890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/bue/pacotes-para-buenos-aires',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-06',
+    titulo: 'Santiago & Valle Nevado com Rota das Vinícolas',
+    destino: 'Santiago, Chile',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hotel Plaza El Bosque Sanhattan',
+    hotel_categoria: '4 Estrelas Superior',
+    noites: 5,
+    dias: 6,
+    preco_custo: 2390.00,
+    imagem_url: 'https://images.unsplash.com/photo-1589802829985-817e51171b92?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/scl/pacotes-para-santiago-do-chile',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-07',
+    titulo: 'Punta Cana All Inclusive & Passeio de Catamarã Ilha Saona',
+    destino: 'Punta Cana, República Dominicana',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Lopesan Costa Bávaro Resort Spa & Casino',
+    hotel_categoria: '5 Estrelas All Inclusive',
+    noites: 6,
+    dias: 7,
+    preco_custo: 4690.00,
+    imagem_url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/puj/pacotes-para-punta-cana',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-08',
+    titulo: 'Nova York Times Square, Broadway & Estátua da Liberdade',
+    destino: 'Nova York, EUA',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'New York Marriott Marquis Times Square',
+    hotel_categoria: '4 Estrelas Superior',
+    noites: 5,
+    dias: 6,
+    preco_custo: 6450.00,
+    imagem_url: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/nyc/pacotes-para-nova-york',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-09',
+    titulo: 'Roma Imperial, Vaticano & Coliseu Histórico',
+    destino: 'Roma, Itália',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Starhotels Metropole Roma',
+    hotel_categoria: '4 Estrelas',
+    noites: 6,
+    dias: 7,
+    preco_custo: 6390.00,
+    imagem_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/rom/pacotes-para-roma',
+    categoria: 'internacional'
+  },
+  {
+    codigo: 'GSA-INT-10',
+    titulo: 'Dubai Futurista & Safari 4x4 no Deserto com Jantar Beduíno',
+    destino: 'Dubai, Emirados Árabes Unidos',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'JW Marriott Marquis Hotel Dubai',
+    hotel_categoria: '5 Estrelas Luxo',
+    noites: 6,
+    dias: 7,
+    preco_custo: 7890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/dxb/pacotes-para-dubai',
+    categoria: 'internacional'
+  }
+];
+
+const GSA_PACOTES_PROMOCOES = [
+  {
+    codigo: 'GSA-PROMO-01',
+    titulo: 'Super Promoção: Porto Seguro All Inclusive com Beach Club',
+    destino: 'Porto Seguro, BA',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Nauticomar Resort All Inclusive',
+    hotel_categoria: 'Resort All Inclusive',
+    noites: 7,
+    dias: 8,
+    preco_custo: 1490.00,
+    imagem_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/bps/pacotes-para-porto-seguro',
+    categoria: 'promocoes-exclusivas'
+  },
+  {
+    codigo: 'GSA-PROMO-02',
+    titulo: 'Super Promoção: Maragogi Caribe Brasileiro com Piscinas Naturais',
+    destino: 'Maragogi, AL',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Grand Oca Maragogi All Inclusive Resort',
+    hotel_categoria: 'Resort All Inclusive',
+    noites: 4,
+    dias: 5,
+    preco_custo: 1790.00,
+    imagem_url: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/mcx/pacotes-para-maragogi',
+    categoria: 'promocoes-exclusivas'
+  },
+  {
+    codigo: 'GSA-PROMO-03',
+    titulo: 'Super Promoção: Bariloche Neve, Chocolates & Circuito Chico',
+    destino: 'Bariloche, Argentina',
+    origem: 'São Paulo, SP',
+    hotel_nome: 'Hotel Panamericano Bariloche',
+    hotel_categoria: '5 Estrelas com Spa',
+    noites: 5,
+    dias: 6,
+    preco_custo: 2890.00,
+    imagem_url: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=1080&q=80',
+    url_fornecedor: 'https://www.decolar.com/pacotes/brc/pacotes-para-bariloche',
+    categoria: 'promocoes-exclusivas'
+  }
+];
+
+function slugifyViagens(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '') || 'pacote-viagem';
+}
+
+async function handleViagensScraping(config) {
+  const currentId = config.id;
+  const targetUrl = (config.target_url || '').trim();
+  const margem = parseFloat(config.margem_lucro) || 30;
+  const categoriaId = config.categoria_id || null;
+  const syncId = config.sync_id || 'VIAGENS';
+
+  logScrapingStep(currentId, 'requisicao', 'executando', `✈️ Conectando à fonte de pacotes de viagem: ${targetUrl}`, 15, {
+    url_alvo: targetUrl
+  });
+
+  try {
+    let extractedPackages = [];
+
+    // Detecção de Feed Integrado GSA (Nacionais / Internacionais / Promoções / Todos)
+    const urlLower = targetUrl.toLowerCase();
+    if (urlLower.includes('nacionais') || urlLower.includes('gsa-viagens-nacionais')) {
+      extractedPackages = [...GSA_PACOTES_NACIONAIS];
+    } else if (urlLower.includes('internacionais') || urlLower.includes('gsa-viagens-internacionais')) {
+      extractedPackages = [...GSA_PACOTES_INTERNACIONAIS];
+    } else if (urlLower.includes('promoc') || urlLower.includes('gsa-viagens-promocoes')) {
+      extractedPackages = [...GSA_PACOTES_PROMOCOES];
+    } else if (urlLower.includes('geral') || urlLower.includes('todos') || urlLower.includes('gsa-viagens-geral')) {
+      extractedPackages = [...GSA_PACOTES_NACIONAIS, ...GSA_PACOTES_INTERNACIONAIS, ...GSA_PACOTES_PROMOCOES];
+    }
+
+    if (extractedPackages.length === 0) {
+      const feedText = await fetchText(targetUrl);
+      const sizeKb = (feedText.length / 1024).toFixed(1);
+      logScrapingStep(currentId, 'download', 'executando', `Feed de pacotes baixado com sucesso (${sizeKb} KB). Analisando dados...`, 45);
+
+      // 1. Tentar parsear como JSON
+      try {
+        const parsed = JSON.parse(feedText);
+        const arr = Array.isArray(parsed) 
+          ? parsed 
+          : (parsed.data || parsed.packages || parsed.items || parsed.offers || parsed.results || parsed.trips || []);
+        if (Array.isArray(arr) && arr.length > 0) {
+          for (const item of arr) {
+            const dest = item.destino || item.destination || item.city || item.cidade || item.local || item.pais || 'Destino Nacional';
+            const title = item.titulo || item.title || item.nome || item.name || item.package_name || `Pacote ${dest}`;
+            const orig = item.origem || item.origin || item.departure_city || 'São Paulo, SP';
+            const hotel = item.hotel_nome || item.hotel || item.hotel_name || item.hospedagem || 'Hotel Selecionado';
+            const hotelCat = item.hotel_categoria || item.stars || '4 Estrelas';
+            const noites = parseInt(item.noites || item.nights || 4, 10);
+            const dias = parseInt(item.dias || item.days || (noites + 1), 10);
+            const cost = parseFloat(item.preco_custo || item.preco || item.price || item.valor || 0);
+            const img = item.imagem_url || item.imagem || item.image || item.photo || item.thumbnail || item.cover_url || '';
+            const code = String(item.codigo || item.id || item.codigo_oferta || `PKG-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+            const providerUrl = item.url_fornecedor || item.affiliate_url || item.link || item.url || item.product_url || (code ? `https://www.decolar.com/pacotes/${slugifyViagens(dest)}` : '');
+            const cat = categoriaId || item.categoria || (dest.toLowerCase().includes('orlando') || dest.toLowerCase().includes('cancun') || dest.toLowerCase().includes('paris') || dest.toLowerCase().includes('disney') || dest.toLowerCase().includes('miami') || dest.toLowerCase().includes('lisboa') ? 'internacional' : 'nacional');
+
+            if (title && cost > 0) {
+              extractedPackages.push({
+                titulo: title,
+                destino: dest,
+                origem: orig,
+                hotel_nome: hotel,
+                hotel_categoria: hotelCat,
+                noites,
+                dias,
+                preco_custo: cost,
+                imagem_url: img,
+                codigo_oferta_fornecedor: code,
+                url_fornecedor: providerUrl,
+                categoria: cat
+              });
+            }
+          }
+        }
+      } catch (e) {}
+
+      // 2. Se não encontrou JSON, tentar como CSV/TSV
+      if (extractedPackages.length === 0) {
+        function parseCSVHelper(text) {
+          const cleanText = text.replace(/^[\uFEFF\xFF\xFE]/, '');
+          const rows = [];
+          let currentRow = [];
+          let currentField = '';
+          let inQuotes = false;
+          for (let i = 0; i < cleanText.length; i++) {
+            const ch = cleanText[i];
+            const nextCh = cleanText[i + 1];
+            if (ch === '"') {
+              if (inQuotes && nextCh === '"') { currentField += '"'; i++; }
+              else inQuotes = !inQuotes;
+            } else if (ch === ',' && !inQuotes) {
+              currentRow.push(currentField.trim());
+              currentField = '';
+            } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
+              if (ch === '\r' && nextCh === '\n') i++;
+              currentRow.push(currentField.trim());
+              if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+              currentRow = [];
+              currentField = '';
+            } else {
+              currentField += ch;
+            }
+          }
+          if (currentField || currentRow.length > 0) {
+            currentRow.push(currentField.trim());
+            if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+          }
+          return rows;
+        }
+
+        const rows = parseCSVHelper(feedText);
+        if (rows.length > 1) {
+          const headers = rows[0].map(h => h.toLowerCase().trim());
+          const findCol = (terms) => headers.findIndex(h => terms.some(t => h.includes(t)));
+          
+          const titleIdx = findCol(['titulo', 'title', 'nome', 'name', 'pacote', 'package', 'oferta', 'product_name']);
+          const destIdx = findCol(['destino', 'destination', 'cidade', 'city', 'local', 'pais']);
+          const origIdx = findCol(['origem', 'origin', 'saida', 'departure']);
+          const priceIdx = findCol(['preco', 'price', 'custo', 'cost', 'valor', 'amount']);
+          const hotelIdx = findCol(['hotel', 'hospedagem', 'resort', 'pousada']);
+          const nightsIdx = findCol(['noite', 'night', 'duracao', 'duration', 'dia', 'day']);
+          const imgIdx = findCol(['imagem', 'image', 'foto', 'photo', 'url_imagem', 'pic', 'thumbnail']);
+          const codeIdx = findCol(['codigo', 'code', 'id', 'sku', 'ref']);
+          const linkIdx = findCol(['url_fornecedor', 'link', 'url', 'product_url', 'affiliate_url', 'deeplink']);
+          const catIdx = findCol(['categoria', 'category']);
+
+          for (let r = 1; r < rows.length; r++) {
+            const row = rows[r];
+            const title = titleIdx >= 0 ? row[titleIdx] : '';
+            const dest = destIdx >= 0 ? row[destIdx] : '';
+            const rawPrice = priceIdx >= 0 ? row[priceIdx] : '';
+            const cost = parseFloat(String(rawPrice || '0').replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+
+            if ((title || dest) && cost > 0) {
+              const finalDest = dest || 'Destino Nacional';
+              const finalTitle = title || `Pacote Promocional ${finalDest}`;
+              const orig = origIdx >= 0 && row[origIdx] ? row[origIdx] : 'São Paulo, SP';
+              const hotel = hotelIdx >= 0 && row[hotelIdx] ? row[hotelIdx] : 'Hotel Selecionado';
+              const noites = nightsIdx >= 0 ? (parseInt(row[nightsIdx], 10) || 4) : 4;
+              const img = imgIdx >= 0 ? row[imgIdx] : '';
+              const code = codeIdx >= 0 && row[codeIdx] ? row[codeIdx] : `PKG-CSV-${r}`;
+              const providerUrl = linkIdx >= 0 && row[linkIdx] ? row[linkIdx] : `https://www.decolar.com/pacotes/${slugifyViagens(finalDest)}`;
+              const cat = categoriaId || (catIdx >= 0 && row[catIdx] ? row[catIdx] : (finalDest.toLowerCase().includes('orlando') || finalDest.toLowerCase().includes('cancun') || finalDest.toLowerCase().includes('europa') ? 'internacional' : 'nacional'));
+
+              extractedPackages.push({
+                titulo: finalTitle,
+                destino: finalDest,
+                origem: orig,
+                hotel_nome: hotel,
+                hotel_categoria: '4 Estrelas',
+                noites: noites,
+                dias: noites + 1,
+                preco_custo: cost,
+                imagem_url: img,
+                codigo_oferta_fornecedor: code,
+                categoria: cat
+              });
+            }
+          }
+        }
+      }
+
+      // 3. Se não encontrou CSV, tentar XML/RSS
+      if (extractedPackages.length === 0) {
+        const itemRegex = /<item[\s\S]*?<\/item>|<offer[\s\S]*?<\/offer>|<pacote[\s\S]*?<\/pacote>/gi;
+        let xmlMatch;
+        while ((xmlMatch = itemRegex.exec(feedText)) !== null) {
+          const block = xmlMatch[0];
+          const getTag = (t) => {
+            const m = new RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`, 'i').exec(block);
+            return m ? m[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').trim() : '';
+          };
+          const dest = getTag('destination') || getTag('destino') || getTag('cidade') || 'Destino Nacional';
+          const title = getTag('title') || getTag('nome') || getTag('titulo') || `Pacote ${dest}`;
+          const priceStr = getTag('price') || getTag('preco') || getTag('valor');
+          const cost = parseFloat(priceStr.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+          const img = getTag('image') || getTag('imagem') || getTag('photo') || getTag('enclosure');
+          const code = getTag('id') || getTag('code') || getTag('guid') || `PKG-XML-${Date.now().toString(36)}`;
+
+          if ((title || dest) && cost > 0) {
+            extractedPackages.push({
+              titulo: title,
+              destino: dest,
+              origem: getTag('origin') || getTag('origem') || 'São Paulo, SP',
+              hotel_nome: getTag('hotel') || 'Hotel Selecionado',
+              hotel_categoria: '4 Estrelas',
+              noites: parseInt(getTag('nights') || getTag('noites') || '4', 10),
+              dias: parseInt(getTag('days') || getTag('dias') || '5', 10),
+              preco_custo: cost,
+              imagem_url: img,
+              codigo_oferta_fornecedor: code,
+              categoria: categoriaId || 'nacional'
+            });
+          }
+        }
+      }
+    }
+
+    // 3. Se não encontrou CSV, tentar XML/RSS
+    if (extractedPackages.length === 0) {
+      const itemRegex = /<item[\s\S]*?<\/item>|<offer[\s\S]*?<\/offer>|<pacote[\s\S]*?<\/pacote>/gi;
+      let xmlMatch;
+      while ((xmlMatch = itemRegex.exec(feedText)) !== null) {
+        const block = xmlMatch[0];
+        const getTag = (t) => {
+          const m = new RegExp(`<${t}[^>]*>([\\s\\S]*?)<\\/${t}>`, 'i').exec(block);
+          return m ? m[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').trim() : '';
+        };
+        const dest = getTag('destination') || getTag('destino') || getTag('cidade') || 'Destino Nacional';
+        const title = getTag('title') || getTag('nome') || getTag('titulo') || `Pacote ${dest}`;
+        const priceStr = getTag('price') || getTag('preco') || getTag('valor');
+        const cost = parseFloat(priceStr.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+        const img = getTag('image') || getTag('imagem') || getTag('photo') || getTag('enclosure');
+        const code = getTag('id') || getTag('code') || getTag('guid') || `PKG-XML-${Date.now().toString(36)}`;
+
+        if ((title || dest) && cost > 0) {
+          extractedPackages.push({
+            titulo: title,
+            destino: dest,
+            origem: getTag('origin') || getTag('origem') || 'São Paulo, SP',
+            hotel_nome: getTag('hotel') || 'Hotel Selecionado',
+            hotel_categoria: '4 Estrelas',
+            noites: parseInt(getTag('nights') || getTag('noites') || '4', 10),
+            dias: parseInt(getTag('days') || getTag('dias') || '5', 10),
+            preco_custo: cost,
+            imagem_url: img,
+            codigo_oferta_fornecedor: code,
+            categoria: categoriaId || 'nacional'
+          });
+        }
+      }
+    }
+
+    if (extractedPackages.length === 0) {
+      const isDecolarOrSPA = targetUrl.includes('decolar') || targetUrl.includes('cvc') || targetUrl.includes('booking');
+      const detalheMotivo = isDecolarOrSPA
+        ? 'A URL da operadora é um portal interativo protegido por firewall (SPA). Para importar pacotes de viagens, utilize a URL do Feed de Afiliados (formato CSV, JSON ou XML fornecido no painel da Decolar/Awin/Lomadee) ou API de catálogo.'
+        : 'Nenhum pacote de viagem identificado no feed retornado. Verifique se a URL aponta para um feed CSV/JSON/XML válido.';
+
+      logScrapingStep(currentId, 'erro', 'erro', `Aviso: ${detalheMotivo}`, 100, {
+        erros: [detalheMotivo],
+        motivo_erro: detalheMotivo,
+        produtos_encontrados: 0,
+        novos: 0,
+        atualizados: 0,
+        esgotados: 0
+      });
+      return;
+    }
+
+    const limiteMax = Number(config.limite_produtos || 0);
+    const packagesToProcess = (limiteMax > 0 && extractedPackages.length > limiteMax)
+      ? extractedPackages.slice(0, limiteMax)
+      : extractedPackages;
+
+    const infoLimite = limiteMax > 0 ? ` (limitado a ${limiteMax})` : ' (sem limite)';
+    logScrapingStep(currentId, 'processamento', 'executando', `Encontrados ${extractedPackages.length} pacote(s). Importando ${packagesToProcess.length}${infoLimite}. Calculando margem de lucro (+${margem}%) e cadastrando no GSA Viagens...`, 70, {
+      produtos_encontrados: extractedPackages.length,
+      produtos_limitados: packagesToProcess.length
+    });
+
+    let inseridos = 0;
+    let atualizados = 0;
+    const batchSize = 50;
+
+    for (let b = 0; b < packagesToProcess.length; b += batchSize) {
+      const chunk = packagesToProcess.slice(b, b + batchSize);
+      const newPkgs = [];
+      const imgMap = [];
+
+      for (let idx = 0; idx < chunk.length; idx++) {
+        const pkg = chunk[idx];
+        const precoCusto = pkg.preco_custo;
+        const margemValor = Math.round((precoCusto * (margem / 100)) * 100) / 100;
+        const precoVenda = Math.ceil((precoCusto + margemValor) * 100) / 100;
+        const hashSuffix = (pkg.codigo_oferta_fornecedor || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(-6) || Math.random().toString(36).slice(2, 6);
+        const baseSlug = `${slugifyViagens(pkg.titulo)}-${hashSuffix}`;
+
+        newPkgs.push({
+          titulo: pkg.titulo.slice(0, 200),
+          slug: baseSlug,
+          categoria: pkg.categoria || 'nacional',
+          origem: pkg.origem || 'São Paulo, SP',
+          destino: pkg.destino || 'Destino Nacional',
+          dias: pkg.dias || 5,
+          noites: pkg.noites || 4,
+          hotel_nome: pkg.hotel_nome || 'Hotel Selecionado',
+          hotel_categoria: pkg.hotel_categoria || '4 Estrelas',
+          acomodacao_tipo: 'Quarto Duplo Standard',
+          alimentacao: 'Café da manhã incluso',
+          transporte_tipo: 'Aéreo ida e volta',
+          companhia_executor: 'Companhia Aérea Regular',
+          bagagem_inclusa: '1 mala de mão (10kg) inclusa',
+          traslado_incluso: true,
+          codigo_oferta_fornecedor: pkg.codigo_oferta_fornecedor || null,
+          url_fornecedor: pkg.url_fornecedor || (targetUrl.startsWith('http') && !targetUrl.includes('feed.gsa.com') ? targetUrl : `https://www.decolar.com/pacotes/${slugifyViagens(pkg.destino || pkg.titulo)}`),
+          preco_custo: precoCusto,
+          margem_porcentagem: margem,
+          margem_valor: margemValor,
+          preco_venda: precoVenda,
+          parcelamento_maximo: 10,
+          limite_vendas: 50,
+          vendas_realizadas: 0,
+          status: 'publicado',
+          inclusoes: [
+            "Passagens aéreas (ida e volta)",
+            "Hospedagem com café da manhã",
+            "Traslado aeroporto / hotel / aeroporto",
+            "Suporte e assistência 24h GSA Viagens"
+          ],
+          exclusoes: [
+            "Passeios opcionais não descritos",
+            "Taxas de turismo e despesas pessoais"
+          ],
+          regras: [
+            "Valores por pessoa em acomodação dupla",
+            "Sujeito à alteração de disponibilidade sem aviso prévio"
+          ],
+          documentacao_necessaria: [
+            "Documento oficial com foto (RG ou CNH válida)",
+            "Para destinos internacionais: Passaporte com validade mínima de 6 meses"
+          ]
+        });
+        imgMap.push({ slug: baseSlug, imagem_url: pkg.imagem_url });
+      }
+
+      await new Promise((resolve) => {
+        supabaseUpsertCustom('/rest/v1/viagens_pacotes', 'slug', newPkgs, (errPkg, resPkg, statusCode) => {
+          if (!errPkg) {
+            const resArr = Array.isArray(resPkg) ? resPkg : (resPkg ? [resPkg] : []);
+            if (statusCode === 201) inseridos += resArr.length;
+            else atualizados += resArr.length;
+
+            const imgsToInsert = [];
+            for (const createdPkg of resArr) {
+              const match = imgMap.find(m => m.slug === createdPkg.slug);
+              if (match && match.imagem_url && match.imagem_url.startsWith('http')) {
+                imgsToInsert.push({
+                  pacote_id: createdPkg.id,
+                  url: match.imagem_url,
+                  is_capa: true,
+                  ordem: 0
+                });
+              }
+            }
+            if (imgsToInsert.length > 0) {
+              supabasePost('/rest/v1/viagens_pacote_imagens', imgsToInsert, () => {});
+            }
+          } else {
+            console.error('❌ Erro no lote de viagens:', errPkg?.message || errPkg);
+          }
+          resolve();
+        });
+      });
+
+      const pct = Math.min(98, 70 + Math.floor(((b + chunk.length) / packagesToProcess.length) * 28));
+      logScrapingStep(currentId, 'processamento', 'executando', `Processando lote de pacotes (${Math.min(b + chunk.length, packagesToProcess.length)} / ${packagesToProcess.length})...`, pct);
+    }
+
+    supabasePatch(`/rest/v1/automacao_scraping_configs?id=eq.${currentId}`, { ultima_execucao: new Date().toISOString() }, () => {});
+
+    const msgFinal = inseridos > 0 
+      ? `Sincronização 100% concluída com sucesso! ${inseridos} novo(s) e ${atualizados} atualizado(s) no GSA Viagens com a margem de ${margem}%.`
+      : `Sincronização 100% concluída com sucesso! ${atualizados} pacote(s) atualizados com a margem de ${margem}%.`;
+
+    logScrapingStep(currentId, 'sucesso', 'sucesso', msgFinal, 100, {
+      novos: inseridos,
+      atualizados: atualizados,
+      esgotados: 0,
+      produtos_encontrados: extractedPackages.length,
+      erros: []
+    });
+
+  } catch (err) {
+    console.error('❌ [Viagens Scraping] Erro:', err.message);
+    logScrapingStep(currentId, 'erro', 'erro', `Erro no processamento de viagens: ${err.message}`, 100, {
+      erros: [err.message],
+      motivo_erro: err.message,
+      novos: 0,
+      atualizados: 0,
+      esgotados: 0
+    });
+  }
+}
+
+// ─── SCRAPING HANDLER FOR PRODUCTS & TRAVEL ───────────────────────────────────────────
 async function handleProductScraping(bodyData) {
   let automacaoId = null;
   try {
@@ -3495,7 +4006,7 @@ async function handleProductScraping(bodyData) {
   // Buscar configurações da automação no Supabase
   const path = automacaoId 
     ? `/rest/v1/automacao_scraping_configs?id=eq.${automacaoId}&select=*`
-    : `/rest/v1/automacao_scraping_configs?ativo=eq.true&tipo=eq.produtos&select=*`;
+    : `/rest/v1/automacao_scraping_configs?ativo=eq.true&select=*`;
 
   supabaseGet(path, async (err, configs) => {
     if (err || !Array.isArray(configs) || configs.length === 0) {
@@ -3510,6 +4021,10 @@ async function handleProductScraping(bodyData) {
     }
 
     for (const config of configs) {
+      if (config.tipo === 'viagens') {
+        await handleViagensScraping(config);
+        continue;
+      }
       const currentId = config.id;
       const targetUrl = config.target_url;
       const margem = parseFloat(config.margem_lucro) || 100;
@@ -3534,7 +4049,7 @@ async function handleProductScraping(bodyData) {
         if (isShopeeCSVFeed) {
           logScrapingStep(currentId, 'requisicao', 'executando', '🟠 Motor Shopee Feed CSV: Baixando catálogo de afiliados...', 20, { url_alvo: targetUrl });
           try {
-            const csvText = await fetchText(targetUrl);
+            const csvText = html || await fetchText(targetUrl);
 
             const keywordFilter = (config.palavras_chave || '').toLowerCase().trim();
             const categoriaFiltro = (config.categoria_filtro || '').toLowerCase().trim();
@@ -3542,15 +4057,18 @@ async function handleProductScraping(bodyData) {
             const precoMax = config.preco_max ? parseFloat(config.preco_max) : null;
             const descontoMin = config.desconto_min ? parseInt(config.desconto_min) : null;
             const ratingMin = config.rating_min ? parseFloat(config.rating_min) : null;
-            const limiteShopee = Number(config.limite_produtos || 50);
+            const rawLim = config.limite_produtos;
+            const limiteShopee = (rawLim !== null && rawLim !== undefined && rawLim !== '' && !isNaN(Number(rawLim))) ? Number(rawLim) : 0;
 
-            function parseFirstNCSVRows(text, maxRows) {
+            function parseCSVFull(text, maxRows) {
               const cleanText = text.replace(/^[\uFEFF\xFF\xFE]/, '');
               const rows = [];
               let currentRow = [];
               let currentField = '';
               let inQuotes = false;
-              for (let i = 0; i < cleanText.length && rows.length <= maxRows; i++) {
+              const shouldLimit = maxRows > 0;
+
+              for (let i = 0; i < cleanText.length; i++) {
                 const ch = cleanText[i];
                 const nextCh = cleanText[i + 1];
                 if (ch === '"') {
@@ -3562,21 +4080,27 @@ async function handleProductScraping(bodyData) {
                 } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
                   if (ch === '\r' && nextCh === '\n') i++;
                   currentRow.push(currentField.trim());
-                  if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+                  if (currentRow.some(f => f.length > 0)) {
+                    rows.push(currentRow);
+                    if (shouldLimit && rows.length >= maxRows) break;
+                  }
                   currentRow = [];
                   currentField = '';
                 } else {
                   currentField += ch;
                 }
               }
-              if ((currentField || currentRow.length > 0) && rows.length <= maxRows) {
-                currentRow.push(currentField.trim());
-                if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+              if (!shouldLimit || rows.length < maxRows) {
+                if (currentField || currentRow.length > 0) {
+                  currentRow.push(currentField.trim());
+                  if (currentRow.some(f => f.length > 0)) rows.push(currentRow);
+                }
               }
               return rows;
             }
 
-            const allRows = parseFirstNCSVRows(csvText, limiteShopee + 5);
+            const maxRowsToParse = limiteShopee > 0 ? (limiteShopee + 5) : 0;
+            const allRows = parseCSVFull(csvText, maxRowsToParse);
             if (allRows.length > 1) {
               const headers = allRows[0].map(h => h.trim().toLowerCase().replace(/^[\uFEFF\xFF\xFE]/, '').replace(/[^a-z0-9]+/g, '_'));
               
@@ -3620,23 +4144,18 @@ async function handleProductScraping(bodyData) {
                 }
 
                 const productLink = row.offer_link || row.product_short_link || row.product_link || row.link || row.url || '';
-                const imageUrl = row.image_link || row.image_url || row.image || row.imageurl || '';
-                const desc = (row.description || '').replace(/<[^>]*>/g, '').trim();
-                const discountPct = row.discount_percentage || row.discount || '';
+                const imageUrl = row.image_link || row.image_url || row.image || row.imageurl || row.cover_image || row.picture || '';
 
                 extractedProducts.push({
-                  nome: title.slice(0, 200),
+                  codigo: itemId ? `SHP-${itemId}` : null,
+                  nome: title,
                   preco: salePrice,
-                  imagem_url: imageUrl,
-                  codigo: itemId || null,
-                  codigo_barras: null,
-                  descricao: desc.slice(0, 800),
                   url_afiliado: productLink,
-                  shopee_shop: row.shop_name || row.seller_name || 'Shopee',
-                  shopee_rating: row.item_rating || row.shop_rating || '',
-                  desconto: discountPct ? `${discountPct}% OFF` : ''
+                  imagem_url: imageUrl,
+                  desconto_percentual: discountPctNum,
+                  rating: itemRating,
+                  shopee_shop: row.shop_name || row.seller_name || 'Vendedor Shopee'
                 });
-
                 shopeeCount++;
               }
             }
@@ -3645,81 +4164,6 @@ async function handleProductScraping(bodyData) {
               `🟠 Feed Shopee: ${extractedProducts.length} produto(s) extraídos do catálogo CSV de afiliado.${config.palavras_chave ? ` Filtro: "${config.palavras_chave}"` : ' (sem filtro por keyword)'}`, 50);
           } catch(shopeeErr) {
             console.error('❌ [Shopee Feed] Erro no parsing CSV:', shopeeErr.message);
-          }
-        }
-
-        // Tentativa A: Engine VTEX API (Atacadão, Carrefour, Mobly, Electrolux, etc.)
-        try {
-          const parsedUrl = new URL(targetUrl);
-          const vtexApi = `https://${parsedUrl.hostname}/api/catalog_system/pub/products/search${parsedUrl.pathname}${parsedUrl.search}`;
-          const vtexRes = await fetch(vtexApi, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-              'Accept': 'application/json'
-            }
-          });
-          if (vtexRes.status === 200 || vtexRes.status === 206) {
-            const vtexData = await vtexRes.json();
-            if (Array.isArray(vtexData) && vtexData.length > 0) {
-              for (const item of vtexData) {
-                const sku = item.items?.[0];
-                const seller = sku?.sellers?.[0];
-                const offer = seller?.commertialOffer;
-                const price = offer?.Price || offer?.ListPrice || 0;
-                const image = sku?.images?.[0]?.imageUrl || '';
-                const nome = item.productName || item.productTitle || item.name;
-
-                // Extrair código interno do produto (RefID, ItemID, ProductId ou regex da URL)
-                const urlCodeMatch = (item.linkText || targetUrl).match(/-(\d+)(?:\/p|$|[\?#])/);
-                const codigo = sku?.referenceId?.[0]?.Value || item.productReference || urlCodeMatch?.[1] || sku?.itemId || item.productId;
-                const codigoBarras = sku?.ean && sku.ean.length >= 8 ? sku.ean : null;
-
-                if (nome && price > 0) {
-                  const desc = (item.description || item.metaTagDescription || item.productDescription || '').replace(/<[^>]*>/g, '').trim();
-                  extractedProducts.push({ 
-                    nome: String(nome).trim(), 
-                    preco: price, 
-                    imagem_url: image,
-                    codigo: codigo ? String(codigo) : null,
-                    codigo_barras: codigoBarras,
-                    descricao: desc
-                  });
-                }
-              }
-            }
-          }
-        } catch(vtexErr) {}
-
-        // Tentativa B: JSON-LD structured data (<script type="application/ld+json">)
-        if (extractedProducts.length === 0) {
-          const jsonLdMatches = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
-          for (const match of jsonLdMatches) {
-            try {
-              const parsed = JSON.parse(match[1].trim());
-              const items = Array.isArray(parsed) ? parsed : (parsed['@graph'] || [parsed]);
-              for (const item of items) {
-                if (item['@type'] === 'Product' || item.offers) {
-                  const nome = item.name || '';
-                  const offers = Array.isArray(item.offers) ? item.offers[0] : (item.offers || {});
-                  const preco = parseFloat(offers.price || offers.lowPrice || 0);
-                  const imagem = Array.isArray(item.image) ? item.image[0] : (item.image?.url || item.image || '');
-                  const codigo = item.sku || item.mpn || item.productID || (targetUrl.match(/-(\d+)(?:\/p|$|[\?#])/) || [])[1];
-                  const codigoBarras = item.gtin13 || item.gtin8 || item.gtin || null;
-                  const desc = (item.description || '').replace(/<[^>]*>/g, '').trim();
-
-                  if (nome && preco > 0) {
-                    extractedProducts.push({ 
-                      nome, 
-                      preco, 
-                      imagem_url: typeof imagem === 'string' ? imagem : '',
-                      codigo: codigo ? String(codigo) : null,
-                      codigo_barras: codigoBarras,
-                      descricao: desc
-                    });
-                  }
-                }
-              }
-            } catch(e) {}
           }
         }
 
@@ -3819,76 +4263,89 @@ async function handleProductScraping(bodyData) {
           produtos_limitados: productsToProcess.length
         });
 
-        // 3. Inserção / Atualização dos produtos no Supabase
+        // 3. Inserção / Atualização dos produtos no Supabase em lotes (high-speed batching)
         let inseridos = 0;
-        for (const prod of productsToProcess) {
-          const precoCusto = prod.preco;
-          const precoVenda = Math.ceil(precoCusto * (1 + margem / 100) * 100) / 100;
-          
-          // Se encontrou o código do produto na loja (ex: 19839), usa como código interno exclusivo. Caso contrário, gera código auto.
-          const urlCodeMatch = targetUrl.match(/-(\d{3,10})(?:\/p|$|[\?#])/);
-          const storeCode = prod.codigo || (urlCodeMatch ? urlCodeMatch[1] : null) || `PRD-${syncId}-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random()*900+100)}`;
+        let atualizados = 0;
+        const batchSize = 200;
 
-          // Descrição pública limpa (nunca exibe mensagens de fornecedor para clientes)
-          const cleanDesc = prod.descricao && prod.descricao.length > 5 && !prod.descricao.toLowerCase().includes('fornecedor')
-            ? prod.descricao.slice(0, 500)
-            : `${prod.nome}. Produto disponível com garantia de entrega e excelente qualidade na GSA Store.`;
+        for (let b = 0; b < productsToProcess.length; b += batchSize) {
+          const chunk = productsToProcess.slice(b, b + batchSize);
+          const newProds = [];
+          const fornConfigsMap = [];
 
-          const descPct = Number(prod.desconto_percentual || 0);
-          const hasPromo = descPct > 0;
-          const precoPromocional = hasPromo ? (Math.round(precoVenda * (1 - descPct / 100) * 100) / 100) : null;
+          for (let idx = 0; idx < chunk.length; idx++) {
+            const prod = chunk[idx];
+            const precoCusto = prod.preco;
+            const precoVenda = Math.ceil(precoCusto * (1 + margem / 100) * 100) / 100;
+            const urlCodeMatch = targetUrl.match(/-(\d{3,10})(?:\/p|$|[\?#])/);
+            const storeCode = prod.codigo || (urlCodeMatch ? urlCodeMatch[1] : null) || `PRD-${syncId}-${b + idx + 1}-${Date.now().toString(36).toUpperCase()}`;
 
-          const newProd = {
-            codigo_produto: String(storeCode),
-            codigo_barras: prod.codigo_barras || null,
-            nome: prod.nome.slice(0, 200),
-            descricao: cleanDesc,
-            valor: precoVenda,
-            valor_custo: precoCusto,
-            porcentagem_lucro: margem,
-            desconto_ativo: hasPromo,
-            desconto_percentual: hasPromo ? descPct : null,
-            valor_promocional: precoPromocional,
-            estoque: 99,
-            estoque_disponivel: 99,
-            status: 'ativo',
-            visivel_na_loja: true,
-            tipo_cliente: 'ambos',
-            categoria_id: categoriaId,
-            imagem_url: prod.imagem_url || null,
-            identificador_preferencial: 'interno'
-          };
+            const cleanDesc = prod.descricao && prod.descricao.length > 5 && !prod.descricao.toLowerCase().includes('fornecedor')
+              ? prod.descricao.slice(0, 500)
+              : `${prod.nome}. Produto disponível com garantia de entrega e excelente qualidade na GSA Store.`;
+
+            newProds.push({
+              codigo_produto: String(storeCode),
+              codigo_barras: prod.codigo_barras || null,
+              nome: prod.nome.slice(0, 200),
+              descricao: cleanDesc,
+              valor: precoVenda,
+              valor_custo: precoCusto,
+              porcentagem_lucro: margem,
+              estoque: 99,
+              estoque_disponivel: 99,
+              status: 'ativo',
+              visivel_na_loja: true,
+              tipo_cliente: 'ambos',
+              categoria_id: categoriaId,
+              imagem_url: prod.imagem_url || null,
+              identificador_preferencial: 'interno'
+            });
+            fornConfigsMap.push({ storeCode: String(storeCode), prod: prod });
+          }
 
           await new Promise((resolve) => {
-            supabasePost('/rest/v1/produtos', newProd, (errP, resP) => {
+            supabaseUpsertProduct('/rest/v1/produtos', newProds, (errP, resP, statusCode) => {
               if (!errP) {
-                inseridos++;
-                let insertedId = null;
-                if (Array.isArray(resP) && resP[0]?.id) insertedId = resP[0].id;
-                else if (resP && resP.id) insertedId = resP.id;
+                const resArr = Array.isArray(resP) ? resP : (resP ? [resP] : []);
+                if (statusCode === 201) inseridos += resArr.length;
+                else atualizados += resArr.length;
 
-                if (insertedId) {
-                  const fornConfig = {
-                    produto_id: insertedId,
+                const fornConfigs = resArr.map(p => {
+                  const match = fornConfigsMap.find(f => f.storeCode === p.codigo_produto);
+                  const prodObj = match ? match.prod : {};
+                  return {
+                    produto_id: p.id,
                     fornecimento_externo_ativo: true,
-                    tipo_fornecedor: isShopeeCSVFeed ? 'shopee_afiliado' : 'online',
-                    nome_fornecedor: isShopeeCSVFeed ? `Shopee - ${prod.shopee_shop || 'Vendedor Shopee'}` : (config.nome || 'Fornecedor Externo'),
-                    url_produto: prod.url_afiliado || targetUrl // usa link de afiliado Shopee quando disponível
+                    tipo_fornecedor: 'online',
+                    nome_fornecedor: isShopeeCSVFeed ? `Shopee - ${prodObj.shopee_shop || 'Vendedor Shopee'}` : (config.nome || 'Fornecedor Externo'),
+                    url_produto: prodObj.url_afiliado || targetUrl
                   };
-                  supabasePost('/rest/v1/produto_fornecedor_config', fornConfig, () => {});
+                });
+                if (fornConfigs.length > 0) {
+                  supabasePost('/rest/v1/produto_fornecedor_config?on_conflict=produto_id', fornConfigs, () => {});
                 }
+              } else {
+                console.error('❌ Erro no lote de produtos:', errP?.message || errP);
               }
               resolve();
             });
           });
+
+          const pct = Math.min(98, 75 + Math.floor(((b + chunk.length) / productsToProcess.length) * 23));
+          logScrapingStep(currentId, 'processamento', 'executando', `Processando lote de produtos (${Math.min(b + chunk.length, productsToProcess.length)} / ${productsToProcess.length})...`, pct);
         }
 
         // 4. Atualizar última execução e registrar sucesso 100%
         supabasePatch(`/rest/v1/automacao_scraping_configs?id=eq.${currentId}`, { ultima_execucao: new Date().toISOString() }, () => {});
 
-        logScrapingStep(currentId, 'sucesso', 'sucesso', `Sincronização 100% concluída com sucesso! ${inseridos} produto(s) cadastrado(s) no catálogo da loja com a margem de ${margem}%.`, 100, {
+        const msgFinal = inseridos > 0 
+          ? `Sincronização 100% concluída com sucesso! ${inseridos} novo(s) e ${atualizados} atualizado(s) no catálogo da loja com a margem de ${margem}%.`
+          : `Sincronização 100% concluída com sucesso! ${atualizados} produto(s) atualizados com a margem de ${margem}%.`;
+
+        logScrapingStep(currentId, 'sucesso', 'sucesso', msgFinal, 100, {
           novos: inseridos,
-          atualizados: 0,
+          atualizados: atualizados,
           esgotados: 0,
           produtos_encontrados: extractedProducts.length,
           erros: []
@@ -3981,6 +4438,35 @@ const server = http.createServer((req, res) => {
         timestamp: new Date().toISOString(),
         activeSessions: Object.keys(userSessions).length
       }));
+    }
+
+    // Public Travel Package Feeds
+    if (req.method === 'GET' && urlPath.startsWith('/feeds/viagens')) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Cache-Control', 'no-cache');
+
+      if (urlPath.includes('nacionais')) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify(GSA_PACOTES_NACIONAIS, null, 2));
+      }
+      if (urlPath.includes('internacionais')) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify(GSA_PACOTES_INTERNACIONAIS, null, 2));
+      }
+      if (urlPath.includes('promoc')) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        return res.end(JSON.stringify(GSA_PACOTES_PROMOCOES, null, 2));
+      }
+      if (urlPath.includes('.csv')) {
+        res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8' });
+        const all = [...GSA_PACOTES_NACIONAIS, ...GSA_PACOTES_INTERNACIONAIS, ...GSA_PACOTES_PROMOCOES];
+        const headers = 'codigo,titulo,destino,origem,hotel_nome,hotel_categoria,noites,dias,preco_custo,imagem_url,categoria\n';
+        const rows = all.map(p => `"${p.codigo}","${p.titulo}","${p.destino}","${p.origem}","${p.hotel_nome}","${p.hotel_categoria}",${p.noites},${p.dias},${p.preco_custo},"${p.imagem_url}","${p.categoria}"`).join('\n');
+        return res.end(headers + rows);
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(JSON.stringify([...GSA_PACOTES_NACIONAIS, ...GSA_PACOTES_INTERNACIONAIS, ...GSA_PACOTES_PROMOCOES], null, 2));
     }
 
     // Verificação do webhook (GET)

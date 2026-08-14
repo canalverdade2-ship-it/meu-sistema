@@ -144,6 +144,7 @@ export const routes = {
       reembolsos: () => '/marketplace/loja/reembolsos',
       checkout: () => '/marketplace/loja/checkout',
       orderSuccess: (orderId: string) => `/marketplace/loja/pedido-confirmado?orderId=${orderId}`,
+      vaquinha: (codigo: string) => `/marketplace/loja/vaquinha/${codigo}`,
       wishlist: () => '/marketplace/loja/wishlist',
       blog: () => '/marketplace/loja/blog',
       blogPost: (id: string) => `/marketplace/loja/blog/${id}`,

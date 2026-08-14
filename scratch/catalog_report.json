@@ -1,0 +1,1717 @@
+{
+  "totalProducts": 10000,
+  "totalCategories": 29,
+  "categories": [
+    {
+      "pos": 1,
+      "nameEn": "Home & Living",
+      "namePt": "Casa e Decoração",
+      "id": "100636",
+      "productsCount": 2684,
+      "percentage": "26.84%",
+      "subcategoriesCount": 17,
+      "subcategories": [
+        {
+          "name": "Decoration",
+          "id": "100711",
+          "count": 388,
+          "percentage": "14.5%"
+        },
+        {
+          "name": "Kitchenware",
+          "id": "100717",
+          "count": 366,
+          "percentage": "13.6%"
+        },
+        {
+          "name": "Party Supplies",
+          "id": "100722",
+          "count": 324,
+          "percentage": "12.1%"
+        },
+        {
+          "name": "Tools & Home Improvement",
+          "id": "100715",
+          "count": 315,
+          "percentage": "11.7%"
+        },
+        {
+          "name": "Furniture",
+          "id": "100713",
+          "count": 231,
+          "percentage": "8.6%"
+        },
+        {
+          "name": "Home Care Supplies",
+          "id": "100716",
+          "count": 198,
+          "percentage": "7.4%"
+        },
+        {
+          "name": "Dinnerware",
+          "id": "100718",
+          "count": 187,
+          "percentage": "7.0%"
+        },
+        {
+          "name": "Home Organizers",
+          "id": "100721",
+          "count": 154,
+          "percentage": "5.7%"
+        },
+        {
+          "name": "Bathrooms",
+          "id": "100709",
+          "count": 119,
+          "percentage": "4.4%"
+        },
+        {
+          "name": "Lighting",
+          "id": "100719",
+          "count": 98,
+          "percentage": "3.7%"
+        },
+        {
+          "name": "Gardening",
+          "id": "100714",
+          "count": 98,
+          "percentage": "3.7%"
+        },
+        {
+          "name": "Bedding",
+          "id": "100710",
+          "count": 80,
+          "percentage": "3.0%"
+        },
+        {
+          "name": "Fengshui & Religious Supplies",
+          "id": "100723",
+          "count": 56,
+          "percentage": "2.1%"
+        },
+        {
+          "name": "Safety & Security",
+          "id": "100720",
+          "count": 29,
+          "percentage": "1.1%"
+        },
+        {
+          "name": "Home Fragrance & Aromatherapy",
+          "id": "100708",
+          "count": 27,
+          "percentage": "1.0%"
+        },
+        {
+          "name": "Others",
+          "id": "100724",
+          "count": 11,
+          "percentage": "0.4%"
+        },
+        {
+          "name": "Hand Warmers, Hot Water Bags & Ice Bags",
+          "id": "100712",
+          "count": 3,
+          "percentage": "0.1%"
+        }
+      ]
+    },
+    {
+      "pos": 2,
+      "nameEn": "Beauty",
+      "namePt": "Beleza e Cuidados Pessoais",
+      "id": "100630",
+      "productsCount": 789,
+      "percentage": "7.89%",
+      "subcategoriesCount": 10,
+      "subcategories": [
+        {
+          "name": "Hair Care",
+          "id": "100659",
+          "count": 195,
+          "percentage": "24.7%"
+        },
+        {
+          "name": "Beauty Tools",
+          "id": "100663",
+          "count": 154,
+          "percentage": "19.5%"
+        },
+        {
+          "name": "Hand, Foot & Nail Care",
+          "id": "100658",
+          "count": 130,
+          "percentage": "16.5%"
+        },
+        {
+          "name": "Makeup",
+          "id": "100662",
+          "count": 83,
+          "percentage": "10.5%"
+        },
+        {
+          "name": "Bath & Body Care",
+          "id": "102002",
+          "count": 65,
+          "percentage": "8.2%"
+        },
+        {
+          "name": "Skincare",
+          "id": "100664",
+          "count": 62,
+          "percentage": "7.9%"
+        },
+        {
+          "name": "Perfumes & Fragrances",
+          "id": "100661",
+          "count": 55,
+          "percentage": "7.0%"
+        },
+        {
+          "name": "Men's Care",
+          "id": "100660",
+          "count": 38,
+          "percentage": "4.8%"
+        },
+        {
+          "name": "Beauty Sets & Packages",
+          "id": "100665",
+          "count": 4,
+          "percentage": "0.5%"
+        },
+        {
+          "name": "Others",
+          "id": "100666",
+          "count": 3,
+          "percentage": "0.4%"
+        }
+      ]
+    },
+    {
+      "pos": 3,
+      "nameEn": "Women Clothes",
+      "namePt": "Moda Feminina",
+      "id": "100017",
+      "productsCount": 757,
+      "percentage": "7.57%",
+      "subcategoriesCount": 20,
+      "subcategories": [
+        {
+          "name": "Tops",
+          "id": "100099",
+          "count": 209,
+          "percentage": "27.6%"
+        },
+        {
+          "name": "Lingerie & Underwear",
+          "id": "100111",
+          "count": 100,
+          "percentage": "13.2%"
+        },
+        {
+          "name": "Dresses",
+          "id": "100104",
+          "count": 75,
+          "percentage": "9.9%"
+        },
+        {
+          "name": "Shorts",
+          "id": "100101",
+          "count": 45,
+          "percentage": "5.9%"
+        },
+        {
+          "name": "Sets",
+          "id": "100110",
+          "count": 43,
+          "percentage": "5.7%"
+        },
+        {
+          "name": "Pants & Leggings",
+          "id": "100100",
+          "count": 42,
+          "percentage": "5.5%"
+        },
+        {
+          "name": "Jackets, Coats & Vests",
+          "id": "100107",
+          "count": 38,
+          "percentage": "5.0%"
+        },
+        {
+          "name": "Skirts",
+          "id": "100102",
+          "count": 37,
+          "percentage": "4.9%"
+        },
+        {
+          "name": "Fabric",
+          "id": "100117",
+          "count": 34,
+          "percentage": "4.5%"
+        },
+        {
+          "name": "Socks & Stockings",
+          "id": "100118",
+          "count": 30,
+          "percentage": "4.0%"
+        },
+        {
+          "name": "Sleepwear & Pajamas",
+          "id": "100112",
+          "count": 28,
+          "percentage": "3.7%"
+        },
+        {
+          "name": "Jumpsuits, Playsuits & Overalls",
+          "id": "100106",
+          "count": 23,
+          "percentage": "3.0%"
+        },
+        {
+          "name": "Jeans",
+          "id": "100103",
+          "count": 17,
+          "percentage": "2.2%"
+        },
+        {
+          "name": "Maternity Wear",
+          "id": "100113",
+          "count": 9,
+          "percentage": "1.2%"
+        },
+        {
+          "name": "Hoodies & Sweatshirts",
+          "id": "100109",
+          "count": 9,
+          "percentage": "1.2%"
+        },
+        {
+          "name": "Sweaters & Cardigans",
+          "id": "100108",
+          "count": 6,
+          "percentage": "0.8%"
+        },
+        {
+          "name": "Wedding Dresses",
+          "id": "100105",
+          "count": 5,
+          "percentage": "0.7%"
+        },
+        {
+          "name": "Traditional Wear",
+          "id": "100114",
+          "count": 4,
+          "percentage": "0.5%"
+        },
+        {
+          "name": "Others",
+          "id": "100116",
+          "count": 2,
+          "percentage": "0.3%"
+        },
+        {
+          "name": "Costumes",
+          "id": "100115",
+          "count": 1,
+          "percentage": "0.1%"
+        }
+      ]
+    },
+    {
+      "pos": 4,
+      "nameEn": "Spare Parts and Accessories for Vehicles",
+      "namePt": "Autopeças e Acessórios para Veículos",
+      "id": "102187",
+      "productsCount": 660,
+      "percentage": "6.60%",
+      "subcategoriesCount": 11,
+      "subcategories": [
+        {
+          "name": "Spare Parts for Automobiles",
+          "id": "102224",
+          "count": 196,
+          "percentage": "29.7%"
+        },
+        {
+          "name": "Spare Parts for Motorcycles",
+          "id": "102251",
+          "count": 122,
+          "percentage": "18.5%"
+        },
+        {
+          "name": "External Accessories for Automobiles",
+          "id": "102243",
+          "count": 88,
+          "percentage": "13.3%"
+        },
+        {
+          "name": "Internal Accessories for Automobiles",
+          "id": "102249",
+          "count": 85,
+          "percentage": "12.9%"
+        },
+        {
+          "name": "Accessories for Motorcycles",
+          "id": "102260",
+          "count": 73,
+          "percentage": "11.1%"
+        },
+        {
+          "name": "Vehicular Care",
+          "id": "102272",
+          "count": 33,
+          "percentage": "5.0%"
+        },
+        {
+          "name": "Tires and Wheels",
+          "id": "102264",
+          "count": 22,
+          "percentage": "3.3%"
+        },
+        {
+          "name": "Vehicular Tools",
+          "id": "102265",
+          "count": 21,
+          "percentage": "3.2%"
+        },
+        {
+          "name": "Vehicular Safety",
+          "id": "102271",
+          "count": 7,
+          "percentage": "1.1%"
+        },
+        {
+          "name": "Heavy Duty and Boats",
+          "id": "102188",
+          "count": 7,
+          "percentage": "1.1%"
+        },
+        {
+          "name": "Others",
+          "id": "102601",
+          "count": 6,
+          "percentage": "0.9%"
+        }
+      ]
+    },
+    {
+      "pos": 5,
+      "nameEn": "Fashion Accessories",
+      "namePt": "Acessórios de Moda",
+      "id": "100009",
+      "productsCount": 538,
+      "percentage": "5.38%",
+      "subcategoriesCount": 15,
+      "subcategories": [
+        {
+          "name": "Additional Accessories",
+          "id": "100034",
+          "count": 92,
+          "percentage": "17.1%"
+        },
+        {
+          "name": "Necklaces",
+          "id": "100029",
+          "count": 82,
+          "percentage": "15.2%"
+        },
+        {
+          "name": "Hair Accessories",
+          "id": "100025",
+          "count": 78,
+          "percentage": "14.5%"
+        },
+        {
+          "name": "Eyewear",
+          "id": "100030",
+          "count": 64,
+          "percentage": "11.9%"
+        },
+        {
+          "name": "Earrings",
+          "id": "100022",
+          "count": 45,
+          "percentage": "8.4%"
+        },
+        {
+          "name": "Bracelets & Bangles",
+          "id": "100026",
+          "count": 45,
+          "percentage": "8.4%"
+        },
+        {
+          "name": "Rings",
+          "id": "100021",
+          "count": 35,
+          "percentage": "6.5%"
+        },
+        {
+          "name": "Hats & Caps",
+          "id": "100028",
+          "count": 27,
+          "percentage": "5.0%"
+        },
+        {
+          "name": "Belts",
+          "id": "100032",
+          "count": 23,
+          "percentage": "4.3%"
+        },
+        {
+          "name": "Accessories Sets & Packages",
+          "id": "100035",
+          "count": 18,
+          "percentage": "3.3%"
+        },
+        {
+          "name": "Others",
+          "id": "100036",
+          "count": 14,
+          "percentage": "2.6%"
+        },
+        {
+          "name": "Gloves",
+          "id": "100024",
+          "count": 5,
+          "percentage": "0.9%"
+        },
+        {
+          "name": "Scarves & Shawls",
+          "id": "100023",
+          "count": 5,
+          "percentage": "0.9%"
+        },
+        {
+          "name": "Neckties, Bow Ties & Cravats",
+          "id": "100033",
+          "count": 3,
+          "percentage": "0.6%"
+        },
+        {
+          "name": "Anklets",
+          "id": "100027",
+          "count": 2,
+          "percentage": "0.4%"
+        }
+      ]
+    },
+    {
+      "pos": 6,
+      "nameEn": "Stationery",
+      "namePt": "Papelaria e Escritório",
+      "id": "100638",
+      "productsCount": 505,
+      "percentage": "5.05%",
+      "subcategoriesCount": 7,
+      "subcategories": [
+        {
+          "name": "Notebooks & Papers",
+          "id": "100734",
+          "count": 151,
+          "percentage": "29.9%"
+        },
+        {
+          "name": "School & Office Equipment",
+          "id": "100732",
+          "count": 105,
+          "percentage": "20.8%"
+        },
+        {
+          "name": "Gift & Wrapping",
+          "id": "100730",
+          "count": 99,
+          "percentage": "19.6%"
+        },
+        {
+          "name": "Art Supplies",
+          "id": "100733",
+          "count": 77,
+          "percentage": "15.2%"
+        },
+        {
+          "name": "Writing & Correction",
+          "id": "100731",
+          "count": 50,
+          "percentage": "9.9%"
+        },
+        {
+          "name": "Others",
+          "id": "100736",
+          "count": 16,
+          "percentage": "3.2%"
+        },
+        {
+          "name": "Letters & Envelopes",
+          "id": "100735",
+          "count": 7,
+          "percentage": "1.4%"
+        }
+      ]
+    },
+    {
+      "pos": 7,
+      "nameEn": "Mobile & Gadgets",
+      "namePt": "Celulares e Dispositivos",
+      "id": "100013",
+      "productsCount": 457,
+      "percentage": "4.57%",
+      "subcategoriesCount": 5,
+      "subcategories": [
+        {
+          "name": "Accessories",
+          "id": "100075",
+          "count": 399,
+          "percentage": "87.3%"
+        },
+        {
+          "name": "Others",
+          "id": "100077",
+          "count": 28,
+          "percentage": "6.1%"
+        },
+        {
+          "name": "Wearable Devices",
+          "id": "100074",
+          "count": 18,
+          "percentage": "3.9%"
+        },
+        {
+          "name": "Mobile Phones",
+          "id": "100073",
+          "count": 6,
+          "percentage": "1.3%"
+        },
+        {
+          "name": "Tablets",
+          "id": "100072",
+          "count": 6,
+          "percentage": "1.3%"
+        }
+      ]
+    },
+    {
+      "pos": 8,
+      "nameEn": "Baby & Kids Fashion",
+      "namePt": "Moda Infantil e Bebês",
+      "id": "100633",
+      "productsCount": 435,
+      "percentage": "4.35%",
+      "subcategoriesCount": 7,
+      "subcategories": [
+        {
+          "name": "Girl Clothes",
+          "id": "100691",
+          "count": 110,
+          "percentage": "25.3%"
+        },
+        {
+          "name": "Baby & Kids Accessories",
+          "id": "100689",
+          "count": 88,
+          "percentage": "20.2%"
+        },
+        {
+          "name": "Boy Clothes",
+          "id": "100690",
+          "count": 82,
+          "percentage": "18.9%"
+        },
+        {
+          "name": "Baby Clothes",
+          "id": "100687",
+          "count": 74,
+          "percentage": "17.0%"
+        },
+        {
+          "name": "Girl Shoes",
+          "id": "100693",
+          "count": 48,
+          "percentage": "11.0%"
+        },
+        {
+          "name": "Boy Shoes",
+          "id": "100692",
+          "count": 30,
+          "percentage": "6.9%"
+        },
+        {
+          "name": "Baby Mittens & Footwear",
+          "id": "100688",
+          "count": 3,
+          "percentage": "0.7%"
+        }
+      ]
+    },
+    {
+      "pos": 9,
+      "nameEn": "Sports & Outdoors",
+      "namePt": "Esportes e Lazer",
+      "id": "100637",
+      "productsCount": 429,
+      "percentage": "4.29%",
+      "subcategoriesCount": 5,
+      "subcategories": [
+        {
+          "name": "Sports & Outdoor Recreation Equipments",
+          "id": "100725",
+          "count": 222,
+          "percentage": "51.7%"
+        },
+        {
+          "name": "Sports & Outdoor Apparels",
+          "id": "100727",
+          "count": 130,
+          "percentage": "30.3%"
+        },
+        {
+          "name": "Sports & Outdoor Accessories",
+          "id": "100728",
+          "count": 40,
+          "percentage": "9.3%"
+        },
+        {
+          "name": "Sports Footwear",
+          "id": "100726",
+          "count": 36,
+          "percentage": "8.4%"
+        },
+        {
+          "name": "Others",
+          "id": "100729",
+          "count": 1,
+          "percentage": "0.2%"
+        }
+      ]
+    },
+    {
+      "pos": 10,
+      "nameEn": "Mom & Baby",
+      "namePt": "Mom & Baby",
+      "id": "100632",
+      "productsCount": 399,
+      "percentage": "3.99%",
+      "subcategoriesCount": 12,
+      "subcategories": [
+        {
+          "name": "Toys",
+          "id": "100684",
+          "count": 224,
+          "percentage": "56.1%"
+        },
+        {
+          "name": "Feeding Essentials",
+          "id": "100675",
+          "count": 49,
+          "percentage": "12.3%"
+        },
+        {
+          "name": "Nursery",
+          "id": "100679",
+          "count": 40,
+          "percentage": "10.0%"
+        },
+        {
+          "name": "Bath & Body Care",
+          "id": "100678",
+          "count": 31,
+          "percentage": "7.8%"
+        },
+        {
+          "name": "Diapering & Potty",
+          "id": "100683",
+          "count": 18,
+          "percentage": "4.5%"
+        },
+        {
+          "name": "Baby Travel Essentials",
+          "id": "100674",
+          "count": 13,
+          "percentage": "3.3%"
+        },
+        {
+          "name": "Baby Healthcare",
+          "id": "100682",
+          "count": 8,
+          "percentage": "2.0%"
+        },
+        {
+          "name": "Baby Safety",
+          "id": "100680",
+          "count": 8,
+          "percentage": "2.0%"
+        },
+        {
+          "name": "Maternity Accessories",
+          "id": "100676",
+          "count": 3,
+          "percentage": "0.8%"
+        },
+        {
+          "name": "Milk Formula & Baby Food",
+          "id": "100681",
+          "count": 3,
+          "percentage": "0.8%"
+        },
+        {
+          "name": "Others",
+          "id": "100686",
+          "count": 1,
+          "percentage": "0.3%"
+        },
+        {
+          "name": "Gift Sets & Packages",
+          "id": "100685",
+          "count": 1,
+          "percentage": "0.3%"
+        }
+      ]
+    },
+    {
+      "pos": 11,
+      "nameEn": "Health",
+      "namePt": "Saúde",
+      "id": "100001",
+      "productsCount": 345,
+      "percentage": "3.45%",
+      "subcategoriesCount": 5,
+      "subcategories": [
+        {
+          "name": "Food Supplement",
+          "id": "100002",
+          "count": 118,
+          "percentage": "34.2%"
+        },
+        {
+          "name": "Medical Supplies",
+          "id": "100018",
+          "count": 101,
+          "percentage": "29.3%"
+        },
+        {
+          "name": "Personal Care",
+          "id": "100019",
+          "count": 78,
+          "percentage": "22.6%"
+        },
+        {
+          "name": "Sexual Wellness",
+          "id": "100020",
+          "count": 42,
+          "percentage": "12.2%"
+        },
+        {
+          "name": "Others",
+          "id": "100008",
+          "count": 6,
+          "percentage": "1.7%"
+        }
+      ]
+    },
+    {
+      "pos": 12,
+      "nameEn": "Men Clothes",
+      "namePt": "Moda Masculina",
+      "id": "100011",
+      "productsCount": 290,
+      "percentage": "2.90%",
+      "subcategoriesCount": 15,
+      "subcategories": [
+        {
+          "name": "Tops",
+          "id": "100054",
+          "count": 136,
+          "percentage": "46.9%"
+        },
+        {
+          "name": "Shorts",
+          "id": "100053",
+          "count": 27,
+          "percentage": "9.3%"
+        },
+        {
+          "name": "Hoodies & Sweatshirts",
+          "id": "100048",
+          "count": 22,
+          "percentage": "7.6%"
+        },
+        {
+          "name": "Socks",
+          "id": "100062",
+          "count": 21,
+          "percentage": "7.2%"
+        },
+        {
+          "name": "Innerwear & Underwear",
+          "id": "100055",
+          "count": 17,
+          "percentage": "5.9%"
+        },
+        {
+          "name": "Pants",
+          "id": "100052",
+          "count": 15,
+          "percentage": "5.2%"
+        },
+        {
+          "name": "Jackets, Coats & Vests",
+          "id": "100050",
+          "count": 14,
+          "percentage": "4.8%"
+        },
+        {
+          "name": "Jeans",
+          "id": "100047",
+          "count": 12,
+          "percentage": "4.1%"
+        },
+        {
+          "name": "Sets",
+          "id": "100057",
+          "count": 8,
+          "percentage": "2.8%"
+        },
+        {
+          "name": "Suits",
+          "id": "100051",
+          "count": 6,
+          "percentage": "2.1%"
+        },
+        {
+          "name": "Occupational Attire",
+          "id": "100060",
+          "count": 3,
+          "percentage": "1.0%"
+        },
+        {
+          "name": "Costumes",
+          "id": "100059",
+          "count": 3,
+          "percentage": "1.0%"
+        },
+        {
+          "name": "Sweaters & Cardigans",
+          "id": "100049",
+          "count": 2,
+          "percentage": "0.7%"
+        },
+        {
+          "name": "Traditional Wear",
+          "id": "100058",
+          "count": 2,
+          "percentage": "0.7%"
+        },
+        {
+          "name": "Sleepwear",
+          "id": "100056",
+          "count": 2,
+          "percentage": "0.7%"
+        }
+      ]
+    },
+    {
+      "pos": 13,
+      "nameEn": "Home Appliances",
+      "namePt": "Eletrodomésticos e Eletroportáteis",
+      "id": "100010",
+      "productsCount": 261,
+      "percentage": "2.61%",
+      "subcategoriesCount": 8,
+      "subcategories": [
+        {
+          "name": "Kitchen Appliances",
+          "id": "100041",
+          "count": 104,
+          "percentage": "39.8%"
+        },
+        {
+          "name": "Electrical Circuitry & Parts",
+          "id": "100042",
+          "count": 49,
+          "percentage": "18.8%"
+        },
+        {
+          "name": "Small Household Appliances",
+          "id": "100038",
+          "count": 41,
+          "percentage": "15.7%"
+        },
+        {
+          "name": "Large Household Appliances",
+          "id": "100039",
+          "count": 29,
+          "percentage": "11.1%"
+        },
+        {
+          "name": "Remote Controls",
+          "id": "100045",
+          "count": 19,
+          "percentage": "7.3%"
+        },
+        {
+          "name": "TVs & Accessories",
+          "id": "100040",
+          "count": 11,
+          "percentage": "4.2%"
+        },
+        {
+          "name": "Projectors & Accessories",
+          "id": "100037",
+          "count": 6,
+          "percentage": "2.3%"
+        },
+        {
+          "name": "Others",
+          "id": "100046",
+          "count": 2,
+          "percentage": "0.8%"
+        }
+      ]
+    },
+    {
+      "pos": 14,
+      "nameEn": "Hobbies & Collections",
+      "namePt": "Hobbies e Coleções",
+      "id": "100639",
+      "productsCount": 247,
+      "percentage": "2.47%",
+      "subcategoriesCount": 9,
+      "subcategories": [
+        {
+          "name": "Collectible Items",
+          "id": "100737",
+          "count": 72,
+          "percentage": "29.1%"
+        },
+        {
+          "name": "Souvenirs",
+          "id": "100738",
+          "count": 54,
+          "percentage": "21.9%"
+        },
+        {
+          "name": "Toys & Games",
+          "id": "100739",
+          "count": 46,
+          "percentage": "18.6%"
+        },
+        {
+          "name": "Needlework",
+          "id": "100744",
+          "count": 35,
+          "percentage": "14.2%"
+        },
+        {
+          "name": "Musical Instruments & Accessories",
+          "id": "100741",
+          "count": 22,
+          "percentage": "8.9%"
+        },
+        {
+          "name": "CD, DVD & Bluray",
+          "id": "100740",
+          "count": 8,
+          "percentage": "3.2%"
+        },
+        {
+          "name": "Vinyl Records",
+          "id": "100742",
+          "count": 4,
+          "percentage": "1.6%"
+        },
+        {
+          "name": "Others",
+          "id": "100745",
+          "count": 4,
+          "percentage": "1.6%"
+        },
+        {
+          "name": "Photo Albums",
+          "id": "100743",
+          "count": 2,
+          "percentage": "0.8%"
+        }
+      ]
+    },
+    {
+      "pos": 15,
+      "nameEn": "Pets",
+      "namePt": "Pet Shop e Animais",
+      "id": "100631",
+      "productsCount": 243,
+      "percentage": "2.43%",
+      "subcategoriesCount": 6,
+      "subcategories": [
+        {
+          "name": "Pet Accessories",
+          "id": "100668",
+          "count": 114,
+          "percentage": "46.9%"
+        },
+        {
+          "name": "Pet Food",
+          "id": "100667",
+          "count": 49,
+          "percentage": "20.2%"
+        },
+        {
+          "name": "Pet Grooming",
+          "id": "100670",
+          "count": 22,
+          "percentage": "9.1%"
+        },
+        {
+          "name": "Pet Healthcare",
+          "id": "100672",
+          "count": 21,
+          "percentage": "8.6%"
+        },
+        {
+          "name": "Pet Clothing & Accessories",
+          "id": "100671",
+          "count": 20,
+          "percentage": "8.2%"
+        },
+        {
+          "name": "Litter & Toilet",
+          "id": "100669",
+          "count": 17,
+          "percentage": "7.0%"
+        }
+      ]
+    },
+    {
+      "pos": 16,
+      "nameEn": "Food & Beverages",
+      "namePt": "Alimentos e Bebidas",
+      "id": "100629",
+      "productsCount": 190,
+      "percentage": "1.90%",
+      "subcategoriesCount": 11,
+      "subcategories": [
+        {
+          "name": "Snacks",
+          "id": "100646",
+          "count": 61,
+          "percentage": "32.1%"
+        },
+        {
+          "name": "Beverages",
+          "id": "100651",
+          "count": 32,
+          "percentage": "16.8%"
+        },
+        {
+          "name": "Cooking Essentials",
+          "id": "100648",
+          "count": 31,
+          "percentage": "16.3%"
+        },
+        {
+          "name": "Baking Needs",
+          "id": "100649",
+          "count": 23,
+          "percentage": "12.1%"
+        },
+        {
+          "name": "Food Staples",
+          "id": "100647",
+          "count": 10,
+          "percentage": "5.3%"
+        },
+        {
+          "name": "Breakfast Cereals & Spread",
+          "id": "100650",
+          "count": 10,
+          "percentage": "5.3%"
+        },
+        {
+          "name": "Alcoholic Beverages",
+          "id": "100655",
+          "count": 10,
+          "percentage": "5.3%"
+        },
+        {
+          "name": "Dairy & Eggs",
+          "id": "100652",
+          "count": 6,
+          "percentage": "3.2%"
+        },
+        {
+          "name": "Bakery",
+          "id": "100654",
+          "count": 4,
+          "percentage": "2.1%"
+        },
+        {
+          "name": "Convenience / Ready-to-eat",
+          "id": "100645",
+          "count": 2,
+          "percentage": "1.1%"
+        },
+        {
+          "name": "Gift Set & Hampers",
+          "id": "100656",
+          "count": 1,
+          "percentage": "0.5%"
+        }
+      ]
+    },
+    {
+      "pos": 17,
+      "nameEn": "Women Shoes",
+      "namePt": "Calçados Femininos",
+      "id": "100532",
+      "productsCount": 177,
+      "percentage": "1.77%",
+      "subcategoriesCount": 7,
+      "subcategories": [
+        {
+          "name": "Flat Sandals & Flip Flops",
+          "id": "100561",
+          "count": 61,
+          "percentage": "34.5%"
+        },
+        {
+          "name": "Sneakers",
+          "id": "100557",
+          "count": 30,
+          "percentage": "16.9%"
+        },
+        {
+          "name": "Heels",
+          "id": "100559",
+          "count": 28,
+          "percentage": "15.8%"
+        },
+        {
+          "name": "Flats",
+          "id": "100558",
+          "count": 28,
+          "percentage": "15.8%"
+        },
+        {
+          "name": "Boots",
+          "id": "100556",
+          "count": 20,
+          "percentage": "11.3%"
+        },
+        {
+          "name": "Wedges",
+          "id": "100560",
+          "count": 5,
+          "percentage": "2.8%"
+        },
+        {
+          "name": "Shoe Care & Accessories",
+          "id": "100562",
+          "count": 5,
+          "percentage": "2.8%"
+        }
+      ]
+    },
+    {
+      "pos": 18,
+      "nameEn": "Men Shoes",
+      "namePt": "Calçados Masculinos",
+      "id": "100012",
+      "productsCount": 106,
+      "percentage": "1.06%",
+      "subcategoriesCount": 7,
+      "subcategories": [
+        {
+          "name": "Sandals & Flip Flops",
+          "id": "100068",
+          "count": 34,
+          "percentage": "32.1%"
+        },
+        {
+          "name": "Boots",
+          "id": "100063",
+          "count": 23,
+          "percentage": "21.7%"
+        },
+        {
+          "name": "Shoe Care & Accessories",
+          "id": "100069",
+          "count": 22,
+          "percentage": "20.8%"
+        },
+        {
+          "name": "Sneakers",
+          "id": "100064",
+          "count": 14,
+          "percentage": "13.2%"
+        },
+        {
+          "name": "Loafers & Boat Shoes",
+          "id": "100066",
+          "count": 6,
+          "percentage": "5.7%"
+        },
+        {
+          "name": "Oxfords & Lace-Ups",
+          "id": "100067",
+          "count": 5,
+          "percentage": "4.7%"
+        },
+        {
+          "name": "Slip Ons & Mules",
+          "id": "100065",
+          "count": 2,
+          "percentage": "1.9%"
+        }
+      ]
+    },
+    {
+      "pos": 19,
+      "nameEn": "Computers & Accessories",
+      "namePt": "Informática e Computadores",
+      "id": "100644",
+      "productsCount": 78,
+      "percentage": "0.78%",
+      "subcategoriesCount": 9,
+      "subcategories": [
+        {
+          "name": "Peripherals & Accessories",
+          "id": "101940",
+          "count": 21,
+          "percentage": "26.9%"
+        },
+        {
+          "name": "Desktop & Laptop Components",
+          "id": "101934",
+          "count": 14,
+          "percentage": "17.9%"
+        },
+        {
+          "name": "Keyboards & Mice",
+          "id": "101941",
+          "count": 11,
+          "percentage": "14.1%"
+        },
+        {
+          "name": "Printers & Scanners",
+          "id": "101939",
+          "count": 10,
+          "percentage": "12.8%"
+        },
+        {
+          "name": "Data Storage",
+          "id": "101935",
+          "count": 9,
+          "percentage": "11.5%"
+        },
+        {
+          "name": "Network Components",
+          "id": "101936",
+          "count": 8,
+          "percentage": "10.3%"
+        },
+        {
+          "name": "Others",
+          "id": "101943",
+          "count": 2,
+          "percentage": "2.6%"
+        },
+        {
+          "name": "Office Equipment",
+          "id": "101938",
+          "count": 2,
+          "percentage": "2.6%"
+        },
+        {
+          "name": "Desktop Computers",
+          "id": "101932",
+          "count": 1,
+          "percentage": "1.3%"
+        }
+      ]
+    },
+    {
+      "pos": 20,
+      "nameEn": "Books & Magazines",
+      "namePt": "Livros e Revistas",
+      "id": "100643",
+      "productsCount": 74,
+      "percentage": "0.74%",
+      "subcategoriesCount": 1,
+      "subcategories": [
+        {
+          "name": "Books",
+          "id": "100777",
+          "count": 74,
+          "percentage": "100.0%"
+        }
+      ]
+    },
+    {
+      "pos": 21,
+      "nameEn": "Women Bags",
+      "namePt": "Bolsas Femininas",
+      "id": "100016",
+      "productsCount": 72,
+      "percentage": "0.72%",
+      "subcategoriesCount": 9,
+      "subcategories": [
+        {
+          "name": "Crossbody & Shoulder Bags",
+          "id": "100095",
+          "count": 21,
+          "percentage": "29.2%"
+        },
+        {
+          "name": "Wallets",
+          "id": "100096",
+          "count": 14,
+          "percentage": "19.4%"
+        },
+        {
+          "name": "Backpacks",
+          "id": "100089",
+          "count": 13,
+          "percentage": "18.1%"
+        },
+        {
+          "name": "Bag Accessories",
+          "id": "100097",
+          "count": 7,
+          "percentage": "9.7%"
+        },
+        {
+          "name": "Top-handle Bags",
+          "id": "100094",
+          "count": 6,
+          "percentage": "8.3%"
+        },
+        {
+          "name": "Tote Bags",
+          "id": "100093",
+          "count": 5,
+          "percentage": "6.9%"
+        },
+        {
+          "name": "Clutches & Wristlets",
+          "id": "100091",
+          "count": 3,
+          "percentage": "4.2%"
+        },
+        {
+          "name": "Laptop Bags",
+          "id": "100090",
+          "count": 2,
+          "percentage": "2.8%"
+        },
+        {
+          "name": "Waist Bags & Chest Bags",
+          "id": "100092",
+          "count": 1,
+          "percentage": "1.4%"
+        }
+      ]
+    },
+    {
+      "pos": 22,
+      "nameEn": "Audio",
+      "namePt": "Áudio e Fones",
+      "id": "100535",
+      "productsCount": 64,
+      "percentage": "0.64%",
+      "subcategoriesCount": 7,
+      "subcategories": [
+        {
+          "name": "Earphones, Headphones & Headsets",
+          "id": "100578",
+          "count": 29,
+          "percentage": "45.3%"
+        },
+        {
+          "name": "Home Audio & Speakers",
+          "id": "100582",
+          "count": 15,
+          "percentage": "23.4%"
+        },
+        {
+          "name": "Audio & Video Cables & Converters",
+          "id": "100583",
+          "count": 8,
+          "percentage": "12.5%"
+        },
+        {
+          "name": "Microphones",
+          "id": "100580",
+          "count": 5,
+          "percentage": "7.8%"
+        },
+        {
+          "name": "Media Players",
+          "id": "100579",
+          "count": 3,
+          "percentage": "4.7%"
+        },
+        {
+          "name": "Others",
+          "id": "100584",
+          "count": 3,
+          "percentage": "4.7%"
+        },
+        {
+          "name": "Amplifiers & Mixers",
+          "id": "100581",
+          "count": 1,
+          "percentage": "1.6%"
+        }
+      ]
+    },
+    {
+      "pos": 23,
+      "nameEn": "Travel & Luggage",
+      "namePt": "Malas e Viagem",
+      "id": "100015",
+      "productsCount": 51,
+      "percentage": "0.51%",
+      "subcategoriesCount": 4,
+      "subcategories": [
+        {
+          "name": "Travel Accessories",
+          "id": "100087",
+          "count": 34,
+          "percentage": "66.7%"
+        },
+        {
+          "name": "Travel Bags",
+          "id": "100086",
+          "count": 8,
+          "percentage": "15.7%"
+        },
+        {
+          "name": "Luggage",
+          "id": "100085",
+          "count": 7,
+          "percentage": "13.7%"
+        },
+        {
+          "name": "Others",
+          "id": "100088",
+          "count": 2,
+          "percentage": "3.9%"
+        }
+      ]
+    },
+    {
+      "pos": 24,
+      "nameEn": "Watches",
+      "namePt": "Relógios",
+      "id": "100534",
+      "productsCount": 36,
+      "percentage": "0.36%",
+      "subcategoriesCount": 3,
+      "subcategories": [
+        {
+          "name": "Watches Accessories",
+          "id": "100576",
+          "count": 16,
+          "percentage": "44.4%"
+        },
+        {
+          "name": "Men Watches",
+          "id": "100574",
+          "count": 13,
+          "percentage": "36.1%"
+        },
+        {
+          "name": "Women Watches",
+          "id": "100573",
+          "count": 7,
+          "percentage": "19.4%"
+        }
+      ]
+    },
+    {
+      "pos": 25,
+      "nameEn": "Men Bags",
+      "namePt": "Bolsas e Mochilas Masculinas",
+      "id": "100533",
+      "productsCount": 29,
+      "percentage": "0.29%",
+      "subcategoriesCount": 5,
+      "subcategories": [
+        {
+          "name": "Backpacks",
+          "id": "100564",
+          "count": 11,
+          "percentage": "37.9%"
+        },
+        {
+          "name": "Wallets",
+          "id": "100571",
+          "count": 5,
+          "percentage": "17.2%"
+        },
+        {
+          "name": "Waist Bags & Chest Bags",
+          "id": "100569",
+          "count": 5,
+          "percentage": "17.2%"
+        },
+        {
+          "name": "Laptop Bags",
+          "id": "100565",
+          "count": 4,
+          "percentage": "13.8%"
+        },
+        {
+          "name": "Crossbody & Shoulder Bags",
+          "id": "100570",
+          "count": 4,
+          "percentage": "13.8%"
+        }
+      ]
+    },
+    {
+      "pos": 26,
+      "nameEn": "Gaming & Consoles",
+      "namePt": "Games e Consoles",
+      "id": "100634",
+      "productsCount": 28,
+      "percentage": "0.28%",
+      "subcategoriesCount": 4,
+      "subcategories": [
+        {
+          "name": "Console Accessories",
+          "id": "100696",
+          "count": 20,
+          "percentage": "71.4%"
+        },
+        {
+          "name": "Video Games",
+          "id": "100697",
+          "count": 5,
+          "percentage": "17.9%"
+        },
+        {
+          "name": "Console Machines",
+          "id": "100695",
+          "count": 2,
+          "percentage": "7.1%"
+        },
+        {
+          "name": "Others",
+          "id": "100698",
+          "count": 1,
+          "percentage": "3.6%"
+        }
+      ]
+    },
+    {
+      "pos": 27,
+      "nameEn": "Cameras & Drones",
+      "namePt": "Câmeras e Drones",
+      "id": "100635",
+      "productsCount": 25,
+      "percentage": "0.25%",
+      "subcategoriesCount": 5,
+      "subcategories": [
+        {
+          "name": "Camera Accessories",
+          "id": "100703",
+          "count": 13,
+          "percentage": "52.0%"
+        },
+        {
+          "name": "Security Cameras & Systems",
+          "id": "100700",
+          "count": 9,
+          "percentage": "36.0%"
+        },
+        {
+          "name": "Cameras",
+          "id": "100699",
+          "count": 1,
+          "percentage": "4.0%"
+        },
+        {
+          "name": "Camera Care",
+          "id": "100704",
+          "count": 1,
+          "percentage": "4.0%"
+        },
+        {
+          "name": "Drone Accessories",
+          "id": "100706",
+          "count": 1,
+          "percentage": "4.0%"
+        }
+      ]
+    },
+    {
+      "pos": 28,
+      "nameEn": "Automobiles",
+      "namePt": "Automóveis",
+      "id": "100640",
+      "productsCount": 24,
+      "percentage": "0.24%",
+      "subcategoriesCount": 5,
+      "subcategories": [
+        {
+          "name": "Automobile Spare Parts",
+          "id": "100749",
+          "count": 10,
+          "percentage": "41.7%"
+        },
+        {
+          "name": "Automobile Interior Accessories",
+          "id": "100747",
+          "count": 5,
+          "percentage": "20.8%"
+        },
+        {
+          "name": "Automotive Tools",
+          "id": "100750",
+          "count": 4,
+          "percentage": "16.7%"
+        },
+        {
+          "name": "Automobile Exterior Accessories",
+          "id": "100748",
+          "count": 3,
+          "percentage": "12.5%"
+        },
+        {
+          "name": "Automotive Keychains & Key Covers",
+          "id": "100753",
+          "count": 2,
+          "percentage": "8.3%"
+        }
+      ]
+    },
+    {
+      "pos": 29,
+      "nameEn": "Motorcycles",
+      "namePt": "Motocicletas",
+      "id": "100641",
+      "productsCount": 7,
+      "percentage": "0.07%",
+      "subcategoriesCount": 3,
+      "subcategories": [
+        {
+          "name": "Motorcycle Spare Parts",
+          "id": "100757",
+          "count": 3,
+          "percentage": "42.9%"
+        },
+        {
+          "name": "Motorcycle Helmets & Accessories",
+          "id": "100758",
+          "count": 2,
+          "percentage": "28.6%"
+        },
+        {
+          "name": "Motorcycle Accessories",
+          "id": "100756",
+          "count": 2,
+          "percentage": "28.6%"
+        }
+      ]
+    }
+  ]
+}

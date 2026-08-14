@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ShoppingCart, User, Menu, X, Bell, LogIn, Diamond, Loader2, Zap, TrendingUp, Sparkles, Plane, Car, HeartPulse, Shield, Gem, LayoutGrid, MapPin } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Search, ShoppingCart, User, Menu, X, Bell, LogIn, Diamond, Loader2, 
+  Zap, TrendingUp, Sparkles, Plane, Car, Heart, HeartPulse, Shield, Gem, 
+  LayoutGrid, MapPin, Package, Laptop, Home, Shirt, FlaskConical, 
+  Wrench, ChevronRight, ArrowRight, Tag, Ticket, Compass, Flame, ShoppingBag
+} from 'lucide-react';
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
 import { useAppLocation } from '../../../routing/useAppLocation';
@@ -10,6 +16,7 @@ import { useClientNotifications } from '../../../hooks/useClientNotifications';
 import { VolteEganheModal } from './VolteEganheModal';
 import { consultarCEP, ViaCEPResult } from '../../../utils/viaCep';
 import { toast } from 'react-hot-toast';
+import { fetchWishlistFromDb, getWishlist } from '../../../lib/wishlistStorage';
 
 interface EcommerceHeaderProps {
   clientId?: string;
@@ -42,6 +49,26 @@ export function EcommerceHeader({
 
   const [pointsBalance, setPointsBalance] = useState(0);
   const [localCartCount, setLocalCartCount] = useState(cartItemCount || 0);
+  const [wishlistCount, setWishlistCount] = useState(() => getWishlist(clientId).length);
+
+  // Sincronização em tempo real do contador de favoritos
+  useEffect(() => {
+    const updateWishlist = () => {
+      setWishlistCount(getWishlist(clientId).length);
+    };
+    updateWishlist();
+    if (clientId) {
+      fetchWishlistFromDb(clientId).then((ids) => {
+        setWishlistCount(ids.length);
+      }).catch(() => {});
+    }
+    window.addEventListener('gsa-wishlist-updated', updateWishlist);
+    return () => window.removeEventListener('gsa-wishlist-updated', updateWishlist);
+  }, [clientId]);
+
+  // Estado do Menu Lateral de Categorias
+  const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = useState(false);
+  const [drawerSearchQuery, setDrawerSearchQuery] = useState('');
 
   // Estados para Gestão de CEP e Localização do Cliente
   const [userLocationLabel, setUserLocationLabel] = useState('São Paulo 01000-000');
@@ -329,8 +356,116 @@ export function EcommerceHeader({
     }
   };
 
+  const STORE_CATEGORIES = [
+    {
+      id: 'eletronicos',
+      name: 'Eletrônicos',
+      sub: 'Smartphones, informática, áudio e periféricos',
+      Icon: Laptop,
+      color: '#2563eb',
+      bg: '#eff6ff',
+      badge: 'Destaque',
+      action: () => {
+        setIsCategoriesDrawerOpen(false);
+        navigate(`${routes.marketplace.store.products()}?busca=Eletrônicos`);
+      },
+    },
+    {
+      id: 'casa',
+      name: 'Casa & Eletro',
+      sub: 'Eletrodomésticos, cozinha, cama e utilidades',
+      Icon: Home,
+      color: '#d97706',
+      bg: '#fffbeb',
+      action: () => {
+        setIsCategoriesDrawerOpen(false);
+        navigate(`${routes.marketplace.store.products()}?busca=Casa`);
+      },
+    },
+    {
+      id: 'moda',
+      name: 'Moda & Estilo',
+      sub: 'Roupas, calçados, bolsas e acessórios',
+      Icon: Shirt,
+      color: '#db2777',
+      bg: '#fdf2f8',
+      action: () => {
+        setIsCategoriesDrawerOpen(false);
+        navigate(`${routes.marketplace.store.products()}?busca=Moda`);
+      },
+    },
+    {
+      id: 'beleza',
+      name: 'Beleza & Saúde',
+      sub: 'Cosméticos, cuidados pessoais e bem-estar',
+      Icon: FlaskConical,
+      color: '#7c3aed',
+      bg: '#f5f3ff',
+      action: () => {
+        setIsCategoriesDrawerOpen(false);
+        navigate(`${routes.marketplace.store.products()}?busca=Beleza`);
+      },
+    },
+    {
+      id: 'viagens',
+      name: 'Viagens',
+      sub: 'Pacotes turísticos, hotéis e passagens aéreas',
+      Icon: Plane,
+      color: '#0891b2',
+      bg: '#ecfeff',
+      badge: 'Destinos',
+      action: () => {
+        setIsCategoriesDrawerOpen(false);
+        navigate(routes.marketplace.travelPackages.root());
+      },
+    },
+    {
+      id: 'servicos',
+      name: 'Serviços',
+      sub: 'Contrate profissionais e serviços certificados',
+      Icon: Wrench,
+      color: '#16a34a',
+      bg: '#f0fdf4',
+      action: () => {
+        setIsCategoriesDrawerOpen(false);
+        navigate(routes.public.services());
+      },
+    },
+    {
+      id: 'classificados',
+      name: 'Classificados',
+      sub: 'Veículos, imóveis, maquinários e oportunidades',
+      Icon: Car,
+      color: '#1e293b',
+      bg: '#f8fafc',
+      action: () => {
+        setIsCategoriesDrawerOpen(false);
+        navigate(routes.marketplace.classifieds.root());
+      },
+    },
+    {
+      id: 'vip',
+      name: 'Clube VIP',
+      sub: 'Vantagens exclusivas, cashback e pontos',
+      Icon: Gem,
+      color: '#b45309',
+      bg: '#fffbeb',
+      badge: 'VIP',
+      action: () => {
+        setIsCategoriesDrawerOpen(false);
+        navigate(routes.marketplace.store.vip());
+      },
+    },
+  ];
+
+  const filteredDrawerCategories = STORE_CATEGORIES.filter(cat => 
+    !drawerSearchQuery.trim() || 
+    cat.name.toLowerCase().includes(drawerSearchQuery.toLowerCase()) ||
+    cat.sub.toLowerCase().includes(drawerSearchQuery.toLowerCase())
+  );
+
   const departments = [
-    { label: 'Categorias', Icon: LayoutGrid, action: () => navigate(routes.marketplace.store.products()), isPrimary: true },
+    { label: 'Categorias', Icon: LayoutGrid, action: () => setIsCategoriesDrawerOpen(true), isPrimary: true },
     { label: 'Ofertas do Dia', Icon: Zap, action: () => navigate(routes.marketplace.store.products() + '?filtro=ofertas'), highlight: true },
     { label: 'Mais Vendidos', Icon: TrendingUp, action: () => navigate(routes.marketplace.store.products() + '?filtro=mais-vendidos') },
     { label: 'Lançamentos', Icon: Sparkles, action: () => navigate(routes.marketplace.store.products() + '?filtro=novidades') },
@@ -370,6 +505,9 @@ export function EcommerceHeader({
             <div className="flex items-center gap-5 font-semibold text-xs text-white/80">
               <button onClick={() => navigate(routes.marketplace.store.compras())} className="hover:text-[#d8bd73] transition-colors">
                 Minhas Compras
+              </button>
+              <button onClick={() => navigate(routes.marketplace.store.wishlist())} className="hover:text-[#d8bd73] transition-colors flex items-center gap-1.5">
+                <Heart size={11} className={wishlistCount > 0 ? "text-rose-400 fill-rose-400" : "text-slate-400"} /> Favoritos {wishlistCount > 0 && <span className="text-[10px] font-black text-[#d8bd73]">({wishlistCount})</span>}
               </button>
               <button onClick={() => navigate(routes.marketplace.store.products() + '?filtro=ofertas')} className="hover:text-[#d8bd73] transition-colors">
                 Ofertas do Dia
@@ -546,6 +684,20 @@ export function EcommerceHeader({
                   <span>{pointsBalance.toLocaleString('pt-BR')} pts</span>
                 </div>
                 
+                {/* Favoritos (Lista de Desejos) */}
+                <button 
+                  onClick={() => navigate(routes.marketplace.store.wishlist())}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:text-rose-400 hover:bg-white/20 transition-colors relative cursor-pointer"
+                  title="Meus Favoritos (Lista de Desejos)"
+                >
+                  <Heart className={`h-4 w-4 ${wishlistCount > 0 ? 'fill-rose-500 text-rose-500' : ''}`} />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white border-2 border-[#17345f]">
+                      {wishlistCount > 99 ? '99+' : wishlistCount}
+                    </span>
+                  )}
+                </button>
+
                 {/* Notificações */}
                 <div className="relative hidden sm:block notifications-container">
                   <button 
@@ -795,18 +947,39 @@ export function EcommerceHeader({
           <div className="absolute left-0 top-[116px] z-50 w-full bg-white shadow-2xl lg:hidden border-t border-slate-200">
             <ul className="flex flex-col py-2 divide-y divide-slate-100">
               {clientId && (
-                <li>
-                  <button
-                    onClick={() => {
-                      navigate(routes.marketplace.store.compras());
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-5 py-3 text-left text-sm font-black text-[#17345f] bg-[#17345f]/5 hover:bg-[#17345f]/10"
-                  >
-                    <Package size={16} className="text-[#17345f]" />
-                    Minhas Compras & Pedidos
-                  </button>
-                </li>
+                <>
+                  <li>
+                    <button
+                      onClick={() => {
+                        navigate(routes.marketplace.store.compras());
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-5 py-3 text-left text-sm font-black text-[#17345f] bg-[#17345f]/5 hover:bg-[#17345f]/10"
+                    >
+                      <Package size={16} className="text-[#17345f]" />
+                      Minhas Compras & Pedidos
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        navigate(routes.marketplace.store.wishlist());
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center justify-between w-full px-5 py-3 text-left text-sm font-bold text-slate-700 hover:bg-slate-50"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Heart size={16} className="text-rose-500 fill-rose-500" />
+                        Meus Favoritos (Lista de Desejos)
+                      </span>
+                      {wishlistCount > 0 && (
+                        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-black text-rose-600">
+                          {wishlistCount}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                </>
               )}
               {departments.map((dept, idx) => (
                 <li key={idx}>
@@ -934,7 +1107,7 @@ export function EcommerceHeader({
                 </div>
               )}
 
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-start text-[11px] text-slate-500">
                 <a 
                   href="https://buscacepinter.correios.com.br/app/endereco/index.php" 
                   target="_blank" 
@@ -943,12 +1116,181 @@ export function EcommerceHeader({
                 >
                   Não sei meu CEP →
                 </a>
-                <span>Consulta via ViaCEP API</span>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* ─── MENU LATERAL / DRAWER DE CATEGORIAS ─── */}
+      <AnimatePresence>
+        {isCategoriesDrawerOpen && (
+          <div className="fixed inset-0 z-50 overflow-hidden">
+            {/* Backdrop com blur suave */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
+              onClick={() => setIsCategoriesDrawerOpen(false)}
+            />
+
+            {/* Painel Lateral */}
+            <div className="fixed inset-y-0 left-0 max-w-full flex">
+              <motion.aside
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+                className="w-screen max-w-sm sm:max-w-md bg-white shadow-2xl flex flex-col z-10 overflow-hidden"
+              >
+                {/* Header do Drawer */}
+                <div className="bg-gradient-to-r from-[#0c2340] via-[#17345f] to-[#1e4a8a] text-white px-5 py-4 flex items-center justify-between border-b border-white/10 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-[#d8bd73]/20 border border-[#d8bd73]/30 flex items-center justify-center text-[#d8bd73]">
+                      <LayoutGrid className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black leading-tight text-white flex items-center gap-2">
+                        Categorias
+                      </h3>
+                      <p className="text-[11px] text-white/60 font-medium">Todos os departamentos da loja</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoriesDrawerOpen(false)}
+                    className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                    title="Fechar menu"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Campo de Busca Rápida no Drawer */}
+                <div className="p-3.5 bg-neutral-50 border-b border-neutral-100 shrink-0">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
+                    <input
+                      type="text"
+                      value={drawerSearchQuery}
+                      onChange={(e) => setDrawerSearchQuery(e.target.value)}
+                      placeholder="Filtrar categorias..."
+                      className="w-full pl-8 pr-7 py-2 bg-white border border-neutral-200 rounded-xl text-xs font-medium text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#17345f]/20 transition-all"
+                    />
+                    {drawerSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setDrawerSearchQuery('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Lista de Categorias com Scroll */}
+                <div className="flex-1 overflow-y-auto p-3.5 space-y-1.5 custom-scrollbar">
+                  <div className="px-2 py-1 flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                    <span>Departamentos Disponíveis</span>
+                    <span>{filteredDrawerCategories.length} categorias</span>
+                  </div>
+
+                  {filteredDrawerCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={cat.action}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl border border-transparent hover:border-neutral-200/80 hover:bg-neutral-50 active:scale-[0.99] transition-all text-left group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div
+                          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-2xs"
+                          style={{ backgroundColor: cat.bg, color: cat.color }}
+                        >
+                          <cat.Icon className="h-5 w-5" strokeWidth={1.8} />
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-neutral-900 group-hover:text-[#17345f] transition-colors">
+                              {cat.name}
+                            </span>
+                            {cat.badge && (
+                              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black uppercase bg-[#17345f]/10 text-[#17345f]">
+                                {cat.badge}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-neutral-400 truncate leading-tight">
+                            {cat.sub}
+                          </p>
+                        </div>
+                      </div>
+
+                      <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-[#17345f] group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
+                    </button>
+                  ))}
+
+                  {filteredDrawerCategories.length === 0 && (
+                    <div className="p-8 text-center space-y-2">
+                      <p className="text-xs font-bold text-neutral-600">Nenhuma categoria encontrada</p>
+                      <p className="text-[11px] text-neutral-400">Tente buscar por outro termo</p>
+                    </div>
+                  )}
+
+                  {/* Divisor & Acessos Rápidos */}
+                  <div className="pt-3 mt-3 border-t border-neutral-100 space-y-1.5">
+                    <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                      Acesso Rápido
+                    </div>
+
+                    {[
+                      { label: 'Ofertas Relâmpago', icon: Zap, color: 'text-rose-500', path: routes.marketplace.store.products() + '?filtro=ofertas' },
+                      { label: 'Mais Vendidos', icon: TrendingUp, color: 'text-blue-500', path: routes.marketplace.store.products() + '?filtro=mais-vendidos' },
+                      { label: 'Cupons de Desconto', icon: Ticket, color: 'text-amber-500', path: routes.marketplace.store.cupons() },
+                      { label: 'Minhas Compras', icon: Package, color: 'text-indigo-500', path: routes.marketplace.store.compras() },
+                    ].map((item, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setIsCategoriesDrawerOpen(false);
+                          navigate(item.path);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-neutral-700 hover:bg-neutral-100 hover:text-neutral-950 transition-colors text-left cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <item.icon className={`h-4 w-4 ${item.color}`} />
+                          <span>{item.label}</span>
+                        </div>
+                        <ChevronRight className="h-3.5 w-3.5 text-neutral-300" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Footer do Drawer */}
+                <div className="p-3.5 bg-neutral-50 border-t border-neutral-100 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCategoriesDrawerOpen(false);
+                      navigate(routes.marketplace.store.products());
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-[#17345f] hover:bg-[#102746] text-white text-xs font-black uppercase tracking-wider transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                    <span>Ver Catálogo Completo</span>
+                  </button>
+                </div>
+              </motion.aside>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

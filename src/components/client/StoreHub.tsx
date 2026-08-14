@@ -28,7 +28,8 @@ import {
   Search,
   Copy,
   Megaphone,
-  Star
+  Star,
+  Heart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
@@ -1323,6 +1324,20 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
       onClick: () => navigate(routes.marketplace.store.compras()),
     },
     {
+      id: 'favoritos',
+      icon: Heart,
+      title: 'Meus Favoritos',
+      description: 'Veja os produtos que você salvou com o coração.',
+      actionLabel: 'Ver favoritos',
+      categoryLabel: 'Desejos',
+      image: '/images/marketplace/submodules/store/acessar-loja.jpg?v=2',
+      imageAlt: 'Produtos favoritados pelo cliente',
+      accentColor: '#e11d48',
+      visible: Boolean(clientId),
+      badge: null,
+      onClick: () => navigate(routes.marketplace.store.wishlist()),
+    },
+    {
       id: 'cupons',
       icon: Ticket,
       title: 'Meus Cupons',
@@ -1456,13 +1471,20 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="space-y-3"
         >
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-[#1a1a1a] leading-none mb-4 md:mb-6">
-            Bem Vindo ao <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-gradient-x italic">GSA STORE HUB</span>
+          <div className="inline-flex items-center gap-2 bg-[#17345f]/10 border border-[#17345f]/20 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest text-[#17345f]">
+            <ShoppingBag className="h-3.5 w-3.5 text-[#d8bd73]" />
+            <span>Central da Loja & Serviços</span>
+          </div>
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-[#0c2340] leading-tight">
+            GSA Store <span className="text-[#d8bd73]">Hub</span>
           </h2>
-          <div className="h-1 w-20 bg-gradient-to-r from-indigo-500 to-purple-500 mx-auto rounded-full mb-6 md:mb-8"></div>
+          <p className="max-w-lg mx-auto text-xs md:text-sm text-neutral-500 font-medium leading-relaxed">
+            Acesse seus pedidos, cupons, crédito e serviços pós-venda em um só lugar.
+          </p>
+          <div className="h-1 w-16 bg-[#d8bd73] mx-auto rounded-full mt-4"></div>
         </motion.div>
       </div>
 

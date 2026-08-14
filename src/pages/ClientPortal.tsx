@@ -286,7 +286,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     ? (route.module === 'classificados' ? 'classificados' : 'gsa_store') 
     : route.module) as Module;
   const isMarketplaceArea = route.area === 'marketplace' || (activeModule as string) === 'gsa_store' || (activeModule as string) === 'classificados';
-  const isCheckoutPage = route.submodule === 'loja-checkout' || route.pathname.includes('/marketplace/loja/checkout') || route.pathname.endsWith('/checkout');
+  const isCheckoutPage = route.submodule === 'loja-checkout' || route.pathname.includes('/marketplace/loja/checkout') || route.pathname.endsWith('/checkout') || route.submodule === 'loja-compras' || route.pathname.includes('/marketplace/loja/compras');
   const activeTab = route.submodule;
   const activeItemId = route.itemId;
   

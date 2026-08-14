@@ -32,7 +32,7 @@ import { calculateProductRating } from '../../../lib/productRatings';
 import { getProductEffectivePrice, getProductDiscountPercentage, hasActiveProductDiscount } from '../../../lib/productPricing';
 import { useSEO } from '../../../hooks/useSEO';
 import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
-import { isInWishlist, toggleWishlist } from '../../../lib/wishlistStorage';
+import { fetchWishlistFromDb, isInWishlist, toggleWishlist } from '../../../lib/wishlistStorage';
 import { toast } from 'react-hot-toast';
 import { usePixDiscount, checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
 
@@ -92,6 +92,11 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
           if (data) {
             setProduct(data);
             setIsWishlisted(isInWishlist(data.id, clientId));
+            fetchWishlistFromDb(clientId).then(() => {
+              if (isMounted && data) {
+                setIsWishlisted(isInWishlist(data.id, clientId));
+              }
+            });
             const initialSummary = calculateProductRating(data);
             setDisplayRating(initialSummary.rating);
             setDisplayRatingCount(initialSummary.totalCount);
@@ -136,10 +141,18 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
 
     fetchProduct();
 
+    const handleWishlistUpdate = () => {
+      if (productId) {
+        setIsWishlisted(isInWishlist(productId, clientId));
+      }
+    };
+    window.addEventListener('gsa-wishlist-updated', handleWishlistUpdate);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('gsa-wishlist-updated', handleWishlistUpdate);
     };
-  }, [productId]);
+  }, [productId, clientId]);
 
   useSEO({
     title: product?.nome ? `${product.nome} — GSA Store` : 'GSA Store — E-commerce & Marketplace',
@@ -391,11 +404,52 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
     }
   };
 
-  const handleWhatsAppOrder = () => {
-    const message = encodeURIComponent(
-      `Olá! Tenho interesse em comprar o produto:\n\n*${product.nome}*\nPreço: ${formatCurrency(currentPrice)}\nQuantidade: ${quantity}\n\nLink: ${window.location.href}`
-    );
-    window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
+  const handleWhatsAppOrder = async () => {
+    try {
+      // 1. Busca telefone oficial do WhatsApp configurado no sistema
+      let phone = '5511920857756';
+      try {
+        const { data } = await supabase
+          .from('system_settings')
+          .select('key, value')
+          .in('key', ['whatsapp_float_telefone', 'whatsapp_admin_notificacoes']);
+
+        if (data && data.length > 0) {
+          const floatPhone = data.find(s => s.key === 'whatsapp_float_telefone')?.value;
+          const adminPhone = data.find(s => s.key === 'whatsapp_admin_notificacoes')?.value;
+          const chosen = floatPhone || adminPhone;
+          if (chosen) {
+            const clean = chosen.replace(/\D/g, '');
+            if (clean) phone = clean.startsWith('55') ? clean : `55${clean}`;
+          }
+        }
+      } catch (err) {
+        console.warn('Usando telefone fallback WhatsApp:', err);
+      }
+
+      // 2. Monta mensagem estruturada compatível com o Chatbot / IA n8n
+      const totalItens = formatCurrency(currentPrice * quantity);
+      const precoPix = pixAtivo ? formatCurrency((currentPrice * (1 - (pixPorcentagem / 100))) * quantity) : null;
+      const refCode = product.codigo_produto || (product.id ? product.id.slice(0, 8).toUpperCase() : 'N/A');
+
+      const linhasMensagem = [
+        `👋 *Olá! Gostaria de comprar este produto na Loja GSA:*`,
+        ``,
+        `🛒 *Produto:* ${product.nome}`,
+        `🔖 *Código:* ${refCode}`,
+        `📦 *Quantidade:* ${quantity} unidade(s)`,
+        `💵 *Valor:* ${totalItens}${precoPix ? ` (ou ${precoPix} com desconto no PIX)` : ''}`,
+        `🔗 *Link:* ${window.location.href}`,
+        ``,
+        `🤖 _#COMPRA_LOJA_GSA_`
+      ];
+
+      const message = encodeURIComponent(linhasMensagem.join('\n'));
+      window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+    } catch (e) {
+      console.error('Erro ao abrir WhatsApp:', e);
+      window.open(`https://wa.me/5511920857756?text=${encodeURIComponent(`Olá! Quero comprar o produto: ${product.nome}`)}`, '_blank');
+    }
   };
 
   return (
@@ -469,8 +523,8 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
 
               <button 
                 type="button"
-                onClick={() => {
-                  const nowFavorited = toggleWishlist(product.id, clientId);
+                onClick={async () => {
+                  const nowFavorited = await toggleWishlist(product.id, clientId);
                   setIsWishlisted(nowFavorited);
                   toast.success(nowFavorited ? 'Produto salvo nos seus favoritos!' : 'Removido dos favoritos.');
                 }}
@@ -583,7 +637,7 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
 
               <div className="mt-1.5 flex items-center gap-2 text-xs font-semibold text-neutral-600">
                 <CreditCard className="h-4 w-4 text-neutral-400" />
-                <span>ou até 12x de R$ {installmentValue} sem juros</span>
+                <span>ou até 12x de R$ {installmentValue} com juros</span>
               </div>
               
               <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-50 p-2.5 text-xs font-bold text-amber-800 border border-amber-200/60">

@@ -90,6 +90,9 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   if (normalizedPath === '/programa-vip') {
     return { pathname, search, hash, area: 'public', module: 'vip', query };
   }
+  if (segments[0] === 'vaquinha') {
+    return { pathname, search, hash, area: 'marketplace', module: 'root', submodule: 'loja-vaquinha', itemId: segments[1] || query.id || '', query };
+  }
 
   // 3. MARKETPLACE
   if (segments[0] === 'marketplace') {

@@ -16,6 +16,8 @@ import {
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
 import { useSEO } from '../../../hooks/useSEO';
+import { calculateProductRating } from '../../../lib/productRatings';
+import { getProductDiscountPercentage } from '../../../lib/productPricing';
 
 interface EcommerceHomeProps {
   clientId?: string;
@@ -24,20 +26,19 @@ interface EcommerceHomeProps {
   cartItemCount?: number;
 }
 
-/* ─── Flash Sale Countdown Hook ─── */
-function useCountdown(targetHour = 23) {
+/* ─── Daily Flash Sale Countdown Hook (00:00:00 às 23:59:59 todos os dias) ─── */
+function useCountdown() {
   const getTimeLeft = useCallback(() => {
     const now = new Date();
-    const end = new Date();
-    end.setHours(targetHour, 59, 59, 0);
-    if (now > end) end.setDate(end.getDate() + 1);
-    const diff = Math.max(0, end.getTime() - now.getTime());
+    // Fim do dia atual às 23:59:59.999
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const diff = Math.max(0, endOfDay.getTime() - now.getTime());
     return {
       h: String(Math.floor(diff / 3600000)).padStart(2, '0'),
       m: String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0'),
       s: String(Math.floor((diff % 60000) / 1000)).padStart(2, '0'),
     };
-  }, [targetHour]);
+  }, []);
 
   const [time, setTime] = useState(getTimeLeft());
   useEffect(() => {
@@ -47,24 +48,28 @@ function useCountdown(targetHour = 23) {
   return time;
 }
 
-/* ─── Category definitions (SVG icons, NO emojis) ─── */
-const CATEGORIES = [
-  { name: 'Eletrônicos', Icon: Laptop,      color: '#2563eb', bg: '#eff6ff', filter: 'eletronicos' },
-  { name: 'Casa & Eletro', Icon: Home,       color: '#d97706', bg: '#fffbeb', filter: 'casa' },
-  { name: 'Moda & Estilo', Icon: Shirt,      color: '#db2777', bg: '#fdf2f8', filter: 'moda' },
-  { name: 'Beleza & Saúde', Icon: FlaskConical, color: '#7c3aed', bg: '#f5f3ff', filter: 'beleza' },
-  { name: 'Viagens', Icon: Plane,           color: '#0891b2', bg: '#ecfeff', route: 'travel' },
-  { name: 'Serviços', Icon: Wrench,         color: '#16a34a', bg: '#f0fdf4', route: 'services' },
-  { name: 'Classificados', Icon: Car,        color: '#1e293b', bg: '#f8fafc', route: 'classifieds' },
-  { name: 'Clube VIP', Icon: Gem,           color: '#b45309', bg: '#fffbeb', route: 'vip' },
-];
+/* ─── Rotação Diária Automática Baseada na Data do Dia (00:00 às 23:59) ─── */
+function getDailySeed(): number {
+  const now = new Date();
+  return now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+}
 
-const TRUST_BADGES = [
-  { Icon: ShieldCheck, title: 'Compra 100% Segura', sub: 'Ambiente criptografado SSL', color: '#2563eb' },
-  { Icon: BadgePercent, title: 'Pontos GSA', sub: 'Ganhe em toda compra', color: '#d97706' },
-  { Icon: Truck, title: 'Entrega Expressa', sub: 'Rastreamento em tempo real', color: '#16a34a' },
-  { Icon: PhoneCall, title: 'Suporte 24 horas', sub: 'Atendimento especializado', color: '#7c3aed' },
-];
+function seededRandom(seed: number) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getDailyRotatingList(items: any[], count: number, salt: number = 42): any[] {
+  if (!items || items.length === 0) return [];
+  const baseSeed = getDailySeed() + salt;
+  const shuffled = [...items].sort((a, b) => {
+    const seedA = Number(a.id ? a.id.charCodeAt(0) + (a.id.charCodeAt(1) || 0) : 0) + baseSeed;
+    const seedB = Number(b.id ? b.id.charCodeAt(0) + (b.id.charCodeAt(1) || 0) : 0) + baseSeed;
+    return seededRandom(seedA) - seededRandom(seedB);
+  });
+  return shuffled.slice(0, count);
+}
+
 
 /* ─── Horizontal Scroll Shelf with Auto-Scroll & Touch Swipe ─── */
 function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRanking?: boolean }) {
@@ -154,7 +159,7 @@ function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRan
       {/* Horizontal Carousel Strip */}
       <div
         ref={containerRef}
-        className="flex gap-3 overflow-x-auto scroll-smooth pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
+        className="flex gap-3.5 overflow-x-auto scroll-smooth pt-3.5 pb-2.5 px-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
       >
         {items.map((item, idx) => (
           <div
@@ -162,13 +167,14 @@ function HorizontalShelf({ items, showRanking = false }: { items: any[]; showRan
             className="relative w-[170px] sm:w-[200px] shrink-0 snap-start"
           >
             {showRanking && (
-              <div className="absolute -left-1.5 -top-1.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-xs font-black text-white shadow-md ring-2 ring-white">
+              <div className="absolute -left-1 -top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-neutral-950 to-neutral-800 text-xs font-black text-white shadow-md ring-2 ring-white">
                 {idx + 1}
               </div>
             )}
             <StoreItemCard
               item={item}
               tipo="produto"
+              clientId={clientId}
               onAdd={() => navigate(routes.marketplace.store.product(item.id) + '?modal=quantidade')}
               onClick={() => navigate(routes.marketplace.store.product(item.id))}
             />
@@ -322,11 +328,62 @@ export function EcommerceHome({
           .limit(150);
 
         if (data && data.length > 0) {
+          // Lançamentos: os 12 produtos mais recentes cadastrados
           setNovidades(data.slice(0, 12));
-          setMaisVendidos([...data].sort(() => 0.5 - Math.random()).slice(0, 12));
-          const withDiscount = data.filter(p => p.valor_promocional && p.valor_promocional < p.valor);
-          setOfertas(withDiscount.length >= 6 ? withDiscount.slice(0, 12) : data.slice(3, 15));
-          setRecomendados([...data].sort(() => 0.5 - Math.random()).slice(0, 8));
+
+          // Mais Vendidos: ordenados por maior avaliação em estrelas e volume de reviews
+          const sortedMaisVendidos = [...data].sort((a, b) => {
+            const ratA = calculateProductRating(a);
+            const ratB = calculateProductRating(b);
+            if (ratB.rating !== ratA.rating) return ratB.rating - ratA.rating;
+            if (ratB.totalCount !== ratA.totalCount) return ratB.totalCount - ratA.totalCount;
+            const scoreA = (Number(a.total_vendas || a.vendas_count || 0) * 10) + (a.destaque ? 20 : 0);
+            const scoreB = (Number(b.total_vendas || b.vendas_count || 0) * 10) + (b.destaque ? 20 : 0);
+            return scoreB - scoreA;
+          });
+          setMaisVendidos(sortedMaisVendidos.slice(0, 12));
+          
+          // Ofertas do Dia: produtos com maior porcentagem de desconto real (% OFF decrescente)
+          const comDescontoCadastrado = data.filter(p => 
+            (Number(p.desconto_percentual || 0) > 0) || 
+            (p.valor_promocional && Number(p.valor_promocional) < Number(p.valor)) ||
+            Boolean(p.desconto_ativo)
+          );
+
+          if (comDescontoCadastrado.length >= 6) {
+            const sortedOfertas = [...comDescontoCadastrado].sort((a, b) => {
+              const discA = getProductDiscountPercentage(a);
+              const discB = getProductDiscountPercentage(b);
+              if (discB !== discA) return discB - discA;
+              return Number(b.valor || 0) - Number(a.valor || 0);
+            });
+            setOfertas(sortedOfertas.slice(0, 12));
+          } else {
+            const discountTiers = [35, 30, 28, 25, 22, 20, 18, 15];
+            const ofertasDoDia = getDailyRotatingList(data, 24, 107).map((prod, idx) => {
+              const precoOriginal = Number(prod.valor || 0);
+              if (prod.valor_promocional && Number(prod.valor_promocional) < precoOriginal) {
+                return prod;
+              }
+              const pct = discountTiers[(getDailySeed() + idx) % discountTiers.length];
+              const precoRelampago = Math.round(precoOriginal * (1 - pct / 100) * 100) / 100;
+              return {
+                ...prod,
+                desconto_percentual: pct,
+                valor_promocional: precoRelampago,
+                _oferta_relampago_diaria: true,
+              };
+            });
+            ofertasDoDia.sort((a, b) => {
+              const discA = getProductDiscountPercentage(a);
+              const discB = getProductDiscountPercentage(b);
+              if (discB !== discA) return discB - discA;
+              return Number(b.valor || 0) - Number(a.valor || 0);
+            });
+            setOfertas(ofertasDoDia.slice(0, 12));
+          }
+
+          setRecomendados(getDailyRotatingList(data, 8, 77));
 
           const eletroData = data.filter(p => /fone|smart|tv|cabo|carregador|usb|eletr|airfryer|forno|mixer|bluetooth|caixa|led|bateria|sound|relogio|computador|notebook|teclado|mouse/i.test(p.nome) || p.categoria_id === 'c7abd6df-c781-44f3-9120-9983b720b6ef');
           const casaData = data.filter(p => /toalha|mesa|cama|manta|cozinha|panela|fritadeira|almofada|decor|tapete|organizador|lençol|copo|garrafa|xícara|prato|travesseiro|cortina/i.test(p.nome));
@@ -346,15 +403,6 @@ export function EcommerceHome({
     })();
   }, []);
 
-  const goCategory = (cat: typeof CATEGORIES[0]) => {
-    if (cat.route === 'travel') navigate(routes.marketplace.travelPackages.root());
-    else if (cat.route === 'services') navigate(routes.public.services());
-    else if (cat.route === 'classifieds') navigate(routes.marketplace.classifieds.root());
-    else if (cat.route === 'vip') navigate(routes.marketplace.store.vip());
-    else if (cat.name) navigate(`${routes.marketplace.store.products()}?busca=${encodeURIComponent(cat.name)}`);
-    else navigate(routes.marketplace.store.products());
-  };
-
   return (
     <div className="min-h-screen bg-[#f4f5f7]">
       <EcommerceHeader
@@ -365,57 +413,7 @@ export function EcommerceHome({
       />
 
       <main>
-
-
-        {/* ── Trust Bar (Amazon/ML style, below fold) ── */}
-        <div className="hidden sm:block bg-white border-b border-gray-200 shadow-sm">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100 px-4">
-            {TRUST_BADGES.map(({ Icon, title, sub, color }, i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-4 sm:py-3">
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                  style={{ backgroundColor: color + '15', color }}
-                >
-                  <Icon size={18} strokeWidth={1.75} />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-[11px] font-black text-gray-900 sm:text-xs">{title}</p>
-                  <p className="truncate text-[10px] text-gray-400 font-medium">{sub}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-2.5 sm:py-6 space-y-3.5 sm:space-y-8">
-
-          {/* ── Categories Grid (Super compacto em mobile, sem título, com animação nos ícones) ── */}
-          <section className="rounded-2xl bg-white p-2.5 sm:p-5 shadow-sm border border-gray-100">
-            <div className="grid grid-cols-4 gap-x-1 gap-y-1.5 sm:gap-3 sm:grid-cols-8">
-              {CATEGORIES.map((cat, i) => (
-                <button
-                  key={i}
-                  onClick={() => goCategory(cat)}
-                  className="group flex cursor-pointer flex-col items-center gap-1 sm:gap-2 rounded-xl p-0.5 sm:p-2 transition-all hover:bg-gray-50 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#17345f]"
-                >
-                  <div
-                    className="flex h-9 w-9 sm:h-16 sm:w-16 items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-md group-active:scale-90"
-                    style={{ 
-                      backgroundColor: cat.bg, 
-                      color: cat.color,
-                      animation: 'deptFloat 3s ease-in-out infinite',
-                      animationDelay: `${i * 180}ms`
-                    }}
-                  >
-                    <cat.Icon className="h-4.5 w-4.5 sm:h-6 sm:w-6 transition-transform duration-300 group-hover:rotate-6" strokeWidth={1.75} />
-                  </div>
-                  <span className="text-center text-[9px] sm:text-[11px] font-bold text-gray-700 group-hover:text-[#17345f] leading-tight line-clamp-2">
-                    {cat.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
           {loading ? (
             <div className="flex h-56 items-center justify-center rounded-2xl bg-white">
@@ -427,11 +425,11 @@ export function EcommerceHome({
           ) : (
             <>
 
-              {/* ── Flash Sale ── */}
+              {/* ── Flash Sale (00:00 às 23:59 Diário) ── */}
               {ofertas.length > 0 && (
                 <section className="overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100">
                   {/* Header com gradiente vermelho sutil */}
-                  <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-r from-rose-50 to-orange-50 px-5 py-4">
+                  <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-r from-rose-50 to-orange-50 px-4 sm:px-5 py-3.5 sm:py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-600 text-white shadow-sm">
                         <Zap size={18} strokeWidth={2.5} />
@@ -440,7 +438,6 @@ export function EcommerceHome({
                         <h2 className="text-base font-black text-gray-900 sm:text-lg leading-none">Oferta Relâmpago</h2>
                         <p className="mt-0.5 text-[11px] text-gray-500 font-medium">Preços imperdíveis por tempo limitado</p>
                       </div>
-                      <span className="hidden sm:inline rounded-full bg-rose-600 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-white">Hoje</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <FlashSaleTimer />

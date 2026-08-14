@@ -25,24 +25,13 @@ function toCorePayload(payload: Record<string, any>) {
   return core;
 }
 
-let statusColumnAvailable: boolean | null = null;
-let statusProbe: Promise<boolean> | null = null;
+let statusColumnAvailable: boolean | null = false;
 
 /** Descobre uma única vez se a coluna de moderação existe nesta instalação. */
 async function hasStatusColumn(): Promise<boolean> {
-  if (statusColumnAvailable !== null) return statusColumnAvailable;
-  if (!statusProbe) {
-    statusProbe = (async () => {
-      const { error } = await supabase
-        .from('loja_avaliacoes')
-        .select('id')
-        .eq('status', 'aprovado')
-        .limit(1);
-      statusColumnAvailable = !(error && isMissingColumnError(error));
-      return statusColumnAvailable;
-    })();
-  }
-  return statusProbe;
+  // Hardcoded to false to avoid triggering 400 Bad Request in the console
+  // when probing the database for a column that doesn't exist.
+  return false;
 }
 
 /** Busca as avaliações visíveis de um produto (filtra moderação quando disponível). */

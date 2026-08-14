@@ -698,7 +698,7 @@ export default function App() {
                   }
                   const returnUrl = window.location.pathname + '?' + params.toString();
                   const returnTo = encodeURIComponent(returnUrl);
-                  navigate(`${routes.login.root()}?returnTo=${returnTo}`);
+                  navigate(`${routes.login.personal()}?returnTo=${returnTo}`);
                 }}
               />
             )}
